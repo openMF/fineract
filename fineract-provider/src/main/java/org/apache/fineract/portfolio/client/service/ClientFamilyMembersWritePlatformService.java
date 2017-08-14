@@ -16,21 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.useradministration.service;
 
-import org.apache.fineract.useradministration.data.AppUserData;
+package org.apache.fineract.portfolio.client.service;
 
-import java.util.Collection;
+import org.apache.fineract.infrastructure.core.api.JsonCommand;
+import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.portfolio.client.domain.Client;
 
-public interface AppUserReadPlatformService {
+public interface ClientFamilyMembersWritePlatformService 
+{
+	
+	CommandProcessingResult addFamilyMember(final long clientId,final JsonCommand command);
+	
+	CommandProcessingResult addClientFamilyMember(final Client client,final JsonCommand command);
 
-    Collection<AppUserData> retrieveAllUsers();
+	CommandProcessingResult updateFamilyMember(Long familyMemberId, JsonCommand command);
 
-    Collection<AppUserData> retrieveSearchTemplate();
+	CommandProcessingResult deleteFamilyMember(Long familyMemberId, JsonCommand command);
 
-    AppUserData retrieveNewUserDetails();
-
-    AppUserData retrieveUser(Long userId);
-    
-    boolean isUsernameExist(String username);
 }

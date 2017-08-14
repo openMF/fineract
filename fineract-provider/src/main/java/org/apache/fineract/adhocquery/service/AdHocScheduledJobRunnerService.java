@@ -16,21 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.useradministration.service;
+package org.apache.fineract.adhocquery.service;
 
-import org.apache.fineract.useradministration.data.AppUserData;
-
-import java.util.Collection;
-
-public interface AppUserReadPlatformService {
-
-    Collection<AppUserData> retrieveAllUsers();
-
-    Collection<AppUserData> retrieveSearchTemplate();
-
-    AppUserData retrieveNewUserDetails();
-
-    AppUserData retrieveUser(Long userId);
-    
-    boolean isUsernameExist(String username);
+public interface AdHocScheduledJobRunnerService {
+    void generateClientSchedule();
 }

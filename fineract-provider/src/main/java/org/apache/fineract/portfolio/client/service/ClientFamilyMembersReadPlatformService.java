@@ -16,21 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.useradministration.service;
 
-import org.apache.fineract.useradministration.data.AppUserData;
+package org.apache.fineract.portfolio.client.service;
 
 import java.util.Collection;
 
-public interface AppUserReadPlatformService {
+import org.apache.fineract.portfolio.client.data.ClientFamilyMembersData;
 
-    Collection<AppUserData> retrieveAllUsers();
+public interface ClientFamilyMembersReadPlatformService 
+{
 
-    Collection<AppUserData> retrieveSearchTemplate();
+	Collection<ClientFamilyMembersData> getClientFamilyMembers(long clientId);
+	
+	ClientFamilyMembersData getClientFamilyMember(long id);
 
-    AppUserData retrieveNewUserDetails();
-
-    AppUserData retrieveUser(Long userId);
-    
-    boolean isUsernameExist(String username);
+	ClientFamilyMembersData retrieveTemplate();
 }

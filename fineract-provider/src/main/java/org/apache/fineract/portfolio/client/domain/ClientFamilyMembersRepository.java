@@ -16,21 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.useradministration.service;
 
-import org.apache.fineract.useradministration.data.AppUserData;
+package org.apache.fineract.portfolio.client.domain;
 
-import java.util.Collection;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface AppUserReadPlatformService {
+public interface ClientFamilyMembersRepository 
+extends JpaRepository<ClientFamilyMembers, Long>, JpaSpecificationExecutor<ClientFamilyMembers>
+{
 
-    Collection<AppUserData> retrieveAllUsers();
-
-    Collection<AppUserData> retrieveSearchTemplate();
-
-    AppUserData retrieveNewUserDetails();
-
-    AppUserData retrieveUser(Long userId);
-    
-    boolean isUsernameExist(String username);
 }

@@ -56,7 +56,11 @@
 										  org.apache.fineract.template.service.*,
 										  org.apache.fineract.useradministration.*,
 										  org.apache.fineract.batch,
+<<<<<<< HEAD
 										  org.mifosplatform.infrastructure.report.service">
+=======
+										  org.apache.fineract.adhocquery.*">
+>>>>>>> upstream/develop
 		<context:exclude-filter expression="org.springframework.stereotype.Controller"
 			type="annotation" />
 
@@ -81,6 +85,7 @@
 	<jpa:repositories base-package="org.apache.fineract.scheduledjobs.domain" />
 	<jpa:repositories base-package="org.apache.fineract.template.domain" />
 	<jpa:repositories base-package="org.apache.fineract.infrastructure.campaigns.sms.domain" />
+	<jpa:repositories base-package="org.apache.fineract.adhocquery.domain" />
 	
 	<import resource="infrastructure.xml" />
 

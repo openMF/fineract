@@ -16,24 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.client.exception;
+package org.apache.fineract.adhocquery.exception;
 
 import org.apache.fineract.infrastructure.core.exception.AbstractPlatformResourceNotFoundException;
 
 /**
- * A {@link RuntimeException} thrown when client resources are not found.
+ * A {@link RuntimeException} thrown when AdHoc  resources are not
+ * found.
  */
-public class ClientNotFoundException extends AbstractPlatformResourceNotFoundException {
+public class AdHocNotFoundException extends AbstractPlatformResourceNotFoundException {
 
-    public ClientNotFoundException(final Long id) {
-        super("error.msg.client.id.invalid", "Client with identifier " + id + " does not exist", id);
-    }
-    
-    public ClientNotFoundException() {
-        super("error.msg.client.not.found.with.basic.details", "Client not found with basic details.");
-    }
-    
-    public ClientNotFoundException(String accountNumber) {
-        super("error.msg.client.not.found.with.account.number", "Client not found with account number "+accountNumber+".");
+    public AdHocNotFoundException(final Long id) {
+        super("error.msg.adhocquery.adhoc.id.invalid", "Adhoc Record with identifier " + id + " does not exist", id);
     }
 }
