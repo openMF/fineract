@@ -35,6 +35,6 @@ public interface SmsCampaignRepository extends JpaRepository<SmsCampaign, Long>,
 
     Collection<SmsCampaign> findByTriggerType(Integer triggerType);
 
-    @Query("SELECT campaign FROM SmsCampaign campaign WHERE campaign.paramValue LIKE :reportPattern AND campaign.triggerType=:triggerType AND campaign.status=300")
+    @Query("SELECT campaign FROM SmsCampaign campaign WHERE campaign.paramValue LIKE %:reportPattern% AND campaign.triggerType=:triggerType AND campaign.status=300")
     List<SmsCampaign> findActiveSmsCampaigns(@Param("reportPattern") String reportPattern, @Param("triggerType") Integer triggerType);
 }

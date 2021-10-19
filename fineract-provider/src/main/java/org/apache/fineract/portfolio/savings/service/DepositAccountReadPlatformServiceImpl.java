@@ -509,9 +509,9 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
         sqlBuilder.append(mapper.schema());
         sqlBuilder.append(" where da.transfer_interest_to_linked_account = 1 and ");
         sqlBuilder.append(
-                "st.transaction_date > (select IFNULL(max(sat.transaction_date),sa.activatedon_date) from m_savings_account_transaction sat where sat.transaction_type_enum = ? and sat.savings_account_id = sa.id and sat.is_reversed=0) ");
+                "st.transaction_date > (select IFNULL(max(sat.transaction_date),sa.activatedon_date) from m_savings_account_transaction sat where sat.transaction_type_enum = ? and sat.savings_account_id = sa.id and sat.is_reversed=false) ");
         sqlBuilder.append(
-                "and st.transaction_type_enum = ? and sa.status_enum = ? and st.is_reversed=0 and st.transaction_date > IFNULL(sa.lockedin_until_date_derived,sa.activatedon_date)");
+                "and st.transaction_type_enum = ? and sa.status_enum = ? and st.is_reversed=false and st.transaction_date > IFNULL(sa.lockedin_until_date_derived,sa.activatedon_date)");
 
         return this.jdbcTemplate.query(sqlBuilder.toString(), mapper, new Object[] { SavingsAccountTransactionType.WITHDRAWAL.getValue(),
                 SavingsAccountTransactionType.INTEREST_POSTING.getValue(), SavingsAccountStatusType.ACTIVE.getValue() });

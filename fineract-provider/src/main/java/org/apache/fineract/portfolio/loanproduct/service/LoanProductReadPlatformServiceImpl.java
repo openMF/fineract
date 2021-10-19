@@ -121,7 +121,7 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
         this.context.authenticatedUser();
 
-        final LoanProductLookupMapper rm = new LoanProductLookupMapper();
+        final LoanProductLookupMapper rm = new LoanProductLookupMapper(JdbcSupport.getDateFunction(this.jdbcTemplate));
 
         String sql = "select " + rm.schema();
 
@@ -143,7 +143,7 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
     public Collection<LoanProductData> retrieveAllLoanProductsForLookup(final boolean activeOnly) {
         this.context.authenticatedUser();
 
-        final LoanProductLookupMapper rm = new LoanProductLookupMapper();
+        final LoanProductLookupMapper rm = new LoanProductLookupMapper(JdbcSupport.getDateFunction(this.jdbcTemplate));
 
         String sql = "select ";
         if (activeOnly) {
@@ -479,12 +479,18 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
     private static final class LoanProductLookupMapper implements RowMapper<LoanProductData> {
 
+        private String dateFunction = "CURDATE()";
+
+        public LoanProductLookupMapper(String dateFunction) {
+            this.dateFunction = dateFunction;
+        }
+
         public String schema() {
             return "lp.id as id, lp.name as name, lp.allow_multiple_disbursals as multiDisburseLoan from m_product_loan lp";
         }
 
         public String activeOnlySchema() {
-            return schema() + " where (close_date is null or close_date >= CURDATE())";
+            return schema() + " where (close_date is null or close_date >= " + this.dateFunction + ")";
         }
 
         public String productMixSchema() {
@@ -563,7 +569,7 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
         this.context.authenticatedUser();
 
-        final LoanProductLookupMapper rm = new LoanProductLookupMapper();
+        final LoanProductLookupMapper rm = new LoanProductLookupMapper(JdbcSupport.getDateFunction(this.jdbcTemplate));
 
         String sql = "Select " + rm.productMixSchema();
 
@@ -583,7 +589,7 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
         this.context.authenticatedUser();
 
-        final LoanProductLookupMapper rm = new LoanProductLookupMapper();
+        final LoanProductLookupMapper rm = new LoanProductLookupMapper(JdbcSupport.getDateFunction(this.jdbcTemplate));
 
         String sql = "Select " + rm.restrictedProductsSchema() + " where pm.product_id=? ";
         // Check if branch specific products are enabled. If yes, fetch only
@@ -612,7 +618,7 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
         this.context.authenticatedUser();
 
-        final LoanProductLookupMapper rm = new LoanProductLookupMapper();
+        final LoanProductLookupMapper rm = new LoanProductLookupMapper(JdbcSupport.getDateFunction(this.jdbcTemplate));
 
         String sql = "Select " + rm.schema() + " where ";
 

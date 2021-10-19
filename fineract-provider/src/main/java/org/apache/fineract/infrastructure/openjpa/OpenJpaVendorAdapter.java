@@ -26,6 +26,8 @@ import javax.persistence.spi.PersistenceProvider;
 import org.apache.openjpa.persistence.OpenJPAEntityManagerFactorySPI;
 import org.apache.openjpa.persistence.OpenJPAEntityManagerSPI;
 import org.apache.openjpa.persistence.PersistenceProviderImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.orm.jpa.vendor.AbstractJpaVendorAdapter;
 import org.springframework.orm.jpa.vendor.Database;
 
@@ -44,6 +46,8 @@ import org.springframework.orm.jpa.vendor.Database;
  * @see org.apache.openjpa.persistence.OpenJPAEntityManager
  */
 public class OpenJpaVendorAdapter extends AbstractJpaVendorAdapter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(OpenJpaVendorAdapter.class);
 
     private final PersistenceProvider persistenceProvider = new PersistenceProviderImpl();
 
@@ -71,6 +75,12 @@ public class OpenJpaVendorAdapter extends AbstractJpaVendorAdapter {
                 jpaProperties.put("openjpa.jdbc.DBDictionary", databaseDictonary);
             }
         }
+
+        LOG.info("=======================");
+        LOG.info("=======================");
+        LOG.info((String) jpaProperties.get("openjpa.jdbc.DBDictionary"));
+        LOG.info("=======================");
+        LOG.info("=======================");
 
         if (isGenerateDdl()) {
             jpaProperties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)");

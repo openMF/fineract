@@ -253,7 +253,7 @@ public class CollectionSheetReadPlatformServiceImpl implements CollectionSheetRe
             sql.append("and (gp.status_enum = 300 or (gp.status_enum = 600 and gp.closedon_date >= :dueDate)) ")
                     .append("and (cl.status_enum = 300 or (cl.status_enum = 600 and cl.closedon_date >= :dueDate)) ")
                     .append("GROUP BY gp.id, cl.id, ln.id, ca.attendance_type_enum ORDER BY gp.id , cl.id , ln.id ").append(") loandata ")
-                    .append("LEFT JOIN m_loan_charge lc ON lc.loan_id = loandata.loanId AND lc.is_paid_derived = 0 AND lc.is_active = 1 ")
+                    .append("LEFT JOIN m_loan_charge lc ON lc.loan_id = loandata.loanId AND lc.is_paid_derived = 0 AND lc.is_active = true ")
                     .append("AND ( lc.due_for_collection_as_of_date  <= :dueDate OR lc.charge_time_enum = 1) ")
                     .append("GROUP BY loandata.groupId, loandata.clientId, loandata.loanId ")
                     .append(", loandata.principalDue, loandata.interestDue, loandata.feeDue, loandata.attendanceTypeId ")
@@ -749,7 +749,7 @@ public class CollectionSheetReadPlatformServiceImpl implements CollectionSheetRe
             sb.append("(ln.loan_status_id = 300) ");
             sb.append("and ln.group_id is null GROUP BY cl.id , ln.id ORDER BY cl.id , ln.id ) loandata ");
             sb.append(
-                    "LEFT JOIN m_loan_charge lc ON lc.loan_id = loandata.loanId AND lc.is_paid_derived = 0 AND lc.is_active = 1 AND ( lc.due_for_collection_as_of_date  <= :dueDate OR lc.charge_time_enum = 1) ");
+                    "LEFT JOIN m_loan_charge lc ON lc.loan_id = loandata.loanId AND lc.is_paid_derived = 0 AND lc.is_active = true AND ( lc.due_for_collection_as_of_date  <= :dueDate OR lc.charge_time_enum = 1) ");
             sb.append("GROUP BY loandata.clientId, loandata.loanId ORDER BY loandata.clientId, loandata.loanId ");
 
             sql = sb.toString();

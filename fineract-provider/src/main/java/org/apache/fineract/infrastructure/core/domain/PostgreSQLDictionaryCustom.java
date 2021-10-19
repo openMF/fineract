@@ -18,26 +18,29 @@
  */
 package org.apache.fineract.infrastructure.core.domain;
 
-import org.apache.fineract.infrastructure.security.domain.PlatformUser;
-import org.apache.fineract.infrastructure.security.service.PlatformPasswordEncoder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
+import java.sql.Connection;
+import java.sql.SQLException;
+import org.apache.openjpa.jdbc.sql.BooleanRepresentationFactory;
+import org.apache.openjpa.jdbc.sql.PostgresDictionary;
 
-@Service(value = "applicationPasswordEncoder")
-@Scope("singleton")
-public class DefaultPlatformPasswordEncoder implements PlatformPasswordEncoder {
+@SuppressWarnings("unchecked")
+public class PostgreSQLDictionaryCustom extends PostgresDictionary {
 
-    private final PasswordEncoder passwordEncoder;
+    public PostgreSQLDictionaryCustom() {
 
-    @Autowired
-    public DefaultPlatformPasswordEncoder(final PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
+        this.supportsSubselect = true;
+        this.booleanRepresentation = BooleanRepresentationFactory.BOOLEAN;
+        this.supportsGetGeneratedKeys = false;
+        this.allowsAliasInBulkClause = true;
+        this.useWildCardForCount = true;
     }
 
     @Override
-    public String encode(final PlatformUser appUser) {
-        return this.passwordEncoder.encode(appUser.getPassword());
+    public void connectedConfiguration(Connection conn) throws SQLException {
+        super.connectedConfiguration(conn);
+        this.supportsSubselect = true;
+        this.supportsGetGeneratedKeys = false;
+        this.allowsAliasInBulkClause = true;
+        this.useWildCardForCount = true;
     }
 }

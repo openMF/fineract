@@ -103,7 +103,7 @@ public class JournalEntryRunningBalanceUpdateServiceImpl implements JournalEntry
     @CronTarget(jobName = JobName.ACCOUNTING_RUNNING_BALANCE_UPDATE)
     public void updateRunningBalance() {
         String dateFinder = "select MIN(je.entry_date) as entityDate from acc_gl_journal_entry  je "
-                + "where je.is_running_balance_calculated=0 ";
+                + "where je.is_running_balance_calculated=false ";
         try {
             Date entityDate = this.jdbcTemplate.queryForObject(dateFinder, Date.class);
             updateOrganizationRunningBalance(entityDate);
@@ -124,7 +124,7 @@ public class JournalEntryRunningBalanceUpdateServiceImpl implements JournalEntry
         } else {
             this.officeRepositoryWrapper.findOneWithNotFoundDetection(officeId);
             String dateFinder = "select MIN(je.entry_date) as entityDate " + "from acc_gl_journal_entry  je "
-                    + "where je.is_running_balance_calculated=0  and je.office_id=?";
+                    + "where je.is_running_balance_calculated=false  and je.office_id=?";
             try {
                 Date entityDate = this.jdbcTemplate.queryForObject(dateFinder, Date.class, officeId);
                 updateRunningBalance(officeId, entityDate);

@@ -281,7 +281,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
              * TODO Vishwas: Remove references to "Contra" from the codebase
              ***/
             final String sql = "select " + rm.loanPaymentsSchema()
-                    + " where tr.loan_id = ? and tr.transaction_type_enum not in (0, 3) and  (tr.is_reversed=0 or tr.manually_adjusted_or_reversed = 1) order by tr.transaction_date ASC,id ";
+                    + " where tr.loan_id = ? and tr.transaction_type_enum not in (0, 3) and  (tr.is_reversed=false or tr.manually_adjusted_or_reversed = 1) order by tr.transaction_date ASC,id ";
             return this.jdbcTemplate.query(sql, rm, new Object[] { loanId });
         } catch (final EmptyResultDataAccessException e) {
             return null;
@@ -1571,7 +1571,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         public String schema() {
             return "dd.id as id,dd.expected_disburse_date as expectedDisbursementdate, dd.disbursedon_date as actualDisbursementdate,dd.principal as principal,dd.net_disbursal_amount as netDisbursalAmount,sum(lc.amount) chargeAmount, lc.amount_waived_derived waivedAmount,group_concat(lc.id) loanChargeId "
                     + "from m_loan l inner join m_loan_disbursement_detail dd on dd.loan_id = l.id left join m_loan_tranche_disbursement_charge tdc on tdc.disbursement_detail_id=dd.id "
-                    + "left join m_loan_charge lc on  lc.id=tdc.loan_charge_id and lc.is_active=1";
+                    + "left join m_loan_charge lc on  lc.id=tdc.loan_charge_id and lc.is_active=true";
         }
 
         @Override
@@ -1642,7 +1642,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                 .append(" and (((ls.fee_charges_amount <> if(ls.accrual_fee_charges_derived is null,0, ls.accrual_fee_charges_derived))")
                 .append(" or ( ls.penalty_charges_amount <> if(ls.accrual_penalty_charges_derived is null,0,ls.accrual_penalty_charges_derived))")
                 .append(" or ( ls.interest_amount <> if(ls.accrual_interest_derived is null,0,ls.accrual_interest_derived)))")
-                .append(" and loan.loan_status_id=:active and mpl.accounting_type=:type and loan.is_npa=0 and ls.duedate <= CURDATE()) ");
+                .append(" and loan.loan_status_id=:active and mpl.accounting_type=:type and loan.is_npa=false and ls.duedate <= CURDATE()) ");
         if (organisationStartDate != null) {
             sqlBuilder.append(" and ls.duedate > :organisationstartdate ");
         }
@@ -1669,7 +1669,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                 .append(" or (ls.penalty_charges_amount <> if(ls.accrual_penalty_charges_derived is null,0,ls.accrual_penalty_charges_derived))")
                 .append(" or (ls.interest_amount <> if(ls.accrual_interest_derived is null,0,ls.accrual_interest_derived)))")
                 .append(" and loan.loan_status_id=:active and mpl.accounting_type=:type and (loan.closedon_date <= :tilldate or loan.closedon_date is null)")
-                .append(" and loan.is_npa=0 and (ls.duedate <= :tilldate or (ls.duedate > :tilldate and ls.fromdate < :tilldate))) ");
+                .append(" and loan.is_npa=false and (ls.duedate <= :tilldate or (ls.duedate > :tilldate and ls.fromdate < :tilldate))) ");
         if (organisationStartDate != null) {
             sqlBuilder.append(" and ls.duedate > :organisationstartdate ");
         }
@@ -1857,7 +1857,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         sqlBuilder.append(" and mr.duedate < ? )");
         sqlBuilder.append(" or dd.expected_disburse_date < ? )) ");
         sqlBuilder.append(" or (");
-        sqlBuilder.append(" fr.is_active = 1 and  frp.is_active = 1");
+        sqlBuilder.append(" fr.is_active = true and  frp.is_active = true");
         sqlBuilder.append(" and (frp.created_date >= ?  or ");
         sqlBuilder.append("(bfrp.id is not null and frp.is_differential_to_base_lending_rate = 1 and frp.from_date >= bfrp.from_date)) ");
         sqlBuilder.append("and lrr.loan_id is null");
@@ -1901,7 +1901,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         sqlBuilder.append(" and mr.duedate < ? )");
         sqlBuilder.append(" or dd.expected_disburse_date < ? )) ");
         sqlBuilder.append(" or (");
-        sqlBuilder.append(" fr.is_active = 1 and  frp.is_active = 1");
+        sqlBuilder.append(" fr.is_active = true and  frp.is_active = true");
         sqlBuilder.append(" and (frp.created_date >= ?  or ");
         sqlBuilder.append("(bfrp.id is not null and frp.is_differential_to_base_lending_rate = 1 and frp.from_date >= bfrp.from_date)) ");
         sqlBuilder.append("and lrr.loan_id is null");
@@ -1928,7 +1928,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             final LoanTransactionDerivedComponentMapper rm = new LoanTransactionDerivedComponentMapper();
 
             final String sql = "select " + rm.schema()
-                    + " where tr.loan_id = ? and tr.transaction_type_enum = ? and tr.is_reversed=0 order by tr.transaction_date ASC,id ";
+                    + " where tr.loan_id = ? and tr.transaction_type_enum = ? and tr.is_reversed=false order by tr.transaction_date ASC,id ";
             return this.jdbcTemplate.query(sql, rm, new Object[] { loanId, LoanTransactionType.WAIVE_INTEREST.getValue() });
         } catch (final EmptyResultDataAccessException e) {
             return null;
@@ -2238,7 +2238,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             sqlBuilder.append("rc.display_symbol as currencyDisplaySymbol, rc.internationalized_name_code as currencyNameCode ");
             sqlBuilder.append("FROM m_loan l ");
             sqlBuilder.append(
-                    "LEFT JOIN m_loan_transaction tr ON tr.loan_id = l.id AND tr.transaction_type_enum = ? and tr.is_reversed = 0 ");
+                    "LEFT JOIN m_loan_transaction tr ON tr.loan_id = l.id AND tr.transaction_type_enum = ? and tr.is_reversed = false ");
             sqlBuilder.append("join m_currency rc on rc.`code` = l.currency_code ");
             sqlBuilder.append("JOIN m_loan_repayment_schedule ls ON ls.loan_id = l.id AND ls.completed_derived = 0 ");
             sqlBuilder.append("join( ");

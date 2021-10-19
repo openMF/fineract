@@ -50,6 +50,14 @@ public class JDBCDriverConfig {
         return this.driverClassName;
     }
 
+    public boolean isMySQL() {
+        return (this.subProtocol.toLowerCase().contains("mysql"));
+    }
+
+    public boolean isPostgreSQL() {
+        return (this.subProtocol.toLowerCase().contains("postgresql"));
+    }
+
     public String constructProtocol(String schemaServer, String schemaServerPort, String schemaName, String schemaConnectionParameters) {
         StringBuilder sb = new StringBuilder(protocol).append(":").append(subProtocol).append("://").append(schemaServer).append(":")
                 .append(schemaServerPort).append('/').append(schemaName);

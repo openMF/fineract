@@ -54,7 +54,6 @@ public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceSe
     public DataSource retrieveDataSource() {
         // default to tenant database datasource
         DataSource tenantDataSource = this.tenantDataSource;
-
         final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
         if (tenant != null) {
             final FineractPlatformTenantConnection tenantConnection = tenant.getConnection();

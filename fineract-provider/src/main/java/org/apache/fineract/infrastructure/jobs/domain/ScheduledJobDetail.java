@@ -71,7 +71,7 @@ public class ScheduledJobDetail extends AbstractPersistableCustom {
     @Column(name = "is_active")
     private boolean activeSchedular;
 
-    @Column(name = "currently_running")
+    @Column(name = "currently_running", columnDefinition = "TINYINT(1)")
     private boolean currentlyRunning;
 
     @Column(name = "updates_allowed")

@@ -44,6 +44,8 @@ import org.apache.fineract.portfolio.search.data.AdHocSearchQueryData;
 import org.apache.fineract.portfolio.search.data.SearchConditions;
 import org.apache.fineract.portfolio.search.data.SearchData;
 import org.apache.fineract.useradministration.domain.AppUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -52,6 +54,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class SearchReadPlatformServiceImpl implements SearchReadPlatformService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SearchReadPlatformServiceImpl.class);
 
     private final NamedParameterJdbcTemplate namedParameterjdbcTemplate;
     private final PlatformSecurityContext context;
@@ -140,10 +144,12 @@ public class SearchReadPlatformServiceImpl implements SearchReadPlatformService 
             if (searchConditions.isGroupSearch()) {
                 sql.append(groupMatchSql).append(union);
             }
+            LOG.info("SQL " + sql.toString());
 
             sql.replace(sql.lastIndexOf(union), sql.length(), "");
 
             // remove last occurrence of "union all" string
+            LOG.info("SQL " + sql.toString());
             return sql.toString();
         }
 

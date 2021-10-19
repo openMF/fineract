@@ -18,11 +18,13 @@
  */
 package org.apache.fineract.infrastructure.core.service;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import org.apache.fineract.infrastructure.core.boot.JDBCDriverConfig;
+import org.apache.fineract.infrastructure.core.boot.LiquiBaseUtil;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection;
 import org.apache.fineract.infrastructure.security.service.TenantDetailsService;
@@ -33,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
@@ -48,6 +51,15 @@ public class TenantDatabaseUpgradeService {
     private final TenantDetailsService tenantDetailsService;
     protected final DataSource tenantDataSource;
 
+    private final String coreChangeLog = "/sql/liquibase/db.changelog-core.yaml";
+    private final String tenantChangeLog = "/sql/liquibase/db.changelog-tenant.yaml";
+
+    protected String databaseProduct;
+    protected String databaseVersion;
+
+    @Value("${allow.upgrade.fineract.databases:false}")
+    private boolean allowUpgradeDatabases;
+
     @Autowired
     private JDBCDriverConfig driverConfig;
 
@@ -60,7 +72,14 @@ public class TenantDatabaseUpgradeService {
 
     @PostConstruct
     public void upgradeAllTenants() {
+        setDatabaseProduct();
+
+        if (!allowUpgradeDatabases) {
+            LOG.info("The upgrade tenant databases will be not executed");
+            return;
+        }
         upgradeTenantDB();
+
         final List<FineractPlatformTenant> tenants = this.tenantDetailsService.findAllTenants();
         for (final FineractPlatformTenant tenant : tenants) {
             final FineractPlatformTenantConnection connection = tenant.getConnection();
@@ -68,34 +87,59 @@ public class TenantDatabaseUpgradeService {
 
                 String connectionProtocol = driverConfig.constructProtocol(connection.getSchemaServer(), connection.getSchemaServerPort(),
                         connection.getSchemaName(), connection.getSchemaConnectionParameters());
+
                 DriverDataSource source = new DriverDataSource(Thread.currentThread().getContextClassLoader(),
                         driverConfig.getDriverClassName(), connectionProtocol, connection.getSchemaUsername(),
                         connection.getSchemaPassword());
 
-                final Flyway flyway = Flyway.configure().dataSource(source).locations("sql/migrations/core_db").outOfOrder(true)
-                        .placeholderReplacement(false).configuration(Map.of("flyway.table", "schema_version")) // FINERACT-979
-                        .load();
-
                 // Should be removed later when all instances are stabilized
                 // :FINERACT-1008
-                repairFlywayVersionSkip(flyway.getConfiguration().getDataSource());
+                if (isMySQL()) {
 
-                try {
-                    flyway.repair();
-                    flyway.migrate();
-                } catch (FlywayException e) {
-                    String betterMessage = e.getMessage() + "; for Tenant DB URL: " + connectionProtocol + ", username: "
-                            + connection.getSchemaUsername();
-                    throw new FlywayException(betterMessage, e);
+                    final Flyway flyway = Flyway.configure().dataSource(source).locations("sql/migrations/core_db").outOfOrder(true)
+                            .placeholderReplacement(false).configuration(Map.of("flyway.table", "schema_version")) // FINERACT-979
+                            .load();
+                    repairFlywayVersionSkip(flyway.getConfiguration().getDataSource());
+
+                    try {
+                        flyway.repair();
+                        flyway.migrate();
+                    } catch (FlywayException e) {
+                        String betterMessage = e.getMessage() + "; for Tenant DB URL: " + connectionProtocol + ", username: "
+                                + connection.getSchemaUsername();
+                        throw new FlywayException(betterMessage, e);
+                    }
+                } else {
+                    try {
+                        LOG.info("Liquibase tenant " + tenant.getName() + " change log: " + tenantChangeLog);
+                        LiquiBaseUtil.applyLiquibaseMigrations(tenantChangeLog, source.getConnection());
+                    } catch (SQLException e) {
+                        LOG.error(e.getMessage(), e);
+                    }
                 }
             }
         }
     }
 
+    private void setDatabaseProduct() {
+        this.databaseProduct = "";
+        try {
+            this.databaseProduct = this.tenantDataSource.getConnection().getMetaData().getDatabaseProductName();
+            this.databaseVersion = this.tenantDataSource.getConnection().getMetaData().getDatabaseProductVersion();
+        } catch (SQLException e) {
+            LOG.error(e.getMessage());
+        }
+        LOG.info("Database Product: " + this.databaseProduct + " : " + this.databaseVersion);
+    }
+
+    private boolean isMySQL() {
+        return (this.databaseProduct.toLowerCase().contains("mysql"));
+    }
+
     /**
      * Initializes, and if required upgrades (using Flyway) the Tenant DB itself.
      */
-    private void upgradeTenantDB() {
+    public void upgradeTenantDBMySQL() {
         String dbHostname = getEnvVar("FINERACT_DEFAULT_TENANTDB_HOSTNAME", "localhost");
         String dbPort = getEnvVar("FINERACT_DEFAULT_TENANTDB_PORT", "3306");
         String dbUid = getEnvVar("FINERACT_DEFAULT_TENANTDB_UID", "root");
@@ -117,6 +161,15 @@ public class TenantDatabaseUpgradeService {
 
         flyway.repair();
         flyway.migrate();
+    }
+
+    private void upgradeTenantDB() {
+        try {
+            LOG.info("Liquibase core change log: " + coreChangeLog);
+            LiquiBaseUtil.applyLiquibaseMigrations(coreChangeLog, tenantDataSource.getConnection());
+        } catch (SQLException e) {
+            LOG.error(e.getMessage(), e);
+        }
     }
 
     private String getEnvVar(String name, String defaultValue) {

@@ -79,22 +79,22 @@ public class AppUser extends AbstractPersistableCustom implements PlatformUser {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "nonexpired", nullable = false)
+    @Column(name = "nonexpired", nullable = false, columnDefinition = "BIT(1)")
     private boolean accountNonExpired;
 
-    @Column(name = "nonlocked", nullable = false)
+    @Column(name = "nonlocked", nullable = false, columnDefinition = "BIT(1)")
     private boolean accountNonLocked;
 
-    @Column(name = "nonexpired_credentials", nullable = false)
+    @Column(name = "nonexpired_credentials", nullable = false, columnDefinition = "BIT(1)")
     private boolean credentialsNonExpired;
 
-    @Column(name = "enabled", nullable = false)
+    @Column(name = "enabled", nullable = false, columnDefinition = "BIT(1)")
     private boolean enabled;
 
-    @Column(name = "firsttime_login_remaining", nullable = false)
+    @Column(name = "firsttime_login_remaining", nullable = false, columnDefinition = "BIT(1)")
     private boolean firstTimeLoginRemaining;
 
-    @Column(name = "is_deleted", nullable = false)
+    @Column(name = "is_deleted", nullable = false, columnDefinition = "BIT(1)")
     private boolean deleted;
 
     @ManyToOne

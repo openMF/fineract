@@ -114,7 +114,7 @@ public class GuarantorReadPlatformServiceImpl implements GuarantorReadPlatformSe
                         .append(" FROM m_guarantor g") //
                         .append(" left JOIN m_code_value cv on g.client_reln_cv_id = cv.id")//
                         .append(" left JOIN m_guarantor_funding_details gfd on g.id = gfd.guarantor_id")//
-                        .append(" left JOIN m_portfolio_account_associations aa on gfd.account_associations_id = aa.id and aa.is_active = 1 and aa.association_type_enum = ?")//
+                        .append(" left JOIN m_portfolio_account_associations aa on gfd.account_associations_id = aa.id and aa.is_active = true and aa.association_type_enum = ?")//
                         .append(" left JOIN m_savings_account sa on sa.id = aa.linked_savings_account_id ")//
                         .append(" left join m_guarantor_transaction gt on gt.guarantor_fund_detail_id = gfd.id") //
                         .append(" left join m_deposit_account_on_hold_transaction oht on oht.id = gt.deposit_on_hold_transaction_id");

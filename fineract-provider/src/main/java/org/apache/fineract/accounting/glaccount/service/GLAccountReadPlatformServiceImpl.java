@@ -147,7 +147,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
         if (filtersPresent) {
             boolean firstWhereConditionAdded = false;
             if (accountClassification != null) {
-                sql += " classification_enum like ?";
+                sql += " classification_enum = ?";
                 paramaterArray[arrayPos] = accountClassification;
                 arrayPos = arrayPos + 1;
                 firstWhereConditionAdded = true;
@@ -179,11 +179,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
                     sql += " and ";
                 }
 
-                if (manualTransactionsAllowed) {
-                    sql += " manual_journal_entries_allowed = 1";
-                } else {
-                    sql += " manual_journal_entries_allowed = 0";
-                }
+                sql += " manual_journal_entries_allowed = " + manualTransactionsAllowed;
                 firstWhereConditionAdded = true;
             }
             if (disabled != null) {
@@ -191,11 +187,8 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
                     sql += " and ";
                 }
 
-                if (disabled) {
-                    sql += " disabled = 1";
-                } else {
-                    sql += " disabled = 0";
-                }
+                sql += " disabled = " + disabled;
+
                 firstWhereConditionAdded = true;
             }
         }

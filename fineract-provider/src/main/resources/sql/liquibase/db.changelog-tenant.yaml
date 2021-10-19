@@ -1,0 +1,7 @@
+databaseChangeLog:
+
+    - include:
+        file: /sql/liquibase/changelog/tenant/01-create-initial-schema.xml
+
+    - include:
+        file: /sql/liquibase/changelog/tenant/02-add-initial-data.sql

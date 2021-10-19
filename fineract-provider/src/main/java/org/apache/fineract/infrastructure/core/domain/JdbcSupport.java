@@ -29,6 +29,7 @@ import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.JdbcUtils;
 
 /**
@@ -38,6 +39,19 @@ import org.springframework.jdbc.support.JdbcUtils;
 public final class JdbcSupport {
 
     private JdbcSupport() {}
+
+    public static String getDateFunction(final JdbcTemplate jdbcTemplate) {
+        try {
+            final String url = jdbcTemplate.getDataSource().getConnection().getMetaData().getURL();
+            if (url.toLowerCase().indexOf("mysql") > 0) {
+                return "CURDATE()";
+            } else {
+                return "CURRENT_DATE";
+            }
+        } catch (SQLException e) {
+            return "";
+        }
+    }
 
     public static ZonedDateTime getDateTime(final ResultSet rs, final String columnName) throws SQLException {
         ZonedDateTime dateTime = null;

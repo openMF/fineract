@@ -217,7 +217,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
             return "Table";
         }
 
-        final String sql = "SELECT ifNull(report_type,'') AS report_type FROM `stretchy_report` WHERE report_name = ? AND self_service_user_report = ?";
+        final String sql = "SELECT coalesce(report_type,'') AS report_type FROM `stretchy_report` WHERE report_name = ? AND self_service_user_report = ?";
 
         final String sqlWrapped = this.genericDataService.wrapSQL(sql);
 

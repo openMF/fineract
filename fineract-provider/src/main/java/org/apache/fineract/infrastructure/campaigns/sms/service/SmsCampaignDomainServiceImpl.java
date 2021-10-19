@@ -293,7 +293,7 @@ public class SmsCampaignDomainServiceImpl implements SmsCampaignDomainService {
     }
 
     private List<SmsCampaign> retrieveSmsCampaigns(String paramValue) {
-        List<SmsCampaign> smsCampaigns = smsCampaignRepository.findActiveSmsCampaigns("%" + paramValue + "%",
+        List<SmsCampaign> smsCampaigns = smsCampaignRepository.findActiveSmsCampaigns(paramValue,
                 SmsCampaignTriggerType.TRIGGERED.getValue());
         return smsCampaigns;
     }
