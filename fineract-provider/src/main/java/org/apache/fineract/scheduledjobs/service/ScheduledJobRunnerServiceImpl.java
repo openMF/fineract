@@ -106,22 +106,22 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
         updateSqlBuilder.append("join (");
         updateSqlBuilder.append("SELECT ml.id AS loanId,");
         updateSqlBuilder.append("SUM(mr.principal_amount) as principal_disbursed_derived, ");
-        updateSqlBuilder.append("SUM(IFNULL(mr.principal_completed_derived,0)) as principal_repaid_derived, ");
-        updateSqlBuilder.append("SUM(IFNULL(mr.principal_writtenoff_derived,0)) as principal_writtenoff_derived,");
-        updateSqlBuilder.append("SUM(IFNULL(mr.interest_amount,0)) as interest_charged_derived,");
-        updateSqlBuilder.append("SUM(IFNULL(mr.interest_completed_derived,0)) as interest_repaid_derived,");
-        updateSqlBuilder.append("SUM(IFNULL(mr.interest_waived_derived,0)) as interest_waived_derived,");
-        updateSqlBuilder.append("SUM(IFNULL(mr.interest_writtenoff_derived,0)) as interest_writtenoff_derived,");
+        updateSqlBuilder.append("SUM(coalesce(mr.principal_completed_derived,0)) as principal_repaid_derived, ");
+        updateSqlBuilder.append("SUM(coalesce(mr.principal_writtenoff_derived,0)) as principal_writtenoff_derived,");
+        updateSqlBuilder.append("SUM(coalesce(mr.interest_amount,0)) as interest_charged_derived,");
+        updateSqlBuilder.append("SUM(coalesce(mr.interest_completed_derived,0)) as interest_repaid_derived,");
+        updateSqlBuilder.append("SUM(coalesce(mr.interest_waived_derived,0)) as interest_waived_derived,");
+        updateSqlBuilder.append("SUM(coalesce(mr.interest_writtenoff_derived,0)) as interest_writtenoff_derived,");
         updateSqlBuilder.append(
-                "SUM(IFNULL(mr.fee_charges_amount,0)) + IFNULL((select SUM(lc.amount) from  m_loan_charge lc where lc.loan_id=ml.id and lc.is_active=true and lc.charge_time_enum=1),0) as fee_charges_charged_derived,");
+                "SUM(coalesce(mr.fee_charges_amount,0)) + coalesce((select SUM(lc.amount) from  m_loan_charge lc where lc.loan_id=ml.id and lc.is_active=true and lc.charge_time_enum=1),0) as fee_charges_charged_derived,");
         updateSqlBuilder.append(
-                "SUM(IFNULL(mr.fee_charges_completed_derived,0)) + IFNULL((select SUM(lc.amount_paid_derived) from  m_loan_charge lc where lc.loan_id=ml.id and lc.is_active=true and lc.charge_time_enum=1),0) as fee_charges_repaid_derived,");
-        updateSqlBuilder.append("SUM(IFNULL(mr.fee_charges_waived_derived,0)) as fee_charges_waived_derived,");
-        updateSqlBuilder.append("SUM(IFNULL(mr.fee_charges_writtenoff_derived,0)) as fee_charges_writtenoff_derived,");
-        updateSqlBuilder.append("SUM(IFNULL(mr.penalty_charges_amount,0)) as penalty_charges_charged_derived,");
-        updateSqlBuilder.append("SUM(IFNULL(mr.penalty_charges_completed_derived,0)) as penalty_charges_repaid_derived,");
-        updateSqlBuilder.append("SUM(IFNULL(mr.penalty_charges_waived_derived,0)) as penalty_charges_waived_derived,");
-        updateSqlBuilder.append("SUM(IFNULL(mr.penalty_charges_writtenoff_derived,0)) as penalty_charges_writtenoff_derived ");
+                "SUM(coalesce(mr.fee_charges_completed_derived,0)) + coalesce((select SUM(lc.amount_paid_derived) from  m_loan_charge lc where lc.loan_id=ml.id and lc.is_active=true and lc.charge_time_enum=1),0) as fee_charges_repaid_derived,");
+        updateSqlBuilder.append("SUM(coalesce(mr.fee_charges_waived_derived,0)) as fee_charges_waived_derived,");
+        updateSqlBuilder.append("SUM(coalesce(mr.fee_charges_writtenoff_derived,0)) as fee_charges_writtenoff_derived,");
+        updateSqlBuilder.append("SUM(coalesce(mr.penalty_charges_amount,0)) as penalty_charges_charged_derived,");
+        updateSqlBuilder.append("SUM(coalesce(mr.penalty_charges_completed_derived,0)) as penalty_charges_repaid_derived,");
+        updateSqlBuilder.append("SUM(coalesce(mr.penalty_charges_waived_derived,0)) as penalty_charges_waived_derived,");
+        updateSqlBuilder.append("SUM(coalesce(mr.penalty_charges_writtenoff_derived,0)) as penalty_charges_writtenoff_derived ");
         updateSqlBuilder.append(" FROM m_loan ml ");
         updateSqlBuilder.append("INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id ");
         updateSqlBuilder.append("WHERE ml.disbursedon_date is not null ");
@@ -292,7 +292,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
         updateSqlBuilder.append(" INNER JOIN  m_loan loan on laa.loan_id = loan.id ");
         updateSqlBuilder.append(" INNER JOIN m_product_loan mpl on mpl.id = loan.product_id AND mpl.overdue_days_for_npa is not null ");
         updateSqlBuilder.append("WHERE loan.loan_status_id = 300  and ");
-        updateSqlBuilder.append("laa.overdue_since_date_derived < SUBDATE(CURDATE(),INTERVAL  ifnull(mpl.overdue_days_for_npa,0) day) ");
+        updateSqlBuilder.append("laa.overdue_since_date_derived < SUBDATE(CURDATE(),INTERVAL  coalesce(mpl.overdue_days_for_npa,0) day) ");
         updateSqlBuilder.append("group by loan.id) as sl ");
         updateSqlBuilder.append("SET ml.is_npa=1 where ml.id=sl.id ");
 
@@ -425,7 +425,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
         final JdbcTemplate jdbcTemplate = new JdbcTemplate(this.dataSourceServiceFactory.determineDataSourceService().retrieveDataSource());
         final StringBuilder tbGapSqlBuilder = new StringBuilder(500);
         tbGapSqlBuilder.append("select distinct(je.transaction_date) ").append("from acc_gl_journal_entry je ")
-                .append("where je.transaction_date > (select IFNULL(MAX(created_date),'2010-01-01') from m_trial_balance)");
+                .append("where je.transaction_date > (select coalesce(MAX(created_date),'2010-01-01') from m_trial_balance)");
 
         final List<Date> tbGaps = jdbcTemplate.queryForList(tbGapSqlBuilder.toString(), Date.class);
 

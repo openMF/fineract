@@ -21,6 +21,7 @@ package org.apache.fineract.infrastructure.core.service;
 import java.util.List;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowCountCallbackHandler;
 import org.springframework.jdbc.core.RowMapper;
 
 public class PaginationHelper<E> {
@@ -37,10 +38,12 @@ public class PaginationHelper<E> {
     }
 
     public Page<Long> fetchPage(JdbcTemplate jdbcTemplate, String sql, String sqlCountRows, Class<Long> type) {
-        final List<Long> items = jdbcTemplate.queryForList(sql, type);
+        RowCountCallbackHandler countCallback = new RowCountCallbackHandler();
+        final List<Long> items = jdbcTemplate.queryForList(sql, type, countCallback);
 
         // determine how many rows are available
-        Integer totalFilteredRecords = jdbcTemplate.queryForObject(sqlCountRows, Integer.class);
+        Integer totalFilteredRecords = countCallback.getRowCount(); // jdbcTemplate.queryForObject(sqlCountRows,
+                                                                    // Integer.class);
 
         return new Page<>(items, ObjectUtils.defaultIfNull(totalFilteredRecords, 0));
     }

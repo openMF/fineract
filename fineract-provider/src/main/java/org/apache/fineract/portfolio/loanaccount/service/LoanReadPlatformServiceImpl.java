@@ -281,7 +281,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
              * TODO Vishwas: Remove references to "Contra" from the codebase
              ***/
             final String sql = "select " + rm.loanPaymentsSchema()
-                    + " where tr.loan_id = ? and tr.transaction_type_enum not in (0, 3) and  (tr.is_reversed=false or tr.manually_adjusted_or_reversed = 1) order by tr.transaction_date ASC,id ";
+                    + " where tr.loan_id = ? and tr.transaction_type_enum not in (0, 3) and  (tr.is_reversed=false or tr.manually_adjusted_or_reversed=true) order by tr.transaction_date ASC,id ";
             return this.jdbcTemplate.query(sql, rm, new Object[] { loanId });
         } catch (final EmptyResultDataAccessException e) {
             return null;
@@ -614,7 +614,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " l.allow_partial_period_interest_calcualtion as allowPartialPeriodInterestCalcualtion,"
                     + " l.loan_status_id as lifeCycleStatusId, l.loan_transaction_strategy_id as transactionStrategyId, "
                     + " lps.name as transactionStrategyName, "
-                    + " l.currency_code as currencyCode, l.currency_digits as currencyDigits, l.currency_multiplesof as inMultiplesOf, rc.`name` as currencyName, rc.display_symbol as currencyDisplaySymbol, rc.internationalized_name_code as currencyNameCode, "
+                    + " l.currency_code as currencyCode, l.currency_digits as currencyDigits, l.currency_multiplesof as inMultiplesOf, rc.name as currencyName, rc.display_symbol as currencyDisplaySymbol, rc.internationalized_name_code as currencyNameCode, "
                     + " l.loan_officer_id as loanOfficerId, s.display_name as loanOfficerName, "
                     + " l.principal_disbursed_derived as principalDisbursed," + " l.principal_repaid_derived as principalPaid,"
                     + " l.principal_writtenoff_derived as principalWrittenOff,"
@@ -665,7 +665,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " topup.topup_amount as topupAmount " + " from m_loan l" //
                     + " join m_product_loan lp on lp.id = l.product_id" //
                     + " left join m_loan_recalculation_details lir on lir.loan_id = l.id "
-                    + " join m_currency rc on rc.`code` = l.currency_code" //
+                    + " join m_currency rc on rc.code = l.currency_code" //
                     + " left join m_client c on c.id = l.client_id" //
                     + " left join m_group g on g.id = l.group_id" //
                     + " left join m_loan_arrears_aging la on la.loan_id = l.id" //
@@ -1288,7 +1288,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
         public String loanPaymentsSchema() {
 
-            return " tr.id as id, tr.transaction_type_enum as transactionType, tr.transaction_date as `date`, tr.amount as total, "
+            return " tr.id as id, tr.transaction_type_enum as transactionType, tr.transaction_date as date, tr.amount as total, "
                     + " tr.principal_portion_derived as principal, tr.interest_portion_derived as interest, "
                     + " tr.fee_charges_portion_derived as fees, tr.penalty_charges_portion_derived as penalties, "
                     + " tr.overpayment_portion_derived as overpayment, tr.outstanding_loan_balance_derived as outstandingLoanBalance, "
@@ -1296,7 +1296,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " tr.manually_adjusted_or_reversed as manuallyReversed, "
                     + " pd.payment_type_id as paymentType,pd.account_number as accountNumber,pd.check_number as checkNumber, "
                     + " pd.receipt_number as receiptNumber, pd.bank_number as bankNumber,pd.routing_code as routingCode, l.net_disbursal_amount as netDisbursalAmount,"
-                    + " l.currency_code as currencyCode, l.currency_digits as currencyDigits, l.currency_multiplesof as inMultiplesOf, rc.`name` as currencyName, "
+                    + " l.currency_code as currencyCode, l.currency_digits as currencyDigits, l.currency_multiplesof as inMultiplesOf, rc.name as currencyName, "
                     + " rc.display_symbol as currencyDisplaySymbol, rc.internationalized_name_code as currencyNameCode, "
                     + " pt.value as paymentTypeName, tr.external_id as externalId, tr.office_id as officeId, office.name as officeName, "
                     + " fromtran.id as fromTransferId, fromtran.is_reversed as fromTransferReversed,"
@@ -1305,8 +1305,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " totran.id as toTransferId, totran.is_reversed as toTransferReversed,"
                     + " totran.transaction_date as toTransferDate, totran.amount as toTransferAmount,"
                     + " totran.description as toTransferDescription " + " from m_loan l join m_loan_transaction tr on tr.loan_id = l.id"
-                    + " join m_currency rc on rc.`code` = l.currency_code "
-                    + " left JOIN m_payment_detail pd ON tr.payment_detail_id = pd.id"
+                    + " join m_currency rc on rc.code = l.currency_code " + " left JOIN m_payment_detail pd ON tr.payment_detail_id = pd.id"
                     + " left join m_payment_type pt on pd.payment_type_id = pt.id" + " left join m_office office on office.id=tr.office_id"
                     + " left join m_account_transfer_transaction fromtran on fromtran.from_loan_transaction_id = tr.id "
                     + " left join m_account_transfer_transaction totran on totran.to_loan_transaction_id = tr.id ";
@@ -1560,7 +1559,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
     @Override
     public Collection<DisbursementData> retrieveLoanDisbursementDetails(final Long loanId) {
-        final LoanDisbursementDetailMapper rm = new LoanDisbursementDetailMapper();
+        final LoanDisbursementDetailMapper rm = new LoanDisbursementDetailMapper(JdbcSupport.getConcatFunction(jdbcTemplate));
         final String sql = "select " + rm.schema()
                 + " where dd.loan_id=? group by dd.id, lc.amount_waived_derived order by dd.expected_disburse_date";
         return this.jdbcTemplate.query(sql, rm, new Object[] { loanId });
@@ -1568,8 +1567,15 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
     private static final class LoanDisbursementDetailMapper implements RowMapper<DisbursementData> {
 
+        private String concatFunction;
+
+        public LoanDisbursementDetailMapper(String concatFunction) {
+            this.concatFunction = concatFunction;
+        }
+
         public String schema() {
-            return "dd.id as id,dd.expected_disburse_date as expectedDisbursementdate, dd.disbursedon_date as actualDisbursementdate,dd.principal as principal,dd.net_disbursal_amount as netDisbursalAmount,sum(lc.amount) chargeAmount, lc.amount_waived_derived waivedAmount,group_concat(lc.id) loanChargeId "
+            return "dd.id as id,dd.expected_disburse_date as expectedDisbursementdate, dd.disbursedon_date as actualDisbursementdate,dd.principal as principal,dd.net_disbursal_amount as netDisbursalAmount,"
+                    + " sum(lc.amount) chargeAmount, lc.amount_waived_derived waivedAmount," + concatFunction + "(lc.id) loanChargeId "
                     + "from m_loan l inner join m_loan_disbursement_detail dd on dd.loan_id = l.id left join m_loan_tranche_disbursement_charge tdc on tdc.disbursement_detail_id=dd.id "
                     + "left join m_loan_charge lc on  lc.id=tdc.loan_charge_id and lc.is_active=true";
         }
@@ -1596,7 +1602,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
     @Override
     public DisbursementData retrieveLoanDisbursementDetail(Long loanId, Long disbursementId) {
-        final LoanDisbursementDetailMapper rm = new LoanDisbursementDetailMapper();
+        final LoanDisbursementDetailMapper rm = new LoanDisbursementDetailMapper(JdbcSupport.getConcatFunction(jdbcTemplate));
         final String sql = "select " + rm.schema() + " where dd.loan_id=? and dd.id=? group by dd.id, lc.amount_waived_derived";
         return this.jdbcTemplate.queryForObject(sql, rm, new Object[] { loanId, disbursementId });
     }
@@ -1945,7 +1951,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
         public String schema() {
 
-            return " tr.id as id, tr.transaction_type_enum as transactionType, tr.transaction_date as `date`, tr.amount as total, "
+            return " tr.id as id, tr.transaction_type_enum as transactionType, tr.transaction_date as date, tr.amount as total, "
                     + " tr.principal_portion_derived as principal, tr.interest_portion_derived as interest, "
                     + " tr.fee_charges_portion_derived as fees, tr.penalty_charges_portion_derived as penalties, "
                     + " tr.overpayment_portion_derived as overpayment, tr.outstanding_loan_balance_derived as outstandingLoanBalance, "
@@ -2069,14 +2075,14 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
     public PaidInAdvanceData retrieveTotalPaidInAdvance(Long loanId) {
         // TODO Auto-generated method stub
         try {
-            final String sql = "  select (SUM(ifnull(mr.principal_completed_derived, 0)) +"
-                    + " + SUM(ifnull(mr.interest_completed_derived, 0)) " + " + SUM(ifnull(mr.fee_charges_completed_derived, 0)) "
-                    + " + SUM(ifnull(mr.penalty_charges_completed_derived, 0))) as total_in_advance_derived "
+            final String sql = "  select (SUM(coalesce(mr.principal_completed_derived, 0)) +"
+                    + " + SUM(coalesce(mr.interest_completed_derived, 0)) " + " + SUM(coalesce(mr.fee_charges_completed_derived, 0)) "
+                    + " + SUM(coalesce(mr.penalty_charges_completed_derived, 0))) as total_in_advance_derived "
                     + " from m_loan ml INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id "
                     + " where ml.id=? and  mr.duedate >= CURDATE() group by ml.id having "
-                    + " (SUM(ifnull(mr.principal_completed_derived, 0))  " + " + SUM(ifnull(mr.interest_completed_derived, 0)) "
-                    + " + SUM(ifnull(mr.fee_charges_completed_derived, 0)) "
-                    + "+  SUM(ifnull(mr.penalty_charges_completed_derived, 0))) > 0";
+                    + " (SUM(coalesce(mr.principal_completed_derived, 0))  " + " + SUM(coalesce(mr.interest_completed_derived, 0)) "
+                    + " + SUM(coalesce(mr.fee_charges_completed_derived, 0)) "
+                    + "+  SUM(coalesce(mr.penalty_charges_completed_derived, 0))) > 0";
             BigDecimal bigDecimal = this.jdbcTemplate.queryForObject(sql, BigDecimal.class, loanId);
             return new PaidInAdvanceData(bigDecimal);
         } catch (DataAccessException e) {
@@ -2160,7 +2166,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                 .append(" inner join m_loan_repayment_schedule as repsch on repsch.loan_id = loan.id ")
                 .append(" inner join m_loan_interest_recalculation_additional_details as adddet on adddet.loan_repayment_schedule_id = repsch.id ")
                 .append(" left join m_loan_transaction as trans on (trans.is_reversed <> 1 and trans.transaction_type_enum = 19 and trans.loan_id = loan.id and trans.transaction_date = adddet.effective_date) ")
-                .append(" where loan.loan_status_id = 300 ").append(" and loan.is_npa = 0 ")
+                .append(" where loan.loan_status_id = 300 ").append(" and loan.is_npa = false ")
                 .append(" and adddet.effective_date is not null ").append(" and trans.transaction_date is null ")
                 .append(" and adddet.effective_date < ? ");
         try {
@@ -2226,20 +2232,20 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
             sqlBuilder.append("if(max(tr.transaction_date)>ls.dueDate,max(tr.transaction_date),ls.dueDate) as transactionDate, ");
             sqlBuilder.append(
-                    "ls.principal_amount - IFNULL(ls.principal_writtenoff_derived,0) - IFNULL(ls.principal_completed_derived,0) as principalDue, ");
+                    "ls.principal_amount - coalesce(ls.principal_writtenoff_derived,0) - coalesce(ls.principal_completed_derived,0) as principalDue, ");
             sqlBuilder.append(
-                    "ls.interest_amount - IFNULL(ls.interest_completed_derived,0) - IFNULL(ls.interest_waived_derived,0) - IFNULL(ls.interest_writtenoff_derived,0) as interestDue, ");
+                    "ls.interest_amount - coalesce(ls.interest_completed_derived,0) - coalesce(ls.interest_waived_derived,0) - coalesce(ls.interest_writtenoff_derived,0) as interestDue, ");
             sqlBuilder.append(
-                    "ls.fee_charges_amount - IFNULL(ls.fee_charges_completed_derived,0) - IFNULL(ls.fee_charges_writtenoff_derived,0) - IFNULL(ls.fee_charges_waived_derived,0) as feeDue, ");
+                    "ls.fee_charges_amount - coalesce(ls.fee_charges_completed_derived,0) - coalesce(ls.fee_charges_writtenoff_derived,0) - coalesce(ls.fee_charges_waived_derived,0) as feeDue, ");
             sqlBuilder.append(
-                    "ls.penalty_charges_amount - IFNULL(ls.penalty_charges_completed_derived,0) - IFNULL(ls.penalty_charges_writtenoff_derived,0) - IFNULL(ls.penalty_charges_waived_derived,0) as penaltyDue, ");
+                    "ls.penalty_charges_amount - coalesce(ls.penalty_charges_completed_derived,0) - coalesce(ls.penalty_charges_writtenoff_derived,0) - coalesce(ls.penalty_charges_waived_derived,0) as penaltyDue, ");
             sqlBuilder.append(
-                    "l.currency_code as currencyCode, l.currency_digits as currencyDigits, l.currency_multiplesof as inMultiplesOf, l.net_disbursal_amount as netDisbursalAmount, rc.`name` as currencyName, ");
+                    "l.currency_code as currencyCode, l.currency_digits as currencyDigits, l.currency_multiplesof as inMultiplesOf, l.net_disbursal_amount as netDisbursalAmount, rc.name as currencyName, ");
             sqlBuilder.append("rc.display_symbol as currencyDisplaySymbol, rc.internationalized_name_code as currencyNameCode ");
             sqlBuilder.append("FROM m_loan l ");
             sqlBuilder.append(
                     "LEFT JOIN m_loan_transaction tr ON tr.loan_id = l.id AND tr.transaction_type_enum = ? and tr.is_reversed = false ");
-            sqlBuilder.append("join m_currency rc on rc.`code` = l.currency_code ");
+            sqlBuilder.append("join m_currency rc on rc.code = l.currency_code ");
             sqlBuilder.append("JOIN m_loan_repayment_schedule ls ON ls.loan_id = l.id AND ls.completed_derived = 0 ");
             sqlBuilder.append("join( ");
             sqlBuilder.append("(select min(ls.duedate) datedue,ls.loan_id from m_loan_repayment_schedule ls ");

@@ -225,11 +225,11 @@ public class CollectionSheetReadPlatformServiceImpl implements CollectionSheetRe
                     .append("pl.short_name As productShortName, ").append("ln.product_id As productId, ")
                     .append("ln.currency_code as currencyCode, ln.currency_digits as currencyDigits, ln.currency_multiplesof as inMultiplesOf, rc.`name` as currencyName, rc.display_symbol as currencyDisplaySymbol, rc.internationalized_name_code as currencyNameCode, ")
                     .append("if(ln.loan_status_id = 200 , ln.principal_amount , null) As disbursementAmount, ")
-                    .append("sum(ifnull(if(ln.loan_status_id = 300, ls.principal_amount, 0.0), 0.0) - ifnull(if(ln.loan_status_id = 300, ls.principal_completed_derived, 0.0), 0.0)) As principalDue, ")
+                    .append("sum(coalesce(if(ln.loan_status_id = 300, ls.principal_amount, 0.0), 0.0) - coalesce(if(ln.loan_status_id = 300, ls.principal_completed_derived, 0.0), 0.0)) As principalDue, ")
                     .append("ln.principal_repaid_derived As principalPaid, ")
-                    .append("sum(ifnull(if(ln.loan_status_id = 300, ls.interest_amount, 0.0), 0.0) - ifnull(if(ln.loan_status_id = 300, ls.interest_completed_derived, 0.0), 0.0) - IFNULL(IF(ln.loan_status_id = 300, ls.interest_waived_derived, 0.0), 0.0)) As interestDue, ")
+                    .append("sum(coalesce(if(ln.loan_status_id = 300, ls.interest_amount, 0.0), 0.0) - coalesce(if(ln.loan_status_id = 300, ls.interest_completed_derived, 0.0), 0.0) - coalesce(IF(ln.loan_status_id = 300, ls.interest_waived_derived, 0.0), 0.0)) As interestDue, ")
                     .append("ln.interest_repaid_derived As interestPaid, ")
-                    .append("sum(ifnull(if(ln.loan_status_id = 300, ls.fee_charges_amount, 0.0), 0.0) - ifnull(if(ln.loan_status_id = 300, ls.fee_charges_completed_derived, 0.0), 0.0)) As feeDue, ")
+                    .append("sum(coalesce(if(ln.loan_status_id = 300, ls.fee_charges_amount, 0.0), 0.0) - coalesce(if(ln.loan_status_id = 300, ls.fee_charges_completed_derived, 0.0), 0.0)) As feeDue, ")
                     .append("ln.fee_charges_repaid_derived As feePaid, ").append("ca.attendance_type_enum as attendanceTypeId ")
                     .append("FROM m_group gp ")
                     .append("LEFT JOIN m_office of ON of.id = gp.office_id AND of.hierarchy like :officeHierarchy ")
@@ -501,7 +501,7 @@ public class CollectionSheetReadPlatformServiceImpl implements CollectionSheetRe
                     .append("rc.display_symbol as currencyDisplaySymbol, ")
                     .append("if(sa.deposit_type_enum=100,'Saving Deposit',if(sa.deposit_type_enum=300,'Recurring Deposit','Current Deposit')) as depositAccountType, ")
                     .append("rc.internationalized_name_code as currencyNameCode, ")
-                    .append("sum(ifnull(mss.deposit_amount,0) - ifnull(mss.deposit_amount_completed_derived,0)) as dueAmount ")
+                    .append("sum(coalesce(mss.deposit_amount,0) - coalesce(mss.deposit_amount_completed_derived,0)) as dueAmount ")
 
                     .append("FROM m_group gp ")
                     .append("LEFT JOIN m_office of ON of.id = gp.office_id AND of.hierarchy like :officeHierarchy ")
@@ -725,13 +725,13 @@ public class CollectionSheetReadPlatformServiceImpl implements CollectionSheetRe
                     "rc.`name` as currencyName, rc.display_symbol as currencyDisplaySymbol, rc.internationalized_name_code as currencyNameCode, ");
             sb.append("if(ln.loan_status_id = 200 , ln.principal_amount , null) As disbursementAmount, ");
             sb.append(
-                    "sum(ifnull(if(ln.loan_status_id = 300, ls.principal_amount, 0.0), 0.0) - ifnull(if(ln.loan_status_id = 300, ls.principal_completed_derived, 0.0), 0.0)) As principalDue, ");
+                    "sum(coalesce(if(ln.loan_status_id = 300, ls.principal_amount, 0.0), 0.0) - coalesce(if(ln.loan_status_id = 300, ls.principal_completed_derived, 0.0), 0.0)) As principalDue, ");
             sb.append("ln.principal_repaid_derived As principalPaid, ");
             sb.append(
-                    "sum(ifnull(if(ln.loan_status_id = 300, ls.interest_amount, 0.0), 0.0) - ifnull(if(ln.loan_status_id = 300, ls.interest_completed_derived, 0.0), 0.0)) As interestDue, ");
+                    "sum(coalesce(if(ln.loan_status_id = 300, ls.interest_amount, 0.0), 0.0) - coalesce(if(ln.loan_status_id = 300, ls.interest_completed_derived, 0.0), 0.0)) As interestDue, ");
             sb.append("ln.interest_repaid_derived As interestPaid, ");
             sb.append(
-                    "sum(ifnull(if(ln.loan_status_id = 300, ls.fee_charges_amount, 0.0), 0.0) - ifnull(if(ln.loan_status_id = 300, ls.fee_charges_completed_derived, 0.0), 0.0)) As feeDue, ");
+                    "sum(coalesce(if(ln.loan_status_id = 300, ls.fee_charges_amount, 0.0), 0.0) - coalesce(if(ln.loan_status_id = 300, ls.fee_charges_completed_derived, 0.0), 0.0)) As feeDue, ");
             sb.append("ln.fee_charges_repaid_derived As feePaid ");
             sb.append("FROM m_loan ln ");
             sb.append("JOIN m_client cl ON cl.id = ln.client_id  ");
@@ -814,7 +814,7 @@ public class CollectionSheetReadPlatformServiceImpl implements CollectionSheetRe
             sb.append("sa.currency_code as currencyCode, sa.currency_digits as currencyDigits, sa.currency_multiplesof as inMultiplesOf, ");
             sb.append(
                     "rc.`name` as currencyName, rc.display_symbol as currencyDisplaySymbol, rc.internationalized_name_code as currencyNameCode, ");
-            sb.append("sum(ifnull(mss.deposit_amount,0) - ifnull(mss.deposit_amount_completed_derived,0)) as dueAmount ");
+            sb.append("sum(coalesce(mss.deposit_amount,0) - coalesce(mss.deposit_amount_completed_derived,0)) as dueAmount ");
             sb.append("FROM m_savings_account sa ");
             sb.append("JOIN m_client cl ON cl.id = sa.client_id ");
             sb.append("JOIN m_savings_product sp ON sa.product_id=sp.id ");

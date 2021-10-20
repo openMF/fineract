@@ -275,8 +275,8 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
         }
 
         if (displayName != null) {
-            // extraCriteria += " and concat(ifnull(c.firstname, ''),
-            // if(c.firstname > '',' ', '') , ifnull(c.lastname, '')) like "
+            // extraCriteria += " and concat(coalesce(c.firstname, ''),
+            // if(c.firstname > '',' ', '') , coalesce(c.lastname, '')) like "
             paramList.add("%" + displayName + "%");
             extraCriteria += " and c.display_name like ? ";
         }
