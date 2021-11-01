@@ -402,7 +402,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             // loan account number generation
             String accountNumber = "";
             GroupLoanIndividualMonitoringAccount glimAccount;
-            BigDecimal applicationId = BigDecimal.ZERO;
+            Long applicationId = 0L;
             Boolean isLastChildApplication = false;
 
             if (newLoanApplication.isAccountNumberRequiresAutoGeneration()) {
@@ -415,7 +415,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
 
                     // GLIM specific parameters
                     if (command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("applicationId") != null) {
-                        applicationId = command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("applicationId");
+                        applicationId = command.longValueOfParameterNamed("applicationId");
                     }
 
                     if (command.booleanObjectValueOfParameterNamed("lastApplication") != null) {

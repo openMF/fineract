@@ -58,12 +58,12 @@ public final class GroupLoanIndividualMonitoringAccount extends AbstractPersista
     private Integer loanStatus;
 
     @Column(name = "application_id", nullable = true)
-    private BigDecimal applicationId;
+    private Long applicationId;
 
     private GroupLoanIndividualMonitoringAccount() {}
 
     private GroupLoanIndividualMonitoringAccount(String accountNumber, Group group, BigDecimal principalAmount, Long childAccountsCount,
-            Boolean isAcceptingChild, Integer loanStatus, BigDecimal applicationId) {
+            Boolean isAcceptingChild, Integer loanStatus, Long applicationId) {
         this.accountNumber = accountNumber;
         this.group = group;
         this.principalAmount = principalAmount;
@@ -74,7 +74,7 @@ public final class GroupLoanIndividualMonitoringAccount extends AbstractPersista
     }
 
     public static GroupLoanIndividualMonitoringAccount getInstance(String accountNumber, Group group, BigDecimal principalAmount,
-            Long childAccountsCount, Boolean isAcceptingChild, Integer loanStatus, BigDecimal applicationId) {
+            Long childAccountsCount, Boolean isAcceptingChild, Integer loanStatus, Long applicationId) {
         return new GroupLoanIndividualMonitoringAccount(accountNumber, group, principalAmount, childAccountsCount, isAcceptingChild,
                 loanStatus, applicationId);
     }

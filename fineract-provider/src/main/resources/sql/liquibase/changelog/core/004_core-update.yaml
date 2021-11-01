@@ -1,0 +1,45 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+databaseChangeLog:
+  - context: core_db
+  - changeSet:
+      id: 004_core-update-1
+      author: fineract
+      description: Trim extra space from m_permission codes and entity names
+      changes:
+        - sql:
+            sql: UPDATE m_permission SET code = TRIM(code), entity_name = TRIM(entity_name)
+            stripComments: true
+  - changeSet:
+      id: 004_core-update-2
+      author: fineract
+      changes:
+        - sql:
+            sql: UPDATE stretchy_report SET report_name = TRIM(report_name)
+            stripComments: true
+  - changeSet:
+      id: 004_core-update-3
+      author: fineract
+      description: Update topic member type
+      context: postgres
+      changes:
+        - sql:
+            dbms: postgres
+            sql: UPDATE topic SET member_type = r.name FROM m_role r WHERE member_type ilike r.name
+            stripComments: true

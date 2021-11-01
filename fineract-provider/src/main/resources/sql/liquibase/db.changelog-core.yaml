@@ -1,7 +1,0 @@
-databaseChangeLog:
-
-    - include:
-        file: /sql/liquibase/changelog/core/01-create-initial-schema.xml
-
-    - include:
-        file: /sql/liquibase/changelog/core/02-add-initial-data.sql

@@ -218,7 +218,7 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
             this.savingAccountRepository.save(account);
             String accountNumber = "";
             GroupSavingsIndividualMonitoring gsimAccount = null;
-            BigDecimal applicationId = BigDecimal.ZERO;
+            Long applicationId = 0L;
             Boolean isLastChildApplication = false;
 
             // gsim
@@ -231,7 +231,7 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                     final Long groupId = command.longValueOfParameterNamed("groupId");
                     // GSIM specific parameters
                     if (command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("applicationId") != null) {
-                        applicationId = command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("applicationId");
+                        applicationId = command.longValueOfParameterNamed("applicationId");
                     }
 
                     if (command.booleanObjectValueOfParameterNamed("lastApplication") != null) {
