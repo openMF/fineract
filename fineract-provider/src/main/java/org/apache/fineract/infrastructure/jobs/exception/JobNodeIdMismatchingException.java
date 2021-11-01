@@ -16,26 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.infrastructure.security.service;
 
-import java.security.SecureRandom;
+package org.apache.fineract.infrastructure.jobs.exception;
 
-public class RandomOTPGenerator {
+import org.apache.fineract.infrastructure.core.exception.AbstractPlatformDomainRuleException;
 
-    private static final String allowedCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVQXYZ";
-    private final int tokenLength;
-    private final SecureRandom secureRandom = new SecureRandom();
+public class JobNodeIdMismatchingException extends AbstractPlatformDomainRuleException {
 
-    public RandomOTPGenerator(int tokenLength) {
-        this.tokenLength = tokenLength;
+    public JobNodeIdMismatchingException(final String nodeId, final String nodeIdProvided) {
+        super("error.msg.job.cannot.execute.on.node." + nodeIdProvided,
+                "The node id provided `" + nodeIdProvided + "`" + "` does not match with the configured nodeId.", new Object[] { nodeId });
     }
 
-    public String generate() {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < tokenLength; i++) {
-            builder.append(allowedCharacters.charAt((int) (secureRandom.nextDouble() * allowedCharacters.length())));
-        }
-
-        return builder.toString();
-    }
 }
