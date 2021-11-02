@@ -32,6 +32,7 @@ import javax.persistence.PersistenceException;
 import javax.sql.DataSource;
 import javax.validation.constraints.NotNull;
 
+import com.google.common.base.Splitter;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -96,7 +97,8 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
     private final static String CODE_VALUES_TABLE = "m_code_value";
 
     private final static Logger LOG = LoggerFactory.getLogger(ReadWriteNonCoreDataServiceImpl.class);
-    private final static HashMap<String, JdbcJavaType> apiTypeToMySQL = new HashMap<String, JdbcJavaType>() {
+    @SuppressWarnings("DoubleBraceInitialization")
+    private final static HashMap<String, JdbcJavaType> apiTypeToMySQL = new HashMap<>() {
         {
             put("STRING", JdbcJavaType.VARCHAR);
             put("NUMBER", JdbcJavaType.INTEGER);
@@ -336,14 +338,12 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
 
     @Override
     public String getDataTableName(String url) {
-        return url.split("/")[3];
-
+        return Splitter.on('/').splitToList(url).get(3);
     }
 
     @Override
     public String getTableName(String url) {
-        String[] urlParts = url.split("/");
-        return urlParts[4];
+        return Splitter.on('/').splitToList(url).get(4);
     }
 
     @Transactional
@@ -1583,7 +1583,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
         final String dateFormat = queryParams.get("dateFormat");
         Locale clientApplicationLocale = null;
         final String localeQueryParam = queryParams.get("locale");
-        if (!(Strings.isBlank(localeQueryParam))) {
+        if (Strings.isBlank(localeQueryParam)) {
             clientApplicationLocale = new Locale(queryParams.get("locale"));
         }
 
@@ -1600,8 +1600,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             // ignores id and foreign key fields
             // also ignores locale and dateformat fields that are used for
             // validating numeric and date data
-            if (!((key.equalsIgnoreCase("id")) || (key.equalsIgnoreCase(keyFieldName)) || (key.equals("locale"))
-                    || (key.equals("dateFormat")))) {
+            if (!(key.equalsIgnoreCase("id") || key.equalsIgnoreCase(keyFieldName) || key.equals("locale") || key.equals("dateFormat"))) {
                 notFound = true;
                 // matches incoming fields with and without underscores (spaces
                 // and underscores considered the same)

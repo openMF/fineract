@@ -23,12 +23,35 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotNull;
-
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.*;
-import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.*;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_ADD_COLUMN;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_ADD_FK;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_ADD_INDEX;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_ADD_UK;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_ALTER;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_ALTER_COLUMN;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_CREATE;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_CREATE_COLUMN;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_CREATE_FK;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_CREATE_PK;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_CREATE_SETTINGS;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_CREATE_UK;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_DROP_COLUMN;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_DROP_FK;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_DROP_INDEX;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_DROP_UK;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.CAST;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.CURDATE;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATE;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATEADD;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATEDIFF;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATESUB;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.GROUP_CONCAT;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.LAST_INSERT_ID;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.SCHEMA;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.TIME;
 
 @Component
 public class DataSourceSqlResolver {
@@ -350,9 +373,8 @@ public class DataSourceSqlResolver {
                     return type.name();
                 case AFTER:
                     return type.name() + ' ' + after;
-                default:
-                    return null;
             }
+            return null;
         }
 
         public static ColumnPosition after(@NotNull DataSourceDialect dialect, @NotNull String after) {

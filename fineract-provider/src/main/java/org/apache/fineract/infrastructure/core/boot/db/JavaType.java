@@ -362,7 +362,8 @@ public enum JavaType {
             case DOUBLE:
             case DOUBLE_OBJ:
                 return o != null && ((Double) o) == 0.0d;
+            default:
+                return false;
         }
-        return false;
     }
 }

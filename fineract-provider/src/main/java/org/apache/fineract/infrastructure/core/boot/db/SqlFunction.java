@@ -27,6 +27,7 @@ public enum SqlFunction {
 
     // Mysql, PostgreSql
     DATE() {
+        @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
             if (dialect.isMySql())
                 return formatSql(dialect, 1, params);
@@ -36,6 +37,7 @@ public enum SqlFunction {
         }
     },
     TIME() {
+        @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
             if (dialect.isMySql())
                 return formatSql(dialect, 1, params);
@@ -45,6 +47,7 @@ public enum SqlFunction {
         }
     },
     CURDATE() {
+        @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
             if (dialect.isMySql())
                 return formatSql(dialect, 0, params);
@@ -54,6 +57,7 @@ public enum SqlFunction {
         }
     },
     DATEADD() {
+        @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
             validateParams(dialect, 3, params);
 
@@ -67,6 +71,7 @@ public enum SqlFunction {
         }
     },
     DATESUB() {
+        @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
             validateParams(dialect, 3, params);
 
@@ -80,6 +85,7 @@ public enum SqlFunction {
         }
     },
     DATEDIFF() {
+        @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
             if (dialect.isMySql())
                 return formatSql(dialect, 2, params);
@@ -89,6 +95,7 @@ public enum SqlFunction {
         }
     },
     CAST() {
+        @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
             validateParams(dialect, 2, params);
             String type = params[1];
@@ -101,6 +108,7 @@ public enum SqlFunction {
         }
     },
     SCHEMA() {
+        @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
             return dialect.isMySql()
                     ? formatSql(dialect, 0, params)
@@ -108,6 +116,7 @@ public enum SqlFunction {
         }
     },
     LAST_INSERT_ID() {
+        @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
             return dialect.isMySql()
                     ? formatSql(dialect, 0, params)
@@ -115,6 +124,7 @@ public enum SqlFunction {
         }
     },
     GROUP_CONCAT() {
+        @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
             if (dialect.isMySql())
                 return formatSql(dialect, 1, params);

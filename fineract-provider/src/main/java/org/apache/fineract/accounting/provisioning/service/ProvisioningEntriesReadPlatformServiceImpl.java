@@ -274,7 +274,7 @@ public class ProvisioningEntriesReadPlatformServiceImpl implements ProvisioningE
         try {
             data = this.jdbcTemplate.queryForObject(sql1, mapper1, new Object[]{date});
         } catch (EmptyResultDataAccessException e) {
-
+            LOG.error("Problem occurred in retrieveProvisioningEntryData function", e);
         }
         return data;
     }

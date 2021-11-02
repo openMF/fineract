@@ -146,7 +146,7 @@ public class AuditReadPlatformServiceImpl implements AuditReadPlatformService {
 
             // data scoping: head office (hierarchy = ".") can see all audit
             // entries
-            if (!(hierarchy.equals("."))) {
+            if (!hierarchy.equals(".")) {
                 partSql += " join m_office o2 on o2.id = aud.office_id and o2.hierarchy like '" + hierarchy + "%' ";
             }
 
@@ -155,7 +155,7 @@ public class AuditReadPlatformServiceImpl implements AuditReadPlatformService {
 
         public String countSchema(String hierarchy) {
             String sql = " count(aud.*) " + FROM;
-            if (!(hierarchy.equals("."))) {
+            if (!hierarchy.equals(".")) {
                 sql += " join m_office o2 on o2.id = aud.office_id and o2.hierarchy like '" + hierarchy + "%' ";
             }
             return sql;

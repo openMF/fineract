@@ -28,18 +28,21 @@ public enum SqlDefinition {
 
     // Mysql, PostgreSql
     TABLE_CREATE() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 1, params);
             sql.append("CREATE TABLE IF NOT EXISTS ").append(params[0]);
         }
     },
     TABLE_ALTER() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 1, params);
             sql.append("ALTER TABLE ").append(params[0]);
         }
     },
     TABLE_CREATE_SETTINGS() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 0, params);
             if (dialect.isMySql()) {
@@ -50,11 +53,13 @@ public enum SqlDefinition {
         }
     },
     TABLE_CREATE_PK() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             formatSql(dialect, sql, embedded, "PRIMARY KEY", 1, params);
         }
     },
     TABLE_CREATE_FK() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 4, params);
             sql.append("CONSTRAINT ").append(params[0]).append(" FOREIGN KEY (").append(params[1]).append(") REFERENCES ").append(params[2]).append(" (").append(params[3])
@@ -62,6 +67,7 @@ public enum SqlDefinition {
         }
     },
     TABLE_ADD_FK() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 5, params);
 
@@ -75,6 +81,7 @@ public enum SqlDefinition {
         }
     },
     TABLE_DROP_FK() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 2, params);
 
@@ -87,12 +94,14 @@ public enum SqlDefinition {
         }
     },
     TABLE_CREATE_UK() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 2, params);
             sql.append("CONSTRAINT ").append(params[0]).append(" UNIQUE (").append(params[1]).append(')');
         }
     },
     TABLE_ADD_UK() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 2, params);
 
@@ -105,6 +114,7 @@ public enum SqlDefinition {
         }
     },
     TABLE_DROP_UK() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 2, params);
 
@@ -117,6 +127,7 @@ public enum SqlDefinition {
         }
     },
     TABLE_ADD_INDEX() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 3, params);
             sql.append("CREATE INDEX ").append(params[1]).append(" ON ").append(params[0]).append(" (").append(params[2]).append(')');
@@ -125,6 +136,7 @@ public enum SqlDefinition {
         }
     },
     TABLE_DROP_INDEX() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 2, params);
 
@@ -137,6 +149,7 @@ public enum SqlDefinition {
         }
     },
     TABLE_CREATE_COLUMN() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 4, params);
 
@@ -153,6 +166,7 @@ public enum SqlDefinition {
         }
     },
     TABLE_ADD_COLUMN() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 6, params);
 
@@ -178,6 +192,7 @@ public enum SqlDefinition {
         }
     },
     TABLE_ALTER_COLUMN() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 7, params);
 
@@ -256,6 +271,7 @@ public enum SqlDefinition {
         }
     },
     TABLE_DROP_COLUMN() {
+        @Override
         public void formatSql(@NotNull DataSourceDialect dialect, @NotNull StringBuilder sql, boolean embedded, String... params) {
             validateParams(dialect, embedded, 2, params);
 
