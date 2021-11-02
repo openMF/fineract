@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.apache.fineract.accounting.glaccount.data.GLAccountData;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
@@ -53,6 +54,7 @@ import org.springframework.stereotype.Service;
 public class SavingsAccountChargeReadPlatformServiceImpl implements SavingsAccountChargeReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final PlatformSecurityContext context;
     private final ChargeDropdownReadPlatformService chargeDropdownReadPlatformService;
     private final DropdownReadPlatformService dropdownReadPlatformService;
@@ -62,11 +64,14 @@ public class SavingsAccountChargeReadPlatformServiceImpl implements SavingsAccou
 
     @Autowired
     public SavingsAccountChargeReadPlatformServiceImpl(final PlatformSecurityContext context,
-            final ChargeDropdownReadPlatformService chargeDropdownReadPlatformService, final RoutingDataSource dataSource,
-            final DropdownReadPlatformService dropdownReadPlatformService) {
+                                                       final ChargeDropdownReadPlatformService chargeDropdownReadPlatformService,
+                                                       final RoutingDataSource dataSource,
+                                                       DataSourceSqlResolver sqlResolver,
+                                                       final DropdownReadPlatformService dropdownReadPlatformService) {
         this.context = context;
         this.chargeDropdownReadPlatformService = chargeDropdownReadPlatformService;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.chargeDueMapper = new SavingsAccountChargeDueMapper();
         this.dropdownReadPlatformService = dropdownReadPlatformService;
     }
@@ -193,9 +198,9 @@ public class SavingsAccountChargeReadPlatformServiceImpl implements SavingsAccou
         final StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append("select ").append(rm.schema()).append(" where sc.savings_account_id=? ");
         if (status.equalsIgnoreCase("active")) {
-            sqlBuilder.append(" and sc.is_active = true ");
+            sqlBuilder.append(" and sc.is_active = ").append(sqlResolver.formatBoolValue(true));
         } else if (status.equalsIgnoreCase("inactive")) {
-            sqlBuilder.append(" and sc.is_active = false ");
+            sqlBuilder.append(" and sc.is_active = ").append(sqlResolver.formatBoolValue(false));
         }
         sqlBuilder.append(" order by sc.charge_time_enum ASC, sc.charge_due_date ASC, sc.is_penalty ASC");
 
@@ -245,8 +250,12 @@ public class SavingsAccountChargeReadPlatformServiceImpl implements SavingsAccou
 
     @Override
     public Collection<SavingsAccountAnnualFeeData> retrieveChargesWithDue() {
-        final String sql = "select " + this.chargeDueMapper.schema()
-                + " where sac.charge_due_date is not null and sac.charge_due_date <= NOW() and sac.waived=false and sac.is_paid_derived=false and sac.is_active=true and sa.status_enum = ? "
+        final String sql = "select "
+                + this.chargeDueMapper.schema()
+                + " where sac.charge_due_date is not null and sac.charge_due_date <= ? and sac.waived = " + sqlResolver.formatBoolValue(false)
+                + " and sac.is_paid_derived = " + sqlResolver.formatBoolValue(false)
+                + " and sac.is_active = " + sqlResolver.formatBoolValue(true)
+                + " and sa.status_enum = ? "
                 + " order by sac.charge_due_date ";
 
         return this.jdbcTemplate.query(sql, this.chargeDueMapper, new Object[] { SavingsAccountStatusType.ACTIVE.getValue() });

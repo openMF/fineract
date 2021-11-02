@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.PostConstruct;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
@@ -60,11 +62,13 @@ public class LoanArrearsAgingServiceImpl implements LoanArrearsAgingService, Bus
     private final BusinessEventNotifierService businessEventNotifierService;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
 
     @Autowired
-    public LoanArrearsAgingServiceImpl(final RoutingDataSource dataSource,
-            final BusinessEventNotifierService businessEventNotifierService) {
+    public LoanArrearsAgingServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
+                                       final BusinessEventNotifierService businessEventNotifierService) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.businessEventNotifierService = businessEventNotifierService;
     }
 
@@ -113,9 +117,11 @@ public class LoanArrearsAgingServiceImpl implements LoanArrearsAgingService, Bus
         updateSqlBuilder.append(" INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id ");
         updateSqlBuilder.append(" left join m_product_loan_recalculation_details prd on prd.product_id = ml.product_id ");
         updateSqlBuilder.append(" WHERE ml.loan_status_id = 300 "); // active
-        updateSqlBuilder.append(" and mr.completed_derived is false ");
-        updateSqlBuilder.append(" and mr.duedate < SUBDATE(CURDATE(),INTERVAL  coalesce(ml.grace_on_arrears_ageing,0) day) ");
-        updateSqlBuilder.append(" and (prd.arrears_based_on_original_schedule = 0 or prd.arrears_based_on_original_schedule is null) ");
+        updateSqlBuilder.append("and mr.completed_derived = ").append(sqlResolver.formatBoolValue(false));
+        updateSqlBuilder.append(" and mr.duedate < ")
+                .append(sqlResolver.formatDateSub("?", "COALESCE(ml.grace_on_arrears_ageing,0)", DataSourceSqlResolver.DateUnit.DAY));
+        updateSqlBuilder.append(" and (prd.arrears_based_on_original_schedule = ").append(sqlResolver.formatBoolValue(false))
+                .append(" or prd.arrears_based_on_original_schedule is null) ");
         updateSqlBuilder.append(" GROUP BY ml.id");
 
         List<String> insertStatements = updateLoanArrearsAgeingDetailsWithOriginalSchedule();
@@ -204,8 +210,11 @@ public class LoanArrearsAgingServiceImpl implements LoanArrearsAgingService, Bus
         loanIdentifier.append("INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id ");
         loanIdentifier.append(
                 "inner join m_product_loan_recalculation_details prd on prd.product_id = ml.product_id and prd.arrears_based_on_original_schedule = 1  ");
-        loanIdentifier.append(
-                "WHERE ml.loan_status_id = 300  and mr.completed_derived is false  and mr.duedate < SUBDATE(CURDATE(),INTERVAL  coalesce(ml.grace_on_arrears_ageing,0) day) group by ml.id");
+        loanIdentifier
+                .append(" WHERE ml.loan_status_id = 300 and mr.completed_derived = ").append(sqlResolver.formatBoolValue(false))
+                .append(" and mr.duedate < ")
+                .append(sqlResolver.formatDateSub("?", "COALESCE(ml.grace_on_arrears_ageing,0)", DataSourceSqlResolver.DateUnit.DAY))
+                .append(" group by ml.id");
         List<Long> loanIds = this.jdbcTemplate.queryForList(loanIdentifier.toString(), Long.class);
         if (!loanIds.isEmpty()) {
             String loanIdsAsString = loanIds.toString();
@@ -309,7 +318,7 @@ public class LoanArrearsAgingServiceImpl implements LoanArrearsAgingService, Bus
         insertStatementBuilder.append(penaltyOverdue).append(",");
         BigDecimal totalOverDue = principalOverdue.add(interestOverdue).add(feeOverdue).add(penaltyOverdue);
         insertStatementBuilder.append(totalOverDue).append(",'");
-        insertStatementBuilder.append(this.formatter.format(overDueSince)).append("')");
+        insertStatementBuilder.append(sqlResolver.formatDate("'" + this.formatter.format(overDueSince) + "'")).append(")");
         return insertStatementBuilder.toString();
     }
 
@@ -323,7 +332,7 @@ public class LoanArrearsAgingServiceImpl implements LoanArrearsAgingService, Bus
         insertStatementBuilder.append(penaltyOverdue).append(", mla.total_overdue_derived=");
         BigDecimal totalOverDue = principalOverdue.add(interestOverdue).add(feeOverdue).add(penaltyOverdue);
         insertStatementBuilder.append(totalOverDue).append(",mla.overdue_since_date_derived= '");
-        insertStatementBuilder.append(this.formatter.format(overDueSince)).append("' ");
+        insertStatementBuilder.append(sqlResolver.formatDate("'" + this.formatter.format(overDueSince) + "'")).append(")");
         insertStatementBuilder.append("WHERE  mla.loan_id=").append(loanId);
         return insertStatementBuilder.toString();
     }
@@ -415,7 +424,7 @@ public class LoanArrearsAgingServiceImpl implements LoanArrearsAgingService, Bus
         }
     }
 
-    private static final class OriginalScheduleExtractor implements ResultSetExtractor<Map<Long, List<LoanSchedulePeriodData>>> {
+    private final class OriginalScheduleExtractor implements ResultSetExtractor<Map<Long, List<LoanSchedulePeriodData>>> {
 
         private final String schema;
 
@@ -425,7 +434,8 @@ public class LoanArrearsAgingServiceImpl implements LoanArrearsAgingService, Bus
             scheduleDetail.append(
                     "mr.interest_amount as interestAmount, mr.fee_charges_amount as feeAmount, mr.penalty_charges_amount as penaltyAmount  ");
             scheduleDetail.append("from m_loan ml  INNER JOIN m_loan_repayment_schedule_history mr on mr.loan_id = ml.id ");
-            scheduleDetail.append("where mr.duedate  < SUBDATE(CURDATE(),INTERVAL  coalesce(ml.grace_on_arrears_ageing,0) day) and ");
+            scheduleDetail.append("where mr.duedate < ")
+                    .append(sqlResolver.formatDateSub("?", "COALESCE(ml.grace_on_arrears_ageing,0)", DataSourceSqlResolver.DateUnit.DAY));
             scheduleDetail.append("ml.id IN(").append(loanIdsAsString).append(") and  mr.version = (");
             scheduleDetail.append("select max(lrs.version) from m_loan_repayment_schedule_history lrs where mr.loan_id = lrs.loan_id");
             scheduleDetail.append(") order by ml.id,mr.duedate");

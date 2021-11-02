@@ -532,7 +532,7 @@ public class TellerManagementReadPlatformServiceImpl implements TellerManagement
             sql += "SQL_CALC_FOUND_ROWS ";
 
         sql += " * ";
-        String from = " from (select " + ctm.cashierTxnSchema() // TODO nexus: there is no posting date on CashierTransaction (to replace created_date conditions with posting_date)
+        String from = " from (select " + ctm.cashierTxnSchema()
                 + " where txn.cashier_id = ? and txn.currency_code = ? and o.hierarchy like ? "
                 + "AND ((case when c.full_day then " + sqlResolver.formatDate("txn.created_date") + " between c.start_date AND c.end_date else (" + sqlResolver.formatDate("txn.created_date") + " between c.start_date AND c.end_date"
                 + " ) and (" + sqlResolver.formatTime("txn.created_date") + " between " + sqlResolver.formatTime("c.start_time") + " AND " + sqlResolver.formatTime("c.end_time") + " or txn.txn_type = 101))  cashier_txns "

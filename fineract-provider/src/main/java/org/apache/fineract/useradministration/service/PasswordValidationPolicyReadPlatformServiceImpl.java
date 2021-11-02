@@ -21,6 +21,8 @@ package org.apache.fineract.useradministration.service;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.useradministration.data.PasswordValidationPolicyData;
@@ -35,11 +37,13 @@ import org.springframework.stereotype.Service;
 public class PasswordValidationPolicyReadPlatformServiceImpl implements PasswordValidationPolicyReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final PasswordValidationPolicyMapper passwordValidationPolicyMapper;
 
     @Autowired
-    public PasswordValidationPolicyReadPlatformServiceImpl(final RoutingDataSource dataSource) {
+    public PasswordValidationPolicyReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.passwordValidationPolicyMapper = new PasswordValidationPolicyMapper();
     }
 
@@ -53,7 +57,7 @@ public class PasswordValidationPolicyReadPlatformServiceImpl implements Password
     @Override
     public PasswordValidationPolicyData retrieveActiveValidationPolicy() {
         try {
-            final String sql = "select " + this.passwordValidationPolicyMapper.schema() + " where pvp.active = true";
+            final String sql = "select " + this.passwordValidationPolicyMapper.schema() + " where pvp.active = " + sqlResolver.formatBoolValue(true);
             return this.jdbcTemplate.queryForObject(sql, this.passwordValidationPolicyMapper);
         } catch (final EmptyResultDataAccessException e) {
             throw new PasswordValidationPolicyNotFoundException(e);

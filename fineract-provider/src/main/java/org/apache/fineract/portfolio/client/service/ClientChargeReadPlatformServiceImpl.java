@@ -23,6 +23,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collection;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.Page;
@@ -47,17 +49,22 @@ public class ClientChargeReadPlatformServiceImpl implements ClientChargeReadPlat
 
     private final PaginationHelper<ClientChargeData> paginationHelper = new PaginationHelper<>();
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final PlatformSecurityContext context;
     private final ClientChargeMapper clientChargeMapper;
 
     @Autowired
-    public ClientChargeReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource) {
+    public ClientChargeReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver) {
         this.context = context;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.clientChargeMapper = new ClientChargeMapper();
     }
 
     public static final class ClientChargeMapper implements RowMapper<ClientChargeData> {
+
+        public static final String FROM = " from m_charge c "
+                + "join m_organisation_currency oc on c.currency_code = oc.code join m_client_charge cc on cc.charge_id = c.id ";
 
         @Override
         public ClientChargeData mapRow(ResultSet rs, @SuppressWarnings("unused") int rowNum) throws SQLException {
@@ -109,10 +116,13 @@ public class ClientChargeReadPlatformServiceImpl implements ClientChargeReadPlat
                     + "cc.is_active as isActive, cc.inactivated_on_date as inactivationDate, "
                     + "c.currency_code as currencyCode, oc.name as currencyName, "
                     + "oc.decimal_places as currencyDecimalPlaces, oc.currency_multiplesof as inMultiplesOf, oc.display_symbol as currencyDisplaySymbol, "
-                    + "oc.internationalized_name_code as currencyNameCode from m_charge c "
-                    + "join m_organisation_currency oc on c.currency_code = oc.code join m_client_charge cc on cc.charge_id = c.id ";
+                    + "oc.internationalized_name_code as currencyNameCode "
+                    + FROM;
         }
 
+        public String countSchema() {
+            return " count(c.*) " + FROM;
+        }
     }
 
     @Override
@@ -131,25 +141,31 @@ public class ClientChargeReadPlatformServiceImpl implements ClientChargeReadPlat
     }
 
     @Override
-    public Page<ClientChargeData> retrieveClientCharges(Long clientId, String status, Boolean pendingPayment,
-            SearchParameters searchParameters) {
+    public Page<ClientChargeData> retrieveClientCharges(Long clientId, String status, Boolean pendingPayment, SearchParameters searchParameters) {
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        final StringBuilder sqlBuilder = new StringBuilder().append("SELECT ");
+        if (mySql) {
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
+        }
+
         final ClientChargeMapper rm = new ClientChargeMapper();
-        final StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ").append(rm.schema()).append(" where cc.client_id=? ");
+        sqlBuilder.append(rm.schema());
+
+        final StringBuilder whereClause = new StringBuilder().append(" where cc.client_id=? ");
 
         // filter for active charges
         if (status.equalsIgnoreCase(ClientApiConstants.CLIENT_CHARGE_QUERY_PARAM_STATUS_VALUE_ACTIVE)) {
-            sqlBuilder.append(" and cc.is_active = true ");
+            whereClause.append(" and cc.is_active = " + sqlResolver.formatBoolValue(true));
         } else if (status.equalsIgnoreCase(ClientApiConstants.CLIENT_CHARGE_QUERY_PARAM_STATUS_VALUE_INACTIVE)) {
-            sqlBuilder.append(" and cc.is_active = false ");
+            whereClause.append(" and cc.is_active = " + sqlResolver.formatBoolValue(false));
         }
 
         // filter for paid charges
-        if (pendingPayment != null && pendingPayment) {
-            sqlBuilder.append(" and ( cc.is_paid_derived = false and cc.waived = false) ");
-        } else if (pendingPayment != null && !pendingPayment) {
-            sqlBuilder.append(" and (cc.is_paid_derived = true or cc.waived = true) ");
+        if (pendingPayment != null) {
+            String boolv = sqlResolver.formatBoolValue(!pendingPayment);
+            whereClause.append(" and ( cc.is_paid_derived = " + boolv + " and cc.waived = " + boolv + ")");
         }
+        sqlBuilder.append(whereClause);
 
         sqlBuilder.append(" order by cc.charge_time_enum ASC, cc.charge_due_date DESC, cc.is_penalty ASC ");
 
@@ -161,9 +177,15 @@ public class ClientChargeReadPlatformServiceImpl implements ClientChargeReadPlat
             }
         }
 
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(), new Object[] { clientId },
+        final Object[] sqlParams = new Object[] {clientId};
+        String sqlCountRows = "SELECT FOUND_ROWS()";
+        Object[] countParams = null;
+        if (!mySql) {
+            sqlCountRows = "SELECT " + rm.countSchema() + whereClause;
+            countParams = sqlParams;
+        }
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, countParams, sqlBuilder.toString(), sqlParams,
                 this.clientChargeMapper);
-    }
+   }
 
 }

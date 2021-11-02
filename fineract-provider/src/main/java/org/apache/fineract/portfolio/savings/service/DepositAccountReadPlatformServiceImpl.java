@@ -29,6 +29,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.data.PaginationParameters;
 import org.apache.fineract.infrastructure.core.data.PaginationParametersDataValidator;
@@ -100,6 +102,7 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
 
     private final PlatformSecurityContext context;
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final DepositAccountInterestRateChartReadPlatformService accountChartReadPlatformService;
     private final InterestRateChartReadPlatformService productChartReadPlatformService;
     private final FixedDepositAccountMapper fixedDepositAccountRowMapper = new FixedDepositAccountMapper();
@@ -127,6 +130,7 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
 
     @Autowired
     public DepositAccountReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource,
+                                                 DataSourceSqlResolver sqlResolver,
             final DepositAccountInterestRateChartReadPlatformService chartReadPlatformService,
             final PaginationParametersDataValidator paginationParametersDataValidator,
             final ClientReadPlatformService clientReadPlatformService, final GroupReadPlatformService groupReadPlatformService,
@@ -140,6 +144,7 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
             PaymentTypeReadPlatformService paymentTypeReadPlatformService) {
         this.context = context;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.accountChartReadPlatformService = chartReadPlatformService;
         this.paginationParametersDataValidator = paginationParametersDataValidator;
         this.transactionsMapper = new SavingsAccountTransactionsMapper();
@@ -507,11 +512,14 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
         AccountTransferMapper mapper = new AccountTransferMapper();
         sqlBuilder.append("SELECT ");
         sqlBuilder.append(mapper.schema());
-        sqlBuilder.append(" where da.transfer_interest_to_linked_account = 1 and ");
-        sqlBuilder.append(
-                "st.transaction_date > (select coalesce(max(sat.transaction_date),sa.activatedon_date) from m_savings_account_transaction sat where sat.transaction_type_enum = ? and sat.savings_account_id = sa.id and sat.is_reversed=false) ");
-        sqlBuilder.append(
-                "and st.transaction_type_enum = ? and sa.status_enum = ? and st.is_reversed=false and st.transaction_date > coalesce(sa.lockedin_until_date_derived,sa.activatedon_date)");
+        sqlBuilder.append(" where da.transfer_interest_to_linked_account = ").append(sqlResolver.formatBoolValue(true)).append(" and ");
+        sqlBuilder.append(" where da.transfer_interest_to_linked_account = ").append(sqlResolver.formatBoolValue(true)).append(" and ");
+        sqlBuilder.append("st.transaction_date > (select COALESCE(max(sat.transaction_date),sa.activatedon_date) from m_savings_account_transaction sat")
+                .append(" where sat.transaction_type_enum = ? and sat.savings_account_id = sa.id and sat.is_reversed = ")
+                .append(sqlResolver.formatBoolValue(false)).append(") ");
+        sqlBuilder.append("and st.transaction_type_enum = ? and sa.status_enum = ? and st.is_reversed = ")
+                .append(sqlResolver.formatBoolValue(false))
+                .append(" and st.transaction_date > COALESCE(sa.lockedin_until_date_derived, sa.activatedon_date)");
 
         return this.jdbcTemplate.query(sqlBuilder.toString(), mapper, new Object[] { SavingsAccountTransactionType.WITHDRAWAL.getValue(),
                 SavingsAccountTransactionType.INTEREST_POSTING.getValue(), SavingsAccountStatusType.ACTIVE.getValue() });
@@ -1410,7 +1418,7 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
         }
     }
 
-    private static final class RecurringAccountDepositTransactionTemplateMapper implements RowMapper<SavingsAccountTransactionData> {
+    private final class RecurringAccountDepositTransactionTemplateMapper implements RowMapper<SavingsAccountTransactionData> {
 
         private final String schemaSql;
 
@@ -1426,14 +1434,16 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
                     "mss.duedate as duedate, (mss.deposit_amount - coalesce(mss.deposit_amount_completed_derived,0)) as dueamount, ");
             sqlBuilder.append("coalesce(sac.amount_outstanding_derived,0.0) AS outstandingChargeAmount ");
             sqlBuilder.append("from m_savings_account sa ");
-            sqlBuilder.append("join m_mandatory_savings_schedule mss  on mss.savings_account_id=sa.id and mss.completed_derived = false ");
+            sqlBuilder.append("join m_mandatory_savings_schedule mss  on mss.savings_account_id=sa.id and mss.completed_derived = ")
+                    .append(sqlResolver.formatBoolValue(false));
             sqlBuilder.append("join m_currency curr on curr.code = sa.currency_code ");
             sqlBuilder.append("LEFT JOIN(SELECT s.savings_account_id AS savings_account_id ");
             sqlBuilder.append(",SUM(coalesce(s.amount_outstanding_derived,0.0)) AS amount_outstanding_derived  ");
             sqlBuilder.append("FROM m_savings_account_charge s  ");
             sqlBuilder.append("JOIN m_charge c ON c.id = s.charge_id AND c.charge_time_enum = 3 ");
             sqlBuilder.append("WHERE s.savings_account_id = ? ");
-            sqlBuilder.append("AND s.is_active = TRUE GROUP BY s.savings_account_id)sac ON sac.savings_account_id = sa.id ");
+            sqlBuilder.append("AND s.is_active = ").append(sqlResolver.formatBoolValue(true))
+                    .append(" GROUP BY s.savings_account_id)sac ON sac.savings_account_id = sa.id ");
 
             this.schemaSql = sqlBuilder.toString();
         }

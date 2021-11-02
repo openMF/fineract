@@ -24,6 +24,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
@@ -55,16 +57,18 @@ import org.springframework.stereotype.Service;
 public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements AccountDetailsReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final ClientReadPlatformService clientReadPlatformService;
     private final GroupReadPlatformService groupReadPlatformService;
     private final ColumnValidator columnValidator;
 
     @Autowired
     public AccountDetailsReadPlatformServiceJpaRepositoryImpl(final ClientReadPlatformService clientReadPlatformService,
-            final RoutingDataSource dataSource, final GroupReadPlatformService groupReadPlatformService,
+            final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver, final GroupReadPlatformService groupReadPlatformService,
             final ColumnValidator columnValidator) {
         this.clientReadPlatformService = clientReadPlatformService;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.groupReadPlatformService = groupReadPlatformService;
         this.columnValidator = columnValidator;
     }
@@ -81,7 +85,7 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
         // currently handles loans of exisiting types.
         final String savingswhereClause = " where sa.client_id = ? order by sa.status_enum ASC, sa.account_no ASC";
 
-        final String guarantorWhereClause = " where g.entity_id = ? and g.is_active = true order by l.account_no ASC";
+        final String guarantorWhereClause = " where g.entity_id = ? and g.is_active = " + sqlResolver.formatBoolValue(true) + " order by l.account_no ASC";
 
         final List<LoanAccountSummaryData> glimAccounts = retrieveLoanAccountDetails(glimLoanClause, new Object[] { clientId });
         final List<LoanAccountSummaryData> loanAccounts = retrieveLoanAccountDetails(loanwhereClause, new Object[] { clientId });
@@ -102,9 +106,11 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
         final String savingswhereClauseForGroup = " where sa.group_id = ? and sa.client_id is null order by sa.status_enum ASC, sa.account_no ASC";
         final String savingswhereClauseForMembers = " where sa.group_id = ? and sa.client_id is not null order by sa.status_enum ASC, sa.account_no ASC";
 
-        final String guarantorWhereClauseForGroup = " where l.group_id = ? and l.client_id is null and g.is_active = true order by l.account_no ASC";
-        final String guarantorWhereClauseForMembers = " where l.group_id = ? and l.client_id is not null and g.is_active = true order by l.account_no ASC";
-        final List<LoanAccountSummaryData> glimAccounts = retrieveLoanAccountDetails(loanWhereClauseForGroupAndLoanType,
+        final String guarantorWhereClauseForGroup = " where l.group_id = ? and l.client_id is null and g.is_active = " +
+                sqlResolver.formatBoolValue(true) + " order by l.account_no ASC";
+        final String guarantorWhereClauseForMembers = " where l.group_id = ? and l.client_id is not null and g.is_active = " +
+                sqlResolver.formatBoolValue(true) + " order by l.account_no ASC";
+       final List<LoanAccountSummaryData> glimAccounts = retrieveLoanAccountDetails(loanWhereClauseForGroupAndLoanType,
                 new Object[] { groupId });
 
         final List<LoanAccountSummaryData> groupLoanAccounts = retrieveLoanAccountDetails(loanWhereClauseForGroup,
@@ -314,7 +320,7 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
         }
     }
 
-    private static final class SavingsAccountSummaryDataMapper implements RowMapper<SavingsAccountSummaryData> {
+    private final class SavingsAccountSummaryDataMapper implements RowMapper<SavingsAccountSummaryData> {
 
         final String schemaSql;
 
@@ -347,7 +353,7 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
             accountsSummary.append("sa.sub_status_enum as subStatusEnum, ");
             accountsSummary.append("(select coalesce(max(sat.transaction_date),sa.activatedon_date) ");
             accountsSummary.append("from m_savings_account_transaction as sat ");
-            accountsSummary.append("where sat.is_reversed = false ");
+            accountsSummary.append("where sat.is_reversed = ").append(sqlResolver.formatBoolValue(false));
             accountsSummary.append("and sat.transaction_type_enum in (1,2) ");
             accountsSummary.append("and sat.savings_account_id = sa.id) as lastActiveTransactionDate, ");
 

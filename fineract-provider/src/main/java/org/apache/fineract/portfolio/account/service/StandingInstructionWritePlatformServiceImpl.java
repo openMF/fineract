@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.apache.fineract.infrastructure.core.exception.AbstractPlatformServiceUnavailableException;
@@ -85,6 +86,7 @@ public class StandingInstructionWritePlatformServiceImpl implements StandingInst
     private final StandingInstructionReadPlatformService standingInstructionReadPlatformService;
     private final AccountTransfersWritePlatformService accountTransfersWritePlatformService;
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
 
     @Autowired
     public StandingInstructionWritePlatformServiceImpl(final StandingInstructionDataValidator standingInstructionDataValidator,
@@ -92,7 +94,8 @@ public class StandingInstructionWritePlatformServiceImpl implements StandingInst
             final AccountTransferDetailRepository accountTransferDetailRepository,
             final StandingInstructionRepository standingInstructionRepository,
             final StandingInstructionReadPlatformService standingInstructionReadPlatformService,
-            final AccountTransfersWritePlatformService accountTransfersWritePlatformService, final RoutingDataSource dataSource) {
+            final AccountTransfersWritePlatformService accountTransfersWritePlatformService, final RoutingDataSource dataSource,
+                                                       DataSourceSqlResolver dataSourceSqlResolver) {
         this.standingInstructionDataValidator = standingInstructionDataValidator;
         this.standingInstructionAssembler = standingInstructionAssembler;
         this.accountTransferDetailRepository = accountTransferDetailRepository;
@@ -100,6 +103,7 @@ public class StandingInstructionWritePlatformServiceImpl implements StandingInst
         this.standingInstructionReadPlatformService = standingInstructionReadPlatformService;
         this.accountTransfersWritePlatformService = accountTransfersWritePlatformService;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = dataSourceSqlResolver;
     }
 
     @Transactional
@@ -261,7 +265,8 @@ public class StandingInstructionWritePlatformServiceImpl implements StandingInst
         boolean transferCompleted = true;
         StringBuilder errorLog = new StringBuilder();
         StringBuilder updateQuery = new StringBuilder(
-                "INSERT INTO `m_account_transfer_standing_instructions_history` (`standing_instruction_id`, `status`, `amount`,`execution_time`, `error_log`) VALUES (");
+                "INSERT INTO m_account_transfer_standing_instructions_history (standing_instruction_id, " + sqlResolver.toDefinition("status")
+                        + ", amount,execution_time, error_log) VALUES (");
         try {
             this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
         } catch (final PlatformApiDataValidationException e) {

@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.fineract.accounting.glaccount.domain.TrialBalance;
 import org.apache.fineract.accounting.glaccount.domain.TrialBalanceRepositoryWrapper;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
@@ -71,6 +72,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
     private final DateTimeFormatter formatterWithTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final RoutingDataSourceServiceFactory dataSourceServiceFactory;
+    private final DataSourceSqlResolver sqlResolver;
     private final SavingsAccountWritePlatformService savingsAccountWritePlatformService;
     private final SavingsAccountChargeReadPlatformService savingsAccountChargeReadPlatformService;
     private final DepositAccountReadPlatformService depositAccountReadPlatformService;
@@ -86,15 +88,17 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
 
     @Autowired
     public ScheduledJobRunnerServiceImpl(final RoutingDataSourceServiceFactory dataSourceServiceFactory,
-            final SavingsAccountWritePlatformService savingsAccountWritePlatformService,
-            final SavingsAccountChargeReadPlatformService savingsAccountChargeReadPlatformService,
-            final DepositAccountReadPlatformService depositAccountReadPlatformService,
-            final DepositAccountWritePlatformService depositAccountWritePlatformService,
-            final ShareAccountDividendReadPlatformService shareAccountDividendReadPlatformService,
-            final ShareAccountSchedularService shareAccountSchedularService,
-            final TrialBalanceRepositoryWrapper trialBalanceRepositoryWrapper, final JobRegisterService jobRegisterService,
-            final ScheduledJobDetailRepository scheduledJobDetailsRepository) {
+                                         DataSourceSqlResolver sqlResolver,
+                                         final SavingsAccountWritePlatformService savingsAccountWritePlatformService,
+                                         final SavingsAccountChargeReadPlatformService savingsAccountChargeReadPlatformService,
+                                         final DepositAccountReadPlatformService depositAccountReadPlatformService,
+                                         final DepositAccountWritePlatformService depositAccountWritePlatformService,
+                                         final ShareAccountDividendReadPlatformService shareAccountDividendReadPlatformService,
+                                         final ShareAccountSchedularService shareAccountSchedularService,
+                                         final TrialBalanceRepositoryWrapper trialBalanceRepositoryWrapper, final JobRegisterService jobRegisterService,
+                                         final ScheduledJobDetailRepository scheduledJobDetailsRepository) {
         this.dataSourceServiceFactory = dataSourceServiceFactory;
+        this.sqlResolver = sqlResolver;
         this.savingsAccountWritePlatformService = savingsAccountWritePlatformService;
         this.savingsAccountChargeReadPlatformService = savingsAccountChargeReadPlatformService;
         this.depositAccountReadPlatformService = depositAccountReadPlatformService;
@@ -110,79 +114,93 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
     @Override
     @CronTarget(jobName = JobName.UPDATE_LOAN_SUMMARY)
     public void updateLoanSummaryDetails() {
-
         final JdbcTemplate jdbcTemplate = new JdbcTemplate(this.dataSourceServiceFactory.determineDataSourceService().retrieveDataSource());
 
-        final StringBuilder updateSqlBuilder = new StringBuilder(900);
-        updateSqlBuilder.append("update m_loan ");
-        updateSqlBuilder.append("join (");
-        updateSqlBuilder.append("SELECT ml.id AS loanId,");
-        updateSqlBuilder.append("SUM(mr.principal_amount) as principal_disbursed_derived, ");
-        updateSqlBuilder.append("SUM(coalesce(mr.principal_completed_derived,0)) as principal_repaid_derived, ");
-        updateSqlBuilder.append("SUM(coalesce(mr.principal_writtenoff_derived,0)) as principal_writtenoff_derived,");
-        updateSqlBuilder.append("SUM(coalesce(mr.interest_amount,0)) as interest_charged_derived,");
-        updateSqlBuilder.append("SUM(coalesce(mr.interest_completed_derived,0)) as interest_repaid_derived,");
-        updateSqlBuilder.append("SUM(coalesce(mr.interest_waived_derived,0)) as interest_waived_derived,");
-        updateSqlBuilder.append("SUM(coalesce(mr.interest_writtenoff_derived,0)) as interest_writtenoff_derived,");
-        updateSqlBuilder.append(
-                "SUM(coalesce(mr.fee_charges_amount,0)) + coalesce((select SUM(lc.amount) from  m_loan_charge lc where lc.loan_id=ml.id and lc.is_active=true and lc.charge_time_enum=1),0) as fee_charges_charged_derived,");
-        updateSqlBuilder.append(
-                "SUM(coalesce(mr.fee_charges_completed_derived,0)) + coalesce((select SUM(lc.amount_paid_derived) from  m_loan_charge lc where lc.loan_id=ml.id and lc.is_active=true and lc.charge_time_enum=1),0) as fee_charges_repaid_derived,");
-        updateSqlBuilder.append("SUM(coalesce(mr.fee_charges_waived_derived,0)) as fee_charges_waived_derived,");
-        updateSqlBuilder.append("SUM(coalesce(mr.fee_charges_writtenoff_derived,0)) as fee_charges_writtenoff_derived,");
-        updateSqlBuilder.append("SUM(coalesce(mr.penalty_charges_amount,0)) as penalty_charges_charged_derived,");
-        updateSqlBuilder.append("SUM(coalesce(mr.penalty_charges_completed_derived,0)) as penalty_charges_repaid_derived,");
-        updateSqlBuilder.append("SUM(coalesce(mr.penalty_charges_waived_derived,0)) as penalty_charges_waived_derived,");
-        updateSqlBuilder.append("SUM(coalesce(mr.penalty_charges_writtenoff_derived,0)) as penalty_charges_writtenoff_derived ");
-        updateSqlBuilder.append(" FROM m_loan ml ");
-        updateSqlBuilder.append("INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id ");
-        updateSqlBuilder.append("WHERE ml.disbursedon_date is not null ");
-        updateSqlBuilder.append("GROUP BY ml.id ");
-        updateSqlBuilder.append(") x on x.loanId = m_loan.id ");
+        boolean mySql = sqlResolver.getDialect().isMySql();
 
-        updateSqlBuilder.append("SET m_loan.principal_disbursed_derived = x.principal_disbursed_derived,");
-        updateSqlBuilder.append("m_loan.principal_repaid_derived = x.principal_repaid_derived,");
-        updateSqlBuilder.append("m_loan.principal_writtenoff_derived = x.principal_writtenoff_derived,");
-        updateSqlBuilder.append(
-                "m_loan.principal_outstanding_derived = (x.principal_disbursed_derived - (x.principal_repaid_derived + x.principal_writtenoff_derived)),");
-        updateSqlBuilder.append("m_loan.interest_charged_derived = x.interest_charged_derived,");
-        updateSqlBuilder.append("m_loan.interest_repaid_derived = x.interest_repaid_derived,");
-        updateSqlBuilder.append("m_loan.interest_waived_derived = x.interest_waived_derived,");
-        updateSqlBuilder.append("m_loan.interest_writtenoff_derived = x.interest_writtenoff_derived,");
-        updateSqlBuilder.append(
-                "m_loan.interest_outstanding_derived = (x.interest_charged_derived - (x.interest_repaid_derived + x.interest_waived_derived + x.interest_writtenoff_derived)),");
-        updateSqlBuilder.append("m_loan.fee_charges_charged_derived = x.fee_charges_charged_derived,");
-        updateSqlBuilder.append("m_loan.fee_charges_repaid_derived = x.fee_charges_repaid_derived,");
-        updateSqlBuilder.append("m_loan.fee_charges_waived_derived = x.fee_charges_waived_derived,");
-        updateSqlBuilder.append("m_loan.fee_charges_writtenoff_derived = x.fee_charges_writtenoff_derived,");
-        updateSqlBuilder.append(
-                "m_loan.fee_charges_outstanding_derived = (x.fee_charges_charged_derived - (x.fee_charges_repaid_derived + x.fee_charges_waived_derived + x.fee_charges_writtenoff_derived)),");
-        updateSqlBuilder.append("m_loan.penalty_charges_charged_derived = x.penalty_charges_charged_derived,");
-        updateSqlBuilder.append("m_loan.penalty_charges_repaid_derived = x.penalty_charges_repaid_derived,");
-        updateSqlBuilder.append("m_loan.penalty_charges_waived_derived = x.penalty_charges_waived_derived,");
-        updateSqlBuilder.append("m_loan.penalty_charges_writtenoff_derived = x.penalty_charges_writtenoff_derived,");
-        updateSqlBuilder.append(
-                "m_loan.penalty_charges_outstanding_derived = (x.penalty_charges_charged_derived - (x.penalty_charges_repaid_derived + x.penalty_charges_waived_derived + x.penalty_charges_writtenoff_derived)),");
-        updateSqlBuilder.append(
-                "m_loan.total_expected_repayment_derived = (x.principal_disbursed_derived + x.interest_charged_derived + x.fee_charges_charged_derived + x.penalty_charges_charged_derived),");
-        updateSqlBuilder.append(
-                "m_loan.total_repayment_derived = (x.principal_repaid_derived + x.interest_repaid_derived + x.fee_charges_repaid_derived + x.penalty_charges_repaid_derived),");
-        updateSqlBuilder.append(
-                "m_loan.total_expected_costofloan_derived = (x.interest_charged_derived + x.fee_charges_charged_derived + x.penalty_charges_charged_derived),");
-        updateSqlBuilder.append(
-                "m_loan.total_costofloan_derived = (x.interest_repaid_derived + x.fee_charges_repaid_derived + x.penalty_charges_repaid_derived),");
-        updateSqlBuilder.append(
-                "m_loan.total_waived_derived = (x.interest_waived_derived + x.fee_charges_waived_derived + x.penalty_charges_waived_derived),");
-        updateSqlBuilder.append(
-                "m_loan.total_writtenoff_derived = (x.interest_writtenoff_derived +  x.fee_charges_writtenoff_derived + x.penalty_charges_writtenoff_derived),");
-        updateSqlBuilder.append("m_loan.total_outstanding_derived=");
-        updateSqlBuilder.append(" (x.principal_disbursed_derived - (x.principal_repaid_derived + x.principal_writtenoff_derived)) + ");
-        updateSqlBuilder.append(
-                " (x.interest_charged_derived - (x.interest_repaid_derived + x.interest_waived_derived + x.interest_writtenoff_derived)) +");
-        updateSqlBuilder.append(
-                " (x.fee_charges_charged_derived - (x.fee_charges_repaid_derived + x.fee_charges_waived_derived + x.fee_charges_writtenoff_derived)) +");
-        updateSqlBuilder.append(
-                " (x.penalty_charges_charged_derived - (x.penalty_charges_repaid_derived + x.penalty_charges_waived_derived + x.penalty_charges_writtenoff_derived))");
+        String alias = mySql ? "l." : "";
+        final String selectPart = new StringBuilder(900)
+                .append(" (SELECT ml.id AS loan_id, ")
+                .append("SUM(mr.principal_amount) as principal_disbursed_derived, ")
+                .append("SUM(COALESCE(mr.principal_completed_derived,0)) as principal_repaid_derived, ")
+                .append("SUM(COALESCE(mr.principal_writtenoff_derived,0)) as principal_writtenoff_derived, ")
+                .append("SUM(COALESCE(mr.interest_amount,0)) as interest_charged_derived, ")
+                .append("SUM(COALESCE(mr.interest_completed_derived,0)) as interest_repaid_derived, ")
+                .append("SUM(COALESCE(mr.interest_waived_derived,0)) as interest_waived_derived, ")
+                .append("SUM(COALESCE(mr.interest_writtenoff_derived,0)) as interest_writtenoff_derived, ")
+                .append("SUM(COALESCE(mr.fee_charges_amount,0)) + ")
+                .append("COALESCE((select SUM(lc.amount) from m_loan_charge lc where lc.loan_id = ml.id and lc.is_active = ")
+                .append(sqlResolver.formatBoolValue(true))
+                .append(" and lc.charge_time_enum=1),0) as fee_charges_charged_derived, ")
+                .append("SUM(COALESCE(mr.fee_charges_completed_derived,0)) + ")
+                .append("COALESCE((select SUM(lc.amount_paid_derived) from m_loan_charge lc where lc.loan_id = ml.id and lc.is_active = ")
+                .append(sqlResolver.formatBoolValue(true))
+                .append(" and lc.charge_time_enum = 1), 0) as fee_charges_repaid_derived, ")
+                .append("SUM(COALESCE(mr.fee_charges_waived_derived,0)) as fee_charges_waived_derived, ")
+                .append("SUM(COALESCE(mr.fee_charges_writtenoff_derived,0)) as fee_charges_writtenoff_derived, ")
+                .append("SUM(COALESCE(mr.penalty_charges_amount,0)) as penalty_charges_charged_derived, ")
+                .append("SUM(COALESCE(mr.penalty_charges_completed_derived,0)) as penalty_charges_repaid_derived, ")
+                .append("SUM(COALESCE(mr.penalty_charges_waived_derived,0)) as penalty_charges_waived_derived, ")
+                .append("SUM(COALESCE(mr.penalty_charges_writtenoff_derived,0)) as penalty_charges_writtenoff_derived ")
+                .append("FROM m_loan ml ")
+                .append("INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id ")
+                .append("WHERE ml.disbursedon_date is not null ")
+                .append("GROUP BY ml.id")
+                .append(") x")
+                .toString();
+
+        final String setPart = new StringBuilder(900)
+                .append(" SET ")
+                .append(alias).append("principal_disbursed_derived = x.principal_disbursed_derived, ")
+                .append(alias).append("principal_repaid_derived = x.principal_repaid_derived, ")
+                .append(alias).append("principal_writtenoff_derived = x.principal_writtenoff_derived, ")
+                .append(alias).append("principal_outstanding_derived = (x.principal_disbursed_derived - (x.principal_repaid_derived + x.principal_writtenoff_derived)), ")
+                .append(alias).append("interest_charged_derived = x.interest_charged_derived, ")
+                .append(alias).append("interest_repaid_derived = x.interest_repaid_derived, ")
+                .append(alias).append("interest_waived_derived = x.interest_waived_derived, ")
+                .append(alias).append("interest_writtenoff_derived = x.interest_writtenoff_derived, ")
+                .append(alias).append("interest_outstanding_derived = (x.interest_charged_derived - (x.interest_repaid_derived + x.interest_waived_derived + x.interest_writtenoff_derived)), ")
+                .append(alias).append("fee_charges_charged_derived = x.fee_charges_charged_derived, ")
+                .append(alias).append("fee_charges_repaid_derived = x.fee_charges_repaid_derived, ")
+                .append(alias).append("fee_charges_waived_derived = x.fee_charges_waived_derived, ")
+                .append(alias).append("fee_charges_writtenoff_derived = x.fee_charges_writtenoff_derived, ")
+                .append(alias).append("fee_charges_outstanding_derived = (x.fee_charges_charged_derived - (x.fee_charges_repaid_derived + x.fee_charges_waived_derived + x.fee_charges_writtenoff_derived)), ")
+                .append(alias).append("penalty_charges_charged_derived = x.penalty_charges_charged_derived, ")
+                .append(alias).append("penalty_charges_repaid_derived = x.penalty_charges_repaid_derived, ")
+                .append(alias).append("penalty_charges_waived_derived = x.penalty_charges_waived_derived, ")
+                .append(alias).append("penalty_charges_writtenoff_derived = x.penalty_charges_writtenoff_derived, ")
+                .append(alias).append("penalty_charges_outstanding_derived = (x.penalty_charges_charged_derived - (x.penalty_charges_repaid_derived + x.penalty_charges_waived_derived + x.penalty_charges_writtenoff_derived)), ")
+                .append(alias).append("total_expected_repayment_derived = (x.principal_disbursed_derived + x.interest_charged_derived + x.fee_charges_charged_derived + x.penalty_charges_charged_derived), ")
+                .append(alias).append("total_repayment_derived = (x.principal_repaid_derived + x.interest_repaid_derived + x.fee_charges_repaid_derived + x.penalty_charges_repaid_derived), ")
+                .append(alias).append("total_expected_costofloan_derived = (x.interest_charged_derived + x.fee_charges_charged_derived + x.penalty_charges_charged_derived), ")
+                .append(alias).append("total_costofloan_derived = (x.interest_repaid_derived + x.fee_charges_repaid_derived + x.penalty_charges_repaid_derived), ")
+                .append(alias).append("total_waived_derived = (x.interest_waived_derived + x.fee_charges_waived_derived + x.penalty_charges_waived_derived), ")
+                .append(alias).append("total_writtenoff_derived = (x.interest_writtenoff_derived +  x.fee_charges_writtenoff_derived + x.penalty_charges_writtenoff_derived), ")
+                .append(alias).append("total_outstanding_derived = (x.principal_disbursed_derived - (x.principal_repaid_derived + x.principal_writtenoff_derived)) + ")
+                .append("(x.interest_charged_derived - (x.interest_repaid_derived + x.interest_waived_derived + x.interest_writtenoff_derived)) + ")
+                .append("(x.fee_charges_charged_derived - (x.fee_charges_repaid_derived + x.fee_charges_waived_derived + x.fee_charges_writtenoff_derived)) + ")
+                .append("(x.penalty_charges_charged_derived - (x.penalty_charges_repaid_derived + x.penalty_charges_waived_derived + x.penalty_charges_writtenoff_derived))")
+                .toString();
+
+        String wherePart = " x.loan_id = l.id";
+
+        final StringBuilder updateSqlBuilder = new StringBuilder(900);
+        updateSqlBuilder.append("UPDATE m_loan l");
+        if (mySql) {
+            updateSqlBuilder
+                    .append(" JOIN")
+                    .append(selectPart)
+                    .append(" ON")
+                    .append(wherePart).append(' ')
+                    .append(setPart);
+        } else {
+            updateSqlBuilder
+                    .append(setPart)
+                    .append(" FROM")
+                    .append(selectPart)
+                    .append(" WHERE")
+                    .append(wherePart);
+        }
 
         final int result = jdbcTemplate.update(updateSqlBuilder.toString());
 
@@ -287,26 +305,54 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
 
         final StringBuilder resetNPASqlBuilder = new StringBuilder(900);
         resetNPASqlBuilder.append("update m_loan loan ");
-        resetNPASqlBuilder.append("left join m_loan_arrears_aging laa on laa.loan_id = loan.id ");
-        resetNPASqlBuilder.append("inner join m_product_loan mpl on mpl.id = loan.product_id and mpl.overdue_days_for_npa is not null ");
-        resetNPASqlBuilder.append("set loan.is_npa = 0 ");
-        resetNPASqlBuilder.append("where  loan.loan_status_id = 300 and mpl.account_moves_out_of_npa_only_on_arrears_completion = 0 ");
-        resetNPASqlBuilder
-                .append("or (mpl.account_moves_out_of_npa_only_on_arrears_completion = 1 and laa.overdue_since_date_derived is null)");
+        String fromPart = new StringBuilder(400).append(" (SELECT loan2.* FROM m_loan loan2 left join m_loan_arrears_aging laa on laa.loan_id = loan2.id ")
+                .append("inner join m_product_loan mpl on mpl.id = loan2.product_id and mpl.overdue_days_for_npa is not null ")
+                .append("WHERE loan2.loan_status_id = 300 and mpl.account_moves_out_of_npa_only_on_arrears_completion = ")
+                .append(sqlResolver.formatBoolValue(false))
+                .append(" or (mpl.account_moves_out_of_npa_only_on_arrears_completion = ")
+                .append(sqlResolver.formatBoolValue(true))
+                .append(" and laa.overdue_since_date_derived is null)) sl").toString();
+        String wherePart = new StringBuilder(400).append(" where loan.id = sl.id ").toString();
+        if (sqlResolver.getDialect().isMySql()) {
+            resetNPASqlBuilder
+                    .append(", ")
+                    .append(fromPart)
+                    .append(" set loan.is_npa = ").append(sqlResolver.formatBoolValue(false))
+                    .append(wherePart);
+        } else {
+            resetNPASqlBuilder
+                    .append("set is_npa = ").append(sqlResolver.formatBoolValue(false))
+                    .append(" FROM ")
+                    .append(fromPart)
+                    .append(wherePart);
+        }
 
         jdbcTemplate.update(resetNPASqlBuilder.toString());
 
-        final StringBuilder updateSqlBuilder = new StringBuilder(900);
-
-        updateSqlBuilder.append("UPDATE m_loan as ml,");
-        updateSqlBuilder.append(" (select loan.id ");
-        updateSqlBuilder.append("from m_loan_arrears_aging laa");
-        updateSqlBuilder.append(" INNER JOIN  m_loan loan on laa.loan_id = loan.id ");
-        updateSqlBuilder.append(" INNER JOIN m_product_loan mpl on mpl.id = loan.product_id AND mpl.overdue_days_for_npa is not null ");
-        updateSqlBuilder.append("WHERE loan.loan_status_id = 300  and ");
-        updateSqlBuilder.append("laa.overdue_since_date_derived < SUBDATE(CURDATE(),INTERVAL  coalesce(mpl.overdue_days_for_npa,0) day) ");
-        updateSqlBuilder.append("group by loan.id) as sl ");
-        updateSqlBuilder.append("SET ml.is_npa=1 where ml.id=sl.id ");
+        final StringBuilder updateSqlBuilder = new StringBuilder();
+        fromPart = new StringBuilder().append(" (select loan.id ")
+                .append(" FROM m_loan_arrears_aging laa")
+                .append(" INNER JOIN  m_loan loan on laa.loan_id = loan.id ")
+                .append(" INNER JOIN m_product_loan mpl on mpl.id = loan.product_id AND mpl.overdue_days_for_npa is not null ")
+                .append("WHERE loan.loan_status_id = 300 and ")
+                .append("laa.overdue_since_date_derived < ")
+                .append(sqlResolver.formatDateSub("?", "COALESCE(mpl.overdue_days_for_npa, 0)", DataSourceSqlResolver.DateUnit.DAY))
+                .append(" group by loan.id) as sl ").toString();
+        wherePart = " where ml.id=sl.id ";
+        updateSqlBuilder.append("UPDATE m_loan as ml ");
+        if (sqlResolver.getDialect().isMySql()) {
+            updateSqlBuilder
+                    .append(", ")
+                    .append(fromPart)
+                    .append(" SET ml.is_npa = ").append(sqlResolver.formatBoolValue(true))
+                    .append(wherePart);
+        } else {
+            updateSqlBuilder
+                    .append(" SET is_npa = ").append(sqlResolver.formatBoolValue(true))
+                    .append(" FROM ")
+                    .append(fromPart)
+                    .append(wherePart);
+        }
 
         final int result = jdbcTemplate.update(updateSqlBuilder.toString());
 
@@ -374,7 +420,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
                 sb.append(installmentNumber);
                 sb.append(",");
                 sb.append(amount);
-                sb.append(", b'0','");
+                sb.append(", ").append(sqlResolver.formatBoolValue(false)).append(", '");
                 sb.append(currentDate);
                 sb.append("','");
                 sb.append(currentDate);

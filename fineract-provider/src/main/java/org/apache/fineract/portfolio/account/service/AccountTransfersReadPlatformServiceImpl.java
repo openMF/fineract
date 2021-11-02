@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
@@ -57,6 +59,7 @@ import org.springframework.util.CollectionUtils;
 public class AccountTransfersReadPlatformServiceImpl implements AccountTransfersReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final ClientReadPlatformService clientReadPlatformService;
     private final OfficeReadPlatformService officeReadPlatformService;
     private final PortfolioAccountReadPlatformService portfolioAccountReadPlatformService;
@@ -70,10 +73,11 @@ public class AccountTransfersReadPlatformServiceImpl implements AccountTransfers
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Autowired
-    public AccountTransfersReadPlatformServiceImpl(final RoutingDataSource dataSource,
+    public AccountTransfersReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
             final ClientReadPlatformService clientReadPlatformService, final OfficeReadPlatformService officeReadPlatformService,
             final PortfolioAccountReadPlatformService portfolioAccountReadPlatformService, final ColumnValidator columnValidator) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.clientReadPlatformService = clientReadPlatformService;
         this.officeReadPlatformService = officeReadPlatformService;
         this.portfolioAccountReadPlatformService = portfolioAccountReadPlatformService;
@@ -212,18 +216,23 @@ public class AccountTransfersReadPlatformServiceImpl implements AccountTransfers
 
     @Override
     public Page<AccountTransferData> retrieveAll(final SearchParameters searchParameters, final Long accountDetailId) {
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        final StringBuilder sqlBuilder = new StringBuilder("SELECT ");
+        if (mySql)
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
 
-        final StringBuilder sqlBuilder = new StringBuilder(200);
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ");
         sqlBuilder.append(this.accountTransfersMapper.schema());
-        Object[] finalObjectArray = {};
+        String where = "";
+        Object[] sqlParams = {};
         if (accountDetailId != null) {
-            sqlBuilder.append(" where att.account_transfer_details_id=?");
-            finalObjectArray = new Object[] { accountDetailId };
+            where = " where att.account_transfer_details_id=?";
+            sqlBuilder.append(where);
+            sqlParams = new Object[] { accountDetailId };
         }
 
         if (searchParameters.isOrderByRequested()) {
-            sqlBuilder.append(" order by ").append(searchParameters.getOrderBy());
+            sqlBuilder.append(" order by ").append(
+                    searchParameters.getOrderBy());
             this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getOrderBy());
             if (searchParameters.isSortOrderProvided()) {
                 sqlBuilder.append(' ').append(searchParameters.getSortOrder());
@@ -234,13 +243,18 @@ public class AccountTransfersReadPlatformServiceImpl implements AccountTransfers
         if (searchParameters.isLimited()) {
             sqlBuilder.append(" limit ").append(searchParameters.getLimit());
             if (searchParameters.isOffset()) {
-                sqlBuilder.append(" offset ").append(searchParameters.getOffset());
+                sqlBuilder.append(" offset ").append(
+                        searchParameters.getOffset());
             }
         }
 
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(), finalObjectArray,
-                this.accountTransfersMapper);
+        String sqlCountRows = "SELECT FOUND_ROWS()";
+        Object[] countParams = null;
+        if (!mySql) {
+            sqlCountRows = "SELECT " + accountTransfersMapper.countSchema() + where;
+            countParams = sqlParams;
+        }
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, countParams, sqlBuilder.toString(), sqlParams, this.accountTransfersMapper);
     }
 
     @Override
@@ -257,7 +271,9 @@ public class AccountTransfersReadPlatformServiceImpl implements AccountTransfers
 
     @Override
     public Collection<Long> fetchPostInterestTransactionIds(final Long accountId) {
-        final String sql = "select att.from_savings_transaction_id from m_account_transfer_transaction att inner join m_account_transfer_details atd on atd.id = att.account_transfer_details_id where atd.from_savings_account_id=? and att.is_reversed =false and atd.transfer_type = ?";
+        String sql = "select att.from_savings_transaction_id from m_account_transfer_transaction att " +
+                "inner join m_account_transfer_details atd on atd.id = att.account_transfer_details_id where atd.from_savings_account_id = ? " +
+                "and att.is_reversed = " + sqlResolver.formatBoolValue(false) + " and atd.transfer_type = ?";
 
         final List<Long> transactionId = this.jdbcTemplate.queryForList(sql, Long.class, accountId,
                 AccountTransferType.INTEREST_TRANSFER.getValue());
@@ -266,6 +282,22 @@ public class AccountTransfersReadPlatformServiceImpl implements AccountTransfers
     }
 
     private static final class AccountTransfersMapper implements RowMapper<AccountTransferData> {
+
+        public static final String FROM = " FROM m_account_transfer_transaction att " +
+                "left join m_account_transfer_details atd on atd.id = att.account_transfer_details_id " +
+                "join m_currency curr on curr.code = att.currency_code " +
+                "join m_office fromoff on fromoff.id = atd.from_office_id " +
+                "join m_office tooff on tooff.id = atd.to_office_id " +
+                "join m_client fromclient on fromclient.id = atd.from_client_id " +
+                "join m_client toclient on toclient.id = atd.to_client_id " +
+                "left join m_savings_account fromsavacc on fromsavacc.id = atd.from_savings_account_id " +
+                "left join m_loan fromloanacc on fromloanacc.id = atd.from_loan_account_id " +
+                "left join m_savings_account tosavacc on tosavacc.id = atd.to_savings_account_id " +
+                "left join m_loan toloanacc on toloanacc.id = atd.to_loan_account_id " +
+                "left join m_savings_account_transaction fromsavtran on fromsavtran.id = att.from_savings_transaction_id " +
+                "left join m_savings_account_transaction tosavtran on tosavtran.id = att.to_savings_transaction_id " +
+                "left join m_loan_transaction fromloantran on fromloantran.id = att.from_savings_transaction_id " +
+                "left join m_loan_transaction toloantran on toloantran.id = att.to_savings_transaction_id ";
 
         private final String schemaSql;
 
@@ -290,27 +322,17 @@ public class AccountTransfersReadPlatformServiceImpl implements AccountTransfers
             sqlBuilder.append("fromsavtran.transaction_type_enum as fromSavingsAccountTransactionType,");
             sqlBuilder.append("tosavtran.id as toSavingsAccountTransactionId,");
             sqlBuilder.append("tosavtran.transaction_type_enum as toSavingsAccountTransactionType");
-            sqlBuilder.append(" FROM m_account_transfer_transaction att ");
-            sqlBuilder.append("left join m_account_transfer_details atd on atd.id = att.account_transfer_details_id ");
-            sqlBuilder.append("join m_currency curr on curr.code = att.currency_code ");
-            sqlBuilder.append("join m_office fromoff on fromoff.id = atd.from_office_id ");
-            sqlBuilder.append("join m_office tooff on tooff.id = atd.to_office_id ");
-            sqlBuilder.append("join m_client fromclient on fromclient.id = atd.from_client_id ");
-            sqlBuilder.append("join m_client toclient on toclient.id = atd.to_client_id ");
-            sqlBuilder.append("left join m_savings_account fromsavacc on fromsavacc.id = atd.from_savings_account_id ");
-            sqlBuilder.append("left join m_loan fromloanacc on fromloanacc.id = atd.from_loan_account_id ");
-            sqlBuilder.append("left join m_savings_account tosavacc on tosavacc.id = atd.to_savings_account_id ");
-            sqlBuilder.append("left join m_loan toloanacc on toloanacc.id = atd.to_loan_account_id ");
-            sqlBuilder.append("left join m_savings_account_transaction fromsavtran on fromsavtran.id = att.from_savings_transaction_id ");
-            sqlBuilder.append("left join m_savings_account_transaction tosavtran on tosavtran.id = att.to_savings_transaction_id ");
-            sqlBuilder.append("left join m_loan_transaction fromloantran on fromloantran.id = att.from_savings_transaction_id ");
-            sqlBuilder.append("left join m_loan_transaction toloantran on toloantran.id = att.to_savings_transaction_id ");
+            sqlBuilder.append(FROM);
 
             this.schemaSql = sqlBuilder.toString();
         }
 
         public String schema() {
             return this.schemaSql;
+        }
+
+        public String countSchema() {
+            return " count(att.*) " + FROM;
         }
 
         @Override
@@ -398,35 +420,46 @@ public class AccountTransfersReadPlatformServiceImpl implements AccountTransfers
 
     @Override
     public Page<AccountTransferData> retrieveByStandingInstruction(final Long id, final SearchParameters searchParameters) {
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        final StringBuilder sqlBuilder = new StringBuilder("SELECT ");
+        if (mySql)
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
 
-        final StringBuilder sqlBuilder = new StringBuilder(200);
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ");
-        sqlBuilder.append(this.accountTransfersMapper.schema()).append(
-                " join m_account_transfer_standing_instructions atsi on atsi.account_transfer_details_id = att.account_transfer_details_id ");
-        sqlBuilder.append(" where atsi.id = ?");
+        String join = " join m_account_transfer_standing_instructions atsi on atsi.account_transfer_details_id = att.account_transfer_details_id ";
+        String where = " where atsi.id = ? ";
+        sqlBuilder.append(this.accountTransfersMapper.schema())
+                .append(join).append(where);
 
         if (searchParameters != null) {
             if (searchParameters.isOrderByRequested()) {
-                sqlBuilder.append(" order by ").append(searchParameters.getOrderBy());
+                sqlBuilder.append(" order by ").append(
+                        searchParameters.getOrderBy());
                 this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getOrderBy());
                 if (searchParameters.isSortOrderProvided()) {
-                    sqlBuilder.append(' ').append(searchParameters.getSortOrder());
+                    sqlBuilder.append(' ').append(
+                            searchParameters.getSortOrder());
                     this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getSortOrder());
                 }
             }
 
             if (searchParameters.isLimited()) {
-                sqlBuilder.append(" limit ").append(searchParameters.getLimit());
+                sqlBuilder.append(" limit ")
+                        .append(searchParameters.getLimit());
                 if (searchParameters.isOffset()) {
-                    sqlBuilder.append(" offset ").append(searchParameters.getOffset());
+                    sqlBuilder.append(" offset ").append(
+                            searchParameters.getOffset());
                 }
             }
         }
 
-        final Object[] finalObjectArray = { id };
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(), finalObjectArray,
-                this.accountTransfersMapper);
+        Object[] sqlParams = { id };
+        String sqlCountRows = "SELECT FOUND_ROWS()";
+        Object[] countParams = null;
+        if (!mySql) {
+            sqlCountRows = "SELECT " + accountTransfersMapper.countSchema() + join + where;
+            countParams = sqlParams;
+        }
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, countParams, sqlBuilder.toString(), sqlParams, this.accountTransfersMapper);
     }
 
     @Override
@@ -546,12 +579,12 @@ public class AccountTransfersReadPlatformServiceImpl implements AccountTransfers
         sqlBuilder.append(" from m_account_transfer_details as det ");
         sqlBuilder.append(" inner join m_account_transfer_transaction as trans ");
         sqlBuilder.append(" on det.id = trans.account_transfer_details_id ");
-        sqlBuilder.append(" where trans.is_reversed = false ");
+        sqlBuilder.append(" where trans.is_reversed = ").append(sqlResolver.formatBoolValue(false));
         sqlBuilder.append(" and trans.transaction_date = ? ");
         sqlBuilder.append(" and IF(1=?, det.from_loan_account_id = ?, det.from_savings_account_id = ?) ");
 
         return this.jdbcTemplate.queryForObject(sqlBuilder.toString(),
-                new Object[] { this.formatter.format(transactionDate), accountType, accountId, accountId }, BigDecimal.class);
+                new Object[] { sqlResolver.formatDate(this.formatter.format(transactionDate)), accountType, accountId, accountId }, BigDecimal.class);
     }
 
 }

@@ -23,6 +23,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collection;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
@@ -36,16 +38,18 @@ import org.springframework.stereotype.Service;
 public class PurchasedSharesReadPlatformServiceImpl implements PurchasedSharesReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
 
     @Autowired
-    public PurchasedSharesReadPlatformServiceImpl(final RoutingDataSource dataSource) {
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
+    public PurchasedSharesReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver) {
+        this.jdbcTemplate = new JdbcTemplate(dataSource) ;
+        this.sqlResolver = sqlResolver;
     }
 
     @Override
     public Collection<ShareAccountTransactionData> retrievePurchasedShares(Long accountId) {
         PurchasedSharesDataRowMapper mapper = new PurchasedSharesDataRowMapper();
-        final String sql = "select " + mapper.schema() + " where saps.account_id=? and saps.is_active = true";
+        final String sql = "select " + mapper.schema() + " where saps.account_id=? and saps.is_active = " + sqlResolver.formatBoolValue(true);
         return this.jdbcTemplate.query(sql, mapper, new Object[] { accountId });
     }
 

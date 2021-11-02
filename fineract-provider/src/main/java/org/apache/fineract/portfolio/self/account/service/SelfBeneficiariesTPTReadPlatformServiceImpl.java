@@ -21,6 +21,8 @@ package org.apache.fineract.portfolio.self.account.service;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
@@ -39,13 +41,16 @@ public class SelfBeneficiariesTPTReadPlatformServiceImpl implements SelfBenefici
 
     private final PlatformSecurityContext context;
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final BeneficiaryMapper mapper;
     private final AccountTemplateMapper accountTemplateMapper;
 
     @Autowired
-    public SelfBeneficiariesTPTReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource) {
+    public SelfBeneficiariesTPTReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource,
+                                                       DataSourceSqlResolver sqlResolver) {
         this.context = context;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.mapper = new BeneficiaryMapper();
         this.accountTemplateMapper = new AccountTemplateMapper();
     }
@@ -62,7 +67,7 @@ public class SelfBeneficiariesTPTReadPlatformServiceImpl implements SelfBenefici
                 new Object[] { user.getId(), user.getId() });
     }
 
-    private static final class BeneficiaryMapper implements RowMapper<SelfBeneficiariesTPTData> {
+    private final class BeneficiaryMapper implements RowMapper<SelfBeneficiariesTPTData> {
 
         private final String schemaSql;
 
@@ -78,7 +83,7 @@ public class SelfBeneficiariesTPTReadPlatformServiceImpl implements SelfBenefici
             sqlBuilder.append(" inner join m_office as o on b.office_id = o.id ");
             sqlBuilder.append(" inner join m_client as c on b.client_id = c.id ");
             sqlBuilder.append(" inner join m_savings_account as s on b.account_id = s.id ");
-            sqlBuilder.append(" where b.is_active = true ");
+            sqlBuilder.append(" where b.is_active = ").append(sqlResolver.formatBoolValue(true));
             sqlBuilder.append(" and b.account_type = 2 ");
             sqlBuilder.append(" and b.app_user_id = ?) ");
             sqlBuilder.append(" union all ");
@@ -93,7 +98,7 @@ public class SelfBeneficiariesTPTReadPlatformServiceImpl implements SelfBenefici
             sqlBuilder.append(" inner join m_office as o on b.office_id = o.id ");
             sqlBuilder.append(" inner join m_client as c on b.client_id = c.id ");
             sqlBuilder.append(" inner join m_loan as l on b.account_id = l.id ");
-            sqlBuilder.append(" where b.is_active = true ");
+            sqlBuilder.append(" where b.is_active = ").append(sqlResolver.formatBoolValue(true));
             sqlBuilder.append(" and b.account_type = 1 ");
             sqlBuilder.append(" and b.app_user_id = ?) ");
 
@@ -120,7 +125,7 @@ public class SelfBeneficiariesTPTReadPlatformServiceImpl implements SelfBenefici
         }
     }
 
-    private static final class AccountTemplateMapper implements RowMapper<SelfAccountTemplateData> {
+    private final class AccountTemplateMapper implements RowMapper<SelfAccountTemplateData> {
 
         private final String schemaSql;
 
@@ -151,7 +156,7 @@ public class SelfBeneficiariesTPTReadPlatformServiceImpl implements SelfBenefici
             sqlBuilder.append(" inner join m_office as o on b.office_id = o.id ");
             sqlBuilder.append(" inner join m_client as c on b.client_id = c.id ");
             sqlBuilder.append(" inner join m_loan as l on b.account_id = l.id ");
-            sqlBuilder.append(" where b.is_active = true ");
+            sqlBuilder.append(" where b.is_active = ").append(sqlResolver.formatBoolValue(true));
             sqlBuilder.append(" and b.account_type = 1 ");
             sqlBuilder.append(" and b.app_user_id = ?) ");
 
@@ -184,7 +189,7 @@ public class SelfBeneficiariesTPTReadPlatformServiceImpl implements SelfBenefici
         sqlBuilder.append(" where b.app_user_id = ? ");
         sqlBuilder.append(" and b.account_id = ? ");
         sqlBuilder.append(" and b.account_type = ? ");
-        sqlBuilder.append(" and b.is_active = true; ");
+        sqlBuilder.append(" and b.is_active = ").append(sqlResolver.formatBoolValue(true)).append("; ");
 
         return this.jdbcTemplate.queryForObject(sqlBuilder.toString(), new Object[] { appUserId, accountId, accountType }, Long.class);
     }

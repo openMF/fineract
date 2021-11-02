@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
@@ -87,6 +88,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
 
     private final PlatformSecurityContext context;
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final ClientReadPlatformService clientReadPlatformService;
     private final GroupReadPlatformService groupReadPlatformService;
     private final SavingsProductReadPlatformService savingsProductReadPlatformService;
@@ -109,6 +111,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
 
     @Autowired
     public SavingsAccountReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource,
+                                                 DataSourceSqlResolver sqlResolver,
             final ClientReadPlatformService clientReadPlatformService, final GroupReadPlatformService groupReadPlatformService,
             final SavingsProductReadPlatformService savingProductReadPlatformService,
             final StaffReadPlatformService staffReadPlatformService, final SavingsDropdownReadPlatformService dropdownReadPlatformService,
@@ -116,6 +119,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             final EntityDatatableChecksReadService entityDatatableChecksReadService, final ColumnValidator columnValidator) {
         this.context = context;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.clientReadPlatformService = clientReadPlatformService;
         this.groupReadPlatformService = groupReadPlatformService;
         this.savingsProductReadPlatformService = savingProductReadPlatformService;
@@ -1125,14 +1129,14 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         List<Long> ret = null;
         StringBuilder sql = new StringBuilder("select sa.id ");
         sql.append(" from m_savings_account as sa ");
-        sql.append(" inner join m_savings_product as sp on (sa.product_id = sp.id and sp.is_dormancy_tracking_active = true) ");
+        sql.append(" inner join m_savings_product as sp on (sa.product_id = sp.id and sp.is_dormancy_tracking_active = ")
+                .append(sqlResolver.formatBoolValue(true)).append(") ");
         sql.append(" where sa.status_enum = 300 ");
         sql.append(" and sa.sub_status_enum = 0 ");
-        sql.append(" and DATEDIFF(?,(select coalesce(max(sat.transaction_date),sa.activatedon_date) ");
-        sql.append(" from m_savings_account_transaction as sat ");
-        sql.append(" where sat.is_reversed = false ");
-        sql.append(" and sat.transaction_type_enum in (1,2) ");
-        sql.append(" and sat.savings_account_id = sa.id)) >= sp.days_to_inactive ");
+        String compareDate = "(select COALESCE(max(sat.transaction_date), sa.activatedon_date) " +
+                "from m_savings_account_transaction as sat where sat.is_reversed = " + sqlResolver.formatBoolValue(false) +
+                " and sat.transaction_type_enum in (1,2) and sat.savings_account_id = sa.id)";
+        sql.append(" and ").append(sqlResolver.formatDateDiff("?", compareDate)).append(" >= sp.days_to_inactive ");
 
         try {
             ret = this.jdbcTemplate.queryForList(sql.toString(), Long.class, new Object[] { formatter.format(tenantLocalDate) });
@@ -1150,14 +1154,15 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         List<Long> ret = null;
         StringBuilder sql = new StringBuilder("select sa.id ");
         sql.append(" from m_savings_account as sa ");
-        sql.append(" inner join m_savings_product as sp on (sa.product_id = sp.id and sp.is_dormancy_tracking_active = true) ");
+        sql.append("inner join m_savings_product as sp on (sa.product_id = sp.id and sp.is_dormancy_tracking_active = ")
+                .append(sqlResolver.formatBoolValue(true)).append(")");
         sql.append(" where sa.status_enum = 300 ");
         sql.append(" and sa.sub_status_enum = 100 ");
-        sql.append(" and DATEDIFF(?,(select coalesce(max(sat.transaction_date),sa.activatedon_date) ");
-        sql.append(" from m_savings_account_transaction as sat ");
-        sql.append(" where sat.is_reversed = false ");
-        sql.append(" and sat.transaction_type_enum in (1,2) ");
-        sql.append(" and sat.savings_account_id = sa.id)) >= sp.days_to_dormancy ");
+
+        String compareDate = "(select COALESCE(max(sat.transaction_date),sa.activatedon_date)" +
+                " from m_savings_account_transaction as sat where sat.is_reversed = " + sqlResolver.formatBoolValue(false) +
+                " and sat.transaction_type_enum in (1,2) and sat.savings_account_id = sa.id)";
+        sql.append(" and ").append(sqlResolver.formatDateDiff("?", compareDate)).append(" >= sp.days_to_dormancy ");
 
         try {
             ret = this.jdbcTemplate.queryForList(sql.toString(), Long.class, new Object[] { formatter.format(tenantLocalDate) });
@@ -1175,14 +1180,15 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         List<Long> ret = null;
         StringBuilder sql = new StringBuilder("select sa.id ");
         sql.append(" from m_savings_account as sa ");
-        sql.append(" inner join m_savings_product as sp on (sa.product_id = sp.id and sp.is_dormancy_tracking_active = true) ");
+        sql.append("inner join m_savings_product as sp on (sa.product_id = sp.id and sp.is_dormancy_tracking_active = ")
+                .append(sqlResolver.formatBoolValue(true)).append(")");
         sql.append(" where sa.status_enum = 300 ");
         sql.append(" and sa.sub_status_enum = 200 ");
-        sql.append(" and DATEDIFF(?,(select coalesce(max(sat.transaction_date),sa.activatedon_date) ");
-        sql.append(" from m_savings_account_transaction as sat ");
-        sql.append(" where sat.is_reversed = false ");
-        sql.append(" and sat.transaction_type_enum in (1,2) ");
-        sql.append(" and sat.savings_account_id = sa.id)) >= sp.days_to_escheat ");
+
+        String compareDate = "(select COALESCE(max(sat.transaction_date), sa.activatedon_date)" +
+                " from m_savings_account_transaction as sat where sat.is_reversed = " + sqlResolver.formatBoolValue(false) +
+                " and sat.transaction_type_enum in (1,2) and sat.savings_account_id = sa.id)";
+        sql.append(" and ").append(sqlResolver.formatDateDiff("?", compareDate)).append(" >= sp.days_to_escheat ");
 
         try {
             ret = this.jdbcTemplate.queryForList(sql.toString(), Long.class, new Object[] { formatter.format(tenantLocalDate) });

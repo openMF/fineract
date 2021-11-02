@@ -24,6 +24,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.portfolio.floatingrates.data.FloatingRateData;
@@ -40,10 +42,12 @@ import org.springframework.stereotype.Service;
 public class FloatingRatesReadPlatformServiceImpl implements FloatingRatesReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
 
     @Autowired
-    public FloatingRatesReadPlatformServiceImpl(final RoutingDataSource dataSource) {
+    public FloatingRatesReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
     }
 
     @Override
@@ -56,14 +60,14 @@ public class FloatingRatesReadPlatformServiceImpl implements FloatingRatesReadPl
     @Override
     public List<FloatingRateData> retrieveAllActive() {
         FloatingRateRowMapper rateMapper = new FloatingRateRowMapper(false);
-        final String sql = "select " + rateMapper.schema() + " where rate.is_active = true ";
+        final String sql = "select " + rateMapper.schema() + " where rate.is_active = " + sqlResolver.formatBoolValue(true);
         return this.jdbcTemplate.query(sql, rateMapper);
     }
 
     @Override
     public List<FloatingRateData> retrieveLookupActive() {
         FloatingRateLookupMapper rateMapper = new FloatingRateLookupMapper();
-        final String sql = "select " + rateMapper.schema() + " where rate.is_active = true ";
+        final String sql = "select " + rateMapper.schema() + " where rate.is_active = " + sqlResolver.formatBoolValue(true);
         return this.jdbcTemplate.query(sql, rateMapper);
     }
 
@@ -92,7 +96,8 @@ public class FloatingRatesReadPlatformServiceImpl implements FloatingRatesReadPl
     public FloatingRateData retrieveBaseLendingRate() {
         try {
             FloatingRateRowMapper rateMapper = new FloatingRateRowMapper(true);
-            final String sql = "select " + rateMapper.schema() + " where rate.is_base_lending_rate = 1 and rate.is_active = true";
+            final String sql = "select " + rateMapper.schema() + " where rate.is_base_lending_rate = " + sqlResolver.formatBoolValue(true) +
+                    " and rate.is_active = " + sqlResolver.formatBoolValue(true);
             return this.jdbcTemplate.queryForObject(sql, rateMapper);
         } catch (final EmptyResultDataAccessException e) {
             throw new FloatingRateNotFoundException("error.msg.floatingrate.base.lending.rate.not.found", e);
@@ -103,14 +108,20 @@ public class FloatingRatesReadPlatformServiceImpl implements FloatingRatesReadPl
 
         private final boolean addRatePeriods;
 
-        private final StringBuilder sqlQuery = new StringBuilder().append("rate.id as id, ").append("rate.name as name, ")
-                .append("rate.is_base_lending_rate as isBaseLendingRate, ").append("rate.is_active as isActive, ")
-                .append("crappu.username as createdBy, ").append("rate.created_date as createdOn, ")
-                .append("moappu.username as modifiedBy, ").append("rate.lastmodified_date as modifiedOn ")
-                .append("FROM m_floating_rates as rate ").append("LEFT JOIN m_appuser as crappu on rate.createdby_id = crappu.id ")
+        private final StringBuilder sqlQuery = new StringBuilder()
+                .append("rate.id as id, ")
+                .append("rate.name as name, ")
+                .append("rate.is_base_lending_rate as is_base_lending_rate, ")
+                .append("rate.is_active as is_active, ")
+                .append("crappu.username as created_by, ")
+                .append("rate.created_date as created_on, ")
+                .append("moappu.username as modified_by, ")
+                .append("rate.lastmodified_date as modified_on ")
+                .append("FROM m_floating_rates as rate ")
+                .append("LEFT JOIN m_appuser as crappu on rate.createdby_id = crappu.id ")
                 .append("LEFT JOIN m_appuser as moappu on rate.lastmodifiedby_id = moappu.id ");
 
-        FloatingRateRowMapper(final boolean addRatePeriods) {
+        public FloatingRateRowMapper(final boolean addRatePeriods) {
             this.addRatePeriods = addRatePeriods;
         }
 
@@ -118,21 +129,21 @@ public class FloatingRatesReadPlatformServiceImpl implements FloatingRatesReadPl
         public FloatingRateData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
             final Long id = rs.getLong("id");
             final String name = rs.getString("name");
-            final boolean isBaseLendingRate = rs.getBoolean("isBaseLendingRate");
-            final boolean isActive = rs.getBoolean("isActive");
-            final String createdBy = rs.getString("createdBy");
-            final LocalDate createdOn = JdbcSupport.getLocalDate(rs, "createdOn");
-            final String modifiedBy = rs.getString("modifiedBy");
-            final LocalDate modifiedOn = JdbcSupport.getLocalDate(rs, "modifiedOn");
+            final boolean isBaseLendingRate = rs.getBoolean("is_base_lending_rate");
+            final boolean isActive = rs.getBoolean("is_active");
+            final String createdBy = rs.getString("created_by");
+            final LocalDate createdOn = JdbcSupport.getLocalDate(rs, "created_on");
+            final String modifiedBy = rs.getString("modified_by");
+            final LocalDate modifiedOn = JdbcSupport.getLocalDate(rs, "modified_on");
             List<FloatingRatePeriodData> ratePeriods = null;
             if (addRatePeriods) {
                 FloatingRatePeriodRowMapper ratePeriodMapper = new FloatingRatePeriodRowMapper();
                 final String sql = "select " + ratePeriodMapper.schema()
-                        + " where period.is_active = true and period.floating_rates_id = ? " + " order by period.from_date desc ";
+                        + " where period.is_active = " + sqlResolver.formatBoolValue(true) + " and period.floating_rates_id = ? "
+                        + " order by period.from_date desc ";
                 ratePeriods = jdbcTemplate.query(sql, ratePeriodMapper, new Object[] { id });
             }
-            return new FloatingRateData(id, name, isBaseLendingRate, isActive, createdBy, createdOn, modifiedBy, modifiedOn, ratePeriods,
-                    null);
+            return new FloatingRateData(id, name, isBaseLendingRate, isActive, createdBy, createdOn, modifiedBy, modifiedOn, ratePeriods, null);
         }
 
         public String schema() {
@@ -189,31 +200,49 @@ public class FloatingRatesReadPlatformServiceImpl implements FloatingRatesReadPl
         }
     }
 
-    private static final class FloatingInterestRatePeriodRowMapper implements RowMapper<InterestRatePeriodData> {
+    private final class FloatingInterestRatePeriodRowMapper implements RowMapper<InterestRatePeriodData> {
 
-        private final StringBuilder sqlQuery = new StringBuilder().append("select ")
+        private final StringBuilder sqlQuery = new StringBuilder()
+                .append("select ")
                 .append("    linkedrateperiods.from_date as linkedrateperiods_from_date, ")
                 .append("    linkedrateperiods.interest_rate as linkedrateperiods_interest_rate, ")
                 .append("    linkedrateperiods.is_differential_to_base_lending_rate as linkedrateperiods_is_differential_to_base_lending_rate, ")
-                .append("    baserate.from_date as baserate_from_date, ").append("    baserate.interest_rate as baserate_interest_rate ")
+                .append("    baserate.from_date as baserate_from_date, ")
+                .append("    baserate.interest_rate as baserate_interest_rate ")
                 .append(" from m_product_loan as lp ")
                 .append(" join m_product_loan_floating_rates as plfr on lp.id = plfr.loan_product_id ")
-                .append(" join  m_floating_rates as linkedrate on linkedrate.id = plfr.floating_rates_id ")
-                .append("left join m_floating_rates_periods as linkedrateperiods on (linkedrate.id = linkedrateperiods.floating_rates_id and linkedrateperiods.is_active = true) ")
-                .append("left join ( ").append("    select blr.name, ").append("    blr.is_base_lending_rate, ")
-                .append("    blr.is_active, ").append("    blrperiods.from_date, ").append("    blrperiods.interest_rate ")
+                .append(" join m_floating_rates as linkedrate on linkedrate.id = plfr.floating_rates_id ")
+                .append("left join m_floating_rates_periods as linkedrateperiods on (linkedrate.id = linkedrateperiods.floating_rates_id and linkedrateperiods.is_active = ")
+                .append(sqlResolver.formatBoolValue(true)).append(") ")
+                .append("left join ( ")
+                .append("    select blr.name, ")
+                .append("    blr.is_base_lending_rate, ")
+                .append("    blr.is_active, ")
+                .append("    blrperiods.from_date, ")
+                .append("    blrperiods.interest_rate ")
                 .append("    from m_floating_rates as blr ")
-                .append("    left join m_floating_rates_periods as blrperiods on (blr.id = blrperiods.floating_rates_id and blrperiods.is_active = true) ")
-                .append("    where blr.is_base_lending_rate = 1 and blr.is_active = true ")
-                .append(") as baserate on (linkedrateperiods.is_differential_to_base_lending_rate = 1 and linkedrate.is_base_lending_rate = 0) ")
-                .append("where (baserate.from_date is null ").append("    or baserate.from_date = (select MAX(b.from_date) ")
-                .append("        from (select blr.name, ").append("            blr.is_base_lending_rate, ")
-                .append("            blr.is_active, ").append("            blrperiods.from_date, ")
-                .append("            blrperiods.interest_rate ").append("            from m_floating_rates as blr ")
-                .append("            left join m_floating_rates_periods as blrperiods on (blr.id = blrperiods.floating_rates_id and blrperiods.is_active = true) ")
-                .append("            where blr.is_base_lending_rate = 1 and blr.is_active = true ").append("        ) as b ")
-                .append("        where b.from_date <= linkedrateperiods.from_date)) ").append("and lp.id = ? ")
-                .append("order by linkedratePeriods_from_date desc ");
+                .append("    left join m_floating_rates_periods as blrperiods on (blr.id = blrperiods.floating_rates_id and blrperiods.is_active = ")
+                .append(sqlResolver.formatBoolValue(true)).append(")")
+                .append("    where blr.is_base_lending_rate = ").append(sqlResolver.formatBoolValue(true))
+                .append(" and blr.is_active = ").append(sqlResolver.formatBoolValue(true)).append(")")
+                .append(" as baserate on (linkedrateperiods.is_differential_to_base_lending_rate = ").append(sqlResolver.formatBoolValue(true))
+                .append(" and linkedrate.is_base_lending_rate = ").append(sqlResolver.formatBoolValue(false)).append(")")
+                .append(" where (baserate.from_date is null ")
+                .append("    or baserate.from_date = (select MAX(b.from_date) ")
+                .append("        from (select blr.name, ")
+                .append("            blr.is_base_lending_rate, ")
+                .append("            blr.is_active, ")
+                .append("            blrperiods.from_date, ")
+                .append("            blrperiods.interest_rate ")
+                .append("            from m_floating_rates as blr ")
+                .append("            left join m_floating_rates_periods as blrperiods on (blr.id = blrperiods.floating_rates_id and blrperiods.is_active = ")
+                .append(sqlResolver.formatBoolValue(true)).append(")")
+                .append("            where blr.is_base_lending_rate = ").append(sqlResolver.formatBoolValue(true))
+                .append(" and blr.is_active = ").append(sqlResolver.formatBoolValue(true)).append(")")
+                .append("        as b ")
+                .append("        where b.from_date <= linkedrateperiods.from_date)) ")
+                .append("and lp.id = ? ")
+                .append("order by linkedrateperiods_from_date desc ");
 
         @Override
         public InterestRatePeriodData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
