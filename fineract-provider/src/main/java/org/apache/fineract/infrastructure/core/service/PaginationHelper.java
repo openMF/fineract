@@ -26,6 +26,17 @@ import org.springframework.jdbc.core.RowMapper;
 
 public class PaginationHelper<E> {
 
+    public Page<E> fetchPage(final JdbcTemplate jt, final String sqlCountRows, final Object[] countArgs, final String sqlFetchRows, final Object[] fetchArgs,
+                             final RowMapper<E> rowMapper) {
+
+        final List<E> items = jt.query(sqlFetchRows, fetchArgs, rowMapper);
+
+        // determine how many rows are available
+        final Integer totalFilteredRecords = jt.queryForObject(sqlCountRows, countArgs, Integer.class);
+
+        return new Page<>(items, ObjectUtils.defaultIfNull(totalFilteredRecords, 0));
+    }
+
     public Page<E> fetchPage(final JdbcTemplate jt, final String sqlCountRows, final String sqlFetchRows, final Object[] args,
             final RowMapper<E> rowMapper) {
 

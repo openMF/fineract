@@ -32,5 +32,5 @@ public interface GLIMAccountInfoWritePlatformService {
     void incrementChildAccountCount(GroupLoanIndividualMonitoringAccount glimAccount);
 
     void addGLIMAccountInfo(String accountNumber, Group group, BigDecimal principalAmount, Long childAccountsCount,
-            Boolean isAcceptingChild, Integer loanStatus, BigDecimal applicationId);
+            Boolean isAcceptingChild, Integer loanStatus, Long applicationId);
 }

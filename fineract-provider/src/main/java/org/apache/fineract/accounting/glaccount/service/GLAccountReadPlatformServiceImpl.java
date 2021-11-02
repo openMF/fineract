@@ -32,6 +32,7 @@ import org.apache.fineract.accounting.glaccount.exception.GLAccountInvalidClassi
 import org.apache.fineract.accounting.glaccount.exception.GLAccountNotFoundException;
 import org.apache.fineract.accounting.journalentry.data.JournalEntryAssociationParametersData;
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
@@ -45,11 +46,13 @@ import org.springframework.stereotype.Service;
 public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private static final String nameDecoratedBaseOnHierarchy = "concat(substring('........................................', 1, ((LENGTH(hierarchy) - LENGTH(REPLACE(hierarchy, '.', '')) - 1) * 4)), name)";
 
     @Autowired
-    public GLAccountReadPlatformServiceImpl(final RoutingDataSource dataSource) {
+    public GLAccountReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
     }
 
     private static final class GLAccountMapper implements RowMapper<GLAccountData> {
@@ -130,7 +133,8 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
         if (associationParametersData != null) {
             if (associationParametersData.isRunningBalanceRequired()) {
                 sql = sql + " and gl_j.id in (select t1.id from (select t2.account_id, max(t2.id) as id from "
-                        + "(select id, max(entry_date) as entry_date, account_id from acc_gl_journal_entry where is_running_balance_calculated = 1 "
+                        + "(select id, max(entry_date) as entry_date, account_id from acc_gl_journal_entry where is_running_balance_calculated = "
+                        + sqlResolver.formatBoolValue(true)
                         + "group by account_id desc, id) t3 inner join acc_gl_journal_entry t2 on t2.account_id = t3.account_id and t2.entry_date = t3.entry_date "
                         + "group by t2.account_id desc) t1)";
             }
@@ -179,7 +183,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
                     sql += " and ";
                 }
 
-                sql += " manual_journal_entries_allowed = " + manualTransactionsAllowed;
+                sql += " manual_journal_entries_allowed = " + sqlResolver.formatBoolValue(manualTransactionsAllowed);
                 firstWhereConditionAdded = true;
             }
             if (disabled != null) {
@@ -187,7 +191,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
                     sql += " and ";
                 }
 
-                sql += " disabled = " + disabled;
+                sql += " disabled = " + sqlResolver.formatBoolValue(disabled);
 
                 firstWhereConditionAdded = true;
             }
@@ -207,7 +211,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
             final StringBuilder sql = new StringBuilder();
             sql.append("select ").append(rm.schema());
             if (associationParametersData.isRunningBalanceRequired()) {
-                sql.append(" and gl_j.is_running_balance_calculated = 1 ");
+                sql.append(" and gl_j.is_running_balance_calculated = " + sqlResolver.formatBoolValue(true));
             }
             sql.append("where gl.id = ?");
             if (associationParametersData.isRunningBalanceRequired()) {

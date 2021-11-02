@@ -38,6 +38,9 @@ import java.util.Map;
 import java.util.Set;
 import javax.sql.DataSource;
 import javax.ws.rs.core.StreamingOutput;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
+import org.apache.fineract.infrastructure.core.boot.db.JdbcJavaType;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
@@ -68,14 +71,16 @@ public class ReadReportingServiceImpl implements ReadReportingService {
     private final DataSource dataSource;
     private final PlatformSecurityContext context;
     private final GenericDataService genericDataService;
+    private final DataSourceSqlResolver sqlResolver;
 
     @Autowired
     public ReadReportingServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource,
-            final GenericDataService genericDataService) {
+            final GenericDataService genericDataService, DataSourceSqlResolver sqlResolver) {
         this.context = context;
         this.dataSource = dataSource;
         this.jdbcTemplate = new JdbcTemplate(this.dataSource);
         this.genericDataService = genericDataService;
+        this.sqlResolver = sqlResolver;
     }
 
     @Override
@@ -121,23 +126,22 @@ public class ReadReportingServiceImpl implements ReadReportingService {
 
         final List<ResultsetRowData> data = result.getData();
         List<String> row;
-        Integer rSize;
+        int rSize;
         // String currCol;
-        String currColType;
+        JdbcJavaType currColType;
         String currVal;
         final String doubleQuote = "\"";
         final String twoDoubleQuotes = doubleQuote + doubleQuote;
-        LOG.info("NO. of Rows: {}", data.size());
-        for (ResultsetRowData element : data) {
-            row = element.getRow();
+        LOG.info("NO. of Rows: " + data.size());
+        for (int i = 0; i < data.size(); i++) {
+            row = data.get(i).getRow();
             rSize = row.size();
             for (int j = 0; j < rSize; j++) {
                 // currCol = columnHeaders.get(j).getColumnName();
                 currColType = columnHeaders.get(j).getColumnType();
                 currVal = row.get(j);
                 if (currVal != null) {
-                    if (currColType.equals("DECIMAL") || currColType.equals("DOUBLE") || currColType.equals("BIGINT")
-                            || currColType.equals("SMALLINT") || currColType.equals("INT")) {
+                    if (currColType.isNumericType()) {
                         writer.append(currVal);
                     } else {
                         writer.append('"' + this.genericDataService.replace(currVal, doubleQuote, twoDoubleQuotes) + '"');
@@ -188,9 +192,9 @@ public class ReadReportingServiceImpl implements ReadReportingService {
         // Allows sql query to restrict data by current user Id if required
         // (typically used to return report lists containing only reports
         // permitted to be run by the user
-        sql = this.genericDataService.replace(sql, "${currentUserId}", currentUser.getId().toString());
+        sql = this.genericDataService.replace(sql, "${currentUserId}", String.valueOf(currentUser.getId()));
 
-        sql = this.genericDataService.replace(sql, "${isSelfServiceUser}", Integer.toString(isSelfServiceUserReport ? 1 : 0));
+        sql = this.genericDataService.replace(sql, "${isSelfServiceUser}", sqlResolver.formatBoolValue(isSelfServiceUserReport));
 
         sql = this.genericDataService.wrapSQL(sql);
 
@@ -266,19 +270,17 @@ public class ReadReportingServiceImpl implements ReadReportingService {
             table.completeRow();
 
             Integer rSize;
-            String currColType;
+            JdbcJavaType currColType;
             String currVal;
-            LOG.info("NO. of Rows: {}", data.size());
-            for (ResultsetRowData element : data) {
-                row = element.getRow();
+            LOG.info("NO. of Rows: " + data.size());
+            for (int i = 0; i < data.size(); i++) {
+                row = data.get(i).getRow();
                 rSize = row.size();
                 for (int j = 0; j < rSize; j++) {
                     currColType = columnHeaders.get(j).getColumnType();
                     currVal = row.get(j);
                     if (currVal != null) {
-                        if (currColType.equals("DECIMAL") || currColType.equals("DOUBLE") || currColType.equals("BIGINT")
-                                || currColType.equals("SMALLINT") || currColType.equals("INT")) {
-
+                        if (currColType.isNumericType()) {
                             table.addCell(currVal.toString());
                         } else {
                             table.addCell(currVal.toString());

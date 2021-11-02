@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.Page;
@@ -47,40 +49,47 @@ import org.springframework.stereotype.Service;
 public class SmsReadPlatformServiceImpl implements SmsReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final SmsMapper smsRowMapper;
     private final PaginationHelper<SmsData> paginationHelper = new PaginationHelper<>();
     private final ColumnValidator columnValidator;
 
     @Autowired
-    public SmsReadPlatformServiceImpl(final RoutingDataSource dataSource, final ColumnValidator columnValidator) {
+    public SmsReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
+                                      final ColumnValidator columnValidator) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.smsRowMapper = new SmsMapper();
         this.columnValidator = columnValidator;
     }
 
     private static final class SmsMapper implements RowMapper<SmsData> {
 
+        public static final String FROM = " from sms_messages_outbound smo join sms_campaign smc on smc.id = smo.campaign_id ";
         final String schema;
 
-        SmsMapper() {
+        public SmsMapper() {
             final StringBuilder sql = new StringBuilder(300);
             sql.append("smo.id as id, ");
-            sql.append("smo.group_id as groupId, ");
-            sql.append("smo.client_id as clientId, ");
-            sql.append("smo.staff_id as staffId, ");
-            sql.append("smo.status_enum as statusId, ");
-            sql.append("smo.mobile_no as mobileNo, ");
+            sql.append("smo.group_id as group_id, ");
+            sql.append("smo.client_id as client_id, ");
+            sql.append("smo.staff_id as staff_id, ");
+            sql.append("smo.status_enum as status_id, ");
+            sql.append("smo.mobile_no as mobile_no, ");
             sql.append("smo.message as message, ");
-            sql.append("smc.provider_id as providerId, ");
-            sql.append("smc.campaign_name as campaignName ");
-            sql.append("from sms_messages_outbound smo ");
-            sql.append("join sms_campaign smc on smc.id = smo.campaign_id ");
+            sql.append("smc.provider_id as provider_id, ");
+            sql.append("smc.campaign_name as campaign_name ");
+            sql.append(FROM);
 
             this.schema = sql.toString();
         }
 
         public String schema() {
             return this.schema;
+        }
+
+        public String countSchema() {
+            return " count(smo.*) " + FROM;
         }
 
         public String tableName() {
@@ -91,19 +100,19 @@ public class SmsReadPlatformServiceImpl implements SmsReadPlatformService {
         public SmsData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
 
             final Long id = JdbcSupport.getLong(rs, "id");
-            final Long groupId = JdbcSupport.getLong(rs, "groupId");
-            final Long clientId = JdbcSupport.getLong(rs, "clientId");
-            final Long staffId = JdbcSupport.getLong(rs, "staffId");
+            final Long groupId = JdbcSupport.getLong(rs, "group_id");
+            final Long clientId = JdbcSupport.getLong(rs, "client_id");
+            final Long staffId = JdbcSupport.getLong(rs, "staff_id");
 
-            final String mobileNo = rs.getString("mobileNo");
+            final String mobileNo = rs.getString("mobile_no");
             final String message = rs.getString("message");
 
-            final Integer statusId = JdbcSupport.getInteger(rs, "statusId");
+            final Integer statusId = JdbcSupport.getInteger(rs, "status_id");
             final EnumOptionData status = SmsMessageEnumerations.status(statusId);
 
-            final Long providerId = JdbcSupport.getLong(rs, "providerId");
+            final Long providerId = JdbcSupport.getLong(rs, "provider_id");
 
-            final String campaignName = rs.getString("campaignName");
+            final String campaignName = rs.getString("campaign_name");
 
             return SmsData.instance(id, groupId, clientId, staffId, status, mobileNo, message, providerId, campaignName);
         }
@@ -162,13 +171,19 @@ public class SmsReadPlatformServiceImpl implements SmsReadPlatformService {
 
     @Override
     public Page<Long> retrieveAllWaitingForDeliveryReport(final Integer limit) {
-        final String sqlPlusLimit = JdbcSupport.getLimitData(jdbcTemplate, limit);
-        final String sql = "select id from " + this.smsRowMapper.tableName() + " where status_enum = "
-                + SmsMessageStatusType.WAITING_FOR_DELIVERY_REPORT.getValue() + sqlPlusLimit;
-        final String sqlCountRows = JdbcSupport.getCountFunction(jdbcTemplate);
-        return this.paginationHelper.fetchPage(jdbcTemplate, sql, sqlCountRows, Long.class);
-        // (this.jdbcTemplate, sqlCountRows, new Object [] {}, Long.class);
-        // this.jdbcTemplate.queryForList(sql, Long.class);
+        final StringBuilder sqlStringBuilder = new StringBuilder("select ");
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        if (mySql)
+            sqlStringBuilder.append("SQL_CALC_FOUND_ROWS ");
+
+        sqlStringBuilder.append("id from " + this.smsRowMapper.tableName());
+        final String where = " where status_enum = " + SmsMessageStatusType.WAITING_FOR_DELIVERY_REPORT.getValue();
+        sqlStringBuilder.append(where);
+        sqlStringBuilder.append(limit > 0 ? (" limit " + limit + " offset 0") : "");
+
+        final String sqlCountRows = mySql ? "SELECT FOUND_ROWS()" : ("SELECT COUNT(*) FROM " + smsRowMapper.tableName() + where);
+        return this.paginationHelper.fetchPage(jdbcTemplate, sqlStringBuilder.toString(), sqlCountRows, Long.class);
+        //(this.jdbcTemplate, sqlCountRows, new Object [] {}, Long.class); this.jdbcTemplate.queryForList(sql, Long.class);
     }
 
     @Override
@@ -201,13 +216,19 @@ public class SmsReadPlatformServiceImpl implements SmsReadPlatformService {
     @Override
     public Page<SmsData> retrieveSmsByStatus(final Long campaignId, final SearchParameters searchParameters, final Integer status,
             final Date dateFrom, final Date dateTo) {
-        final StringBuilder sqlBuilder = new StringBuilder(200);
+        final StringBuilder sqlBuilder = new StringBuilder("select ");
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        if (mySql)
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
+
         final Object[] objectArray = new Object[10];
         int arrayPos = 0;
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ");
         sqlBuilder.append(this.smsRowMapper.schema());
+
+        final StringBuilder whereClause = new StringBuilder("");
         if (status != null) {
-            sqlBuilder.append(" where smo.campaign_id = ? and smo.status_enum= ? ");
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
+            whereClause.append(" smo.campaign_id = ? and smo.status_enum= ? ");
             objectArray[arrayPos] = campaignId;
             arrayPos = arrayPos + 1;
             objectArray[arrayPos] = status;
@@ -216,17 +237,18 @@ public class SmsReadPlatformServiceImpl implements SmsReadPlatformService {
         String fromDateString = null;
         String toDateString = null;
         if (dateFrom != null && dateTo != null) {
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
             final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
             fromDateString = df.format(dateFrom);
             toDateString = df.format(dateTo);
-            sqlBuilder.append(" and smo.submittedon_date >= ? and smo.submittedon_date <= ? ");
+            whereClause.append(" smo.submittedon_date >= ? and smo.submittedon_date <= ? ");
             objectArray[arrayPos] = fromDateString;
             arrayPos = arrayPos + 1;
 
             objectArray[arrayPos] = toDateString;
             arrayPos = arrayPos + 1;
         }
-
+        sqlBuilder.append(whereClause);
         if (searchParameters.isOrderByRequested()) {
             sqlBuilder.append(" order by ").append(searchParameters.getOrderBy());
             this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getOrderBy());
@@ -244,9 +266,14 @@ public class SmsReadPlatformServiceImpl implements SmsReadPlatformService {
                 sqlBuilder.append(" offset ").append(searchParameters.getOffset());
             }
         }
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        final Object[] finalObjectArray = Arrays.copyOf(objectArray, arrayPos);
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(), finalObjectArray, this.smsRowMapper);
+        final Object[] sqlParams = Arrays.copyOf(objectArray, arrayPos);
+        String sqlCountRows = "SELECT FOUND_ROWS()";
+        Object[] countParams = null;
+        if (!mySql) {
+            sqlCountRows = "SELECT " + smsRowMapper.countSchema() + whereClause;
+            countParams = sqlParams;
+        }
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, countParams, sqlBuilder.toString(), sqlParams, this.smsRowMapper);
     }
 
 }

@@ -21,15 +21,20 @@ package org.apache.fineract.adhocquery.service;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.stream.Collectors;
+
 import org.apache.fineract.adhocquery.data.AdHocData;
 import org.apache.fineract.adhocquery.domain.ReportRunFrequency;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.jobs.annotation.CronTarget;
 import org.apache.fineract.infrastructure.jobs.service.JobName;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,13 +47,15 @@ public class AdHocScheduledJobRunnerServiceImpl implements AdHocScheduledJobRunn
 
     private static final Logger LOG = LoggerFactory.getLogger(AdHocScheduledJobRunnerServiceImpl.class);
     private final AdHocReadPlatformService adHocReadPlatformService;
+    private final DataSourceSqlResolver sqlResolver;
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public AdHocScheduledJobRunnerServiceImpl(final RoutingDataSource dataSource, final AdHocReadPlatformService adHocReadPlatformService) {
+    public AdHocScheduledJobRunnerServiceImpl(final RoutingDataSource dataSource, final AdHocReadPlatformService adHocReadPlatformService,
+                                              DataSourceSqlResolver sqlResolver) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.adHocReadPlatformService = adHocReadPlatformService;
-
+        this.sqlResolver = sqlResolver;
     }
 
     @Transactional
@@ -95,8 +102,13 @@ public class AdHocScheduledJobRunnerServiceImpl implements AdHocScheduledJobRunn
                 if (run) {
                     // jdbcTemplate.execute("truncate table
                     // "+adhoc.getTableName());
+                    String fields = Arrays.stream(adhoc.getTableFields().split(",")).filter(f -> !Strings.isEmpty(f))
+                            .map(f -> sqlResolver.toDefinition(f.trim())).collect(Collectors.joining(", "));
                     final StringBuilder insertSqlBuilder = new StringBuilder(900);
-                    insertSqlBuilder.append("INSERT INTO ").append(adhoc.getTableName() + "(").append(adhoc.getTableFields() + ") ")
+                    insertSqlBuilder
+                            .append("INSERT INTO ")
+                            .append(sqlResolver.toDefinition(adhoc.getTableName())).append('(')
+                            .append(fields).append(')')
                             .append(adhoc.getQuery());
                     if (insertSqlBuilder.length() > 0) {
                         final int result = this.jdbcTemplate.update(insertSqlBuilder.toString());

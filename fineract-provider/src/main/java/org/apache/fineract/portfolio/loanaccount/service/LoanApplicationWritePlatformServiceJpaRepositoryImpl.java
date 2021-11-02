@@ -403,7 +403,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             String accountNumber = "";
             GroupLoanIndividualMonitoringAccount glimAccount;
             Long applicationId = 0L;
-            Boolean isLastChildApplication = false;
+            boolean isLastChildApplication = false;
 
             if (newLoanApplication.isAccountNumberRequiresAutoGeneration()) {
 
@@ -431,7 +431,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                             accountNumber = this.accountNumberGenerator.generate(newLoanApplication, accountNumberFormat);
                             newLoanApplication.updateAccountNo(accountNumber + "1");
                             glimAccountInfoWritePlatformService.addGLIMAccountInfo(accountNumber, group,
-                                    command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("totalLoan"), Long.valueOf(1), true,
+                                    command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("totalLoan"), 1L, true,
                                     LoanStatus.SUBMITTED_AND_PENDING_APPROVAL.getValue(), applicationId);
                             newLoanApplication.setGlim(glimRepository.findOneByAccountNumber(accountNumber));
                             this.loanRepositoryWrapper.save(newLoanApplication);
@@ -443,7 +443,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                             accountNumber = this.accountNumberGenerator.generate(newLoanApplication, accountNumberFormat);
                             newLoanApplication.updateAccountNo(accountNumber + "1");
                             glimAccountInfoWritePlatformService.addGLIMAccountInfo(accountNumber, group,
-                                    command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("totalLoan"), Long.valueOf(1), true,
+                                    command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("totalLoan"), 1L, true,
                                     LoanStatus.SUBMITTED_AND_PENDING_APPROVAL.getValue(), applicationId);
                             newLoanApplication.setGlim(glimRepository.findOneByAccountNumber(accountNumber));
                             this.loanRepositoryWrapper.save(newLoanApplication);
@@ -470,7 +470,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                             accountNumber = this.accountNumberGenerator.generate(newLoanApplication, accountNumberFormat);
                             newLoanApplication.updateAccountNo(accountNumber + "1");
                             glimAccountInfoWritePlatformService.addGLIMAccountInfo(accountNumber, group,
-                                    command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("totalLoan"), Long.valueOf(1), true,
+                                    command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("totalLoan"), 1L, true,
                                     LoanStatus.SUBMITTED_AND_PENDING_APPROVAL.getValue(), applicationId);
                             newLoanApplication.setGlim(glimRepository.findOneByAccountNumber(accountNumber));
                             this.loanRepositoryWrapper.save(newLoanApplication);

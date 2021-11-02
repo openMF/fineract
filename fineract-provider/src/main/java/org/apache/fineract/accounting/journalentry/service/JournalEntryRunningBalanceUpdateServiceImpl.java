@@ -33,6 +33,7 @@ import org.apache.fineract.accounting.journalentry.data.JournalEntryData;
 import org.apache.fineract.accounting.journalentry.data.JournalEntryDataValidator;
 import org.apache.fineract.accounting.journalentry.domain.JournalEntryType;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
@@ -56,14 +57,11 @@ public class JournalEntryRunningBalanceUpdateServiceImpl implements JournalEntry
     private static final Logger LOG = LoggerFactory.getLogger(JournalEntryRunningBalanceUpdateServiceImpl.class);
 
     private final JdbcTemplate jdbcTemplate;
-
     private final OfficeRepositoryWrapper officeRepositoryWrapper;
-
     private final JournalEntryDataValidator dataValidator;
-
     private final FromJsonHelper fromApiJsonHelper;
-
     private final GLJournalEntryMapper entryMapper = new GLJournalEntryMapper();
+    private final DataSourceSqlResolver sqlResolver;
 
     // if a limit is not added to the running balance select statements below
     // and the resultset is more than 400,000,
@@ -92,18 +90,19 @@ public class JournalEntryRunningBalanceUpdateServiceImpl implements JournalEntry
     @Autowired
     public JournalEntryRunningBalanceUpdateServiceImpl(final RoutingDataSource dataSource,
             final OfficeRepositoryWrapper officeRepositoryWrapper, final JournalEntryDataValidator dataValidator,
-            final FromJsonHelper fromApiJsonHelper) {
+            final FromJsonHelper fromApiJsonHelper, DataSourceSqlResolver sqlResolver) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.officeRepositoryWrapper = officeRepositoryWrapper;
         this.dataValidator = dataValidator;
         this.fromApiJsonHelper = fromApiJsonHelper;
+        this.sqlResolver = sqlResolver;
     }
 
     @Override
     @CronTarget(jobName = JobName.ACCOUNTING_RUNNING_BALANCE_UPDATE)
     public void updateRunningBalance() {
         String dateFinder = "select MIN(je.entry_date) as entityDate from acc_gl_journal_entry  je "
-                + "where je.is_running_balance_calculated=false ";
+                + "where je.is_running_balance_calculated= " + sqlResolver.formatBoolValue(false);
         try {
             Date entityDate = this.jdbcTemplate.queryForObject(dateFinder, Date.class);
             updateOrganizationRunningBalance(entityDate);
@@ -124,7 +123,7 @@ public class JournalEntryRunningBalanceUpdateServiceImpl implements JournalEntry
         } else {
             this.officeRepositoryWrapper.findOneWithNotFoundDetection(officeId);
             String dateFinder = "select MIN(je.entry_date) as entityDate " + "from acc_gl_journal_entry  je "
-                    + "where je.is_running_balance_calculated=false  and je.office_id=?";
+                    + "where je.is_running_balance_calculated= " + sqlResolver.formatBoolValue(false) + " and je.office_id=?";
             try {
                 Date entityDate = this.jdbcTemplate.queryForObject(dateFinder, Date.class, officeId);
                 updateRunningBalance(officeId, entityDate);
@@ -191,7 +190,7 @@ public class JournalEntryRunningBalanceUpdateServiceImpl implements JournalEntry
                 }
                 BigDecimal officeRunningBalance = calculateRunningBalance(entryData, officeRunningBalanceMap);
                 BigDecimal runningBalance = calculateRunningBalance(entryData, runningBalanceMap);
-                String sql = "UPDATE acc_gl_journal_entry je SET je.is_running_balance_calculated=1, je.organization_running_balance="
+                String sql = "UPDATE acc_gl_journal_entry je SET je.is_running_balance_calculated= "  + sqlResolver.formatBoolValue(true) + ", je.organization_running_balance="
                         + runningBalance + ",je.office_running_balance=" + officeRunningBalance + " WHERE  je.id=" + entryData.getId();
                 updateSql.add(sql);
                 batchIndex++;

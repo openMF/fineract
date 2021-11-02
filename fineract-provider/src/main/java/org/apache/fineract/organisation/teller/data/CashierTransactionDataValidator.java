@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.infrastructure.core.service.SearchParameters;
@@ -44,15 +45,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class CashierTransactionDataValidator {
 
+    private static final Logger LOG = LoggerFactory.getLogger(CashierTransactionDataValidator.class);
+
     private final TellerManagementReadPlatformService tellerManagementReadPlatformService;
     private final JdbcTemplate jdbcTemplate;
-    private static final Logger LOG = LoggerFactory.getLogger(CashierTransactionDataValidator.class);
+    private final DataSourceSqlResolver sqlResolver;
 
     @Autowired
     public CashierTransactionDataValidator(final TellerManagementReadPlatformService tellerManagementReadPlatformService,
-            final RoutingDataSource dataSource) {
+                                           final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver) {
         this.tellerManagementReadPlatformService = tellerManagementReadPlatformService;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
     }
 
     public void validateSettleCashAndCashOutTransactions(final Long cashierId, String currencyCode, final BigDecimal transactionAmount) {
@@ -100,8 +104,10 @@ public class CashierTransactionDataValidator {
         if (!cashier.isFullDay()) {
             String startTime = cashier.getStartTime();
             String endTime = cashier.getEndTime();
-            sql = sql + " AND ( Time(c.start_time) BETWEEN TIME('" + startTime + "') and TIME('" + endTime
-                    + "') or Time(c.end_time) BETWEEN TIME('" + startTime + "') and TIME('" + endTime + "')) ";
+            sql = sql + " AND (" + sqlResolver.formatTime("c.start_time") + " BETWEEN " + sqlResolver.formatTime("'" + startTime + "'")
+                    + " AND " + sqlResolver.formatTime("'" + endTime + "'")
+                    + " OR " + sqlResolver.formatTime("c.end_time") + " BETWEEN " + sqlResolver.formatTime("'" + startTime + "'")
+                    + " AND " + sqlResolver.formatTime("'" + endTime + "'") + ") ";
         }
         int count = this.jdbcTemplate.queryForObject(sql, Integer.class);
         if (count > 0) {

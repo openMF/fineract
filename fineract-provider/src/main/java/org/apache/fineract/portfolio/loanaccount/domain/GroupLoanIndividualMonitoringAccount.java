@@ -135,11 +135,11 @@ public final class GroupLoanIndividualMonitoringAccount extends AbstractPersista
         this.loanStatus = loanStatus;
     }
 
-    public BigDecimal getApplicationId() {
+    public Long getApplicationId() {
         return applicationId;
     }
 
-    public void setApplicationId(BigDecimal applicationId) {
+    public void setApplicationId(Long applicationId) {
         this.applicationId = applicationId;
     }
 }
