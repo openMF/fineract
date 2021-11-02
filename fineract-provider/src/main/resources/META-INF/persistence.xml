@@ -32,7 +32,7 @@
             <!--
             <property name="openjpa.jdbc.DBDictionary" value="org.apache.fineract.infrastructure.core.domain.MySQLDictionaryCustom"/>
             -->
-            <property name="openjpa.jdbc.DBDictionary" value="org.apache.fineract.infrastructure.core.domain.PostgreSQLDictionaryCustom"/>
+<!--            <property name="openjpa.jdbc.DBDictionary" value="org.apache.fineract.infrastructure.core.domain.PostgreSQLDictionaryCustom"/>-->
             <!--<property name="openjpa.InverseManager" value="true(Action=warn)"/> -->
             <property name="openjpa.Log" value="slf4j"/>
             <property name="openjpa.jdbc.MappingDefaults" value="ForeignKeyDeleteAction=CASCADE"/>
