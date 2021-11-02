@@ -76,10 +76,8 @@ public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceSe
 
     // creates the tenant data source for the oltp and report database
     private DataSource createNewDataSourceFor(final FineractPlatformTenantConnection tenantConnectionObj) {
-        String jdbcUrl = this.driverConfig.constructProtocol(tenantConnectionObj.getSchemaServer(),
-                tenantConnectionObj.getSchemaServerPort(), tenantConnectionObj.getSchemaName(),
-                tenantConnectionObj.getSchemaConnectionParameters());
-
+        String jdbcUrl = this.driverConfig.constructUrl(tenantConnectionObj.getSchemaServer(), tenantConnectionObj.getSchemaServerPort(),
+                tenantConnectionObj.getSchemaName(), tenantConnectionObj.getSchemaConnectionParameters());
         HikariConfig config = new HikariConfig();
         config.setDriverClassName(this.driverConfig.getDriverClassName());
         config.setPoolName(tenantConnectionObj.getSchemaName() + "_pool");

@@ -1,44 +1,34 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed with this work for
+ * additional information regarding copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+ * CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 package org.apache.fineract.infrastructure.core.service;
 
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.PostConstruct;
-import javax.sql.DataSource;
+import com.zaxxer.hikari.HikariDataSource;
+import liquibase.exception.LiquibaseException;
 import org.apache.fineract.infrastructure.core.boot.JDBCDriverConfig;
-import org.apache.fineract.infrastructure.core.boot.LiquiBaseUtil;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection;
 import org.apache.fineract.infrastructure.security.service.TenantDetailsService;
-import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.FlywayException;
-import org.flywaydb.core.internal.jdbc.DriverDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * A service that picks up on tenants that are configured to auto-update their specific schema on application startup.
@@ -46,173 +36,114 @@ import org.springframework.stereotype.Service;
 @Service
 public class TenantDatabaseUpgradeService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TenantDatabaseUpgradeService.class);
+    private final static Logger LOG = LoggerFactory.getLogger(TenantDatabaseUpgradeService.class);
 
     private final TenantDetailsService tenantDetailsService;
-    protected final DataSource tenantDataSource;
-
-    private final String coreChangeLog = "/sql/liquibase/db.changelog-core.yaml";
-    private final String tenantChangeLog = "/sql/liquibase/db.changelog-tenant.yaml";
-
-    protected String databaseProduct;
-    protected String databaseVersion;
-
-    @Value("${allow.upgrade.fineract.databases:false}")
-    private boolean allowUpgradeDatabases;
-
-    @Autowired
     private JDBCDriverConfig driverConfig;
+    private final LiquibaseProperties liquibaseProperties;
+    private final ResourceLoader resourceLoader;
+    protected final DataSource dataSource;
+    protected final Environment environment;
 
     @Autowired
     public TenantDatabaseUpgradeService(final TenantDetailsService detailsService,
-            @Qualifier("hikariTenantDataSource") final DataSource dataSource) {
+                                        JDBCDriverConfig jdbcDriverConfig,
+                                        LiquibaseProperties liquibaseProperties,
+                                        ResourceLoader resourceLoader,
+                                        @Qualifier("hikariTenantDataSource") final DataSource dataSource,
+                                        Environment environment) {
         this.tenantDetailsService = detailsService;
-        this.tenantDataSource = dataSource;
+        this.driverConfig = jdbcDriverConfig;
+        this.liquibaseProperties = liquibaseProperties;
+        this.resourceLoader = resourceLoader;
+        this.dataSource = dataSource;
+        this.environment = environment;
     }
 
     @PostConstruct
-    public void upgradeAllTenants() {
-        setDatabaseProduct();
-
-        if (!allowUpgradeDatabases) {
-            LOG.info("The upgrade tenant databases will be not executed");
+    public void upgradeAllTenants() throws LiquibaseException {
+        if (!liquibaseProperties.isEnabled()) {
             return;
         }
-        upgradeTenantDB();
+        upgradeTenantsDb();
 
         final List<FineractPlatformTenant> tenants = this.tenantDetailsService.findAllTenants();
-        for (final FineractPlatformTenant tenant : tenants) {
-            final FineractPlatformTenantConnection connection = tenant.getConnection();
-            if (connection.isAutoUpdateEnabled()) {
-
-                String connectionProtocol = driverConfig.constructProtocol(connection.getSchemaServer(), connection.getSchemaServerPort(),
-                        connection.getSchemaName(), connection.getSchemaConnectionParameters());
-
-                DriverDataSource source = new DriverDataSource(Thread.currentThread().getContextClassLoader(),
-                        driverConfig.getDriverClassName(), connectionProtocol, connection.getSchemaUsername(),
-                        connection.getSchemaPassword());
-
-                // Should be removed later when all instances are stabilized
-                // :FINERACT-1008
-                if (isMySQL()) {
-
-                    final Flyway flyway = Flyway.configure().dataSource(source).locations("sql/migrations/core_db").outOfOrder(true)
-                            .placeholderReplacement(false).configuration(Map.of("flyway.table", "schema_version")) // FINERACT-979
-                            .load();
-                    repairFlywayVersionSkip(flyway.getConfiguration().getDataSource());
-
-                    try {
-                        flyway.repair();
-                        flyway.migrate();
-                    } catch (FlywayException e) {
-                        String betterMessage = e.getMessage() + "; for Tenant DB URL: " + connectionProtocol + ", username: "
-                                + connection.getSchemaUsername();
-                        throw new FlywayException(betterMessage, e);
-                    }
-                } else {
-                    try {
-                        LOG.info("Liquibase tenant " + tenant.getName() + " change log: " + tenantChangeLog);
-                        LiquiBaseUtil.applyLiquibaseMigrations(tenantChangeLog, source.getConnection());
-                    } catch (SQLException e) {
-                        LOG.error(e.getMessage(), e);
-                    }
-                }
-            }
+        if (tenants == null) {
+            return;
         }
-    }
+        TenantAwareSpringLiquibase liquibase = createLiquibase(calcContext(new StringBuilder("core_db")).toString());
 
-    private void setDatabaseProduct() {
-        this.databaseProduct = "";
-        try {
-            this.databaseProduct = this.tenantDataSource.getConnection().getMetaData().getDatabaseProductName();
-            this.databaseVersion = this.tenantDataSource.getConnection().getMetaData().getDatabaseProductVersion();
-        } catch (SQLException e) {
-            LOG.error(e.getMessage());
+        HashMap<Object, Object> dataSources = new HashMap<>();
+        for (FineractPlatformTenant tenant : tenants) {
+            FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
+            LOG.debug("Initialize liquibase for tenant " + tenant.getTenantIdentifier());
+            dataSources.put(tenant.getTenantIdentifier(), createTenantDataSource((HikariDataSource) dataSource, tenantConnection));
         }
-        LOG.info("Database Product: " + this.databaseProduct + " : " + this.databaseVersion);
-    }
-
-    private boolean isMySQL() {
-        return (this.databaseProduct.toLowerCase().contains("mysql"));
+        liquibase.setTargetDataSources(dataSources);
+        LOG.debug("Start liquibase on core database");
+        liquibase.afterPropertiesSet();
     }
 
     /**
-     * Initializes, and if required upgrades (using Flyway) the Tenant DB itself.
+     * Initializes, and if required upgrades (using Liquibase) the Tenants DB itself.
      */
-    public void upgradeTenantDBMySQL() {
-        String dbHostname = getEnvVar("FINERACT_DEFAULT_TENANTDB_HOSTNAME", "localhost");
-        String dbPort = getEnvVar("FINERACT_DEFAULT_TENANTDB_PORT", "3306");
-        String dbUid = getEnvVar("FINERACT_DEFAULT_TENANTDB_UID", "root");
-        String dbPwd = getEnvVar("FINERACT_DEFAULT_TENANTDB_PWD", "mysql");
-        String dbConnParams = getEnvVar("FINERACT_DEFAULT_TENANTDB_CONN_PARAMS", "");
-        LOG.info("upgradeTenantDB: FINERACT_DEFAULT_TENANTDB_HOSTNAME = {}, FINERACT_DEFAULT_TENANTDB_PORT = {}", dbHostname, dbPort);
+    private void upgradeTenantsDb() throws LiquibaseException {
+        TenantAwareSpringLiquibase liquibase = createLiquibase(calcContext(new StringBuilder("tenants_db")).toString());
 
-        final Flyway flyway = Flyway.configure().dataSource(tenantDataSource).locations("sql/migrations/list_db").outOfOrder(true)
-                // FINERACT-773
-                .placeholders(Map.of("fineract_default_tenantdb_hostname", dbHostname, "fineract_default_tenantdb_port", dbPort,
-                        "fineract_default_tenantdb_uid", dbUid, "fineract_default_tenantdb_pwd", dbPwd,
-                        "fineract_default_tenantdb_conn_params", dbConnParams))
-                .configuration(Map.of("flyway.table", "schema_version")) // FINERACT-979
-                .load();
+        liquibase.setDataSource(dataSource);
+        LOG.debug("Start liquibase on list database " + dataSource);
 
-        // Should be removed later when all instances are stabilized
-        // :FINERACT-1008
-        repairFlywayVersionSkip(flyway.getConfiguration().getDataSource());
-
-        flyway.repair();
-        flyway.migrate();
+        liquibase.afterPropertiesSet();
     }
 
-    private void upgradeTenantDB() {
-        try {
-            LOG.info("Liquibase core change log: " + coreChangeLog);
-            LiquiBaseUtil.applyLiquibaseMigrations(coreChangeLog, tenantDataSource.getConnection());
-        } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
+    private StringBuilder calcContext(StringBuilder context) {
+        if (context == null) {
+            context = new StringBuilder();
+        } else if (context.length() > 0) {
+            context.append(',');
         }
+
+        context.append(driverConfig.getDialect().name().toLowerCase());
+
+        String[] profiles = environment.getActiveProfiles();
+        if (profiles.length > 0) {
+            context.append(',').append(String.join(",", profiles));
+        }
+        return context;
     }
 
-    private String getEnvVar(String name, String defaultValue) {
-        String value = System.getenv(name);
-        if (value == null) {
-            return defaultValue;
-        }
-        return value;
+    private TenantAwareSpringLiquibase createLiquibase(String context) {
+        TenantAwareSpringLiquibase liquibase = new TenantAwareSpringLiquibase();
+        String changeLog = liquibaseProperties.getChangeLog();
+
+        liquibase.setShouldRun(true);
+        liquibase.setChangeLog(changeLog);
+        String contexts = liquibaseProperties.getContexts();
+        contexts = contexts == null || contexts.isEmpty() ? context : (contexts + ", " + context);
+        liquibase.setContexts(contexts);
+        liquibase.setDefaultSchema(liquibaseProperties.getDefaultSchema());
+        liquibase.setDropFirst(liquibaseProperties.isDropFirst());
+        liquibase.setResourceLoader(resourceLoader);
+        liquibase.setChangeLogParameters(liquibaseProperties.getParameters());
+
+        LOG.debug("Initiated liquibase " + liquibase.getContexts());
+        return liquibase;
     }
 
-    private void repairFlywayVersionSkip(DataSource source) {
-        JdbcTemplate template = new JdbcTemplate(source);
-        LOG.info("repairFlywayVersionSkip: Check whether the version table is in old format ");
-        SqlRowSet ts = template.queryForRowSet("SHOW TABLES LIKE 'schema_version';");
-        if (ts.next()) {
-            SqlRowSet rs = template.queryForRowSet("SHOW  COLUMNS FROM schema_version LIKE 'version_rank';");
-            if (rs.next()) {
-                LOG.info("repairFlywayVersionSkip: The schema_version table is in old format, executing repair ");
-                template.execute("CREATE TABLE schema_version_history (  version_rank int(11) NOT NULL, "
-                        + " installed_rank int(11) NOT NULL,  version varchar(50) NOT NULL,  description varchar(200) NOT NULL,  "
-                        + "type varchar(20) NOT NULL,  script varchar(1000) NOT NULL,  checksum int(11) DEFAULT NULL, "
-                        + " installed_by varchar(100) NOT NULL,  installed_on timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, "
-                        + " execution_time int(11) NOT NULL,  success tinyint(1) NOT NULL,  PRIMARY KEY (version), "
-                        + " KEY schema_version_vr_idx (version_rank),  KEY schema_version_ir_idx (installed_rank), "
-                        + " KEY schema_version_s_idx (success));");
-                template.execute("INSERT INTO schema_version_history select * from schema_version;");
-                template.execute("DROP TABLE schema_version;");
-                template.execute("CREATE TABLE schema_version ( installed_rank int(11) NOT NULL, "
-                        + "  version varchar(50) DEFAULT NULL,   description varchar(200) NOT NULL,   type varchar(20) NOT NULL,  "
-                        + " script varchar(1000) NOT NULL,   checksum int(11) DEFAULT NULL,   installed_by varchar(100) NOT NULL,  "
-                        + " installed_on timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,   execution_time int(11) NOT NULL, "
-                        + "  success tinyint(1) NOT NULL,   PRIMARY KEY (installed_rank),   KEY flyway_schema_history_s_idx (success) );");
-                template.execute("INSERT INTO schema_version (installed_rank, version, description, type, script, checksum, "
-                        + "installed_by, installed_on, execution_time, success) SELECT installed_rank, version, description, type, "
-                        + "script, checksum, installed_by, installed_on, execution_time, success FROM schema_version_history;");
-                template.execute("DROP TABLE schema_version_history;");
+    private DataSource createTenantDataSource(HikariDataSource tenantsDataSource, FineractPlatformTenantConnection tenantConnection) {
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setDriverClassName(tenantsDataSource.getDriverClassName());
+        dataSource.setDataSourceProperties(tenantsDataSource.getDataSourceProperties());
+        dataSource.setMinimumIdle(tenantsDataSource.getMinimumIdle());
+        dataSource.setMaximumPoolSize(tenantsDataSource.getMaximumPoolSize());
+        dataSource.setIdleTimeout(tenantsDataSource.getIdleTimeout());
+        dataSource.setConnectionTestQuery(tenantsDataSource.getConnectionTestQuery());
 
-                LOG.info("repairFlywayVersionSkip: The schema_version repair completed.");
-            } else {
-                LOG.info("repairFlywayVersionSkip: The schema_version table format is new, aborting repair");
-            }
-        } else {
-            LOG.info("repairFlywayVersionSkip: The schema_version table does not exist, aborting repair");
-        }
+        dataSource.setUsername(tenantConnection.getSchemaUsername());
+        dataSource.setPassword(tenantConnection.getSchemaPassword());
+        dataSource.setJdbcUrl(driverConfig.constructUrl(tenantConnection.getSchemaServer(), tenantConnection.getSchemaServerPort(),
+                tenantConnection.getSchemaName(), tenantConnection.getSchemaConnectionParameters()));
+
+        return dataSource;
     }
 }
