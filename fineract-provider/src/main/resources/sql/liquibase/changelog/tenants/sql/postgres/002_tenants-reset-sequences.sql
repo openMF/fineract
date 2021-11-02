@@ -16,6 +16,6 @@
 -- specific language governing permissions and limitations
 -- under the License.
 --
-SELECT SETVAL('tenant_server_connections_seq', COALESCE(MAX(id), 0)+1, false ) FROM tenant_server_connections;
-SELECT SETVAL('tenants_seq', COALESCE(MAX(id), 0)+1, false ) FROM tenants;
-SELECT SETVAL('timezones_seq', COALESCE(MAX(id), 0)+1, false ) FROM timezones;
+SELECT SETVAL('tenant_server_connections_id_seq', COALESCE(MAX(id), 0)+1, false ) FROM tenant_server_connections;
+SELECT SETVAL('tenants_id_seq', COALESCE(MAX(id), 0)+1, false ) FROM tenants;
+SELECT SETVAL('timezones_id_seq', COALESCE(MAX(id), 0)+1, false ) FROM timezones;
