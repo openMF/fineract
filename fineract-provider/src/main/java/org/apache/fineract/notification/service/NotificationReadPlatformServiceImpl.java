@@ -114,7 +114,8 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
     @Override
     public void updateNotificationReadStatus() {
         final Long appUserId = context.authenticatedUser().getId();
-        String sql = "UPDATE notification_mapper SET is_read = " + sqlResolver.formatBoolValue(true) + " WHERE is_read = " + sqlResolver.formatBoolValue(false) + " and user_id = ?";
+        String sql = "UPDATE notification_mapper SET is_read = " + sqlResolver.formatBoolValue(true) + " WHERE is_read = " + sqlResolver.formatBoolValue(false)
+                + " and user_id = ?";
         this.jdbcTemplate.update(sql, appUserId);
     }
 

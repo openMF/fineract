@@ -18,9 +18,18 @@
  */
 package org.apache.fineract.notification.service;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.annotation.PostConstruct;
+import javax.jms.Queue;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
+import org.apache.fineract.notification.data.NotificationData;
 import org.apache.fineract.notification.data.TopicSubscriberData;
 import org.apache.fineract.notification.eventandlistener.NotificationEventService;
 import org.apache.fineract.notification.eventandlistener.SpringEventPublisher;
@@ -43,13 +52,6 @@ import org.apache.fineract.useradministration.domain.Role;
 import org.apache.fineract.useradministration.domain.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Service
 public class NotificationDomainServiceImpl implements NotificationDomainService {
@@ -399,15 +401,15 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
             String eventType, Long appUserId, Long officeId) {
 
         String tenantIdentifier = ThreadLocalContextUtil.getTenant().getTenantIdentifier();
-//        Queue queue = new ActiveMQQueue("NotificationQueue");
+        Queue queue = new ActiveMQQueue("NotificationQueue");
         List<Long> userIds = retrieveSubscribers(officeId, permission);
-//        NotificationData notificationData = new NotificationData(objectType, objectIdentifier, eventType, appUserId, notificationContent,
-//                false, false, tenantIdentifier, officeId, userIds);
-//        try {
-//            this.notificationEvent.broadcastNotification(queue, notificationData);
-//        } catch (Exception e) {
-//            this.springEventPublisher.broadcastNotification(notificationData);
-//        }
+        NotificationData notificationData = new NotificationData(objectType, objectIdentifier, eventType, appUserId, notificationContent,
+                false, false, tenantIdentifier, officeId, userIds);
+        try {
+            this.notificationEvent.broadcastNotification(queue, notificationData);
+        } catch (Exception e) {
+            this.springEventPublisher.broadcastNotification(notificationData);
+        }
     }
 
     private List<Long> retrieveSubscribers(Long officeId, String permission) {
