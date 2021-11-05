@@ -1292,7 +1292,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
         // PERMITTED datatables
         final String sql = "select (CASE WHEN exists (select 1 from x_registered_table where registered_table_name = ?) THEN 'true' ELSE 'false' END)";
         final String isRegisteredDataTable = this.jdbcTemplate.queryForObject(sql, String.class, new Object[] { name });
-        return Boolean.getBoolean(isRegisteredDataTable);
+        return Boolean.parseBoolean(isRegisteredDataTable);
     }
 
     private void assertDataTableExists(final String datatableName) {
@@ -1300,7 +1300,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
                 + sqlResolver.formatSchema()
                 + " and table_name = ?) THEN 'true' ELSE 'false' END)";
         final String dataTableExistsString = this.jdbcTemplate.queryForObject(sql, String.class, new Object[] { datatableName });
-        final boolean dataTableExists = Boolean.getBoolean(dataTableExistsString);
+        final boolean dataTableExists = Boolean.parseBoolean(dataTableExistsString);
         if (!dataTableExists) { throw new PlatformDataIntegrityException("error.msg.invalid.datatable",
                 "Invalid Data Table: " + datatableName, "name", datatableName); }
     }
