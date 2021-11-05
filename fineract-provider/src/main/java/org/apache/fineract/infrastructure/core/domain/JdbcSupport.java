@@ -18,7 +18,8 @@
  */
 package org.apache.fineract.infrastructure.core.domain;
 
-import static org.apache.fineract.infrastructure.core.service.DateUtils.getDateTimeZoneOfTenant;
+import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.springframework.jdbc.support.JdbcUtils;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -28,9 +29,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.Date;
-import org.apache.fineract.infrastructure.core.service.DateUtils;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.JdbcUtils;
+
+import static org.apache.fineract.infrastructure.core.service.DateUtils.getDateTimeZoneOfTenant;
 
 /**
  * Support for retrieving possibly null values from jdbc recordset delegating to springs {@link JdbcUtils} where
@@ -39,50 +39,6 @@ import org.springframework.jdbc.support.JdbcUtils;
 public final class JdbcSupport {
 
     private JdbcSupport() {}
-
-    public static boolean isMySQLDatabase(final JdbcTemplate jdbcTemplate) {
-        try {
-            final String url = jdbcTemplate.getDataSource().getConnection().getMetaData().getURL();
-            return (url.toLowerCase().indexOf("mysql") > 0);
-        } catch (SQLException e) {
-            return false;
-        }
-    }
-
-    public static String getDateFunction(final JdbcTemplate jdbcTemplate) {
-        if (isMySQLDatabase(jdbcTemplate)) {
-            return "CURDATE()";
-        } else {
-            return "CURRENT_DATE";
-        }
-    }
-
-    public static String getCountFunction(final JdbcTemplate jdbcTemplate) {
-        if (isMySQLDatabase(jdbcTemplate)) {
-            return "SELECT FOUND_ROWS()";
-        } else {
-            return "SELECT FOUND_ROWS()";
-        }
-    }
-
-    public static String getLimitData(final JdbcTemplate jdbcTemplate, final Integer limit) {
-        if (limit > 0) {
-            if (isMySQLDatabase(jdbcTemplate)) {
-                return " limit 0, " + limit;
-            } else {
-                return " OFFSET 0 LIMIT " + limit;
-            }
-        }
-        return "";
-    }
-
-    public static String getConcatFunction(final JdbcTemplate jdbcTemplate) {
-        if (isMySQLDatabase(jdbcTemplate)) {
-            return "group_concat";
-        } else {
-            return "array_agg";
-        }
-    }
 
     public static ZonedDateTime getDateTime(final ResultSet rs, final String columnName) throws SQLException {
         ZonedDateTime dateTime = null;

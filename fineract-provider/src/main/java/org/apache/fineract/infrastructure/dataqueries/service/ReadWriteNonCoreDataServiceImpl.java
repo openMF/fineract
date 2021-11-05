@@ -617,7 +617,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
 
     private void parseDatatableColumnObjectForCreate(final JsonObject column, StringBuilder sqlBuilder,
                                                      final StringBuilder constraintBuilder, final String dataTableNameAlias, final Map<String, Long> codeMappings,
-            final boolean isConstraintApproach) {
+                                                     final boolean isConstraintApproach) {
 
         String name = column.has("name") ? column.get("name").getAsString() : null;
         final String type = column.has("type") ? column.get("type").getAsString().toUpperCase() : null;
@@ -944,11 +944,12 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
      * @see {https://mifosforge.jira.com/browse/MIFOSX-1145}
      **/
     private void removeNullValuesFromStringColumn(final String datatableName, String columnName, JdbcJavaType columnType, boolean mandatory) {
-        if (!mandatory)
+        if (!mandatory) {
             return;
-        if (!columnType.isStringType() && !columnType.isBlobType())
+        }
+        if (!columnType.isStringType() && !columnType.isBlobType()) {
             return;
-        // TODO: JM why only string type columns?
+        }
 
         String sql = "UPDATE " + datatableName + " SET " + columnName + " = '' WHERE " + columnName + " IS NULL";
         jdbcTemplate.update(sql);
@@ -968,7 +969,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             deregisterDatatable(datatableName);
             String[] sqlArray = null;
             if (this.configurationDomainService.isConstraintApproachEnabledForDatatables()) {
-                final String deleteColumnCodeSql = "delete from x_table_column_code_mappings where column_alias_name like'"
+                final String deleteColumnCodeSql = "delete from x_table_column_code_mappings where column_alias_name like '"
                         + datatableName.toLowerCase().replaceAll("\\s", "_") + "_%'";
                 sqlArray = new String[2];
                 sqlArray[1] = deleteColumnCodeSql;
@@ -1154,8 +1155,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
 
         final String sqlString = "SELECT COUNT(" + sqlResolver.toDefinition(foreignKeyColumn) + ") FROM " + sqlResolver.toDefinition(datatableName) +
                 " WHERE " + sqlResolver.toDefinition(foreignKeyColumn) + "="  + appTableId;
-        final Long count = this.jdbcTemplate.queryForObject(sqlString, Long.class);
-        return count;
+        return this.jdbcTemplate.queryForObject(sqlString, Long.class);
     }
 
     // ---- UTIL ----
@@ -1172,7 +1172,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             length = 11;
 
         return length;
-        }
+    }
 
     private Integer adjustColumnScale(@NotNull DataSourceDialect dialect, JdbcJavaType columnType, Integer scale, String inputType) {
         if (!columnType.hasScale(dialect))

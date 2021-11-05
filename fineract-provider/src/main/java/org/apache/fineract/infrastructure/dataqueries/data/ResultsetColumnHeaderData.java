@@ -82,8 +82,9 @@ public final class ResultsetColumnHeaderData implements Serializable {
     private DisplayType calcDisplayType() {
         if (this.columnCode == null) {
             DisplayType displayType = calcColumnDisplayType(columnType);
-            if (displayType != null)
+            if (displayType != null) {
                 return displayType;
+            }
 
             throw new PlatformDataIntegrityException("error.msg.invalid.lookup.type", "Invalid Lookup Type:" + this.columnType
                     + " - Column Name: " + this.columnName);

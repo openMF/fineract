@@ -75,12 +75,7 @@ public class OpenJpaVendorAdapter extends AbstractJpaVendorAdapter {
                 jpaProperties.put("openjpa.jdbc.DBDictionary", databaseDictonary);
             }
         }
-
-        LOG.info("=======================");
-        LOG.info("=======================");
         LOG.info((String) jpaProperties.get("openjpa.jdbc.DBDictionary"));
-        LOG.info("=======================");
-        LOG.info("=======================");
 
         if (isGenerateDdl()) {
             jpaProperties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)");

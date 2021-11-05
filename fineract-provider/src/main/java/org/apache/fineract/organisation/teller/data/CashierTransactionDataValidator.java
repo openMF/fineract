@@ -42,6 +42,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.NotNull;
+
 @Component
 public class CashierTransactionDataValidator {
 
@@ -117,12 +119,15 @@ public class CashierTransactionDataValidator {
 
     public void validateOnLoanDisbursal(AppUser user, String currencyCode, BigDecimal transactionAmount) {
         LocalDateTime localDateTime = DateUtils.getLocalDateTimeOfTenant();
+        @NotNull LocalDate effectiveDate = localDateTime.toLocalDate();
         if (user.getStaff() != null) {
-            String sql = "select c.id from m_cashiers c where c.staff_id = " + user.getStaff().getId() + " AND "
-                    + " (case when c.full_day then '" + localDateTime.toLocalDate() + "' BETWEEN c.start_date AND c.end_date " + " else ('"
-                    + localDateTime.toLocalDate() + "' BETWEEN c.start_date AND c.end_date and " + " TIME('"
-                    + ZonedDateTime.of(localDateTime, DateUtils.getDateTimeZoneOfTenant())
-                    + "') BETWEEN TIME(c.start_time) AND TIME(c.end_time)  ) end)";
+			String sql = "select c.id from m_cashiers c where c.staff_id = " + user.getStaff().getId()
+					+ " AND (case when c.full_day THEN '"
+						+ effectiveDate + "' BETWEEN c.start_date AND c.end_date"
+					+ " else ('"
+						+ effectiveDate + "' BETWEEN c.start_date AND c.end_date"
+						+ " AND " + sqlResolver.formatTime("'" + ZonedDateTime.of(localDateTime, DateUtils.getDateTimeZoneOfTenant()) + "'")
+							+ " BETWEEN " + sqlResolver.formatTime("c.start_time") + " AND " + sqlResolver.formatTime("c.end_time") + ") end)";
             try {
                 Long cashierId = this.jdbcTemplate.queryForObject(sql, Long.class);
                 validateSettleCashAndCashOutTransactions(cashierId, currencyCode, transactionAmount);
@@ -130,6 +135,5 @@ public class CashierTransactionDataValidator {
                 LOG.error("Problem occurred in validateOnLoanDisbursal function", e);
             }
         }
-
     }
 }

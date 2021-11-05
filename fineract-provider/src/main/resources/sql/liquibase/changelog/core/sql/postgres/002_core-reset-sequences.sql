@@ -21,7 +21,7 @@ SELECT SETVAL('job_id_seq', COALESCE(MAX(id), 0)+1, false ) FROM job;
 SELECT SETVAL('m_appuser_id_seq', COALESCE(MAX(id), 0)+1, false ) FROM m_appuser;
 SELECT SETVAL('m_code_id_seq', COALESCE(MAX(id), 0)+1, false ) FROM m_code;
 SELECT SETVAL('m_role_id_seq', COALESCE(MAX(id), 0)+1, false ) FROM m_role;
-SELECT SETVAL('m_permission_seq', COALESCE(MAX(id), 0)+1, false ) FROM m_permission;
+SELECT SETVAL('m_permission_id_seq', COALESCE(MAX(id), 0)+1, false ) FROM m_permission;
 SELECT SETVAL('m_hook_templates_id_seq', COALESCE(MAX(id), 0)+1, false ) FROM m_hook_templates;
 SELECT SETVAL('stretchy_parameter_id_seq', COALESCE(MAX(id), 0)+1, false ) FROM stretchy_parameter;
 SELECT SETVAL('stretchy_report_id_seq', COALESCE(MAX(id), 0)+1, false ) FROM stretchy_report;

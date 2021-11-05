@@ -49,12 +49,21 @@ public class PaginationHelper<E> {
     }
 
     public Page<Long> fetchPage(JdbcTemplate jdbcTemplate, String sql, String sqlCountRows, Class<Long> type) {
+        final List<Long> items = jdbcTemplate.queryForList(sql, type);
+
+        // determine how many rows are available
+        Integer totalFilteredRecords = jdbcTemplate.queryForObject(sqlCountRows, Integer.class);
+
+        return new Page<>(items, ObjectUtils.defaultIfNull(totalFilteredRecords, 0));
+    }
+
+    public Page<Long> fetchPage(JdbcTemplate jdbcTemplate, String sql, Class<Long> type) {
         RowCountCallbackHandler countCallback = new RowCountCallbackHandler();
         final List<Long> items = jdbcTemplate.queryForList(sql, type, countCallback);
 
         // determine how many rows are available
         Integer totalFilteredRecords = countCallback.getRowCount(); // jdbcTemplate.queryForObject(sqlCountRows,
-                                                                    // Integer.class);
+        // Integer.class);
 
         return new Page<>(items, ObjectUtils.defaultIfNull(totalFilteredRecords, 0));
     }

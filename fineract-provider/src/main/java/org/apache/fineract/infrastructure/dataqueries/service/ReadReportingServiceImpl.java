@@ -221,7 +221,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
             return "Table";
         }
 
-        final String sql = "SELECT coalesce(report_type,'') AS report_type FROM stretchy_report WHERE report_name = ? AND self_service_user_report = ?";
+        final String sql = "SELECT COALESCE(report_type, '') as report_type FROM stretchy_report where report_name = '" + reportName + "' and self_service_user_report = ?";
 
         final String sqlWrapped = this.genericDataService.wrapSQL(sql);
 
@@ -462,7 +462,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
     private static final class ReportParameterMapper implements RowMapper<ReportParameterData> {
 
         public String schema() {
-            return "select p.id as id, p.parameter_name as parameterName from stretchy_parameter p where coalesce(p.special,'') != 'Y' order by p.id";
+            return "select p.id as id, p.parameter_name as parameterName from stretchy_parameter p where COALESCE(p.special,'') != 'Y' order by p.id";
         }
 
         @Override

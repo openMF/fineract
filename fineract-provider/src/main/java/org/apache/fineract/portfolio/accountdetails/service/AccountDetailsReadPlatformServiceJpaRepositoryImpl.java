@@ -202,7 +202,6 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
     }
 
     /**
-     * @param entityId
      * @return
      */
     private List<SavingsAccountSummaryData> retrieveAccountDetails(final String savingswhereClause, final Object[] inputs) {
@@ -351,7 +350,7 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
             accountsSummary.append("avbu.firstname as activatedByFirstname, avbu.lastname as activatedByLastname,");
 
             accountsSummary.append("sa.sub_status_enum as subStatusEnum, ");
-            accountsSummary.append("(select coalesce(max(sat.transaction_date),sa.activatedon_date) ");
+            accountsSummary.append("(select COALESCE(max(sat.transaction_date),sa.activatedon_date) ");
             accountsSummary.append("from m_savings_account_transaction as sat ");
             accountsSummary.append("where sat.is_reversed = ").append(sqlResolver.formatBoolValue(false));
             accountsSummary.append("and sat.transaction_type_enum in (1,2) ");

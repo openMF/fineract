@@ -71,8 +71,8 @@ public class ProvisioningEntriesReadPlatformServiceImpl implements ProvisioningE
         private final StringBuilder sqlQuery;
 
         private LoanProductProvisioningEntryMapper(String formattedDate) {
-            sqlQuery = new StringBuilder().append(
-                    "select if(loan.loan_type_enum=1, mclient.office_id, mgroup.office_id) as office_id, loan.loan_type_enum, pcd.criteria_id as criteriaid, loan.product_id,loan.currency_code,")
+            sqlQuery = new StringBuilder()
+                    .append("select (CASE WHEN loan.loan_type_enum=1 THEN mclient.office_id ELSE mgroup.office_id END) as office_id, loan.loan_type_enum, pcd.criteria_id as criteriaid, loan.product_id,loan.currency_code,")
                     .append("GREATEST(")
                     .append(sqlResolver.formatDateDiff(formattedDate, "sch.duedate"))
                     .append(",0)")

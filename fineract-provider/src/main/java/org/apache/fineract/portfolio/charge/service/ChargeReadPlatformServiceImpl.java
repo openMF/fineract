@@ -224,7 +224,6 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     /**
      * @param excludeChargeTimes
      * @param excludeClause
-     * @param params
      * @return
      */
     private void processChargeExclusionsForLoans(ChargeTimeType[] excludeChargeTimes, StringBuilder excludeClause) {
@@ -396,6 +395,7 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
         if (feeChargesOnly) {
             sql += " and c.is_penalty = " + sqlResolver.formatBoolValue(false);
         }
+        sql += " and c.charge_applies_to_enum=? ";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
         sql += " order by c.name ";
 

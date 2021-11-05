@@ -738,9 +738,6 @@ databaseChangeLog:
         - insert:
             columns:
               - column:
-                  name: id
-                  valueNumeric: 4
-              - column:
                   name: name
                   value: NOTIFICATION
             tableName: c_external_service
@@ -7053,9 +7050,6 @@ databaseChangeLog:
       changes:
         - insert:
             columns:
-              - column:
-                  name: id
-                  valueNumeric: 21
               - column:
                   name: code
                   value: USD
@@ -25092,9 +25086,6 @@ databaseChangeLog:
         - insert:
             columns:
               - column:
-                  name: id
-                  valueNumeric: 4
-              - column:
                   name: name
                   value: GMAIL_SMTP_PASSWORD
               - column:
@@ -25120,9 +25111,6 @@ databaseChangeLog:
       changes:
         - insert:
             columns:
-              - column:
-                  name: id
-                  valueNumeric: 2
               - column:
                   name: recurrence
                   value: FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,TU,WE,TH,FR,SA,SU
@@ -29668,14 +29656,14 @@ databaseChangeLog:
             relativeToChangelogFile: true
             stripComments: true
   # PLEASE LEAVE THE 'RESET SEQUENCES' TO BE THE LAST CHANGESET!
-#  - changeSet:
-#      id: 002_core-init-1000
-#      author: fineract
-#      description: reset sequences
-#      context: postgres
-#      changes:
-#        - sqlFile:
-#            path: sql/postgres/002_core-reset-sequences.sql
-#            relativeToChangelogFile: true
-#            stripComments: true
+  - changeSet:
+      id: 002_core-init-1000
+      author: fineract
+      description: reset sequences
+      context: postgres
+      changes:
+        - sqlFile:
+            path: sql/postgres/002_core-reset-sequences.sql
+            relativeToChangelogFile: true
+            stripComments: true
 # THIS IS THE END OF THE FILE AND PLEASE DO NOT PUT ANYTHING BELOW THIS COMMENT!

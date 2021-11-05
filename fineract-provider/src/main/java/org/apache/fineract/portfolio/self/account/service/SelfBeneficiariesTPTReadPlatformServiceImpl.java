@@ -141,7 +141,7 @@ public class SelfBeneficiariesTPTReadPlatformServiceImpl implements SelfBenefici
             sqlBuilder.append(" inner join m_office as o on b.office_id = o.id ");
             sqlBuilder.append(" inner join m_client as c on b.client_id = c.id ");
             sqlBuilder.append(" inner join m_savings_account as s on b.account_id = s.id ");
-            sqlBuilder.append(" where b.is_active = true ");
+            sqlBuilder.append(" where b.is_active = ").append(sqlResolver.formatBoolValue(true));
             sqlBuilder.append(" and b.account_type = 2 ");
             sqlBuilder.append(" and b.app_user_id = ?) ");
             sqlBuilder.append(" union all ");

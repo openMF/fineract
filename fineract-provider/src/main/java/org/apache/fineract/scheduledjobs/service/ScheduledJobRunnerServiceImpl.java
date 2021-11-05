@@ -218,24 +218,22 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
 
         final StringBuilder updateSqlBuilder = new StringBuilder(900);
 
-        updateSqlBuilder.append(
-                "INSERT INTO m_loan_paid_in_advance(loan_id, principal_in_advance_derived, interest_in_advance_derived, fee_charges_in_advance_derived, penalty_charges_in_advance_derived, total_in_advance_derived)");
-        updateSqlBuilder.append(" select ml.id as loanId,");
-        updateSqlBuilder.append(" SUM(coalesce(mr.principal_completed_derived, 0)) as principal_in_advance_derived,");
-        updateSqlBuilder.append(" SUM(coalesce(mr.interest_completed_derived, 0)) as interest_in_advance_derived,");
-        updateSqlBuilder.append(" SUM(coalesce(mr.fee_charges_completed_derived, 0)) as fee_charges_in_advance_derived,");
-        updateSqlBuilder.append(" SUM(coalesce(mr.penalty_charges_completed_derived, 0)) as penalty_charges_in_advance_derived,");
-        updateSqlBuilder.append(
-                " (SUM(coalesce(mr.principal_completed_derived, 0)) + SUM(coalesce(mr.interest_completed_derived, 0)) + SUM(coalesce(mr.fee_charges_completed_derived, 0)) + SUM(coalesce(mr.penalty_charges_completed_derived, 0))) as total_in_advance_derived");
+        updateSqlBuilder.append("INSERT INTO m_loan_paid_in_advance (loan_id, principal_in_advance_derived, interest_in_advance_derived, fee_charges_in_advance_derived, " +
+                "penalty_charges_in_advance_derived, total_in_advance_derived)");
+        updateSqlBuilder.append(" select ml.id as loan_id,");
+        updateSqlBuilder.append(" SUM(COALESCE(mr.principal_completed_derived, 0)) as principal_in_advance_derived,");
+        updateSqlBuilder.append(" SUM(COALESCE(mr.interest_completed_derived, 0)) as interest_in_advance_derived,");
+        updateSqlBuilder.append(" SUM(COALESCE(mr.fee_charges_completed_derived, 0)) as fee_charges_in_advance_derived,");
+        updateSqlBuilder.append(" SUM(COALESCE(mr.penalty_charges_completed_derived, 0)) as penalty_charges_in_advance_derived,");
+        updateSqlBuilder.append(" (SUM(COALESCE(mr.principal_completed_derived, 0)) + SUM(COALESCE(mr.interest_completed_derived, 0)) + SUM(COALESCE(mr.fee_charges_completed_derived, 0))" +
+                " + SUM(COALESCE(mr.penalty_charges_completed_derived, 0))) as total_in_advance_derived");
         updateSqlBuilder.append(" FROM m_loan ml ");
         updateSqlBuilder.append(" INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id ");
         updateSqlBuilder.append(" WHERE ml.loan_status_id = 300 ");
-        updateSqlBuilder.append(" and mr.duedate >= CURDATE() ");
+        updateSqlBuilder.append(" and mr.duedate >= ").append(sqlResolver.formatDateCurrent());
         updateSqlBuilder.append(" GROUP BY ml.id");
-        updateSqlBuilder
-                .append(" HAVING (SUM(coalesce(mr.principal_completed_derived, 0)) + SUM(coalesce(mr.interest_completed_derived, 0)) +");
-        updateSqlBuilder.append(
-                " SUM(coalesce(mr.fee_charges_completed_derived, 0)) + SUM(coalesce(mr.penalty_charges_completed_derived, 0))) > 0.0");
+        updateSqlBuilder.append(" HAVING (SUM(COALESCE(mr.principal_completed_derived, 0)) + SUM(COALESCE(mr.interest_completed_derived, 0)) +");
+        updateSqlBuilder.append(" SUM(COALESCE(mr.fee_charges_completed_derived, 0)) + SUM(COALESCE(mr.penalty_charges_completed_derived, 0))) > 0.0");
 
         final int result = jdbcTemplate.update(updateSqlBuilder.toString());
 
@@ -336,7 +334,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
                 .append(" INNER JOIN m_product_loan mpl on mpl.id = loan.product_id AND mpl.overdue_days_for_npa is not null ")
                 .append("WHERE loan.loan_status_id = 300 and ")
                 .append("laa.overdue_since_date_derived < ")
-                .append(sqlResolver.formatDateSub("?", "COALESCE(mpl.overdue_days_for_npa, 0)", DataSourceSqlResolver.DateUnit.DAY))
+                .append(sqlResolver.formatDateSub(sqlResolver.formatDateCurrent(), "COALESCE(mpl.overdue_days_for_npa, 0)", DataSourceSqlResolver.DateUnit.DAY))
                 .append(" group by loan.id) as sl ").toString();
         wherePart = " where ml.id=sl.id ";
         updateSqlBuilder.append("UPDATE m_loan as ml ");
@@ -389,7 +387,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
     public void generateRDSchedule() {
         final JdbcTemplate jdbcTemplate = new JdbcTemplate(this.dataSourceServiceFactory.determineDataSourceService().retrieveDataSource());
         final Collection<Map<String, Object>> scheduleDetails = this.depositAccountReadPlatformService.retriveDataForRDScheduleCreation();
-        String insertSql = "INSERT INTO `m_mandatory_savings_schedule` (`savings_account_id`, `duedate`, `installment`, `deposit_amount`, `completed_derived`, `created_date`, `lastmodified_date`) VALUES ";
+        String insertSql = "INSERT INTO m_mandatory_savings_schedule (savings_account_id, duedate, installment, deposit_amount, completed_derived, created_date, lastmodified_date) VALUES ";
         StringBuilder sb = new StringBuilder();
         String currentDate = formatterWithTime.format(DateUtils.getLocalDateTimeOfTenant());
         int iterations = 0;
@@ -482,8 +480,8 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
     public void updateTrialBalanceDetails() throws JobExecutionException {
         final JdbcTemplate jdbcTemplate = new JdbcTemplate(this.dataSourceServiceFactory.determineDataSourceService().retrieveDataSource());
         final StringBuilder tbGapSqlBuilder = new StringBuilder(500);
-        tbGapSqlBuilder.append("select distinct(je.transaction_date) ").append("from acc_gl_journal_entry je ")
-                .append("where je.transaction_date > (select coalesce(MAX(created_date),'2010-01-01') from m_trial_balance)");
+        tbGapSqlBuilder.append("select distinct(je.entry_date) ").append("from acc_gl_journal_entry je ")
+                .append("where je.entry_date > (select COALESCE(MAX(created_date),'2010-01-01') from m_trial_balance)");
 
         final List<Date> tbGaps = jdbcTemplate.queryForList(tbGapSqlBuilder.toString(), Date.class);
 
@@ -495,11 +493,12 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
             }
             final String formattedDate = new SimpleDateFormat("yyyy-MM-dd").format(tbGap);
             final StringBuilder sqlBuilder = new StringBuilder(600);
-            sqlBuilder.append("Insert Into m_trial_balance(office_id, account_id, Amount, entry_date, created_date,closing_balance) ")
-                    .append("Select je.office_id, je.account_id, sum(if(je.type_enum=1, (-1) * je.amount, je.amount)) ")
-                    .append("as Amount, Date(je.entry_date) as 'Entry_Date', je.transaction_date as 'Created_Date',sum(je.amount) as closing_balance ")
-                    .append("from acc_gl_journal_entry je WHERE je.transaction_date = ? ")
-                    .append("group by je.account_id, je.office_id, je.transaction_date, Date(je.entry_date)");
+            sqlBuilder.append("INSERT INTO m_trial_balance(office_id, account_id, amount, entry_date, created_date,closing_balance)")
+                    .append(" SELECT je.office_id, je.account_id, SUM(CASE WHEN je.type_enum=1 THEN (-1) * je.amount ELSE je.amount END)")
+                    .append(" as amount, ").append(sqlResolver.formatDate("je.entry_date"))
+                    .append(" as 'entry_date', je.entry_date as 'created_date', SUM(je.amount) as closing_balance ")
+                    .append(" FROM acc_gl_journal_entry je WHERE je.entry_date = ?")
+                    .append(" GROUP BY je.account_id, je.office_id, je.entry_date, ").append(sqlResolver.formatDate("je.entry_date"));
 
             final int result = jdbcTemplate.update(sqlBuilder.toString(), formattedDate);
             LOG.info("{}: Records affected by updateTrialBalanceDetails: {}", ThreadLocalContextUtil.getTenant().getName(), result);

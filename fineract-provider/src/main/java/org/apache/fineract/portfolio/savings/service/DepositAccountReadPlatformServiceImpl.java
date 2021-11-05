@@ -539,7 +539,7 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
         sb.append(" inner join m_calendar mc  on mc.id = mci.calendar_id and mc.calendar_type_enum = ?");
         sb.append(" inner join m_mandatory_savings_schedule ms on ms.savings_account_id = dat.savings_account_id and ms.duedate > ?");
         sb.append(" where dat.deposit_period is null");
-        sb.append(" group by ms.savings_account_id, rd.mandatory_recommended_deposit_amount, mc.recurrence");
+        sb.append(" group by rd.savings_account_id, rd.mandatory_recommended_deposit_amount, mc.recurrence");
 
         return this.jdbcTemplate.queryForList(sb.toString(), SavingsAccountStatusType.ACTIVE.getValue(),
                 CalendarEntityType.SAVINGS.getValue(), CalendarType.COLLECTION.getValue(),
@@ -1425,20 +1425,18 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
         RecurringAccountDepositTransactionTemplateMapper() {
             final StringBuilder sqlBuilder = new StringBuilder(400);
             sqlBuilder.append("sa.id as id, sa.account_no as accountNo, ");
-            sqlBuilder.append(
-                    "sa.currency_code as currencyCode, sa.currency_digits as currencyDigits, sa.currency_multiplesof as inMultiplesOf, ");
+            sqlBuilder.append("sa.currency_code as currencyCode, sa.currency_digits as currencyDigits, sa.currency_multiplesof as inMultiplesOf, ");
             sqlBuilder.append("curr.name as currencyName, curr.internationalized_name_code as currencyNameCode, ");
             sqlBuilder.append("curr.display_symbol as currencyDisplaySymbol, ");
             sqlBuilder.append("sa.account_balance_derived as runningBalance, ");
-            sqlBuilder.append(
-                    "mss.duedate as duedate, (mss.deposit_amount - coalesce(mss.deposit_amount_completed_derived,0)) as dueamount, ");
-            sqlBuilder.append("coalesce(sac.amount_outstanding_derived,0.0) AS outstandingChargeAmount ");
+            sqlBuilder.append("mss.duedate as duedate, (mss.deposit_amount - coalesce(mss.deposit_amount_completed_derived,0)) as dueamount, ");
+            sqlBuilder.append("COALESCE(sac.amount_outstanding_derived,0.0) AS outstandingChargeAmount ");
             sqlBuilder.append("from m_savings_account sa ");
             sqlBuilder.append("join m_mandatory_savings_schedule mss  on mss.savings_account_id=sa.id and mss.completed_derived = ")
                     .append(sqlResolver.formatBoolValue(false));
             sqlBuilder.append("join m_currency curr on curr.code = sa.currency_code ");
             sqlBuilder.append("LEFT JOIN(SELECT s.savings_account_id AS savings_account_id ");
-            sqlBuilder.append(",SUM(coalesce(s.amount_outstanding_derived,0.0)) AS amount_outstanding_derived  ");
+            sqlBuilder.append(",SUM(COALESCE(s.amount_outstanding_derived,0.0)) AS amount_outstanding_derived  ");
             sqlBuilder.append("FROM m_savings_account_charge s  ");
             sqlBuilder.append("JOIN m_charge c ON c.id = s.charge_id AND c.charge_time_enum = 3 ");
             sqlBuilder.append("WHERE s.savings_account_id = ? ");

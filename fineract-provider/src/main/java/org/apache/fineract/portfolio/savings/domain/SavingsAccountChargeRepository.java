@@ -31,6 +31,6 @@ public interface SavingsAccountChargeRepository
     @Query("select sac from SavingsAccountCharge sac where sac.id =:id and sac.savingsAccount.id = :savingsAccountId")
     SavingsAccountCharge findByIdAndSavingsAccountId(@Param("id") Long id, @Param("savingsAccountId") Long savingsAccountId);
 
-    @Query("select sac from SavingsAccountCharge sac where sac.dueDate <=:transactionDate and sac.waived=false and sac.paid=false order by sac.dueDate")
+    @Query("select sac from SavingsAccountCharge sac where sac.dueDate <=:transactionDate and sac.waived = false and sac.paid = false order by sac.dueDate")
     List<SavingsAccountCharge> findPendingCharges(@Param("transactionDate") Date transactionDate);
 }

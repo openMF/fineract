@@ -152,6 +152,10 @@ compileJava {
     finalizedBy resolve
 }
 
+bootRun {
+    systemProperties = System.properties
+}
+
 war {
     from("$rootDir/licenses/binary/") {
         // notice the parens

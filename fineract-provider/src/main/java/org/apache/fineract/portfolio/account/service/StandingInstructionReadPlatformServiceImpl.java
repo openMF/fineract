@@ -330,9 +330,10 @@ public class StandingInstructionReadPlatformServiceImpl implements StandingInstr
         final StringBuilder sqlBuilder = new StringBuilder(200);
         sqlBuilder.append("select ");
         sqlBuilder.append(this.standingInstructionMapper.schema());
-        sqlBuilder.append(
-                " where atsi.status=? and CURRENT_DATE() >= atsi.valid_from and (atsi.valid_till IS NULL or CURRENT_DATE() < atsi.valid_till) ")
-                .append(" and  (atsi.last_run_date <> CURRENT_DATE() or atsi.last_run_date IS NULL)")
+        sqlBuilder.append(" where atsi.status=? and ")
+                .append(sqlResolver.formatDateCurrent()).append(" >= atsi.valid_from and (atsi.valid_till IS NULL or ")
+                .append(sqlResolver.formatDateCurrent()).append("  < atsi.valid_till) ")
+                .append(" and  (atsi.last_run_date <> ").append(sqlResolver.formatDateCurrent()).append(" or atsi.last_run_date IS NULL)")
                 .append(" ORDER BY atsi.priority DESC");
         return this.jdbcTemplate.query(sqlBuilder.toString(), this.standingInstructionMapper, status);
     }
@@ -352,7 +353,7 @@ public class StandingInstructionReadPlatformServiceImpl implements StandingInstr
     @Override
     public StandingInstructionDuesData retriveLoanDuesData(final Long loanId) {
         final StandingInstructionLoanDuesMapper rm = new StandingInstructionLoanDuesMapper();
-        final String sql = "select " + rm.schema() + " where ml.id= ? and ls.duedate <= CURRENT_DATE() and ls.completed_derived <> 1";
+        final String sql = "select " + rm.schema() + " where ml.id= ? and ls.duedate <= " + sqlResolver.formatDateCurrent() + " and ls.completed_derived <> 1";
         return this.jdbcTemplate.queryForObject(sql, rm, new Object[] { loanId });
     }
 

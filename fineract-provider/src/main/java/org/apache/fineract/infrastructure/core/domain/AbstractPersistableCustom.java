@@ -42,7 +42,7 @@ public abstract class AbstractPersistableCustom implements Persistable<Long>, Se
     private static final long serialVersionUID = 9181640245194392646L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Override
