@@ -25,7 +25,7 @@ public class NotificationData implements Serializable {
 
     private Long id;
     private String objectType;
-    private Long objectId;
+    private Long objectIdentifier;
     private String action;
     private Long actorId;
     private String content;
@@ -38,10 +38,10 @@ public class NotificationData implements Serializable {
 
     public NotificationData() {}
 
-    public NotificationData(String objectType, Long objectId, String action, Long actorId, String content, boolean isSystemGenerated,
-            boolean isRead, String tenantIdentifier, Long officeId, List<Long> userIds) {
+    public NotificationData(String objectType, Long objectIdentifier, String action, Long actorId, String content,
+            boolean isSystemGenerated, boolean isRead, String tenantIdentifier, Long officeId, List<Long> userIds) {
         this.objectType = objectType;
-        this.objectId = objectId;
+        this.objectIdentifier = objectIdentifier;
         this.action = action;
         this.actorId = actorId;
         this.content = content;
@@ -50,6 +50,14 @@ public class NotificationData implements Serializable {
         this.tenantIdentifier = tenantIdentifier;
         this.officeId = officeId;
         this.userIds = userIds;
+    }
+
+    @Override
+    public String toString() {
+        return "NotificationData [objectType=" + this.objectType + ", objectIdentifier=" + this.objectIdentifier + ", action=" + this.action
+                + ", actorId=" + this.actorId + ", isSystemGenerated=" + this.isSystemGenerated + ", notificationContent=" + this.content
+                + ", createdAt=" + this.createdAt + ", officeId=" + this.officeId + ", isSystemGenerated=" + this.isSystemGenerated
+                + ", tenantIdentifier=" + this.tenantIdentifier + ", getId()=" + this.getId() + "]";
     }
 
     public Long getOfficeId() {
@@ -92,12 +100,12 @@ public class NotificationData implements Serializable {
         this.objectType = objectType;
     }
 
-    public Long getObjectIdentfier() {
-        return objectId;
+    public Long getObjectIdentifier() {
+        return objectIdentifier;
     }
 
-    public void entifier(Long objectIdentifier) {
-        this.objectId = objectIdentifier;
+    public void setObjectIdentifier(Long objectIdentifier) {
+        this.objectIdentifier = objectIdentifier;
     }
 
     public String getAction() {

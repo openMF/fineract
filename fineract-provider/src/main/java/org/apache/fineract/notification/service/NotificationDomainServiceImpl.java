@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.PostConstruct;
-import javax.jms.Queue;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
@@ -50,11 +48,16 @@ import org.apache.fineract.portfolio.savings.domain.SavingsAccountTransaction;
 import org.apache.fineract.portfolio.shareaccounts.domain.ShareAccount;
 import org.apache.fineract.useradministration.domain.Role;
 import org.apache.fineract.useradministration.domain.RoleRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class NotificationDomainServiceImpl implements NotificationDomainService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(NotificationDomainServiceImpl.class);
 
     private final BusinessEventNotifierService businessEventNotifierService;
     final PlatformSecurityContext context;
@@ -63,6 +66,9 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
     private final TopicSubscriberReadPlatformService topicSubscriberReadPlatformService;
     private final NotificationEventService notificationEvent;
     private final SpringEventPublisher springEventPublisher;
+
+    @Value(value = "${notification.data.topic.name}")
+    private String notificationDataTopicName;
 
     @Autowired
     public NotificationDomainServiceImpl(final BusinessEventNotifierService businessEventNotifierService,
@@ -401,12 +407,11 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
             String eventType, Long appUserId, Long officeId) {
 
         String tenantIdentifier = ThreadLocalContextUtil.getTenant().getTenantIdentifier();
-        Queue queue = new ActiveMQQueue("NotificationQueue");
         List<Long> userIds = retrieveSubscribers(officeId, permission);
         NotificationData notificationData = new NotificationData(objectType, objectIdentifier, eventType, appUserId, notificationContent,
                 false, false, tenantIdentifier, officeId, userIds);
         try {
-            this.notificationEvent.broadcastNotification(queue, notificationData);
+            this.notificationEvent.broadcastNotification(notificationDataTopicName, notificationData);
         } catch (Exception e) {
             this.springEventPublisher.broadcastNotification(notificationData);
         }

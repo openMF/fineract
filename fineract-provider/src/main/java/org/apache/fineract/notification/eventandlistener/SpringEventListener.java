@@ -28,6 +28,8 @@ import org.apache.fineract.notification.data.NotificationData;
 import org.apache.fineract.notification.service.NotificationWritePlatformService;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.apache.fineract.useradministration.domain.AppUserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
@@ -40,6 +42,8 @@ public class SpringEventListener implements ApplicationListener<SpringEvent> {
     private final NotificationWritePlatformService notificationWritePlatformService;
 
     private final AppUserRepository appUserRepository;
+
+    private static final Logger LOG = LoggerFactory.getLogger(SpringEventListener.class);
 
     @Autowired
     public SpringEventListener(BasicAuthTenantDetailsService basicAuthTenantDetailsService,
@@ -75,7 +79,7 @@ public class SpringEventListener implements ApplicationListener<SpringEvent> {
             userIds.remove(appUserId);
         }
 
-        notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentfier(),
+        notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
                 notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
                 notificationData.isSystemGenerated());
 

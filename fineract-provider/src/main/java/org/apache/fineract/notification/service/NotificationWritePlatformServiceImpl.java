@@ -26,6 +26,8 @@ import org.apache.fineract.notification.domain.Notification;
 import org.apache.fineract.notification.domain.NotificationMapper;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.apache.fineract.useradministration.domain.AppUserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +41,8 @@ public class NotificationWritePlatformServiceImpl implements NotificationWritePl
     private final AppUserRepository appUserRepository;
 
     private final NotificationMapperWritePlatformService notificationMapperWritePlatformService;
+
+    private static final Logger LOG = LoggerFactory.getLogger(NotificationWritePlatformServiceImpl.class);
 
     @Autowired
     public NotificationWritePlatformServiceImpl(final NotificationGeneratorWritePlatformService notificationGeneratorWritePlatformService,
@@ -57,26 +61,9 @@ public class NotificationWritePlatformServiceImpl implements NotificationWritePl
 
         Long generatedNotificationId = insertIntoNotificationGenerator(objectType, objectIdentifier, action, actorId, notificationContent,
                 isSystemGenerated);
+
         insertIntoNotificationMapper(userId, generatedNotificationId);
         return generatedNotificationId;
-    }
-
-    private Long insertIntoNotificationMapper(Long userId, Long generatedNotificationId) {
-        AppUser appUser = this.appUserRepository.findById(userId).orElse(null);
-        NotificationMapper notificationMapper = new NotificationMapper(
-                this.notificationGeneratorReadRepositoryWrapper.findById(generatedNotificationId), appUser, false, getCurrentDateTime());
-
-        this.notificationMapperWritePlatformService.create(notificationMapper);
-        return notificationMapper.getId();
-    }
-
-    private Long insertIntoNotificationGenerator(String objectType, Long objectIdentifier, String action, Long actorId,
-            String notificationContent, boolean isSystemGenerated) {
-
-        Notification notification = new Notification(objectType, objectIdentifier, action, actorId, isSystemGenerated, notificationContent,
-                getCurrentDateTime());
-
-        return this.notificationGeneratorWritePlatformService.create(notification);
     }
 
     @Override
@@ -101,6 +88,23 @@ public class NotificationWritePlatformServiceImpl implements NotificationWritePl
             mappedIds.add(notificationMapper.getId());
         }
         return mappedIds;
+    }
+
+    private Long insertIntoNotificationMapper(Long userId, Long generatedNotificationId) {
+        AppUser appUser = this.appUserRepository.findById(userId).orElse(null);
+        NotificationMapper notificationMapper = new NotificationMapper(
+                this.notificationGeneratorReadRepositoryWrapper.findById(generatedNotificationId), appUser, false, getCurrentDateTime());
+
+        this.notificationMapperWritePlatformService.create(notificationMapper);
+        return notificationMapper.getId();
+    }
+
+    private Long insertIntoNotificationGenerator(String objectType, Long objectIdentifier, String action, Long actorId,
+            String notificationContent, boolean isSystemGenerated) {
+
+        Notification notification = new Notification(objectType, objectIdentifier, action, actorId, isSystemGenerated, notificationContent,
+                getCurrentDateTime());
+        return this.notificationGeneratorWritePlatformService.create(notification);
     }
 
     private String getCurrentDateTime() {

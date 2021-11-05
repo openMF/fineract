@@ -115,7 +115,7 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
     public Page<NotificationData> getAllUnreadNotifications(final SearchParameters searchParameters) {
         final Long appUserId = context.authenticatedUser().getId();
         String sql = "SELECT SQL_CALC_FOUND_ROWS ng.id as id, nm.user_id as userId, ng.object_type as objectType, "
-                + "ng.object_identifier as objectId, ng.actor as actor, ng.action action, ng.notification_content "
+                + "ng.object_identifier as objectIdentifier, ng.actor as actor, ng.action action, ng.notification_content "
                 + "as content, ng.is_system_generated as isSystemGenerated, nm.created_at as createdAt "
                 + "FROM notification_mapper nm INNER JOIN notification_generator ng ON nm.notification_id = ng.id "
                 + "WHERE nm.user_id = ? AND nm.is_read = false order by nm.created_at desc";
@@ -127,7 +127,7 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
     public Page<NotificationData> getAllNotifications(SearchParameters searchParameters) {
         final Long appUserId = context.authenticatedUser().getId();
         String sql = "SELECT SQL_CALC_FOUND_ROWS ng.id as id, nm.user_id as userId, ng.object_type as objectType, "
-                + "ng.object_identifier as objectId, ng.actor as actor, ng.action action, ng.notification_content "
+                + "ng.object_identifier as objectIdentifier, ng.actor as actor, ng.action action, ng.notification_content "
                 + "as content, ng.is_system_generated as isSystemGenerated, nm.created_at as createdAt "
                 + "FROM notification_mapper nm INNER JOIN notification_generator ng ON nm.notification_id = ng.id "
                 + "WHERE nm.user_id = ? order by nm.created_at desc";
@@ -197,8 +197,8 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
             final String objectType = rs.getString("objectType");
             notificationData.setObjectType(objectType);
 
-            final Long objectId = rs.getLong("objectId");
-            notificationData.entifier(objectId);
+            final Long objectIdentifier = rs.getLong("objectIdentifier");
+            notificationData.setObjectIdentifier(objectIdentifier);
 
             final Long actorId = rs.getLong("actor");
             notificationData.setActor(actorId);

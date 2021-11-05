@@ -44,4 +44,5 @@ public class CreateClientCommandHandler implements NewCommandSourceHandler {
 
         return this.clientWritePlatformService.createClient(command);
     }
+
 }
