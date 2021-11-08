@@ -20,10 +20,10 @@
 cloud:
   aws:
     region:
-      static: us-east-1
+      static: REGION
       auto: false
     credentials:
       access-key: XXXX
       secret-key: XXXX
     end-point:
-      uri: https://sqs.us-east-1.amazonaws.com/549485575026/spring-boot-poc
+      uri: https://sqs.REGION.amazonaws.com/XXXX/QUEUE
