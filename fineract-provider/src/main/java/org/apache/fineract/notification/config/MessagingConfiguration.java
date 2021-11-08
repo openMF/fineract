@@ -18,6 +18,9 @@
  */
 package org.apache.fineract.notification.config;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Properties;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -25,10 +28,11 @@ import org.apache.fineract.notification.eventandlistener.NotificationEventListen
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.env.Environment;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jms.connection.CachingConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
@@ -36,9 +40,6 @@ import org.springframework.jms.listener.DefaultMessageListenerContainer;
 @Configuration
 @Profile("activeMqEnabled")
 public class MessagingConfiguration {
-
-    @Autowired
-    private Environment env;
 
     @Autowired
     private NotificationEventListener notificationEventListener;
@@ -50,13 +51,25 @@ public class MessagingConfiguration {
 
     private static final String DEFAULT_BROKER_URL = "tcp://localhost:61616";
 
+    public Properties activeMqProperties() throws IOException {
+        PropertiesFactoryBean propertiesFactoryBean = new PropertiesFactoryBean();
+        propertiesFactoryBean.setLocation(new ClassPathResource("/activemq.properties"));
+        propertiesFactoryBean.afterPropertiesSet();
+        return propertiesFactoryBean.getObject();
+    }
+
     @Bean
     public ActiveMQConnectionFactory amqConnectionFactory() {
         ActiveMQConnectionFactory amqConnectionFactory = new ActiveMQConnectionFactory();
         try {
-            amqConnectionFactory.setBrokerURL(DEFAULT_BROKER_URL);
+            final Properties activeMqProperties = activeMqProperties();
+            amqConnectionFactory.setBrokerURL(activeMqProperties.getProperty("activemq.broker.url"));
+            amqConnectionFactory.setUserName(activeMqProperties.getProperty("spring.activemq.user"));
+            amqConnectionFactory.setPassword(activeMqProperties.getProperty("spring.activemq.password"));
+            amqConnectionFactory.setTrustedPackages(Arrays.asList("org.apache.fineract", "java.util", "java.lang", "org.apache.fineract",
+                    "org.apache.fineract.notification.data"));
         } catch (Exception e) {
-            amqConnectionFactory.setBrokerURL(this.env.getProperty("brokerUrl"));
+            amqConnectionFactory.setBrokerURL(DEFAULT_BROKER_URL);
         }
         return amqConnectionFactory;
     }

@@ -28,10 +28,9 @@ import org.springframework.cache.interceptor.CacheResolver;
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.cache.interceptor.SimpleKeyGenerator;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 @SuppressWarnings("deprecation")
-@Configuration
+// @Configuration
 @EnableCaching
 public class PlatformCacheConfiguration implements CachingConfigurer {
 

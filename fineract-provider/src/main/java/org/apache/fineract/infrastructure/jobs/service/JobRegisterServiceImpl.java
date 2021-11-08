@@ -28,7 +28,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
+import org.apache.fineract.infrastructure.batch.config.BatchConfiguration;
+import org.apache.fineract.infrastructure.core.boot.JDBCDriverConfig;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
+import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection;
 import org.apache.fineract.infrastructure.core.exception.PlatformInternalServerException;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.jobs.annotation.CronMethodParser;
@@ -52,6 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
@@ -84,6 +89,9 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
     private JobParameterRepository jobParameterRepository;
 
     private final HashMap<String, Scheduler> schedulers = new HashMap<>(4);
+
+    @Autowired
+    private JDBCDriverConfig driverConfig;
 
     @Autowired
     public void setApplicationContext(ApplicationContext applicationContext) {
@@ -128,18 +136,43 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
         final List<FineractPlatformTenant> allTenants = this.tenantDetailsService.findAllTenants();
         for (final FineractPlatformTenant tenant : allTenants) {
             ThreadLocalContextUtil.setTenant(tenant);
-            final List<ScheduledJobDetail> scheduledJobDetails = this.schedularWritePlatformService.retrieveAllJobs(nodeId);
-            for (final ScheduledJobDetail jobDetails : scheduledJobDetails) {
-                scheduleJob(jobDetails);
-                jobDetails.updateTriggerMisfired(false);
-                this.schedularWritePlatformService.saveOrUpdate(jobDetails);
-            }
-            final SchedulerDetail schedulerDetail = this.schedularWritePlatformService.retriveSchedulerDetail();
-            if (schedulerDetail.isResetSchedulerOnBootup()) {
-                schedulerDetail.updateSuspendedState(false);
-                this.schedularWritePlatformService.updateSchedulerDetail(schedulerDetail);
+
+            if (isActiveProfile("batchJobs")) {
+                final List<ScheduledJobDetail> scheduledJobDetails = this.schedularWritePlatformService.retrieveAllJobs(nodeId);
+
+                for (final ScheduledJobDetail jobDetails : scheduledJobDetails) {
+                    scheduleJob(jobDetails);
+                    jobDetails.updateTriggerMisfired(false);
+                    this.schedularWritePlatformService.saveOrUpdate(jobDetails);
+                }
+                final SchedulerDetail schedulerDetail = this.schedularWritePlatformService.retriveSchedulerDetail();
+                if (schedulerDetail.isResetSchedulerOnBootup()) {
+                    schedulerDetail.updateSuspendedState(false);
+                    this.schedularWritePlatformService.updateSchedulerDetail(schedulerDetail);
+                }
+
+            } else if (isActiveProfile("batch")) {
+                final FineractPlatformTenantConnection connection = tenant.getConnection();
+
+                String jdbcUrl = driverConfig.constructProtocol(connection.getSchemaServer(), connection.getSchemaServerPort(),
+                        connection.getSchemaName(), connection.getSchemaConnectionParameters());
+
+                DataSource dataSource = getDriverDataSource(jdbcUrl, driverConfig.getDriverClassName(), connection);
+                LOG.info("Database for tenant {}", tenant.getName());
+                final BatchConfiguration batchConfiguration = new BatchConfiguration(dataSource);
             }
         }
+    }
+
+    private boolean isActiveProfile(String profile) {
+        String[] activeProfiles = this.applicationContext.getEnvironment().getActiveProfiles();
+        return (Arrays.asList(activeProfiles).contains(profile));
+    }
+
+    public DataSource getDriverDataSource(final String jdbcUrl, final String driverClassName,
+            final FineractPlatformTenantConnection connection) {
+        return DataSourceBuilder.create().username(connection.getSchemaUsername()).password(connection.getSchemaPassword()).url(jdbcUrl)
+                .driverClassName(driverClassName).build();
     }
 
     public void executeJob(final ScheduledJobDetail scheduledJobDetail, String triggerType) {

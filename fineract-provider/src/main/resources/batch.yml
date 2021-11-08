@@ -17,25 +17,25 @@
 # under the License.
 #
 
-# spring.profiles.default=basicauth
-management.health.jms.enabled=false
+spring:
+  batch:
+    job:
+      enabled: false
+    initialize-schema: ALWAYS
+    jdbc:
+      initialize-schema: ALWAYS
 
-# FINERACT 1296
-management.endpoint.health.probes.enabled=true
-management.health.livenessState.enabled=true
-management.health.readinessState.enabled=true
+batch:
+  isolationlevel: ISOLATION_SERIALIZABLE
+  table:
+    prefix: BATCH_
 
-# FINERACT-883
-management.info.git.mode=FULL
-
-# FINERACT-914
-server.forward-headers-strategy=framework
-
-
-spring.batch.job.enabled=false
-batch.isolationlevel=ISOLATION_SERIALIZABLE
-batch.table.prefix=BATCH_
-
-fineract.bacth.jobs.chunk.size=100
-
-fineract.bacth.jobs.queues.apply-charge-overdue-loans=APPLY_CHARGE_TO_OVERDUE_LOAN_INSTALLMENT_RQT
+fineract:
+  batch:
+    jobs:
+      enabled: true
+      communication: activemq
+      chunk:
+        size: 100
+      queues:
+        applyChargeToOverdueLoans: APPLY_CHARGE_TO_OVERDUE_LOAN_INSTALLMENT_RQT

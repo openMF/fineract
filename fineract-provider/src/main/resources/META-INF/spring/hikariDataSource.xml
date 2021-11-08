@@ -29,7 +29,7 @@
         http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.0.xsd">
 
     <!-- HikariCP Database bean -->
-    <bean id="hikariTenantDataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+    <bean id="hikariTenantDataSource" primary="true" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
         <constructor-arg ref="hikariConfig" />
     </bean>
 

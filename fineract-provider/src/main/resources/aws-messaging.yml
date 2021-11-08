@@ -17,25 +17,13 @@
 # under the License.
 #
 
-# spring.profiles.default=basicauth
-management.health.jms.enabled=false
-
-# FINERACT 1296
-management.endpoint.health.probes.enabled=true
-management.health.livenessState.enabled=true
-management.health.readinessState.enabled=true
-
-# FINERACT-883
-management.info.git.mode=FULL
-
-# FINERACT-914
-server.forward-headers-strategy=framework
-
-
-spring.batch.job.enabled=false
-batch.isolationlevel=ISOLATION_SERIALIZABLE
-batch.table.prefix=BATCH_
-
-fineract.bacth.jobs.chunk.size=100
-
-fineract.bacth.jobs.queues.apply-charge-overdue-loans=APPLY_CHARGE_TO_OVERDUE_LOAN_INSTALLMENT_RQT
+cloud:
+  aws:
+    region:
+      static: us-east-1
+      auto: false
+    credentials:
+      access-key: XXXX
+      secret-key: XXXX
+    end-point:
+      uri: https://sqs.us-east-1.amazonaws.com/549485575026/spring-boot-poc

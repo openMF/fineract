@@ -94,6 +94,9 @@ configurations {
         exclude module: 'itext-rtf'
         exclude module: 'classworlds'
     }
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
     runtime
 }
 

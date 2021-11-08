@@ -25,9 +25,9 @@ import org.apache.fineract.batch.domain.Header;
 /**
  * Created by sanyam on 26/7/17.
  */
-final class BatchApiResourceSwagger {
+final class BatchesApiResourceSwagger {
 
-    private BatchApiResourceSwagger() {
+    private BatchesApiResourceSwagger() {
 
     }
 

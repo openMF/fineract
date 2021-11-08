@@ -70,7 +70,7 @@ import org.springframework.stereotype.Component;
         + "Batch API uses Json Path to handle dependent parameters. For example, if request '2' is referencing request '1' and in the \"body\" or in \"relativeUrl\" of request '2', there is a dependent parameter (which will look like \"$.parameter_name\"), then Batch API will internally substitute this dependent parameter from the response body of request '1'.\n"
         + "\n"
         + "Batch API is able to handle deeply nested dependent requests as well nested parameters. As shown in the example, requests are dependent on each other as, 1<--2<--6, i.e a nested dependency, where request '6' is not directly dependent on request '1' but still it is one of the nested child of request '1'. In the same way Batch API could handle a deeply nested dependent value, such as {..[..{..,$.parameter_name,..}..]}.")
-public class BatchApiResource {
+public class BatchesApiResource {
 
     private final PlatformSecurityContext context;
     private final ToApiJsonSerializer<BatchResponse> toApiJsonSerializer;
@@ -86,7 +86,7 @@ public class BatchApiResource {
      * @param batchRequestJsonHelper
      */
     @Autowired
-    public BatchApiResource(final PlatformSecurityContext context, final ToApiJsonSerializer<BatchResponse> toApiJsonSerializer,
+    public BatchesApiResource(final PlatformSecurityContext context, final ToApiJsonSerializer<BatchResponse> toApiJsonSerializer,
             final BatchApiService service, final BatchRequestJsonHelper batchRequestJsonHelper) {
 
         this.context = context;
@@ -109,7 +109,7 @@ public class BatchApiResource {
     @Operation(summary = "Batch requests in a single transaction", description = "The Apache Fineract Batch API is also capable of executing all the requests in a single transaction, by setting a Query Parameter, \"enclosingTransaction=true\". So, if one or more of the requests in a batch returns an erroneous response all of the Data base transactions made by other successful requests will be rolled back.\n"
             + "\n"
             + "If there has been a rollback in a transaction then a single response will be provided, with a '400' status code and a body consisting of the error details of the first failed request.")
-    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = BatchApiResourceSwagger.PostBatchesRequest.class, description = "request body")))
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = BatchesApiResourceSwagger.PostBatchesRequest.class, description = "request body")))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(implementation = BatchResponse.class))) })
     public String handleBatchRequests(

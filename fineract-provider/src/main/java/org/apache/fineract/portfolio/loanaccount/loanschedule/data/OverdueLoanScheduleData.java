@@ -18,9 +18,10 @@
  */
 package org.apache.fineract.portfolio.loanaccount.loanschedule.data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
-public class OverdueLoanScheduleData {
+public class OverdueLoanScheduleData implements Serializable {
 
     private final Long loanId;
     private final Long chargeId;
