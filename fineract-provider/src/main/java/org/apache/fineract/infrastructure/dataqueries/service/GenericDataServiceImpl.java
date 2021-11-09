@@ -18,6 +18,13 @@
  */
 package org.apache.fineract.infrastructure.dataqueries.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoField;
+import java.util.ArrayList;
+import java.util.List;
+import javax.sql.DataSource;
 import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.boot.db.JdbcJavaType;
 import org.apache.fineract.infrastructure.core.exception.PlatformDataIntegrityException;
@@ -35,14 +42,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
 import org.springframework.stereotype.Service;
-
-import javax.sql.DataSource;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.temporal.ChronoField;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.apache.fineract.infrastructure.dataqueries.data.ResultsetColumnHeaderData.DisplayType.DATE;
 import static org.apache.fineract.infrastructure.dataqueries.data.ResultsetColumnHeaderData.DisplayType.DATETIME;
@@ -217,14 +216,14 @@ public class GenericDataServiceImpl implements GenericDataService {
 
         columnDefinitions.beforeFirst();
         while (columnDefinitions.next()) {
-            final String columnName = columnDefinitions.getString("COLUMN_NAME");
-            final String isNullable = columnDefinitions.getString("IS_NULLABLE");
-            final String isPrimaryKey = columnDefinitions.getString("COLUMN_KEY");
-            final String columnType = columnDefinitions.getString("DATA_TYPE");
-            final Long columnLength = columnDefinitions.getLong("CHARACTER_MAXIMUM_LENGTH");
+            final String columnName = columnDefinitions.getString(1);
+            final String isNullable = columnDefinitions.getString(2);
+            final String isPrimaryKey = columnDefinitions.getString(5);
+            final String columnType = columnDefinitions.getString(3);
+            final Long columnLength = columnDefinitions.getLong(4);
 
-            final boolean columnNullable = "YES".equalsIgnoreCase(isNullable);
-            final boolean columnIsPrimaryKey = "PRI".equalsIgnoreCase(isPrimaryKey);
+            final boolean columnNullable = "YES".equalsIgnoreCase(isNullable) || "TRUE".equalsIgnoreCase(isNullable);
+            final boolean columnIsPrimaryKey = "PRI".equalsIgnoreCase(isPrimaryKey) || "TRUE".equalsIgnoreCase(isPrimaryKey);
 
             JdbcJavaType jdbcType = JdbcJavaType.getByTypeName(sqlResolver.getDialect(), columnType);
 
@@ -307,16 +306,9 @@ public class GenericDataServiceImpl implements GenericDataService {
     }
 
     private SqlRowSet getDatatableMetaData(final String datatable) {
-        String sql = "SELECT c.COLUMN_NAME, c.IS_NULLABLE, c.DATA_TYPE, c.CHARACTER_MAXIMUM_LENGTH, ";
-        sql += sqlResolver.getDialect().isPostgres()
-                ? ("(CASE WHEN EXISTS (SELECT 1 FROM information_schema.table_constraints tc"
-                    + " JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name)"
-                    + " WHERE tc.constraint_schema = c.table_schema AND tc.table_name = c.table_name AND ccu.column_name = c.column_name AND tc.constraint_type = 'PRIMARY KEY')"
-                    + " THEN 'PRI' ELSE NULL END) AS COLUMN_KEY"
-                    + " FROM INFORMATION_SCHEMA.COLUMNS c WHERE c.TABLE_SCHEMA = current_schema() AND c.TABLE_NAME = '" + datatable + "' ")
-                : ("c.COLUMN_KEY FROM INFORMATION_SCHEMA.COLUMNS c WHERE TABLE_SCHEMA = schema() AND TABLE_NAME = '" + datatable + "' ");
-
-        sql += "ORDER BY ORDINAL_POSITION";
+        String sql = (sqlResolver.getDialect().isPostgres() ?
+                ("SELECT attname AS COLUMN_NAME, not attnotnull AS IS_NULLABLE, atttypid::regtype  AS DATATYPE, attlen AS CHARACTER_MAXIMUM_LENGTH, attnum = 1 AS COLUMN_KEY FROM pg_attribute WHERE attrelid = '" + datatable + "'::regclass AND attnum > 0 AND NOT attisdropped ORDER BY attnum") :
+                ("SELECT c.COLUMN_NAME, c.IS_NULLABLE, c.DATA_TYPE, c.CHARACTER_MAXIMUM_LENGTH, c.COLUMN_KEY FROM INFORMATION_SCHEMA.COLUMNS c WHERE TABLE_SCHEMA = schema() AND TABLE_NAME = '" + datatable + "' ORDER BY ORDINAL_POSITION"));
 
         final SqlRowSet columnDefinitions = this.jdbcTemplate.queryForRowSet(sql);
         if (columnDefinitions.next()) {
