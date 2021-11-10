@@ -59,7 +59,12 @@ public class JdbcTenantDetailsService implements TenantDetailsService {
                 .append(" ts.pool_suspect_timeout as poolSuspectTimeout, ts.pool_time_between_eviction_runs_millis as poolTimeBetweenEvictionRunsMillis,")//
                 .append(" ts.pool_min_evictable_idle_time_millis as poolMinEvictableIdleTimeMillis,")//
                 .append(" ts.deadlock_max_retries as maxRetriesOnDeadlock,")//
-                .append(" ts.deadlock_max_retry_interval as maxIntervalBetweenRetries ")//
+                .append(" ts.deadlock_max_retry_interval as maxIntervalBetweenRetries, ")//
+                .append(" ts.readonly_schema_server as readOnlySchemaServer, ")//
+                .append(" ts.readonly_schema_server_port as readOnlySchemaServerPort, ")//
+                .append(" ts.readonly_schema_name as readOnlySchemaName, ")//
+                .append(" ts.readonly_schema_username as readOnlySchemaUsername, ")//
+                .append(" ts.readonly_schema_password as readOnlySchemaPassword ")//
                 .append(" from tenants t left join tenant_server_connections ts on t.oltp_Id=ts.id ");
 
         public String schema() {
@@ -103,6 +108,11 @@ public class JdbcTenantDetailsService implements TenantDetailsService {
             final int minEvictableIdleTimeMillis = rs.getInt("poolMinEvictableIdleTimeMillis");
             int maxRetriesOnDeadlock = rs.getInt("maxRetriesOnDeadlock");
             int maxIntervalBetweenRetries = rs.getInt("maxIntervalBetweenRetries");
+            final String readOnlySchemaName = rs.getString("readOnlySchemaName");
+            final String readOnlySchemaServer = rs.getString("readOnlySchemaServer");
+            final String readOnlySchemaServerPort = rs.getString("readOnlySchemaServerPort");
+            final String readOnlySchemaUsername = rs.getString("readOnlySchemaUsername");
+            final String readOnlySchemaPassword = rs.getString("readOnlySchemaPassword");
 
             maxRetriesOnDeadlock = bindValueInMinMaxRange(maxRetriesOnDeadlock, 0, 15);
             maxIntervalBetweenRetries = bindValueInMinMaxRange(maxIntervalBetweenRetries, 1, 15);
@@ -111,7 +121,8 @@ public class JdbcTenantDetailsService implements TenantDetailsService {
                     schemaConnectionParameters, schemaUsername, schemaPassword, autoUpdateEnabled, initialSize, validationInterval,
                     removeAbandoned, removeAbandonedTimeout, logAbandoned, abandonWhenPercentageFull, maxActive, minIdle, maxIdle,
                     suspectTimeout, timeBetweenEvictionRunsMillis, minEvictableIdleTimeMillis, maxRetriesOnDeadlock,
-                    maxIntervalBetweenRetries, testOnBorrow);
+                    maxIntervalBetweenRetries, testOnBorrow, readOnlySchemaServer, readOnlySchemaServerPort, readOnlySchemaName,
+                    readOnlySchemaUsername, readOnlySchemaPassword);
 
         }
 

@@ -21,6 +21,7 @@ databaseChangeLog:
   - changeSet:
       id: 002_tenants-init-1
       author: fineract (generated)
+      validCheckSum: ANY
       changes:
         - insert:
             columns:

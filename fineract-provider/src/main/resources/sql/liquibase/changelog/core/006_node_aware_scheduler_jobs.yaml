@@ -16,13 +16,19 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
+# Flyway counterpair: V376__node_aware_scheduler_jobs.sql
 databaseChangeLog:
-  - context: tenants_db
-  - include:
-      file: sql/liquibase/changelog/tenants/001_tenants-create.yaml
-  - include:
-      file: sql/liquibase/changelog/tenants/002_tenants-init.yaml
-  - include:
-      file: sql/liquibase/changelog/tenants/003_add-readonly-database-connection-properties.yaml
-
-
+  - context: core_db
+  - changeSet:
+      id: 006_node_aware_scheduler_jobs-1
+      author: fineract
+      description: Make 'Execute All Dirty Jobs' node aware
+      changes:
+        - update:
+            columns:
+              - column:
+                  name: node_id
+                  value: 1
+            tableName: job
+            where: name='Execute All Dirty Jobs'

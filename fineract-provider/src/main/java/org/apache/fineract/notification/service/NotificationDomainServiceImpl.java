@@ -18,19 +18,10 @@
  */
 package org.apache.fineract.notification.service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.PostConstruct;
-import javax.jms.Queue;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
-import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
-import org.apache.fineract.notification.data.NotificationData;
-import org.apache.fineract.notification.data.TopicSubscriberData;
 import org.apache.fineract.notification.eventandlistener.NotificationEventService;
 import org.apache.fineract.notification.eventandlistener.SpringEventPublisher;
 import org.apache.fineract.organisation.office.domain.OfficeRepository;
@@ -48,7 +39,6 @@ import org.apache.fineract.portfolio.savings.domain.RecurringDepositAccount;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccount;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountTransaction;
 import org.apache.fineract.portfolio.shareaccounts.domain.ShareAccount;
-import org.apache.fineract.useradministration.domain.Role;
 import org.apache.fineract.useradministration.domain.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -398,42 +388,6 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
     }
 
     private void buildNotification(String permission, String objectType, Long objectIdentifier, String notificationContent,
-            String eventType, Long appUserId, Long officeId) {
+            String eventType, Long appUserId, Long officeId) {}
 
-        String tenantIdentifier = ThreadLocalContextUtil.getTenant().getTenantIdentifier();
-        Queue queue = new ActiveMQQueue("NotificationQueue");
-        List<Long> userIds = retrieveSubscribers(officeId, permission);
-        NotificationData notificationData = new NotificationData(objectType, objectIdentifier, eventType, appUserId, notificationContent,
-                false, false, tenantIdentifier, officeId, userIds);
-        try {
-            this.notificationEvent.broadcastNotification(queue, notificationData);
-        } catch (Exception e) {
-            this.springEventPublisher.broadcastNotification(notificationData);
-        }
-    }
-
-    private List<Long> retrieveSubscribers(Long officeId, String permission) {
-
-        Set<TopicSubscriberData> topicSubscribers = new HashSet<>();
-        List<Long> subscriberIds = new ArrayList<>();
-        Long entityId = officeId;
-        String entityType = "";
-        if (officeRepository.findById(entityId).get().getParent() == null) {
-            entityType = "OFFICE";
-        } else {
-            entityType = "BRANCH";
-        }
-        List<Role> allRoles = roleRepository.findAll();
-        for (Role curRole : allRoles) {
-            if (curRole.hasPermissionTo(permission) || curRole.hasPermissionTo("ALL_FUNCTIONS")) {
-                String memberType = curRole.getName();
-                topicSubscribers.addAll(topicSubscriberReadPlatformService.getSubscribers(entityId, entityType, memberType));
-            }
-        }
-
-        for (TopicSubscriberData topicSubscriber : topicSubscribers) {
-            subscriberIds.add(topicSubscriber.getUserId());
-        }
-        return subscriberIds;
-    }
 }

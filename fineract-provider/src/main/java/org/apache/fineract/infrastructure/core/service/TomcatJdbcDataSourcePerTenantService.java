@@ -28,6 +28,7 @@ import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -39,11 +40,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceService {
 
-    private final Map<Long, DataSource> tenantToDataSourceMap = new HashMap<>(1);
+    private final Map<String, DataSource> tenantToDataSourceMap = new HashMap<>(1);
     private final DataSource tenantDataSource;
 
     @Autowired
     private JDBCDriverConfig driverConfig;
+
+    @Value("${fineract.config.readonly:false}")
+    private boolean readOnlyInstance;
 
     @Autowired
     public TomcatJdbcDataSourcePerTenantService(final @Qualifier("hikariTenantDataSource") DataSource tenantDataSource) {
@@ -54,6 +58,8 @@ public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceSe
     public DataSource retrieveDataSource() {
         // default to tenant database datasource
         DataSource tenantDataSource = this.tenantDataSource;
+        String prefix = readOnlyInstance ? "r" : "d";
+
         final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
         if (tenant != null) {
             final FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
@@ -61,12 +67,12 @@ public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceSe
             synchronized (this.tenantToDataSourceMap) {
                 // if tenantConnection information available switch to the
                 // appropriate datasource for that tenant.
-                DataSource possibleDS = this.tenantToDataSourceMap.get(tenantConnection.getConnectionId());
+                DataSource possibleDS = this.tenantToDataSourceMap.get(prefix + tenantConnection.getConnectionId());
                 if (possibleDS != null) {
                     tenantDataSource = possibleDS;
                 } else {
                     tenantDataSource = createNewDataSourceFor(tenantConnection);
-                    this.tenantToDataSourceMap.put(tenantConnection.getConnectionId(), tenantDataSource);
+                    this.tenantToDataSourceMap.put(prefix + tenantConnection.getConnectionId(), tenantDataSource);
                 }
             }
         }
@@ -76,14 +82,33 @@ public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceSe
 
     // creates the tenant data source for the oltp and report database
     private DataSource createNewDataSourceFor(final FineractPlatformTenantConnection tenantConnectionObj) {
-        String jdbcUrl = this.driverConfig.constructUrl(tenantConnectionObj.getSchemaServer(), tenantConnectionObj.getSchemaServerPort(),
-                tenantConnectionObj.getSchemaName(), tenantConnectionObj.getSchemaConnectionParameters());
+        String schemaServer;
+        String schemaPort;
+        String schemaName;
+        String schemaUsername;
+        String schemaPassword;
+        if (readOnlyInstance) {
+            schemaServer = tenantConnectionObj.getReadOnlySchemaServer();
+            schemaPort = tenantConnectionObj.getReadOnlySchemaServerPort();
+            schemaName = tenantConnectionObj.getReadOnlySchemaName();
+            schemaUsername = tenantConnectionObj.getReadOnlySchemaUsername();
+            schemaPassword = tenantConnectionObj.getReadOnlySchemaPassword();
+        } else {
+            schemaServer = tenantConnectionObj.getSchemaServer();
+            schemaPort = tenantConnectionObj.getSchemaServerPort();
+            schemaName = tenantConnectionObj.getSchemaName();
+            schemaUsername = tenantConnectionObj.getSchemaUsername();
+            schemaPassword = tenantConnectionObj.getSchemaPassword();
+        }
+        String jdbcUrl = this.driverConfig.constructUrl(schemaServer, schemaPort, schemaName,
+                tenantConnectionObj.getSchemaConnectionParameters());
+
         HikariConfig config = new HikariConfig();
         config.setDriverClassName(this.driverConfig.getDriverClassName());
-        config.setPoolName(tenantConnectionObj.getSchemaName() + "_pool");
+        config.setPoolName(readOnlyInstance ? "r_" : "d_" + tenantConnectionObj.getSchemaName() + "_pool");
         config.setJdbcUrl(jdbcUrl);
-        config.setUsername(tenantConnectionObj.getSchemaUsername());
-        config.setPassword(tenantConnectionObj.getSchemaPassword());
+        config.setUsername(schemaUsername);
+        config.setPassword(schemaPassword);
         config.setMinimumIdle(tenantConnectionObj.getInitialSize());
         config.setMaximumPoolSize(tenantConnectionObj.getMaxActive());
         config.setConnectionTestQuery("SELECT 1");
