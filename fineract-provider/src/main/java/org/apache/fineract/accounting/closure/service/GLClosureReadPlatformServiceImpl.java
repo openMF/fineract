@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.apache.fineract.accounting.closure.data.GLClosureData;
 import org.apache.fineract.accounting.closure.exception.GLClosureNotFoundException;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,10 +38,12 @@ import org.springframework.stereotype.Service;
 public class GLClosureReadPlatformServiceImpl implements GLClosureReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
 
     @Autowired
-    public GLClosureReadPlatformServiceImpl(final RoutingDataSource dataSource) {
+    public GLClosureReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
     }
 
     private static final class GLClosureMapper implements RowMapper<GLClosureData> {
@@ -80,7 +83,7 @@ public class GLClosureReadPlatformServiceImpl implements GLClosureReadPlatformSe
     public List<GLClosureData> retrieveAllGLClosures(final Long officeId) {
         final GLClosureMapper rm = new GLClosureMapper();
 
-        String sql = "select " + rm.schema() + " and glClosure.is_deleted = 0";
+        String sql = "select " + rm.schema() + " and glClosure.is_deleted " + sqlResolver.formatBoolValue(false);
         final Object[] objectArray = new Object[1];
         int arrayPos = 0;
         if (officeId != null && officeId != 0) {

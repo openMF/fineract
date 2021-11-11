@@ -120,11 +120,17 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
         this.jobParameterRepository = jobParameterRepository;
     }
 
+    @Value("${fineract.config.readonly:false}")
+    private boolean readOnlyInstance;
+
     @Value("${node_id:1}")
     private String nodeId;
 
     @PostConstruct
     public void loadAllJobs() {
+        if (readOnlyInstance) {
+            return;
+        }
         final List<FineractPlatformTenant> allTenants = this.tenantDetailsService.findAllTenants();
         for (final FineractPlatformTenant tenant : allTenants) {
             ThreadLocalContextUtil.setTenant(tenant);

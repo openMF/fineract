@@ -82,7 +82,7 @@ task buildTypescriptAngularSdk(type: org.openapitools.generator.gradle.plugin.ta
 }
 
 // TODO: @vidakovic we could provide even more client libs in different languages (Go, Ruby, Swift etc.)
-compileJava.dependsOn buildJavaSdk, spotlessJavaApply, buildTypescriptAngularSdk, spotlessMiscApply
+compileJava.dependsOn buildJavaSdk, buildTypescriptAngularSdk
 
 sourceSets {
     generated {
@@ -121,4 +121,4 @@ test {
 }
 
 // Gradle 7.x asks for explicit dependencies between tasks
-licenseFormatBuildScripts.dependsOn spotlessGroovyGradle, spotlessJava, spotlessMisc, compileJava, processResources, compileGeneratedJava, compileTestJava, rat, test
+licenseFormatBuildScripts.dependsOn compileJava, processResources, compileGeneratedJava, compileTestJava, rat, test

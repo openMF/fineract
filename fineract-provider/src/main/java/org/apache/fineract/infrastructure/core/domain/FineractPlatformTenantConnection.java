@@ -46,6 +46,11 @@ public class FineractPlatformTenantConnection {
     private final int maxRetriesOnDeadlock;
     private final int maxIntervalBetweenRetries;
     private final boolean testOnBorrow;
+    private final String readOnlySchemaServer;
+    private final String readOnlySchemaServerPort;
+    private final String readOnlySchemaName;
+    private final String readOnlySchemaUsername;
+    private final String readOnlySchemaPassword;
 
     public FineractPlatformTenantConnection(final Long connectionId, final String schemaName, String schemaServer,
             final String schemaServerPort, final String schemaConnectionParameters, final String schemaUsername,
@@ -53,7 +58,9 @@ public class FineractPlatformTenantConnection {
             final boolean removeAbandoned, final int removeAbandonedTimeout, final boolean logAbandoned,
             final int abandonWhenPercentageFull, final int maxActive, final int minIdle, final int maxIdle, final int suspectTimeout,
             final int timeBetweenEvictionRunsMillis, final int minEvictableIdleTimeMillis, final int maxRetriesOnDeadlock,
-            final int maxIntervalBetweenRetries, final boolean tesOnBorrow) {
+            final int maxIntervalBetweenRetries, final boolean tesOnBorrow, final String readOnlySchemaServer,
+            final String readOnlySchemaServerPort, final String readOnlySchemaName, final String readOnlySchemaUsername,
+            final String readOnlySchemaPassword) {
 
         this.connectionId = connectionId;
         this.schemaName = schemaName;
@@ -78,6 +85,11 @@ public class FineractPlatformTenantConnection {
         this.maxRetriesOnDeadlock = maxRetriesOnDeadlock;
         this.maxIntervalBetweenRetries = maxIntervalBetweenRetries;
         this.testOnBorrow = tesOnBorrow;
+        this.readOnlySchemaServer = readOnlySchemaServer;
+        this.readOnlySchemaServerPort = readOnlySchemaServerPort;
+        this.readOnlySchemaName = readOnlySchemaName;
+        this.readOnlySchemaUsername = readOnlySchemaUsername;
+        this.readOnlySchemaPassword = readOnlySchemaPassword;
     }
 
     public String getSchemaServer() {
@@ -170,6 +182,26 @@ public class FineractPlatformTenantConnection {
 
     public String getSchemaName() {
         return schemaName;
+    }
+
+    public String getReadOnlySchemaServer() {
+        return readOnlySchemaServer;
+    }
+
+    public String getReadOnlySchemaServerPort() {
+        return readOnlySchemaServerPort;
+    }
+
+    public String getReadOnlySchemaName() {
+        return readOnlySchemaName;
+    }
+
+    public String getReadOnlySchemaUsername() {
+        return readOnlySchemaUsername;
+    }
+
+    public String getReadOnlySchemaPassword() {
+        return readOnlySchemaPassword;
     }
 
     @Override

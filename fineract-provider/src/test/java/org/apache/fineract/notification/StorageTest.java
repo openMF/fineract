@@ -24,7 +24,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
@@ -77,10 +76,9 @@ public class StorageTest {
         Long actor = 1L;
         String notificationContent = "A client was created";
         boolean isSystemGenerated = false;
-        String now = getCurrentDateTime();
+        Date now = getCurrentDateTime();
 
-        Notification notification = new Notification(objectType, objectIdentifier, action, actor, isSystemGenerated, notificationContent,
-                now);
+        Notification notification = new Notification(objectType, objectIdentifier, action, actor, isSystemGenerated, notificationContent, now);
 
         AppUser appUser = new AppUser(null, new User("J.J.", "", true, true, true, true, Collections.emptyList()), null, "user@com", "John",
                 "", null, false, false, null);
@@ -104,9 +102,7 @@ public class StorageTest {
         assertEquals(Long.valueOf(1), actualGeneratedNotificationId);
     }
 
-    private String getCurrentDateTime() {
-        Date date = new Date();
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return formatter.format(date);
+    private Date getCurrentDateTime() {
+        return new Date();
     }
 }

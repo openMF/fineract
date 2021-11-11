@@ -20,6 +20,7 @@ package org.apache.fineract.portfolio.savings.domain;
 
 import java.util.Date;
 import java.util.List;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.portfolio.charge.exception.SavingsAccountChargeNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,10 +34,12 @@ import org.springframework.stereotype.Service;
 public class SavingsAccountChargeRepositoryWrapper {
 
     private final SavingsAccountChargeRepository repository;
+    private final DataSourceSqlResolver sqlResolver;
 
     @Autowired
-    public SavingsAccountChargeRepositoryWrapper(final SavingsAccountChargeRepository repository) {
+    public SavingsAccountChargeRepositoryWrapper(final SavingsAccountChargeRepository repository, DataSourceSqlResolver sqlResolver) {
         this.repository = repository;
+        this.sqlResolver = sqlResolver;
     }
 
     public SavingsAccountCharge findOneWithNotFoundDetection(final Long id) {

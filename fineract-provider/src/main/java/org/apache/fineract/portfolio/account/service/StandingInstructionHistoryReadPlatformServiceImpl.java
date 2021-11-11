@@ -28,6 +28,8 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.Page;
@@ -50,6 +52,7 @@ import org.springframework.stereotype.Service;
 public class StandingInstructionHistoryReadPlatformServiceImpl implements StandingInstructionHistoryReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final ColumnValidator columnValidator;
 
     // mapper
@@ -59,84 +62,67 @@ public class StandingInstructionHistoryReadPlatformServiceImpl implements Standi
     private final PaginationHelper<StandingInstructionHistoryData> paginationHelper = new PaginationHelper<>();
 
     @Autowired
-    public StandingInstructionHistoryReadPlatformServiceImpl(final RoutingDataSource dataSource, final ColumnValidator columnValidator) {
+    public StandingInstructionHistoryReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
+                                                             final ColumnValidator columnValidator) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.standingInstructionHistoryMapper = new StandingInstructionHistoryMapper();
         this.columnValidator = columnValidator;
     }
 
     @Override
     public Page<StandingInstructionHistoryData> retrieveAll(StandingInstructionDTO standingInstructionDTO) {
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        final StringBuilder sqlBuilder = new StringBuilder(1000)
+                .append("SELECT ");
+        if (mySql)
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
 
-        final StringBuilder sqlBuilder = new StringBuilder(200);
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ");
         sqlBuilder.append(this.standingInstructionHistoryMapper.schema());
-        if (standingInstructionDTO.transferType() != null || standingInstructionDTO.clientId() != null
-                || standingInstructionDTO.clientName() != null
-                || (standingInstructionDTO.fromAccountType() != null && standingInstructionDTO.fromAccount() != null)
-                || standingInstructionDTO.startDateRange() != null || standingInstructionDTO.endDateRange() != null) {
-            sqlBuilder.append(" where ");
-        }
-        boolean addAndCaluse = false;
+        final StringBuilder whereClause = new StringBuilder(500);
+
         List<Object> paramObj = new ArrayList<>();
         if (standingInstructionDTO.transferType() != null) {
-            if (addAndCaluse) {
-                sqlBuilder.append(" and ");
-            }
-            sqlBuilder.append(" atd.transfer_type=? ");
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
+            whereClause.append(" atd.transfer_type=? ");
             paramObj.add(standingInstructionDTO.transferType());
-            addAndCaluse = true;
         }
         if (standingInstructionDTO.clientId() != null) {
-            if (addAndCaluse) {
-                sqlBuilder.append(" and ");
-            }
-            sqlBuilder.append(" fromclient.id=? ");
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
+            whereClause.append(" fromclient.id=? ");
             paramObj.add(standingInstructionDTO.clientId());
-            addAndCaluse = true;
         } else if (standingInstructionDTO.clientName() != null) {
-            if (addAndCaluse) {
-                sqlBuilder.append(" and ");
-            }
-            sqlBuilder.append(" fromclient.display_name=? ");
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
+            whereClause.append(" fromclient.display_name=? ");
             paramObj.add(standingInstructionDTO.clientName());
-            addAndCaluse = true;
         }
 
         if (standingInstructionDTO.fromAccountType() != null && standingInstructionDTO.fromAccount() != null) {
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
             PortfolioAccountType accountType = PortfolioAccountType.fromInt(standingInstructionDTO.fromAccountType());
-            if (addAndCaluse) {
-                sqlBuilder.append(" and ");
-            }
             if (accountType.isSavingsAccount()) {
-                sqlBuilder.append(" fromsavacc.id=? ");
+                whereClause.append(" fromsavacc.id=? ");
                 paramObj.add(standingInstructionDTO.fromAccount());
             } else if (accountType.isLoanAccount()) {
-                sqlBuilder.append(" fromloanacc.id=? ");
+                whereClause.append(" fromloanacc.id=? ");
                 paramObj.add(standingInstructionDTO.fromAccount());
             }
-            addAndCaluse = true;
         }
 
         if (standingInstructionDTO.startDateRange() != null) {
-            if (addAndCaluse) {
-                sqlBuilder.append(" and ");
-            }
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
             final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-            sqlBuilder.append(" atsih.execution_time >= ? ");
+            whereClause.append(" atsih.execution_time >= ? ");
             paramObj.add(df.format(standingInstructionDTO.startDateRange()));
-            addAndCaluse = true;
         }
 
         if (standingInstructionDTO.endDateRange() != null) {
-            if (addAndCaluse) {
-                sqlBuilder.append(" and ");
-            }
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
             final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-            sqlBuilder.append(" atsih.execution_time < ? ");
+            whereClause.append(" atsih.execution_time < ? ");
             paramObj.add(df.format(standingInstructionDTO.endDateRange()));
-            addAndCaluse = true;
         }
+        sqlBuilder.append(whereClause);
 
         final SearchParameters searchParameters = standingInstructionDTO.searchParameters();
         if (searchParameters.isOrderByRequested()) {
@@ -155,13 +141,34 @@ public class StandingInstructionHistoryReadPlatformServiceImpl implements Standi
             }
         }
 
-        final Object[] finalObjectArray = paramObj.toArray();
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(), finalObjectArray,
+        Object[] sqlParams = paramObj.toArray();
+        String sqlCountRows = "SELECT FOUND_ROWS()";
+        Object[] countParams = null;
+        if (!mySql) {
+            sqlCountRows = "SELECT " + standingInstructionHistoryMapper.countSchema() + whereClause;
+            countParams = sqlParams;
+        }
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, countParams, sqlBuilder.toString(), sqlParams,
                 this.standingInstructionHistoryMapper);
     }
 
     private static final class StandingInstructionHistoryMapper implements RowMapper<StandingInstructionHistoryData> {
+
+        public static final String FROM = " FROM m_account_transfer_standing_instructions_history atsih " +
+                " join m_account_transfer_standing_instructions atsi on atsi.id = atsih.standing_instruction_id " +
+                "join m_account_transfer_details atd on atd.id = atsi.account_transfer_details_id " +
+                "join m_office fromoff on fromoff.id = atd.from_office_id " +
+                "join m_office tooff on tooff.id = atd.to_office_id " +
+                "join m_client fromclient on fromclient.id = atd.from_client_id " +
+                "join m_client toclient on toclient.id = atd.to_client_id " +
+                "left join m_savings_account fromsavacc on fromsavacc.id = atd.from_savings_account_id " +
+                "left join m_savings_product fromsp ON fromsavacc.product_id = fromsp.id " +
+                "left join m_loan fromloanacc on fromloanacc.id = atd.from_loan_account_id " +
+                "left join m_product_loan fromlp ON fromloanacc.product_id = fromlp.id " +
+                "left join m_savings_account tosavacc on tosavacc.id = atd.to_savings_account_id " +
+                "left join m_savings_product tosp ON tosavacc.product_id = tosp.id " +
+                "left join m_loan toloanacc on toloanacc.id = atd.to_loan_account_id " +
+                "left join m_product_loan tolp ON toloanacc.product_id = tolp.id ";
 
         private final String schemaSql;
 
@@ -182,27 +189,17 @@ public class StandingInstructionHistoryReadPlatformServiceImpl implements Standi
             sqlBuilder.append("tosp.id as toProductId, tosp.name as toProductName, ");
             sqlBuilder.append("toloanacc.id as toLoanAccountId, toloanacc.account_no as toLoanAccountNo, ");
             sqlBuilder.append("tolp.id as toLoanProductId, tolp.name as toLoanProductName ");
-            sqlBuilder.append(" FROM m_account_transfer_standing_instructions_history atsih ");
-            sqlBuilder.append(" join m_account_transfer_standing_instructions atsi on atsi.id = atsih.standing_instruction_id ");
-            sqlBuilder.append("join m_account_transfer_details atd on atd.id = atsi.account_transfer_details_id ");
-            sqlBuilder.append("join m_office fromoff on fromoff.id = atd.from_office_id ");
-            sqlBuilder.append("join m_office tooff on tooff.id = atd.to_office_id ");
-            sqlBuilder.append("join m_client fromclient on fromclient.id = atd.from_client_id ");
-            sqlBuilder.append("join m_client toclient on toclient.id = atd.to_client_id ");
-            sqlBuilder.append("left join m_savings_account fromsavacc on fromsavacc.id = atd.from_savings_account_id ");
-            sqlBuilder.append("left join m_savings_product fromsp ON fromsavacc.product_id = fromsp.id ");
-            sqlBuilder.append("left join m_loan fromloanacc on fromloanacc.id = atd.from_loan_account_id ");
-            sqlBuilder.append("left join m_product_loan fromlp ON fromloanacc.product_id = fromlp.id ");
-            sqlBuilder.append("left join m_savings_account tosavacc on tosavacc.id = atd.to_savings_account_id ");
-            sqlBuilder.append("left join m_savings_product tosp ON tosavacc.product_id = tosp.id ");
-            sqlBuilder.append("left join m_loan toloanacc on toloanacc.id = atd.to_loan_account_id ");
-            sqlBuilder.append("left join m_product_loan tolp ON toloanacc.product_id = tolp.id ");
+            sqlBuilder.append(FROM);
 
             this.schemaSql = sqlBuilder.toString();
         }
 
         public String schema() {
             return this.schemaSql;
+        }
+
+        public String countSchema() {
+            return " count(atsih.*) " + FROM;
         }
 
         @Override

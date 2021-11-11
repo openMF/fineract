@@ -34,6 +34,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
@@ -71,6 +73,7 @@ import org.springframework.util.CollectionUtils;
 public class StandingInstructionReadPlatformServiceImpl implements StandingInstructionReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final ColumnValidator columnValidator;
     private final ClientReadPlatformService clientReadPlatformService;
     private final OfficeReadPlatformService officeReadPlatformService;
@@ -84,11 +87,12 @@ public class StandingInstructionReadPlatformServiceImpl implements StandingInstr
     private final PaginationHelper<StandingInstructionData> paginationHelper = new PaginationHelper<>();
 
     @Autowired
-    public StandingInstructionReadPlatformServiceImpl(final RoutingDataSource dataSource,
+    public StandingInstructionReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
             final ClientReadPlatformService clientReadPlatformService, final OfficeReadPlatformService officeReadPlatformService,
             final PortfolioAccountReadPlatformService portfolioAccountReadPlatformService,
             final DropdownReadPlatformService dropdownReadPlatformService, final ColumnValidator columnValidator) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.clientReadPlatformService = clientReadPlatformService;
         this.officeReadPlatformService = officeReadPlatformService;
         this.portfolioAccountReadPlatformService = portfolioAccountReadPlatformService;
@@ -255,54 +259,43 @@ public class StandingInstructionReadPlatformServiceImpl implements StandingInstr
 
     @Override
     public Page<StandingInstructionData> retrieveAll(final StandingInstructionDTO standingInstructionDTO) {
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        final StringBuilder sqlBuilder = new StringBuilder(1000)
+                .append("SELECT ");
+        if (mySql)
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
 
-        final StringBuilder sqlBuilder = new StringBuilder(200);
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ");
         sqlBuilder.append(this.standingInstructionMapper.schema());
-        if (standingInstructionDTO.transferType() != null || standingInstructionDTO.clientId() != null
-                || standingInstructionDTO.clientName() != null) {
-            sqlBuilder.append(" where ");
-        }
-        boolean addAndCaluse = false;
+        final StringBuilder whereClause = new StringBuilder(500);
+
         List<Object> paramObj = new ArrayList<>();
         if (standingInstructionDTO.transferType() != null) {
-            if (addAndCaluse) {
-                sqlBuilder.append(" and ");
-            }
-            sqlBuilder.append(" atd.transfer_type=? ");
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
+            whereClause.append(" atd.transfer_type=? ");
             paramObj.add(standingInstructionDTO.transferType());
-            addAndCaluse = true;
         }
         if (standingInstructionDTO.clientId() != null) {
-            if (addAndCaluse) {
-                sqlBuilder.append(" and ");
-            }
-            sqlBuilder.append(" fromclient.id=? ");
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
+            whereClause.append(" fromclient.id=? ");
             paramObj.add(standingInstructionDTO.clientId());
-            addAndCaluse = true;
         } else if (standingInstructionDTO.clientName() != null) {
-            if (addAndCaluse) {
-                sqlBuilder.append(" and ");
-            }
-            sqlBuilder.append(" fromclient.display_name=? ");
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
+            whereClause.append(" fromclient.display_name=? ");
             paramObj.add(standingInstructionDTO.clientName());
-            addAndCaluse = true;
         }
 
         if (standingInstructionDTO.fromAccountType() != null && standingInstructionDTO.fromAccount() != null) {
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
             PortfolioAccountType accountType = PortfolioAccountType.fromInt(standingInstructionDTO.fromAccountType());
-            if (addAndCaluse) {
-                sqlBuilder.append(" and ");
-            }
             if (accountType.isSavingsAccount()) {
-                sqlBuilder.append(" fromsavacc.id=? ");
+                whereClause.append(" fromsavacc.id=? ");
                 paramObj.add(standingInstructionDTO.fromAccount());
             } else if (accountType.isLoanAccount()) {
-                sqlBuilder.append(" fromloanacc.id=? ");
+                whereClause.append(" fromloanacc.id=? ");
                 paramObj.add(standingInstructionDTO.fromAccount());
             }
-            addAndCaluse = true;
         }
+        sqlBuilder.append(whereClause);
 
         final SearchParameters searchParameters = standingInstructionDTO.searchParameters();
         if (searchParameters.isOrderByRequested()) {
@@ -321,20 +314,26 @@ public class StandingInstructionReadPlatformServiceImpl implements StandingInstr
             }
         }
 
-        final Object[] finalObjectArray = paramObj.toArray();
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(), finalObjectArray,
+        final Object[] sqlParams = paramObj.toArray();
+        String sqlCountRows = "SELECT FOUND_ROWS()";
+        Object[] countParams = null;
+        if (!mySql) {
+            sqlCountRows = "SELECT " + standingInstructionMapper.countSchema() + whereClause;
+            countParams = sqlParams;
+        }
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, countParams, sqlBuilder.toString(), sqlParams,
                 this.standingInstructionMapper);
-    }
+   }
 
     @Override
     public Collection<StandingInstructionData> retrieveAll(final Integer status) {
         final StringBuilder sqlBuilder = new StringBuilder(200);
         sqlBuilder.append("select ");
         sqlBuilder.append(this.standingInstructionMapper.schema());
-        sqlBuilder.append(
-                " where atsi.status=? and CURRENT_DATE() >= atsi.valid_from and (atsi.valid_till IS NULL or CURRENT_DATE() < atsi.valid_till) ")
-                .append(" and  (atsi.last_run_date <> CURRENT_DATE() or atsi.last_run_date IS NULL)")
+        sqlBuilder.append(" where atsi.status=? and ")
+                .append(sqlResolver.formatDateCurrent()).append(" >= atsi.valid_from and (atsi.valid_till IS NULL or ")
+                .append(sqlResolver.formatDateCurrent()).append("  < atsi.valid_till) ")
+                .append(" and  (atsi.last_run_date <> ").append(sqlResolver.formatDateCurrent()).append(" or atsi.last_run_date IS NULL)")
                 .append(" ORDER BY atsi.priority DESC");
         return this.jdbcTemplate.query(sqlBuilder.toString(), this.standingInstructionMapper, status);
     }
@@ -354,11 +353,25 @@ public class StandingInstructionReadPlatformServiceImpl implements StandingInstr
     @Override
     public StandingInstructionDuesData retriveLoanDuesData(final Long loanId) {
         final StandingInstructionLoanDuesMapper rm = new StandingInstructionLoanDuesMapper();
-        final String sql = "select " + rm.schema() + " where ml.id= ? and ls.duedate <= CURRENT_DATE() and ls.completed_derived <> 1";
+        final String sql = "select " + rm.schema() + " where ml.id= ? and ls.duedate <= " + sqlResolver.formatDateCurrent() + " and ls.completed_derived <> 1";
         return this.jdbcTemplate.queryForObject(sql, rm, new Object[] { loanId });
     }
 
     private static final class StandingInstructionMapper implements RowMapper<StandingInstructionData> {
+        public static final String FROM = new StringBuilder(" FROM m_account_transfer_standing_instructions atsi ")
+                .append("join m_account_transfer_details atd on atd.id = atsi.account_transfer_details_id ")
+                .append("join m_office fromoff on fromoff.id = atd.from_office_id ")
+                .append("join m_office tooff on tooff.id = atd.to_office_id ")
+                .append("join m_client fromclient on fromclient.id = atd.from_client_id ")
+                .append("join m_client toclient on toclient.id = atd.to_client_id ")
+                .append("left join m_savings_account fromsavacc on fromsavacc.id = atd.from_savings_account_id ")
+                .append("left join m_savings_product fromsp ON fromsavacc.product_id = fromsp.id ")
+                .append("left join m_loan fromloanacc on fromloanacc.id = atd.from_loan_account_id ")
+                .append("left join m_product_loan fromlp ON fromloanacc.product_id = fromlp.id ")
+                .append("left join m_savings_account tosavacc on tosavacc.id = atd.to_savings_account_id ")
+                .append("left join m_savings_product tosp ON tosavacc.product_id = tosp.id ")
+                .append("left join m_loan toloanacc on toloanacc.id = atd.to_loan_account_id ")
+                .append("left join m_product_loan tolp ON toloanacc.product_id = tolp.id ").toString();
 
         private final String schemaSql;
 
@@ -384,26 +397,17 @@ public class StandingInstructionReadPlatformServiceImpl implements StandingInstr
             sqlBuilder.append("tosp.id as toProductId, tosp.name as toProductName, ");
             sqlBuilder.append("toloanacc.id as toLoanAccountId, toloanacc.account_no as toLoanAccountNo, ");
             sqlBuilder.append("tolp.id as toLoanProductId, tolp.name as toLoanProductName ");
-            sqlBuilder.append(" FROM m_account_transfer_standing_instructions atsi ");
-            sqlBuilder.append("join m_account_transfer_details atd on atd.id = atsi.account_transfer_details_id ");
-            sqlBuilder.append("join m_office fromoff on fromoff.id = atd.from_office_id ");
-            sqlBuilder.append("join m_office tooff on tooff.id = atd.to_office_id ");
-            sqlBuilder.append("join m_client fromclient on fromclient.id = atd.from_client_id ");
-            sqlBuilder.append("join m_client toclient on toclient.id = atd.to_client_id ");
-            sqlBuilder.append("left join m_savings_account fromsavacc on fromsavacc.id = atd.from_savings_account_id ");
-            sqlBuilder.append("left join m_savings_product fromsp ON fromsavacc.product_id = fromsp.id ");
-            sqlBuilder.append("left join m_loan fromloanacc on fromloanacc.id = atd.from_loan_account_id ");
-            sqlBuilder.append("left join m_product_loan fromlp ON fromloanacc.product_id = fromlp.id ");
-            sqlBuilder.append("left join m_savings_account tosavacc on tosavacc.id = atd.to_savings_account_id ");
-            sqlBuilder.append("left join m_savings_product tosp ON tosavacc.product_id = tosp.id ");
-            sqlBuilder.append("left join m_loan toloanacc on toloanacc.id = atd.to_loan_account_id ");
-            sqlBuilder.append("left join m_product_loan tolp ON toloanacc.product_id = tolp.id ");
+            sqlBuilder.append(FROM);
 
             this.schemaSql = sqlBuilder.toString();
         }
 
         public String schema() {
             return this.schemaSql;
+        }
+
+        public String countSchema() {
+            return " count(atsi.*) " + FROM;
         }
 
         @Override

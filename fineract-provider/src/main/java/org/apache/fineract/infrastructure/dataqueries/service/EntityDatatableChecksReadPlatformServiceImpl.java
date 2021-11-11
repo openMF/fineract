@@ -24,6 +24,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.Page;
@@ -52,6 +54,7 @@ import org.springframework.stereotype.Service;
 public class EntityDatatableChecksReadPlatformServiceImpl implements EntityDatatableChecksReadService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final RegisterDataTableMapper registerDataTableMapper;
     private final EntityDataTableChecksMapper entityDataTableChecksMapper;
     private final EntityDatatableChecksRepository entityDatatableChecksRepository;
@@ -61,13 +64,14 @@ public class EntityDatatableChecksReadPlatformServiceImpl implements EntityDatat
     private final PaginationHelper<EntityDataTableChecksData> paginationHelper = new PaginationHelper<>();
 
     @Autowired
-    public EntityDatatableChecksReadPlatformServiceImpl(final RoutingDataSource dataSource,
-            final LoanProductReadPlatformService loanProductReadPlatformService,
-            final SavingsProductReadPlatformService savingsProductReadPlatformService,
-            final EntityDatatableChecksRepository entityDatatableChecksRepository,
-            final ReadWriteNonCoreDataService readWriteNonCoreDataService) {
+    public EntityDatatableChecksReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
+                                                        final LoanProductReadPlatformService loanProductReadPlatformService,
+                                                        final SavingsProductReadPlatformService savingsProductReadPlatformService,
+                                                        final EntityDatatableChecksRepository entityDatatableChecksRepository,
+                                                        final ReadWriteNonCoreDataService readWriteNonCoreDataService) {
 
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.registerDataTableMapper = new RegisterDataTableMapper();
         this.entityDataTableChecksMapper = new EntityDataTableChecksMapper();
         this.loanProductReadPlatformService = loanProductReadPlatformService;
@@ -77,40 +81,49 @@ public class EntityDatatableChecksReadPlatformServiceImpl implements EntityDatat
     }
 
     @Override
-    public Page<EntityDataTableChecksData> retrieveAll(SearchParameters searchParameters, final Long status, final String entity,
-            final Long productId) {
-        final StringBuilder sqlBuilder = new StringBuilder(200);
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ");
-        sqlBuilder.append(this.entityDataTableChecksMapper.schema());
+    public Page<EntityDataTableChecksData> retrieveAll(SearchParameters searchParameters, final Long status, final String entity, final Long productId) {
+        final StringBuilder sqlBuilder = new StringBuilder("select ");
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        if (mySql)
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
 
-        if (status != null || entity != null || productId != null) {
-            sqlBuilder.append(" where ");
-        }
+        sqlBuilder.append(this.entityDataTableChecksMapper.schema());
+        final StringBuilder whereClause = new StringBuilder();
+
         List<Object> paramList = new ArrayList<>();
         if (status != null) {
-            sqlBuilder.append(" status_enum = ? ");
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
+            whereClause.append(" status_enum = ? ");
             paramList.add(status);
         }
 
         if (entity != null) {
-            sqlBuilder.append(" and t.application_table_name = ? ");
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
+            whereClause.append(" t.application_table_name = ? ");
             paramList.add(entity);
         }
 
         if (productId != null) {
-            sqlBuilder.append(" and t.product_id = ? ");
+            whereClause.append(whereClause.length() == 0 ? " where " : " and ");
+            whereClause.append(" t.product_id = ? ");
             paramList.add(productId);
         }
+        sqlBuilder.append(whereClause);
+
         if (searchParameters.isLimited()) {
             sqlBuilder.append(" limit ").append(searchParameters.getLimit());
             if (searchParameters.isOffset()) {
                 sqlBuilder.append(" offset ").append(searchParameters.getOffset());
             }
         }
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        return this.paginationHelper.fetchPage(jdbcTemplate, sqlCountRows, sqlBuilder.toString(), paramList.toArray(),
-                entityDataTableChecksMapper);
-
+        final Object[] sqlParams = paramList.toArray();
+        String sqlCountRows = "SELECT FOUND_ROWS()";
+        Object[] countParams = null;
+        if (!mySql) {
+            sqlCountRows = "SELECT " + entityDataTableChecksMapper.countSchema() + whereClause;
+            countParams = sqlParams;
+        }
+        return this.paginationHelper.fetchPage(jdbcTemplate, sqlCountRows, countParams, sqlBuilder.toString(), sqlParams, entityDataTableChecksMapper);
     }
 
     @Override
@@ -188,6 +201,10 @@ public class EntityDatatableChecksReadPlatformServiceImpl implements EntityDatat
 
     protected static final class EntityDataTableChecksMapper implements RowMapper<EntityDataTableChecksData> {
 
+        public static final String FROM = " from m_entity_datatable_check as t  "
+                + "left join m_product_loan lp on lp.id = t.product_id and t.application_table_name = 'm_loan' "
+                + "left join m_savings_product sp on sp.id = t.product_id and t.application_table_name = 'm_savings_account' ";
+
         @Override
         public EntityDataTableChecksData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
 
@@ -198,23 +215,24 @@ public class EntityDatatableChecksReadPlatformServiceImpl implements EntityDatat
             if (status != null) {
                 statusEnum = StatusEnum.statusTypeEnum(status.intValue());
             }
-            final String datatableName = rs.getString("datatableName");
-            final boolean systemDefined = rs.getBoolean("systemDefined");
-            final Long productId = JdbcSupport.getLong(rs, "productId");
-            final String productName = rs.getString("productName");
+            final String datatableName = rs.getString("datatable_name");
+            final boolean systemDefined = rs.getBoolean("system_defined");
+            final Long productId = JdbcSupport.getLong(rs, "product_id");
+            final String productName = rs.getString("product_name");
 
             return new EntityDataTableChecksData(id, entity, statusEnum, datatableName, systemDefined, productId, productName);
         }
 
         public String schema() {
             return " t.id as id, " + "t.application_table_name as entity, " + "t.status_enum as status,  "
-                    + "t.system_defined as systemDefined,  " + "t.x_registered_table_name as datatableName,  "
-                    + "t.product_id as productId,  " + "(CASE t.application_table_name " + "WHEN 'm_loan' THEN lp.name "
-                    + "WHEN 'm_savings_account' THEN sp.name " + "ELSE NULL  " + "END) as productName "
-                    + "from m_entity_datatable_check as t  "
-                    + "left join m_product_loan lp on lp.id = t.product_id and t.application_table_name = 'm_loan' "
-                    + "left join m_savings_product sp on sp.id = t.product_id and t.application_table_name = 'm_savings_account' ";
+                    + "t.system_defined as system_defined,  " + "t.x_registered_table_name as datatable_name,  "
+                    + "t.product_id as product_id,  " + "(CASE t.application_table_name " + "WHEN 'm_loan' THEN lp.name "
+                    + "WHEN 'm_savings_account' THEN sp.name " + "ELSE NULL  " + "END) as product_name "
+                    + FROM;
+        }
+
+        public String countSchema() {
+            return " count(t.*) " + FROM;
         }
     }
-
 }

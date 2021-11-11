@@ -18,44 +18,100 @@
  */
 package org.apache.fineract.infrastructure.core.boot;
 
-import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.env.Environment;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceDialect;
+import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.TimeZone;
 
 @Service
 public class JDBCDriverConfig {
 
-    private static final String DRIVER_CLASS_PROPERTYNAME = "DRIVERCLASS_NAME";
-    private static final String PROTOCOL_PROPERTYNAME = "PROTOCOL";
-    private static final String SUBPROTOCOL_PROPERTYNAME = "SUB_PROTOCOL";
-
+    @Value("${fineract.ds.driver}")
     private String driverClassName;
+
+    @Value("${fineract.ds.protocol}")
     private String protocol;
+
+    @Value("${fineract.ds.subprotocol}")
     private String subProtocol;
 
-    @Autowired
-    ApplicationContext context;
+    @Value("${fineract.ds.host}")
+    private String host;
 
-    @PostConstruct
-    protected void init() {
-        Environment environment = context.getEnvironment();
-        driverClassName = environment.getProperty(DRIVER_CLASS_PROPERTYNAME);
-        protocol = environment.getProperty(PROTOCOL_PROPERTYNAME);
-        subProtocol = environment.getProperty(SUBPROTOCOL_PROPERTYNAME);
-    }
+    @Value("${fineract.ds.port}")
+    private Integer port;
+
+    @Value("${fineract.ds.tenants.db}")
+    private String listDbName;
+
+    @Value("${fineract.ds.username}")
+    private String username;
+
+    @Value("${fineract.ds.password}")
+    private String password;
+
+    @Value("${fineract.ds.dialect}")
+    private DataSourceDialect dialect;
+
+    @Value("${fineract.ds.timezone}")
+    private String timezone;
 
     public String getDriverClassName() {
-        return this.driverClassName;
+        return driverClassName;
     }
 
-    public String constructProtocol(String schemaServer, String schemaServerPort, String schemaName, String schemaConnectionParameters) {
-        StringBuilder sb = new StringBuilder(protocol).append(":").append(subProtocol).append("://").append(schemaServer).append(":")
-                .append(schemaServerPort).append('/').append(schemaName);
-        if (schemaConnectionParameters != null && !schemaConnectionParameters.isEmpty()) {
-            sb.append('?').append(schemaConnectionParameters);
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public String getSubProtocol() {
+        return subProtocol;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public String getListDbName() {
+        return listDbName;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public DataSourceDialect getDialect() {
+        return dialect;
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public String constructUrl(String schemaServer, String schemaServerPort, String schemaName, String connectionParameters) {
+        String url = getProtocol() + ':' + getSubProtocol() + "://" + schemaServer + ':' + schemaServerPort + '/' + schemaName;
+        if (!Strings.isEmpty(connectionParameters)) {
+            url += (url.contains("?") ? "&" : "?") + connectionParameters;
         }
-        return sb.toString();
+        return url;
+    }
+
+    public String constructUrl(String schemaName) {
+        String timezone = getTimezone();
+        if (StringUtils.isEmpty(timezone)) {
+            timezone = TimeZone.getDefault().getID(); // has to be set as some databases are not able to handle summer time
+        }
+        return constructUrl(getHost(), getPort().toString(), schemaName, "serverTimezone=" + timezone);
     }
 }

@@ -58,12 +58,12 @@ public final class GroupSavingsIndividualMonitoring extends AbstractPersistableC
     private Integer savingsStatus;
 
     @Column(name = "application_id", nullable = true)
-    private BigDecimal applicationId;
+    private Long applicationId;
 
     private GroupSavingsIndividualMonitoring() {}
 
     private GroupSavingsIndividualMonitoring(String accountNumber, Group group, BigDecimal parentDeposit, Long childAccountsCount,
-            Boolean isAcceptingChild, Integer savingsStatus, BigDecimal applicationId) {
+            Boolean isAcceptingChild, Integer savingsStatus, Long applicationId) {
         this.accountNumber = accountNumber;
         this.group = group;
         this.parentDeposit = parentDeposit;
@@ -75,7 +75,7 @@ public final class GroupSavingsIndividualMonitoring extends AbstractPersistableC
     }
 
     public static GroupSavingsIndividualMonitoring getInstance(String accountNumber, Group group, BigDecimal parentDeposit,
-            Long childAccountsCount, Boolean isAcceptingChild, Integer savingsStatus, BigDecimal applicationId) {
+            Long childAccountsCount, Boolean isAcceptingChild, Integer savingsStatus, Long applicationId) {
         return new GroupSavingsIndividualMonitoring(accountNumber, group, parentDeposit, childAccountsCount, isAcceptingChild,
                 savingsStatus, applicationId);
     }

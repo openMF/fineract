@@ -35,6 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.commands.data.AuditData;
 import org.apache.fineract.commands.data.AuditSearchData;
 import org.apache.fineract.commands.data.ProcessingResultLookup;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.PaginationParameters;
 import org.apache.fineract.infrastructure.core.data.PaginationParametersDataValidator;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
@@ -64,6 +65,7 @@ import org.apache.fineract.portfolio.savings.service.SavingsProductReadPlatformS
 import org.apache.fineract.useradministration.data.AppUserData;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.apache.fineract.useradministration.service.AppUserReadPlatformService;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,6 +82,7 @@ public class AuditReadPlatformServiceImpl implements AuditReadPlatformService {
             "clientId", "loanId", "maker", "checker", "processingResult"));
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final PlatformSecurityContext context;
     private final FromJsonHelper fromApiJsonHelper;
     private final AppUserReadPlatformService appUserReadPlatformService;
@@ -94,7 +97,7 @@ public class AuditReadPlatformServiceImpl implements AuditReadPlatformService {
     private final ColumnValidator columnValidator;
 
     @Autowired
-    public AuditReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource,
+    public AuditReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
             final FromJsonHelper fromApiJsonHelper, final AppUserReadPlatformService appUserReadPlatformService,
             final OfficeReadPlatformService officeReadPlatformService, final ClientReadPlatformService clientReadPlatformService,
             final LoanProductReadPlatformService loanProductReadPlatformService, final StaffReadPlatformService staffReadPlatformService,
@@ -103,6 +106,7 @@ public class AuditReadPlatformServiceImpl implements AuditReadPlatformService {
             final DepositProductReadPlatformService depositProductReadPlatformService, final ColumnValidator columnValidator) {
         this.context = context;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.fromApiJsonHelper = fromApiJsonHelper;
         this.appUserReadPlatformService = appUserReadPlatformService;
         this.officeReadPlatformService = officeReadPlatformService;
@@ -116,26 +120,29 @@ public class AuditReadPlatformServiceImpl implements AuditReadPlatformService {
     }
 
     private static final class AuditMapper implements RowMapper<AuditData> {
+        public static final String FROM = " from m_portfolio_command_source aud "
+                + " left join m_appuser mk on mk.id = aud.maker_id" + " left join m_appuser ck on ck.id = aud.checker_id"
+                + " left join m_office o on o.id = aud.office_id" + " left join m_group g on g.id = aud.group_id"
+                + " left join m_group_level gl on gl.id = g.level_id" + " left join m_client c on c.id = aud.client_id"
+                + " left join m_loan l on l.id = aud.loan_id" + " left join m_savings_account s on s.id = aud.savings_account_id"
+                + " left join r_enum_value ev on ev.enum_name = 'processing_result_enum' and ev.enum_id = aud.processing_result_enum ";
 
         public String schema(final boolean includeJson, final String hierarchy) {
 
             String commandAsJsonString = "";
             if (includeJson) {
-                commandAsJsonString = ", aud.command_as_json as commandAsJson ";
+                commandAsJsonString = ", aud.command_as_json as command_as_json ";
             }
 
-            String partSql = " aud.id as id, aud.action_name as actionName, aud.entity_name as entityName,"
-                    + " aud.resource_id as resourceId, aud.subresource_id as subresourceId,aud.client_id as clientId, aud.loan_id as loanId,"
-                    + " mk.username as maker, aud.made_on_date as madeOnDate, " + " aud.api_get_url as resourceGetUrl, "
-                    + "ck.username as checker, aud.checked_on_date as checkedOnDate, ev.enum_message_property as processingResult "
+            String partSql = " aud.id as id, aud.action_name as action_name, aud.entity_name as entity_name,"
+                    + " aud.resource_id as resource_id, aud.subresource_id as subresource_id,aud.client_id as client_id, aud.loan_id as loan_id,"
+                    + " mk.username as maker, aud.made_on_date as made_on_date, " + " aud.api_get_url as resource_get_url, "
+                    + "ck.username as checker, aud.checked_on_date as checked_on_date, ev.enum_message_property as processing_result "
                     + commandAsJsonString + ", "
-                    + " o.name as officeName, gl.level_name as groupLevelName, g.display_name as groupName, c.display_name as clientName, "
-                    + " l.account_no as loanAccountNo, s.account_no as savingsAccountNo " + " from m_portfolio_command_source aud "
-                    + " left join m_appuser mk on mk.id = aud.maker_id" + " left join m_appuser ck on ck.id = aud.checker_id"
-                    + " left join m_office o on o.id = aud.office_id" + " left join m_group g on g.id = aud.group_id"
-                    + " left join m_group_level gl on gl.id = g.level_id" + " left join m_client c on c.id = aud.client_id"
-                    + " left join m_loan l on l.id = aud.loan_id" + " left join m_savings_account s on s.id = aud.savings_account_id"
-                    + " left join r_enum_value ev on ev.enum_name = 'processing_result_enum' and ev.enum_id = aud.processing_result_enum";
+                    + " o.name as office_name, gl.level_name as group_level_name, g.display_name as group_name, c.display_name as client_name, "
+                    + " l.account_no as loan_account_no, s.account_no as savings_account_no "
+                    + FROM;
+
 
             // data scoping: head office (hierarchy = ".") can see all audit
             // entries
@@ -146,36 +153,44 @@ public class AuditReadPlatformServiceImpl implements AuditReadPlatformService {
             return partSql;
         }
 
+        public String countSchema(String hierarchy) {
+            String sql = " count(aud.*) " + FROM;
+            if (!hierarchy.equals(".")) {
+                sql += " join m_office o2 on o2.id = aud.office_id and o2.hierarchy like '" + hierarchy + "%' ";
+            }
+            return sql;
+        }
+
         @Override
         public AuditData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
 
             final Long id = rs.getLong("id");
-            final String actionName = rs.getString("actionName");
-            final String entityName = rs.getString("entityName");
-            final Long resourceId = JdbcSupport.getLong(rs, "resourceId");
-            final Long clientId = JdbcSupport.getLong(rs, "clientId");
-            final Long loanId = JdbcSupport.getLong(rs, "loanId");
-            final Long subresourceId = JdbcSupport.getLong(rs, "subresourceId");
+            final String actionName = rs.getString("action_name");
+            final String entityName = rs.getString("entity_name");
+            final Long resourceId = JdbcSupport.getLong(rs, "resource_id");
+            final Long clientId = JdbcSupport.getLong(rs, "client_id");
+            final Long loanId = JdbcSupport.getLong(rs, "loan_id");
+            final Long subresourceId = JdbcSupport.getLong(rs, "subresource_id");
             final String maker = rs.getString("maker");
-            final ZonedDateTime madeOnDate = JdbcSupport.getDateTime(rs, "madeOnDate");
+            final ZonedDateTime madeOnDate = JdbcSupport.getDateTime(rs, "made_on_date");
             final String checker = rs.getString("checker");
-            final ZonedDateTime checkedOnDate = JdbcSupport.getDateTime(rs, "checkedOnDate");
-            final String processingResult = rs.getString("processingResult");
-            final String resourceGetUrl = rs.getString("resourceGetUrl");
+            final ZonedDateTime checkedOnDate = JdbcSupport.getDateTime(rs, "checked_on_date");
+            final String processingResult = rs.getString("processing_result");
+            final String resourceGetUrl = rs.getString("resource_get_url");
             String commandAsJson;
             // commandAsJson might not be on the select list of columns
             try {
-                commandAsJson = rs.getString("commandAsJson");
+                commandAsJson = rs.getString("command_as_json");
             } catch (final SQLException e) {
                 commandAsJson = null;
             }
 
-            final String officeName = rs.getString("officeName");
-            final String groupLevelName = rs.getString("groupLevelName");
-            final String groupName = rs.getString("groupName");
-            final String clientName = rs.getString("clientName");
-            final String loanAccountNo = rs.getString("loanAccountNo");
-            final String savingsAccountNo = rs.getString("savingsAccountNo");
+            final String officeName = rs.getString("office_name");
+            final String groupLevelName = rs.getString("group_level_name");
+            final String groupName = rs.getString("group_name");
+            final String clientName = rs.getString("client_name");
+            final String loanAccountNo = rs.getString("loan_account_no");
+            final String savingsAccountNo = rs.getString("savings_account_no");
 
             return new AuditData(id, actionName, entityName, resourceId, subresourceId, maker, madeOnDate, checker, checkedOnDate,
                     processingResult, commandAsJson, officeName, groupLevelName, groupName, clientName, loanAccountNo, savingsAccountNo,
@@ -197,11 +212,20 @@ public class AuditReadPlatformServiceImpl implements AuditReadPlatformService {
         final AppUser currentUser = this.context.authenticatedUser();
         final String hierarchy = currentUser.getOffice().getHierarchy();
 
+        String updatedExtraCriteria = extraCriteria == null ? "" : extraCriteria.toString();
+        if (Strings.isNotEmpty(updatedExtraCriteria)) {
+            updatedExtraCriteria = " where (" + updatedExtraCriteria + ")";
+        }
+
         final AuditMapper rm = new AuditMapper();
-        final StringBuilder sqlBuilder = new StringBuilder(200);
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ");
+        final StringBuilder sqlBuilder = new StringBuilder("select ");
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        if (mySql)
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
+
         sqlBuilder.append(rm.schema(includeJson, hierarchy));
-        sqlBuilder.append(' ').append(extraCriteria.getSQLTemplate());
+        sqlBuilder.append(' ').append(updatedExtraCriteria);
+        this.columnValidator.validateSqlInjection(sqlBuilder.toString(), updatedExtraCriteria);
         if (parameters.isOrderByRequested()) {
             sqlBuilder.append(' ').append(parameters.orderBySql());
             this.columnValidator.validateSqlInjection(sqlBuilder.toString(), parameters.orderBySql());
@@ -214,10 +238,13 @@ public class AuditReadPlatformServiceImpl implements AuditReadPlatformService {
             this.columnValidator.validateSqlInjection(sqlBuilder.toString(), parameters.limitSql());
         }
 
-        LOG.info("sql: {}", sqlBuilder);
+        LOG.info("sql: " + sqlBuilder.toString());
 
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(), extraCriteria.getArguments(), rm);
+        String sqlCountRows = "SELECT FOUND_ROWS()";
+        if (!mySql) {
+            sqlCountRows = "SELECT " + rm.countSchema(hierarchy) + updatedExtraCriteria;
+        }
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, null, sqlBuilder.toString(), null, rm);
     }
 
     @Override
@@ -441,13 +468,13 @@ public class AuditReadPlatformServiceImpl implements AuditReadPlatformService {
 
         String sql = " SELECT distinct(action_name) as actionName FROM m_permission p ";
         sql += makercheckerCapabilityOnly(useType, currentUser);
-        sql += " order by if(action_name in ('CREATE', 'DELETE', 'UPDATE'), action_name, 'ZZZ'), action_name";
+        sql += " order by (CASE WHEN action_name in ('CREATE', 'DELETE', 'UPDATE') THEN action_name ELSE 'ZZZ' END), action_name";
         final ActionNamesMapper mapper = new ActionNamesMapper();
         final List<String> actionNames = this.jdbcTemplate.query(sql, mapper);
 
         sql = " select distinct(entity_name) as entityName from m_permission p ";
         sql += makercheckerCapabilityOnly(useType, currentUser);
-        sql += " order by if(grouping = 'datatable', 'ZZZ', entity_name), entity_name";
+        sql += " order by (CASE WHEN grouping = 'datatable' THEN 'ZZZ' ELSE entity_name END), entity_name";
         final EntityNamesMapper mapper2 = new EntityNamesMapper();
         final List<String> entityNames = this.jdbcTemplate.query(sql, mapper2);
 

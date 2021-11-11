@@ -21,7 +21,7 @@ CREATE TABLE `scheduled_email_campaign` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
     `campaign_name` VARCHAR(100) NOT NULL,
     `campaign_type` INT NOT NULL,
-    `businessRule_id` INT NOT NULL,
+    `business_rule_id` INT NOT NULL,
     `param_value` TEXT NULL,
     `status_enum` INT NOT NULL,
     `email_subject` VARCHAR(100) NOT NULL,

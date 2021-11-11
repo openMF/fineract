@@ -18,16 +18,16 @@
  */
 package org.apache.fineract.notification.service;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import org.apache.fineract.notification.domain.Notification;
 import org.apache.fineract.notification.domain.NotificationMapper;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.apache.fineract.useradministration.domain.AppUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Service
 public class NotificationWritePlatformServiceImpl implements NotificationWritePlatformService {
@@ -103,9 +103,7 @@ public class NotificationWritePlatformServiceImpl implements NotificationWritePl
         return mappedIds;
     }
 
-    private String getCurrentDateTime() {
-        Date date = new Date();
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return formatter.format(date);
+    private Date getCurrentDateTime() {
+        return new Date();
     }
 }
