@@ -22,5 +22,7 @@ databaseChangeLog:
       file: sql/liquibase/changelog/tenants/001_tenants-create.yaml
   - include:
       file: sql/liquibase/changelog/tenants/002_tenants-init.yaml
+  - include:
+      file: sql/liquibase/changelog/tenants/003_add-readonly-database-connection-properties.yaml
 
 
