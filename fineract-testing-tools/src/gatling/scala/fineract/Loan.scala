@@ -51,7 +51,7 @@ class Loan {
          |}""".stripMargin)).asJson
 
   val getDetails = http("Get loan details")
-    .get(s"/loans/$${loanId}?associations=all&exclude=guarantors,futureSchedule,collateral")
+    .get(s"/loans/$${loanId}")
     .body(StringBody(s"""{}""")).asJson
 
   val getLoansOfCustomer = http("Get loans of customer")
