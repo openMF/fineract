@@ -39,8 +39,8 @@
         <property name="jdbcUrl" value="${fineract.ds.tenants.url}" />
         <property name="username" value="${fineract.ds.username}" />
         <property name="password" value="${fineract.ds.password}" />
-        <property name="minimumIdle" value="3" />
-        <property name="maximumPoolSize" value="10" />
+        <property name="minimumIdle" value="10" />
+        <property name="maximumPoolSize" value="40" />
         <property name="idleTimeout" value="60000" />
         <property name="ConnectionTestQuery" value="SELECT 1" />
 
