@@ -47,25 +47,28 @@ class ReadTest extends Simulation {
     .exec(loan.getDetails)
 
   val scn2 = scenario("Read loan transactions")
-    .feed(randomNumbers).exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
-    .exec(loan.getTransactions)
-
+    .repeat(50) {
+      feed(randomNumbers).exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
+        .exec(loan.getTransactions)
+    }
   val scn3 = scenario("Read loans of customer")
     .feed(randomNumbers).exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
     .exec(loan.getLoansOfCustomer)
 
   val scn4 = scenario("Calculate loan schedules")
-    .feed(randomNumbers).exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
-    .exec(loan.calculateLoanSchedule)
-
-  setUp(scn.inject(
-    atOnceUsers(2))
-    , scn2.inject(
-      atOnceUsers(2)),
-    scn3.inject(
-      atOnceUsers(2)),
-    scn4.inject(
-      atOnceUsers(2))
+    .repeat(100) {
+      feed(randomNumbers).exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
+        .exec(loan.calculateLoanSchedule)
+    }
+  setUp(
+    //    scn.inject(
+    //      atOnceUsers(20)),
+    scn.inject(
+      constantConcurrentUsers(300) during(360)),
+    //    scn3.inject(
+    //      atOnceUsers(20)),
+//    scn4.inject(
+//      atOnceUsers(100))
     //constantConcurrentUsers(300) during(60)
   ) protocols (httpProtocol)
 }
