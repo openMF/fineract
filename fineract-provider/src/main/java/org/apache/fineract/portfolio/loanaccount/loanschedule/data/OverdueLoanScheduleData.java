@@ -18,20 +18,23 @@
  */
 package org.apache.fineract.portfolio.loanaccount.loanschedule.data;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
 public class OverdueLoanScheduleData implements Serializable {
 
-    private final Long loanId;
-    private final Long chargeId;
-    private final String locale;
-    private final BigDecimal amount;
-    private final String dateFormat;
-    private final String dueDate;
-    private final BigDecimal principalOverdue;
-    private final BigDecimal interestOverdue;
-    private final Integer periodNumber;
+    private Long loanId;
+    private Long chargeId;
+    private String locale;
+    private BigDecimal amount;
+    private String dateFormat;
+    private String dueDate;
+    private BigDecimal principalOverdue;
+    private BigDecimal interestOverdue;
+    private Integer periodNumber;
 
     public OverdueLoanScheduleData(final Long loanId, final Long chargeId, final String dueDate, final BigDecimal amount,
             final String dateFormat, final String locale, final BigDecimal principalOverdue, final BigDecimal interestOverdue,
@@ -47,34 +50,6 @@ public class OverdueLoanScheduleData implements Serializable {
         this.periodNumber = periodNumber;
     }
 
-    public Long getLoanId() {
-        return this.loanId;
-    }
-
-    public Long getChargeId() {
-        return this.chargeId;
-    }
-
-    public String getDueDate() {
-        return this.dueDate;
-    }
-
-    public BigDecimal getAmount() {
-        return this.amount;
-    }
-
-    public String getDateFormat() {
-        return this.dateFormat;
-    }
-
-    public String getLocale() {
-        return this.locale;
-    }
-
-    public Integer getPeriodNumber() {
-        return this.periodNumber;
-    }
-
     @Override
     public String toString() {
         return "{" + "chargeId:" + this.chargeId + ", locale:'" + this.locale + '\'' + ", amount:" + this.amount + ", dateFormat:'"
@@ -82,4 +57,80 @@ public class OverdueLoanScheduleData implements Serializable {
                 + ", interest:'" + this.interestOverdue + '\'' + '}';
     }
 
+    public static OverdueLoanScheduleData fromJSON(String json) throws JsonProcessingException, IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(json, OverdueLoanScheduleData.class);
+    }
+
+    public Long getLoanId() {
+        return loanId;
+    }
+
+    public void setLoanId(Long loanId) {
+        this.loanId = loanId;
+    }
+
+    public Long getChargeId() {
+        return chargeId;
+    }
+
+    public void setChargeId(Long chargeId) {
+        this.chargeId = chargeId;
+    }
+
+    public String getLocale() {
+        return locale;
+    }
+
+    public void setLocale(String locale) {
+        this.locale = locale;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public String getDateFormat() {
+        return dateFormat;
+    }
+
+    public void setDateFormat(String dateFormat) {
+        this.dateFormat = dateFormat;
+    }
+
+    public String getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(String dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public BigDecimal getPrincipalOverdue() {
+        return principalOverdue;
+    }
+
+    public void setPrincipalOverdue(BigDecimal principalOverdue) {
+        this.principalOverdue = principalOverdue;
+    }
+
+    public BigDecimal getInterestOverdue() {
+        return interestOverdue;
+    }
+
+    public void setInterestOverdue(BigDecimal interestOverdue) {
+        this.interestOverdue = interestOverdue;
+    }
+
+    public Integer getPeriodNumber() {
+        return periodNumber;
+    }
+
+    public void setPeriodNumber(Integer periodNumber) {
+        this.periodNumber = periodNumber;
+    }
 }

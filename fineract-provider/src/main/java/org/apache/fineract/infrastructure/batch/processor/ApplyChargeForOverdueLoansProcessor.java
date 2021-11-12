@@ -29,7 +29,7 @@ public class ApplyChargeForOverdueLoansProcessor implements ItemProcessor<Overdu
 
     @Override
     public OverdueLoanScheduleData process(OverdueLoanScheduleData item) throws Exception {
-        LOG.info("processing: " + item.toString());
+        LOG.debug("processing: " + item.toString());
         return item;
     }
 }

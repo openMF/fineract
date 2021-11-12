@@ -18,19 +18,19 @@
  */
 package org.apache.fineract.infrastructure.core.utils;
 
-import org.apache.commons.lang3.StringUtils;
+import java.util.Arrays;
+import org.springframework.core.env.Environment;
 
-public class TextUtils extends StringUtils {
+public class ProfileUtils {
 
-    public static boolean is(final String commandParam, final String commandValue) {
-        return isNotBlank(commandParam) && commandParam.trim().equalsIgnoreCase(commandValue);
+    private final Environment environment;
+
+    public ProfileUtils(final Environment environment) {
+        this.environment = environment;
     }
 
-    public static boolean stringToBoolean(final String value) {
-        if (value == null) {
-            return false;
-        }
-        return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("t") || value.equalsIgnoreCase("1");
+    public boolean isActiveProfile(String profile) {
+        String[] activeProfiles = environment.getActiveProfiles();
+        return (Arrays.asList(activeProfiles).contains(profile));
     }
-
 }

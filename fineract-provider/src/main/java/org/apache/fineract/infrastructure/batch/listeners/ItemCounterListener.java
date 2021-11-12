@@ -16,21 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.infrastructure.core.utils;
+package org.apache.fineract.infrastructure.batch.listeners;
 
-import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.ChunkListener;
+import org.springframework.batch.core.scope.context.ChunkContext;
 
-public class TextUtils extends StringUtils {
+public class ItemCounterListener implements ChunkListener {
 
-    public static boolean is(final String commandParam, final String commandValue) {
-        return isNotBlank(commandParam) && commandParam.trim().equalsIgnoreCase(commandValue);
+    public static final Logger LOG = LoggerFactory.getLogger(ItemCounterListener.class);
+    private int chunkCounter = 0;
+
+    @Override
+    public void beforeChunk(ChunkContext context) {}
+
+    @Override
+    public void afterChunk(ChunkContext context) {
+        int count = context.getStepContext().getStepExecution().getReadCount();
+        LOG.info("Context: {}, Items: {}", ++chunkCounter, count);
     }
 
-    public static boolean stringToBoolean(final String value) {
-        if (value == null) {
-            return false;
-        }
-        return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("t") || value.equalsIgnoreCase("1");
-    }
-
+    @Override
+    public void afterChunkError(ChunkContext context) {}
 }

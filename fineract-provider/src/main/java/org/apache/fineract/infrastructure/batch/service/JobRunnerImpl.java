@@ -18,14 +18,19 @@
  */
 package org.apache.fineract.infrastructure.batch.service;
 
+import java.util.UUID;
+import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.exception.JobAlreadyCompletedException;
 import org.apache.fineract.infrastructure.batch.exception.JobAlreadyRunningException;
 import org.apache.fineract.infrastructure.batch.exception.JobIllegalRestartException;
 import org.apache.fineract.infrastructure.batch.exception.JobParameterInvalidException;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
+import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
+import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -37,6 +42,7 @@ import org.springframework.batch.core.repository.JobExecutionAlreadyRunningExcep
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -44,7 +50,7 @@ public class JobRunnerImpl implements JobRunner {
 
     public static final Logger LOG = LoggerFactory.getLogger(JobRunnerImpl.class);
 
-    private final JobLauncher batchJobLauncher;
+    private final JobLauncher jobLauncher;
     private final JobBuilderFactory jobBuilderFactory;
     private final JobExecutionListener jobExecutionListener;
     private final ConfigurationDomainService configurationDomainService;
@@ -53,22 +59,24 @@ public class JobRunnerImpl implements JobRunner {
     private final Step applyChargeForOverdueLoansStep;
 
     @Autowired
-    public JobRunnerImpl(final JobLauncher batchJobLauncher, final JobBuilderFactory jobBuilderFactory,
+    public JobRunnerImpl(@Qualifier("batchJobLauncher") JobLauncher jobLauncher, final JobBuilderFactory jobBuilderFactory,
             JobExecutionListener jobExecutionListener, final ConfigurationDomainService configurationDomainService,
             final Step applyChargeForOverdueLoansStep) {
-        this.batchJobLauncher = batchJobLauncher;
+        this.jobLauncher = jobLauncher;
         this.jobBuilderFactory = jobBuilderFactory;
         this.jobExecutionListener = jobExecutionListener;
 
         this.configurationDomainService = configurationDomainService;
+        // Steps
         this.applyChargeForOverdueLoansStep = applyChargeForOverdueLoansStep;
     }
 
     @Override
-    public void runJob(final Long jobId) {
-        LOG.info("runJob ===== " + jobId);
+    public Long runJob(final Long jobId) {
+        LOG.debug("runJob ===== " + jobId);
         try {
-            this.batchJobLauncher.run(getJobById(jobId), getJobParametersById(jobId));
+            JobExecution jobExecution = this.jobLauncher.run(getJobById(jobId), getJobParametersById(jobId));
+            return jobExecution.getJobInstance().getId();
         } catch (JobExecutionAlreadyRunningException e) {
             throw new JobAlreadyRunningException();
         } catch (JobInstanceAlreadyCompleteException e) {
@@ -82,7 +90,7 @@ public class JobRunnerImpl implements JobRunner {
 
     @Override
     public void stopJob(final Long jobId) {
-        LOG.info("stopJob ===== " + jobId);
+        LOG.debug("stopJob ===== " + jobId);
 
     }
 
@@ -97,17 +105,21 @@ public class JobRunnerImpl implements JobRunner {
     }
 
     private JobParameters getJobParametersById(final Long jobId) {
-        LOG.info("getJobParametersById ===== " + jobId);
-
+        final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
+        jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_ID, tenant.getTenantIdentifier());
+        jobParametersBuilder.addString("instance_id", UUID.randomUUID().toString(), true);
+
         switch (jobId.intValue()) {
+            //
             case 1:
                 final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();
                 final Boolean backdatePenalties = this.configurationDomainService.isBackdatePenaltiesEnabled();
-                LOG.info("    penaltyWaitPeriodValue: " + penaltyWaitPeriodValue);
-                LOG.info("    backdatePenalties:      " + backdatePenalties);
-                jobParametersBuilder.addLong("penaltyWaitPeriodValue", penaltyWaitPeriodValue);
-                jobParametersBuilder.addString("backdatePenalties", backdatePenalties.toString(), backdatePenalties);
+                LOG.debug("    penaltyWaitPeriodValue: " + penaltyWaitPeriodValue);
+                LOG.debug("    backdatePenalties:      " + backdatePenalties);
+                jobParametersBuilder.addLong(BatchConstants.JOB_PARAM_PENALTY_WAIT_PERIOD, penaltyWaitPeriodValue);
+                jobParametersBuilder.addString(BatchConstants.JOB_PARAM_BACKDATE_PENALTIES, backdatePenalties.toString(),
+                        backdatePenalties);
         }
         return jobParametersBuilder.toJobParameters();
     }

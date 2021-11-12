@@ -68,10 +68,10 @@ public class BatchApiResource {
             final String authorizationMessage = "User has no authority to execute scheduler jobs";
             throw new NoAuthorizationException(authorizationMessage);
         }
-        Response response = Response.status(400).build();
+        Response response = Response.status(Response.Status.NO_CONTENT).build();
         if (TextUtils.is(commandParam, "start")) {
-            jobRunner.runJob(jobId);
-            response = Response.status(202).build();
+            Long jobInstanceId = jobRunner.runJob(jobId);
+            response = Response.status(Response.Status.OK).entity("{batchJobId: " + jobInstanceId + "}").build();
         } else {
             throw new UnrecognizedQueryParamException("command", commandParam);
         }

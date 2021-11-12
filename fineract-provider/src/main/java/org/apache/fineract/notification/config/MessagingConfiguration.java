@@ -24,6 +24,7 @@ import java.util.Properties;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.notification.eventandlistener.NotificationEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +34,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.connection.CachingConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 @Configuration
-@Profile("activeMqEnabled")
 public class MessagingConfiguration {
 
     @Autowired
@@ -67,7 +68,7 @@ public class MessagingConfiguration {
             amqConnectionFactory.setUserName(activeMqProperties.getProperty("spring.activemq.user"));
             amqConnectionFactory.setPassword(activeMqProperties.getProperty("spring.activemq.password"));
             amqConnectionFactory.setTrustedPackages(Arrays.asList("org.apache.fineract", "java.util", "java.lang", "org.apache.fineract",
-                    "org.apache.fineract.notification.data"));
+                    "java.math", "org.apache.fineract.notification.data"));
         } catch (Exception e) {
             amqConnectionFactory.setBrokerURL(DEFAULT_BROKER_URL);
         }
@@ -90,7 +91,6 @@ public class MessagingConfiguration {
 
     @Bean
     public DefaultMessageListenerContainer messageListenerContainer() {
-
         DefaultMessageListenerContainer messageListenerContainer = new DefaultMessageListenerContainer();
         messageListenerContainer.setConnectionFactory(connectionFactory());
         messageListenerContainer.setDestinationName("NotificationQueue");
@@ -106,4 +106,11 @@ public class MessagingConfiguration {
         return messageListenerContainer;
     }
 
+    @Bean
+    @Profile(JobConstants.SPRING_MESSAGING_PROFILE_NAME)
+    public DefaultJmsListenerContainerFactory jmsListenerContainerFactory() {
+        DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
+        factory.setConnectionFactory(amqConnectionFactory());
+        return factory;
+    }
 }

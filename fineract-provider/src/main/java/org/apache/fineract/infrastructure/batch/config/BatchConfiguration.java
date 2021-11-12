@@ -22,10 +22,13 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 import javax.sql.DataSource;
+import org.apache.fineract.infrastructure.batch.listeners.ItemCounterListener;
 import org.apache.fineract.infrastructure.batch.processor.ApplyChargeForOverdueLoansProcessor;
 import org.apache.fineract.infrastructure.batch.reader.ApplyChargeForOverdueLoansReader;
 import org.apache.fineract.infrastructure.batch.writer.ApplyChargeForOverdueLoansWriter;
+import org.apache.fineract.infrastructure.core.service.RoutingDataSourceService;
 import org.apache.fineract.infrastructure.core.utils.PropertyUtils;
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.OverdueLoanScheduleData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +42,6 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.support.SimpleJobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.repository.support.JobRepositoryFactoryBean;
-import org.springframework.batch.core.step.tasklet.TaskletStep;
 import org.springframework.batch.support.transaction.ResourcelessTransactionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -54,28 +56,29 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
-@Profile("batch")
+@Profile(JobConstants.SPRING_BATCH_PROFILE_NAME)
 @Configuration
 @EnableBatchProcessing
 public class BatchConfiguration extends DefaultBatchConfigurer {
 
     public static final Logger LOG = LoggerFactory.getLogger(BatchConfiguration.class);
 
-    public static final String BATCH_PROPERTIES = "/batch.yml";
-
-    private final DataSource dataSource;
-
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
 
-    @Autowired
-    private JobRepository jobRepository;
+    private final Properties batchJobProperties;
+    private DataSource dataSource;
+    private String databaseType;
 
-    private final String databaseType;
+    public BatchConfiguration(RoutingDataSourceService tomcatJdbcDataSourcePerTenantService) {
+        setDataSource(tomcatJdbcDataSourcePerTenantService.retrieveDataSource());
+        batchJobProperties = PropertyUtils.loadYamlProperties(BatchConstants.BATCH_PROPERTIES_FILE);
+    }
 
-    public BatchConfiguration(final DataSource dataSource) {
+    @Override
+    public void setDataSource(DataSource dataSource) {
+        super.setDataSource(dataSource);
         this.dataSource = dataSource;
-        super.setDataSource(this.dataSource);
         this.databaseType = getDatabaseType(dataSource);
         LOG.info("Database Type for Batch configuration {}", databaseType);
     }
@@ -86,32 +89,40 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
             @Override
             public String doInConnection(Connection connection) throws SQLException, DataAccessException {
-                return connection.getMetaData().getDatabaseProductName().toLowerCase();
+                final String databaseType = connection.getMetaData().getDatabaseProductName();
+                LOG.info("Database {} Type configuration {}", connection.getCatalog(), databaseType);
+                return databaseType;
             }
         });
+    }
+
+    @Bean
+    public Properties batchJobProperties() {
+        return this.batchJobProperties;
     }
 
     @Bean
     public DataSourceInitializer dataSourceInitializer(DataSource dataSource) {
         ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
 
-        databasePopulator.addScript(new ClassPathResource("sql/migrations/batch/schema-drop-" + databaseType + ".sql"));
-        databasePopulator.addScript(new ClassPathResource("sql/migrations/batch/schema-" + databaseType + ".sql"));
+        databasePopulator.addScript(new ClassPathResource("sql/migrations/batch/schema-drop-" + databaseType.toLowerCase() + ".sql"));
+        databasePopulator.addScript(new ClassPathResource("sql/migrations/batch/schema-" + databaseType.toLowerCase() + ".sql"));
         databasePopulator.setIgnoreFailedDrops(true);
 
         DataSourceInitializer initializer = new DataSourceInitializer();
         initializer.setDataSource(dataSource);
         initializer.setDatabasePopulator(databasePopulator);
-        initializer.setEnabled(true);
+        initializer.setEnabled(false);
         return initializer;
     }
 
+    @Bean
     public JobRepository batchJobRepository() {
         try {
             JobRepositoryFactoryBean factory = new JobRepositoryFactoryBean();
-            factory.setDataSource(this.dataSource);
+            factory.setDatabaseType(databaseType);
             factory.setTransactionManager(getTxManager());
-            if (!databaseType.isEmpty()) factory.setDatabaseType(databaseType);
+            factory.setDataSource(this.dataSource);
             factory.afterPropertiesSet();
             return factory.getObject();
         } catch (Exception e) {
@@ -120,11 +131,12 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         }
     }
 
-    private PlatformTransactionManager getTxManager() {
+    @Bean
+    public PlatformTransactionManager getTxManager() {
         return new ResourcelessTransactionManager();
     }
 
-    @Bean
+    @Bean(name = "batchJobLauncher")
     public JobLauncher batchJobLauncher() {
         try {
             ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
@@ -134,7 +146,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
             taskExecutor.initialize(); // (5)
 
             SimpleJobLauncher jobLauncher = new SimpleJobLauncher();
-            jobLauncher.setJobRepository(jobRepository);
+            jobLauncher.setJobRepository(batchJobRepository());
             jobLauncher.setTaskExecutor(taskExecutor);
 
             return jobLauncher;
@@ -145,15 +157,31 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     }
 
     @Bean
+    public BatchDestinations batchDestinations() {
+        return new BatchDestinations(batchJobProperties());
+    }
+
+    @Bean
     public JobExecutionListener jobExecutionListener() {
         return new JobExecutionListener() {
 
             @Override
-            public void beforeJob(JobExecution jobExecution) {}
+            public void beforeJob(JobExecution jobExecution) {
+                String jobName = jobExecution.getJobInstance().getJobName();
+                LOG.info("About to execute the job : {}", jobName);
+            }
 
             @Override
-            public void afterJob(JobExecution jobExecution) {}
+            public void afterJob(JobExecution jobExecution) {
+                String jobName = jobExecution.getJobInstance().getJobName();
+                LOG.info("Finished execution {} {}", jobName, jobExecution.getExitStatus().getExitDescription());
+            }
         };
+    }
+
+    @Bean
+    public ItemCounterListener itemCounterListener() {
+        return new ItemCounterListener();
     }
 
     // Readers
@@ -171,7 +199,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     // Writers
     @Bean
     public ApplyChargeForOverdueLoansWriter applyChargeForOverdueLoansWriter() {
-        return new ApplyChargeForOverdueLoansWriter();
+        return new ApplyChargeForOverdueLoansWriter(batchDestinations());
     }
 
     // Steps
@@ -179,12 +207,12 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     public Step applyChargeForOverdueLoansStep(ApplyChargeForOverdueLoansReader applyChargeForOverdueLoansReader,
             ApplyChargeForOverdueLoansProcessor applyChargeForOverdueLoansProcessor,
             ApplyChargeForOverdueLoansWriter applyChargeForOverdueLoansWriter) {
-        Properties batchJobProperties = PropertyUtils.loadYamlProperties(BATCH_PROPERTIES);
-
-        final int chunkSize = Integer.parseInt(batchJobProperties.getProperty("fineract.batch.jobs.chunk.size"));
-        TaskletStep step = stepBuilderFactory.get("applyChargeForOverdueLoansStep")
+        final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size"));
+        Step step = stepBuilderFactory.get("applyChargeForOverdueLoansStep")
                 .<OverdueLoanScheduleData, OverdueLoanScheduleData>chunk(chunkSize).reader(applyChargeForOverdueLoansReader)
-                .processor(applyChargeForOverdueLoansProcessor).writer(applyChargeForOverdueLoansWriter).build();
+                .processor(applyChargeForOverdueLoansProcessor).writer(applyChargeForOverdueLoansWriter).listener(itemCounterListener())
+                .build();
+
         return step;
     }
 }

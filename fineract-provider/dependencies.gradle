@@ -25,7 +25,6 @@ dependencies {
 
     // implementation dependencies are directly used (compiled against) in src/main (and src/test)
     //
-    implementation platform('software.amazon.awssdk:bom:2.17.70')
     implementation(
             //'ch.vorburger.mariaDB4j:mariaDB4j:2.4.0',
 
@@ -78,8 +77,9 @@ dependencies {
             'com.squareup.retrofit2:converter-gson',
             'com.sun.activation:jakarta.activation:1.2.2',
 
-            'software.amazon.awssdk:aws-sdk-java:2.17.70',
-            'software.amazon.awssdk:sqs:2.17.70'
+            'com.amazonaws:aws-java-sdk:1.12.108',
+            'com.amazonaws:aws-java-sdk-sqs:1.12.108',
+            'com.amazonaws:amazon-sqs-java-messaging-lib:1.0.8'
             )
     implementation('org.apache.commons:commons-email') {
         exclude group: 'javax.activation'

@@ -17,9 +17,16 @@
  * under the License.
  */
 
-package org.apache.fineract.infrastructure.core.messaging;
+package org.apache.fineract.infrastructure.jobs.data;
 
-public interface MessageQueue {
+public class JobConstants {
 
-    void sendMessage();
+    // Spring Profiles
+    public static final String QUARTZ_BATCH_PROFILE_NAME = "quartzJobs";
+    public static final String SPRING_BATCH_PROFILE_NAME = "springBatch";
+    public static final String SPRING_BATCH_WORKER_PROFILE_NAME = "springBatchWorker";
+
+    public static final String SPRING_MESSAGING_PROFILE_NAME = "messaging";
+    public static final String SPRING_MESSAGINGSQS_PROFILE_NAME = "messagingSQS";
+
 }

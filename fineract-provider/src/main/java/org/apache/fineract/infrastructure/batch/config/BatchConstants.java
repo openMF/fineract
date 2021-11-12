@@ -16,21 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.infrastructure.core.utils;
+package org.apache.fineract.infrastructure.batch.config;
 
-import org.apache.commons.lang3.StringUtils;
+public class BatchConstants {
 
-public class TextUtils extends StringUtils {
+    public static final String BATCH_PROPERTIES_FILE = "/batch.yml";
 
-    public static boolean is(final String commandParam, final String commandValue) {
-        return isNotBlank(commandParam) && commandParam.trim().equalsIgnoreCase(commandValue);
-    }
-
-    public static boolean stringToBoolean(final String value) {
-        if (value == null) {
-            return false;
-        }
-        return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("t") || value.equalsIgnoreCase("1");
-    }
+    public static final String JOB_PARAM_TENANT_ID = "tenantIdentifier";
+    public static final String JOB_PARAM_PENALTY_WAIT_PERIOD = "penaltyWaitPeriod";
+    public static final String JOB_PARAM_BACKDATE_PENALTIES = "backdatePenalties";
 
 }

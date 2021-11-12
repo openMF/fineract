@@ -16,21 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.infrastructure.core.utils;
+package org.apache.fineract.infrastructure.batch.config;
 
-import org.apache.commons.lang3.StringUtils;
+import java.util.Properties;
 
-public class TextUtils extends StringUtils {
+public class BatchDestinations {
 
-    public static boolean is(final String commandParam, final String commandValue) {
-        return isNotBlank(commandParam) && commandParam.trim().equalsIgnoreCase(commandValue);
+    private Properties batchJobProperties;
+
+    public String getBatchJobsCommunication() {
+        return batchJobProperties.getProperty("fineract.batch.jobs.communication");
     }
 
-    public static boolean stringToBoolean(final String value) {
-        if (value == null) {
-            return false;
-        }
-        return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("t") || value.equalsIgnoreCase("1");
+    public BatchDestinations(Properties batchJobProperties) {
+        this.batchJobProperties = batchJobProperties;
+    }
+
+    public String getApplyChargeToOverdueLoanDestination() {
+        return batchJobProperties.getProperty("fineract.batch.jobs.queues.applyChargeToOverdueLoans");
     }
 
 }

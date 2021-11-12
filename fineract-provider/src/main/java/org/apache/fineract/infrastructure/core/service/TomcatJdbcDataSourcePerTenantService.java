@@ -26,6 +26,8 @@ import javax.sql.DataSource;
 import org.apache.fineract.infrastructure.core.boot.JDBCDriverConfig;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -38,6 +40,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TomcatJdbcDataSourcePerTenantService.class);
 
     private final Map<Long, DataSource> tenantToDataSourceMap = new HashMap<>(1);
     private final DataSource tenantDataSource;
@@ -57,6 +61,7 @@ public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceSe
 
         final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
         if (tenant != null) {
+            LOG.debug("tenant: " + tenant.getName());
             final FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
 
             synchronized (this.tenantToDataSourceMap) {
@@ -71,6 +76,7 @@ public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceSe
                 }
             }
         }
+        LOG.debug("Datasource: " + tenantDataSource.toString());
 
         return tenantDataSource;
     }

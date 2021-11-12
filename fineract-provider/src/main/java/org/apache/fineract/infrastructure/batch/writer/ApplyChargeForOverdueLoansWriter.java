@@ -18,59 +18,117 @@
  */
 package org.apache.fineract.infrastructure.batch.writer;
 
+import com.google.gson.Gson;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.Queue;
 import javax.jms.Session;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.fineract.infrastructure.batch.config.BatchConfiguration;
-import org.apache.fineract.infrastructure.core.utils.PropertyUtils;
+import org.apache.fineract.infrastructure.batch.config.BatchConstants;
+import org.apache.fineract.infrastructure.batch.config.BatchDestinations;
+import org.apache.fineract.infrastructure.batch.data.MessageData;
+import org.apache.fineract.infrastructure.core.utils.ProfileUtils;
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.OverdueLoanScheduleData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.ExitStatus;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 
-public class ApplyChargeForOverdueLoansWriter implements ItemWriter<OverdueLoanScheduleData> {
+public class ApplyChargeForOverdueLoansWriter implements ItemWriter<OverdueLoanScheduleData>, StepExecutionListener {
 
     public static final Logger LOG = LoggerFactory.getLogger(ApplyChargeForOverdueLoansWriter.class);
 
     @Autowired
     private JmsTemplate jmsTemplate;
 
-    private Properties batchJobProperties;
-    private Queue queue;
+    @Autowired
+    private JmsTemplate sqsJmsTemplate;
 
-    public ApplyChargeForOverdueLoansWriter() {
+    @Autowired
+    private ApplicationContext context;
+
+    private BatchDestinations batchDestinations;
+    private StepExecution stepExecution;
+    private String tenantIdentifier;
+    private String batchJobName;
+    private String communicationType;
+    private String queueName;
+
+    private final Gson gson = new Gson();
+    private ProfileUtils profileUtils;
+
+    public ApplyChargeForOverdueLoansWriter(BatchDestinations batchDestinations) {
         super();
-        this.batchJobProperties = PropertyUtils.loadYamlProperties(BatchConfiguration.BATCH_PROPERTIES);
+        this.batchDestinations = batchDestinations;
+        this.queueName = batchDestinations.getApplyChargeToOverdueLoanDestination();
+        LOG.debug("Batch jobs communication using with the queue {}", queueName);
+    }
 
-        String queueName = batchJobProperties.getProperty("fineract.batch.jobs.queues.applyChargeToOverdueLoans");
-        String communication = batchJobProperties.getProperty("fineract.batch.jobs.communication");
-        LOG.info("Batch jobs communication using {} with the queue {}", communication, queueName);
+    @Override
+    public void beforeStep(StepExecution stepExecution) {
+        this.stepExecution = stepExecution;
+        this.profileUtils = new ProfileUtils(context.getEnvironment());
+        JobParameters parameters = stepExecution.getJobExecution().getJobParameters();
+        tenantIdentifier = parameters.getString(BatchConstants.JOB_PARAM_TENANT_ID);
+        batchJobName = stepExecution.getJobExecution().getJobInstance().getJobName();
+    }
 
-        LOG.info("Queue name: " + queueName);
-        if (communication.equalsIgnoreCase("activemq"))
-            queue = new ActiveMQQueue(queueName);
-        else
-            queue = new ActiveMQQueue(queueName);
+    @Override
+    public ExitStatus afterStep(StepExecution stepExecution) {
+        return stepExecution.getExitStatus();
     }
 
     @Override
     public void write(List<? extends OverdueLoanScheduleData> items) throws Exception {
-        for (OverdueLoanScheduleData item : items) {
-            LOG.info("Sending: " + item.toString());
-            this.jmsTemplate.send(queue, new MessageCreator() {
+        Map<Long, Collection<OverdueLoanScheduleData>> overdueScheduleData = groupByLoanId(items);
+        for (final Long loanId : overdueScheduleData.keySet()) {
+            MessageData messageData = new MessageData(batchJobName, tenantIdentifier, loanId, overdueScheduleData.get(loanId));
+            sendMessage(messageData);
+        }
+    }
+
+    private Map<Long, Collection<OverdueLoanScheduleData>> groupByLoanId(List<? extends OverdueLoanScheduleData> items) {
+        final Map<Long, Collection<OverdueLoanScheduleData>> overdueScheduleData = new HashMap<>();
+        for (final OverdueLoanScheduleData overdueInstallment : items) {
+            if (overdueScheduleData.containsKey(overdueInstallment.getLoanId())) {
+                overdueScheduleData.get(overdueInstallment.getLoanId()).add(overdueInstallment);
+            } else {
+                Collection<OverdueLoanScheduleData> loanData = new ArrayList<>();
+                loanData.add(overdueInstallment);
+                overdueScheduleData.put(overdueInstallment.getLoanId(), loanData);
+            }
+        }
+        return overdueScheduleData;
+    }
+
+    private void sendMessage(final MessageData message) {
+        final String payload = gson.toJson(message);
+        LOG.debug("Sending: {}", payload);
+        // ActiveMQ
+        if (profileUtils.isActiveProfile(JobConstants.SPRING_MESSAGING_PROFILE_NAME)) {
+            this.jmsTemplate.send(new ActiveMQQueue(this.queueName), new MessageCreator() {
 
                 @Override
                 public Message createMessage(Session session) throws JMSException {
-                    return session.createObjectMessage(item);
+                    LOG.info("Sending {} to Loan Id {}", batchJobName, message.getEntityId());
+                    return session.createTextMessage(payload);
                 }
             });
+            // SQS
+        } else if (profileUtils.isActiveProfile(JobConstants.SPRING_MESSAGINGSQS_PROFILE_NAME)) {
+            this.sqsJmsTemplate.convertAndSend(this.queueName, payload);
         }
     }
 }

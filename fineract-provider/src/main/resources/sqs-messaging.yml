@@ -17,13 +17,15 @@
 # under the License.
 #
 
-cloud:
-  aws:
+aws:
+  messaging:
+    accountno: XXX
+    concurrency: 3-10
     region:
-      static: REGION
+      name: us-east-1
       auto: false
     credentials:
       access-key: XXXX
       secret-key: XXXX
     end-point:
-      uri: https://sqs.REGION.amazonaws.com/XXXX/QUEUE
+      uri: spring-boot-queue
