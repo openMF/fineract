@@ -22,6 +22,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.core.service.PaginationHelper;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
@@ -41,6 +43,7 @@ import org.springframework.stereotype.Service;
 public class NotificationReadPlatformServiceImpl implements NotificationReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final PlatformSecurityContext context;
     private final ColumnValidator columnValidator;
     private final PaginationHelper<NotificationData> paginationHelper = new PaginationHelper<>();
@@ -49,9 +52,10 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
     private HashMap<Long, HashMap<Long, CacheNotificationResponseHeader>> tenantNotificationResponseHeaderCache = new HashMap<>();
 
     @Autowired
-    public NotificationReadPlatformServiceImpl(final RoutingDataSource dataSource, final PlatformSecurityContext context,
-            final ColumnValidator columnValidator) {
+    public NotificationReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
+                                               final PlatformSecurityContext context, final ColumnValidator columnValidator) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.context = context;
         this.columnValidator = columnValidator;
     }
@@ -98,44 +102,61 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
     }
 
     private boolean checkForUnreadNotifications(Long appUserId) {
-        String sql = "SELECT id, notification_id as notificationId, user_id as userId, is_read as isRead, created_at "
-                + "as createdAt FROM notification_mapper WHERE user_id = ? AND is_read = false";
-        List<NotificationMapperData> notificationMappers = this.jdbcTemplate.query(sql, notificationMapperRow, appUserId);
+        String sql = "SELECT id, notification_id as notification_id, user_id as user_id, is_read as is_read, created_at " +
+                "as created_at FROM notification_mapper WHERE user_id = ? AND is_read = " + sqlResolver.formatBoolValue(false);
+        List<NotificationMapperData> notificationMappers = this.jdbcTemplate.query(
+                sql,
+                notificationMapperRow,
+                appUserId);
         return notificationMappers.size() > 0;
     }
 
     @Override
     public void updateNotificationReadStatus() {
         final Long appUserId = context.authenticatedUser().getId();
-        String sql = "UPDATE notification_mapper SET is_read = true WHERE is_read = false and user_id = ?";
+        String sql = "UPDATE notification_mapper SET is_read = " + sqlResolver.formatBoolValue(true) + " WHERE is_read = " + sqlResolver.formatBoolValue(false)
+                + " and user_id = ?";
         this.jdbcTemplate.update(sql, appUserId);
     }
 
     @Override
     public Page<NotificationData> getAllUnreadNotifications(final SearchParameters searchParameters) {
-        final Long appUserId = context.authenticatedUser().getId();
-        String sql = "SELECT SQL_CALC_FOUND_ROWS ng.id as id, nm.user_id as userId, ng.object_type as objectType, "
-                + "ng.object_identifier as objectIdentifier, ng.actor as actor, ng.action action, ng.notification_content "
-                + "as content, ng.is_system_generated as isSystemGenerated, nm.created_at as createdAt "
-                + "FROM notification_mapper nm INNER JOIN notification_generator ng ON nm.notification_id = ng.id "
-                + "WHERE nm.user_id = ? AND nm.is_read = false order by nm.created_at desc";
+        final StringBuilder sqlBuilder = new StringBuilder(500);
+        sqlBuilder.append("SELECT ");
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        if (mySql)
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
 
-        return getNotificationDataPage(searchParameters, appUserId, sql);
+        final String where = "WHERE nm.user_id = ? AND nm.is_read = " + sqlResolver.formatBoolValue(false);
+
+        final Long appUserId = context.authenticatedUser().getId();
+        sqlBuilder.append(notificationMapperRow.schema())
+                .append(where);
+
+        final String sqlCountRows = mySql ? "SELECT FOUND_ROWS()" : (notificationMapperRow.countSchema() + where);
+        return getNotificationDataPage(searchParameters, appUserId, sqlBuilder.toString(), sqlCountRows);
     }
+
 
     @Override
     public Page<NotificationData> getAllNotifications(SearchParameters searchParameters) {
-        final Long appUserId = context.authenticatedUser().getId();
-        String sql = "SELECT SQL_CALC_FOUND_ROWS ng.id as id, nm.user_id as userId, ng.object_type as objectType, "
-                + "ng.object_identifier as objectIdentifier, ng.actor as actor, ng.action action, ng.notification_content "
-                + "as content, ng.is_system_generated as isSystemGenerated, nm.created_at as createdAt "
-                + "FROM notification_mapper nm INNER JOIN notification_generator ng ON nm.notification_id = ng.id "
-                + "WHERE nm.user_id = ? order by nm.created_at desc";
+        final StringBuilder sqlBuilder = new StringBuilder(500)
+                .append("SELECT ");
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        if (mySql)
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
 
-        return getNotificationDataPage(searchParameters, appUserId, sql);
+        final String where = "WHERE nm.user_id = ? ";
+
+        final Long appUserId = context.authenticatedUser().getId();
+        sqlBuilder.append(notificationMapperRow.schema())
+                .append(where);
+
+        final String sqlCountRows = mySql ? "SELECT FOUND_ROWS()" : (notificationMapperRow.countSchema() + where);
+        return getNotificationDataPage(searchParameters, appUserId, sqlBuilder.toString(), sqlCountRows);
     }
 
-    private Page<NotificationData> getNotificationDataPage(SearchParameters searchParameters, Long appUserId, String sql) {
+    private Page<NotificationData> getNotificationDataPage(SearchParameters searchParameters, Long appUserId, String sql, String sqlCountRows) {
         final StringBuilder sqlBuilder = new StringBuilder(200);
         sqlBuilder.append(sql);
 
@@ -146,7 +167,8 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
                 sqlBuilder.append(' ').append(searchParameters.getSortOrder());
                 this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getSortOrder());
             }
-        }
+        } else
+            sqlBuilder.append(" order by nm.created_at desc");
 
         if (searchParameters.isLimited()) {
             sqlBuilder.append(" limit ").append(searchParameters.getLimit());
@@ -155,12 +177,27 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
             }
         }
 
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        Object[] params = new Object[] { appUserId };
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(), params, this.notificationDataRow);
+        final Object[] sqlParams = new Object[]{appUserId};
+        Object[] countParams = null;
+        if (!sqlResolver.getDialect().isMySql()) {
+            countParams = sqlParams;
+        }
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, countParams, sqlBuilder.toString(), sqlParams, this.notificationDataRow);
     }
 
     private static final class NotificationMapperRow implements RowMapper<NotificationMapperData> {
+        public static final String FROM = " FROM notification_mapper nm INNER JOIN notification_generator ng ON nm.notification_id = ng.id ";
+
+        public static final String SCHEMA =  " ng.id as id, nm.user_id as user_id, ng.object_type as object_type, ng.object_identifier as object_identifier, ng.actor as actor, " +
+                "ng.action as action, ng.notification_content as content, ng.is_system_generated as is_system_generated, nm.created_at as created_at ";
+
+        public String schema() {
+            return SCHEMA + FROM;
+        }
+
+        public String countSchema() {
+            return "SELECT count(nm.*) " + FROM;
+        }
 
         @Override
         public NotificationMapperData mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -169,16 +206,16 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
             final Long id = rs.getLong("id");
             notificationMapperData.setId(id);
 
-            final Long notificationId = rs.getLong("notificationId");
+            final Long notificationId = rs.getLong("notification_id");
             notificationMapperData.setNotificationId(notificationId);
 
-            final Long userId = rs.getLong("userId");
+            final Long userId = rs.getLong("user_id");
             notificationMapperData.setUserId(userId);
 
-            final boolean isRead = rs.getBoolean("isRead");
+            final boolean isRead = rs.getBoolean("is_read");
             notificationMapperData.setRead(isRead);
 
-            final String createdAt = rs.getString("createdAt");
+            final String createdAt = rs.getString("created_at");
             notificationMapperData.setCreatedAt(createdAt);
 
             return notificationMapperData;
@@ -194,10 +231,10 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
             final Long id = rs.getLong("id");
             notificationData.setId(id);
 
-            final String objectType = rs.getString("objectType");
+            final String objectType = rs.getString("object_type");
             notificationData.setObjectType(objectType);
 
-            final Long objectIdentifier = rs.getLong("objectIdentifier");
+            final Long objectIdentifier = rs.getLong("object_identifier");
             notificationData.setObjectIdentifier(objectIdentifier);
 
             final Long actorId = rs.getLong("actor");
@@ -209,10 +246,10 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
             final String content = rs.getString("content");
             notificationData.setContent(content);
 
-            final boolean isSystemGenerated = rs.getBoolean("isSystemGenerated");
+            final boolean isSystemGenerated = rs.getBoolean("is_system_generated");
             notificationData.setSystemGenerated(isSystemGenerated);
 
-            final String createdAt = rs.getString("createdAt");
+            final String createdAt = rs.getString("created_at");
             notificationData.setCreatedAt(createdAt);
 
             return notificationData;

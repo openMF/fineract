@@ -22,6 +22,8 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
@@ -38,10 +40,12 @@ import org.springframework.stereotype.Service;
 public class ShareAccountChargeReadPlatformServiceImpl implements ShareAccountChargeReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
 
     @Autowired
-    public ShareAccountChargeReadPlatformServiceImpl(final RoutingDataSource dataSource) {
+    public ShareAccountChargeReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
     }
 
     @Override
@@ -50,9 +54,9 @@ public class ShareAccountChargeReadPlatformServiceImpl implements ShareAccountCh
         final StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append("select ").append(rm.schema()).append(" where sc.account_id=? ");
         if (status.equalsIgnoreCase("active")) {
-            sqlBuilder.append(" and sc.is_active = 1 ");
+            sqlBuilder.append(" and sc.is_active = ").append(sqlResolver.formatBoolValue(true));
         } else if (status.equalsIgnoreCase("inactive")) {
-            sqlBuilder.append(" and sc.is_active = 0 ");
+            sqlBuilder.append(" and sc.is_active = ").append(sqlResolver.formatBoolValue(false));
         }
         sqlBuilder.append(" order by sc.charge_time_enum ASC");
 

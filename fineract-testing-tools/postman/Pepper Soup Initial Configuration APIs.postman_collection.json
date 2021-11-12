@@ -1,0 +1,3904 @@
+{
+	"info": {
+		"_postman_id": "fbc19468-d2fd-489c-90a1-5360ac034bfb",
+		"name": "Pepper Soup Initial Configuration APIs",
+		"description": "Pepper Soup Initial Configuration APIs for setting up the Pepper Soup Instance.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Init",
+			"item": [
+				{
+					"name": "scheduler",
+					"item": [
+						{
+							"name": "stop scheduler",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{url}}/scheduler?command=stop",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"scheduler"
+									],
+									"query": [
+										{
+											"key": "command",
+											"value": "stop"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "currencies",
+					"item": [
+						{
+							"name": "Configuring Currency",
+							"protocolProfileBehavior": {
+								"disabledSystemHeaders": {
+									"accept": true
+								}
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"currencies\": [\n        \"EUR\", \"USD\"\n    ]\n}"
+								},
+								"url": {
+									"raw": "{{url}}/currencies",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"currencies"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "payment types",
+					"item": [
+						{
+							"name": "Payment type cash addition",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Cash\",\n    \"description\": \"cash payment\",\n    \"isCashPayment\": true,\n    \"position\": \"1\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/paymenttypes",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"paymenttypes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Payment type Bank addition",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Bank Transfers\",\n    \"description\": \"Bank Transfers\",\n    \"position\": \"2\",\n    \"isCashPayment\": false\n}"
+								},
+								"url": {
+									"raw": "{{url}}/paymenttypes",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"paymenttypes"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "global configurations",
+					"item": [
+						{
+							"name": "Enable Customer Address",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"enabled\": \"false\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/configurations/31",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"configurations",
+										"31"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Enable Interest calculation",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"enabled\": \"true\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/configurations/27",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"configurations",
+										"27"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "codes",
+					"item": [
+						{
+							"name": "financial instrument",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"financial_instrument\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "transaction type",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"transaction_type\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "bankruptcy_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"bankruptcy_tag\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pending_fraud_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"pending_fraud_tag\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "pending_deceased_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"pending_deceased_tag\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "hardship_tag code",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"hardship_tag\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "active_duty_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"active_duty_tag\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "code values",
+					"item": [
+						{
+							"name": "codevalue addtion for address type",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"residential address\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/29/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"29",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for address type",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"office address\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/29/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"29",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for country",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"Germany\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/28/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"28",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for state",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"Berlin\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/27/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"27",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for financial_instrument",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"debit_card\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/34/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"34",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for financial_instrument",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"credit_card\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/34/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"34",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for transaction_type",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"scheduled_payment\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/35/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"35",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for bankruptcy_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"pending_bankruptcy\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/36/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"36",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for bankruptcy_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"bankruptcy\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/36/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"36",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for pending_fraud_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"pending_fraud\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/37/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"37",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for pending_fraud_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"fraud\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/37/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"37",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for pending_deceased_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"pending_deceased\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/38/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"38",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for pending_deceased_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"deceased\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/38/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"38",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for hardship_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"active\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/39/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"39",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for hardship_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"inactive\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/39/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"39",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for active_duty_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"active\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/40/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"40",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "codevalue addtion for active_duty_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"inactive\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/40/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"40",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Customer Identifiers",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Passport\",\n    \"position\": 1,\n    \"isActive\": false\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/1/codevalues/1",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"1",
+										"codevalues",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Customer Identifiers 2",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Id\",\n    \"position\": 2,\n    \"isActive\": false\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/1/codevalues/2",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"1",
+										"codevalues",
+										"2"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Customer Identifiers 3",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Drivers License\",\n    \"position\": 3,\n    \"isActive\": false\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/1/codevalues/3",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"1",
+										"codevalues",
+										"3"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Customer Identifiers 4",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Any Other Id Type\",\n    \"position\": 4,\n    \"isActive\": false\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/1/codevalues/4",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"1",
+										"codevalues",
+										"4"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Customer Identifiers 5",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"SSN\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/1/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"1",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Customer Identifiers 6",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"TIN\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/1/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"1",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Customer Identifiers 7",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"ITIN\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/1/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"1",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Customer Identifiers 8",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"EIN\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/1/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"1",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Gender Addition",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"female\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/4/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"4",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Gender Addition 2",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"male\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/4/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"4",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "datatables",
+					"item": [
+						{
+							"name": "create datatable-autopay",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"datatableName\": \"dt_autopay_details\",\n    \"apptableName\": \"m_loan\",\n    \"multiRow\": true,\n    \"columns\": [\n        {\n            \"name\": \"financial_instruments\",\n            \"type\": \"Dropdown\",\n            \"mandatory\": false,\n            \"code\": \"financial_instrument\"\n        },\n        {\n            \"name\": \"date_of_payment\",\n            \"type\": \"Date\",\n            \"mandatory\": false\n        }\n    ]\n}"
+								},
+								"url": {
+									"raw": "{{url}}/datatables",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"datatables"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create datatable -scheduled payments",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"datatableName\": \"dt_schedule_payments\",\n    \"apptableName\": \"m_loan\",\n    \"multiRow\": true,\n    \"columns\": [\n        {\n            \"name\": \"external_reference_id\",\n            \"type\": \"String\",\n            \"mandatory\": false,\n            \"length\": \"50\"\n        },\n        {\n            \"name\": \"scheduled_date\",\n            \"type\": \"Date\",\n            \"mandatory\": false\n        },\n        {\n            \"name\": \"amount\",\n            \"type\": \"Decimal\",\n            \"mandatory\": false\n        },\n        {\n            \"name\": \"transaction_type\",\n            \"type\": \"Dropdown\",\n            \"mandatory\": false,\n            \"code\": \"transaction_type\"\n        }\n    ]\n}"
+								},
+								"url": {
+									"raw": "{{url}}/datatables",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"datatables"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create datatable 3 -tags",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"datatableName\": \"dt_user_tags\",\n    \"apptableName\": \"m_client\",\n    \"multiRow\": false,\n    \"columns\": [\n        {\n            \"name\": \"bankruptcy_tag\",\n            \"type\": \"Dropdown\",\n            \"mandatory\": false,\n            \"code\": \"bankruptcy_tag\"\n        },\n        {\n            \"name\": \"pending_fraud_tag\",\n            \"type\": \"Dropdown\",\n            \"mandatory\": false,\n            \"code\": \"pending_fraud_tag\"\n        },\n        {\n            \"name\": \"pending_deceased_tag\",\n            \"type\": \"Dropdown\",\n            \"mandatory\": false,\n            \"code\": \"pending_deceased_tag\"\n        },\n        {\n            \"name\": \"hardship_tag\",\n            \"type\": \"Dropdown\",\n            \"mandatory\": false,\n            \"code\": \"hardship_tag\"\n        },\n        {\n            \"name\": \"active_duty_tag\",\n            \"type\": \"Dropdown\",\n            \"mandatory\": false,\n            \"code\": \"active_duty_tag\"\n        }\n    ]\n}"
+								},
+								"url": {
+									"raw": "{{url}}/datatables",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"datatables"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "charges",
+					"item": [
+						{
+							"name": "create charge product % late fees",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"chargeAppliesTo\": 1,\n    \"name\": \"% Late fee\",\n    \"currencyCode\": \"EUR\",\n    \"chargeTimeType\": 9,\n    \"chargeCalculationType\": 2,\n    \"chargePaymentMode\": 0,\n    \"amount\": \"1\",\n    \"active\": true,\n    \"penalty\": true,\n    \"locale\": \"en\",\n    \"monthDayFormat\": \"dd MMM\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/charges",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"charges"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create charge product flat late fees Copy",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"chargeAppliesTo\": 1,\n    \"name\": \"Fixed Late fee\",\n    \"currencyCode\": \"EUR\",\n    \"chargeTimeType\": 9,\n    \"chargeCalculationType\": 1,\n    \"chargePaymentMode\": 0,\n    \"amount\": \"10\",\n    \"active\": true,\n    \"penalty\": true,\n    \"locale\": \"en\",\n    \"monthDayFormat\": \"dd MMM\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/charges",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"charges"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create charge product fixed returned payment",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"chargeAppliesTo\": 1,\n    \"name\": \"Fixed Returned payment fee\",\n    \"currencyCode\": \"EUR\",\n    \"chargeTimeType\": 2,\n    \"chargeCalculationType\": 1,\n    \"chargePaymentMode\": 0,\n    \"amount\": \"10\",\n    \"active\": true,\n    \"locale\": \"en\",\n    \"monthDayFormat\": \"dd MMM\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/charges",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"charges"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create charge product snooze fee",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"chargeAppliesTo\": 1,\n    \"name\": \"snooze fee\",\n    \"currencyCode\": \"EUR\",\n    \"chargeTimeType\": 2,\n    \"chargeCalculationType\": 1,\n    \"chargePaymentMode\": 0,\n    \"amount\": \"10\",\n    \"active\": true,\n    \"locale\": \"en\",\n    \"monthDayFormat\": \"dd MMM\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/charges",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"charges"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "gl accounts",
+					"item": [
+						{
+							"name": "COA1",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 1,\n    \"usage\": \"1\",\n    \"glCode\": \"112601\",\n    \"name\": \"Loans Receivable\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "COA2",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 1,\n    \"usage\": \"1\",\n    \"glCode\": \"112603\",\n    \"name\": \"Interest/Fee Receivable\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "COA3",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 1,\n    \"usage\": \"1\",\n    \"glCode\": \"145800\",\n    \"name\": \"Other Receivables\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "COA4",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 1,\n    \"usage\": \"1\",\n    \"glCode\": \"245000\",\n    \"name\": \"UNC Receivable\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "COA5",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 2,\n    \"usage\": \"1\",\n    \"name\": \"AA Suspense Balance\",\n    \"glCode\": \"999999\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "COA6",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 2,\n    \"usage\": \"1\",\n    \"name\": \"Suspense/Clearing account\",\n    \"glCode\": \"145023\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "COA7",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 4,\n    \"usage\": \"1\",\n    \"name\": \"Deferred Interest Revenue\",\n    \"glCode\": \"240005\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "COA8",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 4,\n    \"usage\": \"1\",\n    \"name\": \"Retained Earnings Prior Year\",\n    \"glCode\": \"320000\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "COA9",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 4,\n    \"usage\": \"1\",\n    \"name\": \"Interest Income\",\n    \"glCode\": \"404000\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "COA10",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 4,\n    \"usage\": \"1\",\n    \"name\": \"Fee Income\",\n    \"glCode\": \"404007\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "COA11",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 5,\n    \"usage\": \"1\",\n    \"name\": \"Fee Charge Off\",\n    \"glCode\": \"404008\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "COA12",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 5,\n    \"usage\": \"1\",\n    \"name\": \"Credit Loss/Bad Debt\",\n    \"glCode\": \"744007\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "COA13",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"manualEntriesAllowed\": true,\n    \"type\": 5,\n    \"usage\": \"1\",\n    \"name\": \"Credit Loss/Bad Debt-Fraud\",\n    \"glCode\": \"744037\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/glaccounts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"glaccounts"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "loan products",
+					"item": [
+						{
+							"name": "create loan product",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"currencyCode\": \"EUR\",\n    \"includeInBorrowerCycle\": \"false\",\n    \"useBorrowerCycle\": false,\n    \"digitsAfterDecimal\": \"2\",\n    \"inMultiplesOf\": \"0\",\n    \"repaymentFrequencyType\": 0,\n    \"interestRateFrequencyType\": 2,\n    \"amortizationType\": 1,\n    \"interestType\": 0,\n    \"interestCalculationPeriodType\": 1,\n    \"transactionProcessingStrategyId\": 1,\n    \"principalVariationsForBorrowerCycle\": [],\n    \"interestRateVariationsForBorrowerCycle\": [],\n    \"numberOfRepaymentVariationsForBorrowerCycle\": [],\n    \"multiDisburseLoan\": true,\n    \"accountingRule\": \"1\",\n    \"daysInYearType\": 1,\n    \"daysInMonthType\": 1,\n    \"isInterestRecalculationEnabled\": true,\n    \"interestRecalculationCompoundingMethod\": 0,\n    \"rescheduleStrategyMethod\": 2,\n    \"preClosureInterestCalculationStrategy\": 1,\n    \"isLinkedToFloatingInterestRates\": false,\n    \"allowVariableInstallments\": false,\n    \"name\": \"APP POC\",\n    \"shortName\": \"APP\",\n    \"description\": \"non-interest bearing product\",\n    \"installmentAmountInMultiplesOf\": \"1\",\n    \"minPrincipal\": \"100\",\n    \"principal\": \"1000\",\n    \"maxPrincipal\": \"10000\",\n    \"numberOfRepayments\": \"1\",\n    \"repaymentEvery\": \"30\",\n    \"minimumDaysBetweenDisbursalAndFirstRepayment\": \"30\",\n    \"allowPartialPeriodInterestCalcualtion\": true,\n    \"canDefineInstallmentAmount\": true,\n    \"principalThresholdForLastInstallment\": \"50\",\n    \"recalculationRestFrequencyType\": 1,\n    \"maxTrancheCount\": \"10\",\n    \"outstandingLoanBalance\": \"10000\",\n    \"paymentChannelToFundSourceMappings\": [],\n    \"feeToIncomeAccountMappings\": [],\n    \"penaltyToIncomeAccountMappings\": [],\n    \"charges\": [\n        {\n            \"id\": 1\n        },\n        {\n            \"id\": 2\n        }\n    ],\n    \"allowAttributeOverrides\": {\n        \"amortizationType\": true,\n        \"interestType\": true,\n        \"transactionProcessingStrategyId\": true,\n        \"interestCalculationPeriodType\": true,\n        \"inArrearsTolerance\": true,\n        \"repaymentEvery\": true,\n        \"graceOnPrincipalAndInterestPayment\": true,\n        \"graceOnArrearsAgeing\": true\n    },\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\",\n    \"rates\": [],\n    \"interestRatePerPeriod\": 0\n}"
+								},
+								"url": {
+									"raw": "{{url}}/loanproducts",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"loanproducts"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Actions",
+			"item": [
+				{
+					"name": "create clients",
+					"item": [
+						{
+							"name": "create test customer",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"address\": [],\n    \"familyMembers\": [],\n    \"officeId\": 1,\n    \"legalFormId\": 1,\n    \"firstname\": \"{{$randomFirstName}}\",\n    \"lastname\": \"{{$randomLastName}}\",\n    \"mobileNo\": \"{{$randomPhoneNumber}}\",\n    \"genderId\": 36,\n    \"active\": true,\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\",\n    \"activationDate\": \"01 September 2021\",\n    \"submittedOnDate\": \"01 September 2021\",\n    \"dateOfBirth\": \"11 March 1991\",\n    \"savingsProductId\": null,\n    \"externalId\":{{$guid}}\n}"
+								},
+								"url": {
+									"raw": "{{url}}/clients",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"clients"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "creating customer tax details",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"documentTypeId\": 34,\n    \"status\": \"Active\",\n    \"documentKey\": \"{{$randomInt}}\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/clients/1/identifiers",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"clients",
+										"1",
+										"identifiers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "creating customer tag details",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"bankruptcy_tag_cd_bankruptcy_tag\": 22,\n    \"pending_fraud_tag_cd_pending_fraud_tag\": 24,\n    \"pending_deceased_tag_cd_pending_deceased_tag\": 26,\n    \"hardship_tag_cd_hardship_tag\": 28,\n    \"active_duty_tag_cd_active_duty_tag\": 30,\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/datatables/dt_user_tags/1?genericResultSet=true",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"datatables",
+										"dt_user_tags",
+										"1"
+									],
+									"query": [
+										{
+											"key": "genericResultSet",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "create loans",
+					"item": [
+						{
+							"name": "create test loan",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"clientId\": \"1\",\n    \"productId\": 1,\n    \"disbursementData\": [\n        {\n            \"expectedDisbursementDate\": \"03 September 2021\",\n            \"principal\": \"100\"\n        },\n        {\n            \"expectedDisbursementDate\": \"04 September 2021\",\n            \"principal\": \"100\"\n        }\n    ],\n    \"principal\": 1000,\n    \"loanTermFrequency\": 30,\n    \"loanTermFrequencyType\": 0,\n    \"numberOfRepayments\": 1,\n    \"repaymentEvery\": 30,\n    \"repaymentFrequencyType\": 0,\n    \"interestRatePerPeriod\": 0,\n    \"amortizationType\": 1,\n    \"isEqualAmortization\": false,\n    \"interestType\": 0,\n    \"interestCalculationPeriodType\": 1,\n    \"allowPartialPeriodInterestCalcualtion\": true,\n    \"transactionProcessingStrategyId\": 1,\n    \"maxOutstandingLoanBalance\": 10000,\n    \"rates\": [],\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\",\n    \"loanType\": \"individual\",\n    \"expectedDisbursementDate\": \"03 September 2021\",\n    \"submittedOnDate\": \"03 September 2021\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/loans",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"loans"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "approve test loan",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"approvedOnDate\": \"03 September 2021\",\n    \"approvedLoanAmount\": 1000,\n    \"expectedDisbursementDate\": \"03 September 2021\",\n    \"disbursementData\": [\n        {\n            \"principal\": 100,\n            \"expectedDisbursementDate\": \"03 September 2021\"\n        },\n        {\n            \"principal\": 100,\n            \"expectedDisbursementDate\": \"04 September 2021\"\n        }\n    ],\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/loans/1?command=approve",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"loans",
+										"1"
+									],
+									"query": [
+										{
+											"key": "command",
+											"value": "approve"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "disburse test loan",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"actualDisbursementDate\": \"03 September 2021\",\n    \"paymentTypeId\": 1,\n    \"transactionAmount\": 100,\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/loans/1?command=disburse",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"loans",
+										"1"
+									],
+									"query": [
+										{
+											"key": "command",
+											"value": "disburse"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create autopay test data",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"financial_instrument_cd_financial_instruments\": 19,\n    \"date_of_payment\": \"15 October 2021\",\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/datatables/dt_autopay_details/1?genericResultSet=true",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"datatables",
+										"dt_autopay_details",
+										"1"
+									],
+									"query": [
+										{
+											"key": "genericResultSet",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create scheduled payment test data",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"external_reference_id\": \"123\",\n    \"amount\": \"200\",\n    \"transaction_type_cd_transaction_type\": 21,\n    \"scheduled_date\": \"15 October 2021\",\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/datatables/dt_schedule_payments/1?genericResultSet=true",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"datatables",
+										"dt_schedule_payments",
+										"1"
+									],
+									"query": [
+										{
+											"key": "genericResultSet",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "transactions",
+					"item": [
+						{
+							"name": "create test repayment data",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"paymentTypeId\": 2,\n    \"transactionAmount\": \"200\",\n    \"transactionDate\": \"15 October 2021\",\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/loans/1/transactions?command=repayment",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"loans",
+										"1",
+										"transactions"
+									],
+									"query": [
+										{
+											"key": "command",
+											"value": "repayment"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "retrieve",
+					"item": [
+						{
+							"name": "get loan details",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "password",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "mifos",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{url}}/loans/1",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"loans",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "password",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "mifos",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "Accept",
+			"value": "application/json"
+		},
+		{
+			"key": "Fineract-Platform-TenantId",
+			"value": "pp"
+		}
+	]
+}

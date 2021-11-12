@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.infrastructure.codes.exception.CodeValueNotFoundException;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +37,15 @@ import org.springframework.stereotype.Service;
 public class CodeValueReadPlatformServiceImpl implements CodeValueReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final PlatformSecurityContext context;
 
     @Autowired
-    public CodeValueReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource) {
+    public CodeValueReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource,
+                                            DataSourceSqlResolver sqlResolver) {
         this.context = context;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
     }
 
     private static final class CodeValueDataMapper implements RowMapper<CodeValueData> {
@@ -71,7 +75,7 @@ public class CodeValueReadPlatformServiceImpl implements CodeValueReadPlatformSe
         this.context.authenticatedUser();
 
         final CodeValueDataMapper rm = new CodeValueDataMapper();
-        final String sql = "select " + rm.schema() + "where c.code_name like ? and cv.is_active = 1 order by position";
+        final String sql = "select " + rm.schema() + "where c.code_name like ? and cv.is_active = " + sqlResolver.formatBoolValue(true) + " order by position";
 
         return this.jdbcTemplate.query(sql, rm, new Object[] { code });
     }

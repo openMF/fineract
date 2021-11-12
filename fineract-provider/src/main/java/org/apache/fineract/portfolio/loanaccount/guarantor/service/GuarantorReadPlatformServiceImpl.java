@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
@@ -52,14 +53,17 @@ import org.springframework.stereotype.Service;
 public class GuarantorReadPlatformServiceImpl implements GuarantorReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final ClientReadPlatformService clientReadPlatformService;
     private final StaffReadPlatformService staffReadPlatformService;
     private final LoanRepositoryWrapper loanRepositoryWrapper;
 
     @Autowired
-    public GuarantorReadPlatformServiceImpl(final RoutingDataSource dataSource, final ClientReadPlatformService clientReadPlatformService,
-            final StaffReadPlatformService staffReadPlatformService, final LoanRepositoryWrapper loanRepositoryWrapper) {
+    public GuarantorReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
+                                            final ClientReadPlatformService clientReadPlatformService, final StaffReadPlatformService staffReadPlatformService,
+                                            final LoanRepositoryWrapper loanRepositoryWrapper) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.clientReadPlatformService = clientReadPlatformService;
         this.staffReadPlatformService = staffReadPlatformService;
         this.loanRepositoryWrapper = loanRepositoryWrapper;
@@ -98,26 +102,30 @@ public class GuarantorReadPlatformServiceImpl implements GuarantorReadPlatformSe
         return mergeDetailsForClientOrStaffGuarantor(guarantorData);
     }
 
-    private static final class GuarantorMapper implements RowMapper<GuarantorData> {
+    private final class GuarantorMapper implements RowMapper<GuarantorData> {
 
         private GuarantorTransactionMapper guarantorTransactionMapper = new GuarantorTransactionMapper();
         private GuarantorFundingMapper guarantorFundingMapper = new GuarantorFundingMapper(guarantorTransactionMapper);
 
         private final StringBuilder sqlBuilder = new StringBuilder(
-                " g.id as id, g.loan_id as loanId, g.client_reln_cv_id clientRelationshipTypeId, g.entity_id as entityId, g.type_enum guarantorType ,g.firstname as firstname, g.lastname as lastname, g.dob as dateOfBirth, g.address_line_1 as addressLine1, g.address_line_2 as addressLine2, g.city as city, g.state as state, g.country as country, g.zip as zip, g.house_phone_number as housePhoneNumber, g.mobile_number as mobilePhoneNumber, g.comment as comment, ")
-                        .append(" g.is_active as guarantorStatus,")//
-                        .append(" cv.code_value as typeName, ")//
-                        .append("gfd.amount,")//
-                        .append(this.guarantorFundingMapper.schema())//
-                        .append(",")//
-                        .append(this.guarantorTransactionMapper.schema())//
-                        .append(" FROM m_guarantor g") //
-                        .append(" left JOIN m_code_value cv on g.client_reln_cv_id = cv.id")//
-                        .append(" left JOIN m_guarantor_funding_details gfd on g.id = gfd.guarantor_id")//
-                        .append(" left JOIN m_portfolio_account_associations aa on gfd.account_associations_id = aa.id and aa.is_active = 1 and aa.association_type_enum = ?")//
-                        .append(" left JOIN m_savings_account sa on sa.id = aa.linked_savings_account_id ")//
-                        .append(" left join m_guarantor_transaction gt on gt.guarantor_fund_detail_id = gfd.id") //
-                        .append(" left join m_deposit_account_on_hold_transaction oht on oht.id = gt.deposit_on_hold_transaction_id");
+                " g.id as id, g.loan_id as loanId, g.client_reln_cv_id clientRelationshipTypeId, g.entity_id as entityId, g.type_enum guarantorType, "
+                        + "g.firstname as firstname, g.lastname as lastname, g.dob as dateOfBirth, g.address_line_1 as addressLine1, "
+                        + "g.address_line_2 as addressLine2, g.city as city, g.state as state, g.country as country, g.zip as zip, "
+                        + "g.house_phone_number as housePhoneNumber, g.mobile_number as mobilePhoneNumber, g.comment as comment, ")
+                .append(" g.is_active as guarantorStatus,")//
+                .append(" cv.code_value as typeName, ")//
+                .append("gfd.amount,")//
+                .append(this.guarantorFundingMapper.schema())//
+                .append(",")//
+                .append(this.guarantorTransactionMapper.schema())//
+                .append(" FROM m_guarantor g") //
+                .append(" left JOIN m_code_value cv on g.client_reln_cv_id = cv.id")//
+                .append(" left JOIN m_guarantor_funding_details gfd on g.id = gfd.guarantor_id")//
+                .append(" left JOIN m_portfolio_account_associations aa on gfd.account_associations_id = aa.id and aa.is_active = "
+                        + sqlResolver.formatBoolValue(true) + " and aa.association_type_enum = ?")//
+                .append(" left JOIN m_savings_account sa on sa.id = aa.linked_savings_account_id ")//
+                .append(" left join m_guarantor_transaction gt on gt.guarantor_fund_detail_id = gfd.id") //
+                .append(" left join m_deposit_account_on_hold_transaction oht on oht.id = gt.deposit_on_hold_transaction_id");
 
         public String schema() {
             return this.sqlBuilder.toString();

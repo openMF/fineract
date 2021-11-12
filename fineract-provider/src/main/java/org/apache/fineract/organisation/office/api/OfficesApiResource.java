@@ -115,7 +115,7 @@ public class OfficesApiResource {
             @QueryParam("sortOrder") @Parameter(description = "sortOrder") final String sortOrder) {
 
         this.context.authenticatedUser().validateHasReadPermission(this.resourceNameForPermissions);
-
+        System.out.println("================================================ orderBy = " + orderBy);
         final SearchParameters searchParameters = SearchParameters.forOffices(orderBy, sortOrder);
 
         final Collection<OfficeData> offices = this.readPlatformService.retrieveAllOffices(onlyManualEntries, searchParameters);

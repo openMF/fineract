@@ -28,6 +28,7 @@ import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -45,6 +46,9 @@ public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceSe
     @Autowired
     private JDBCDriverConfig driverConfig;
 
+    @Value("${fineract.config.readonly:false}")
+    private boolean readOnlyInstance;
+
     @Autowired
     public TomcatJdbcDataSourcePerTenantService(final @Qualifier("hikariTenantDataSource") DataSource tenantDataSource) {
         this.tenantDataSource = tenantDataSource;
@@ -54,7 +58,6 @@ public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceSe
     public DataSource retrieveDataSource() {
         // default to tenant database datasource
         DataSource tenantDataSource = this.tenantDataSource;
-
         final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
         if (tenant != null) {
             final FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
@@ -77,16 +80,33 @@ public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceSe
 
     // creates the tenant data source for the oltp and report database
     private DataSource createNewDataSourceFor(final FineractPlatformTenantConnection tenantConnectionObj) {
-        String jdbcUrl = this.driverConfig.constructProtocol(tenantConnectionObj.getSchemaServer(),
-                tenantConnectionObj.getSchemaServerPort(), tenantConnectionObj.getSchemaName(),
+        String schemaServer;
+        String schemaPort;
+        String schemaName;
+        String schemaUsername;
+        String schemaPassword;
+        if (readOnlyInstance) {
+            schemaServer = tenantConnectionObj.getReadOnlySchemaServer();
+            schemaPort = tenantConnectionObj.getReadOnlySchemaServerPort();
+            schemaName = tenantConnectionObj.getReadOnlySchemaName();
+            schemaUsername = tenantConnectionObj.getReadOnlySchemaUsername();
+            schemaPassword = tenantConnectionObj.getReadOnlySchemaPassword();
+        } else {
+            schemaServer = tenantConnectionObj.getSchemaServer();
+            schemaPort = tenantConnectionObj.getSchemaServerPort();
+            schemaName = tenantConnectionObj.getSchemaName();
+            schemaUsername = tenantConnectionObj.getSchemaUsername();
+            schemaPassword = tenantConnectionObj.getSchemaPassword();
+        }
+        String jdbcUrl = this.driverConfig.constructUrl(schemaServer, schemaPort, schemaName,
                 tenantConnectionObj.getSchemaConnectionParameters());
 
         HikariConfig config = new HikariConfig();
         config.setDriverClassName(this.driverConfig.getDriverClassName());
         config.setPoolName(tenantConnectionObj.getSchemaName() + "_pool");
         config.setJdbcUrl(jdbcUrl);
-        config.setUsername(tenantConnectionObj.getSchemaUsername());
-        config.setPassword(tenantConnectionObj.getSchemaPassword());
+        config.setUsername(schemaUsername);
+        config.setPassword(schemaPassword);
         config.setMinimumIdle(tenantConnectionObj.getInitialSize());
         config.setMaximumPoolSize(tenantConnectionObj.getMaxActive());
         config.setConnectionTestQuery("SELECT 1");

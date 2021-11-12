@@ -356,9 +356,13 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
                     .setRollbackTransaction(result.isRollbackTransaction())//
                     .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            LOG.error("ABC " + dve.getMessage());
+            dve.printStackTrace();
             handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         } catch (final PersistenceException dve) {
+            LOG.error("CDE " + dve.getMessage());
+            dve.printStackTrace();
             Throwable throwable = ExceptionUtils.getRootCause(dve.getCause());
             handleDataIntegrityIssues(command, throwable, dve);
             return CommandProcessingResult.empty();

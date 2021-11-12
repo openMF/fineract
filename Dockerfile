@@ -22,7 +22,7 @@ RUN apt-get update -qq && apt-get install -y wget
 COPY . fineract
 WORKDIR /fineract
 
-RUN ./gradlew --no-daemon -q -x rat -x compileTestJava -x test -x spotlessJavaCheck -x spotlessJava bootJar
+RUN ./gradlew --no-daemon -q -x rat -x compileTestJava -x test bootJar
 
 # https://issues.apache.org/jira/browse/LEGAL-462
 # https://issues.apache.org/jira/browse/FINERACT-762

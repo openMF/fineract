@@ -24,6 +24,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
@@ -41,6 +43,7 @@ import org.springframework.stereotype.Service;
 public class PortfolioAccountReadPlatformServiceImpl implements PortfolioAccountReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
 
     // mapper
     private final PortfolioSavingsAccountMapper savingsAccountMapper;
@@ -48,8 +51,9 @@ public class PortfolioAccountReadPlatformServiceImpl implements PortfolioAccount
     private final PortfolioLoanAccountRefundByTransferMapper accountRefundByTransferMapper;
 
     @Autowired
-    public PortfolioAccountReadPlatformServiceImpl(final RoutingDataSource dataSource) {
+    public PortfolioAccountReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.savingsAccountMapper = new PortfolioSavingsAccountMapper();
         this.loanAccountMapper = new PortfolioLoanAccountMapper();
         this.accountRefundByTransferMapper = new PortfolioLoanAccountRefundByTransferMapper();
@@ -150,7 +154,7 @@ public class PortfolioAccountReadPlatformServiceImpl implements PortfolioAccount
                 }
 
                 if (portfolioAccountDTO.isExcludeOverDraftAccounts()) {
-                    sql += " and sa.allow_overdraft = 0";
+                    sql += " and sa.allow_overdraft = " + sqlResolver.formatBoolValue(false);
                 }
 
                 if (portfolioAccountDTO.getClientId() == null && portfolioAccountDTO.getGroupId() != null) {
@@ -169,18 +173,18 @@ public class PortfolioAccountReadPlatformServiceImpl implements PortfolioAccount
 
         private final String schemaSql;
 
-        PortfolioSavingsAccountMapper() {
+        public PortfolioSavingsAccountMapper() {
 
             final StringBuilder sqlBuilder = new StringBuilder(400);
-            sqlBuilder.append("sa.id as id, sa.account_no as accountNo, sa.external_id as externalId, ");
-            sqlBuilder.append("c.id as clientId, c.display_name as clientName, ");
-            sqlBuilder.append("g.id as groupId, g.display_name as groupName, ");
-            sqlBuilder.append("sp.id as productId, sp.name as productName, ");
-            sqlBuilder.append("s.id as fieldOfficerId, s.display_name as fieldOfficerName, ");
-            sqlBuilder.append("sa.currency_code as currencyCode, sa.currency_digits as currencyDigits,");
-            sqlBuilder.append("sa.currency_multiplesof as inMultiplesOf, ");
-            sqlBuilder.append("curr.name as currencyName, curr.internationalized_name_code as currencyNameCode, ");
-            sqlBuilder.append("curr.display_symbol as currencyDisplaySymbol ");
+            sqlBuilder.append("sa.id as id, sa.account_no as account_no, sa.external_id as external_id, ");
+            sqlBuilder.append("c.id as client_id, c.display_name as client_name, ");
+            sqlBuilder.append("g.id as group_id, g.display_name as group_name, ");
+            sqlBuilder.append("sp.id as product_id, sp.name as product_name, ");
+            sqlBuilder.append("s.id as field_officer_id, s.display_name as field_officer_name, ");
+            sqlBuilder.append("sa.currency_code as currency_code, sa.currency_digits as currency_digits,");
+            sqlBuilder.append("sa.currency_multiplesof as in_multiples_of, ");
+            sqlBuilder.append("curr.name as currency_name, curr.internationalized_name_code as currency_name_code, ");
+            sqlBuilder.append("curr.display_symbol as currency_display_symbol ");
             sqlBuilder.append("from m_savings_account sa ");
             sqlBuilder.append("join m_savings_product sp ON sa.product_id = sp.id ");
             sqlBuilder.append("join m_currency curr on curr.code = sa.currency_code ");
@@ -199,28 +203,28 @@ public class PortfolioAccountReadPlatformServiceImpl implements PortfolioAccount
         public PortfolioAccountData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
 
             final Long id = rs.getLong("id");
-            final String accountNo = rs.getString("accountNo");
-            final String externalId = rs.getString("externalId");
+            final String accountNo = rs.getString("account_no");
+            final String externalId = rs.getString("external_id");
 
-            final Long groupId = JdbcSupport.getLong(rs, "groupId");
-            final String groupName = rs.getString("groupName");
-            final Long clientId = JdbcSupport.getLong(rs, "clientId");
-            final String clientName = rs.getString("clientName");
+            final Long groupId = JdbcSupport.getLong(rs, "group_id");
+            final String groupName = rs.getString("group_name");
+            final Long clientId = JdbcSupport.getLong(rs, "client_id");
+            final String clientName = rs.getString("client_name");
 
-            final Long productId = rs.getLong("productId");
-            final String productName = rs.getString("productName");
+            final Long productId = rs.getLong("product_id");
+            final String productName = rs.getString("product_name");
 
-            final Long fieldOfficerId = rs.getLong("fieldOfficerId");
-            final String fieldOfficerName = rs.getString("fieldOfficerName");
+            final Long fieldOfficerId = rs.getLong("field_officer_id");
+            final String fieldOfficerName = rs.getString("field_officer_name");
 
-            final String currencyCode = rs.getString("currencyCode");
-            final String currencyName = rs.getString("currencyName");
-            final String currencyNameCode = rs.getString("currencyNameCode");
-            final String currencyDisplaySymbol = rs.getString("currencyDisplaySymbol");
-            final Integer currencyDigits = JdbcSupport.getInteger(rs, "currencyDigits");
-            final Integer inMulitplesOf = JdbcSupport.getInteger(rs, "inMultiplesOf");
-            final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMulitplesOf, currencyDisplaySymbol,
-                    currencyNameCode);
+            final String currencyCode = rs.getString("currency_code");
+            final String currencyName = rs.getString("currency_name");
+            final String currencyNameCode = rs.getString("currency_name_code");
+            final String currencyDisplaySymbol = rs.getString("currency_display_symbol");
+            final Integer currencyDigits = JdbcSupport.getInteger(rs, "currency_digits");
+            final Integer inMulitplesOf = JdbcSupport.getInteger(rs, "in_multiples_of");
+            final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMulitplesOf,
+                    currencyDisplaySymbol, currencyNameCode);
 
             return new PortfolioAccountData(id, accountNo, externalId, groupId, groupName, clientId, clientName, productId, productName,
                     fieldOfficerId, fieldOfficerName, currency);
@@ -231,19 +235,19 @@ public class PortfolioAccountReadPlatformServiceImpl implements PortfolioAccount
 
         private final String schemaSql;
 
-        PortfolioLoanAccountMapper() {
+        public PortfolioLoanAccountMapper() {
 
             final StringBuilder sqlBuilder = new StringBuilder(400);
-            sqlBuilder.append("la.id as id, la.account_no as accountNo, la.external_id as externalId, ");
-            sqlBuilder.append("c.id as clientId, c.display_name as clientName, ");
-            sqlBuilder.append("g.id as groupId, g.display_name as groupName, ");
-            sqlBuilder.append("lp.id as productId, lp.name as productName, ");
-            sqlBuilder.append("s.id as fieldOfficerId, s.display_name as fieldOfficerName, ");
-            sqlBuilder.append("la.currency_code as currencyCode, la.currency_digits as currencyDigits,");
-            sqlBuilder.append("la.currency_multiplesof as inMultiplesOf, ");
-            sqlBuilder.append("la.total_overpaid_derived as totalOverpaid, ");
-            sqlBuilder.append("curr.name as currencyName, curr.internationalized_name_code as currencyNameCode, ");
-            sqlBuilder.append("curr.display_symbol as currencyDisplaySymbol ");
+            sqlBuilder.append("la.id as id, la.account_no as account_no, la.external_id as external_id, ");
+            sqlBuilder.append("c.id as client_id, c.display_name as client_name, ");
+            sqlBuilder.append("g.id as group_id, g.display_name as group_name, ");
+            sqlBuilder.append("lp.id as product_id, lp.name as product_name, ");
+            sqlBuilder.append("s.id as field_officer_id, s.display_name as field_officer_name, ");
+            sqlBuilder.append("la.currency_code as currency_code, la.currency_digits as currency_digits,");
+            sqlBuilder.append("la.currency_multiplesof as in_multiples_of, ");
+            sqlBuilder.append("la.total_overpaid_derived as total_overpaid, ");
+            sqlBuilder.append("curr.name as currency_name, curr.internationalized_name_code as currency_name_code, ");
+            sqlBuilder.append("curr.display_symbol as currency_display_symbol ");
             sqlBuilder.append("from m_loan la ");
             sqlBuilder.append("join m_product_loan lp ON la.product_id = lp.id ");
             sqlBuilder.append("join m_currency curr on curr.code = la.currency_code ");
@@ -262,66 +266,65 @@ public class PortfolioAccountReadPlatformServiceImpl implements PortfolioAccount
         public PortfolioAccountData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
 
             final Long id = rs.getLong("id");
-            final String accountNo = rs.getString("accountNo");
-            final String externalId = rs.getString("externalId");
+            final String accountNo = rs.getString("account_no");
+            final String externalId = rs.getString("external_id");
 
-            final Long groupId = JdbcSupport.getLong(rs, "groupId");
-            final String groupName = rs.getString("groupName");
-            final Long clientId = JdbcSupport.getLong(rs, "clientId");
-            final String clientName = rs.getString("clientName");
+            final Long groupId = JdbcSupport.getLong(rs, "group_id");
+            final String groupName = rs.getString("group_name");
+            final Long clientId = JdbcSupport.getLong(rs, "client_id");
+            final String clientName = rs.getString("client_name");
 
-            final Long productId = rs.getLong("productId");
-            final String productName = rs.getString("productName");
+            final Long productId = rs.getLong("product_id");
+            final String productName = rs.getString("product_name");
 
-            final Long fieldOfficerId = rs.getLong("fieldOfficerId");
-            final String fieldOfficerName = rs.getString("fieldOfficerName");
+            final Long fieldOfficerId = rs.getLong("field_officer_id");
+            final String fieldOfficerName = rs.getString("field_officer_name");
 
-            final String currencyCode = rs.getString("currencyCode");
-            final String currencyName = rs.getString("currencyName");
-            final String currencyNameCode = rs.getString("currencyNameCode");
-            final String currencyDisplaySymbol = rs.getString("currencyDisplaySymbol");
-            final Integer currencyDigits = JdbcSupport.getInteger(rs, "currencyDigits");
-            final Integer inMulitplesOf = JdbcSupport.getInteger(rs, "inMultiplesOf");
-            final BigDecimal amtForTransfer = JdbcSupport.getBigDecimalDefaultToNullIfZero(rs, "totalOverpaid");
-            final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMulitplesOf, currencyDisplaySymbol,
-                    currencyNameCode);
+            final String currencyCode = rs.getString("currency_code");
+            final String currencyName = rs.getString("currency_name");
+            final String currencyNameCode = rs.getString("currency_name_code");
+            final String currencyDisplaySymbol = rs.getString("currency_display_symbol");
+            final Integer currencyDigits = JdbcSupport.getInteger(rs, "currency_digits");
+            final Integer inMulitplesOf = JdbcSupport.getInteger(rs, "in_multiples_of");
+            final BigDecimal amtForTransfer = JdbcSupport.getBigDecimalDefaultToNullIfZero(rs, "total_overpaid");
+            final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMulitplesOf,
+                    currencyDisplaySymbol, currencyNameCode);
 
             return new PortfolioAccountData(id, accountNo, externalId, groupId, groupName, clientId, clientName, productId, productName,
                     fieldOfficerId, fieldOfficerName, currency, amtForTransfer);
         }
     }
 
-    private static final class PortfolioLoanAccountRefundByTransferMapper implements RowMapper<PortfolioAccountData> {
+    private final class PortfolioLoanAccountRefundByTransferMapper implements RowMapper<PortfolioAccountData> {
 
         private final String schemaSql;
 
-        PortfolioLoanAccountRefundByTransferMapper() {
-
+        public PortfolioLoanAccountRefundByTransferMapper() {
             final StringBuilder amountQueryString = new StringBuilder(400);
-            amountQueryString.append("(select (SUM(ifnull(mr.principal_completed_derived, 0)) +");
-            amountQueryString.append("SUM(ifnull(mr.interest_completed_derived, 0)) + ");
-            amountQueryString.append("SUM(ifnull(mr.fee_charges_completed_derived, 0)) + ");
-            amountQueryString.append(" SUM(ifnull(mr.penalty_charges_completed_derived, 0))) as total_in_advance_derived");
+            amountQueryString.append("(select (SUM(COALESCE(mr.principal_completed_derived, 0)) +");
+            amountQueryString.append("SUM(COALESCE(mr.interest_completed_derived, 0)) + ");
+             amountQueryString.append("SUM(COALESCE(mr.fee_charges_completed_derived, 0)) + ");
+             amountQueryString.append(" SUM(COALESCE(mr.penalty_charges_completed_derived, 0))) as total_in_advance_derived");
             amountQueryString.append(" from m_loan ml INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id");
             amountQueryString.append(" where ml.id=? and ml.loan_status_id = 300");
-            amountQueryString.append("  and  mr.duedate >= CURDATE() group by ml.id having");
-            amountQueryString.append(" (SUM(ifnull(mr.principal_completed_derived, 0)) + ");
-            amountQueryString.append(" SUM(ifnull(mr.interest_completed_derived, 0)) + ");
-            amountQueryString.append("SUM(ifnull(mr.fee_charges_completed_derived, 0)) + ");
-            amountQueryString.append("SUM(ifnull(mr.penalty_charges_completed_derived, 0))) > 0) as totalOverpaid ");
+             amountQueryString.append("  and  mr.duedate >= ").append(sqlResolver.formatDateCurrent()).append(" group by ml.id having");
+             amountQueryString.append(" (SUM(COALESCE(mr.principal_completed_derived, 0)) + ");
+             amountQueryString.append(" SUM(COALESCE(mr.interest_completed_derived, 0)) + ");
+             amountQueryString.append("SUM(COALESCE(mr.fee_charges_completed_derived, 0)) + ");
+             amountQueryString.append("SUM(COALESCE(mr.penalty_charges_completed_derived, 0))) > 0) as total_overpaid ");
 
             final StringBuilder sqlBuilder = new StringBuilder(400);
-            sqlBuilder.append("la.id as id, la.account_no as accountNo, la.external_id as externalId, ");
-            sqlBuilder.append("c.id as clientId, c.display_name as clientName, ");
-            sqlBuilder.append("g.id as groupId, g.display_name as groupName, ");
-            sqlBuilder.append("lp.id as productId, lp.name as productName, ");
-            sqlBuilder.append("s.id as fieldOfficerId, s.display_name as fieldOfficerName, ");
-            sqlBuilder.append("la.currency_code as currencyCode, la.currency_digits as currencyDigits,");
-            sqlBuilder.append("la.currency_multiplesof as inMultiplesOf, ");
+            sqlBuilder.append("la.id as id, la.account_no as account_no, la.external_id as external_id, ");
+            sqlBuilder.append("c.id as client_id, c.display_name as client_name, ");
+            sqlBuilder.append("g.id as group_id, g.display_name as group_name, ");
+            sqlBuilder.append("lp.id as product_id, lp.name as product_name, ");
+            sqlBuilder.append("s.id as field_officer_id, s.display_name as field_officer_name, ");
+            sqlBuilder.append("la.currency_code as currency_code, la.currency_digits as currency_digits,");
+            sqlBuilder.append("la.currency_multiplesof as in_multiples_of, ");
             sqlBuilder.append(amountQueryString.toString());
             sqlBuilder.append(", ");
-            sqlBuilder.append("curr.name as currencyName, curr.internationalized_name_code as currencyNameCode, ");
-            sqlBuilder.append("curr.display_symbol as currencyDisplaySymbol ");
+            sqlBuilder.append("curr.name as currency_name, curr.internationalized_name_code as currency_name_code, ");
+            sqlBuilder.append("curr.display_symbol as currency_display_symbol ");
             sqlBuilder.append("from m_loan la ");
             sqlBuilder.append("join m_product_loan lp ON la.product_id = lp.id ");
             sqlBuilder.append("join m_currency curr on curr.code = la.currency_code ");
@@ -340,29 +343,29 @@ public class PortfolioAccountReadPlatformServiceImpl implements PortfolioAccount
         public PortfolioAccountData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
 
             final Long id = rs.getLong("id");
-            final String accountNo = rs.getString("accountNo");
-            final String externalId = rs.getString("externalId");
+            final String accountNo = rs.getString("account_no");
+            final String externalId = rs.getString("external_id");
 
-            final Long groupId = JdbcSupport.getLong(rs, "groupId");
-            final String groupName = rs.getString("groupName");
-            final Long clientId = JdbcSupport.getLong(rs, "clientId");
-            final String clientName = rs.getString("clientName");
+            final Long groupId = JdbcSupport.getLong(rs, "group_id");
+            final String groupName = rs.getString("group_name");
+            final Long clientId = JdbcSupport.getLong(rs, "client_id");
+            final String clientName = rs.getString("client_name");
 
-            final Long productId = rs.getLong("productId");
-            final String productName = rs.getString("productName");
+            final Long productId = rs.getLong("product_id");
+            final String productName = rs.getString("product_name");
 
-            final Long fieldOfficerId = rs.getLong("fieldOfficerId");
-            final String fieldOfficerName = rs.getString("fieldOfficerName");
+            final Long fieldOfficerId = rs.getLong("field_officer_id");
+            final String fieldOfficerName = rs.getString("field_officer_name");
 
-            final String currencyCode = rs.getString("currencyCode");
-            final String currencyName = rs.getString("currencyName");
-            final String currencyNameCode = rs.getString("currencyNameCode");
-            final String currencyDisplaySymbol = rs.getString("currencyDisplaySymbol");
-            final Integer currencyDigits = JdbcSupport.getInteger(rs, "currencyDigits");
-            final Integer inMulitplesOf = JdbcSupport.getInteger(rs, "inMultiplesOf");
-            final BigDecimal amtForTransfer = JdbcSupport.getBigDecimalDefaultToNullIfZero(rs, "totalOverpaid");
-            final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMulitplesOf, currencyDisplaySymbol,
-                    currencyNameCode);
+            final String currencyCode = rs.getString("currency_code");
+            final String currencyName = rs.getString("currency_name");
+            final String currencyNameCode = rs.getString("currency_name_code");
+            final String currencyDisplaySymbol = rs.getString("currency_display_symbol");
+            final Integer currencyDigits = JdbcSupport.getInteger(rs, "currency_digits");
+            final Integer inMulitplesOf = JdbcSupport.getInteger(rs, "in_multiples_of");
+            final BigDecimal amtForTransfer = JdbcSupport.getBigDecimalDefaultToNullIfZero(rs, "total_overpaid");
+            final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMulitplesOf,
+                    currencyDisplaySymbol, currencyNameCode);
 
             return new PortfolioAccountData(id, accountNo, externalId, groupId, groupName, clientId, clientName, productId, productName,
                     fieldOfficerId, fieldOfficerName, currency, amtForTransfer);

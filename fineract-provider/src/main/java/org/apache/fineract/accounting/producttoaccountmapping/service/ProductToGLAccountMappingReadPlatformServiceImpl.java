@@ -36,6 +36,7 @@ import org.apache.fineract.accounting.glaccount.data.GLAccountData;
 import org.apache.fineract.accounting.producttoaccountmapping.data.ChargeToGLAccountMapper;
 import org.apache.fineract.accounting.producttoaccountmapping.data.PaymentTypeToGLAccountMapper;
 import org.apache.fineract.accounting.producttoaccountmapping.domain.PortfolioProductType;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.portfolio.charge.data.ChargeData;
@@ -49,10 +50,12 @@ import org.springframework.stereotype.Service;
 public class ProductToGLAccountMappingReadPlatformServiceImpl implements ProductToGLAccountMappingReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
 
     @Autowired
-    public ProductToGLAccountMappingReadPlatformServiceImpl(final RoutingDataSource dataSource) {
+    public ProductToGLAccountMappingReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
     }
 
     private static final class ProductToGLAccountMappingMapper implements RowMapper<Map<String, Object>> {
@@ -247,7 +250,6 @@ public class ProductToGLAccountMappingReadPlatformServiceImpl implements Product
 
     /**
      * @param loanProductId
-     * @param paymentTypeToGLAccountMappers
      * @return
      */
     private List<PaymentTypeToGLAccountMapper> fetchPaymentTypeToFundSourceMappings(final PortfolioProductType portfolioProductType,
@@ -301,12 +303,8 @@ public class ProductToGLAccountMappingReadPlatformServiceImpl implements Product
     private List<ChargeToGLAccountMapper> fetchChargeToIncomeAccountMappings(final PortfolioProductType portfolioProductType,
             final Long loanProductId, final boolean penalty) {
         final ProductToGLAccountMappingMapper rm = new ProductToGLAccountMappingMapper();
-        String sql = "select " + rm.schema() + " and product_id = ? and mapping.charge_id is not null and charge.is_penalty=";
-        if (penalty) {
-            sql = sql + " 1";
-        } else {
-            sql = sql + " 0";
-        }
+        String sql = "select " + rm.schema() + " and product_id = ? and mapping.charge_id is not null and charge.is_penalty="
+                + sqlResolver.formatBoolValue(penalty);
 
         final List<Map<String, Object>> chargeToFundSourceMappingsList = this.jdbcTemplate.query(sql, rm,
                 new Object[] { portfolioProductType.getValue(), loanProductId });

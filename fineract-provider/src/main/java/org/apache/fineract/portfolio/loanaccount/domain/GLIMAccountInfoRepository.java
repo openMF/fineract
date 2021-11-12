@@ -18,7 +18,6 @@
  */
 package org.apache.fineract.portfolio.loanaccount.domain;
 
-import java.math.BigDecimal;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -27,7 +26,7 @@ public interface GLIMAccountInfoRepository
 
     GroupLoanIndividualMonitoringAccount findOneByIsAcceptingChild(boolean acceptingChild);
 
-    GroupLoanIndividualMonitoringAccount findOneByIsAcceptingChildAndApplicationId(boolean acceptingChild, BigDecimal applicationId);
+    GroupLoanIndividualMonitoringAccount findOneByIsAcceptingChildAndApplicationId(boolean acceptingChild, Long applicationId);
 
     GroupLoanIndividualMonitoringAccount findOneByAccountNumber(String accountNumber);
 }

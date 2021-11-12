@@ -33,6 +33,7 @@ import org.apache.fineract.accounting.rule.data.AccountingRuleData;
 import org.apache.fineract.accounting.rule.data.AccountingTagRuleData;
 import org.apache.fineract.accounting.rule.exception.AccountingRuleNotFoundException;
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
@@ -48,12 +49,14 @@ import org.springframework.stereotype.Service;
 public class AccountingRuleReadPlatformServiceImpl implements AccountingRuleReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final GLAccountReadPlatformService glAccountReadPlatformService;
 
     @Autowired
-    public AccountingRuleReadPlatformServiceImpl(final RoutingDataSource dataSource,
+    public AccountingRuleReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
             final GLAccountReadPlatformService glAccountReadPlatformService) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.glAccountReadPlatformService = glAccountReadPlatformService;
     }
 
@@ -159,7 +162,7 @@ public class AccountingRuleReadPlatformServiceImpl implements AccountingRuleRead
         final AccountingRuleDataExtractor resultSetExtractor = new AccountingRuleDataExtractor(this.jdbcTemplate,
                 this.glAccountReadPlatformService, isAssociationParametersExists);
         Object[] arguments = new Object[] {};
-        String sql = "select " + resultSetExtractor.schema() + " and system_defined=0 ";
+        String sql = "select " + resultSetExtractor.schema() + " and system_defined= " + sqlResolver.formatBoolValue(false);
         if (hierarchySearchString != null) {
             sql = sql + " and office.hierarchy like ?";
             arguments = new Object[] { hierarchySearchString };
