@@ -18,32 +18,48 @@
  */
 package org.apache.fineract.notification.eventandlistener;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.Session;
 import org.apache.fineract.notification.data.NotificationData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jms.core.JmsTemplate;
-import org.springframework.jms.core.MessageCreator;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
+import org.springframework.util.concurrent.ListenableFuture;
+import org.springframework.util.concurrent.ListenableFutureCallback;
 
 @Service
 public class NotificationEventService {
 
-    private final JmsTemplate jmsTemplate;
+    private static final Logger LOG = LoggerFactory.getLogger(NotificationEventService.class);
 
     @Autowired
-    public NotificationEventService(JmsTemplate jmsTemplate) {
-        this.jmsTemplate = jmsTemplate;
+    private final KafkaTemplate<String, NotificationData> notificationDataKafkaTemplate;
+
+    @Autowired
+    public NotificationEventService(KafkaTemplate<String, NotificationData> kafkaTemplate) {
+        this.notificationDataKafkaTemplate = kafkaTemplate;
     }
 
-    public void broadcastNotification(final Destination destination, final NotificationData notificationData) {
-        this.jmsTemplate.send(destination, new MessageCreator() {
+    public void broadcastNotification(final String destination, final NotificationData notificationData) {
+
+        StringBuilder key = new StringBuilder();
+        key.append(notificationData.getOfficeId()).append(notificationData.getObjectIdentifier());
+
+        ListenableFuture<SendResult<String, NotificationData>> future = 
+            this.notificationDataKafkaTemplate.send(destination,key.toString(), notificationData);
+
+        future.addCallback(new ListenableFutureCallback<SendResult<String, NotificationData>>() {
 
             @Override
-            public Message createMessage(Session session) throws JMSException {
-                return session.createObjectMessage(notificationData);
+            public void onSuccess(SendResult<String, NotificationData> result) {
+                LOG.info("Sent notificationData message=[" + notificationData.toString() + " with Id "
+                        + notificationData.getObjectIdentifier() + "] with offset=[" + result.getRecordMetadata().offset() + "]");
+            }
+
+            @Override
+            public void onFailure(Throwable ex) {
+                LOG.error("Unable to send notificationData message=[" + notificationData + "] due to : " + ex.getMessage());
             }
         });
     }

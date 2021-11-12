@@ -43,6 +43,7 @@ services:
     depends_on:
       - fineractmysql
     environment:
+      - spring_profiles_active=basicauth,kafkaEnabled
       - DRIVERCLASS_NAME=org.drizzle.jdbc.DrizzleDriver
       - PROTOCOL=jdbc
       - node_id=1
@@ -56,6 +57,15 @@ services:
       - FINERACT_DEFAULT_TENANTDB_UID=root
       - FINERACT_DEFAULT_TENANTDB_PWD=skdcnwauicn2ucnaecasdsajdnizucawencascdca
       - FINERACT_DEFAULT_TENANTDB_CONN_PARAMS=
+      - FINERACT_DEFAULT_KAFKA_BOOTSTRAP_ADDRESS=localhost:9092
+      - FINERACT_DEFAULT_KAFKA_SSL_ENABLED=false
+      - FINERACT_DEFAULT_KAFKA_SECURITY_PROTOCOL=SSL
+      - FINERACT_DEFAULT_KAFKA_TRUSTSTORE_LOCATION=
+      - FINERACT_DEFAULT_KAFKA_TRUSTSTORE_PASSWORD=
+      - FINERACT_DEFAULT_KAFKA_KEYSTORE_LOCATION=
+      - FINERACT_DEFAULT_KAFKA_KEYSTORE_PASSWORD=
+      - CONSOLE_LOG_PATTERN=%d{HH:mm:ss.SSS} %-5level %logger{36}:%L - %msg%n
+      - CONSOLE_LOG_LEVEL=warn
 
   # Frontend service
   community-app:

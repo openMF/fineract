@@ -18,6 +18,9 @@
  */
 package org.apache.fineract.infrastructure.core.boot;
 
+import org.apache.fineract.notification.config.KafkaConfiguration;
+import org.apache.fineract.notification.config.KafkaConsumerConfiguration;
+import org.apache.fineract.notification.config.KafkaProducerConfiguration;
 import org.apache.fineract.infrastructure.core.boot.db.DataSourceConfiguration;
 import org.apache.fineract.notification.config.MessagingConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -47,6 +50,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  */
 @Configuration
 @Import({ WebXmlConfiguration.class, WebXmlOauthConfiguration.class, WebFrontEndConfiguration.class, MessagingConfiguration.class,
+        KafkaConfiguration.class, KafkaProducerConfiguration.class, KafkaConsumerConfiguration.class,
         WebTwoFactorXmlConfiguration.class, DataSourceConfiguration.class})
 @ImportResource({ "classpath*:META-INF/spring/appContext.xml" })
 @PropertySource(value = "classpath:META-INF/spring/jdbc.properties")

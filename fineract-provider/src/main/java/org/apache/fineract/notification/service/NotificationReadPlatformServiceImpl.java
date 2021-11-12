@@ -188,7 +188,7 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
     private static final class NotificationMapperRow implements RowMapper<NotificationMapperData> {
         public static final String FROM = " FROM notification_mapper nm INNER JOIN notification_generator ng ON nm.notification_id = ng.id ";
 
-        public static final String SCHEMA =  " ng.id as id, nm.user_id as user_id, ng.object_type as object_type, ng.object_identifier as object_id, ng.actor as actor, " +
+        public static final String SCHEMA =  " ng.id as id, nm.user_id as user_id, ng.object_type as object_type, ng.object_identifier as object_identifier, ng.actor as actor, " +
                 "ng.action as action, ng.notification_content as content, ng.is_system_generated as is_system_generated, nm.created_at as created_at ";
 
         public String schema() {
@@ -231,11 +231,11 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
             final Long id = rs.getLong("id");
             notificationData.setId(id);
 
-            final String objectType = rs.getString("objectType");
+            final String objectType = rs.getString("object_type");
             notificationData.setObjectType(objectType);
 
-            final Long objectId = rs.getLong("objectId");
-            notificationData.entifier(objectId);
+            final Long objectIdentifier = rs.getLong("object_identifier");
+            notificationData.setObjectIdentifier(objectIdentifier);
 
             final Long actorId = rs.getLong("actor");
             notificationData.setActor(actorId);
@@ -246,10 +246,10 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
             final String content = rs.getString("content");
             notificationData.setContent(content);
 
-            final boolean isSystemGenerated = rs.getBoolean("isSystemGenerated");
+            final boolean isSystemGenerated = rs.getBoolean("is_system_generated");
             notificationData.setSystemGenerated(isSystemGenerated);
 
-            final String createdAt = rs.getString("createdAt");
+            final String createdAt = rs.getString("created_at");
             notificationData.setCreatedAt(createdAt);
 
             return notificationData;

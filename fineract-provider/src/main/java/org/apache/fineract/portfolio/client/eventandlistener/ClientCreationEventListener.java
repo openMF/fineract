@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.notification.eventandlistener;
+package org.apache.fineract.portfolio.client.eventandlistener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +41,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @Service
-public class NotificationEventListener implements SessionAwareMessageListener {
+public class ClientCreationEventListener implements SessionAwareMessageListener {
 
     private final BasicAuthTenantDetailsService basicAuthTenantDetailsService;
 
@@ -49,28 +49,28 @@ public class NotificationEventListener implements SessionAwareMessageListener {
 
     private final AppUserRepository appUserRepository;
 
-    private static final Logger LOG = LoggerFactory.getLogger(NotificationEventListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClientCreationEventListener.class);
 
-    private CountDownLatch notificationDataLatch = new CountDownLatch(1);
+    private CountDownLatch clienCreationLatch = new CountDownLatch(1);
 
     @KafkaListener(topics = "${notification.data.topic.name}", containerFactory = "notificationDataKafkaListenerContainerFactory")
-    public void notificationDataListener(NotificationData notificationData) {
-        LOG.info("Received notificationData message=[" + notificationData + "]");
-        this.notificationDataLatch.countDown();
+    public void notificationDataListener(NotificationData clientCreationData) {
 
-        final FineractPlatformTenant tenant = this.basicAuthTenantDetailsService.loadTenantById(notificationData.getTenantIdentifier(),
+        this.clienCreationLatch.countDown();
+
+        final FineractPlatformTenant tenant = this.basicAuthTenantDetailsService.loadTenantById(clientCreationData.getTenantIdentifier(),
                 false);
         ThreadLocalContextUtil.setTenant(tenant);
 
-        Long appUserId = notificationData.getActor();
+        Long appUserId = clientCreationData.getActor();
 
-        List<Long> userIds = notificationData.getUserIds();
+        List<Long> userIds = clientCreationData.getUserIds();
 
-        if (notificationData.getOfficeId() != null) {
+        if (clientCreationData.getOfficeId() != null) {
             List<Long> tempUserIds = new ArrayList<>(userIds);
             for (Long userId : tempUserIds) {
                 AppUser appUser = appUserRepository.findById(userId).get();
-                if (!Objects.equals(appUser.getOffice().getId(), notificationData.getOfficeId())) {
+                if (!Objects.equals(appUser.getOffice().getId(), clientCreationData.getOfficeId())) {
                     userIds.remove(userId);
                 }
             }
@@ -80,14 +80,13 @@ public class NotificationEventListener implements SessionAwareMessageListener {
         /***
          * if (userIds.contains(appUserId)) { userIds.remove(appUserId); }
          ***/
-
-        notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
-                notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
-                notificationData.isSystemGenerated());
+        notificationWritePlatformService.notify(userIds, clientCreationData.getObjectType(), clientCreationData.getObjectIdentifier(),
+                clientCreationData.getAction(), clientCreationData.getActor(), clientCreationData.getContent(),
+                clientCreationData.isSystemGenerated());
     }
 
     @Autowired
-    public NotificationEventListener(BasicAuthTenantDetailsService basicAuthTenantDetailsService,
+    public ClientCreationEventListener(BasicAuthTenantDetailsService basicAuthTenantDetailsService,
             NotificationWritePlatformService notificationWritePlatformService, AppUserRepository appUserRepository) {
         this.basicAuthTenantDetailsService = basicAuthTenantDetailsService;
         this.notificationWritePlatformService = notificationWritePlatformService;
@@ -98,21 +97,21 @@ public class NotificationEventListener implements SessionAwareMessageListener {
     public void onMessage(Message message, Session session) throws JMSException {
         if (message instanceof ObjectMessage) {
             LOG.info("Message arrived");
-            NotificationData notificationData = (NotificationData) ((ObjectMessage) message).getObject();
+            NotificationData clientCreationData = (NotificationData) ((ObjectMessage) message).getObject();
 
-            final FineractPlatformTenant tenant = this.basicAuthTenantDetailsService.loadTenantById(notificationData.getTenantIdentifier(),
-                    false);
+            final FineractPlatformTenant tenant = this.basicAuthTenantDetailsService
+                    .loadTenantById(clientCreationData.getTenantIdentifier(), false);
             ThreadLocalContextUtil.setTenant(tenant);
 
-            Long appUserId = notificationData.getActor();
+            Long appUserId = clientCreationData.getActor();
 
-            List<Long> userIds = notificationData.getUserIds();
+            List<Long> userIds = clientCreationData.getUserIds();
 
-            if (notificationData.getOfficeId() != null) {
+            if (clientCreationData.getOfficeId() != null) {
                 List<Long> tempUserIds = new ArrayList<>(userIds);
                 for (Long userId : tempUserIds) {
                     AppUser appUser = appUserRepository.findById(userId).get();
-                    if (!Objects.equals(appUser.getOffice().getId(), notificationData.getOfficeId())) {
+                    if (!Objects.equals(appUser.getOffice().getId(), clientCreationData.getOfficeId())) {
                         userIds.remove(userId);
                     }
                 }
@@ -122,9 +121,9 @@ public class NotificationEventListener implements SessionAwareMessageListener {
                 userIds.remove(appUserId);
             }
 
-            notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
-                    notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
-                    notificationData.isSystemGenerated());
+            notificationWritePlatformService.notify(userIds, clientCreationData.getObjectType(), clientCreationData.getObjectIdentifier(),
+                    clientCreationData.getAction(), clientCreationData.getActor(), clientCreationData.getContent(),
+                    clientCreationData.isSystemGenerated());
         }
     }
 }
