@@ -58,10 +58,10 @@ public class NotificationWritePlatformServiceImpl implements NotificationWritePl
     @Override
     public Long notify(Long userId, String objectType, Long objectIdentifier, String action, Long actorId, String notificationContent,
             boolean isSystemGenerated) {
-
+                
         Long generatedNotificationId = insertIntoNotificationGenerator(objectType, objectIdentifier, action, actorId, notificationContent,
                 isSystemGenerated);
-
+                
         insertIntoNotificationMapper(userId, generatedNotificationId);
         return generatedNotificationId;
     }
@@ -71,19 +71,21 @@ public class NotificationWritePlatformServiceImpl implements NotificationWritePl
             boolean isSystemGenerated) {
 
         Long generatedNotificationId = insertIntoNotificationGenerator(objectType, objectId, action, actorId, notificationContent,
-                isSystemGenerated);
-
+                isSystemGenerated);                
+                
         insertIntoNotificationMapper(userIds, generatedNotificationId);
         return generatedNotificationId;
     }
 
     private List<Long> insertIntoNotificationMapper(List<Long> userIds, Long generatedNotificationId) {
         List<Long> mappedIds = new ArrayList<>();
+        
         for (Long userId : userIds) {
             AppUser appUser = this.appUserRepository.findById(userId).get();
             NotificationMapper notificationMapper = new NotificationMapper(
                     this.notificationGeneratorReadRepositoryWrapper.findById(generatedNotificationId), appUser, false,
                     getCurrentDateTime());
+        
             this.notificationMapperWritePlatformService.create(notificationMapper);
             mappedIds.add(notificationMapper.getId());
         }
@@ -91,10 +93,11 @@ public class NotificationWritePlatformServiceImpl implements NotificationWritePl
     }
 
     private Long insertIntoNotificationMapper(Long userId, Long generatedNotificationId) {
+        
         AppUser appUser = this.appUserRepository.findById(userId).orElse(null);
         NotificationMapper notificationMapper = new NotificationMapper(
                 this.notificationGeneratorReadRepositoryWrapper.findById(generatedNotificationId), appUser, false, getCurrentDateTime());
-
+        
         this.notificationMapperWritePlatformService.create(notificationMapper);
         return notificationMapper.getId();
     }

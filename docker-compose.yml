@@ -21,19 +21,24 @@
 version: '3.7'
 services:
   # Backend service
-  fineractmysql:
-    image: mysql:5.7
+  postgresql:
+    image: postgres:13.3
     volumes:
-      - ./fineract-db/docker:/docker-entrypoint-initdb.d:Z,ro
+      - ./fineract-db/docker/postgresql:/docker-entrypoint-initdb.d/:Z,ro
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: skdcnwauicn2ucnaecasdsajdnizucawencascdca
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      FINERACT_DB_USER: postgres
+      FINERACT_DB_PASS: password
+      FINERACT_TENANTS_DB_NAME: fineract_tenants
+      FINERACT_TENANT_DEFAULT_DB_NAME: fineract_default
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "--password=skdcnwauicn2ucnaecasdsajdnizucawencascdca" ]
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "root" ]
       timeout: 10s
       retries: 10
     ports:
-      - "3306:3306"
+      - "5432:5432"
   fineract-server:
     build:
       context: .
@@ -41,21 +46,21 @@ services:
     ports:
       - 8443:8443
     depends_on:
-      - fineractmysql
+      - postgresql
     environment:
       - spring_profiles_active=basicauth,kafkaEnabled
-      - DRIVERCLASS_NAME=org.drizzle.jdbc.DrizzleDriver
+      - DRIVERCLASS_NAME=org.postgresql.Driver
       - PROTOCOL=jdbc
       - node_id=1
-      - SUB_PROTOCOL=mysql:thin
-      - fineract_tenants_driver=org.drizzle.jdbc.DrizzleDriver
-      - fineract_tenants_url=jdbc:mysql:thin://fineractmysql:3306/fineract_tenants
-      - fineract_tenants_uid=root
-      - fineract_tenants_pwd=skdcnwauicn2ucnaecasdsajdnizucawencascdca
-      - FINERACT_DEFAULT_TENANTDB_HOSTNAME=fineractmysql
-      - FINERACT_DEFAULT_TENANTDB_PORT=3306
-      - FINERACT_DEFAULT_TENANTDB_UID=root
-      - FINERACT_DEFAULT_TENANTDB_PWD=skdcnwauicn2ucnaecasdsajdnizucawencascdca
+      - SUB_PROTOCOL=postgresql
+      - fineract_tenants_driver=org.postgresql.Driver
+      - fineract_tenants_url=jdbc:postgresql://postgresql:5432/fineract_tenants
+      - fineract_tenants_uid=postgres
+      - fineract_tenants_pwd=password
+      - FINERACT_DEFAULT_TENANTDB_HOSTNAME=postgresql
+      - FINERACT_DEFAULT_TENANTDB_PORT=5432
+      - FINERACT_DEFAULT_TENANTDB_UID=postgres
+      - FINERACT_DEFAULT_TENANTDB_PWD=password
       - FINERACT_DEFAULT_TENANTDB_CONN_PARAMS=
       - FINERACT_DEFAULT_KAFKA_BOOTSTRAP_ADDRESS=192.168.80.135:29092
       - FINERACT_DEFAULT_KAFKA_SSL_ENABLED=false
@@ -75,9 +80,3 @@ services:
     ports:
       - 9090:80
 
-
-# https://issues.apache.org/jira/browse/FINERACT-762
-# To use an altnerative JDBC driver (which is faster, but not allowed to be default in Apache distribution)
-# replace org.drizzle.jdbc.DrizzleDriver with com.mysql.jdbc.Driver in DRIVERCLASS_NAME and fineract_tenants_driver,
-# and remove ":thin:" from SUB_PROTOCOL and fineract_tenants_url.  Note that the mysql-connector-java-*.jar is already
-# bundled in the container by the Dockerfile, but just not used by default.

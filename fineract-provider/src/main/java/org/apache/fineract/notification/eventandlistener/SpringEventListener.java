@@ -79,9 +79,15 @@ public class SpringEventListener implements ApplicationListener<SpringEvent> {
             userIds.remove(appUserId);
         }
 
-        notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
-                notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
-                notificationData.isSystemGenerated());
+        if(!userIds.isEmpty()){
+            notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
+            notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
+            notificationData.isSystemGenerated());
+        } else {
+            notificationWritePlatformService.notify(appUserId, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
+            notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
+            notificationData.isSystemGenerated());
+        }
 
     }
 

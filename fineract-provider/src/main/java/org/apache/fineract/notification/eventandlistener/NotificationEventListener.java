@@ -76,14 +76,19 @@ public class NotificationEventListener implements SessionAwareMessageListener {
             }
         }
 
-        // Remove the comment in order hide the notification for the user which is logged
-        /***
-         * if (userIds.contains(appUserId)) { userIds.remove(appUserId); }
-         ***/
-
-        notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
-                notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
-                notificationData.isSystemGenerated());
+        // Remove the comment in order hide the notification for the user which is logged        
+        if (userIds.contains(appUserId)) 
+            userIds.remove(appUserId);
+        
+        if(!userIds.isEmpty()){
+            notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
+            notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
+            notificationData.isSystemGenerated());
+        } else {
+            notificationWritePlatformService.notify(appUserId, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
+            notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
+            notificationData.isSystemGenerated());
+        }
     }
 
     @Autowired

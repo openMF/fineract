@@ -88,14 +88,14 @@ public class PortfolioCommandSourceWritePlatformServiceImpl implements Portfolio
         validateIsUpdateAllowed();
 
         final String json = wrapper.getJson();
-        LOG.info("json " + json);
+        LOG.debug("json " + json);
         CommandProcessingResult result = null;
         JsonCommand command = null;
         Integer numberOfRetries = 0;
         Integer maxNumberOfRetries = ThreadLocalContextUtil.getTenant().getConnection().getMaxRetriesOnDeadlock();
         Integer maxIntervalBetweenRetries = ThreadLocalContextUtil.getTenant().getConnection().getMaxIntervalBetweenRetries();
         final JsonElement parsedCommand = this.fromApiJsonHelper.parse(json);
-        LOG.info("parsedCommand " + parsedCommand);
+        LOG.debug("parsedCommand " + parsedCommand);
         command = JsonCommand.from(json, parsedCommand, this.fromApiJsonHelper, wrapper.getEntityName(), wrapper.getEntityId(),
                 wrapper.getSubentityId(), wrapper.getGroupId(), wrapper.getClientId(), wrapper.getLoanId(), wrapper.getSavingsId(),
                 wrapper.getTransactionId(), wrapper.getHref(), wrapper.getProductId(), wrapper.getCreditBureauId(),
@@ -103,15 +103,15 @@ public class PortfolioCommandSourceWritePlatformServiceImpl implements Portfolio
         while (numberOfRetries <= maxNumberOfRetries) {
             try {
                 result = this.processAndLogCommandService.processAndLogCommand(wrapper, command, isApprovedByChecker);
-                LOG.info("result " + result);
+                LOG.debug("result " + result);
                 numberOfRetries = maxNumberOfRetries + 1;
             } catch (CannotAcquireLockException | ObjectOptimisticLockingFailureException exception) {
-                LOG.info("The following command {} has been retried  {} time(s)", command.json(), numberOfRetries);
+                LOG.error("The following command {} has been retried  {} time(s)", command.json(), numberOfRetries);
                 /***
                  * Fail if the transaction has been retired for maxNumberOfRetries
                  **/
                 if (numberOfRetries >= maxNumberOfRetries) {
-                    LOG.warn("The following command {} has been retried for the max allowed attempts of {} and will be rolled back",
+                    LOG.error("The following command {} has been retried for the max allowed attempts of {} and will be rolled back",
                             command.json(), numberOfRetries);
                     throw (exception);
                 }
@@ -156,14 +156,14 @@ public class PortfolioCommandSourceWritePlatformServiceImpl implements Portfolio
         validateIsUpdateAllowed();
 
         final String json = wrapper.getJson();
-        LOG.info("kafka json " + json);
+        LOG.debug("kafka json " + json);
         CommandProcessingResult result = null;
         JsonCommand command = null;
         Integer numberOfRetries = 0;
         Integer maxNumberOfRetries = ThreadLocalContextUtil.getTenant().getConnection().getMaxRetriesOnDeadlock();
         Integer maxIntervalBetweenRetries = ThreadLocalContextUtil.getTenant().getConnection().getMaxIntervalBetweenRetries();
         final JsonElement parsedCommand = this.fromApiJsonHelper.parse(json);
-        LOG.info("kafka parsedCommand " + parsedCommand);
+        LOG.debug("kafka parsedCommand " + parsedCommand);
         command = JsonCommand.from(json, parsedCommand, this.fromApiJsonHelper, wrapper.getEntityName(), wrapper.getEntityId(),
                 wrapper.getSubentityId(), wrapper.getGroupId(), wrapper.getClientId(), wrapper.getLoanId(), wrapper.getSavingsId(),
                 wrapper.getTransactionId(), wrapper.getHref(), wrapper.getProductId(), wrapper.getCreditBureauId(),
@@ -171,15 +171,15 @@ public class PortfolioCommandSourceWritePlatformServiceImpl implements Portfolio
         while (numberOfRetries <= maxNumberOfRetries) {
             try {
                 result = this.processAndLogCommandService.processAndLogCommandKafka(wrapper, command, isApprovedByChecker);
-                LOG.info("kafka result " + result);
+                LOG.debug("kafka result " + result);
                 numberOfRetries = maxNumberOfRetries + 1;
             } catch (CannotAcquireLockException | ObjectOptimisticLockingFailureException exception) {
-                LOG.info("The following command {} has been retried  {} time(s)", command.json(), numberOfRetries);
+                LOG.error("The following command {} has been retried  {} time(s)", command.json(), numberOfRetries);
                 /***
                  * Fail if the transaction has been retired for maxNumberOfRetries
                  **/
                 if (numberOfRetries >= maxNumberOfRetries) {
-                    LOG.warn("The following command {} has been retried for the max allowed attempts of {} and will be rolled back",
+                    LOG.error("The following command {} has been retried for the max allowed attempts of {} and will be rolled back",
                             command.json(), numberOfRetries);
                     throw (exception);
                 }
