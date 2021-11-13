@@ -30,7 +30,7 @@ RUN ./gradlew --no-daemon -q -x rat -x compileTestJava -x test bootJar
 # allowing implementations to switch the driver used by changing start-up parameters (for both tenants and each tenant DB)
 # The commented out lines in the docker-compose.yml illustrate how to do this.
 WORKDIR /fineract/libs
-RUN wget -q https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.23/mysql-connector-java-8.0.23.jar
+RUN wget -q https://jdbc.postgresql.org/download/postgresql-42.3.1.jar
 
 # =========================================
 
