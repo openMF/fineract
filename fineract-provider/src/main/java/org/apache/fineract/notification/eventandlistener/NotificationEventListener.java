@@ -76,7 +76,6 @@ public class NotificationEventListener implements SessionAwareMessageListener {
             }
         }
 
-        // Remove the comment in order hide the notification for the user which is logged        
         if (userIds.contains(appUserId)) 
             userIds.remove(appUserId);
         

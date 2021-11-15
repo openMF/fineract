@@ -21,19 +21,6 @@
 version: '3.7'
 services:
   # Backend service
-  fineractmysql:
-    image: mysql:5.7
-    volumes:
-      - ./fineract-db/docker/mysql:/docker-entrypoint-initdb.d:Z,ro
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: skdcnwauicn2ucnaecasdsajdnizucawencascdca
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "--password=skdcnwauicn2ucnaecasdsajdnizucawencascdca" ]
-      timeout: 10s
-      retries: 10
-    ports:
-      - "3306:3306"
   fineract-server:
     build:
       context: .
