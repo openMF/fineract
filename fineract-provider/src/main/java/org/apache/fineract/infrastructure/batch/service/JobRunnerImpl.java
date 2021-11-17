@@ -56,12 +56,14 @@ public class JobRunnerImpl implements JobRunner {
     private final ConfigurationDomainService configurationDomainService;
 
     // Steps
+    private final Step batchForLoansStep;
+    private final Step autopayLoansStep;
     private final Step applyChargeForOverdueLoansStep;
 
     @Autowired
     public JobRunnerImpl(@Qualifier("batchJobLauncher") JobLauncher jobLauncher, final JobBuilderFactory jobBuilderFactory,
             JobExecutionListener jobExecutionListener, final ConfigurationDomainService configurationDomainService,
-            final Step applyChargeForOverdueLoansStep) {
+            final Step batchForLoansStep, final Step applyChargeForOverdueLoansStep, final Step autopayLoansStep) {
         this.jobLauncher = jobLauncher;
         this.jobBuilderFactory = jobBuilderFactory;
         this.jobExecutionListener = jobExecutionListener;
@@ -69,6 +71,8 @@ public class JobRunnerImpl implements JobRunner {
         this.configurationDomainService = configurationDomainService;
         // Steps
         this.applyChargeForOverdueLoansStep = applyChargeForOverdueLoansStep;
+        this.batchForLoansStep = batchForLoansStep;
+        this.autopayLoansStep = autopayLoansStep;
     }
 
     @Override
@@ -76,6 +80,23 @@ public class JobRunnerImpl implements JobRunner {
         LOG.debug("runJob ===== " + jobId);
         try {
             JobExecution jobExecution = this.jobLauncher.run(getJobById(jobId), getJobParametersById(jobId));
+            return jobExecution.getJobInstance().getId();
+        } catch (JobExecutionAlreadyRunningException e) {
+            throw new JobAlreadyRunningException();
+        } catch (JobInstanceAlreadyCompleteException e) {
+            throw new JobAlreadyCompletedException();
+        } catch (JobParametersInvalidException e) {
+            throw new JobParameterInvalidException();
+        } catch (JobRestartException e) {
+            throw new JobIllegalRestartException();
+        }
+    }
+
+    @Override
+    public Long runJob(final Long jobId, final String parameter) {
+        LOG.debug("runJob ===== " + jobId);
+        try {
+            JobExecution jobExecution = this.jobLauncher.run(getJobById(jobId), getJobParametersById(jobId, parameter));
             return jobExecution.getJobInstance().getId();
         } catch (JobExecutionAlreadyRunningException e) {
             throw new JobAlreadyRunningException();
@@ -97,22 +118,32 @@ public class JobRunnerImpl implements JobRunner {
     private Job getJobById(final Long jobId) {
         switch (jobId.intValue()) {
             case 1:
-                return jobBuilderFactory.get("applyChargeForOverdueLoansJob").listener(jobExecutionListener)
-                        .flow(applyChargeForOverdueLoansStep).end().build();
+                return jobBuilderFactory.get("endOfDayJob").listener(jobExecutionListener).flow(batchForLoansStep).end().build();
+            case 2:
+                return jobBuilderFactory.get("endOfDayBatchJob").listener(jobExecutionListener).flow(autopayLoansStep)
+                        .next(applyChargeForOverdueLoansStep).end().build();
             default:
                 return null;
         }
     }
 
     private JobParameters getJobParametersById(final Long jobId) {
+        return getJobParametersById(jobId, null);
+    }
+
+    private JobParameters getJobParametersById(final Long jobId, final String parameter) {
         final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_ID, tenant.getTenantIdentifier());
         jobParametersBuilder.addString("instance_id", UUID.randomUUID().toString(), true);
+        if (parameter != null) {
+            LOG.debug("Adding parameters {}", parameter);
+            jobParametersBuilder.addString(BatchConstants.JOB_PARAM_PARAMETER, parameter);
+        }
 
         switch (jobId.intValue()) {
-            //
-            case 1:
+            // Batch Loan First Step
+            case 2:
                 final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();
                 final Boolean backdatePenalties = this.configurationDomainService.isBackdatePenaltiesEnabled();
                 LOG.debug("    penaltyWaitPeriodValue: " + penaltyWaitPeriodValue);

@@ -4,5 +4,7 @@ public interface JobRunner {
 
     Long runJob(final Long jobId);
 
+    Long runJob(final Long jobId, final String parameter);
+
     void stopJob(final Long jobId);
 }

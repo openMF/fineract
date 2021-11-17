@@ -16,28 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.infrastructure.batch.config;
+package org.apache.fineract.infrastructure.batch.processor;
 
-import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.batch.item.ItemProcessor;
 
-public class BatchDestinations {
+public class BatchLoansProcessor implements ItemProcessor<Long, Long> {
 
-    private Properties batchJobProperties;
+    public static final Logger LOG = LoggerFactory.getLogger(BatchLoansProcessor.class);
 
-    public BatchDestinations(Properties batchJobProperties) {
-        this.batchJobProperties = batchJobProperties;
+    @Override
+    public Long process(Long item) throws Exception {
+        LOG.debug("processing: " + item);
+        return item;
     }
-
-    public String getConcurrencyDestination() {
-        return batchJobProperties.getProperty("fineract.batch.jobs.listeners.concurrency");
-    }
-
-    public String getBatchLoansDestination() {
-        return batchJobProperties.getProperty("fineract.batch.jobs.queues.batchLoans");
-    }
-
-    public String getApplyChargeToOverdueLoanDestination() {
-        return batchJobProperties.getProperty("fineract.batch.jobs.queues.applyChargeToOverdueLoans");
-    }
-
 }

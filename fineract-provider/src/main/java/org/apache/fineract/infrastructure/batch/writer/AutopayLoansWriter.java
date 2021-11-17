@@ -19,11 +19,7 @@
 package org.apache.fineract.infrastructure.batch.writer;
 
 import com.google.gson.Gson;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Session;
@@ -33,7 +29,6 @@ import org.apache.fineract.infrastructure.batch.config.BatchDestinations;
 import org.apache.fineract.infrastructure.batch.data.MessageData;
 import org.apache.fineract.infrastructure.core.utils.ProfileUtils;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
-import org.apache.fineract.portfolio.loanaccount.loanschedule.data.OverdueLoanScheduleData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
@@ -46,9 +41,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 
-public class ApplyChargeForOverdueLoansWriter implements ItemWriter<OverdueLoanScheduleData>, StepExecutionListener {
+public class AutopayLoansWriter implements ItemWriter<Long>, StepExecutionListener {
 
-    public static final Logger LOG = LoggerFactory.getLogger(ApplyChargeForOverdueLoansWriter.class);
+    public static final Logger LOG = LoggerFactory.getLogger(AutopayLoansWriter.class);
 
     @Autowired
     private JmsTemplate jmsTemplate;
@@ -67,7 +62,7 @@ public class ApplyChargeForOverdueLoansWriter implements ItemWriter<OverdueLoanS
     private final Gson gson = new Gson();
     private ProfileUtils profileUtils;
 
-    public ApplyChargeForOverdueLoansWriter(BatchDestinations batchDestinations) {
+    public AutopayLoansWriter(BatchDestinations batchDestinations) {
         super();
         this.queueName = batchDestinations.getApplyChargeToOverdueLoanDestination();
         LOG.debug("Batch jobs communication using with the queue {}", queueName);
@@ -88,29 +83,11 @@ public class ApplyChargeForOverdueLoansWriter implements ItemWriter<OverdueLoanS
     }
 
     @Override
-    public void write(List<? extends OverdueLoanScheduleData> items) throws Exception {
-        Map<Long, Collection<OverdueLoanScheduleData>> overdueScheduleData = groupByLoanId(items);
-        for (final Long loanId : overdueScheduleData.keySet()) {
-            MessageData messageData = new MessageData(batchJobName, tenantIdentifier, loanId, overdueScheduleData.get(loanId));
-            sendMessage(messageData);
-        }
+    public void write(List<? extends Long> items) throws Exception {
+
     }
 
-    private Map<Long, Collection<OverdueLoanScheduleData>> groupByLoanId(List<? extends OverdueLoanScheduleData> items) {
-        final Map<Long, Collection<OverdueLoanScheduleData>> overdueScheduleData = new HashMap<>();
-        for (final OverdueLoanScheduleData overdueInstallment : items) {
-            if (overdueScheduleData.containsKey(overdueInstallment.getLoanId())) {
-                overdueScheduleData.get(overdueInstallment.getLoanId()).add(overdueInstallment);
-            } else {
-                Collection<OverdueLoanScheduleData> loanData = new ArrayList<>();
-                loanData.add(overdueInstallment);
-                overdueScheduleData.put(overdueInstallment.getLoanId(), loanData);
-            }
-        }
-        return overdueScheduleData;
-    }
-
-    private void sendMessage(final MessageData message) {
+    public void sendMessage(final MessageData message) {
         final String payload = gson.toJson(message);
         LOG.debug("Sending: {}", payload);
         // ActiveMQ

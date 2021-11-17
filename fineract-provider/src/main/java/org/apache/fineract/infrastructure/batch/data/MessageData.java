@@ -18,12 +18,8 @@
  */
 package org.apache.fineract.infrastructure.batch.data;
 
-import java.io.Serializable;
+public class MessageData extends MessageBaseData {
 
-public class MessageData implements Serializable {
-
-    private String tenantIdentifier;
-    private String batchJobName;
     private Long entityId;
     private Object payload;
 
@@ -34,28 +30,12 @@ public class MessageData implements Serializable {
         this.payload = payload;
     }
 
-    public String getBatchJobName() {
-        return batchJobName;
-    }
-
-    public void setBatchJobName(String batchJobName) {
-        this.batchJobName = batchJobName;
-    }
-
     public Long getEntityId() {
         return entityId;
     }
 
     public void setEntityId(Long entityId) {
         this.entityId = entityId;
-    }
-
-    public String getTenantIdentifier() {
-        return tenantIdentifier;
-    }
-
-    public void setTenantIdentifier(String tenantIdentifier) {
-        this.tenantIdentifier = tenantIdentifier;
     }
 
     public Object getPayload() {

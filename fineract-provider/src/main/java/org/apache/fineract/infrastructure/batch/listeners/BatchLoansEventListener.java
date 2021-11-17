@@ -18,18 +18,16 @@
  */
 package org.apache.fineract.infrastructure.batch.listeners;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import org.apache.fineract.infrastructure.batch.data.MessageData;
+import org.apache.fineract.infrastructure.batch.config.BatchConstants;
+import org.apache.fineract.infrastructure.batch.data.MessageBatchData;
+import org.apache.fineract.infrastructure.batch.service.JobRunnerImpl;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
-import org.apache.fineract.portfolio.loanaccount.loanschedule.data.OverdueLoanScheduleData;
-import org.apache.fineract.portfolio.loanaccount.service.LoanWritePlatformService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,44 +38,32 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Profile({ JobConstants.SPRING_BATCH_WORKER_PROFILE_NAME, JobConstants.SPRING_MESSAGING_PROFILE_NAME })
-public class ApplyChargeForOverdueLoanEventListener extends BatchEventBaseListener implements SessionAwareMessageListener<Message> {
+public class BatchLoansEventListener extends BatchEventBaseListener implements SessionAwareMessageListener<Message> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ApplyChargeForOverdueLoanEventListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BatchLoansEventListener.class);
 
     @Autowired
-    private LoanWritePlatformService loanWritePlatformService;
+    private JobRunnerImpl jobRunnerImpl;
 
     @Override
-    @JmsListener(destination = "#{@batchDestinations.ApplyChargeToOverdueLoanDestination}", concurrency = "1-5")
+    @JmsListener(destination = "#{@batchDestinations.BatchLoansDestination}", concurrency = "#{@batchDestinations.ConcurrencyDestination}")
     public void onMessage(Message message, Session session) {
         try {
-            LOG.debug("onMessage ==== " + message.getJMSMessageID());
+            LOG.info("onMessage ==== " + message.getJMSMessageID());
             if (message instanceof TextMessage) {
                 String payload = ((TextMessage) message).getText();
-                MessageData messageData = gson.fromJson(payload, MessageData.class);
+                MessageBatchData messageData = gson.fromJson(payload, MessageBatchData.class);
                 if (messageData != null) {
-                    final Long loanId = messageData.getEntityId();
                     final FineractPlatformTenant tenant = setTenant(messageData.getTenantIdentifier());
                     LOG.debug("Tenant {}", tenant.getName());
 
-                    Collection<OverdueLoanScheduleData> loanData = getItems(messageData.getPayload());
-                    LOG.debug("Job {} to Loan Id {} : {} items", messageData.getBatchJobName(), loanId, loanData.size());
-                    this.loanWritePlatformService.applyOverdueChargesForLoan(loanId, loanData);
+                    List<Long> loanIds = getLoanIds(messageData.getEntityIds());
+                    LOG.info("Job {} : {} loans", messageData.getBatchJobName(), loanIds.size());
+                    jobRunnerImpl.runJob(BatchConstants.BATCH_JOB_PROCESS_ID, gson.toJson(loanIds));
                 }
             }
         } catch (JMSException e) {
             LOG.error(e.getMessage());
         }
-    }
-
-    public List<OverdueLoanScheduleData> getItems(Object obj) {
-        List<OverdueLoanScheduleData> items = new ArrayList<OverdueLoanScheduleData>();
-        if (obj instanceof List) {
-            for (int i = 0; i < ((List<?>) obj).size(); i++) {
-                Object item = ((List<?>) obj).get(i);
-                items.add(gson.fromJson(gson.toJson(item), OverdueLoanScheduleData.class));
-            }
-        }
-        return items;
     }
 }

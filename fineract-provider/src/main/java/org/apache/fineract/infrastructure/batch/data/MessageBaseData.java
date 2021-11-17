@@ -16,28 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.infrastructure.batch.config;
+package org.apache.fineract.infrastructure.batch.data;
 
-import java.util.Properties;
+import java.io.Serializable;
 
-public class BatchDestinations {
+public class MessageBaseData implements Serializable {
 
-    private Properties batchJobProperties;
+    protected String tenantIdentifier;
+    protected String batchJobName;
 
-    public BatchDestinations(Properties batchJobProperties) {
-        this.batchJobProperties = batchJobProperties;
+    public String getBatchJobName() {
+        return batchJobName;
     }
 
-    public String getConcurrencyDestination() {
-        return batchJobProperties.getProperty("fineract.batch.jobs.listeners.concurrency");
+    public void setBatchJobName(String batchJobName) {
+        this.batchJobName = batchJobName;
     }
 
-    public String getBatchLoansDestination() {
-        return batchJobProperties.getProperty("fineract.batch.jobs.queues.batchLoans");
+    public String getTenantIdentifier() {
+        return tenantIdentifier;
     }
 
-    public String getApplyChargeToOverdueLoanDestination() {
-        return batchJobProperties.getProperty("fineract.batch.jobs.queues.applyChargeToOverdueLoans");
+    public void setTenantIdentifier(String tenantIdentifier) {
+        this.tenantIdentifier = tenantIdentifier;
     }
-
 }

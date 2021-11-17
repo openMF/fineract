@@ -16,28 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.infrastructure.batch.config;
+package org.apache.fineract.infrastructure.batch.data;
 
-import java.util.Properties;
+import java.util.List;
 
-public class BatchDestinations {
+public class MessageBatchData extends MessageBaseData {
 
-    private Properties batchJobProperties;
+    private List<Long> entityIds;
 
-    public BatchDestinations(Properties batchJobProperties) {
-        this.batchJobProperties = batchJobProperties;
+    public MessageBatchData(String batchJobName, String tenantIdentifier, List<Long> entityIds) {
+        this.batchJobName = batchJobName;
+        this.tenantIdentifier = tenantIdentifier;
+        this.entityIds = entityIds;
     }
 
-    public String getConcurrencyDestination() {
-        return batchJobProperties.getProperty("fineract.batch.jobs.listeners.concurrency");
+    public List<Long> getEntityIds() {
+        return entityIds;
     }
 
-    public String getBatchLoansDestination() {
-        return batchJobProperties.getProperty("fineract.batch.jobs.queues.batchLoans");
+    public void setEntityIds(List<Long> entityIds) {
+        this.entityIds = entityIds;
     }
-
-    public String getApplyChargeToOverdueLoanDestination() {
-        return batchJobProperties.getProperty("fineract.batch.jobs.queues.applyChargeToOverdueLoans");
-    }
-
 }

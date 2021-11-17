@@ -127,6 +127,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -1524,13 +1525,40 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
     }
 
     @Override
+    public Collection<OverdueLoanScheduleData> retrieveOverdueInstallmentsByLoanId(Long penaltyWaitPeriod, Boolean backdatePenalties,
+            List<Long> loanIds) {
+        final MusoniOverdueLoanScheduleMapper rm = new MusoniOverdueLoanScheduleMapper();
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("loanIds", loanIds);
+        parameters.addValue("penaltyWaitPeriod", penaltyWaitPeriod);
+        NamedParameterJdbcTemplate template = new NamedParameterJdbcTemplate(this.jdbcTemplate.getDataSource());
+
+        final StringBuilder sqlBuilder = new StringBuilder(400);
+        sqlBuilder.append("select ").append(rm.schema())
+                .append(" where ls.loan_id in (:loanIds) and DATE_SUB(CURDATE(),INTERVAL :penaltyWaitPeriod DAY) > ls.duedate ")
+                .append(" and ls.completed_derived <> 1 and mc.charge_applies_to_enum = 1 ")
+                .append(" and ls.recalculated_interest_component <> 1 ")
+                .append(" and mc.charge_time_enum = 9 and ml.loan_status_id = 300 ");
+
+        if (backdatePenalties) {
+            return template.query(sqlBuilder.toString(), parameters, rm);
+        }
+        // Only apply for duedate = yesterday (so that we don't apply
+        // penalties on the duedate itself)
+        sqlBuilder.append(" and ls.duedate >= DATE_SUB(CURDATE(),INTERVAL (? + 1) DAY)");
+
+        return this.jdbcTemplate.query(sqlBuilder.toString(), rm, new Object[] { loanIds, penaltyWaitPeriod, penaltyWaitPeriod });
+    }
+
+    @Override
     public Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueInstallments(final Long penaltyWaitPeriod,
             final Boolean backdatePenalties) {
         final MusoniOverdueLoanScheduleMapper rm = new MusoniOverdueLoanScheduleMapper();
 
         final StringBuilder sqlBuilder = new StringBuilder(400);
         sqlBuilder.append("select ").append(rm.schema()).append(" where DATE_SUB(CURDATE(),INTERVAL ? DAY) > ls.duedate ")
-                .append(" and ls.completed_derived <> 1 and mc.charge_applies_to_enum =1 ")
+                .append(" and ls.completed_derived <> 1 and mc.charge_applies_to_enum = 1 ")
                 .append(" and ls.recalculated_interest_component <> 1 ")
                 .append(" and mc.charge_time_enum = 9 and ml.loan_status_id = 300 ");
 
@@ -1830,6 +1858,14 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                 null, null, null, null, outstandingLoanBalance, unrecognizedIncomePortion, false);
         loanTransactionData.setWriteOffReasonOptions(writeOffReasonOptions);
         return loanTransactionData;
+    }
+
+    @Override
+    public Collection<Long> fetchLoansForBatchProcess() {
+        StringBuilder sqlBuilder = new StringBuilder();
+        sqlBuilder.append("SELECT ml.id FROM m_loan ml ");
+        sqlBuilder.append(" WHERE ml.loan_status_id = ? ");
+        return this.jdbcTemplate.queryForList(sqlBuilder.toString(), Long.class, new Object[] { LoanStatus.ACTIVE.getValue() });
     }
 
     @Override
