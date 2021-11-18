@@ -1,0 +1,11 @@
+write test suite
+    run 0 create 100k writes, allow DB to opt itself (postgres command run manually) -> Run Step0
+
+    Run Analyze for DB (if postgres)
+
+    run 1 create 6 millions on empty DB -> Run Step1
+    run 2 create 6 millions -> Run Step1 again
+    run 3 close 10 million  -> Run Step2
+
+
+The test were using 300 concurrent virtual users!

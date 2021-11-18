@@ -21,7 +21,7 @@ class Loan {
          |  "dateFormat": "dd MMMM yyyy"
          |}""".stripMargin)).asJson
 
-  val autopayInstruction = http("Create autopay instruction")
+  val createAutopay = http("Create Autopay")
     .post(s"/datatables/dt_autopay_details/$${loanId}?genericResultSet=true")
     .body(StringBody(
       s"""{
@@ -50,15 +50,19 @@ class Loan {
          |    ],
          |}""".stripMargin)).asJson
 
-  val getDetails = http("Get loan details")
+  val retrieveLoan = http("Retrieve Loan")
     .get(s"/loans/$${loanId}")
     .body(StringBody(s"""{}""")).asJson
 
-  val getLoansOfCustomer = http("Get loans of customer")
+  val retrieveLoansByCustomer = http("Retrieve Loans by Customer")
     .get(s"/clients/$${clientId}/accounts")
     .body(StringBody(s"""{}""")).asJson
 
-  val getTransactions = http("Get loan transactions")
+  val retrieveRepaymentSummary = http("Retrieve Repayment Summary")
+    .get(s"/loans/$${loanId}?associations=repaymentSchedule")
+    .body(StringBody(s"""{}""")).asJson
+
+  val retrieveTransactionsByLoan = http("Retrieve Transactions by Loan")
     .get(s"/loans/$${loanId}?associations=transactions")
     .body(StringBody(s"""{}""")).asJson
 
@@ -87,7 +91,7 @@ class Loan {
          |}""".stripMargin))
     .asJson
 
-  val createAndApproveInBatch = http("Batch - submit, approve loan application")
+  val createAndApproveInBatch = http("Create Loan (Create and Approved)")
     .post("/batches")
     .body(StringBody(
       s"""[
@@ -168,12 +172,22 @@ class Loan {
          |]""".stripMargin)).asJson
     .check(jsonPath("$..body").transform(string => parseJson(string.replaceAll("""\\""", "")).findValue("loanId")).exists.saveAs("loanId"))
 
-  val repayment = http("Repayment for loan")
+  val repayment = http("Repayment for Loan")
     .post(s"/loans/$${loanId}/transactions?command=repayment")
     .body(StringBody(
       s"""{
          |  "paymentTypeId": 2,
-         |  "transactionAmount": 200,
+         |  "transactionAmount": 500,
+         |  "transactionDate": "$${paymentDate}",
+         |  "locale": "en",
+         |  "dateFormat": "dd MMMM yyyy"
+         |}""".stripMargin)).asJson
+    .check(jsonPath("$..resourceId").exists.saveAs("transactionId"))
+
+  val close = http("Close loan")
+    .post(s"/loans/$${loanId}/transactions?command=close")
+    .body(StringBody(
+      s"""{
          |  "transactionDate": "$${paymentDate}",
          |  "locale": "en",
          |  "dateFormat": "dd MMMM yyyy"

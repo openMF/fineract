@@ -1,4 +1,4 @@
-package fineract.scenarios
+package fineract.playground
 
 import fineract.{Client, Loan}
 import io.gatling.core.Predef._
@@ -45,7 +45,7 @@ class LoadTest extends Simulation {
         .exec(client.create)
         .exec(loan.createAndApproveInBatch)
         .exec(loan.disburse)
-        .exec(loan.autopayInstruction)
+        .exec(loan.createAutopay)
     }
 
   setUp(scn.inject(
