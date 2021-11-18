@@ -44,19 +44,22 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.DefaultBatchConfigurer;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.explore.support.JobExplorerFactoryBean;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.support.SimpleJobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.repository.support.JobRepositoryFactoryBean;
-import org.springframework.batch.support.transaction.ResourcelessTransactionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Scope;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -71,23 +74,72 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     private StepBuilderFactory stepBuilderFactory;
 
     private final Properties batchJobProperties;
-    private DataSource dataSource;
     private String databaseType;
+    private RoutingDataSourceService routingDataSourceService;
+    private PlatformTransactionManager transactionManager;
+    private JobRepository jobRepository;
+    private JobLauncher jobLauncher;
+    private JobExplorer jobExplorer;
 
     @Autowired
     private ApplicationContext context;
 
     public BatchConfiguration(RoutingDataSourceService tomcatJdbcDataSourcePerTenantService) {
-        setDataSource(tomcatJdbcDataSourcePerTenantService.retrieveDataSource());
+        routingDataSourceService = tomcatJdbcDataSourcePerTenantService;
         batchJobProperties = PropertyUtils.loadYamlProperties(BatchConstants.BATCH_PROPERTIES_FILE);
+        this.databaseType = getDatabaseType(getDataSource());
+    }
+
+
+
+
+    @Override public JobRepository getJobRepository() {
+        return jobRepository;
+    }
+
+    @Override public PlatformTransactionManager getTransactionManager() {
+        return transactionManager;
+    }
+
+    @Override public JobLauncher getJobLauncher() {
+        return jobLauncher;
+    }
+
+    @Override public JobExplorer getJobExplorer() {
+        return jobExplorer;
+    }
+
+    @Override public void initialize() {
+        super.initialize();
     }
 
     @Override
-    public void setDataSource(DataSource dataSource) {
-        super.setDataSource(dataSource);
-        this.dataSource = dataSource;
-        this.databaseType = getDatabaseType(dataSource);
-        LOG.info("Database Type for Batch configuration {}", databaseType);
+    protected JobLauncher createJobLauncher() throws Exception {
+        SimpleJobLauncher jobLauncher = new SimpleJobLauncher();
+        jobLauncher.setJobRepository(jobRepository);
+        jobLauncher.afterPropertiesSet();
+        return jobLauncher;
+    }
+
+    DataSource getDataSource() {
+        return routingDataSourceService.retrieveDataSource();
+    }
+
+    @Override
+    protected JobRepository createJobRepository() throws Exception {
+        JobRepositoryFactoryBean factory = new JobRepositoryFactoryBean();
+        factory.setDataSource(getDataSource());
+        factory.setTransactionManager(getTransactionManager());
+        factory.afterPropertiesSet();
+        return factory.getObject();
+    }
+
+    @Override
+    protected JobExplorer createJobExplorer() throws Exception {
+        JobExplorerFactoryBean jobExplorerFactoryBean = new JobExplorerFactoryBean();
+        jobExplorerFactoryBean.setDataSource(this.getDataSource());
+        jobExplorerFactoryBean.afterPropertiesSet();
+        return jobExplorerFactoryBean.getObject();
     }
 
     private String getDatabaseType(DataSource dataSource) {
@@ -112,12 +164,13 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     }
 
     @Bean
+    @Scope("prototype")
     public JobRepository batchJobRepository() {
         try {
             JobRepositoryFactoryBean factory = new JobRepositoryFactoryBean();
             factory.setDatabaseType(databaseType);
             factory.setTransactionManager(getTxManager());
-            factory.setDataSource(this.dataSource);
+            factory.setDataSource(this.getDataSource());
             factory.afterPropertiesSet();
             return factory.getObject();
         } catch (Exception e) {
@@ -127,11 +180,13 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     }
 
     @Bean
+    @Scope("prototype")
     public PlatformTransactionManager getTxManager() {
-        return new ResourcelessTransactionManager();
+        return new DataSourceTransactionManager(getDataSource());
     }
 
     @Bean(name = "batchJobLauncher")
+    @Scope("prototype")
     public JobLauncher batchJobLauncher() {
         try {
             ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
