@@ -18,8 +18,6 @@
  */
 package org.apache.fineract.infrastructure.batch.config;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Properties;
 import javax.sql.DataSource;
 import org.apache.fineract.infrastructure.batch.listeners.ItemCounterListener;
@@ -33,6 +31,7 @@ import org.apache.fineract.infrastructure.batch.writer.ApplyChargeForOverdueLoan
 import org.apache.fineract.infrastructure.batch.writer.AutopayLoansWriter;
 import org.apache.fineract.infrastructure.batch.writer.BatchLoansWriter;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSourceService;
+import org.apache.fineract.infrastructure.core.utils.DatabaseUtils;
 import org.apache.fineract.infrastructure.core.utils.PropertyUtils;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.OverdueLoanScheduleData;
@@ -54,11 +53,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.ConnectionCallback;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
+
 
 @Profile(JobConstants.SPRING_BATCH_PROFILE_NAME)
 @Configuration
@@ -86,24 +83,8 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     public void setDataSource(DataSource dataSource) {
         super.setDataSource(dataSource);
         this.dataSource = dataSource;
-        this.databaseType = getDatabaseType(dataSource);
+        this.databaseType = DatabaseUtils.getDatabaseType(dataSource);
         LOG.info("Database Type for Batch configuration {}", databaseType);
-    }
-
-    private String getDatabaseType(DataSource dataSource) {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        return jdbcTemplate.execute(new ConnectionCallback<String>() {
-
-            @Override
-            public String doInConnection(Connection connection) throws SQLException, DataAccessException {
-                String databaseType = connection.getMetaData().getDatabaseProductName();
-                // Special cases
-                if (databaseType.equals("PostgreSQL"))
-                    databaseType = "POSTGRES";
-                LOG.info("Database {} Type configuration {}", connection.getCatalog(), databaseType);
-                return databaseType;
-            }
-        });
     }
 
     @Bean
