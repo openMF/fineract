@@ -55,7 +55,7 @@ public class KafkaConfiguration {
     public KafkaAdmin kafkaAdmin() {
         Map<String, Object> configs = new HashMap<>();
         configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
-        if (sslEnabled) {
+        if (Boolean.TRUE.equals(sslEnabled)) {
             configs.put("security.protocol", securityProtocol);
         }
         LOG.info(configs.toString());
