@@ -38,13 +38,13 @@ import org.springframework.kafka.support.serializer.JsonDeserializer;
 @Configuration
 public class KafkaConsumerConfiguration {
 
-    @Value("${environment.FINERACT_DEFAULT_KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")
+    @Value("${FINERACT_DEFAULT_KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")
     private String bootstrapAddress;
 
-    @Value("${environment.FINERACT_DEFAULT_KAFKA_SECURITY_PROTOCOL:TEXTPLAIN}")
+    @Value("${FINERACT_DEFAULT_KAFKA_SECURITY_PROTOCOL:TEXTPLAIN}")
     private String securityProtocol;
 
-    @Value("${environment.FINERACT_DEFAULT_KAFKA_SSL_ENABLED:false}")
+    @Value("${FINERACT_DEFAULT_KAFKA_SSL_ENABLED:false}")
     private String sslEnabled;
 
     @Value(value = "${kafka.group.id:fineract}")
