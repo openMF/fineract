@@ -109,6 +109,7 @@ public class ClientCreationEventListener implements SessionAwareMessageListener 
 
             final FineractPlatformTenant tenant = this.basicAuthTenantDetailsService
                     .loadTenantById(clientCreationData.getTenantIdentifier(), false);
+            
             ThreadLocalContextUtil.setTenant(tenant);
 
             Long appUserId = clientCreationData.getActor();
