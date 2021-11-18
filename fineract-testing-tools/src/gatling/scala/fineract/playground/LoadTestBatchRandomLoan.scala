@@ -1,29 +1,26 @@
-package fineract.scenarios
+package fineract.playground
 
 import fineract.{Client, Loan}
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 
-import java.util.UUID
 import scala.util.Random
 
-class LoadTestBatch extends Simulation {
+class LoadTestBatchRandomLoan extends Simulation {
 
   val randomNumbers = Iterator.continually(
-    Map("additionalDisbursementChance" -> (Random.nextInt(4) + 1),
-      "loanNoRandomNumber" -> (Random.nextInt(16) + 5),
-      "uuid" -> UUID.randomUUID().toString(),
-      "incrementalNumber" -> (prefixForName+increaseNumber())
+    // Random number will be accessible in session under variable "OrderRef"
+    Map("codeValueRandomNumber" -> Random.nextInt(38),
+      "additionalDisbursementChance" -> (Random.nextInt(4) + 1),
     )
   )
 
-  def increaseNumber( ) : Int = {
-    startingNumber = startingNumber+1
-    startingNumber
-  }
+  def additionalDisbursementChance() = Random.nextInt(4) + 1
+
+  def loanNoRandomNumber() = Random.nextInt(16) + 5
 
   val httpProtocol = http
-    .baseUrl("https://fineract-write.ps.mifos.io/fineract-provider/api/v1")
+    .baseUrl("https://default.ps.mifos.io/fineract-provider/api/v1") // Here is the root for all relative URLs
     .inferHtmlResources()
     .acceptHeader("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
     .acceptEncodingHeader("gzip, deflate, br")
@@ -36,8 +33,6 @@ class LoadTestBatch extends Simulation {
   var productId = 1
   var date = "20 October 2021"
   var paymentDate = "25 October 2021"
-  var prefixForName = ""
-  var startingNumber = 1
 
   //Processes
   var client = new Client()
@@ -45,24 +40,19 @@ class LoadTestBatch extends Simulation {
 
 
   val scn = scenario("Create client, create loan, approve, disburse")
-    .repeat(1000) {
+    .repeat(1) {
       feed(randomNumbers)
         .exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
-        .exec(client.create)
-//        .exec(client.createTaxDetails)
-//        .exec(client.createCustomerTagDetails)
-//        .repeat(10) {
-//          exec(loan.createAndApproveInBatch)
-//            .exec(loan.disburse)
-//            .exec(loan.autopayInstruction)
-//            .doIfEquals("${additionalDisbursementChance}",4) {
-//              exec(client.updateCustomerTagDetails)
-//            }
-//        }
+        .exec(client.createClientInBatch)
+        .repeat(loanNoRandomNumber()) {
+          exec(loan.createAndApproveInBatch)
+            .exec(loan.disburse)
+            .exec(loan.createAutopay)
+        }
     }
 
   setUp(scn.inject(
-    atOnceUsers( 1)
+    constantConcurrentUsers(1) during (60)
   ).protocols(httpProtocol))
 }
 
