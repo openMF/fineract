@@ -19,6 +19,7 @@
 package org.apache.fineract.infrastructure.batch.config;
 
 import java.util.Properties;
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import org.apache.fineract.infrastructure.batch.listeners.ItemCounterListener;
 import org.apache.fineract.infrastructure.batch.processor.ApplyChargeForOverdueLoansProcessor;
@@ -40,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.BatchConfigurationException;
 import org.springframework.batch.core.configuration.annotation.DefaultBatchConfigurer;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
@@ -87,24 +89,37 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         this.databaseType = DatabaseUtils.getDatabaseType(getDataSource());
     }
 
-    @Override public JobRepository getJobRepository() {
+
+    @PostConstruct
+    @Override
+    public void initialize() {
+        try {
+            this.jobRepository = createJobRepository();
+            this.jobExplorer = createJobExplorer();
+            this.jobLauncher = createJobLauncher();
+        } catch (Exception e) {
+            throw new BatchConfigurationException(e);
+        }
+    }
+
+    @Override
+    public JobRepository getJobRepository() {
         return jobRepository;
     }
 
-    @Override public PlatformTransactionManager getTransactionManager() {
+    @Override
+    public PlatformTransactionManager getTransactionManager() {
         return transactionManager;
     }
 
-    @Override public JobLauncher getJobLauncher() {
+    @Override
+    public JobLauncher getJobLauncher() {
         return jobLauncher;
     }
 
-    @Override public JobExplorer getJobExplorer() {
+    @Override
+    public JobExplorer getJobExplorer() {
         return jobExplorer;
-    }
-
-    @Override public void initialize() {
-        super.initialize();
     }
 
     @Override
@@ -115,7 +130,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         return jobLauncher;
     }
 
-    DataSource getDataSource() {
+    protected DataSource getDataSource() {
         return routingDataSourceService.retrieveDataSource();
     }
 
@@ -285,7 +300,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     public Step applyChargeForOverdueLoansStep(ApplyChargeForOverdueLoansReader applyChargeForOverdueLoansReader,
             ApplyChargeForOverdueLoansProcessor applyChargeForOverdueLoansProcessor,
             ApplyChargeForOverdueLoansWriter applyChargeForOverdueLoansWriter) {
-        final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size","1000"));
+        final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
         Step step = stepBuilderFactory.get("applyChargeForOverdueLoansStep")
                 .<OverdueLoanScheduleData, OverdueLoanScheduleData>chunk(chunkSize).reader(applyChargeForOverdueLoansReader)
                 .processor(applyChargeForOverdueLoansProcessor).writer(applyChargeForOverdueLoansWriter).listener(itemCounterListener())
