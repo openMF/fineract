@@ -1,22 +1,4 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-package fineract.scenarios
+package fineract.playground
 
 import fineract.{Client, Loan}
 import io.gatling.core.Predef._
@@ -45,7 +27,7 @@ class LoadTestBatch extends Simulation {
     .inferHtmlResources()
     .acceptHeader("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
     .acceptEncodingHeader("gzip, deflate, br")
-    .header("Fineract-Platform-TenantId", "default")
+    .header("Fineract-Platform-TenantId", "default3")
     .authorizationHeader("Basic bWlmb3M6cGFzc3dvcmQ=")
     .upgradeInsecureRequestsHeader("1")
     .contentTypeHeader("application/json")
@@ -63,24 +45,24 @@ class LoadTestBatch extends Simulation {
 
 
   val scn = scenario("Create client, create loan, approve, disburse")
-    .repeat(1000) {
+    .repeat(4) {
       feed(randomNumbers)
         .exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
         .exec(client.create)
 //        .exec(client.createTaxDetails)
 //        .exec(client.createCustomerTagDetails)
-//        .repeat(10) {
-//          exec(loan.createAndApproveInBatch)
-//            .exec(loan.disburse)
-//            .exec(loan.autopayInstruction)
+        .repeat(10) {
+          exec(loan.createAndApproveInBatch)
+            .exec(loan.disburse)
+            .exec(loan.createAutopay)
 //            .doIfEquals("${additionalDisbursementChance}",4) {
 //              exec(client.updateCustomerTagDetails)
 //            }
-//        }
+        }
     }
 
   setUp(scn.inject(
-    atOnceUsers( 1)
+    atOnceUsers( 200)
   ).protocols(httpProtocol))
 }
 

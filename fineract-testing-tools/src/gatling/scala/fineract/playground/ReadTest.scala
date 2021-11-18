@@ -1,22 +1,4 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements. See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-package fineract.scenarios
+package fineract.playground
 
 import fineract.{Client, Loan}
 import io.gatling.core.Predef._
@@ -62,16 +44,16 @@ class ReadTest extends Simulation {
   val scn = scenario("Read loan details")
     .feed(randomNumbers)
     .exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
-    .exec(loan.getDetails)
+    .exec(loan.retrieveLoan)
 
   val scn2 = scenario("Read loan transactions")
     .repeat(50) {
       feed(randomNumbers).exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
-        .exec(loan.getTransactions)
+        .exec(loan.retrieveTransactionsByLoan)
     }
   val scn3 = scenario("Read loans of customer")
     .feed(randomNumbers).exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
-    .exec(loan.getLoansOfCustomer)
+    .exec(loan.retrieveLoansByCustomer)
 
   val scn4 = scenario("Calculate loan schedules")
     .repeat(100) {

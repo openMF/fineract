@@ -135,7 +135,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
                 sql = sql + " and gl_j.id in (select t1.id from (select t2.account_id, max(t2.id) as id from "
                         + "(select id, max(entry_date) as entry_date, account_id from acc_gl_journal_entry where is_running_balance_calculated = "
                         + sqlResolver.formatBoolValue(true)
-                        + "group by account_id desc, id) t3 inner join acc_gl_journal_entry t2 on t2.account_id = t3.account_id and t2.entry_date = t3.entry_date "
+                        + " group by account_id desc, id) t3 inner join acc_gl_journal_entry t2 on t2.account_id = t3.account_id and t2.entry_date = t3.entry_date "
                         + "group by t2.account_id desc) t1)";
             }
         }
@@ -183,7 +183,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
                     sql += " and ";
                 }
 
-                sql += " manual_journal_entries_allowed = " + sqlResolver.formatBoolValue(manualTransactionsAllowed);
+                sql += " manual_journal_entries_allowed = " + sqlResolver.formatBoolValue(manualTransactionsAllowed)+" ";
                 firstWhereConditionAdded = true;
             }
             if (disabled != null) {
@@ -191,7 +191,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
                     sql += " and ";
                 }
 
-                sql += " disabled = " + sqlResolver.formatBoolValue(disabled);
+                sql += " disabled = " + sqlResolver.formatBoolValue(disabled)+" ";
 
                 firstWhereConditionAdded = true;
             }
@@ -211,7 +211,7 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
             final StringBuilder sql = new StringBuilder();
             sql.append("select ").append(rm.schema());
             if (associationParametersData.isRunningBalanceRequired()) {
-                sql.append(" and gl_j.is_running_balance_calculated = " + sqlResolver.formatBoolValue(true));
+                sql.append(" and gl_j.is_running_balance_calculated = " + sqlResolver.formatBoolValue(true)+" ");
             }
             sql.append("where gl.id = ?");
             if (associationParametersData.isRunningBalanceRequired()) {
