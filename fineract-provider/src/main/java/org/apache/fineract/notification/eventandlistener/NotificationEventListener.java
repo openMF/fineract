@@ -53,7 +53,7 @@ public class NotificationEventListener implements SessionAwareMessageListener {
 
     private CountDownLatch notificationDataLatch = new CountDownLatch(1);
 
-    @KafkaListener(topics = "${notification.data.topic.name}", containerFactory = "notificationDataKafkaListenerContainerFactory")
+    @KafkaListener(topics = "${notification.data.topic.name}", containerFactory = "notificationDataKafkaListenerContainerFactory",autoStartup = "${FINERACT_DEFAULT_KAFKA_ENABLED:false}")
     public void notificationDataListener(NotificationData notificationData) {
         LOG.info("Received notificationData message=[" + notificationData + "]");
         this.notificationDataLatch.countDown();

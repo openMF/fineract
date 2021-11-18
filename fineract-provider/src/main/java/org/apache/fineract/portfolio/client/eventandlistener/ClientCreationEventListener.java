@@ -53,7 +53,7 @@ public class ClientCreationEventListener implements SessionAwareMessageListener 
 
     private CountDownLatch clienCreationLatch = new CountDownLatch(1);
 
-    @KafkaListener(topics = "${notification.data.topic.name}", containerFactory = "notificationDataKafkaListenerContainerFactory")
+    @KafkaListener(topics = "${notification.data.topic.name}", containerFactory = "notificationDataKafkaListenerContainerFactory",autoStartup = "${FINERACT_DEFAULT_KAFKA_ENABLED:false}")
     public void notificationDataListener(NotificationData clientCreationData) {
         LOG.info("LISTENER KAFKA"+ clientCreationData.toString());
         this.clienCreationLatch.countDown();

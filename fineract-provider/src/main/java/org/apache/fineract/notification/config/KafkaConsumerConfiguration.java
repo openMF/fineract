@@ -38,16 +38,16 @@ import org.springframework.kafka.support.serializer.JsonDeserializer;
 @Configuration
 public class KafkaConsumerConfiguration {
 
-    @Value("${fineract.kafka.bootstrapAddress:#{environment.FINERACT_DEFAULT_KAFKA_BOOTSTRAP_ADDRESS}}")
+    @Value("${environment.FINERACT_DEFAULT_KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")
     private String bootstrapAddress;
 
-    @Value("${fineract.kafka.securityProtocol:#{environment.FINERACT_DEFAULT_KAFKA_SECURITY_PROTOCOL}}")
+    @Value("${environment.FINERACT_DEFAULT_KAFKA_SECURITY_PROTOCOL:TEXTPLAIN}")
     private String securityProtocol;
 
-    @Value("${fineract.kafka.sslEnabled:#{environment.FINERACT_DEFAULT_KAFKA_SSL_ENABLED}}")
-    private Boolean sslEnabled;
+    @Value("${environment.FINERACT_DEFAULT_KAFKA_SSL_ENABLED:false}")
+    private String sslEnabled;
 
-    @Value(value = "${kafka.group.id}")
+    @Value(value = "${kafka.group.id:fineract}")
     private String groupId;
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaConsumerConfiguration.class);
@@ -60,7 +60,7 @@ public class KafkaConsumerConfiguration {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG, "20971520");
         props.put(ConsumerConfig.FETCH_MAX_BYTES_CONFIG, "20971520");
-        if (sslEnabled) {
+        if (Boolean.valueOf(sslEnabled)) {
             props.put("security.protocol", securityProtocol);
         }
         LOG.info(props.toString());
@@ -77,7 +77,7 @@ public class KafkaConsumerConfiguration {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        if (sslEnabled) {
+        if (Boolean.valueOf(sslEnabled)) {
             props.put("security.protocol", securityProtocol);
         }
         LOG.info(props.toString());

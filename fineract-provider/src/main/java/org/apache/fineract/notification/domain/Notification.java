@@ -26,8 +26,6 @@ import javax.persistence.TemporalType;
 import java.util.Date;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
 
-import java.util.Date;
-
 @Entity
 @Table(name = "notification_generator")
 public class Notification extends AbstractPersistableCustom {

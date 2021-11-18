@@ -48,7 +48,7 @@ services:
     depends_on:
       - postgresql
     environment:
-      - spring_profiles_active=basicauth,kafkaEnabled
+      - spring_profiles_active=basicauth
       - DRIVERCLASS_NAME=org.postgresql.Driver
       - PROTOCOL=jdbc
       - node_id=1
