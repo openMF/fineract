@@ -33,5 +33,7 @@ databaseChangeLog:
   - includeAll:
       context: sampledata
       path: sql/liquibase/changelog/core/sampledata
+  - include:
+      file: sql/liquibase/changelog/springbatch/001_springbatch-create.yaml
 
 

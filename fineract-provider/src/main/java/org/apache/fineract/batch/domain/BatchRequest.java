@@ -27,7 +27,7 @@ import java.util.Set;
  *
  * @author Rishabh Shukla
  *
- * @see org.apache.fineract.batch.api.BatchApiResource
+ * @see org.apache.fineract.batch.api.BatchesApiResource
  * @see Header
  */
 public class BatchRequest {

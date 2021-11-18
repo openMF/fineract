@@ -28,11 +28,15 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 import javax.annotation.PostConstruct;
+import org.apache.fineract.infrastructure.batch.config.BatchConfiguration;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.exception.PlatformInternalServerException;
+import org.apache.fineract.infrastructure.core.service.RoutingDataSourceServiceFactory;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
+import org.apache.fineract.infrastructure.core.utils.ProfileUtils;
 import org.apache.fineract.infrastructure.jobs.annotation.CronMethodParser;
 import org.apache.fineract.infrastructure.jobs.annotation.CronMethodParser.ClassMethodNamesPair;
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.infrastructure.jobs.domain.JobParameter;
 import org.apache.fineract.infrastructure.jobs.domain.JobParameterRepository;
 import org.apache.fineract.infrastructure.jobs.domain.ScheduledJobDetail;
@@ -84,10 +88,15 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
     private JobParameterRepository jobParameterRepository;
 
     private final HashMap<String, Scheduler> schedulers = new HashMap<>(4);
+    private ProfileUtils profileUtils;
+
+    @Autowired
+    private RoutingDataSourceServiceFactory dataSourceServiceFactory;
 
     @Autowired
     public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
+        this.profileUtils = new ProfileUtils(applicationContext.getEnvironment());
     }
 
     @Autowired
@@ -120,64 +129,69 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
         this.jobParameterRepository = jobParameterRepository;
     }
 
-    @Value("${fineract.config.readonly:false}")
-    private boolean readOnlyInstance;
-
     @Value("${node_id:1}")
     private String nodeId;
 
     @PostConstruct
     public void loadAllJobs() {
-        if (readOnlyInstance) {
-            return;
-        }
         final List<FineractPlatformTenant> allTenants = this.tenantDetailsService.findAllTenants();
         for (final FineractPlatformTenant tenant : allTenants) {
             ThreadLocalContextUtil.setTenant(tenant);
-            final List<ScheduledJobDetail> scheduledJobDetails = this.schedularWritePlatformService.retrieveAllJobs(nodeId);
-            for (final ScheduledJobDetail jobDetails : scheduledJobDetails) {
-                scheduleJob(jobDetails);
-                jobDetails.updateTriggerMisfired(false);
-                this.schedularWritePlatformService.saveOrUpdate(jobDetails);
-            }
-            final SchedulerDetail schedulerDetail = this.schedularWritePlatformService.retriveSchedulerDetail();
-            if (schedulerDetail.isResetSchedulerOnBootup()) {
-                schedulerDetail.updateSuspendedState(false);
-                this.schedularWritePlatformService.updateSchedulerDetail(schedulerDetail);
+            LOG.info("Tenant {} : {}", tenant.getName(), tenant.getTenantIdentifier());
+
+            if (profileUtils.isActiveProfile(JobConstants.QUARTZ_BATCH_PROFILE_NAME)) {
+                final List<ScheduledJobDetail> scheduledJobDetails = this.schedularWritePlatformService.retrieveAllJobs(nodeId);
+
+                for (final ScheduledJobDetail jobDetails : scheduledJobDetails) {
+                    scheduleJob(jobDetails);
+                    jobDetails.updateTriggerMisfired(false);
+                    this.schedularWritePlatformService.saveOrUpdate(jobDetails);
+                }
+                final SchedulerDetail schedulerDetail = this.schedularWritePlatformService.retriveSchedulerDetail();
+                if (schedulerDetail.isResetSchedulerOnBootup()) {
+                    schedulerDetail.updateSuspendedState(false);
+                    this.schedularWritePlatformService.updateSchedulerDetail(schedulerDetail);
+                }
+
+            } else if (profileUtils.isActiveProfile(JobConstants.SPRING_BATCH_PROFILE_NAME)) {
+                LOG.info("Database for tenant {} : {}", tenant.getName(), tenant.getTenantIdentifier());
+                final BatchConfiguration batchConfiguration = new BatchConfiguration(
+                        this.dataSourceServiceFactory.determineDataSourceService());
             }
         }
     }
 
     public void executeJob(final ScheduledJobDetail scheduledJobDetail, String triggerType) {
-        try {
-            final JobDataMap jobDataMap = new JobDataMap();
-            if (triggerType == null) {
-                triggerType = SchedulerServiceConstants.TRIGGER_TYPE_APPLICATION;
-            }
-            jobDataMap.put(SchedulerServiceConstants.TRIGGER_TYPE_REFERENCE, triggerType);
-            jobDataMap.put(SchedulerServiceConstants.TENANT_IDENTIFIER, ThreadLocalContextUtil.getTenant().getTenantIdentifier());
-            final String key = scheduledJobDetail.getJobKey();
-            final JobKey jobKey = constructJobKey(key);
-            final String schedulerName = getSchedulerName(scheduledJobDetail);
-            final Scheduler scheduler = this.schedulers.get(schedulerName);
-            if (scheduler == null || !scheduler.checkExists(jobKey)) {
-                final JobDetail jobDetail = createJobDetail(scheduledJobDetail);
-                final String tempSchedulerName = "temp" + scheduledJobDetail.getId();
-                final Scheduler tempScheduler = createScheduler(tempSchedulerName, 1, schedulerJobListener, schedulerStopListener);
-                tempScheduler.addJob(jobDetail, true);
-                jobDataMap.put(SchedulerServiceConstants.SCHEDULER_NAME, tempSchedulerName);
-                this.schedulers.put(tempSchedulerName, tempScheduler);
-                tempScheduler.triggerJob(jobDetail.getKey(), jobDataMap);
-            } else {
-                scheduler.triggerJob(jobKey, jobDataMap);
-            }
+        if (profileUtils.isActiveProfile(JobConstants.QUARTZ_BATCH_PROFILE_NAME)) {
+            try {
+                final JobDataMap jobDataMap = new JobDataMap();
+                if (triggerType == null) {
+                    triggerType = SchedulerServiceConstants.TRIGGER_TYPE_APPLICATION;
+                }
+                jobDataMap.put(SchedulerServiceConstants.TRIGGER_TYPE_REFERENCE, triggerType);
+                jobDataMap.put(SchedulerServiceConstants.TENANT_IDENTIFIER, ThreadLocalContextUtil.getTenant().getTenantIdentifier());
+                final String key = scheduledJobDetail.getJobKey();
+                final JobKey jobKey = constructJobKey(key);
+                final String schedulerName = getSchedulerName(scheduledJobDetail);
+                final Scheduler scheduler = this.schedulers.get(schedulerName);
+                if (scheduler == null || !scheduler.checkExists(jobKey)) {
+                    final JobDetail jobDetail = createJobDetail(scheduledJobDetail);
+                    final String tempSchedulerName = "temp" + scheduledJobDetail.getId();
+                    final Scheduler tempScheduler = createScheduler(tempSchedulerName, 1, schedulerJobListener, schedulerStopListener);
+                    tempScheduler.addJob(jobDetail, true);
+                    jobDataMap.put(SchedulerServiceConstants.SCHEDULER_NAME, tempSchedulerName);
+                    this.schedulers.put(tempSchedulerName, tempScheduler);
+                    tempScheduler.triggerJob(jobDetail.getKey(), jobDataMap);
+                } else {
+                    scheduler.triggerJob(jobKey, jobDataMap);
+                }
 
-        } catch (final Exception e) {
-            final String msg = "Job execution failed for job with id:" + scheduledJobDetail.getId();
-            LOG.error("{}", msg, e);
-            throw new PlatformInternalServerException("error.msg.sheduler.job.execution.failed", msg, scheduledJobDetail.getId(), e);
+            } catch (final Exception e) {
+                final String msg = "Job execution failed for job with id:" + scheduledJobDetail.getId();
+                LOG.error("{}", msg, e);
+                throw new PlatformInternalServerException("error.msg.sheduler.job.execution.failed", msg, scheduledJobDetail.getId(), e);
+            }
         }
-
     }
 
     public void rescheduleJob(final ScheduledJobDetail scheduledJobDetail) {
@@ -325,17 +339,21 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
     }
 
     private Scheduler getScheduler(final ScheduledJobDetail scheduledJobDetail) throws Exception {
-        final String schedulername = getSchedulerName(scheduledJobDetail);
-        Scheduler scheduler = this.schedulers.get(schedulername);
-        if (scheduler == null) {
-            int noOfThreads = SchedulerServiceConstants.DEFAULT_THREAD_COUNT;
-            if (scheduledJobDetail.getSchedulerGroup() > 0) {
-                noOfThreads = SchedulerServiceConstants.GROUP_THREAD_COUNT;
+        if (profileUtils.isActiveProfile(JobConstants.QUARTZ_BATCH_PROFILE_NAME)) {
+            final String schedulername = getSchedulerName(scheduledJobDetail);
+            Scheduler scheduler = this.schedulers.get(schedulername);
+            if (scheduler == null) {
+                int noOfThreads = SchedulerServiceConstants.DEFAULT_THREAD_COUNT;
+                if (scheduledJobDetail.getSchedulerGroup() > 0) {
+                    noOfThreads = SchedulerServiceConstants.GROUP_THREAD_COUNT;
+                }
+                scheduler = createScheduler(schedulername, noOfThreads, schedulerJobListener);
+                this.schedulers.put(schedulername, scheduler);
             }
-            scheduler = createScheduler(schedulername, noOfThreads, schedulerJobListener);
-            this.schedulers.put(schedulername, scheduler);
+            return scheduler;
+        } else {
+            return null;
         }
-        return scheduler;
     }
 
     @Override
@@ -359,17 +377,21 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
     }
 
     private Scheduler createScheduler(final String name, final int noOfThreads, JobListener... jobListeners) throws Exception {
-        final SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
-        schedulerFactoryBean.setSchedulerName(name);
-        schedulerFactoryBean.setGlobalJobListeners(jobListeners);
-        final TriggerListener[] globalTriggerListeners = { globalSchedulerTriggerListener };
-        schedulerFactoryBean.setGlobalTriggerListeners(globalTriggerListeners);
-        final Properties quartzProperties = new Properties();
-        quartzProperties.put(SchedulerFactoryBean.PROP_THREAD_COUNT, Integer.toString(noOfThreads));
-        schedulerFactoryBean.setQuartzProperties(quartzProperties);
-        schedulerFactoryBean.afterPropertiesSet();
-        schedulerFactoryBean.start();
-        return schedulerFactoryBean.getScheduler();
+        if (profileUtils.isActiveProfile(JobConstants.QUARTZ_BATCH_PROFILE_NAME)) {
+            final SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
+            schedulerFactoryBean.setAutoStartup(profileUtils.isActiveProfile(JobConstants.QUARTZ_BATCH_PROFILE_NAME));
+            schedulerFactoryBean.setSchedulerName(name);
+            schedulerFactoryBean.setGlobalJobListeners(jobListeners);
+            final TriggerListener[] globalTriggerListeners = { globalSchedulerTriggerListener };
+            schedulerFactoryBean.setGlobalTriggerListeners(globalTriggerListeners);
+            final Properties quartzProperties = new Properties();
+            quartzProperties.put(SchedulerFactoryBean.PROP_THREAD_COUNT, Integer.toString(noOfThreads));
+            schedulerFactoryBean.setQuartzProperties(quartzProperties);
+            schedulerFactoryBean.afterPropertiesSet();
+            schedulerFactoryBean.start();
+            return schedulerFactoryBean.getScheduler();
+        }
+        return null;
     }
 
     private JobDetail createJobDetail(final ScheduledJobDetail scheduledJobDetail) throws Exception {

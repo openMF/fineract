@@ -91,6 +91,9 @@ public interface LoanReadPlatformService {
      */
     Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueInstallments(Long penaltyWaitPeriod, Boolean backdatePenalties);
 
+    Collection<OverdueLoanScheduleData> retrieveOverdueInstallmentsByLoanId(Long penaltyWaitPeriod, Boolean backdatePenalties,
+            List<Long> loanIds);
+
     Integer retriveLoanCounter(Long groupId, Integer loanType, Long productId);
 
     Integer retriveLoanCounter(Long clientId, Long productId);
@@ -108,6 +111,8 @@ public interface LoanReadPlatformService {
     LoanTransactionData retrieveLoanWriteoffTemplate(Long loanId);
 
     Collection<LoanScheduleAccrualData> retrivePeriodicAccrualData(LocalDate tillDate);
+
+    Collection<Long> fetchLoansForBatchProcess();
 
     Collection<Long> fetchLoansForInterestRecalculation();
 

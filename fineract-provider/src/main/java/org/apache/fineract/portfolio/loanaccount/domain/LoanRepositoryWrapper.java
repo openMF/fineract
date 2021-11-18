@@ -227,6 +227,10 @@ public class LoanRepositoryWrapper {
         return this.repository.findActiveLoansLoanProductIdsByGroup(groupId, loanStatus);
     }
 
+    public List<Long> findActiveLoans(@Param("loanStatus") Integer loanStatus) {
+        return this.repository.findActiveLoans(loanStatus);
+    }
+
     public boolean doNonClosedLoanAccountsExistForClient(@Param("clientId") Long clientId) {
         return this.repository.doNonClosedLoanAccountsExistForClient(clientId);
     }

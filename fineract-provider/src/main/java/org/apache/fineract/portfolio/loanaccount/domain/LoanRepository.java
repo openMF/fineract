@@ -60,6 +60,8 @@ public interface LoanRepository extends JpaRepository<Loan, Long>, JpaSpecificat
     String FIND_ACTIVE_LOANS_PRODUCT_IDS_BY_CLIENT = "Select loan.loanProduct.id from Loan loan where "
             + "loan.client.id = :clientId and loan.loanStatus = :loanStatus group by loan.loanProduct.id";
 
+    String FIND_ACTIVE_LOANS = "Select loan.id from Loan loan where loan.loanStatus = :loanStatus";
+
     String FIND_ACTIVE_LOANS_PRODUCT_IDS_BY_GROUP = "Select loan.loanProduct.id from Loan loan where "
             + "loan.group.id = :groupId and loan.loanStatus = :loanStatus and loan.client.id is NULL group by loan.loanProduct.id";
 
@@ -143,6 +145,9 @@ public interface LoanRepository extends JpaRepository<Loan, Long>, JpaSpecificat
 
     @Query(FIND_ACTIVE_LOANS_PRODUCT_IDS_BY_GROUP)
     List<Long> findActiveLoansLoanProductIdsByGroup(@Param("groupId") Long groupId, @Param("loanStatus") Integer loanStatus);
+
+    @Query(FIND_ACTIVE_LOANS)
+    List<Long> findActiveLoans(@Param("loanStatus") Integer loanStatus);
 
     @Query(DOES_CLIENT_HAVE_NON_CLOSED_LOANS)
     boolean doNonClosedLoanAccountsExistForClient(@Param("clientId") Long clientId);

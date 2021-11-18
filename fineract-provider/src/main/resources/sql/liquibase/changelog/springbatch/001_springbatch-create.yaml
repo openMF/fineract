@@ -1,0 +1,383 @@
+databaseChangeLog:
+- changeSet:
+    id: 001_springbatch-create-1
+    author: fineract (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: JOB_EXECUTION_ID
+            type: BIGINT
+        - column:
+            name: VERSION
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: JOB_INSTANCE_ID
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: CREATE_TIME
+            type: datetime
+        - column:
+            name: START_TIME
+            type: datetime
+        - column:
+            name: END_TIME
+            type: datetime
+        - column:
+            name: STATUS
+            type: VARCHAR(10)
+        - column:
+            name: EXIT_CODE
+            type: VARCHAR(2500)
+        - column:
+            name: EXIT_MESSAGE
+            type: VARCHAR(2500)
+        - column:
+            name: LAST_UPDATED
+            type: datetime
+        - column:
+            name: JOB_CONFIGURATION_LOCATION
+            type: VARCHAR(2500)
+        tableName: batch_job_execution
+- changeSet:
+    id: 001_springbatch-create-2
+    author: fineract (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: JOB_EXECUTION_ID
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: SHORT_CONTEXT
+            type: VARCHAR(2500)
+        - column:
+            name: SERIALIZED_CONTEXT
+            type: TEXT
+        tableName: batch_job_execution_context
+- changeSet:
+    id: 001_springbatch-create-3
+    author: fineract (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: JOB_EXECUTION_ID
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: TYPE_CD
+            type: VARCHAR(6)
+        - column:
+            constraints:
+              nullable: false
+            name: KEY_NAME
+            type: VARCHAR(100)
+        - column:
+            name: STRING_VAL
+            type: VARCHAR(250)
+        - column:
+            name: DATE_VAL
+            type: datetime
+        - column:
+            name: LONG_VAL
+            type: BIGINT
+        - column:
+            name: DOUBLE_VAL
+            type: DOUBLE
+        - column:
+            constraints:
+              nullable: false
+            name: IDENTIFYING
+            type: CHAR(1)
+        tableName: batch_job_execution_params
+- changeSet:
+    id: 001_springbatch-create-4
+    author: fineract (generated)
+    changes:
+    -  createSequence:  
+        cacheSize:  371717  
+        catalogName:  cat  
+        cycle:  false  
+        dataType:  int  
+        incrementBy:  1  
+        maxValue:  2147483647  
+        minValue:  1  
+        sequenceName:  batch_job_execution_seq  
+        startValue:  1
+- changeSet:
+    id: 001_springbatch-create-5
+    author: fineract (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: JOB_INSTANCE_ID
+            type: BIGINT
+        - column:
+            name: VERSION
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: JOB_NAME
+            type: VARCHAR(100)
+        - column:
+            constraints:
+              nullable: false
+            name: JOB_KEY
+            type: VARCHAR(32)
+        tableName: batch_job_instance
+- changeSet:
+    id: 001_springbatch-create-6
+    author: fineract (generated)
+    changes:
+    -  createSequence:  
+        cacheSize:  371717  
+        catalogName:  cat  
+        cycle:  false  
+        dataType:  int  
+        incrementBy:  1  
+        maxValue:  2147483647  
+        minValue:  1  
+        sequenceName:  batch_job_seq  
+        startValue:  1
+- changeSet:
+    id: 001_springbatch-create-7
+    author: fineract (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: STEP_EXECUTION_ID
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: VERSION
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: STEP_NAME
+            type: VARCHAR(100)
+        - column:
+            constraints:
+              nullable: false
+            name: JOB_EXECUTION_ID
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: START_TIME
+            type: datetime
+        - column:
+            name: END_TIME
+            type: datetime
+        - column:
+            name: STATUS
+            type: VARCHAR(10)
+        - column:
+            name: COMMIT_COUNT
+            type: BIGINT
+        - column:
+            name: READ_COUNT
+            type: BIGINT
+        - column:
+            name: FILTER_COUNT
+            type: BIGINT
+        - column:
+            name: WRITE_COUNT
+            type: BIGINT
+        - column:
+            name: READ_SKIP_COUNT
+            type: BIGINT
+        - column:
+            name: WRITE_SKIP_COUNT
+            type: BIGINT
+        - column:
+            name: PROCESS_SKIP_COUNT
+            type: BIGINT
+        - column:
+            name: ROLLBACK_COUNT
+            type: BIGINT
+        - column:
+            name: EXIT_CODE
+            type: VARCHAR(2500)
+        - column:
+            name: EXIT_MESSAGE
+            type: VARCHAR(2500)
+        - column:
+            name: LAST_UPDATED
+            type: datetime
+        tableName: batch_step_execution
+- changeSet:
+    id: 001_springbatch-create-8
+    author: fineract (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+              primaryKey: true
+            name: STEP_EXECUTION_ID
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: SHORT_CONTEXT
+            type: VARCHAR(2500)
+        - column:
+            name: SERIALIZED_CONTEXT
+            type: TEXT
+        tableName: batch_step_execution_context
+- changeSet:
+    id: 001_springbatch-create-9
+    author: fineract (generated)
+    changes:
+    -  createSequence:  
+        cacheSize:  371717  
+        catalogName:  cat  
+        cycle:  false  
+        dataType:  int  
+        incrementBy:  1  
+        maxValue:  2147483647  
+        minValue:  1  
+        sequenceName:  batch_step_execution_seq  
+        startValue:  1
+- changeSet:
+    id: 001_springbatch-create-10
+    author: fineract (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: JOB_NAME, JOB_KEY
+        constraintName: JOB_INST_UN
+        tableName: batch_job_instance
+- changeSet:
+    id: 001_springbatch-create-11
+    author: fineract (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: JOB_EXECUTION_ID
+        indexName: JOB_EXEC_PARAMS_FK
+        tableName: batch_job_execution_params
+- changeSet:
+    id: 001_springbatch-create-12
+    author: fineract (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: JOB_EXECUTION_ID
+        indexName: JOB_EXEC_STEP_FK
+        tableName: batch_step_execution
+- changeSet:
+    id: 001_springbatch-create-13
+    author: fineract (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: JOB_INSTANCE_ID
+        indexName: JOB_INST_EXEC_FK
+        tableName: batch_job_execution
+- changeSet:
+    id: 001_springbatch-create-14
+    author: fineract (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: JOB_EXECUTION_ID
+        baseTableName: batch_job_execution_context
+        constraintName: JOB_EXEC_CTX_FK
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: JOB_EXECUTION_ID
+        referencedTableName: batch_job_execution
+        validate: true
+- changeSet:
+    id: 001_springbatch-create-15
+    author: fineract (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: JOB_EXECUTION_ID
+        baseTableName: batch_job_execution_params
+        constraintName: JOB_EXEC_PARAMS_FK
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: JOB_EXECUTION_ID
+        referencedTableName: batch_job_execution
+        validate: true
+- changeSet:
+    id: 001_springbatch-create-16
+    author: fineract (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: JOB_EXECUTION_ID
+        baseTableName: batch_step_execution
+        constraintName: JOB_EXEC_STEP_FK
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: JOB_EXECUTION_ID
+        referencedTableName: batch_job_execution
+        validate: true
+- changeSet:
+    id: 001_springbatch-create-17
+    author: fineract (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: JOB_INSTANCE_ID
+        baseTableName: batch_job_execution
+        constraintName: JOB_INST_EXEC_FK
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: JOB_INSTANCE_ID
+        referencedTableName: batch_job_instance
+        validate: true
+- changeSet:
+    id: 001_springbatch-create-18
+    author: fineract (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: STEP_EXECUTION_ID
+        baseTableName: batch_step_execution_context
+        constraintName: STEP_EXEC_CTX_FK
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: RESTRICT
+        onUpdate: RESTRICT
+        referencedColumnNames: STEP_EXECUTION_ID
+        referencedTableName: batch_step_execution
+        validate: true
+

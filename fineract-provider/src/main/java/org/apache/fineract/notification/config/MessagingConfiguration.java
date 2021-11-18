@@ -21,6 +21,7 @@ package org.apache.fineract.notification.config;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.notification.eventandlistener.NotificationEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +30,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
+import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.connection.CachingConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 @Configuration
-@Profile("activeMqEnabled")
 public class MessagingConfiguration {
 
     @Autowired
@@ -93,4 +94,11 @@ public class MessagingConfiguration {
         return messageListenerContainer;
     }
 
+    @Bean
+    @Profile(JobConstants.SPRING_MESSAGING_PROFILE_NAME)
+    public DefaultJmsListenerContainerFactory jmsListenerContainerFactory() {
+        DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
+        factory.setConnectionFactory(amqConnectionFactory());
+        return factory;
+    }
 }
