@@ -48,7 +48,7 @@ public class ApplyChargeForOverdueLoanEventListener extends BatchEventBaseListen
     private LoanWritePlatformService loanWritePlatformService;
 
     @Override
-    @JmsListener(destination = "#{@batchDestinations.ApplyChargeToOverdueLoanDestination}", concurrency = "1-5")
+    @JmsListener(destination = "#{@batchDestinations.ApplyChargeToOverdueLoanDestination}", concurrency = "#{@batchDestinations.ConcurrencyDestination}")
     public void onMessage(Message message, Session session) {
         try {
             LOG.debug("onMessage ==== " + message.getJMSMessageID());

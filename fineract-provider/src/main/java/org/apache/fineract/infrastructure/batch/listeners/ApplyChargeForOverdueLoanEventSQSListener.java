@@ -35,7 +35,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile({ JobConstants.SPRING_BATCH_WORKER_PROFILE_NAME, JobConstants.SPRING_MESSAGINGSQS_PROFILE_NAME })
+@Profile({ JobConstants.SPRING_BATCH_WORKER_PROFILE_NAME, JobConstants.SPRING_MESSAGING_PROFILE_NAME })
 public class ApplyChargeForOverdueLoanEventSQSListener extends BatchEventBaseListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApplyChargeForOverdueLoanEventSQSListener.class);
@@ -43,7 +43,7 @@ public class ApplyChargeForOverdueLoanEventSQSListener extends BatchEventBaseLis
     @Autowired
     private LoanWritePlatformService loanWritePlatformService;
 
-    @JmsListener(destination = "#{@batchDestinations.ApplyChargeToOverdueLoanDestination}")
+    @JmsListener(destination = "#{@batchDestinations.ApplyChargeToOverdueLoanDestination}", concurrency = "#{@batchDestinations.ConcurrencyDestination}")
     public void receivedMessage(@Payload String payload) {
         LOG.debug("receivedMessage ==== " + payload);
         MessageData messageData = gson.fromJson(payload, MessageData.class);

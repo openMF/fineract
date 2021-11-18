@@ -33,17 +33,23 @@ public class BatchDestinations {
     }
 
     public String getConcurrencyDestination() {
-        final String value = environment.getProperty("FINERACT_BATCH_LISTENER_CONCURRENCY");
+        String value = environment.getProperty("FINERACT_BATCH_LISTENER_CONCURRENCY");
         if (value != null)
             return value;
-        return batchJobProperties.getProperty("fineract.batch.jobs.listeners.concurrency");
+        value = batchJobProperties.getProperty("fineract.batch.jobs.listeners.concurrency");
+        if (value != null)
+            return value;
+        return "1-5";
     }
 
     public String getBatchLoansDestination() {
-        final String value = environment.getProperty("FINERACT_BATCH_QUEUES_BATCHLOANS");
+        String value = environment.getProperty("FINERACT_BATCH_QUEUES_BATCHLOANS");
         if (value != null)
             return value;
-        return batchJobProperties.getProperty("fineract.batch.jobs.queues.batchLoans");
+        value =  batchJobProperties.getProperty("fineract.batch.jobs.queues.batchLoans");
+        if (value != null)
+            return value;
+        return "BATCH_LOANS_RQT";
     }
 
     public String getApplyChargeToOverdueLoanDestination() {

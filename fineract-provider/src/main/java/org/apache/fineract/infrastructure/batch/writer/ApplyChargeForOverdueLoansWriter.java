@@ -92,7 +92,7 @@ public class ApplyChargeForOverdueLoansWriter implements ItemWriter<OverdueLoanS
         Map<Long, Collection<OverdueLoanScheduleData>> overdueScheduleData = groupByLoanId(items);
         for (final Long loanId : overdueScheduleData.keySet()) {
             MessageData messageData = new MessageData(batchJobName, tenantIdentifier, loanId, overdueScheduleData.get(loanId));
-            sendMessage(messageData);
+            // sendMessage(messageData);
         }
     }
 
@@ -110,7 +110,7 @@ public class ApplyChargeForOverdueLoansWriter implements ItemWriter<OverdueLoanS
         return overdueScheduleData;
     }
 
-    private void sendMessage(final MessageData message) {
+    public void sendMessage(final MessageData message) {
         final String payload = gson.toJson(message);
         LOG.debug("Sending: {}", payload);
         // ActiveMQ

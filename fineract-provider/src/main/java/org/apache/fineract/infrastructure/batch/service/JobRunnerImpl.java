@@ -27,6 +27,7 @@ import org.apache.fineract.infrastructure.batch.exception.JobParameterInvalidExc
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
@@ -43,9 +44,11 @@ import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteExcep
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
+@Profile(JobConstants.SPRING_BATCH_PROFILE_NAME)
 public class JobRunnerImpl implements JobRunner {
 
     public static final Logger LOG = LoggerFactory.getLogger(JobRunnerImpl.class);

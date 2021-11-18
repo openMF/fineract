@@ -31,12 +31,16 @@ import javax.ws.rs.core.Response;
 import org.apache.fineract.infrastructure.batch.service.JobRunner;
 import org.apache.fineract.infrastructure.core.exception.UnrecognizedQueryParamException;
 import org.apache.fineract.infrastructure.core.utils.TextUtils;
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.infrastructure.security.exception.NoAuthorizationException;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+
+@Profile(JobConstants.SPRING_BATCH_PROFILE_NAME)
 @Path("/batch")
 @Component
 @Scope("singleton")
