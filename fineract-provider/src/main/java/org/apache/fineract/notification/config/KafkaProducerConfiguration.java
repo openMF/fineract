@@ -54,7 +54,7 @@ public class KafkaProducerConfiguration {
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, "20971520");
-        if (sslEnabled) {
+        if (Boolean.TRUE.equals(sslEnabled)) {
             props.put("security.protocol", securityProtocol);
         }
         LOG.info(props.toString());
@@ -73,7 +73,7 @@ public class KafkaProducerConfiguration {
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         props.put(ProducerConfig.TRANSACTION_TIMEOUT_CONFIG, 90000);
-        if (sslEnabled) {
+        if (Boolean.TRUE.equals(sslEnabled)) {
             props.put("security.protocol", securityProtocol);
         }
         LOG.info(props.toString());
