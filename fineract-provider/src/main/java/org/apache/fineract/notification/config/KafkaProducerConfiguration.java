@@ -50,6 +50,7 @@ public class KafkaProducerConfiguration {
     private static final Logger LOG = LoggerFactory.getLogger(KafkaProducerConfiguration.class);
 
     @Bean    
+    @Profile("kafkaEnabled")
     public ProducerFactory<String, String> producerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
@@ -64,11 +65,13 @@ public class KafkaProducerConfiguration {
     }
 
     @Bean    
+    @Profile("kafkaEnabled")
     public KafkaTemplate<String, String> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean    
+    @Profile("kafkaEnabled")
     public ProducerFactory<String, NotificationData> notificationDataProducerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
@@ -83,6 +86,7 @@ public class KafkaProducerConfiguration {
     }
 
     @Bean    
+    @Profile("kafkaEnabled")
     public KafkaTemplate<String, NotificationData> notificationDataKafkaTemplate() {
         return new KafkaTemplate<>(notificationDataProducerFactory());
     }
