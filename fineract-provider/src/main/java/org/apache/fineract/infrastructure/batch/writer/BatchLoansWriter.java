@@ -86,8 +86,11 @@ public class BatchLoansWriter implements ItemWriter<Long>, StepExecutionListener
     @Override
     public void write(List<? extends Long> items) throws Exception {
         List<Long> batchLoanIds = new ArrayList<Long>();
-        for (final Long loanId : items)
-            batchLoanIds.add(loanId);
+        for (final Long loanId : items) {
+            if (loanId != null) {
+                batchLoanIds.add(loanId);
+            }
+        }
 
         MessageBatchData messageData = new MessageBatchData(batchJobName, tenantIdentifier, batchLoanIds);
         sendMessage(messageData);

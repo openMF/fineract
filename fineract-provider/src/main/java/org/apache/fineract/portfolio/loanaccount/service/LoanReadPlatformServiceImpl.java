@@ -41,6 +41,7 @@ import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.core.service.PaginationHelper;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.infrastructure.core.service.SearchParameters;
+import org.apache.fineract.infrastructure.core.utils.DatabaseUtils;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.utils.ColumnValidator;
 import org.apache.fineract.infrastructure.security.utils.SQLInjectionValidator;
@@ -115,6 +116,8 @@ import org.apache.fineract.portfolio.paymentdetail.data.PaymentDetailData;
 import org.apache.fineract.portfolio.paymenttype.data.PaymentTypeData;
 import org.apache.fineract.portfolio.paymenttype.service.PaymentTypeReadPlatformService;
 import org.apache.fineract.useradministration.domain.AppUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -128,6 +131,8 @@ import org.springframework.util.CollectionUtils;
 
 @Service
 public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
+
+    public static final Logger LOG = LoggerFactory.getLogger(LoanReadPlatformServiceImpl.class);
 
     private final JdbcTemplate jdbcTemplate;
     private final DataSourceSqlResolver sqlResolver;
@@ -154,6 +159,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
     private final ConfigurationDomainService configurationDomainService;
     private final AccountDetailsReadPlatformService accountDetailsReadPlatformService;
     private final ColumnValidator columnValidator;
+    private String databaseType;
 
     @Autowired
     public LoanReadPlatformServiceImpl(final PlatformSecurityContext context,
@@ -185,6 +191,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         this.calendarReadPlatformService = calendarReadPlatformService;
         this.staffReadPlatformService = staffReadPlatformService;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.databaseType = DatabaseUtils.getDatabaseType(this.jdbcTemplate);
         this.sqlResolver = sqlResolver;
         this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
         this.paymentTypeReadPlatformService = paymentTypeReadPlatformService;
@@ -1559,18 +1566,33 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         NamedParameterJdbcTemplate template = new NamedParameterJdbcTemplate(this.jdbcTemplate.getDataSource());
 
         final StringBuilder sqlBuilder = new StringBuilder(400);
-        sqlBuilder.append("select ").append(rm.schema())
-                .append(" where ls.loan_id in (:loanIds) and DATE_SUB(CURDATE(),INTERVAL :penaltyWaitPeriod DAY) > ls.duedate ")
-                .append(" and ls.completed_derived <> 1 and mc.charge_applies_to_enum = 1 ")
-                .append(" and ls.recalculated_interest_component <> 1 ")
-                .append(" and mc.charge_time_enum = 9 and ml.loan_status_id = 300 ");
+        if (this.databaseType.equals(DatabaseUtils.POSTGRES_DATABASE_TYPE)) {
+            sqlBuilder.append("select ").append(rm.schema())
+                    .append(" where ls.loan_id in (:loanIds) and (NOW() - INTERVAL ':penaltyWaitPeriod DAY') > ls.duedate ")
+                    .append(" and ls.completed_derived <> 1 and mc.charge_applies_to_enum = 1 ")
+                    .append(" and ls.recalculated_interest_component <> 1 ")
+                    .append(" and mc.charge_time_enum = 9 and ml.loan_status_id = 300 ");
+        } else {
+            sqlBuilder.append("select ").append(rm.schema())
+                    .append(" where ls.loan_id in (:loanIds) and DATE_SUB(CURDATE(),INTERVAL :penaltyWaitPeriod DAY) > ls.duedate ")
+                    .append(" and ls.completed_derived <> 1 and mc.charge_applies_to_enum = 1 ")
+                    .append(" and ls.recalculated_interest_component <> 1 ")
+                    .append(" and mc.charge_time_enum = 9 and ml.loan_status_id = 300 ");
+        }
 
         if (backdatePenalties) {
+            LOG.info("SQL: {}", sqlBuilder.toString());
+            LOG.info("Ids: {}", loanIds.toString());
             return template.query(sqlBuilder.toString(), parameters, rm);
         }
+        
         // Only apply for duedate = yesterday (so that we don't apply
         // penalties on the duedate itself)
-        sqlBuilder.append(" and ls.duedate >= DATE_SUB(CURDATE(),INTERVAL (? + 1) DAY)");
+        if (this.databaseType.equals(DatabaseUtils.POSTGRES_DATABASE_TYPE)) {
+            sqlBuilder.append(" and ls.duedate >= (NOW() - INTERVAL '(? + 1) DAY')");
+        } else {
+            sqlBuilder.append(" and ls.duedate >= DATE_SUB(CURDATE(),INTERVAL (? + 1) DAY)");
+        }
 
         return this.jdbcTemplate.query(sqlBuilder.toString(), rm, new Object[] { loanIds, penaltyWaitPeriod, penaltyWaitPeriod });
     }
