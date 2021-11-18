@@ -1,0 +1,10 @@
+It worth to run an analysis on the DB (if postgres) after a couple 100k or million loans were written into!
+
+read test suite
+    Scenario 1: Retrieve Loan X=30min time on Y=180 clients
+    Scenario 2: Retrieve Loans by Customer X=30min time on Y=36 clients
+    Scenario 3: Retrieve Repayment Summary X=30min time on Y=79 clients
+    Scenario 4: Retrieve Transactions by Loan X=30min time on Y=5 clients
+
+
+The test were using 300 concurrent virtual users!

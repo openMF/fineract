@@ -12,7 +12,7 @@ class Client {
 
   private def parseJson(s: String) = mapper.readValue(s, classOf[JsonNode])
 
-  val create = http("Create client")
+  val create = http("Create Customer")
     .post("/clients")
     .body(StringBody(
       s"""{

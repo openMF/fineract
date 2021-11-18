@@ -1,4 +1,4 @@
-package fineract.scenarios
+package fineract.playground
 
 import fineract.{Client, Loan}
 import io.gatling.core.Predef._
@@ -44,16 +44,16 @@ class ReadTest extends Simulation {
   val scn = scenario("Read loan details")
     .feed(randomNumbers)
     .exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
-    .exec(loan.getDetails)
+    .exec(loan.retrieveLoan)
 
   val scn2 = scenario("Read loan transactions")
     .repeat(50) {
       feed(randomNumbers).exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
-        .exec(loan.getTransactions)
+        .exec(loan.retrieveTransactionsByLoan)
     }
   val scn3 = scenario("Read loans of customer")
     .feed(randomNumbers).exec(_.set("date", date).set("productId", productId).set("paymentDate", paymentDate))
-    .exec(loan.getLoansOfCustomer)
+    .exec(loan.retrieveLoansByCustomer)
 
   val scn4 = scenario("Calculate loan schedules")
     .repeat(100) {
