@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.fineract.accounting.common.AccountingDropdownReadPlatformService;
 import org.apache.fineract.accounting.glaccount.data.GLAccountData;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
@@ -60,6 +61,7 @@ import org.springframework.stereotype.Service;
 public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final CurrencyReadPlatformService currencyReadPlatformService;
     private final ChargeDropdownReadPlatformService chargeDropdownReadPlatformService;
     private final DropdownReadPlatformService dropdownReadPlatformService;
@@ -70,12 +72,14 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
 
     @Autowired
     public ChargeReadPlatformServiceImpl(final CurrencyReadPlatformService currencyReadPlatformService,
-            final ChargeDropdownReadPlatformService chargeDropdownReadPlatformService, final RoutingDataSource dataSource,
-            final DropdownReadPlatformService dropdownReadPlatformService, final FineractEntityAccessUtil fineractEntityAccessUtil,
-            final AccountingDropdownReadPlatformService accountingDropdownReadPlatformService,
+                                         final ChargeDropdownReadPlatformService chargeDropdownReadPlatformService, final RoutingDataSource dataSource,
+                                         DataSourceSqlResolver sqlResolver,
+                                         final DropdownReadPlatformService dropdownReadPlatformService, final FineractEntityAccessUtil fineractEntityAccessUtil,
+                                         final AccountingDropdownReadPlatformService accountingDropdownReadPlatformService,
             final TaxReadPlatformService taxReadPlatformService) {
         this.chargeDropdownReadPlatformService = chargeDropdownReadPlatformService;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.currencyReadPlatformService = currencyReadPlatformService;
         this.dropdownReadPlatformService = dropdownReadPlatformService;
         this.fineractEntityAccessUtil = fineractEntityAccessUtil;
@@ -89,7 +93,7 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     public Collection<ChargeData> retrieveAllCharges() {
         final ChargeMapper rm = new ChargeMapper();
 
-        String sql = "select " + rm.chargeSchema() + " where c.is_deleted=false ";
+        String sql = "select " + rm.chargeSchema() + " where c.is_deleted = " + sqlResolver.formatBoolValue(false);
 
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
 
@@ -102,7 +106,7 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     public Collection<ChargeData> retrieveAllChargesForCurrency(String currencyCode) {
         final ChargeMapper rm = new ChargeMapper();
 
-        String sql = "select " + rm.chargeSchema() + " where c.is_deleted=false and c.currency_code= ? ";
+        String sql = "select " + rm.chargeSchema() + " where c.is_deleted = " + sqlResolver.formatBoolValue(false) + " and c.currency_code= ? ";
 
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
 
@@ -116,7 +120,7 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
         try {
             final ChargeMapper rm = new ChargeMapper();
 
-            String sql = "select " + rm.chargeSchema() + " where c.id = ? and c.is_deleted=false ";
+            String sql = "select " + rm.chargeSchema() + " where c.id = ? and c.is_deleted = " + sqlResolver.formatBoolValue(false);
 
             sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
 
@@ -163,7 +167,8 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     public Collection<ChargeData> retrieveLoanProductCharges(final Long loanProductId) {
         final ChargeMapper rm = new ChargeMapper();
 
-        String sql = "select " + rm.loanProductChargeSchema() + " where c.is_deleted=false and c.is_active=true and plc.product_loan_id=? ";
+        String sql = "select " + rm.loanProductChargeSchema() + " where c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true) + " and plc.product_loan_id = ? ";
 
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
 
@@ -175,8 +180,10 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
 
         final ChargeMapper rm = new ChargeMapper();
 
-        String sql = "select " + rm.loanProductChargeSchema()
-                + " where c.is_deleted=false and c.is_active=true and plc.product_loan_id=? and c.charge_time_enum=? ";
+        String sql = "select " + rm.loanProductChargeSchema() +
+                " where c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true) +
+                " and plc.product_loan_id = ? and c.charge_time_enum = ? ";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
 
         return this.jdbcTemplate.query(sql, rm, new Object[] { loanProductId, chargeTime.getValue() });
@@ -187,7 +194,10 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
         final ChargeMapper rm = new ChargeMapper();
         Object[] params = new Object[] { ChargeAppliesTo.LOAN.getValue() };
         String sql = "select " + rm.chargeSchema()
-                + " where c.is_deleted=false and c.is_active=true and c.is_penalty=false and c.charge_applies_to_enum=? ";
+                + " where c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true) +
+                " and c.is_penalty = " + sqlResolver.formatBoolValue(false) +
+                " and c.charge_applies_to_enum = ? ";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
         sql += " order by c.name ";
 
@@ -202,8 +212,10 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
         paramMap.put("loanId", loanId);
         paramMap.put("chargeAppliesTo", ChargeAppliesTo.LOAN.getValue());
         processChargeExclusionsForLoans(excludeChargeTimes, excludeClause);
-        String sql = "select " + rm.chargeSchema() + " join m_loan la on la.currency_code = c.currency_code" + " where la.id=:loanId"
-                + " and c.is_deleted=false and c.is_active=true and c.charge_applies_to_enum=:chargeAppliesTo" + excludeClause + " ";
+        String sql = "select " + rm.chargeSchema() + " join m_loan la on la.currency_code = c.currency_code" + " where la.id = :loanId" +
+                " and c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true) +
+                " and c.charge_applies_to_enum = :chargeAppliesTo" + excludeClause + " ";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
         sql += " order by c.name ";
         return this.namedParameterJdbcTemplate.query(sql, paramMap, rm);
@@ -212,7 +224,6 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     /**
      * @param excludeChargeTimes
      * @param excludeClause
-     * @param params
      * @return
      */
     private void processChargeExclusionsForLoans(ChargeTimeType[] excludeChargeTimes, StringBuilder excludeClause) {
@@ -237,8 +248,10 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
         paramMap.put("productId", loanProductId);
         paramMap.put("chargeAppliesTo", ChargeAppliesTo.LOAN.getValue());
         processChargeExclusionsForLoans(excludeChargeTimes, excludeClause);
-        String sql = "select " + rm.chargeSchema() + " join m_product_loan lp on lp.currency_code = c.currency_code"
-                + " where lp.id=:productId" + " and c.is_deleted=false and c.is_active=true and c.charge_applies_to_enum=:chargeAppliesTo"
+        String sql = "select " + rm.chargeSchema() + " join m_product_loan lp on lp.currency_code = c.currency_code" +
+                " where lp.id =:productId and c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true) +
+                " and c.charge_applies_to_enum = :chargeAppliesTo"
                 + excludeClause + " ";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
         sql += " order by c.name ";
@@ -251,7 +264,10 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
         final ChargeMapper rm = new ChargeMapper();
 
         String sql = "select " + rm.chargeSchema()
-                + " where c.is_deleted=false and c.is_active=true and c.is_penalty=true and c.charge_applies_to_enum=? ";
+                + " where c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true) +
+                " and c.is_penalty = " + sqlResolver.formatBoolValue(true) +
+                " and c.charge_applies_to_enum=? ";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
         sql += " order by c.name ";
         return this.jdbcTemplate.query(sql, rm, new Object[] { ChargeAppliesTo.LOAN.getValue() });
@@ -374,11 +390,12 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     public Collection<ChargeData> retrieveSavingsProductApplicableCharges(final boolean feeChargesOnly) {
         final ChargeMapper rm = new ChargeMapper();
 
-        String sql = "select " + rm.chargeSchema() + " where c.is_deleted=false and c.is_active=true and c.charge_applies_to_enum=? ";
+        String sql = "select " + rm.chargeSchema() + " where c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true);
         if (feeChargesOnly) {
-            sql = "select " + rm.chargeSchema()
-                    + " where c.is_deleted=false and c.is_active=true and c.is_penalty=false and c.charge_applies_to_enum=? ";
+            sql += " and c.is_penalty = " + sqlResolver.formatBoolValue(false);
         }
+        sql += " and c.charge_applies_to_enum=? ";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
         sql += " order by c.name ";
 
@@ -390,7 +407,10 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
         final ChargeMapper rm = new ChargeMapper();
 
         String sql = "select " + rm.chargeSchema()
-                + " where c.is_deleted=false and c.is_active=true and c.is_penalty=true and c.charge_applies_to_enum=? ";
+                + " where c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true) +
+                " and c.is_penalty = " + sqlResolver.formatBoolValue(true) +
+                " and c.charge_applies_to_enum=? ";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
         sql += " order by c.name ";
         return this.jdbcTemplate.query(sql, rm, new Object[] { ChargeAppliesTo.SAVINGS.getValue() });
@@ -400,7 +420,8 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     public Collection<ChargeData> retrieveSavingsProductCharges(final Long savingsProductId) {
         final ChargeMapper rm = new ChargeMapper();
 
-        String sql = "select " + rm.savingsProductChargeSchema() + " where c.is_deleted=0 and c.is_active=1 and spc.savings_product_id=? ";
+        String sql = "select " + rm.savingsProductChargeSchema() + " where c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true) + " and spc.savings_product_id=? ";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
 
         return this.jdbcTemplate.query(sql, rm, new Object[] { savingsProductId });
@@ -410,7 +431,8 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     public Collection<ChargeData> retrieveShareProductCharges(final Long shareProductId) {
         final ChargeMapper rm = new ChargeMapper();
 
-        String sql = "select " + rm.shareProductChargeSchema() + " where c.is_deleted=false and c.is_active=true and mspc.product_id=? ";
+        String sql = "select " + rm.shareProductChargeSchema() + " where c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true) + " and mspc.product_id=? ";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
 
         return this.jdbcTemplate.query(sql, rm, new Object[] { shareProductId });
@@ -422,17 +444,19 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
         final ChargeMapper rm = new ChargeMapper();
 
         String sql = "select " + rm.chargeSchema() + " join m_savings_account sa on sa.currency_code = c.currency_code"
-                + " where c.is_deleted=false and c.is_active=true and c.charge_applies_to_enum=? " + " and sa.id = ?";
+                + " where c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true) +
+                " and c.charge_applies_to_enum=? " + " and sa.id = ?";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
 
         return this.jdbcTemplate.query(sql, rm, new Object[] { ChargeAppliesTo.SAVINGS.getValue(), savingsAccountId });
-
     }
 
     @Override
     public Collection<ChargeData> retrieveAllChargesApplicableToClients() {
         final ChargeMapper rm = new ChargeMapper();
-        String sql = "select " + rm.chargeSchema() + " where c.is_deleted=false and c.is_active=true and c.charge_applies_to_enum=? ";
+        String sql = "select " + rm.chargeSchema() + " where c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true) + " and c.charge_applies_to_enum=? ";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
         sql += " order by c.name ";
 
@@ -442,7 +466,8 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     @Override
     public Collection<ChargeData> retrieveSharesApplicableCharges() {
         final ChargeMapper rm = new ChargeMapper();
-        String sql = "select " + rm.chargeSchema() + " where c.is_deleted=false and c.is_active=true and c.charge_applies_to_enum=? ";
+        String sql = "select " + rm.chargeSchema() + " where c.is_deleted = " + sqlResolver.formatBoolValue(false) +
+                " and c.is_active = " + sqlResolver.formatBoolValue(true) + " and c.charge_applies_to_enum=? ";
         sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
         sql += " order by c.name ";
 

@@ -18,26 +18,13 @@
  */
 package org.apache.fineract.portfolio.client.service;
 
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.infrastructure.codes.service.CodeValueReadPlatformService;
 import org.apache.fineract.infrastructure.configuration.data.GlobalConfigurationPropertyData;
 import org.apache.fineract.infrastructure.configuration.service.ConfigurationReadPlatformService;
-import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
-import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.core.service.PaginationHelper;
@@ -77,6 +64,18 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Service
 public class ClientReadPlatformServiceImpl implements ClientReadPlatformService {
@@ -187,43 +186,29 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
     @Override
     // @Transactional(readOnly=true)
     public Page<ClientData> retrieveAll(final SearchParameters searchParameters) {
-
-        if (searchParameters != null && searchParameters.getStatus() != null
-                && ClientStatus.fromString(searchParameters.getStatus()) == ClientStatus.INVALID) {
-            final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
-            final String defaultUserMessage = "The Status value '" + searchParameters.getStatus() + "' is not supported.";
-            final ApiParameterError error = ApiParameterError.parameterError("validation.msg.client.status.value.is.not.supported",
-                    defaultUserMessage, "status", searchParameters.getStatus());
-            dataValidationErrors.add(error);
-            throw new PlatformApiDataValidationException(dataValidationErrors);
-        }
-
         final String userOfficeHierarchy = this.context.officeHierarchy();
         final String underHierarchySearchString = userOfficeHierarchy + "%";
         final String appUserID = String.valueOf(context.authenticatedUser().getId());
 
-        // if (searchParameters.isScopedByOfficeHierarchy()) {
-        // this.context.validateAccessRights(searchParameters.getHierarchy());
-        // underHierarchySearchString = searchParameters.getHierarchy() + "%";
-        // }
         List<Object> paramList = new ArrayList<>(Arrays.asList(underHierarchySearchString, underHierarchySearchString));
-        final StringBuilder sqlBuilder = new StringBuilder(200);
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ");
+        final StringBuilder sqlBuilder = new StringBuilder(1000);
+        sqlBuilder.append("select ");
         sqlBuilder.append(this.clientMapper.schema());
-        sqlBuilder.append(" where (o.hierarchy like ? or transferToOffice.hierarchy like ?) ");
+        final StringBuilder whereBuilder = new StringBuilder(200).append(" where (o.hierarchy like ? or transferToOffice.hierarchy like ?) ");
 
         if (searchParameters != null) {
             if (searchParameters.isSelfUser()) {
-                sqlBuilder.append(
-                        " and c.id in (select umap.client_id from m_selfservice_user_client_mapping as umap where umap.appuser_id = ? ) ");
+                whereBuilder.append(" and c.id in (select umap.client_id from m_selfservice_user_client_mapping as umap where umap.appuser_id = ? ) ");
                 paramList.add(appUserID);
             }
 
             final String extraCriteria = buildSqlStringFromClientCriteria(this.clientMapper.schema(), searchParameters, paramList);
 
             if (StringUtils.isNotBlank(extraCriteria)) {
-                sqlBuilder.append(" and (").append(extraCriteria).append(")");
+                whereBuilder.append(" and (").append(extraCriteria).append(")");
             }
+
+            sqlBuilder.append(whereBuilder);
 
             if (searchParameters.isOrderByRequested()) {
                 sqlBuilder.append(" order by ").append(searchParameters.getOrderBy());
@@ -240,10 +225,11 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
                     sqlBuilder.append(" offset ").append(searchParameters.getOffset());
                 }
             }
+        } else {
+            sqlBuilder.append(whereBuilder);
         }
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(), paramList.toArray(),
-                this.clientMapper);
+        final String sqlCountRows = "SELECT count(*) " + this.clientMapper.from() + whereBuilder;
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, paramList.toArray(), sqlBuilder.toString(), paramList.toArray(), this.clientMapper);
     }
 
     private String buildSqlStringFromClientCriteria(String schemaSql, final SearchParameters searchParameters, List<Object> paramList) {
@@ -275,8 +261,8 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
         }
 
         if (displayName != null) {
-            // extraCriteria += " and concat(ifnull(c.firstname, ''),
-            // if(c.firstname > '',' ', '') , ifnull(c.lastname, '')) like "
+            // extraCriteria += " and concat(coalesce(c.firstname, ''),
+            // if(c.firstname > '',' ', '') , coalesce(c.lastname, '')) like "
             paramList.add("%" + displayName + "%");
             extraCriteria += " and c.display_name like ? ";
         }
@@ -585,12 +571,21 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
     private static final class ClientMapper implements RowMapper<ClientData> {
 
         private final String schema;
+        private final String from = "from m_client c join m_office o on o.id = c.office_id left join m_client_non_person cnp on cnp.client_id = c.id"
+                + " left join m_staff s on s.id = c.staff_id left join m_savings_product sp on sp.id = c.default_savings_product"
+                + " left join m_office transferToOffice on transferToOffice.id = c.transfer_to_office_id"
+                + " left join m_appuser sbu on sbu.id = c.submittedon_userid left join m_appuser acu on acu.id = c.activatedon_userid"
+                + " left join m_appuser clu on clu.id = c.closedon_userid left join m_code_value cv on cv.id = c.gender_cv_id"
+                + " left join m_code_value cvclienttype on cvclienttype.id = c.client_type_cv_id"
+                + " left join m_code_value cvclassification on cvclassification.id = c.client_classification_cv_id"
+                + " left join m_code_value cvSubStatus on cvSubStatus.id = c.sub_status"
+                + " left join m_code_value cvConstitution on cvConstitution.id = cnp.constitution_cv_id"
+                + " left join m_code_value cvMainBusinessLine on cvMainBusinessLine.id = cnp.main_business_line_cv_id ";
 
         ClientMapper() {
             final StringBuilder builder = new StringBuilder(400);
 
-            builder.append(
-                    "c.id as id, c.account_no as accountNo, c.external_id as externalId, c.status_enum as statusEnum,c.sub_status as subStatus, ");
+            builder.append("c.id as id, c.account_no as accountNo, c.external_id as externalId, c.status_enum as statusEnum,c.sub_status as subStatus, ");
             builder.append(
                     "cvSubStatus.code_value as subStatusValue,cvSubStatus.code_description as subStatusDesc,c.office_id as officeId, o.name as officeName, ");
             builder.append("c.transfer_to_office_id as transferToOfficeId, transferToOffice.name as transferToOfficeName, ");
@@ -635,27 +630,17 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             builder.append("c.staff_id as staffId, s.display_name as staffName, ");
             builder.append("c.default_savings_product as savingsProductId, sp.name as savingsProductName, ");
             builder.append("c.default_savings_account as savingsAccountId ");
-            builder.append("from m_client c ");
-            builder.append("join m_office o on o.id = c.office_id ");
-            builder.append("left join m_client_non_person cnp on cnp.client_id = c.id ");
-            builder.append("left join m_staff s on s.id = c.staff_id ");
-            builder.append("left join m_savings_product sp on sp.id = c.default_savings_product ");
-            builder.append("left join m_office transferToOffice on transferToOffice.id = c.transfer_to_office_id ");
-            builder.append("left join m_appuser sbu on sbu.id = c.submittedon_userid ");
-            builder.append("left join m_appuser acu on acu.id = c.activatedon_userid ");
-            builder.append("left join m_appuser clu on clu.id = c.closedon_userid ");
-            builder.append("left join m_code_value cv on cv.id = c.gender_cv_id ");
-            builder.append("left join m_code_value cvclienttype on cvclienttype.id = c.client_type_cv_id ");
-            builder.append("left join m_code_value cvclassification on cvclassification.id = c.client_classification_cv_id ");
-            builder.append("left join m_code_value cvSubStatus on cvSubStatus.id = c.sub_status ");
-            builder.append("left join m_code_value cvConstitution on cvConstitution.id = cnp.constitution_cv_id ");
-            builder.append("left join m_code_value cvMainBusinessLine on cvMainBusinessLine.id = cnp.main_business_line_cv_id ");
+            builder.append(from);
 
             this.schema = builder.toString();
         }
 
         public String schema() {
             return this.schema;
+        }
+
+        public String from() {
+            return this.from;
         }
 
         @Override

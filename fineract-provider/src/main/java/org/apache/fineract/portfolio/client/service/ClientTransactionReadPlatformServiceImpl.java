@@ -23,6 +23,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collection;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.Page;
@@ -46,17 +48,27 @@ import org.springframework.stereotype.Service;
 public class ClientTransactionReadPlatformServiceImpl implements ClientTransactionReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final ClientTransactionMapper clientTransactionMapper;
     private final PaginationHelper<ClientTransactionData> paginationHelper;
 
     @Autowired
-    public ClientTransactionReadPlatformServiceImpl(final RoutingDataSource dataSource) {
+    public ClientTransactionReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.clientTransactionMapper = new ClientTransactionMapper();
         this.paginationHelper = new PaginationHelper<>();
     }
 
     private static final class ClientTransactionMapper implements RowMapper<ClientTransactionData> {
+
+        public static final String FROM = " from m_client c  " +
+                "join m_client_transaction tr on tr.client_id = c.id " +
+                "join m_currency curr on curr.code = tr.currency_code " +
+                "left join m_payment_detail pd on tr.payment_detail_id = pd.id  " +
+                "left join m_payment_type pt  on pd.payment_type_id = pt.id " +
+                "left join m_office o on o.id = tr.office_id " +
+                "left join m_client_charge_paid_by ccpb on ccpb.client_transaction_id = tr.id ";
 
         private final String schemaSql;
 
@@ -75,18 +87,16 @@ public class ClientTransactionReadPlatformServiceImpl implements ClientTransacti
             sqlBuilder.append("curr.name as currencyName, curr.internationalized_name_code as currencyNameCode,  ");
             sqlBuilder.append("curr.display_symbol as currencyDisplaySymbol,  ");
             sqlBuilder.append("pt.value as paymentTypeName  ");
-            sqlBuilder.append("from m_client c  ");
-            sqlBuilder.append("join m_client_transaction tr on tr.client_id = c.id ");
-            sqlBuilder.append("join m_currency curr on curr.code = tr.currency_code ");
-            sqlBuilder.append("left join m_payment_detail pd on tr.payment_detail_id = pd.id  ");
-            sqlBuilder.append("left join m_payment_type pt  on pd.payment_type_id = pt.id ");
-            sqlBuilder.append("left join m_office o on o.id = tr.office_id ");
-            sqlBuilder.append("left join m_client_charge_paid_by ccpb on ccpb.client_transaction_id = tr.id ");
+            sqlBuilder.append(FROM);
             this.schemaSql = sqlBuilder.toString();
         }
 
         public String schema() {
             return this.schemaSql;
+        }
+
+        public String countSchema() {
+            return " count(c.*) " + FROM;
         }
 
         @Override
@@ -135,11 +145,14 @@ public class ClientTransactionReadPlatformServiceImpl implements ClientTransacti
 
     @Override
     public Page<ClientTransactionData> retrieveAllTransactions(Long clientId, SearchParameters searchParameters) {
-        Object[] parameters = new Object[1];
-        final StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ").append(this.clientTransactionMapper.schema()).append(" where c.id = ? ");
-        parameters[0] = clientId;
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        final StringBuilder sqlBuilder = new StringBuilder().append("SELECT ");
+        if (mySql) {
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
+        }
+
+        final String where = " where c.id = ? ";
+        sqlBuilder.append(this.clientTransactionMapper.schema()).append(where);
         sqlBuilder.append(" order by tr.transaction_date DESC, tr.created_date DESC, tr.id DESC ");
 
         // apply limit and offsets
@@ -150,8 +163,14 @@ public class ClientTransactionReadPlatformServiceImpl implements ClientTransacti
             }
         }
 
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(), parameters,
-                this.clientTransactionMapper);
+        final Object[] sqlParams = {clientId};
+        String sqlCountRows = "SELECT FOUND_ROWS()";
+        Object[] countParams = null;
+        if (!mySql) {
+            sqlCountRows = "SELECT " + clientTransactionMapper.countSchema() + where;
+            countParams = sqlParams;
+        }
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, countParams, sqlBuilder.toString(), sqlParams, this.clientTransactionMapper);
     }
 
     @Override

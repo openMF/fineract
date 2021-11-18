@@ -1,0 +1,331 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+databaseChangeLog:
+  - context: tenants_db
+  - changeSet:
+      id: 001_tenants-create-1
+      author: fineract (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                  name: installed_rank
+                  type: INTEGER
+              - column:
+                  name: version
+                  type: VARCHAR(50)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: description
+                  type: VARCHAR(200)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: type
+                  type: VARCHAR(20)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: script
+                  type: VARCHAR(1000)
+              - column:
+                  defaultValueComputed: NULL
+                  name: checksum
+                  type: INTEGER
+              - column:
+                  constraints:
+                    nullable: false
+                  name: installed_by
+                  type: VARCHAR(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: ${current_datetime}
+                  name: installed_on
+                  type: TIMESTAMP
+              - column:
+                  constraints:
+                    nullable: false
+                  name: execution_time
+                  type: INTEGER
+              - column:
+                  constraints:
+                    nullable: false
+                  name: success
+                  type: BOOLEAN
+            tableName: schema_version
+  - changeSet:
+      id: 001_tenants-create-2
+      author: fineract (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValue: localhost
+                  name: schema_server
+                  type: VARCHAR(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: schema_name
+                  type: VARCHAR(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValue: '3306'
+                  name: schema_server_port
+                  type: VARCHAR(10)
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValue: root
+                  name: schema_username
+                  type: VARCHAR(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValue: mysql
+                  name: schema_password
+                  type: VARCHAR(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueBoolean: true
+                  name: auto_update
+                  type: BOOLEAN
+              - column:
+                  defaultValueNumeric: 5
+                  name: pool_initial_size
+                  type: INTEGER
+              - column:
+                  defaultValueNumeric: 30000
+                  name: pool_validation_interval
+                  type: INTEGER
+              - column:
+                  defaultValueBoolean: true
+                  name: pool_remove_abandoned
+                  type: BOOLEAN
+              - column:
+                  defaultValueNumeric: 60
+                  name: pool_remove_abandoned_timeout
+                  type: INTEGER
+              - column:
+                  defaultValueBoolean: true
+                  name: pool_log_abandoned
+                  type: BOOLEAN
+              - column:
+                  defaultValueNumeric: 50
+                  name: pool_abandon_when_percentage_full
+                  type: INTEGER
+              - column:
+                  defaultValueBoolean: true
+                  name: pool_test_on_borrow
+                  type: BOOLEAN
+              - column:
+                  defaultValueNumeric: 40
+                  name: pool_max_active
+                  type: INTEGER
+              - column:
+                  defaultValueNumeric: 20
+                  name: pool_min_idle
+                  type: INTEGER
+              - column:
+                  defaultValueNumeric: 10
+                  name: pool_max_idle
+                  type: INTEGER
+              - column:
+                  defaultValueNumeric: 60
+                  name: pool_suspect_timeout
+                  type: INTEGER
+              - column:
+                  defaultValueNumeric: 34000
+                  name: pool_time_between_eviction_runs_millis
+                  type: INTEGER
+              - column:
+                  defaultValueNumeric: 60000
+                  name: pool_min_evictable_idle_time_millis
+                  type: INTEGER
+              - column:
+                  defaultValueNumeric: 0
+                  name: deadlock_max_retries
+                  type: INTEGER
+              - column:
+                  defaultValueNumeric: 1
+                  name: deadlock_max_retry_interval
+                  type: INTEGER
+              - column:
+                  name: schema_connection_parameters
+                  type: TEXT
+            tableName: tenant_server_connections
+  - changeSet:
+      id: 001_tenants-create-3
+      author: fineract (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                    unique: true
+                  name: identifier
+                  type: VARCHAR(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: VARCHAR(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: timezone_id
+                  type: VARCHAR(100)
+              - column:
+                  defaultValueComputed: NULL
+                  name: country_id
+                  type: INTEGER
+              - column:
+                  defaultValueComputed: NULL
+                  name: joined_date
+                  type: date
+              - column:
+                  defaultValueComputed: NULL
+                  name: created_date
+                  type: TIMESTAMP
+              - column:
+                  defaultValueComputed: NULL
+                  name: lastmodified_date
+                  type: TIMESTAMP
+              - column:
+                  constraints:
+                    nullable: false
+                  name: oltp_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: report_id
+                  type: BIGINT
+            tableName: tenants
+  - changeSet:
+      id: 001_tenants-create-4
+      author: fineract (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                  name: id
+                  type: INTEGER
+              - column:
+                  constraints:
+                    nullable: false
+                  name: country_code
+                  type: VARCHAR(2)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: timezonename
+                  type: VARCHAR(100)
+              - column:
+                  name: comments
+                  type: VARCHAR(150)
+            tableName: timezones
+  - changeSet:
+      id: 001_tenants-create-5
+      author: fineract (generated)
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: oltp_id
+            indexName: fk_oltp_id
+            tableName: tenants
+  - changeSet:
+      id: 001_tenants-create-6
+      author: fineract (generated)
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: report_id
+            indexName: fk_report_id
+            tableName: tenants
+  - changeSet:
+      id: 001_tenants-create-7
+      author: fineract (generated)
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: success
+            indexName: schema_version_s_idx
+            tableName: schema_version
+  - changeSet:
+      id: 001_tenants-create-8
+      author: fineract (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: oltp_id
+            baseTableName: tenants
+            constraintName: fk_oltp_id
+            deferrable: false
+            initiallyDeferred: false
+            onDelete: NO ACTION
+            onUpdate: NO ACTION
+            referencedColumnNames: id
+            referencedTableName: tenant_server_connections
+            validate: true
+  - changeSet:
+      id: 001_tenants-create-9
+      author: fineract (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: report_id
+            baseTableName: tenants
+            constraintName: fk_report_id
+            deferrable: false
+            initiallyDeferred: false
+            onDelete: NO ACTION
+            onUpdate: NO ACTION
+            referencedColumnNames: id
+            referencedTableName: tenant_server_connections
+            validate: true

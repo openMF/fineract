@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.apache.fineract.accounting.journalentry.service.JournalEntryWritePlatformService;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.organisation.monetary.domain.ApplicationCurrency;
@@ -63,19 +64,22 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
     private final LoanChargeReadPlatformService loanChargeReadPlatformService;
     private final JdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
+    private final DataSourceSqlResolver sqlResolver;
     private final JournalEntryWritePlatformService journalEntryWritePlatformService;
     private final AppUserRepositoryWrapper userRepository;
     private final LoanRepositoryWrapper loanRepositoryWrapper;
     private final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepository;
 
     @Autowired
-    public LoanAccrualWritePlatformServiceImpl(final RoutingDataSource dataSource, final LoanReadPlatformService loanReadPlatformService,
-            final JournalEntryWritePlatformService journalEntryWritePlatformService,
+    public LoanAccrualWritePlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
+                                               final LoanReadPlatformService loanReadPlatformService,
+                                               final JournalEntryWritePlatformService journalEntryWritePlatformService,
             final LoanChargeReadPlatformService loanChargeReadPlatformService, final AppUserRepositoryWrapper userRepository,
             final LoanRepositoryWrapper loanRepositoryWrapper, final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepository) {
         this.loanReadPlatformService = loanReadPlatformService;
         this.dataSource = dataSource;
         this.jdbcTemplate = new JdbcTemplate(this.dataSource);
+        this.sqlResolver = sqlResolver;
         this.journalEntryWritePlatformService = journalEntryWritePlatformService;
         this.loanChargeReadPlatformService = loanChargeReadPlatformService;
         this.userRepository = userRepository;
@@ -268,13 +272,13 @@ public class LoanAccrualWritePlatformServiceImpl implements LoanAccrualWritePlat
     private void addAccrualAccounting(LoanScheduleAccrualData scheduleAccrualData, BigDecimal amount, BigDecimal interestportion,
             BigDecimal totalAccInterest, BigDecimal feeportion, BigDecimal totalAccFee, BigDecimal penaltyportion,
             BigDecimal totalAccPenalty, final LocalDate accruedTill) throws DataAccessException {
-        String transactionSql = "INSERT INTO m_loan_transaction  (loan_id,office_id,is_reversed,transaction_type_enum,transaction_date,amount,interest_portion_derived,"
-                + "fee_charges_portion_derived,penalty_charges_portion_derived, submitted_on_date) VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?)";
+        String transactionSql = "INSERT INTO m_loan_transaction (loan_id,office_id,is_reversed,transaction_type_enum,transaction_date,amount,interest_portion_derived,"
+                + "fee_charges_portion_derived,penalty_charges_portion_derived, submitted_on_date)"
+                + " VALUES (?, ?, " + sqlResolver.formatBoolValue(false) + ", ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         this.jdbcTemplate.update(transactionSql, scheduleAccrualData.getLoanId(), scheduleAccrualData.getOfficeId(),
                 LoanTransactionType.ACCRUAL.getValue(), Date.from(accruedTill.atStartOfDay(ZoneId.systemDefault()).toInstant()), amount,
                 interestportion, feeportion, penaltyportion, DateUtils.getDateOfTenant());
-        @SuppressWarnings("deprecation")
-        final Long transactonId = this.jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
+        final Long transactonId = this.jdbcTemplate.queryForObject("SELECT " + sqlResolver.formatLastInsertId(), Long.class);
 
         Map<LoanChargeData, BigDecimal> applicableCharges = scheduleAccrualData.getApplicableCharges();
         String chargespaidSql = "INSERT INTO m_loan_charge_paid_by (loan_transaction_id, loan_charge_id, amount,installment_number) VALUES (?,?,?,?)";

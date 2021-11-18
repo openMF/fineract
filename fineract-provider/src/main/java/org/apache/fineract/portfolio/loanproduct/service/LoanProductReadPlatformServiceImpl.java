@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.apache.fineract.accounting.common.AccountingEnumerations;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
@@ -56,17 +57,19 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
 
     private final PlatformSecurityContext context;
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final ChargeReadPlatformService chargeReadPlatformService;
     private final RateReadService rateReadService;
     private final FineractEntityAccessUtil fineractEntityAccessUtil;
 
     @Autowired
-    public LoanProductReadPlatformServiceImpl(final PlatformSecurityContext context,
-            final ChargeReadPlatformService chargeReadPlatformService, final RoutingDataSource dataSource,
-            final FineractEntityAccessUtil fineractEntityAccessUtil, final RateReadService rateReadService) {
+    public LoanProductReadPlatformServiceImpl(final PlatformSecurityContext context, final ChargeReadPlatformService chargeReadPlatformService,
+                                              final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
+                                              final FineractEntityAccessUtil fineractEntityAccessUtil, final RateReadService rateReadService) {
         this.context = context;
         this.chargeReadPlatformService = chargeReadPlatformService;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.fineractEntityAccessUtil = fineractEntityAccessUtil;
         this.rateReadService = rateReadService;
     }
@@ -477,14 +480,14 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
         }
     }
 
-    private static final class LoanProductLookupMapper implements RowMapper<LoanProductData> {
+    private final class LoanProductLookupMapper implements RowMapper<LoanProductData> {
 
         public String schema() {
             return "lp.id as id, lp.name as name, lp.allow_multiple_disbursals as multiDisburseLoan from m_product_loan lp";
         }
 
         public String activeOnlySchema() {
-            return schema() + " where (close_date is null or close_date >= CURDATE())";
+            return schema() + " where (close_date is null or close_date >= "+ sqlResolver.formatDateCurrent() + ")";
         }
 
         public String productMixSchema() {

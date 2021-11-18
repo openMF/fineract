@@ -47,6 +47,6 @@ public class ResultsetColumnValueData implements Serializable {
     }
 
     public boolean codeMatches(final Integer match) {
-        return match.intValue() == this.id;
+        return match == this.id;
     }
 }

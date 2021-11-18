@@ -45,6 +45,8 @@ import org.apache.fineract.portfolio.search.data.AdHocSearchQueryData;
 import org.apache.fineract.portfolio.search.data.SearchConditions;
 import org.apache.fineract.portfolio.search.data.SearchData;
 import org.apache.fineract.useradministration.domain.AppUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -53,6 +55,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class SearchReadPlatformServiceImpl implements SearchReadPlatformService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SearchReadPlatformServiceImpl.class);
 
     private final NamedParameterJdbcTemplate namedParameterjdbcTemplate;
     private final PlatformSecurityContext context;
@@ -96,11 +100,16 @@ public class SearchReadPlatformServiceImpl implements SearchReadPlatformService 
                     + " from m_client c join m_office o on o.id = c.office_id where o.hierarchy like :hierarchy and (c.account_no like :search or c.display_name like :search or c.external_id like :search or c.mobile_no like :search)) ";
 
             final String loanMatchSql = " (select 'LOAN' as entityType, l.id as entityId, pl.name as entityName, l.external_id as entityExternalId, l.account_no as entityAccountNo "
-                    + " , IFNULL(c.id,g.id) as parentId, IFNULL(c.display_name,g.display_name) as parentName, null as entityMobileNo, l.loan_status_id as entityStatusEnum, null as subEntityType, IF(g.id is null, 'client', 'group') as parentType "
+                    + " , COALESCE(c.id,g.id) as parentId, COALESCE(c.display_name,g.display_name) as parentName, null as entityMobileNo, l.loan_status_id as entityStatusEnum, IF(g.id is null, 'client', 'group') as parentType "
+                    + " , COALESCE(c.id,g.id) as parentId, COALESCE(c.display_name,g.display_name) as parentName, null as entityMobileNo, l.loan_status_id as entityStatusEnum, "
+                    + "CASE WHEN g.id is null THEN 'client' ELSE 'group' END as parentType "
                     + " from m_loan l left join m_client c on l.client_id = c.id left join m_group g ON l.group_id = g.id left join m_office o on o.id = c.office_id left join m_product_loan pl on pl.id=l.product_id where (o.hierarchy IS NULL OR o.hierarchy like :hierarchy) and (l.account_no like :search or l.external_id like :search)) ";
 
+
             final String savingMatchSql = " (select 'SAVING' as entityType, s.id as entityId, sp.name as entityName, s.external_id as entityExternalId, s.account_no as entityAccountNo "
-                    + " , IFNULL(c.id,g.id) as parentId, IFNULL(c.display_name,g.display_name) as parentName, null as entityMobileNo, s.status_enum as entityStatusEnum, s.deposit_type_enum as subEntityType,IF(g.id is null, 'client', 'group') as parentType "
+                    + " , COALESCE(c.id,g.id) as parentId, COALESCE(c.display_name,g.display_name) as parentName, null as entityMobileNo, s.status_enum as entityStatusEnum, IF(g.id is null, 'client', 'group') as parentType "
+                    + " , COALESCE(c.id,g.id) as parentId, COALESCE(c.display_name,g.display_name) as parentName, null as entityMobileNo, s.status_enum as entityStatusEnum, "
+                    + "CASE WHEN g.id is null THEN 'client' ELSE 'group' END as parentType "
                     + " from m_savings_account s left join m_client c on s.client_id = c.id left join m_group g ON s.group_id = g.id left join m_office o on o.id = c.office_id left join m_savings_product sp on sp.id=s.product_id "
                     + " where (o.hierarchy IS NULL OR o.hierarchy like :hierarchy) and (s.account_no like :search or s.external_id like :search)) ";
 
@@ -113,7 +122,7 @@ public class SearchReadPlatformServiceImpl implements SearchReadPlatformService 
                     + " null as entityExternalId, null as entityAccountNo, c.id as parentId, c.display_name as parentName,null as entityMobileNo, c.status_enum as entityStatusEnum, null as subEntityType, null as parentType "
                     + " from m_client_identifier ci join m_client c on ci.client_id=c.id join m_office o on o.id = c.office_id "
                     + " where o.hierarchy like :hierarchy and ci.document_key like :search ) ";
-            final String groupMatchSql = " (select IF(g.level_id=1,'CENTER','GROUP') as entityType, g.id as entityId, g.display_name as entityName, g.external_id as entityExternalId, g.account_no as entityAccountNo "
+            final String groupMatchSql = " (select CASE WHEN g.level_id=1 THEN 'CENTER' ELSE 'GROUP' END as entityType, g.id as entityId, g.display_name as entityName, g.external_id as entityExternalId, g.account_no as entityAccountNo "
                     + " , g.office_id as parentId, o.name as parentName, null as entityMobileNo, g.status_enum as entityStatusEnum, null as subEntityType, null as parentType "
                     + " from m_group g join m_office o on o.id = g.office_id where o.hierarchy like :hierarchy and (g.account_no like :search or g.display_name like :search or g.external_id like :search or g.id like :search )) ";
             final StringBuilder sql = new StringBuilder();
@@ -141,10 +150,12 @@ public class SearchReadPlatformServiceImpl implements SearchReadPlatformService 
             if (searchConditions.isGroupSearch()) {
                 sql.append(groupMatchSql).append(union);
             }
+            LOG.info("SQL " + sql.toString());
 
             sql.replace(sql.lastIndexOf(union), sql.length(), "");
 
             // remove last occurrence of "union all" string
+            LOG.info("SQL " + sql.toString());
             return sql.toString();
         }
 
@@ -217,9 +228,9 @@ public class SearchReadPlatformServiceImpl implements SearchReadPlatformService 
             final StringBuilder sql = new StringBuilder();
             sql.append(
                     "Select a.name as officeName, a.Product as productName, a.cnt as 'count', a.outstandingAmt as outstanding, a.percentOut as percentOut  ")
-                    .append("from (select mo.name, mp.name Product, sum(ifnull(ml.total_expected_repayment_derived,0.0)) TotalAmt, count(*) cnt, ")
-                    .append("sum(ifnull(ml.total_outstanding_derived,0.0)) outstandingAmt,  ")
-                    .append("(sum(ifnull(ml.total_outstanding_derived,0.0)) * 100 / sum(ifnull(ml.total_expected_repayment_derived,0.0))) percentOut ")
+                    .append("from (select mo.name, mp.name Product, sum(COALESCE(ml.total_expected_repayment_derived,0.0)) TotalAmt, count(*) cnt, ")
+                    .append("sum(COALESCE(ml.total_outstanding_derived,0.0)) outstandingAmt,  ")
+                    .append("(sum(COALESCE(ml.total_outstanding_derived,0.0)) * 100 / sum(COALESCE(ml.total_expected_repayment_derived,0.0))) percentOut ")
                     .append("from m_loan ml inner join m_product_loan mp on mp.id=ml.product_id  ")
                     .append("inner join m_client mc on mc.id=ml.client_id  ").append("inner join m_office mo on mo.id=mc.office_id  ");
 

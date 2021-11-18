@@ -21,6 +21,7 @@ package org.apache.fineract.notification.eventandlistener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
@@ -32,8 +33,11 @@ import org.apache.fineract.notification.data.NotificationData;
 import org.apache.fineract.notification.service.NotificationWritePlatformService;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.apache.fineract.useradministration.domain.AppUserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.listener.SessionAwareMessageListener;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -44,6 +48,47 @@ public class NotificationEventListener implements SessionAwareMessageListener {
     private final NotificationWritePlatformService notificationWritePlatformService;
 
     private final AppUserRepository appUserRepository;
+
+    private static final Logger LOG = LoggerFactory.getLogger(NotificationEventListener.class);
+
+    private CountDownLatch notificationDataLatch = new CountDownLatch(1);
+
+    @KafkaListener(topics = "${notification.data.topic.name}", containerFactory = "notificationDataKafkaListenerContainerFactory",autoStartup = "${FINERACT_DEFAULT_KAFKA_ENABLED:false}")
+    public void notificationDataListener(NotificationData notificationData) {
+        LOG.info("Received notificationData message=[" + notificationData + "]");
+        this.notificationDataLatch.countDown();
+
+        final FineractPlatformTenant tenant = this.basicAuthTenantDetailsService.loadTenantById(notificationData.getTenantIdentifier(),
+                false);
+        ThreadLocalContextUtil.setTenant(tenant);
+
+        Long appUserId = notificationData.getActor();
+
+        List<Long> userIds = notificationData.getUserIds();
+
+        if (notificationData.getOfficeId() != null) {
+            List<Long> tempUserIds = new ArrayList<>(userIds);
+            for (Long userId : tempUserIds) {
+                AppUser appUser = appUserRepository.findById(userId).get();
+                if (!Objects.equals(appUser.getOffice().getId(), notificationData.getOfficeId())) {
+                    userIds.remove(userId);
+                }
+            }
+        }
+
+        if (userIds.contains(appUserId)) 
+            userIds.remove(appUserId);
+        
+        if(!userIds.isEmpty()){
+            notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
+            notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
+            notificationData.isSystemGenerated());
+        } else {
+            notificationWritePlatformService.notify(appUserId, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
+            notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
+            notificationData.isSystemGenerated());
+        }
+    }
 
     @Autowired
     public NotificationEventListener(BasicAuthTenantDetailsService basicAuthTenantDetailsService,
@@ -56,6 +101,7 @@ public class NotificationEventListener implements SessionAwareMessageListener {
     @Override
     public void onMessage(Message message, Session session) throws JMSException {
         if (message instanceof ObjectMessage) {
+            LOG.info("Message arrived");
             NotificationData notificationData = (NotificationData) ((ObjectMessage) message).getObject();
 
             final FineractPlatformTenant tenant = this.basicAuthTenantDetailsService.loadTenantById(notificationData.getTenantIdentifier(),
@@ -80,7 +126,7 @@ public class NotificationEventListener implements SessionAwareMessageListener {
                 userIds.remove(appUserId);
             }
 
-            notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentfier(),
+            notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
                     notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
                     notificationData.isSystemGenerated());
         }

@@ -111,8 +111,8 @@ public class OfficeReadPlatformServiceImpl implements OfficeReadPlatformService 
                     + " ot.currency_code as currencyCode, rc.decimal_places as currencyDigits, rc.currency_multiplesof as inMultiplesOf, "
                     + " rc.name as currencyName, rc.internationalized_name_code as currencyNameCode, rc.display_symbol as currencyDisplaySymbol "
                     + " from m_office_transaction ot " + " left join m_office fromoff on fromoff.id = ot.from_office_id "
-                    + " left join m_office tooff on tooff.id = ot.to_office_id " + " join m_currency rc on rc.`code` = ot.currency_code";
-        }
+                    + " left join m_office tooff on tooff.id = ot.to_office_id " + " join m_currency rc on rc.code = ot.currency_code";
+       }
 
         @Override
         public OfficeTransactionData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {

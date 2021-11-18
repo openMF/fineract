@@ -18,6 +18,8 @@
  */
 package org.apache.fineract.infrastructure.dataqueries.data;
 
+import org.apache.fineract.infrastructure.core.boot.db.JdbcJavaType;
+
 import java.util.List;
 
 /**
@@ -41,9 +43,9 @@ public final class GenericResultsetData {
         return this.data;
     }
 
-    public String getColTypeOfColumnNamed(final String columnName) {
+    public JdbcJavaType getColTypeOfColumnNamed(final String columnName) {
 
-        String colType = null;
+        JdbcJavaType colType = null;
         for (final ResultsetColumnHeaderData columnHeader : this.columnHeaders) {
             if (columnHeader.isNamed(columnName)) {
                 colType = columnHeader.getColumnType();

@@ -27,6 +27,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
@@ -53,14 +55,15 @@ public class GSIMReadPlatformServiceImpl implements GSIMReadPlatformService {
     private final JdbcTemplate jdbcTemplate;
     private final PlatformSecurityContext context;
     private final ColumnValidator columnValidator;
+    private final DataSourceSqlResolver sqlResolver;
 
     @Autowired
     public GSIMReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource,
-            final ColumnValidator columnValidator) {
+            final ColumnValidator columnValidator, DataSourceSqlResolver sqlResolver) {
         this.context = context;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.columnValidator = columnValidator;
-
+        this.sqlResolver = sqlResolver;
     }
 
     private static final class GSIMFieldsMapper implements RowMapper<GroupSavingsIndividualMonitoringAccountData> {
@@ -241,7 +244,7 @@ public class GSIMReadPlatformServiceImpl implements GSIMReadPlatformService {
         return this.jdbcTemplate.query(savingsSql, savingsAccountSummaryDataMapper, inputs);
     }
 
-    private static final class SavingsAccountSummaryDataMapper implements RowMapper<SavingsSummaryCustom> {
+    private final class SavingsAccountSummaryDataMapper implements RowMapper<SavingsSummaryCustom> {
 
         final String schemaSql;
 
@@ -273,9 +276,9 @@ public class GSIMReadPlatformServiceImpl implements GSIMReadPlatformService {
             accountsSummary.append("avbu.firstname as activatedByFirstname, avbu.lastname as activatedByLastname,");
 
             accountsSummary.append("sa.sub_status_enum as subStatusEnum, ");
-            accountsSummary.append("(select IFNULL(max(sat.transaction_date),sa.activatedon_date) ");
+            accountsSummary.append("(select COALESCE(MAX(sat.transaction_date),sa.activatedon_date) ");
             accountsSummary.append("from m_savings_account_transaction as sat ");
-            accountsSummary.append("where sat.is_reversed = 0 ");
+            accountsSummary.append("where sat.is_reversed = ").append(sqlResolver.formatBoolValue(false));
             accountsSummary.append("and sat.transaction_type_enum in (1,2) ");
             accountsSummary.append("and sat.savings_account_id = sa.id) as lastActiveTransactionDate, ");
 

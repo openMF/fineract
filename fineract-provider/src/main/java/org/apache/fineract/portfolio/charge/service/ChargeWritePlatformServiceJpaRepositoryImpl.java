@@ -26,6 +26,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.fineract.accounting.glaccount.domain.GLAccount;
 import org.apache.fineract.accounting.glaccount.domain.GLAccountRepositoryWrapper;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.apache.fineract.infrastructure.core.exception.PlatformDataIntegrityException;
@@ -62,6 +63,7 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
     private final ChargeDefinitionCommandFromApiJsonDeserializer fromApiJsonDeserializer;
     private final JdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
+    private final DataSourceSqlResolver sqlResolver;
     private final ChargeRepository chargeRepository;
     private final LoanProductRepository loanProductRepository;
     private final FineractEntityAccessUtil fineractEntityAccessUtil;
@@ -71,13 +73,14 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
     @Autowired
     public ChargeWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context,
             final ChargeDefinitionCommandFromApiJsonDeserializer fromApiJsonDeserializer, final ChargeRepository chargeRepository,
-            final LoanProductRepository loanProductRepository, final RoutingDataSource dataSource,
+            final LoanProductRepository loanProductRepository, final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
             final FineractEntityAccessUtil fineractEntityAccessUtil, final GLAccountRepositoryWrapper glAccountRepository,
             final TaxGroupRepositoryWrapper taxGroupRepository) {
         this.context = context;
         this.fromApiJsonDeserializer = fromApiJsonDeserializer;
         this.dataSource = dataSource;
         this.jdbcTemplate = new JdbcTemplate(this.dataSource);
+        this.sqlResolver = sqlResolver;
         this.chargeRepository = chargeRepository;
         this.loanProductRepository = loanProductRepository;
         this.fineractEntityAccessUtil = fineractEntityAccessUtil;
@@ -244,29 +247,29 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
     }
 
     private boolean isAnyLoansAssociateWithThisCharge(final Long chargeId) {
-
-        final String sql = "select if((exists (select 1 from m_loan_charge lc where lc.charge_id = ? and lc.is_active = 1)) = 1, 'true', 'false')";
+        final String sql = "select (CASE WHEN exists (select 1 from m_loan_charge lc where lc.charge_id = ? and lc.is_active = " +
+                sqlResolver.formatBoolValue(true) + ") THEN 'true' ELSE 'false' END)";
         final String isLoansUsingCharge = this.jdbcTemplate.queryForObject(sql, String.class, new Object[] { chargeId });
         return Boolean.valueOf(isLoansUsingCharge);
     }
 
     private boolean isAnySavingsAssociateWithThisCharge(final Long chargeId) {
-
-        final String sql = "select if((exists (select 1 from m_savings_account_charge sc where sc.charge_id = ? and sc.is_active = 1)) = 1, 'true', 'false')";
+        final String sql = "select (CASE WHEN exists (select 1 from m_savings_account_charge sc where sc.charge_id = ? and sc.is_active = " +
+                sqlResolver.formatBoolValue(true) + ") THEN 'true' ELSE 'false' END)";
         final String isSavingsUsingCharge = this.jdbcTemplate.queryForObject(sql, String.class, new Object[] { chargeId });
         return Boolean.valueOf(isSavingsUsingCharge);
     }
 
     private boolean isAnyLoanProductsAssociateWithThisCharge(final Long chargeId) {
 
-        final String sql = "select if((exists (select 1 from m_product_loan_charge lc where lc.charge_id = ?)) = 1, 'true', 'false')";
+        final String sql = "select (CASE WHEN exists (select 1 from m_product_loan_charge lc where lc.charge_id = ?) THEN 'true' ELSE 'false' END)";
         final String isLoansUsingCharge = this.jdbcTemplate.queryForObject(sql, String.class, new Object[] { chargeId });
         return Boolean.valueOf(isLoansUsingCharge);
     }
 
     private boolean isAnySavingsProductsAssociateWithThisCharge(final Long chargeId) {
 
-        final String sql = "select if((exists (select 1 from m_savings_product_charge sc where sc.charge_id = ?)) = 1, 'true', 'false')";
+        final String sql = "select (CASE WHEN (exists (select 1 from m_savings_product_charge sc where sc.charge_id = ?)) = 1 THEN 'true' ELSE 'false' END)";
         final String isSavingsUsingCharge = this.jdbcTemplate.queryForObject(sql, String.class, new Object[] { chargeId });
         return Boolean.valueOf(isSavingsUsingCharge);
     }

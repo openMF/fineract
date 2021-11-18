@@ -18,6 +18,10 @@
  */
 package org.apache.fineract.infrastructure.core.boot;
 
+import org.apache.fineract.notification.config.KafkaConfiguration;
+import org.apache.fineract.notification.config.KafkaConsumerConfiguration;
+import org.apache.fineract.notification.config.KafkaProducerConfiguration;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceConfiguration;
 import org.apache.fineract.notification.config.MessagingConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
@@ -25,6 +29,7 @@ import org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -45,12 +50,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  */
 @Configuration
 @Import({ WebXmlConfiguration.class, WebXmlOauthConfiguration.class, WebFrontEndConfiguration.class, MessagingConfiguration.class,
-        WebTwoFactorXmlConfiguration.class })
+        KafkaConfiguration.class, KafkaProducerConfiguration.class, KafkaConsumerConfiguration.class,
+        WebTwoFactorXmlConfiguration.class, DataSourceConfiguration.class})
 @ImportResource({ "classpath*:META-INF/spring/appContext.xml" })
 @PropertySource(value = "classpath:META-INF/spring/jdbc.properties")
 @EnableAutoConfiguration(exclude = { DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class,
         DataSourceTransactionManagerAutoConfiguration.class, FlywayAutoConfiguration.class, GsonAutoConfiguration.class,
-        JdbcTemplateAutoConfiguration.class })
+        JdbcTemplateAutoConfiguration.class, LiquibaseAutoConfiguration.class})
 @EnableWebSecurity
 @EnableTransactionManagement
 public abstract class AbstractApplicationConfiguration {

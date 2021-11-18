@@ -25,6 +25,8 @@ public interface PortfolioCommandSourceWritePlatformService {
 
     CommandProcessingResult logCommandSource(CommandWrapper commandRequest);
 
+    CommandProcessingResult logKafkaCommandSource(CommandWrapper commandRequest);
+
     CommandProcessingResult approveEntry(Long id);
 
     Long rejectEntry(Long id);

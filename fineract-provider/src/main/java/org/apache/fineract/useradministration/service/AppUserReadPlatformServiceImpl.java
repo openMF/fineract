@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
@@ -50,6 +52,7 @@ import org.springframework.stereotype.Service;
 public class AppUserReadPlatformServiceImpl implements AppUserReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final PlatformSecurityContext context;
     private final OfficeReadPlatformService officeReadPlatformService;
     private final RoleReadPlatformService roleReadPlatformService;
@@ -58,13 +61,15 @@ public class AppUserReadPlatformServiceImpl implements AppUserReadPlatformServic
 
     @Autowired
     public AppUserReadPlatformServiceImpl(final PlatformSecurityContext context, final RoutingDataSource dataSource,
-            final OfficeReadPlatformService officeReadPlatformService, final RoleReadPlatformService roleReadPlatformService,
-            final AppUserRepository appUserRepository, final StaffReadPlatformService staffReadPlatformService) {
+                                          DataSourceSqlResolver sqlResolver,
+                                          final OfficeReadPlatformService officeReadPlatformService, final RoleReadPlatformService roleReadPlatformService,
+                                          final AppUserRepository appUserRepository, final StaffReadPlatformService staffReadPlatformService) {
         this.context = context;
         this.officeReadPlatformService = officeReadPlatformService;
         this.roleReadPlatformService = roleReadPlatformService;
         this.appUserRepository = appUserRepository;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.staffReadPlatformService = staffReadPlatformService;
     }
 
@@ -155,7 +160,7 @@ public class AppUserReadPlatformServiceImpl implements AppUserReadPlatformServic
         return retUser;
     }
 
-    private static final class AppUserMapper implements RowMapper<AppUserData> {
+    private final class AppUserMapper implements RowMapper<AppUserData> {
 
         private final RoleReadPlatformService roleReadPlatformService;
         private final StaffReadPlatformService staffReadPlatformService;
@@ -193,12 +198,13 @@ public class AppUserReadPlatformServiceImpl implements AppUserReadPlatformServic
         public String schema() {
             return " u.id as id, u.username as username, u.firstname as firstname, u.lastname as lastname, u.email as email, u.password_never_expires as passwordNeverExpires, "
                     + " u.office_id as officeId, o.name as officeName, u.staff_id as staffId, u.is_self_service_user as isSelfServiceUser from m_appuser u "
-                    + " join m_office o on o.id = u.office_id where o.hierarchy like ? and u.is_deleted=0 order by u.username";
+                    + " join m_office o on o.id = u.office_id where o.hierarchy like ? and u.is_deleted = " + sqlResolver.formatBoolValue(false)
+                    + " order by u.username";
         }
 
     }
 
-    private static final class AppUserLookupMapper implements RowMapper<AppUserData> {
+    private final class AppUserLookupMapper implements RowMapper<AppUserData> {
 
         @Override
         public AppUserData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
@@ -211,7 +217,8 @@ public class AppUserReadPlatformServiceImpl implements AppUserReadPlatformServic
 
         public String schema() {
             return " u.id as id, u.username as username from m_appuser u "
-                    + " join m_office o on o.id = u.office_id where o.hierarchy like ? and u.is_deleted=0 order by u.username";
+                    + " join m_office o on o.id = u.office_id where o.hierarchy like ? and u.is_deleted = " + sqlResolver.formatBoolValue(false)
+                    + " order by u.username";
         }
     }
 

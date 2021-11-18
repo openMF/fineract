@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
@@ -48,12 +49,15 @@ import org.springframework.util.CollectionUtils;
 public class CalendarReadPlatformServiceImpl implements CalendarReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
+
     private final ConfigurationDomainService configurationDomainService;
 
     @Autowired
-    public CalendarReadPlatformServiceImpl(final RoutingDataSource dataSource,
-            final ConfigurationDomainService configurationDomainService) {
+    public CalendarReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
+                                           final ConfigurationDomainService configurationDomainService) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.configurationDomainService = configurationDomainService;
     }
 
@@ -432,7 +436,7 @@ public class CalendarReadPlatformServiceImpl implements CalendarReadPlatformServ
         try {
             final CalendarDataFromHistoryMapper rm = new CalendarDataFromHistoryMapper();
 
-            final String sql = rm.schema() + " where c.calendar_id = ? and date(?) between c.start_date and c.end_date limit 1";
+            final String sql = rm.schema() + " where c.calendar_id = ? and " + sqlResolver.formatDate("?") + " between c.start_date and c.end_date limit 1";
 
             return this.jdbcTemplate.queryForObject(sql, rm,
                     new Object[] { calendarId, Date.from(compareDate.atStartOfDay(ZoneId.systemDefault()).toInstant()) });

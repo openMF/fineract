@@ -243,7 +243,7 @@ public class ClientsApiResource {
                 .withJson(apiRequestBodyAsJson) //
                 .build(); //
 
-        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logKafkaCommandSource(commandRequest);
 
         return this.toApiJsonSerializer.serialize(result);
     }

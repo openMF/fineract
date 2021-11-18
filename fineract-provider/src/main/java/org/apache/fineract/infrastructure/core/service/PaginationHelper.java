@@ -21,9 +21,21 @@ package org.apache.fineract.infrastructure.core.service;
 import java.util.List;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowCountCallbackHandler;
 import org.springframework.jdbc.core.RowMapper;
 
 public class PaginationHelper<E> {
+
+    public Page<E> fetchPage(final JdbcTemplate jt, final String sqlCountRows, final Object[] countArgs, final String sqlFetchRows, final Object[] fetchArgs,
+                             final RowMapper<E> rowMapper) {
+
+        final List<E> items = jt.query(sqlFetchRows, fetchArgs, rowMapper);
+
+        // determine how many rows are available
+        final Integer totalFilteredRecords = jt.queryForObject(sqlCountRows, countArgs, Integer.class);
+
+        return new Page<>(items, ObjectUtils.defaultIfNull(totalFilteredRecords, 0));
+    }
 
     public Page<E> fetchPage(final JdbcTemplate jt, final String sqlCountRows, final String sqlFetchRows, final Object[] args,
             final RowMapper<E> rowMapper) {
@@ -41,6 +53,17 @@ public class PaginationHelper<E> {
 
         // determine how many rows are available
         Integer totalFilteredRecords = jdbcTemplate.queryForObject(sqlCountRows, Integer.class);
+
+        return new Page<>(items, ObjectUtils.defaultIfNull(totalFilteredRecords, 0));
+    }
+
+    public Page<Long> fetchPage(JdbcTemplate jdbcTemplate, String sql, Class<Long> type) {
+        RowCountCallbackHandler countCallback = new RowCountCallbackHandler();
+        final List<Long> items = jdbcTemplate.queryForList(sql, type, countCallback);
+
+        // determine how many rows are available
+        Integer totalFilteredRecords = countCallback.getRowCount(); // jdbcTemplate.queryForObject(sqlCountRows,
+        // Integer.class);
 
         return new Page<>(items, ObjectUtils.defaultIfNull(totalFilteredRecords, 0));
     }

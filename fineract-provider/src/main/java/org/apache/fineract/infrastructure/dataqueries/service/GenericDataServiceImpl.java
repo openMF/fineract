@@ -20,10 +20,13 @@ package org.apache.fineract.infrastructure.dataqueries.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
 import javax.sql.DataSource;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
+import org.apache.fineract.infrastructure.core.boot.db.JdbcJavaType;
 import org.apache.fineract.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.infrastructure.dataqueries.data.GenericResultsetData;
@@ -40,18 +43,26 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
 import org.springframework.stereotype.Service;
 
+import static org.apache.fineract.infrastructure.dataqueries.data.ResultsetColumnHeaderData.DisplayType.DATE;
+import static org.apache.fineract.infrastructure.dataqueries.data.ResultsetColumnHeaderData.DisplayType.DATETIME;
+import static org.apache.fineract.infrastructure.dataqueries.data.ResultsetColumnHeaderData.DisplayType.DECIMAL;
+import static org.apache.fineract.infrastructure.dataqueries.data.ResultsetColumnHeaderData.DisplayType.INTEGER;
+import static org.apache.fineract.infrastructure.dataqueries.data.ResultsetColumnHeaderData.DisplayType.TIME;
+
 @Service
 public class GenericDataServiceImpl implements GenericDataService {
 
-    private final JdbcTemplate jdbcTemplate;
-    private final DataSource dataSource;
     private static final Logger LOG = LoggerFactory.getLogger(GenericDataServiceImpl.class);
 
+    private final JdbcTemplate jdbcTemplate;
+    private final DataSource dataSource;
+    private final DataSourceSqlResolver sqlResolver;
+
     @Autowired
-    public GenericDataServiceImpl(final RoutingDataSource dataSource) {
+    public GenericDataServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver) {
         this.dataSource = dataSource;
         this.jdbcTemplate = new JdbcTemplate(this.dataSource);
-
+        this.sqlResolver = sqlResolver;
     }
 
     @Override
@@ -69,7 +80,7 @@ public class GenericDataServiceImpl implements GenericDataService {
                 final String columnName = rsmd.getColumnName(i + 1);
                 final String columnType = rsmd.getColumnTypeName(i + 1);
 
-                final ResultsetColumnHeaderData columnHeader = ResultsetColumnHeaderData.basic(columnName, columnType);
+                final ResultsetColumnHeaderData columnHeader = ResultsetColumnHeaderData.basic(columnName, columnType, sqlResolver.getDialect());
                 columnHeaders.add(columnHeader);
             }
 
@@ -134,7 +145,7 @@ public class GenericDataServiceImpl implements GenericDataService {
         Integer rSize;
         final String doubleQuote = "\"";
         final String slashDoubleQuote = "\\\"";
-        String currColType;
+        ResultsetColumnHeaderData.DisplayType colDisplayType;
         String currVal;
 
         for (int i = 0; i < data.size(); i++) {
@@ -144,32 +155,32 @@ public class GenericDataServiceImpl implements GenericDataService {
             rSize = row.size();
             for (int j = 0; j < rSize; j++) {
 
-                writer.append(doubleQuote + columnHeaders.get(j).getColumnName() + doubleQuote + ": ");
-                currColType = columnHeaders.get(j).getColumnDisplayType();
-                final String colType = columnHeaders.get(j).getColumnType();
-                if (currColType == null && colType.equalsIgnoreCase("INT")) {
-                    currColType = "INTEGER";
+                ResultsetColumnHeaderData columnHeader = columnHeaders.get(j);
+                writer.append(doubleQuote + columnHeader.getColumnName() + doubleQuote + ": ");
+                colDisplayType = columnHeader.getColumnDisplayType();
+                final JdbcJavaType colType = columnHeader.getColumnType();
+                if (colDisplayType == null) {
+                    colDisplayType = ResultsetColumnHeaderData.calcColumnDisplayType(colType);
                 }
-                if (currColType == null && colType.equalsIgnoreCase("VARCHAR")) {
-                    currColType = "VARCHAR";
-                }
-                if (currColType == null && colType.equalsIgnoreCase("DATE")) {
-                    currColType = "DATE";
-                }
+
                 currVal = row.get(j);
-                if (currVal != null && currColType != null) {
-                    if (currColType.equals("DECIMAL") || currColType.equals("INTEGER")) {
+                if (currVal != null && colDisplayType != null) {
+                    if (colDisplayType == DECIMAL || colDisplayType == INTEGER) {
                         writer.append(currVal);
                     } else {
-                        if (currColType.equals("DATE")) {
+                        if (colDisplayType == DATE) {
                             final LocalDate localDate = LocalDate.parse(currVal);
-                            writer.append(
-                                    "[" + localDate.getYear() + ", " + localDate.getMonthValue() + ", " + localDate.getDayOfMonth() + "]");
-                        } else if (currColType.equals("DATETIME")) {
+                            writer.append("[" + localDate.getYear() + ", " + localDate.getMonthValue() + ", " + localDate.getDayOfMonth() + "]");
+                        } else if (colDisplayType == DATETIME) {
                             final LocalDateTime localDateTime = LocalDateTime.parse(currVal);
                             writer.append("[" + localDateTime.getYear() + ", " + localDateTime.getMonthValue() + ", "
                                     + localDateTime.getDayOfMonth() + " " + localDateTime.getHour() + ", " + localDateTime.getMinute()
                                     + ", " + localDateTime.getSecond() + ", " + localDateTime.get(ChronoField.MILLI_OF_SECOND) + "]");
+                        } else if (colDisplayType == TIME) {
+                            final LocalTime localTime = LocalTime.parse(currVal);
+                            writer.append("[" + localTime.getHour() + ", "
+                                    + localTime.getMinute() + ", " + localTime.getSecond() + ", "
+                                    + localTime.get(ChronoField.MILLI_OF_SECOND) + "]");
                         } else {
                             writer.append(doubleQuote + replace(currVal, doubleQuote, slashDoubleQuote) + doubleQuote);
                         }
@@ -205,29 +216,28 @@ public class GenericDataServiceImpl implements GenericDataService {
 
         columnDefinitions.beforeFirst();
         while (columnDefinitions.next()) {
-            final String columnName = columnDefinitions.getString("COLUMN_NAME");
-            final String isNullable = columnDefinitions.getString("IS_NULLABLE");
-            final String isPrimaryKey = columnDefinitions.getString("COLUMN_KEY");
-            final String columnType = columnDefinitions.getString("DATA_TYPE");
-            final Long columnLength = columnDefinitions.getLong("CHARACTER_MAXIMUM_LENGTH");
+            final String columnName = columnDefinitions.getString(1);
+            final String isNullable = columnDefinitions.getString(2);
+            final String isPrimaryKey = columnDefinitions.getString(5);
+            final String columnType = columnDefinitions.getString(3);
+            final Long columnLength = columnDefinitions.getLong(4);
 
-            final boolean columnNullable = "YES".equalsIgnoreCase(isNullable);
-            final boolean columnIsPrimaryKey = "PRI".equalsIgnoreCase(isPrimaryKey);
+            final boolean columnNullable = "YES".equalsIgnoreCase(isNullable) || "TRUE".equalsIgnoreCase(isNullable);
+            final boolean columnIsPrimaryKey = "PRI".equalsIgnoreCase(isPrimaryKey) || "TRUE".equalsIgnoreCase(isPrimaryKey);
+
+            JdbcJavaType jdbcType = JdbcJavaType.getByTypeName(sqlResolver.getDialect(), columnType);
 
             List<ResultsetColumnValueData> columnValues = new ArrayList<>();
             String codeName = null;
-            if ("varchar".equalsIgnoreCase(columnType)) {
-
-                final int codePosition = columnName.indexOf("_cv");
+            if (jdbcType != null && jdbcType.isVarcharType()) {
+                final int codePosition = columnName.indexOf("_cv_");
                 if (codePosition > 0) {
                     codeName = columnName.substring(0, codePosition);
 
                     columnValues = retreiveColumnValues(codeName);
                 }
-
-            } else if ("int".equalsIgnoreCase(columnType)) {
-
-                final int codePosition = columnName.indexOf("_cd");
+            } else if (jdbcType != null && jdbcType.isIntegerType()) {
+                final int codePosition = columnName.indexOf("_cd_");
                 if (codePosition > 0) {
                     codeName = columnName.substring(0, codePosition);
                     columnValues = retreiveColumnValues(codeName);
@@ -245,7 +255,7 @@ public class GenericDataServiceImpl implements GenericDataService {
             }
 
             final ResultsetColumnHeaderData rsch = ResultsetColumnHeaderData.detailed(columnName, columnType, columnLength, columnNullable,
-                    columnIsPrimaryKey, columnValues, codeName);
+                    columnIsPrimaryKey, columnValues, codeName, sqlResolver.getDialect());
 
             columnHeaders.add(rsch);
         }
@@ -296,10 +306,9 @@ public class GenericDataServiceImpl implements GenericDataService {
     }
 
     private SqlRowSet getDatatableMetaData(final String datatable) {
-
-        final String sql = "select COLUMN_NAME, IS_NULLABLE, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, COLUMN_KEY"
-                + " from INFORMATION_SCHEMA.COLUMNS " + " where TABLE_SCHEMA = schema() and TABLE_NAME = '" + datatable
-                + "'order by ORDINAL_POSITION";
+        String sql = (sqlResolver.getDialect().isPostgres() ?
+                ("SELECT attname AS COLUMN_NAME, not attnotnull AS IS_NULLABLE, atttypid::regtype  AS DATATYPE, attlen AS CHARACTER_MAXIMUM_LENGTH, attnum = 1 AS COLUMN_KEY FROM pg_attribute WHERE attrelid = '" + datatable + "'::regclass AND attnum > 0 AND NOT attisdropped ORDER BY attnum") :
+                ("SELECT c.COLUMN_NAME, c.IS_NULLABLE, c.DATA_TYPE, c.CHARACTER_MAXIMUM_LENGTH, c.COLUMN_KEY FROM INFORMATION_SCHEMA.COLUMNS c WHERE TABLE_SCHEMA = schema() AND TABLE_NAME = '" + datatable + "' ORDER BY ORDINAL_POSITION"));
 
         final SqlRowSet columnDefinitions = this.jdbcTemplate.queryForRowSet(sql);
         if (columnDefinitions.next()) {

@@ -22,6 +22,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.core.service.PaginationHelper;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
@@ -41,13 +43,16 @@ import org.springframework.stereotype.Service;
 public class SchedulerJobRunnerReadServiceImpl implements SchedulerJobRunnerReadService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final ColumnValidator columnValidator;
 
     private final PaginationHelper<JobDetailHistoryData> paginationHelper = new PaginationHelper<>();
 
     @Autowired
-    public SchedulerJobRunnerReadServiceImpl(final RoutingDataSource dataSource, final ColumnValidator columnValidator) {
+    public SchedulerJobRunnerReadServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
+                                             final ColumnValidator columnValidator) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.columnValidator = columnValidator;
     }
 
@@ -77,10 +82,14 @@ public class SchedulerJobRunnerReadServiceImpl implements SchedulerJobRunnerRead
             throw new JobNotFoundException(String.valueOf(jobId));
         }
         final JobHistoryMapper jobHistoryMapper = new JobHistoryMapper();
-        final StringBuilder sqlBuilder = new StringBuilder(200);
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ");
+        final StringBuilder sqlBuilder = new StringBuilder("select ");
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        if (mySql)
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
+
         sqlBuilder.append(jobHistoryMapper.schema());
-        sqlBuilder.append(" where job.id=?");
+        final String where = " where job.id=?";
+        sqlBuilder.append(where);
         if (searchParameters.isOrderByRequested()) {
             sqlBuilder.append(" order by ").append(searchParameters.getOrderBy());
             this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getOrderBy());
@@ -97,16 +106,22 @@ public class SchedulerJobRunnerReadServiceImpl implements SchedulerJobRunnerRead
             }
         }
 
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(), new Object[] { jobId },
-                jobHistoryMapper);
+        final Object[] sqlParams = new Object[] {jobId};
+        String sqlCountRows = "SELECT FOUND_ROWS()";
+        Object[] countParams = null;
+        if (!mySql) {
+            sqlCountRows = "SELECT " + jobHistoryMapper.countSchema() + where;
+            countParams = sqlParams;
+        }
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, countParams, sqlBuilder.toString(), sqlParams, jobHistoryMapper);
     }
 
     @Override
     public boolean isUpdatesAllowed() {
-        final String sql = "select job.display_name from job job where job.currently_running=true and job.updates_allowed=false";
+        final String sql = "select job.display_name from job job where job.currently_running = " + sqlResolver.formatBoolValue(true) +
+                " and job.updates_allowed = " + sqlResolver.formatBoolValue(false);
         final List<String> names = this.jdbcTemplate.queryForList(sql, String.class);
-        if (names != null && names.size() > 0) {
+        if (names.size() > 0) {
             final String listVals = names.toString();
             final String jobNames = listVals.substring(listVals.indexOf("[") + 1, listVals.indexOf("]"));
             throw new OperationNotAllowedException(jobNames);
@@ -129,12 +144,12 @@ public class SchedulerJobRunnerReadServiceImpl implements SchedulerJobRunnerRead
 
     }
 
-    private static final class JobDetailMapper implements RowMapper<JobDetailData> {
+    private final class JobDetailMapper implements RowMapper<JobDetailData> {
 
-        private final StringBuilder sqlBuilder = new StringBuilder("select").append(
-                " job.id,job.display_name as displayName,job.next_run_time as nextRunTime,job.initializing_errorlog as initializingError,job.cron_expression as cronExpression,job.is_active as active,job.currently_running as currentlyRunning,")
-                .append(" runHistory.version,runHistory.start_time as lastRunStartTime,runHistory.end_time as lastRunEndTime,runHistory.`status`,runHistory.error_message as jobRunErrorMessage,runHistory.trigger_type as triggerType,runHistory.error_log as jobRunErrorLog ")
-                .append(" from job job  left join job_run_history runHistory ON job.id=runHistory.job_id and job.previous_run_start_time=runHistory.start_time ");
+        private final StringBuilder sqlBuilder = new StringBuilder("select")
+                .append(" job.id,job.display_name as display_name,job.next_run_time as next_run_time,job.initializing_errorlog as initializing_error,job.cron_expression as cron_expression,job.is_active as active,job.currently_running as currently_running,")
+                .append(" run_history.version,run_history.start_time as last_run_start_time,run_history.end_time as last_run_end_time,run_history." + sqlResolver.toDefinition("status") + ",run_history.error_message as job_run_error_message,run_history.trigger_type as trigger_type,run_history.error_log as job_run_error_log ")
+                .append(" from job job  left join job_run_history run_history ON job.id=run_history.job_id and job.previous_run_start_time=run_history.start_time ");
 
         public String schema() {
             return this.sqlBuilder.toString();
@@ -170,30 +185,34 @@ public class SchedulerJobRunnerReadServiceImpl implements SchedulerJobRunnerRead
 
     }
 
-    private static final class JobHistoryMapper implements RowMapper<JobDetailHistoryData> {
+    private final class JobHistoryMapper implements RowMapper<JobDetailHistoryData> {
 
-        private final StringBuilder sqlBuilder = new StringBuilder(200).append(
-                " runHistory.version,runHistory.start_time as runStartTime,runHistory.end_time as runEndTime,runHistory.`status`,runHistory.error_message as jobRunErrorMessage,runHistory.trigger_type as triggerType,runHistory.error_log as jobRunErrorLog ")
-                .append(" from job job join job_run_history runHistory ON job.id=runHistory.job_id");
+        public static final String FROM = " from job job join job_run_history run_history ON job.id=run_history.job_id ";
+
+        private final StringBuilder sqlBuilder = new StringBuilder(200)
+                .append(" run_history.version,run_history.start_time as run_start_time,run_history.end_time as run_end_time,run_history." + sqlResolver.toDefinition("status") + ",run_history.error_message as job_run_error_message,run_history.trigger_type as trigger_type,run_history.error_log as job_run_error_log ")
+                .append(FROM);
 
         public String schema() {
             return this.sqlBuilder.toString();
         }
 
+        public String countSchema() {
+            return " count(job.*) " + FROM;
+        }
+
         @Override
         public JobDetailHistoryData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
             final Long version = rs.getLong("version");
-            final Date jobRunStartTime = rs.getTimestamp("runStartTime");
-            final Date jobRunEndTime = rs.getTimestamp("runEndTime");
+            final Date jobRunStartTime = rs.getTimestamp("run_start_time");
+            final Date jobRunEndTime = rs.getTimestamp("run_end_time");
             final String status = rs.getString("status");
-            final String jobRunErrorMessage = rs.getString("jobRunErrorMessage");
-            final String triggerType = rs.getString("triggerType");
-            final String jobRunErrorLog = rs.getString("jobRunErrorLog");
+            final String jobRunErrorMessage = rs.getString("job_run_error_message");
+            final String triggerType = rs.getString("trigger_type");
+            final String jobRunErrorLog = rs.getString("job_run_error_log");
             final JobDetailHistoryData jobDetailHistory = new JobDetailHistoryData(version, jobRunStartTime, jobRunEndTime, status,
                     jobRunErrorMessage, triggerType, jobRunErrorLog);
             return jobDetailHistory;
         }
-
     }
-
 }

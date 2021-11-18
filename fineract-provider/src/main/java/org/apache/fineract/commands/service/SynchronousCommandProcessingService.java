@@ -149,6 +149,72 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
 
     @Transactional
     @Override
+    public CommandProcessingResult processAndLogCommandKafka(final CommandWrapper wrapper, final JsonCommand command,
+            final boolean isApprovedByChecker) {
+
+        final boolean rollbackTransaction = this.configurationDomainService.isMakerCheckerEnabledForTask(wrapper.taskPermissionName());
+
+        final NewCommandSourceHandler handler = findCommandHandler(wrapper);
+
+        final CommandProcessingResult result;
+        try {
+            result = handler.processCommand(command);
+        } catch (Throwable t) {
+            // publish error event
+            publishErrorEvent(wrapper, command, t);
+            throw t;
+        }
+
+        final AppUser maker = this.context.authenticatedUser(wrapper);
+
+        CommandSource commandSourceResult = null;
+        if (command.commandId() != null) {
+            commandSourceResult = this.commandSourceRepository.findById(command.commandId()).orElse(null);
+            commandSourceResult.markAsChecked(maker, ZonedDateTime.now(DateUtils.getDateTimeZoneOfTenant()));
+        } else {
+            commandSourceResult = CommandSource.fullEntryFrom(wrapper, command, maker);
+        }
+        commandSourceResult.updateResourceId(result.resourceId());
+        commandSourceResult.updateForAudit(result.getOfficeId(), result.getGroupId(), result.getClientId(), result.getLoanId(),
+                result.getSavingsId(), result.getProductId(), result.getTransactionId());
+
+        String changesOnlyJson = null;
+        boolean rollBack = (rollbackTransaction || result.isRollbackTransaction()) && !isApprovedByChecker;
+        if (result.hasChanges() && !rollBack) {
+            changesOnlyJson = this.toApiJsonSerializer.serializeResult(result.getChanges());
+            commandSourceResult.updateJsonTo(changesOnlyJson);
+        }
+
+        if (!result.hasChanges() && wrapper.isUpdateOperation() && !wrapper.isUpdateDatatable()) {
+            commandSourceResult.updateJsonTo(null);
+        }
+
+        if (commandSourceResult.hasJson()) {
+            this.commandSourceRepository.save(commandSourceResult);
+        }
+
+        if ((rollbackTransaction || result.isRollbackTransaction()) && !isApprovedByChecker) {
+            /*
+             * JournalEntry will generate a new transactionId every time. Updating the transactionId with old
+             * transactionId, because as there are no entries are created with new transactionId, will throw an error
+             * when checker approves the transaction
+             */
+            commandSourceResult.updateTransaction(command.getTransactionId());
+            /*
+             * Update CommandSource json data with JsonCommand json data, line 77 and 81 may update the json data
+             */
+            commandSourceResult.updateJsonTo(command.json());
+            throw new RollbackTransactionAsCommandIsNotApprovedByCheckerException(commandSourceResult);
+        }
+        result.setRollbackTransaction(null);
+
+        publishEvent(wrapper.entityName(), wrapper.actionName(), command, result);
+
+        return result;
+    }
+
+    @Transactional
+    @Override
     public CommandProcessingResult logCommand(CommandSource commandSourceResult) {
 
         commandSourceResult.markAsAwaitingApproval();

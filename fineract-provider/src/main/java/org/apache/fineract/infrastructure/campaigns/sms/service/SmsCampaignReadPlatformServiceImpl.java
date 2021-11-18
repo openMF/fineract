@@ -36,6 +36,7 @@ import org.apache.fineract.infrastructure.campaigns.sms.data.SmsCampaignTimeLine
 import org.apache.fineract.infrastructure.campaigns.sms.data.SmsProviderData;
 import org.apache.fineract.infrastructure.campaigns.sms.domain.SmsCampaignStatusEnumerations;
 import org.apache.fineract.infrastructure.campaigns.sms.exception.SmsCampaignNotFound;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.Page;
@@ -56,16 +57,18 @@ public class SmsCampaignReadPlatformServiceImpl implements SmsCampaignReadPlatfo
 
     private final BusinessRuleMapper businessRuleMapper;
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final SmsCampaignDropdownReadPlatformService smsCampaignDropdownReadPlatformService;
     private final SmsCampaignMapper smsCampaignMapper;
     private final CalendarDropdownReadPlatformService calendarDropdownReadPlatformService;
     private final PaginationHelper<SmsCampaignData> paginationHelper = new PaginationHelper<>();
 
     @Autowired
-    public SmsCampaignReadPlatformServiceImpl(final RoutingDataSource dataSource,
+    public SmsCampaignReadPlatformServiceImpl(final RoutingDataSource dataSource, DataSourceSqlResolver sqlResolver,
             SmsCampaignDropdownReadPlatformService smsCampaignDropdownReadPlatformService,
             final CalendarDropdownReadPlatformService calendarDropdownReadPlatformService) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         businessRuleMapper = new BusinessRuleMapper();
         this.smsCampaignDropdownReadPlatformService = smsCampaignDropdownReadPlatformService;
         smsCampaignMapper = new SmsCampaignMapper();
@@ -85,19 +88,28 @@ public class SmsCampaignReadPlatformServiceImpl implements SmsCampaignReadPlatfo
 
     @Override
     public Page<SmsCampaignData> retrieveAll(final SearchParameters searchParameters) {
-        final Integer visible = 1;
-        final StringBuilder sqlBuilder = new StringBuilder(200);
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ");
-        sqlBuilder.append(this.smsCampaignMapper.schema() + " where sc.is_visible = ? ");
+        final StringBuilder sqlBuilder = new StringBuilder("select ");
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        if (mySql)
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
+
+        final String whereClause = " where sc.is_visible = ? ";
+        sqlBuilder.append(this.smsCampaignMapper.schema() + whereClause);
         if (searchParameters.isLimited()) {
             sqlBuilder.append(" limit ").append(searchParameters.getLimit());
             if (searchParameters.isOffset()) {
                 sqlBuilder.append(" offset ").append(searchParameters.getOffset());
             }
         }
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        return this.paginationHelper.fetchPage(jdbcTemplate, sqlCountRows, sqlBuilder.toString(), new Object[] { visible },
-                this.smsCampaignMapper);
+        final Integer visible = 1;
+        final Object[] sqlParams = new Object[] { visible };
+        String sqlCountRows = "SELECT FOUND_ROWS()";
+        Object[] countParams = null;
+        if (!mySql) {
+            sqlCountRows = "SELECT " + smsCampaignMapper.countSchema() + whereClause;
+            countParams = sqlParams;
+        }
+        return this.paginationHelper.fetchPage(jdbcTemplate, sqlCountRows, countParams, sqlBuilder.toString(), sqlParams, this.smsCampaignMapper);
     }
 
     @Override
@@ -141,7 +153,7 @@ public class SmsCampaignReadPlatformServiceImpl implements SmsCampaignReadPlatfo
             sql.append("sr.report_subtype as reportSubType, ");
             sql.append("sr.description as description, ");
             sql.append("sp.parameter_variable as params, ");
-            sql.append("sp.parameter_FormatType as paramType, ");
+            sql.append("sp.parameter_format_type as paramType, ");
             sql.append("sp.parameter_label as paramLabel, ");
             sql.append("sp.parameter_name as paramName ");
             sql.append("from stretchy_report sr ");
@@ -197,36 +209,37 @@ public class SmsCampaignReadPlatformServiceImpl implements SmsCampaignReadPlatfo
 
     private static final class SmsCampaignMapper implements RowMapper<SmsCampaignData> {
 
+        public static final String FROM = " from sms_campaign sc " +
+                "left join m_appuser sbu on sbu.id = sc.submittedon_userid " +
+                "left join m_appuser acu on acu.id = sc.approvedon_userid " +
+                "left join m_appuser clu on clu.id = sc.closedon_userid " +
+                "left join stretchy_report sr on sr.id = sc.report_id ";
         final String schema;
 
         private SmsCampaignMapper() {
             final StringBuilder sql = new StringBuilder(400);
             sql.append("sc.id as id, ");
-            sql.append("sc.campaign_name as campaignName, ");
-            sql.append("sc.campaign_type as campaignType, ");
-            sql.append("sc.campaign_trigger_type as triggerType, ");
-            sql.append("sc.report_id as runReportId, ");
+            sql.append("sc.campaign_name as campaign_name, ");
+            sql.append("sc.campaign_type as campaign_type, ");
+            sql.append("sc.campaign_trigger_type as trigger_type, ");
+            sql.append("sc.report_id as run_report_id, ");
             sql.append("sc.message as message, ");
-            sql.append("sc.param_value as paramValue, ");
+            sql.append("sc.param_value as param_value, ");
             sql.append("sc.status_enum as status, ");
             sql.append("sc.recurrence as recurrence, ");
-            sql.append("sc.recurrence_start_date as recurrenceStartDate, ");
-            sql.append("sc.next_trigger_date as nextTriggerDate, ");
-            sql.append("sc.last_trigger_date as lastTriggerDate, ");
-            sql.append("sc.submittedon_date as submittedOnDate, ");
-            sql.append("sbu.username as submittedByUsername, ");
-            sql.append("sc.closedon_date as closedOnDate, ");
-            sql.append("clu.username as closedByUsername, ");
-            sql.append("acu.username as activatedByUsername, ");
-            sql.append("sc.approvedon_date as activatedOnDate, ");
-            sql.append("sr.report_name as reportName, ");
-            sql.append("provider_id as providerId, ");
-            sql.append("sc.is_notification as isNotification ");
-            sql.append("from sms_campaign sc ");
-            sql.append("left join m_appuser sbu on sbu.id = sc.submittedon_userid ");
-            sql.append("left join m_appuser acu on acu.id = sc.approvedon_userid ");
-            sql.append("left join m_appuser clu on clu.id = sc.closedon_userid ");
-            sql.append("left join stretchy_report sr on sr.id = sc.report_id ");
+            sql.append("sc.recurrence_start_date as recurrence_start_date, ");
+            sql.append("sc.next_trigger_date as next_trigger_date, ");
+            sql.append("sc.last_trigger_date as last_trigger_date, ");
+            sql.append("sc.submittedon_date as submitted_on_date, ");
+            sql.append("sbu.username as submitted_by_username, ");
+            sql.append("sc.closedon_date as closed_on_date, ");
+            sql.append("clu.username as closed_by_username, ");
+            sql.append("acu.username as activated_by_username, ");
+            sql.append("sc.approvedon_date as activated_on_date, ");
+            sql.append("sr.report_name as report_name, ");
+            sql.append("provider_id as provider_id, ");
+            sql.append("sc.is_notification as is_notification ");
+            sql.append(FROM);
 
             this.schema = sql.toString();
         }
@@ -235,42 +248,45 @@ public class SmsCampaignReadPlatformServiceImpl implements SmsCampaignReadPlatfo
             return this.schema;
         }
 
+        public String countSchema() {
+            return " count(sc.*) " + FROM;
+        }
+
         @Override
         public SmsCampaignData mapRow(ResultSet rs, int rowNum) throws SQLException {
             final Long id = JdbcSupport.getLong(rs, "id");
-            final String campaignName = rs.getString("campaignName");
-            final Integer campaignType = JdbcSupport.getInteger(rs, "campaignType");
+            final String campaignName = rs.getString("campaign_name");
+            final Integer campaignType = JdbcSupport.getInteger(rs, "campaign_type");
             final EnumOptionData campaignTypeEnum = CampaignType.campaignType(campaignType);
-            final Long runReportId = JdbcSupport.getLong(rs, "runReportId");
-            final String paramValue = rs.getString("paramValue");
+            final Long runReportId = JdbcSupport.getLong(rs, "run_report_id");
+            final String paramValue = rs.getString("param_value");
             final String message = rs.getString("message");
 
             final Integer statusId = JdbcSupport.getInteger(rs, "status");
             final EnumOptionData status = SmsCampaignStatusEnumerations.status(statusId);
-            final Integer triggerType = JdbcSupport.getInteger(rs, "triggerType");
+            final Integer triggerType = JdbcSupport.getInteger(rs, "trigger_type");
             final EnumOptionData triggerTypeEnum = SmsCampaignTriggerType.triggerType(triggerType);
 
-            final ZonedDateTime nextTriggerDate = JdbcSupport.getDateTime(rs, "nextTriggerDate");
-            final LocalDate lastTriggerDate = JdbcSupport.getLocalDate(rs, "lastTriggerDate");
+            final ZonedDateTime nextTriggerDate = JdbcSupport.getDateTime(rs, "next_trigger_date");
+            final LocalDate lastTriggerDate = JdbcSupport.getLocalDate(rs, "last_trigger_date");
 
-            final LocalDate closedOnDate = JdbcSupport.getLocalDate(rs, "closedOnDate");
-            final String closedByUsername = rs.getString("closedByUsername");
+            final LocalDate closedOnDate = JdbcSupport.getLocalDate(rs, "closed_on_date");
+            final String closedByUsername = rs.getString("closed_by_username");
 
-            final LocalDate submittedOnDate = JdbcSupport.getLocalDate(rs, "submittedOnDate");
-            final String submittedByUsername = rs.getString("submittedByUsername");
+            final LocalDate submittedOnDate = JdbcSupport.getLocalDate(rs, "submitted_on_date");
+            final String submittedByUsername = rs.getString("submitted_by_username");
 
-            final LocalDate activatedOnDate = JdbcSupport.getLocalDate(rs, "activatedOnDate");
-            final String activatedByUsername = rs.getString("activatedByUsername");
+            final LocalDate activatedOnDate = JdbcSupport.getLocalDate(rs, "activated_on_date");
+            final String activatedByUsername = rs.getString("activated_by_username");
             final String recurrence = rs.getString("recurrence");
             final ZonedDateTime recurrenceStartDate = JdbcSupport.getDateTime(rs, "recurrenceStartDate");
             final SmsCampaignTimeLine smsCampaignTimeLine = new SmsCampaignTimeLine(submittedOnDate, submittedByUsername, activatedOnDate,
                     activatedByUsername, closedOnDate, closedByUsername);
-            final String reportName = rs.getString("reportName");
-            final Long providerId = rs.getLong("providerId");
-            final Boolean isNotification = rs.getBoolean("isNotification");
-            return SmsCampaignData.instance(id, campaignName, campaignTypeEnum, triggerTypeEnum, runReportId, reportName, paramValue,
-                    status, message, nextTriggerDate, lastTriggerDate, smsCampaignTimeLine, recurrenceStartDate, recurrence, providerId,
-                    isNotification);
+            final String reportName = rs.getString("report_name");
+            final Long providerId = rs.getLong("provider_id");
+            final boolean isNotification = rs.getBoolean("is_notification");
+            return SmsCampaignData.instance(id, campaignName, campaignTypeEnum, triggerTypeEnum, runReportId, reportName, paramValue, status, message,
+                    nextTriggerDate, lastTriggerDate, smsCampaignTimeLine, recurrenceStartDate, recurrence, providerId, isNotification);
         }
     }
 

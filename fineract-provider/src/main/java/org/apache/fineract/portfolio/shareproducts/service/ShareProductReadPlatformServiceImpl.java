@@ -32,6 +32,7 @@ import org.apache.fineract.accounting.glaccount.data.GLAccountData;
 import org.apache.fineract.accounting.producttoaccountmapping.data.ChargeToGLAccountMapper;
 import org.apache.fineract.accounting.producttoaccountmapping.data.PaymentTypeToGLAccountMapper;
 import org.apache.fineract.accounting.producttoaccountmapping.service.ProductToGLAccountMappingReadPlatformService;
+import org.apache.fineract.infrastructure.core.boot.db.DataSourceSqlResolver;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.Page;
@@ -57,6 +58,7 @@ import org.springframework.stereotype.Service;
 public class ShareProductReadPlatformServiceImpl implements ProductReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DataSourceSqlResolver sqlResolver;
     private final CurrencyReadPlatformService currencyReadPlatformService;
     private final ChargeReadPlatformService chargeReadPlatformService;
     private final ShareProductDropdownReadPlatformService shareProductDropdownReadPlatformService;
@@ -65,12 +67,14 @@ public class ShareProductReadPlatformServiceImpl implements ProductReadPlatformS
     private final PaginationHelper<ProductData> shareProductDataPaginationHelper = new PaginationHelper<>();
 
     @Autowired
-    public ShareProductReadPlatformServiceImpl(final RoutingDataSource dataSource,
-            final CurrencyReadPlatformService currencyReadPlatformService, final ChargeReadPlatformService chargeReadPlatformService,
-            final ShareProductDropdownReadPlatformService shareProductDropdownReadPlatformService,
-            final AccountingDropdownReadPlatformService accountingDropdownReadPlatformService,
-            final ProductToGLAccountMappingReadPlatformService accountMappingReadPlatformService) {
+    public ShareProductReadPlatformServiceImpl(final RoutingDataSource dataSource, final DataSourceSqlResolver sqlResolver,
+                                               final CurrencyReadPlatformService currencyReadPlatformService,
+                                               final ChargeReadPlatformService chargeReadPlatformService,
+                                               final ShareProductDropdownReadPlatformService shareProductDropdownReadPlatformService,
+                                               final AccountingDropdownReadPlatformService accountingDropdownReadPlatformService,
+                                               final ProductToGLAccountMappingReadPlatformService accountMappingReadPlatformService) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.sqlResolver = sqlResolver;
         this.currencyReadPlatformService = currencyReadPlatformService;
         this.chargeReadPlatformService = chargeReadPlatformService;
         this.shareProductDropdownReadPlatformService = shareProductDropdownReadPlatformService;
@@ -83,8 +87,11 @@ public class ShareProductReadPlatformServiceImpl implements ProductReadPlatformS
         final Collection<ShareProductMarketPriceData> shareMarketCollection = null;
         final Collection<ChargeData> charges = null;
         ShareProductRowMapper mapper = new ShareProductRowMapper(shareMarketCollection, charges);
-        StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append("select SQL_CALC_FOUND_ROWS ");
+        StringBuilder sqlBuilder = new StringBuilder("select ");
+        boolean mySql = sqlResolver.getDialect().isMySql();
+        if (mySql)
+            sqlBuilder.append("SQL_CALC_FOUND_ROWS ");
+
         sqlBuilder.append(mapper.schema());
         if (limit != null) {
             sqlBuilder.append(" limit ").append(limit);
@@ -93,10 +100,14 @@ public class ShareProductReadPlatformServiceImpl implements ProductReadPlatformS
             sqlBuilder.append(" offset ").append(offSet);
         }
 
-        final String sqlCountRows = "SELECT FOUND_ROWS()";
-        Object[] whereClauseItemsitems = new Object[] {};
-        return this.shareProductDataPaginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, sqlBuilder.toString(),
-                whereClauseItemsitems, mapper);
+        String sqlCountRows;
+        if (!mySql) {
+            sqlCountRows = "SELECT " + mapper.countSchema();
+        } else {
+            sqlCountRows = "SELECT FOUND_ROWS()";
+        }
+        return this.shareProductDataPaginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, null, sqlBuilder.toString(),
+                null, mapper);
     }
 
     @Override
@@ -201,10 +212,10 @@ public class ShareProductReadPlatformServiceImpl implements ProductReadPlatformS
     }
 
     private static final class ShareProductRowMapper implements RowMapper<ProductData> {
-
         Collection<ShareProductMarketPriceData> shareMarketCollection;
         Collection<ChargeData> charges;
         private StringBuilder buff = new StringBuilder();
+        private StringBuilder from = new StringBuilder();
 
         ShareProductRowMapper(Collection<ShareProductMarketPriceData> shareMarketCollection, Collection<ChargeData> charges) {
             this.shareMarketCollection = shareMarketCollection;
@@ -214,19 +225,20 @@ public class ShareProductReadPlatformServiceImpl implements ProductReadPlatformS
                     .append("shareproduct.end_date, shareproduct.currency_code, shareproduct.currency_digits, ")
                     .append("shareproduct.currency_multiplesof, shareproduct.total_shares, shareproduct.issued_shares, ")
                     .append("shareproduct.unit_price, shareproduct.capital_amount,  ")
-                    .append("shareproduct.accounting_type as accountingType, ")
+                    .append("shareproduct.accounting_type as accounting_type, ")
                     .append("shareproduct.minimum_client_shares, shareproduct.nominal_client_shares, ")
                     .append("shareproduct.maximum_client_shares, shareproduct.minimum_active_period_frequency, ")
                     .append("shareproduct.minimum_active_period_frequency_enum, shareproduct.lockin_period_frequency, ")
                     .append("shareproduct.lockin_period_frequency_enum, shareproduct.allow_dividends_inactive_clients, ")
-                    .append("shareproduct.createdby_id, created.username as createdName, modified.username as modifiedName, ")
+                    .append("shareproduct.createdby_id, created.username as created_name, modified.username as modified_name, ")
                     .append("shareproduct.created_date, shareproduct.lastmodifiedby_id, shareproduct.lastmodified_date, ")
-                    .append("curr.name as currencyName, curr.internationalized_name_code as currencyNameCode, ")
-                    .append("curr.display_symbol as currencyDisplaySymbol ").append("from m_share_product shareproduct ")
+                    .append("curr.name as currency_name, curr.internationalized_name_code as currency_name_code, ")
+                    .append("curr.display_symbol as currency_display_symbol ");
+
+            from.append("from m_share_product shareproduct ")
                     .append("LEFT JOIN m_currency curr on curr.code = shareproduct.currency_code ")
                     .append("LEFT JOIN m_appuser created ON created.id = shareproduct.createdby_id ")
                     .append("LEFT JOIN m_appuser modified ON modified.id = shareproduct.lastmodifiedby_id ");
-
         }
 
         @SuppressWarnings("unused")
@@ -239,12 +251,12 @@ public class ShareProductReadPlatformServiceImpl implements ProductReadPlatformS
             final String description = rs.getString("description");
             final String currencyCode = rs.getString("currency_code");
             final Integer currencyDigits = rs.getInt("currency_digits");
-            final String currencyName = rs.getString("currencyName");
-            final String currencyNameCode = rs.getString("currencyNameCode");
-            final String currencyDisplaySymbol = rs.getString("currencyDisplaySymbol");
+            final String currencyName = rs.getString("currency_name");
+            final String currencyNameCode = rs.getString("currency_name_code");
+            final String currencyDisplaySymbol = rs.getString("currency_display_symbol");
             final Integer inMultiplesOf = JdbcSupport.getInteger(rs, "currency_multiplesof");
-            final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMultiplesOf, currencyDisplaySymbol,
-                    currencyNameCode);
+            final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMultiplesOf,
+                    currencyDisplaySymbol, currencyNameCode);
 
             final Long totalShares = rs.getLong("total_shares");
             final Long issuedShares = JdbcSupport.getLongDefaultToNullIfZero(rs, "issued_shares");
@@ -271,7 +283,7 @@ public class ShareProductReadPlatformServiceImpl implements ProductReadPlatformS
             if (lockinPeriodFrequencyTypeValue != null) {
                 lockinPeriodFrequencyType = SharesEnumerations.lockinPeriodFrequencyType(lockinPeriodFrequencyTypeValue);
             }
-            final Integer accountingRuleId = JdbcSupport.getInteger(rs, "accountingType");
+            final Integer accountingRuleId = JdbcSupport.getInteger(rs, "accounting_type");
             final EnumOptionData accountingRuleType = AccountingEnumerations.accountingRuleType(accountingRuleId);
 
             return ShareProductData.data(id, name, shortName, description, externalId, currency, totalShares, issuedShares, unitPrice,
@@ -281,7 +293,15 @@ public class ShareProductReadPlatformServiceImpl implements ProductReadPlatformS
         }
 
         public String schema() {
-            return this.buff.toString();
+            return this.buff.append(from).toString();
+        }
+
+        public String from() {
+            return this.from.toString();
+        }
+
+        public String countSchema() {
+            return " count(shareproduct.*) " + this.from;
         }
     }
 }
