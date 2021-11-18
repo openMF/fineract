@@ -109,7 +109,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
     @Override
     public PlatformTransactionManager getTransactionManager() {
-        return transactionManager;
+        return new DataSourceTransactionManager(getDataSource());
     }
 
     @Override
@@ -175,7 +175,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     @Bean
     @Scope("prototype")
     public PlatformTransactionManager getTxManager() {
-        return new DataSourceTransactionManager(getDataSource());
+        return getTransactionManager();
     }
 
     @Bean(name = "batchJobLauncher")
