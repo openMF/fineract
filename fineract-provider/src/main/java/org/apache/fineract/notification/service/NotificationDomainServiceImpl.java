@@ -18,18 +18,23 @@
  */
 package org.apache.fineract.notification.service;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.PostConstruct;
+import javax.jms.Queue;
+
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.notification.data.NotificationData;
 import org.apache.fineract.notification.data.TopicSubscriberData;
 import org.apache.fineract.notification.eventandlistener.NotificationEventService;
+import org.apache.fineract.notification.eventandlistener.NotificationKafkaEventService;
 import org.apache.fineract.notification.eventandlistener.SpringEventPublisher;
 import org.apache.fineract.organisation.office.domain.OfficeRepository;
 import org.apache.fineract.portfolio.client.domain.Client;
@@ -52,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -59,12 +65,16 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
 
     private static final Logger LOG = LoggerFactory.getLogger(NotificationDomainServiceImpl.class);
 
+    @Autowired
+    private Environment environment;
+
     private final BusinessEventNotifierService businessEventNotifierService;
     final PlatformSecurityContext context;
     private final RoleRepository roleRepository;
     private final OfficeRepository officeRepository;
     private final TopicSubscriberReadPlatformService topicSubscriberReadPlatformService;
     private final NotificationEventService notificationEvent;
+    private final NotificationKafkaEventService notificationKafkaEvent;
     private final SpringEventPublisher springEventPublisher;
 
     @Value(value = "${notification.data.topic.name}")
@@ -74,7 +84,7 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
     public NotificationDomainServiceImpl(final BusinessEventNotifierService businessEventNotifierService,
             final PlatformSecurityContext context, final RoleRepository roleRepository,
             final TopicSubscriberReadPlatformService topicSubscriberReadPlatformService, final OfficeRepository officeRepository,
-            final NotificationEventService notificationEvent, final SpringEventPublisher springEventPublisher) {
+            final NotificationEventService notificationEvent, final NotificationKafkaEventService notificationKafkaEvent, final SpringEventPublisher springEventPublisher) {
 
         this.businessEventNotifierService = businessEventNotifierService;
         this.context = context;
@@ -82,6 +92,7 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
         this.topicSubscriberReadPlatformService = topicSubscriberReadPlatformService;
         this.officeRepository = officeRepository;
         this.notificationEvent = notificationEvent;
+        this.notificationKafkaEvent = notificationKafkaEvent;
         this.springEventPublisher = springEventPublisher;
     }
 
@@ -407,11 +418,19 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
             String eventType, Long appUserId, Long officeId) {
 
         String tenantIdentifier = ThreadLocalContextUtil.getTenant().getTenantIdentifier();
+        Queue queue = new ActiveMQQueue("NotificationQueue");
         List<Long> userIds = retrieveSubscribers(officeId, permission);
         NotificationData notificationData = new NotificationData(objectType, objectIdentifier, eventType, appUserId, notificationContent,
                 false, false, tenantIdentifier, officeId, userIds);
         try {
-            this.notificationEvent.broadcastNotification(notificationDataTopicName, notificationData);
+            if(Arrays.stream(environment.getActiveProfiles()).anyMatch(env -> env.equalsIgnoreCase("activeMqEnabled")))
+            {
+                this.notificationEvent.broadcastNotification(queue, notificationData);
+            } 
+            else if(Arrays.stream(environment.getActiveProfiles()).anyMatch(env -> env.equalsIgnoreCase("kafkaEnabled"))) 
+            {
+                this.notificationKafkaEvent.broadcastNotificationKafka(notificationDataTopicName, notificationData);
+            }
         } catch (Exception e) {
             this.springEventPublisher.broadcastNotification(notificationData);
         }

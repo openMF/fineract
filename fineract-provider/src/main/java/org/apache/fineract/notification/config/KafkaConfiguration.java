@@ -34,19 +34,19 @@ import org.springframework.kafka.core.KafkaAdmin;
 @Profile("kafkaEnabled")
 public class KafkaConfiguration {
 
-    @Value("${fineract.kafka.bootstrapAddress:#{environment.FINERACT_DEFAULT_KAFKA_BOOTSTRAP_ADDRESS}}")
+    @Value("${FINERACT_DEFAULT_KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")
     private String bootstrapAddress;
 
-    @Value("${fineract.kafka.securityProtocol:#{environment.FINERACT_DEFAULT_KAFKA_SECURITY_PROTOCOL}}")
+    @Value("${FINERACT_DEFAULT_KAFKA_SECURITY_PROTOCOL:TEXTPLAIN}")
     private String securityProtocol;
 
-    @Value("${fineract.kafka.sslEnabled:#{environment.FINERACT_DEFAULT_KAFKA_SSL_ENABLED}}")
-    private Boolean sslEnabled;
+    @Value("${FINERACT_DEFAULT_KAFKA_SSL_ENABLED:false}")
+    private String sslEnabled;
 
-    @Value(value = "${notification.data.topic.name}")
+    @Value(value = "${notification.data.topic.name:notificationDataTopic}")
     private String notificationDataTopicName;
 
-    @Value(value = "${client.creation.topic.name}")
+    @Value(value = "${client.creation.topic.name:clientCreationTopic}")
     private String clientCreationTopicName;
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaConfiguration.class);
@@ -55,7 +55,7 @@ public class KafkaConfiguration {
     public KafkaAdmin kafkaAdmin() {
         Map<String, Object> configs = new HashMap<>();
         configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
-        if (Boolean.TRUE.equals(sslEnabled)) {
+        if (Boolean.valueOf(sslEnabled)) {
             configs.put("security.protocol", securityProtocol);
         }
         LOG.info(configs.toString());

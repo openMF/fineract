@@ -53,9 +53,9 @@ public class ClientCreationEventListener implements SessionAwareMessageListener 
 
     private CountDownLatch clienCreationLatch = new CountDownLatch(1);
 
-    @KafkaListener(topics = "${notification.data.topic.name}", containerFactory = "notificationDataKafkaListenerContainerFactory")
+    @KafkaListener(topics = "${notification.data.topic.name}", containerFactory = "notificationDataKafkaListenerContainerFactory",autoStartup = "${FINERACT_DEFAULT_KAFKA_ENABLED:false}")
     public void notificationDataListener(NotificationData clientCreationData) {
-
+        LOG.info("LISTENER KAFKA"+ clientCreationData.toString());
         this.clienCreationLatch.countDown();
 
         final FineractPlatformTenant tenant = this.basicAuthTenantDetailsService.loadTenantById(clientCreationData.getTenantIdentifier(),
@@ -65,24 +65,32 @@ public class ClientCreationEventListener implements SessionAwareMessageListener 
         Long appUserId = clientCreationData.getActor();
 
         List<Long> userIds = clientCreationData.getUserIds();
-
+        
         if (clientCreationData.getOfficeId() != null) {
             List<Long> tempUserIds = new ArrayList<>(userIds);
-            for (Long userId : tempUserIds) {
+            for (Long userId : tempUserIds) {                
                 AppUser appUser = appUserRepository.findById(userId).get();
                 if (!Objects.equals(appUser.getOffice().getId(), clientCreationData.getOfficeId())) {
-                    userIds.remove(userId);
+                    userIds.remove(userId);                    
                 }
             }
         }
-
-        // Remove the comment in order hide the notification for the user which is logged
-        /***
-         * if (userIds.contains(appUserId)) { userIds.remove(appUserId); }
-         ***/
-        notificationWritePlatformService.notify(userIds, clientCreationData.getObjectType(), clientCreationData.getObjectIdentifier(),
-                clientCreationData.getAction(), clientCreationData.getActor(), clientCreationData.getContent(),
-                clientCreationData.isSystemGenerated());
+        
+        if (userIds.contains(appUserId)) {
+            userIds.remove(appUserId);
+            LOG.info("LISTENER KAFKA userIds.remove(appUserId)");
+        }
+         
+        if(!userIds.isEmpty()){
+            notificationWritePlatformService.notify(userIds, clientCreationData.getObjectType(), clientCreationData.getObjectIdentifier(),
+            clientCreationData.getAction(), clientCreationData.getActor(), clientCreationData.getContent(),
+            clientCreationData.isSystemGenerated());
+        } else {
+            notificationWritePlatformService.notify(appUserId, clientCreationData.getObjectType(), clientCreationData.getObjectIdentifier(),
+            clientCreationData.getAction(), clientCreationData.getActor(), clientCreationData.getContent(),
+            clientCreationData.isSystemGenerated());
+        }
+        
     }
 
     @Autowired
@@ -121,9 +129,15 @@ public class ClientCreationEventListener implements SessionAwareMessageListener 
                 userIds.remove(appUserId);
             }
 
-            notificationWritePlatformService.notify(userIds, clientCreationData.getObjectType(), clientCreationData.getObjectIdentifier(),
-                    clientCreationData.getAction(), clientCreationData.getActor(), clientCreationData.getContent(),
-                    clientCreationData.isSystemGenerated());
+            if(!userIds.isEmpty()){
+                notificationWritePlatformService.notify(userIds, clientCreationData.getObjectType(), clientCreationData.getObjectIdentifier(),
+                clientCreationData.getAction(), clientCreationData.getActor(), clientCreationData.getContent(),
+                clientCreationData.isSystemGenerated());
+            } else {
+                notificationWritePlatformService.notify(appUserId, clientCreationData.getObjectType(), clientCreationData.getObjectIdentifier(),
+                clientCreationData.getAction(), clientCreationData.getActor(), clientCreationData.getContent(),
+                clientCreationData.isSystemGenerated());
+            }
         }
     }
 }

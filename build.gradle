@@ -90,7 +90,7 @@ allprojects  {
 
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'com.adarshr.test-logger'
-//    apply plugin: 'com.diffplug.spotless'
+    apply plugin: 'com.diffplug.spotless'
     apply plugin: 'com.github.hierynomus.license'
     apply plugin: 'org.nosphere.apache.rat'
     apply plugin: 'project-report'

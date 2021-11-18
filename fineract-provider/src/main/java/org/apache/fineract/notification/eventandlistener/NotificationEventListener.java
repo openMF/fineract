@@ -53,7 +53,7 @@ public class NotificationEventListener implements SessionAwareMessageListener {
 
     private CountDownLatch notificationDataLatch = new CountDownLatch(1);
 
-    @KafkaListener(topics = "${notification.data.topic.name}", containerFactory = "notificationDataKafkaListenerContainerFactory")
+    @KafkaListener(topics = "${notification.data.topic.name}", containerFactory = "notificationDataKafkaListenerContainerFactory",autoStartup = "${FINERACT_DEFAULT_KAFKA_ENABLED:false}")
     public void notificationDataListener(NotificationData notificationData) {
         LOG.info("Received notificationData message=[" + notificationData + "]");
         this.notificationDataLatch.countDown();
@@ -76,14 +76,18 @@ public class NotificationEventListener implements SessionAwareMessageListener {
             }
         }
 
-        // Remove the comment in order hide the notification for the user which is logged
-        /***
-         * if (userIds.contains(appUserId)) { userIds.remove(appUserId); }
-         ***/
-
-        notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
-                notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
-                notificationData.isSystemGenerated());
+        if (userIds.contains(appUserId)) 
+            userIds.remove(appUserId);
+        
+        if(!userIds.isEmpty()){
+            notificationWritePlatformService.notify(userIds, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
+            notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
+            notificationData.isSystemGenerated());
+        } else {
+            notificationWritePlatformService.notify(appUserId, notificationData.getObjectType(), notificationData.getObjectIdentifier(),
+            notificationData.getAction(), notificationData.getActor(), notificationData.getContent(),
+            notificationData.isSystemGenerated());
+        }
     }
 
     @Autowired
