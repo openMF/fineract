@@ -29,6 +29,7 @@ class WriteStep1 extends Simulation {
     .acceptEncodingHeader("gzip, deflate, br")
     .header("Fineract-Platform-TenantId", Configuration.TenantId)
     .authorizationHeader("Basic bWlmb3M6cGFzc3dvcmQ=")
+    .header("X-Disable-Notification-Check","1")
     .upgradeInsecureRequestsHeader("1")
     .contentTypeHeader("application/json")
 
