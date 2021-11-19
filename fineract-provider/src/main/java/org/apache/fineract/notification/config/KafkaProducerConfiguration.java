@@ -20,6 +20,8 @@ package org.apache.fineract.notification.config;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.notification.data.NotificationData;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -35,7 +37,7 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
 @Configuration
-@Profile("kafkaEnabled")
+@Profile(JobConstants.SPRING_KAFKA_PROFILE_NAME)
 public class KafkaProducerConfiguration {
 
     @Value("$FINERACT_DEFAULT_KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")
@@ -50,7 +52,7 @@ public class KafkaProducerConfiguration {
     private static final Logger LOG = LoggerFactory.getLogger(KafkaProducerConfiguration.class);
 
     @Bean    
-    @Profile("kafkaEnabled")
+    @Profile(JobConstants.SPRING_KAFKA_PROFILE_NAME)
     public ProducerFactory<String, String> producerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
@@ -65,13 +67,13 @@ public class KafkaProducerConfiguration {
     }
 
     @Bean    
-    @Profile("kafkaEnabled")
+    @Profile(JobConstants.SPRING_KAFKA_PROFILE_NAME)
     public KafkaTemplate<String, String> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean    
-    @Profile("kafkaEnabled")
+    @Profile(JobConstants.SPRING_KAFKA_PROFILE_NAME)
     public ProducerFactory<String, NotificationData> notificationDataProducerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
@@ -86,9 +88,8 @@ public class KafkaProducerConfiguration {
     }
 
     @Bean    
-    @Profile("kafkaEnabled")
+    @Profile(JobConstants.SPRING_KAFKA_PROFILE_NAME)
     public KafkaTemplate<String, NotificationData> notificationDataKafkaTemplate() {
         return new KafkaTemplate<>(notificationDataProducerFactory());
     }
-
 }

@@ -29,4 +29,6 @@ public class JobConstants {
     public static final String SPRING_MESSAGING_PROFILE_NAME = "messaging";
     public static final String SPRING_MESSAGINGSQS_PROFILE_NAME = "messagingSQS";
 
+    public static final String SPRING_KAFKA_PROFILE_NAME = "kafkaEnabled";
+
 }

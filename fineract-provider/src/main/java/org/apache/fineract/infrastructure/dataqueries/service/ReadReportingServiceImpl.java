@@ -225,7 +225,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
 
         final String sqlWrapped = this.genericDataService.wrapSQL(sql);
 
-        final SqlRowSet rs = this.jdbcTemplate.queryForRowSet(sqlWrapped, reportName, isSelfServiceUserReport);
+        final SqlRowSet rs = this.jdbcTemplate.queryForRowSet(sqlWrapped, isSelfServiceUserReport);
 
         if (rs.next()) {
             return rs.getString("report_type");

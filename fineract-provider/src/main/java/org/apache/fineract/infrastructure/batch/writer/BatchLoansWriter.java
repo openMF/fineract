@@ -27,7 +27,7 @@ import javax.jms.Session;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.config.BatchDestinations;
-import org.apache.fineract.infrastructure.batch.data.MessageBatchData;
+import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
 import org.apache.fineract.infrastructure.core.utils.ProfileUtils;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.slf4j.Logger;
@@ -92,11 +92,11 @@ public class BatchLoansWriter implements ItemWriter<Long>, StepExecutionListener
             }
         }
 
-        MessageBatchData messageData = new MessageBatchData(batchJobName, tenantIdentifier, batchLoanIds);
+        MessageBatchDataRequest messageData = new MessageBatchDataRequest(batchJobName, tenantIdentifier, batchLoanIds);
         sendMessage(messageData);
     }
 
-    private void sendMessage(final MessageBatchData message) {
+    private void sendMessage(final MessageBatchDataRequest message) {
         final String payload = gson.toJson(message);
         LOG.debug("Sending: {}", payload);
         // ActiveMQ

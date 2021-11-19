@@ -28,8 +28,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Session;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.config.BatchDestinations;
+import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
 import org.apache.fineract.infrastructure.batch.data.MessageData;
 import org.apache.fineract.infrastructure.core.utils.ProfileUtils;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
@@ -37,7 +37,6 @@ import org.apache.fineract.portfolio.loanaccount.loanschedule.data.OverdueLoanSc
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.ItemWriter;
@@ -46,7 +45,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 
-public class ApplyChargeForOverdueLoansWriter implements ItemWriter<OverdueLoanScheduleData>, StepExecutionListener {
+public class ApplyChargeForOverdueLoansWriter implements ItemWriter<MessageBatchDataResponse>, StepExecutionListener {
 
     public static final Logger LOG = LoggerFactory.getLogger(ApplyChargeForOverdueLoansWriter.class);
 
@@ -77,9 +76,6 @@ public class ApplyChargeForOverdueLoansWriter implements ItemWriter<OverdueLoanS
     public void beforeStep(StepExecution stepExecution) {
         this.stepExecution = stepExecution;
         this.profileUtils = new ProfileUtils(context.getEnvironment());
-        JobParameters parameters = stepExecution.getJobExecution().getJobParameters();
-        tenantIdentifier = parameters.getString(BatchConstants.JOB_PARAM_TENANT_ID);
-        batchJobName = stepExecution.getJobExecution().getJobInstance().getJobName();
     }
 
     @Override
@@ -88,15 +84,14 @@ public class ApplyChargeForOverdueLoansWriter implements ItemWriter<OverdueLoanS
     }
 
     @Override
-    public void write(List<? extends OverdueLoanScheduleData> items) throws Exception {
-        Map<Long, Collection<OverdueLoanScheduleData>> overdueScheduleData = groupByLoanId(items);
-        for (final Long loanId : overdueScheduleData.keySet()) {
-            MessageData messageData = new MessageData(batchJobName, tenantIdentifier, loanId, overdueScheduleData.get(loanId));
-            // sendMessage(messageData);
+    public void write(List<? extends MessageBatchDataResponse> items) throws Exception {
+        for (final MessageBatchDataResponse response : items) {
+            MessageData messageData = new MessageData(response.getBatchJobName(), response.getTenantIdentifier(), response.getEntityId(), response.getPayload());
+            sendMessage(messageData);
         }
     }
 
-    private Map<Long, Collection<OverdueLoanScheduleData>> groupByLoanId(List<? extends OverdueLoanScheduleData> items) {
+    public Map<Long, Collection<OverdueLoanScheduleData>> groupByLoanId(List<? extends OverdueLoanScheduleData> items) {
         final Map<Long, Collection<OverdueLoanScheduleData>> overdueScheduleData = new HashMap<>();
         for (final OverdueLoanScheduleData overdueInstallment : items) {
             if (overdueScheduleData.containsKey(overdueInstallment.getLoanId())) {
@@ -110,7 +105,7 @@ public class ApplyChargeForOverdueLoansWriter implements ItemWriter<OverdueLoanS
         return overdueScheduleData;
     }
 
-    public void sendMessage(final MessageData message) {
+    private void sendMessage(final MessageData message) {
         final String payload = gson.toJson(message);
         LOG.debug("Sending: {}", payload);
         // ActiveMQ

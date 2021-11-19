@@ -21,6 +21,8 @@ package org.apache.fineract.infrastructure.batch.config;
 import java.util.Properties;
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
+
+import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
 import org.apache.fineract.infrastructure.batch.listeners.ItemCounterListener;
 import org.apache.fineract.infrastructure.batch.processor.ApplyChargeForOverdueLoansProcessor;
 import org.apache.fineract.infrastructure.batch.processor.AutopayLoansProcessor;
@@ -35,7 +37,6 @@ import org.apache.fineract.infrastructure.core.service.RoutingDataSourceService;
 import org.apache.fineract.infrastructure.core.utils.DatabaseUtils;
 import org.apache.fineract.infrastructure.core.utils.PropertyUtils;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
-import org.apache.fineract.portfolio.loanaccount.loanschedule.data.OverdueLoanScheduleData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobExecution;
@@ -88,7 +89,6 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         batchJobProperties = PropertyUtils.loadYamlProperties(BatchConstants.BATCH_PROPERTIES_FILE);
         this.databaseType = DatabaseUtils.getDatabaseType(getDataSource());
     }
-
 
     @PostConstruct
     @Override
@@ -162,7 +162,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         try {
             JobRepositoryFactoryBean factory = new JobRepositoryFactoryBean();
             factory.setDatabaseType(databaseType);
-            factory.setTransactionManager(getTxManager());
+            factory.setTransactionManager(getTransactionManager());
             factory.setDataSource(this.getDataSource());
             factory.afterPropertiesSet();
             return factory.getObject();
@@ -170,12 +170,6 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
             e.printStackTrace();
             return null;
         }
-    }
-
-    @Bean
-    @Scope("prototype")
-    public PlatformTransactionManager getTxManager() {
-        return getTransactionManager();
     }
 
     @Bean(name = "batchJobLauncher")
@@ -300,9 +294,9 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     public Step applyChargeForOverdueLoansStep(ApplyChargeForOverdueLoansReader applyChargeForOverdueLoansReader,
             ApplyChargeForOverdueLoansProcessor applyChargeForOverdueLoansProcessor,
             ApplyChargeForOverdueLoansWriter applyChargeForOverdueLoansWriter) {
-        final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
+        final int chunkSize = 10;
         Step step = stepBuilderFactory.get("applyChargeForOverdueLoansStep")
-                .<OverdueLoanScheduleData, OverdueLoanScheduleData>chunk(chunkSize).reader(applyChargeForOverdueLoansReader)
+                .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(applyChargeForOverdueLoansReader)
                 .processor(applyChargeForOverdueLoansProcessor).writer(applyChargeForOverdueLoansWriter).listener(itemCounterListener())
                 .build();
 

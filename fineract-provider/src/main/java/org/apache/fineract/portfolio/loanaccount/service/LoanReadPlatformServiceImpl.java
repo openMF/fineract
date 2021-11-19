@@ -1557,44 +1557,39 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
     @Override
     public Collection<OverdueLoanScheduleData> retrieveOverdueInstallmentsByLoanId(Long penaltyWaitPeriod, Boolean backdatePenalties,
-            List<Long> loanIds) {
+            Long loanId) {
         final MusoniOverdueLoanScheduleMapper rm = new MusoniOverdueLoanScheduleMapper();
 
         MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("loanIds", loanIds);
-        parameters.addValue("penaltyWaitPeriod", penaltyWaitPeriod);
+        parameters.addValue("loanId", loanId);
         NamedParameterJdbcTemplate template = new NamedParameterJdbcTemplate(this.jdbcTemplate.getDataSource());
 
         final StringBuilder sqlBuilder = new StringBuilder(400);
+        sqlBuilder.append("select ").append(rm.schema());
         if (this.databaseType.equals(DatabaseUtils.POSTGRES_DATABASE_TYPE)) {
-            sqlBuilder.append("select ").append(rm.schema())
-                    .append(" where ls.loan_id in (:loanIds) and (NOW() - INTERVAL ':penaltyWaitPeriod DAY') > ls.duedate ")
-                    .append(" and ls.completed_derived <> 1 and mc.charge_applies_to_enum = 1 ")
-                    .append(" and ls.recalculated_interest_component <> 1 ")
-                    .append(" and mc.charge_time_enum = 9 and ml.loan_status_id = 300 ");
+            sqlBuilder.append(" where ls.loan_id = :loanId and (NOW() - INTERVAL '" + penaltyWaitPeriod +" DAY') > ls.duedate ");
         } else {
-            sqlBuilder.append("select ").append(rm.schema())
-                    .append(" where ls.loan_id in (:loanIds) and DATE_SUB(CURDATE(),INTERVAL :penaltyWaitPeriod DAY) > ls.duedate ")
-                    .append(" and ls.completed_derived <> 1 and mc.charge_applies_to_enum = 1 ")
-                    .append(" and ls.recalculated_interest_component <> 1 ")
-                    .append(" and mc.charge_time_enum = 9 and ml.loan_status_id = 300 ");
+            sqlBuilder.append(" where ls.loan_id = :loanId and DATE_SUB(CURDATE(),INTERVAL :penaltyWaitPeriod DAY) > ls.duedate ");
+            parameters.addValue("penaltyWaitPeriod", penaltyWaitPeriod);
         }
+        sqlBuilder.append(" and ls.completed_derived <> " + sqlResolver.formatBoolValue(true) + " and mc.charge_applies_to_enum = 1 ")
+        .append(" and ls.recalculated_interest_component <> " + sqlResolver.formatBoolValue(true))
+        .append(" and mc.charge_time_enum = 9 and ml.loan_status_id = 300 ");
 
         if (backdatePenalties) {
-            LOG.info("SQL: {}", sqlBuilder.toString());
-            LOG.info("Ids: {}", loanIds.toString());
             return template.query(sqlBuilder.toString(), parameters, rm);
         }
         
         // Only apply for duedate = yesterday (so that we don't apply
         // penalties on the duedate itself)
         if (this.databaseType.equals(DatabaseUtils.POSTGRES_DATABASE_TYPE)) {
-            sqlBuilder.append(" and ls.duedate >= (NOW() - INTERVAL '(? + 1) DAY')");
+            sqlBuilder.append(" and ls.duedate >= (NOW() - INTERVAL '" + (penaltyWaitPeriod + 1) + " DAY')");
         } else {
             sqlBuilder.append(" and ls.duedate >= DATE_SUB(CURDATE(),INTERVAL (? + 1) DAY)");
+            parameters.addValue("penaltyWaitPeriod", penaltyWaitPeriod);
         }
 
-        return this.jdbcTemplate.query(sqlBuilder.toString(), rm, new Object[] { loanIds, penaltyWaitPeriod, penaltyWaitPeriod });
+        return template.query(sqlBuilder.toString(), parameters, rm);
     }
 
     @Override

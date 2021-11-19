@@ -20,7 +20,7 @@ package org.apache.fineract.infrastructure.batch.listeners;
 
 import java.util.List;
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
-import org.apache.fineract.infrastructure.batch.data.MessageBatchData;
+import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
 import org.apache.fineract.infrastructure.batch.service.JobRunnerImpl;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
@@ -44,7 +44,7 @@ public class BatchLoansEventSQSListener extends BatchEventBaseListener {
     @JmsListener(destination = "#{@batchDestinations.BatchLoansDestination}", concurrency = "#{@batchDestinations.ConcurrencyDestination}")
     public void receivedMessage(@Payload String payload) {
         LOG.debug("receivedMessage ==== " + payload);
-        MessageBatchData messageData = gson.fromJson(payload, MessageBatchData.class);
+        MessageBatchDataRequest messageData = gson.fromJson(payload, MessageBatchDataRequest.class);
         if (messageData != null) {
             final FineractPlatformTenant tenant = setTenant(messageData.getTenantIdentifier());
             LOG.debug("Tenant {}", tenant.getName());

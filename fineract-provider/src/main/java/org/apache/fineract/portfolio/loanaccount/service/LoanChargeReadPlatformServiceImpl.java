@@ -186,8 +186,8 @@ public class LoanChargeReadPlatformServiceImpl implements LoanChargeReadPlatform
         final LoanChargeMapper rm = new LoanChargeMapper();
 
         final String sql = "select " + rm.schema() + " where lc.loan_id=? AND lc.is_active = " + sqlResolver.formatBoolValue(true)
-                + " order by COALESCE(lc.due_for_collection_as_of_date, " + sqlResolver.formatDate("COALESCE(dd.disbursedon_date,dd.expected_disburse_date)") +
-                ", lc.charge_time_enum ASC, lc.due_for_collection_as_of_date ASC, lc.is_penalty ASC";
+                + " order by COALESCE(lc.due_for_collection_as_of_date, " + sqlResolver.formatDate("COALESCE(dd.disbursedon_date,dd.expected_disburse_date)") + "),"
+                + " lc.charge_time_enum ASC, lc.due_for_collection_as_of_date ASC, lc.is_penalty ASC";
 
         return this.jdbcTemplate.query(sql, rm, new Object[] { loanId });
     }

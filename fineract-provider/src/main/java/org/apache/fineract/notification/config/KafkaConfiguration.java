@@ -20,6 +20,8 @@ package org.apache.fineract.notification.config;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.slf4j.Logger;
@@ -31,7 +33,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaAdmin;
 
 @Configuration
-@Profile("kafkaEnabled")
+@Profile(JobConstants.SPRING_KAFKA_PROFILE_NAME)
 public class KafkaConfiguration {
 
     @Value("${FINERACT_DEFAULT_KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")

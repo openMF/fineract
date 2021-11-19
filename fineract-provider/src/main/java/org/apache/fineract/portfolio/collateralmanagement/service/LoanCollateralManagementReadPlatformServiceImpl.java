@@ -75,14 +75,16 @@ public class LoanCollateralManagementReadPlatformServiceImpl implements LoanColl
         Loan loan = this.loanRepository.findById(loanId).orElseThrow(() -> new LoanNotFoundException(loanId));
         List<LoanCollateralResponseData> loanCollateralResponseDataCollection = new ArrayList<>();
         Set<LoanCollateralManagement> loanCollateralManagements = loan.getLoanCollateralManagements();
-        for (LoanCollateralManagement loanCollateralManagement : loanCollateralManagements) {
-            final CollateralManagementDomain collateralManagementDomain = loanCollateralManagement.getClientCollateralManagement()
-                    .getCollaterals();
-            BigDecimal quantity = loanCollateralManagement.getQuantity();
-            BigDecimal total = quantity.multiply(collateralManagementDomain.getBasePrice());
-            BigDecimal totalCollateral = total.multiply(collateralManagementDomain.getPctToBase()).divide(BigDecimal.valueOf(100));
-            loanCollateralResponseDataCollection
-                    .add(LoanCollateralResponseData.instanceOf(loanCollateralManagement, total, totalCollateral));
+        if (loanCollateralManagements != null) {
+            for (LoanCollateralManagement loanCollateralManagement : loanCollateralManagements) {
+                final CollateralManagementDomain collateralManagementDomain = loanCollateralManagement.getClientCollateralManagement()
+                        .getCollaterals();
+                BigDecimal quantity = loanCollateralManagement.getQuantity();
+                BigDecimal total = quantity.multiply(collateralManagementDomain.getBasePrice());
+                BigDecimal totalCollateral = total.multiply(collateralManagementDomain.getPctToBase()).divide(BigDecimal.valueOf(100));
+                loanCollateralResponseDataCollection
+                        .add(LoanCollateralResponseData.instanceOf(loanCollateralManagement, total, totalCollateral));
+            }
         }
         return loanCollateralResponseDataCollection;
     }

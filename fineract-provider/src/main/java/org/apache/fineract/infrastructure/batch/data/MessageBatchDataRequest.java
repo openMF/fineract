@@ -20,11 +20,11 @@ package org.apache.fineract.infrastructure.batch.data;
 
 import java.util.List;
 
-public class MessageBatchData extends MessageBaseData {
+public class MessageBatchDataRequest extends MessageBaseData {
 
     private List<Long> entityIds;
 
-    public MessageBatchData(String batchJobName, String tenantIdentifier, List<Long> entityIds) {
+    public MessageBatchDataRequest(String batchJobName, String tenantIdentifier, List<Long> entityIds) {
         this.batchJobName = batchJobName;
         this.tenantIdentifier = tenantIdentifier;
         this.entityIds = entityIds;

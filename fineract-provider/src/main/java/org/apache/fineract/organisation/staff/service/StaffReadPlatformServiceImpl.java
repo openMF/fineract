@@ -69,7 +69,7 @@ public class StaffReadPlatformServiceImpl implements StaffReadPlatformService {
         public String schema() {
             return " s.id as id,s.office_id as officeId, o.name as officeName, s.firstname as firstname, s.lastname as lastname,"
                     + " s.display_name as displayName, s.is_loan_officer as isLoanOfficer, s.external_id as externalId, s.mobile_no as mobileNo,"
-                    + " s.is_active as isActive, s.joining_date as joiningDate from m_staff s " + " join m_office o on o.id = s.office_id";
+                    + " s.is_active as isActive, s.joining_date as joiningDate from m_staff s join m_office o on o.id = s.office_id";
         }
 
         @Override
@@ -166,7 +166,7 @@ public class StaffReadPlatformServiceImpl implements StaffReadPlatformService {
     public Collection<StaffData> retrieveAllLoanOfficersInOfficeById(final Long officeId) {
         SQLBuilder extraCriteria = new SQLBuilder();
         extraCriteria.addCriteria(" office_id = ", officeId);
-        extraCriteria.addCriteria(" is_loan_officer = ", sqlResolver.formatBoolValue(true));
+        extraCriteria.addCriteria(" is_loan_officer = ", true);
         return retrieveAllStaff(extraCriteria);
     }
 

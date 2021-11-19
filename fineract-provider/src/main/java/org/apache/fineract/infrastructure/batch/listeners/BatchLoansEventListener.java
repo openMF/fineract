@@ -24,7 +24,7 @@ import javax.jms.Message;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
-import org.apache.fineract.infrastructure.batch.data.MessageBatchData;
+import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
 import org.apache.fineract.infrastructure.batch.service.JobRunnerImpl;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
@@ -52,7 +52,7 @@ public class BatchLoansEventListener extends BatchEventBaseListener implements S
             LOG.info("onMessage ==== " + message.getJMSMessageID());
             if (message instanceof TextMessage) {
                 String payload = ((TextMessage) message).getText();
-                MessageBatchData messageData = gson.fromJson(payload, MessageBatchData.class);
+                MessageBatchDataRequest messageData = gson.fromJson(payload, MessageBatchDataRequest.class);
                 if (messageData != null) {
                     final FineractPlatformTenant tenant = setTenant(messageData.getTenantIdentifier());
                     LOG.debug("Tenant {}", tenant.getName());
