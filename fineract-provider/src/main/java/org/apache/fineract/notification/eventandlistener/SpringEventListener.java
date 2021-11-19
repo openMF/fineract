@@ -18,9 +18,12 @@
  */
 package org.apache.fineract.notification.eventandlistener;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import org.apache.fineract.infrastructure.core.domain.FineractPlatformDefaultTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.security.service.BasicAuthTenantDetailsService;
@@ -31,6 +34,7 @@ import org.apache.fineract.useradministration.domain.AppUserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
@@ -42,6 +46,12 @@ public class SpringEventListener implements ApplicationListener<SpringEvent> {
     private final NotificationWritePlatformService notificationWritePlatformService;
 
     private final AppUserRepository appUserRepository;
+
+    @Autowired      
+    FineractPlatformDefaultTenant fineractPlatformDefaultTenant;
+
+    @Autowired
+    Environment environment;    
 
     private static final Logger LOG = LoggerFactory.getLogger(SpringEventListener.class);
 
@@ -57,8 +67,17 @@ public class SpringEventListener implements ApplicationListener<SpringEvent> {
     public void onApplicationEvent(SpringEvent event) {
         NotificationData notificationData = event.getNotificationData();
 
-        final FineractPlatformTenant tenant = this.basicAuthTenantDetailsService.loadTenantById(notificationData.getTenantIdentifier(),
-                false);
+        final FineractPlatformTenant tenant; 
+
+        if(this.fineractPlatformDefaultTenant.getFineractTenant().getTenantIdentifier().equalsIgnoreCase(notificationData.getTenantIdentifier()) && Arrays.stream(environment.getActiveProfiles()).anyMatch(env -> env.equalsIgnoreCase("singleTenant"))) {
+            tenant = this.fineractPlatformDefaultTenant.getFineractTenant();
+        } 
+        else {
+            tenant =this.basicAuthTenantDetailsService.loadTenantById(notificationData.getTenantIdentifier(),false);
+            LOG.info("TENANT DB QUERY");
+        }
+
+
         ThreadLocalContextUtil.setTenant(tenant);
 
         Long appUserId = notificationData.getActor();

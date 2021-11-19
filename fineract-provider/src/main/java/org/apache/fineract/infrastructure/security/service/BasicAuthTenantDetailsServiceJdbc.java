@@ -21,6 +21,8 @@ package org.apache.fineract.infrastructure.security.service;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.sql.DataSource;
+
+import org.apache.fineract.infrastructure.core.domain.FineractPlatformDefaultTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection;
 import org.apache.fineract.infrastructure.security.exception.InvalidTenantIdentiferException;
@@ -45,6 +47,9 @@ public class BasicAuthTenantDetailsServiceJdbc implements BasicAuthTenantDetails
     public BasicAuthTenantDetailsServiceJdbc(@Qualifier("hikariTenantDataSource") final DataSource dataSource) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
+
+    @Autowired      
+    private FineractPlatformDefaultTenant fineractPlatformDefaultTenant;
 
     private static final class TenantMapper implements RowMapper<FineractPlatformTenant> {
 
@@ -152,6 +157,16 @@ public class BasicAuthTenantDetailsServiceJdbc implements BasicAuthTenantDetails
             final String sql = "select  " + rm.schema() + " where t.identifier = ?";
 
             return this.jdbcTemplate.queryForObject(sql, rm, new Object[] { tenantIdentifier });
+        } catch (final EmptyResultDataAccessException e) {
+            throw new InvalidTenantIdentiferException("The tenant identifier: " + tenantIdentifier + " is not valid.", e);
+        }
+    }
+
+    @Cacheable(value = "defaultTenantById")
+    public FineractPlatformDefaultTenant loadDefaultTenantById(final String tenantIdentifier, final boolean isReport) {
+
+        try {
+            return fineractPlatformDefaultTenant;
         } catch (final EmptyResultDataAccessException e) {
             throw new InvalidTenantIdentiferException("The tenant identifier: " + tenantIdentifier + " is not valid.", e);
         }

@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.infrastructure.security.filter;
 
+import java.util.Arrays;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -27,6 +28,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.fineract.infrastructure.cache.domain.CacheType;
 import org.apache.fineract.infrastructure.cache.service.CacheWritePlatformService;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
+import org.apache.fineract.infrastructure.core.domain.FineractPlatformDefaultTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.serialization.ToApiJsonSerializer;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
@@ -38,6 +40,7 @@ import org.apache.fineract.useradministration.domain.AppUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -73,6 +76,12 @@ public class TenantAwareBasicAuthenticationFilter extends BasicAuthenticationFil
     private final NotificationReadPlatformService notificationReadPlatformService;
     private final String tenantRequestHeader = "Fineract-Platform-TenantId";
     private final boolean exceptionIfHeaderMissing = true;
+
+    @Autowired      
+    FineractPlatformDefaultTenant fineractPlatformDefaultTenant;
+
+    @Autowired
+    Environment environment;
 
     @Autowired
     public TenantAwareBasicAuthenticationFilter(final AuthenticationManager authenticationManager,
@@ -118,7 +127,16 @@ public class TenantAwareBasicAuthenticationFilter extends BasicAuthenticationFil
                 if (pathInfo != null && pathInfo.contains("report")) {
                     isReportRequest = true;
                 }
-                final FineractPlatformTenant tenant = this.basicAuthTenantDetailsService.loadTenantById(tenantIdentifier, isReportRequest);
+
+                final FineractPlatformTenant tenant; 
+
+                if(this.fineractPlatformDefaultTenant.getFineractTenant().getTenantIdentifier().equalsIgnoreCase(tenantIdentifier) && Arrays.stream(environment.getActiveProfiles()).anyMatch(env -> env.equalsIgnoreCase("singleTenant"))) {
+                    tenant = this.fineractPlatformDefaultTenant.getFineractTenant();
+                } 
+                else {
+                    tenant =this.basicAuthTenantDetailsService.loadTenantById(tenantIdentifier, isReportRequest);
+                    LOG.info("TENANT DB QUERY");
+                }  
 
                 ThreadLocalContextUtil.setTenant(tenant);
                 String authToken = request.getHeader("Authorization");

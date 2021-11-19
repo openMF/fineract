@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.portfolio.client.eventandlistener;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -26,6 +27,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
+
+import org.apache.fineract.infrastructure.core.domain.FineractPlatformDefaultTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.security.service.BasicAuthTenantDetailsService;
@@ -36,9 +39,12 @@ import org.apache.fineract.useradministration.domain.AppUserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.jms.listener.SessionAwareMessageListener;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+
+
 
 @Service
 public class ClientCreationEventListener implements SessionAwareMessageListener {
@@ -53,13 +59,27 @@ public class ClientCreationEventListener implements SessionAwareMessageListener 
 
     private CountDownLatch clienCreationLatch = new CountDownLatch(1);
 
+    @Autowired      
+    FineractPlatformDefaultTenant fineractPlatformDefaultTenant;
+
+    @Autowired
+    Environment environment;
+
     @KafkaListener(topics = "${notification.data.topic.name}", containerFactory = "notificationDataKafkaListenerContainerFactory",autoStartup = "${FINERACT_DEFAULT_KAFKA_ENABLED:false}")
     public void notificationDataListener(NotificationData clientCreationData) {
         LOG.info("LISTENER KAFKA"+ clientCreationData.toString());
         this.clienCreationLatch.countDown();
 
-        final FineractPlatformTenant tenant = this.basicAuthTenantDetailsService.loadTenantById(clientCreationData.getTenantIdentifier(),
-                false);
+        final FineractPlatformTenant tenant; 
+
+        if(this.fineractPlatformDefaultTenant.getFineractTenant().getTenantIdentifier().equalsIgnoreCase(clientCreationData.getTenantIdentifier()) && Arrays.stream(environment.getActiveProfiles()).anyMatch(env -> env.equalsIgnoreCase("singleTenant"))) {
+            tenant = this.fineractPlatformDefaultTenant.getFineractTenant();
+        } 
+        else {
+            tenant =this.basicAuthTenantDetailsService.loadTenantById(clientCreationData.getTenantIdentifier(),false);
+            LOG.info("TENANT DB QUERY");
+        }
+
         ThreadLocalContextUtil.setTenant(tenant);
 
         Long appUserId = clientCreationData.getActor();
