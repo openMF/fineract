@@ -48,7 +48,7 @@ services:
     depends_on:
       - postgresql
     environment:
-      - spring_profiles_active=basicauth
+      - spring_profiles_active=basicauth,singleTenant
       - DRIVERCLASS_NAME=org.postgresql.Driver
       - PROTOCOL=jdbc
       - node_id=1
@@ -71,7 +71,7 @@ services:
       - FINERACT_DEFAULT_KAFKA_KEYSTORE_LOCATION=
       - FINERACT_DEFAULT_KAFKA_KEYSTORE_PASSWORD=
       - CONSOLE_LOG_PATTERN=%d{HH:mm:ss.SSS} %-5level %logger{36}:%L - %msg%n
-      - CONSOLE_LOG_LEVEL=warn
+      - CONSOLE_LOG_LEVEL=info
 
   # Frontend service
   community-app:
