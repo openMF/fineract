@@ -36,4 +36,7 @@ public class PaymentTypeRepositoryWrapper {
         return this.repository.findById(id).orElseThrow(() -> new PaymentTypeNotFoundException(id));
     }
 
+    public PaymentType findByName(final String name) {
+        return this.repository.findByName(name);
+    }
 }

@@ -19,6 +19,7 @@
 package org.apache.fineract.infrastructure.core.service;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -98,5 +99,24 @@ public final class DateUtils {
 
     public static boolean isDateInTheFuture(final LocalDate localDate) {
         return localDate.isAfter(getLocalDateOfTenant());
+    }
+
+    public static Date createDate(final String value, final String format) {
+        Date date = null;    
+        try {
+            date = new SimpleDateFormat(format).parse(value);
+        } catch (ParseException e) {
+            final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+            throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist", e.getMessage(),
+            dataValidationErrors, e);
+        }
+        return date;
+    } 
+
+    public static String formatDate(final Date date, final String format) {
+        final DateFormat df = new SimpleDateFormat(format);
+        df.setTimeZone(getTimeZoneOfTenant());
+        final String formattedSqlDate = df.format(date);
+        return formattedSqlDate;
     }
 }

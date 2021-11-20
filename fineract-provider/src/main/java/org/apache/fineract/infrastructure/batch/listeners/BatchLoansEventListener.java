@@ -58,7 +58,7 @@ public class BatchLoansEventListener extends BatchEventBaseListener implements S
                     LOG.debug("Tenant {}", tenant.getName());
 
                     List<Long> loanIds = getLoanIds(messageData.getEntityIds());
-                    LOG.info("Job {} : {} loans", messageData.getBatchJobName(), loanIds.size());
+                    LOG.info("Job {} : {} loans", messageData.getBatchStepName(), loanIds.size());
                     jobRunnerImpl.runJob(BatchConstants.BATCH_JOB_PROCESS_ID, gson.toJson(loanIds));
                 }
             }

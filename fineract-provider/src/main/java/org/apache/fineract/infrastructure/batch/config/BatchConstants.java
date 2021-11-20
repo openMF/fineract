@@ -22,11 +22,18 @@ public class BatchConstants {
 
     public static final String BATCH_PROPERTIES_FILE = "batch.yml";
 
+    public static final String BATCH_BLOCKLOANS_JOB_NAME = "blockLoansJob";
+    public static final String BATCH_COB_JOB_NAME = "closeOfBusinessJob";
+
     public static final String JOB_PARAM_PARAMETER = "parameter";
     public static final String JOB_PARAM_TENANT_ID = "tenantIdentifier";
+    public static final String JOB_PARAM_TENANT_DATE = "tenantDate";
+
+    public static final String DEFAULT_BATCH_DATE_FORMAT = "yyyy-MM-dd";
+    public static final String DEFAULT_BATCH_DATE_LOCALE = "en";
+
     public static final String JOB_PARAM_PENALTY_WAIT_PERIOD = "penaltyWaitPeriod";
     public static final String JOB_PARAM_BACKDATE_PENALTIES = "backdatePenalties";
 
     public static final Long BATCH_JOB_PROCESS_ID = 2L;
-
 }

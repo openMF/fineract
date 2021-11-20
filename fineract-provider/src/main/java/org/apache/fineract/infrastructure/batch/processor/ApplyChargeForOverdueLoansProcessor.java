@@ -22,22 +22,19 @@ import java.util.Collection;
 
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
-import org.apache.fineract.infrastructure.batch.service.BatchJobUtils;
-import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.utils.TextUtils;
-import org.apache.fineract.infrastructure.security.service.TenantDetailsService;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.OverdueLoanScheduleData;
 import org.apache.fineract.portfolio.loanaccount.service.LoanReadPlatformService;
 import org.apache.fineract.portfolio.loanaccount.service.LoanWritePlatformService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.annotation.AfterStep;
+import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.annotation.BeforeStep;
-import org.springframework.batch.core.JobParameters;
 
-public class ApplyChargeForOverdueLoansProcessor implements ItemProcessor<Long, MessageBatchDataResponse> {
+public class ApplyChargeForOverdueLoansProcessor extends BatchProcessorBase implements ItemProcessor<Long, MessageBatchDataResponse> {
 
     public static final Logger LOG = LoggerFactory.getLogger(ApplyChargeForOverdueLoansProcessor.class);
 
@@ -47,39 +44,35 @@ public class ApplyChargeForOverdueLoansProcessor implements ItemProcessor<Long, 
     @Autowired
     private LoanWritePlatformService loanWritePlatformService;
 
-    @Autowired
-    private TenantDetailsService tenantDetailsService;
-
-    private String batchJobName;
-    private String tenantIdentifier;
     private Long penaltyWaitPeriodValue;
     private Boolean backdatePenalties;
 
-    private StepExecution stepExecution;
-
     @BeforeStep
     public void before(StepExecution stepExecution) {
-        this.stepExecution = stepExecution;
-        this.batchJobName = stepExecution.getJobExecution().getJobInstance().getJobName();
-        JobParameters parameters = this.stepExecution.getJobExecution().getJobParameters();
-        this.tenantIdentifier = parameters.getString(BatchConstants.JOB_PARAM_TENANT_ID);
-        final FineractPlatformTenant tenant = BatchJobUtils.setTenant(tenantIdentifier, tenantDetailsService);
-        LOG.debug("Tenant {}", tenant.getName());
-
+        super.initialize(stepExecution);
+        LOG.debug("Job Step {} : Tenant {}", this.batchStepName, this.tenant.getName());
+        // Particular process parameters or properties
         this.penaltyWaitPeriodValue = parameters.getLong(BatchConstants.JOB_PARAM_PENALTY_WAIT_PERIOD);
         this.backdatePenalties = TextUtils.stringToBoolean(parameters.getString(BatchConstants.JOB_PARAM_BACKDATE_PENALTIES));
     }
 
+    @AfterStep
+    public void after(StepExecution stepExecution) {
+        LOG.debug(stepExecution.getSummary());
+    }
+    
     @Override
     public MessageBatchDataResponse process(Long entityId) throws Exception {
-        LOG.debug("processing: " + entityId.toString());
         final Collection<OverdueLoanScheduleData> loanData = this.loanReadPlatformService
                 .retrieveOverdueInstallmentsByLoanId(penaltyWaitPeriodValue, backdatePenalties, entityId);
         
-        LOG.debug("Job {} to Loan Id {} : {} items", batchJobName, entityId, loanData.size());
-        this.loanWritePlatformService.applyOverdueChargesForLoan(entityId, loanData);
+        boolean changed = !loanData.isEmpty();
+        if (changed) {
+            // LOG.debug("Job Step {} to Loan Id {} : {} matured installments", batchStepName, entityId, loanData.size());
+            this.loanWritePlatformService.applyOverdueChargesForLoan(entityId, loanData);
+        }
 
-        MessageBatchDataResponse response = new MessageBatchDataResponse(batchJobName, tenantIdentifier, entityId, true, null);
+        MessageBatchDataResponse response = new MessageBatchDataResponse(batchStepName, tenantIdentifier, entityId, true, changed, null);
         return response;
     }
 }

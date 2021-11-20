@@ -21,14 +21,16 @@ package org.apache.fineract.infrastructure.batch.data;
 public class MessageBatchDataResponse extends MessageBaseData {
 
     private Long entityId;
+    private boolean changed;
     private boolean success;
     private Object payload;
 
-    public MessageBatchDataResponse(String batchJobName, String tenantIdentifier, Long entityId, boolean success, Object payload) {
-        this.batchJobName = batchJobName;
+    public MessageBatchDataResponse(String batchStepName, String tenantIdentifier, Long entityId, boolean success, boolean changed, Object payload) {
+        this.batchStepName = batchStepName;
         this.tenantIdentifier = tenantIdentifier;
         this.entityId = entityId;
         this.success = success;
+        this.changed = changed;
         this.payload = payload;
     }
 
@@ -54,5 +56,13 @@ public class MessageBatchDataResponse extends MessageBaseData {
 
     public void setSuccess(boolean success) {
         this.success = success;
-    }    
+    }
+
+    public boolean wasChanged() {
+        return changed;
+    }
+
+    public void setChanged(boolean changed) {
+        this.changed = changed;
+    } 
 }

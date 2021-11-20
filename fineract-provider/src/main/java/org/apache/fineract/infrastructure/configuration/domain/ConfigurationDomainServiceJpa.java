@@ -281,6 +281,8 @@ public class ConfigurationDomainServiceJpa implements ConfigurationDomainService
     public boolean isChangeEmiIfRepaymentDateSameAsDisbursementDateEnabled() {
         final String propertyName = "change-emi-if-repaymentdate-same-as-disbursementdate";
         final GlobalConfigurationPropertyData property = getGlobalConfigurationPropertyData(propertyName);
+        if (property == null)
+            return false;
         return property.isEnabled();
     }
 

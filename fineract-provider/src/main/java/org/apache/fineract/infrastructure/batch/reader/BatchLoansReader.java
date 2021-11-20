@@ -50,7 +50,7 @@ public class BatchLoansReader implements ItemReader<Long> {
     @BeforeStep
     public void before(StepExecution stepExecution) {
         this.stepExecution = stepExecution;
-        JobParameters parameters = stepExecution.getJobExecution().getJobParameters();
+        JobParameters parameters = this.stepExecution.getJobExecution().getJobParameters();
         final String tenantIdentifier = parameters.getString(BatchConstants.JOB_PARAM_TENANT_ID);
         final FineractPlatformTenant tenant = BatchJobUtils.setTenant(tenantIdentifier, tenantDetailsService);
         LOG.debug("Tenant {}", tenant.getName());

@@ -23,8 +23,8 @@ public class MessageData extends MessageBaseData {
     private Long entityId;
     private Object payload;
 
-    public MessageData(String batchJobName, String tenantIdentifier, Long entityId, Object payload) {
-        this.batchJobName = batchJobName;
+    public MessageData(String batchStepName, String tenantIdentifier, Long entityId, Object payload) {
+        this.batchStepName = batchStepName;
         this.tenantIdentifier = tenantIdentifier;
         this.entityId = entityId;
         this.payload = payload;

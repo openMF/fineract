@@ -1567,7 +1567,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         final StringBuilder sqlBuilder = new StringBuilder(400);
         sqlBuilder.append("select ").append(rm.schema());
         if (this.databaseType.equals(DatabaseUtils.POSTGRES_DATABASE_TYPE)) {
-            sqlBuilder.append(" where ls.loan_id = :loanId and (NOW() - INTERVAL '" + penaltyWaitPeriod +" DAY') > ls.duedate ");
+            sqlBuilder.append(" where ls.loan_id = :loanId and (CURRENT_DATE - INTERVAL '" + penaltyWaitPeriod +" DAY') > ls.duedate ");
         } else {
             sqlBuilder.append(" where ls.loan_id = :loanId and DATE_SUB(CURDATE(),INTERVAL :penaltyWaitPeriod DAY) > ls.duedate ");
             parameters.addValue("penaltyWaitPeriod", penaltyWaitPeriod);

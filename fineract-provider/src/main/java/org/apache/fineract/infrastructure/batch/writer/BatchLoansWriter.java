@@ -18,31 +18,28 @@
  */
 package org.apache.fineract.infrastructure.batch.writer;
 
-import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Session;
+
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.config.BatchDestinations;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
-import org.apache.fineract.infrastructure.core.utils.ProfileUtils;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 
-public class BatchLoansWriter implements ItemWriter<Long>, StepExecutionListener {
+public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long>, StepExecutionListener {
 
     public static final Logger LOG = LoggerFactory.getLogger(BatchLoansWriter.class);
 
@@ -52,17 +49,6 @@ public class BatchLoansWriter implements ItemWriter<Long>, StepExecutionListener
     @Autowired
     private JmsTemplate sqsJmsTemplate;
 
-    @Autowired
-    private ApplicationContext context;
-
-    private StepExecution stepExecution;
-    private String tenantIdentifier;
-    private String batchJobName;
-    private String queueName;
-
-    private final Gson gson = new Gson();
-    private ProfileUtils profileUtils;
-
     public BatchLoansWriter(BatchDestinations batchDestinations) {
         super();
         this.queueName = batchDestinations.getBatchLoansDestination();
@@ -71,15 +57,13 @@ public class BatchLoansWriter implements ItemWriter<Long>, StepExecutionListener
 
     @Override
     public void beforeStep(StepExecution stepExecution) {
-        this.stepExecution = stepExecution;
-        this.profileUtils = new ProfileUtils(context.getEnvironment());
-        JobParameters parameters = stepExecution.getJobExecution().getJobParameters();
-        tenantIdentifier = parameters.getString(BatchConstants.JOB_PARAM_TENANT_ID);
-        batchJobName = stepExecution.getJobExecution().getJobInstance().getJobName();
+        initialize(stepExecution);
     }
 
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
+        LOG.info("{} items processed {}", this.batchStepName, this.processed);
+        LOG.debug(stepExecution.getSummary());
         return stepExecution.getExitStatus();
     }
 
@@ -89,15 +73,17 @@ public class BatchLoansWriter implements ItemWriter<Long>, StepExecutionListener
         for (final Long loanId : items) {
             if (loanId != null) {
                 batchLoanIds.add(loanId);
+                this.processed++;
             }
         }
 
-        MessageBatchDataRequest messageData = new MessageBatchDataRequest(batchJobName, tenantIdentifier, batchLoanIds);
+        MessageBatchDataRequest messageData = new MessageBatchDataRequest(batchStepName, tenantIdentifier, batchLoanIds);
         sendMessage(messageData);
     }
 
     private void sendMessage(final MessageBatchDataRequest message) {
         final String payload = gson.toJson(message);
+        LOG.debug("Writing: {}", message.getEntityIds().size());
         LOG.debug("Sending: {}", payload);
         // ActiveMQ
         if (profileUtils.isActiveProfile(JobConstants.SPRING_MESSAGING_PROFILE_NAME)) {
@@ -105,13 +91,13 @@ public class BatchLoansWriter implements ItemWriter<Long>, StepExecutionListener
 
                 @Override
                 public Message createMessage(Session session) throws JMSException {
-                    LOG.info("Sending {} to Queue {} with {} items", batchJobName, queueName, message.getEntityIds().size());
+                    LOG.info("Sending {} to Queue {} with {} items", batchStepName, queueName, message.getEntityIds().size());
                     return session.createTextMessage(payload);
                 }
             });
             // SQS
         } else if (profileUtils.isActiveProfile(JobConstants.SPRING_MESSAGINGSQS_PROFILE_NAME)) {
-            LOG.info("Sending {} to Queue {} with {} items", batchJobName, queueName, message.getEntityIds().size());
+            LOG.info("Sending {} to Queue {} with {} items", batchStepName, queueName, message.getEntityIds().size());
             this.sqsJmsTemplate.convertAndSend(this.queueName, payload);
         }
     }

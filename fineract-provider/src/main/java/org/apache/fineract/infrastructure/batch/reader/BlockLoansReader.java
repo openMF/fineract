@@ -29,9 +29,9 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemReader;
 
-public class ApplyChargeForOverdueLoansReader implements ItemReader<Long> {
+public class BlockLoansReader implements ItemReader<Long> {
 
-    public static final Logger LOG = LoggerFactory.getLogger(ApplyChargeForOverdueLoansReader.class);
+    public static final Logger LOG = LoggerFactory.getLogger(BlockLoansReader.class);
 
     private Iterator<Long> dataIterator;
     private StepExecution stepExecution;
@@ -41,9 +41,9 @@ public class ApplyChargeForOverdueLoansReader implements ItemReader<Long> {
         this.stepExecution = stepExecution;
         JobParameters parameters = this.stepExecution.getJobExecution().getJobParameters();
         final String parameter = parameters.getString(BatchConstants.JOB_PARAM_PARAMETER);
-        LOG.debug("Processing Loan Ids {}", parameter);
         List<Long> loanIds = BatchJobUtils.getLoanIds(parameter);
         this.dataIterator = loanIds.iterator();
+        LOG.debug("{} processing {} Loan Ids", this.stepExecution.getId(), loanIds.size());
     }
 
     @Override

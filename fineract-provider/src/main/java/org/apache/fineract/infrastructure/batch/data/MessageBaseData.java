@@ -23,14 +23,14 @@ import java.io.Serializable;
 public class MessageBaseData implements Serializable {
 
     protected String tenantIdentifier;
-    protected String batchJobName;
+    protected String batchStepName;
 
-    public String getBatchJobName() {
-        return batchJobName;
+    public String getBatchStepName() {
+        return batchStepName;
     }
 
-    public void setBatchJobName(String batchJobName) {
-        this.batchJobName = batchJobName;
+    public void setBatchStepName(String batchStepName) {
+        this.batchStepName = batchStepName;
     }
 
     public String getTenantIdentifier() {

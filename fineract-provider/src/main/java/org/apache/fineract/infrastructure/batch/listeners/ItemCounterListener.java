@@ -21,6 +21,7 @@ package org.apache.fineract.infrastructure.batch.listeners;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ChunkListener;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 
 public class ItemCounterListener implements ChunkListener {
@@ -33,8 +34,9 @@ public class ItemCounterListener implements ChunkListener {
 
     @Override
     public void afterChunk(ChunkContext context) {
-        int count = context.getStepContext().getStepExecution().getReadCount();
-        LOG.info("Context: {}, Items: {}", ++chunkCounter, count);
+        StepExecution stepExecution = context.getStepContext().getStepExecution();
+        LOG.debug("Step {} : Context: {}, Items: {}", stepExecution.getStepName(), ++chunkCounter, stepExecution.getReadCount());
+        LOG.debug(stepExecution.getSummary());
     }
 
     @Override

@@ -18,17 +18,92 @@
  */
 package org.apache.fineract.infrastructure.batch.processor;
 
+import com.google.gson.JsonElement;
+
+import org.apache.fineract.infrastructure.batch.config.BatchConstants;
+import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
+import org.apache.fineract.infrastructure.batch.data.process.LoanRepaymentData;
+import org.apache.fineract.infrastructure.core.api.JsonCommand;
+import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
+import org.apache.fineract.organisation.monetary.domain.Money;
+import org.apache.fineract.portfolio.loanaccount.domain.Loan;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallmentRepository;
+import org.apache.fineract.portfolio.loanaccount.service.LoanWritePlatformServiceJpaRepositoryImpl;
+import org.apache.fineract.portfolio.paymenttype.domain.PaymentType;
+import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepositoryWrapper;
+import org.apache.fineract.useradministration.domain.AppUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.annotation.AfterStep;
+import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 
-public class AutopayLoansProcessor implements ItemProcessor<Long, Long> {
+public class AutopayLoansProcessor extends BatchProcessorBase implements ItemProcessor<Long, MessageBatchDataResponse> {
 
     public static final Logger LOG = LoggerFactory.getLogger(AutopayLoansProcessor.class);
 
+    @Autowired
+    private LoanRepaymentScheduleInstallmentRepository loanRepaymentScheduleInstallmentRepository;
+
+    @Autowired
+    private LoanWritePlatformServiceJpaRepositoryImpl loanWritePlatformService;
+
+    @Autowired
+    private FromJsonHelper fromApiJsonHelper;
+
+    @Autowired
+    private PaymentTypeRepositoryWrapper paymentTypeRepository;
+
+    private PaymentType autopayPaymentType;
+
+    @BeforeStep
+    public void before(StepExecution stepExecution) {
+        super.initialize(stepExecution);
+        LOG.debug("Job Step {} : Tenant {}", this.batchStepName, this.tenant.getName());
+        // Particular process parameters or properties
+        this.autopayPaymentType = this.paymentTypeRepository.findByName("AUTOPAY");
+    }
+
+    @AfterStep
+    public void after(StepExecution stepExecution) {
+        LOG.debug(stepExecution.getSummary());
+    }
+
     @Override
-    public Long process(Long item) throws Exception {
-        LOG.debug("processing: " + item.toString());
-        return item;
+    public MessageBatchDataResponse process(Long entityId) throws Exception {
+        final LoanRepaymentScheduleInstallment repaymentInstallment = this.loanRepaymentScheduleInstallmentRepository
+            .fetchLoanRepaymentScheduleInstallmentByLoanIdAndDuedate(entityId, dateOfTenant, false);
+
+        MessageBatchDataResponse response;
+        if (repaymentInstallment != null) {
+            // LOG.debug("Job Step {} to Loan Id {} : installment number {} : duedate {}", 
+            //    batchStepName, entityId, repaymentInstallment.getInstallmentNumber(), repaymentInstallment.getDueDate());
+
+            final Loan loan = repaymentInstallment.getLoan();
+            final Money amountDue = repaymentInstallment.getDue(loan.getCurrency());
+            LoanRepaymentData loanRepaymentData = new LoanRepaymentData(entityId, dateOfTenantValue, amountDue.getAmount(), "", 
+                BatchConstants.DEFAULT_BATCH_DATE_LOCALE, BatchConstants.DEFAULT_BATCH_DATE_FORMAT, this.autopayPaymentType.getId().intValue());
+
+            final AppUser appUser = this.context.getAuthenticatedUserIfPresent();
+            final String jsonData = gson.toJson(loanRepaymentData);
+            // LOG.debug("Json {} ", jsonData);
+            final JsonElement parsedCommand = this.fromApiJsonHelper.parse(jsonData);
+
+            JsonCommand command = new JsonCommand(entityId, jsonData, parsedCommand, this.fromApiJsonHelper, "LOAN", appUser);
+
+            final boolean isRecoveryRepayment = false;
+            final CommandProcessingResult processResult = loanWritePlatformService.makeLoanRepayment(entityId, command, isRecoveryRepayment);
+            response = new MessageBatchDataResponse(batchStepName, tenantIdentifier, entityId, true, true, processResult.getTransactionId());
+            // LOG.debug("processResult: {} ", processResult.getTransactionId());
+        } else {
+            // LOG.debug("Job Step {} to Loan Id {} : Not repayment for date {}", batchStepName, entityId, dateOfTenant);
+            response = new MessageBatchDataResponse(batchStepName, tenantIdentifier, entityId, true, false, null);
+        }
+
+        return response;
     }
 }

@@ -28,7 +28,7 @@ public class BatchLoansProcessor implements ItemProcessor<Long, Long> {
 
     @Override
     public Long process(Long item) throws Exception {
-        LOG.debug("processing: " + item);
+        // LOG.debug("processing: " + item);
         return item;
     }
 }

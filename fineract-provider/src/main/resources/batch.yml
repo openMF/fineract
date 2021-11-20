@@ -37,7 +37,6 @@ fineract:
       chunk:
         size: 1000
       listeners:
-        concurrency: 1-2
+        concurrency: 1
       queues:
         batchLoans: BATCH_LOANS_RQT
-        applyChargeToOverdueLoans: APPLY_CHARGE_TO_OVERDUE_LOAN_INSTALLMENT_RQT

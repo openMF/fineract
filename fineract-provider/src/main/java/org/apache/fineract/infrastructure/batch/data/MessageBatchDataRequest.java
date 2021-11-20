@@ -24,8 +24,8 @@ public class MessageBatchDataRequest extends MessageBaseData {
 
     private List<Long> entityIds;
 
-    public MessageBatchDataRequest(String batchJobName, String tenantIdentifier, List<Long> entityIds) {
-        this.batchJobName = batchJobName;
+    public MessageBatchDataRequest(String batchStepName, String tenantIdentifier, List<Long> entityIds) {
+        this.batchStepName = batchStepName;
         this.tenantIdentifier = tenantIdentifier;
         this.entityIds = entityIds;
     }

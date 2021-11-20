@@ -26,6 +26,7 @@ import org.apache.fineract.infrastructure.batch.exception.JobIllegalRestartExcep
 import org.apache.fineract.infrastructure.batch.exception.JobParameterInvalidException;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
+import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.slf4j.Logger;
@@ -121,10 +122,14 @@ public class JobRunnerImpl implements JobRunner {
     private Job getJobById(final Long jobId) {
         switch (jobId.intValue()) {
             case 1:
-                return jobBuilderFactory.get("endOfDayJob").listener(jobExecutionListener).flow(batchForLoansStep).end().build();
+                return jobBuilderFactory.get(BatchConstants.BATCH_BLOCKLOANS_JOB_NAME)
+                    .listener(jobExecutionListener).flow(batchForLoansStep)
+                    .end().build();
             case 2:
-                return jobBuilderFactory.get("endOfDayBatchJob").listener(jobExecutionListener).flow(autopayLoansStep)
-                        .next(applyChargeForOverdueLoansStep).end().build();
+                return jobBuilderFactory.get(BatchConstants.BATCH_COB_JOB_NAME)
+                    .listener(jobExecutionListener).flow(autopayLoansStep)
+                    .next(applyChargeForOverdueLoansStep)
+                    .end().build();
             default:
                 return null;
         }
@@ -138,6 +143,8 @@ public class JobRunnerImpl implements JobRunner {
         final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_ID, tenant.getTenantIdentifier());
+        final String dateOfTenant = DateUtils.formatDate(DateUtils.getDateOfTenant(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
+        jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_DATE, dateOfTenant);
         jobParametersBuilder.addString("instance_id", UUID.randomUUID().toString(), true);
         if (parameter != null) {
             LOG.debug("Adding parameters {}", parameter);
