@@ -22,6 +22,8 @@ package org.apache.fineract.infrastructure.jobs.data;
 public class JobConstants {
 
     // Spring Profiles
+    public static final String BASIC_AUTH_PROFILE_NAME = "basicauth";
+    public static final String TWOFACT_AUTH_PROFILE_NAME = "twofactor";
     public static final String QUARTZ_BATCH_PROFILE_NAME = "quartzJobs";
     public static final String SPRING_BATCH_PROFILE_NAME = "springBatch";
     public static final String SPRING_BATCH_WORKER_PROFILE_NAME = "springBatchWorker";

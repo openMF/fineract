@@ -137,7 +137,7 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
         final List<FineractPlatformTenant> allTenants = this.tenantDetailsService.findAllTenants();
         for (final FineractPlatformTenant tenant : allTenants) {
             ThreadLocalContextUtil.setTenant(tenant);
-            LOG.info("Tenant {} : {}", tenant.getName(), tenant.getTenantIdentifier());
+            LOG.debug("Tenant {} : {}", tenant.getName(), tenant.getTenantIdentifier());
 
             if (profileUtils.isActiveProfile(JobConstants.QUARTZ_BATCH_PROFILE_NAME)) {
                 final List<ScheduledJobDetail> scheduledJobDetails = this.schedularWritePlatformService.retrieveAllJobs(nodeId);
@@ -154,7 +154,7 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
                 }
 
             } else if (profileUtils.isActiveProfile(JobConstants.SPRING_BATCH_PROFILE_NAME)) {
-                LOG.info("Database for tenant {} : {}", tenant.getName(), tenant.getTenantIdentifier());
+                LOG.debug("Database for tenant {} : {}", tenant.getName(), tenant.getTenantIdentifier());
                 final BatchConfiguration batchConfiguration = new BatchConfiguration(
                         this.dataSourceServiceFactory.determineDataSourceService());
             }
