@@ -17,7 +17,7 @@
 #
 FROM azul/zulu-openjdk-debian:11 AS builder
 
-RUN apt-get update -qq && apt-get install -y wget
+RUN apt-get update -qq && apt-get install -y wget curl
 
 COPY . fineract
 WORKDIR /fineract
