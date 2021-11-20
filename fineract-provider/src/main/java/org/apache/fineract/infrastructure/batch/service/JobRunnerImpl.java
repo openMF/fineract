@@ -54,6 +54,8 @@ public class JobRunnerImpl implements JobRunner {
 
     public static final Logger LOG = LoggerFactory.getLogger(JobRunnerImpl.class);
 
+    private Long limit;
+
     private final JobLauncher jobLauncher;
     private final JobBuilderFactory jobBuilderFactory;
     private final JobExecutionListener jobExecutionListener;
@@ -83,7 +85,11 @@ public class JobRunnerImpl implements JobRunner {
     }
 
     @Override
-    public Long runJob(final Long jobId) {
+    public Long runJob(final Long jobId, final Long limit) {
+        this.limit = 0L;
+        if (limit != null)
+            this.limit = limit;
+
         LOG.debug("runJob ===== " + jobId);
         try {
             JobExecution jobExecution = this.jobLauncher.run(getJobById(jobId), getJobParametersById(jobId));
@@ -156,7 +162,11 @@ public class JobRunnerImpl implements JobRunner {
         }
 
         switch (jobId.intValue()) {
-            // Batch Loan First Step
+            // Batch Chunker Job
+            case 1:
+                jobParametersBuilder.addLong(BatchConstants.JOB_PARAM_LIMIT_READ, this.limit);
+                break;
+            // Batch Close Of Bussines Job
             case 2:
                 final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();
                 final Boolean backdatePenalties = this.configurationDomainService.isBackdatePenaltiesEnabled();
@@ -165,6 +175,7 @@ public class JobRunnerImpl implements JobRunner {
                 jobParametersBuilder.addLong(BatchConstants.JOB_PARAM_PENALTY_WAIT_PERIOD, penaltyWaitPeriodValue);
                 jobParametersBuilder.addString(BatchConstants.JOB_PARAM_BACKDATE_PENALTIES, backdatePenalties.toString(),
                         backdatePenalties);
+                break;
         }
         return jobParametersBuilder.toJobParameters();
     }

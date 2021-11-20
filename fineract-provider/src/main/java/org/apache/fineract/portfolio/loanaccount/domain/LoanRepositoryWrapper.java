@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 import org.apache.fineract.portfolio.loanaccount.exception.LoanNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -227,8 +228,11 @@ public class LoanRepositoryWrapper {
         return this.repository.findActiveLoansLoanProductIdsByGroup(groupId, loanStatus);
     }
 
-    public List<Long> findActiveLoans(@Param("loanStatus") Integer loanStatus) {
-        return this.repository.findActiveLoans(loanStatus);
+    public List<Long> findActiveLoans(@Param("loanStatus") Integer loanStatus, int size) {
+        if (size == 0)
+            return this.repository.findActiveLoans(loanStatus);
+        else 
+            return this.repository.findActiveLoans(loanStatus, PageRequest.of(0, size));
     }
 
     public boolean doNonClosedLoanAccountsExistForClient(@Param("clientId") Long clientId) {

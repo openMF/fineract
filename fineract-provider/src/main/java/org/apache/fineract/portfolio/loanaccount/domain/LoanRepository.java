@@ -21,6 +21,8 @@ package org.apache.fineract.portfolio.loanaccount.domain;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -150,6 +152,9 @@ public interface LoanRepository extends JpaRepository<Loan, Long>, JpaSpecificat
 
     @Query(FIND_ACTIVE_LOANS)
     List<Long> findActiveLoans(@Param("loanStatus") Integer loanStatus);
+
+    @Query(FIND_ACTIVE_LOANS)
+    List<Long> findActiveLoans(@Param("loanStatus") Integer loanStatus, Pageable pageable);
 
     @Query(DOES_CLIENT_HAVE_NON_CLOSED_LOANS)
     boolean doNonClosedLoanAccountsExistForClient(@Param("clientId") Long clientId);

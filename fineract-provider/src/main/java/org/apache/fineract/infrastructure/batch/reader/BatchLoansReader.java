@@ -55,7 +55,10 @@ public class BatchLoansReader implements ItemReader<Long> {
         final FineractPlatformTenant tenant = BatchJobUtils.setTenant(tenantIdentifier, tenantDetailsService);
         LOG.debug("Tenant {}", tenant.getName());
 
-        final Collection<Long> loansForBatchProcess = this.loanRepository.findActiveLoans(LoanStatus.ACTIVE.getValue());
+        Long limitRead = parameters.getLong(BatchConstants.JOB_PARAM_LIMIT_READ);
+
+        final Collection<Long> loansForBatchProcess = this.loanRepository.
+            findActiveLoans(LoanStatus.ACTIVE.getValue(), limitRead.intValue());
         this.dataIterator = loansForBatchProcess.iterator();
     }
 

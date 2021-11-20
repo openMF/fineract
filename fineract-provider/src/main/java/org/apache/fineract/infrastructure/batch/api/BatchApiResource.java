@@ -66,7 +66,8 @@ public class BatchApiResource {
     @Operation(summary = "Run a Job", description = "Manually Execute Specific Job.")
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "POST: jobs/1?command=executeJob") })
     public Response executeBatchJob(@PathParam("jobId") @Parameter(description = "jobId") final Long jobId,
-            @QueryParam("command") @Parameter(description = "command") final String commandParam) {
+            @QueryParam("command") @Parameter(description = "command") final String commandParam,
+            @QueryParam("limit") @Parameter(description = "limit") final Long limitParam) {
         final boolean hasNotPermission = this.context.authenticatedUser().hasNotPermissionForAnyOf("ALL_FUNCTIONS", "EXECUTEJOB_SCHEDULER");
         if (hasNotPermission) {
             final String authorizationMessage = "User has no authority to execute scheduler jobs";
@@ -74,7 +75,7 @@ public class BatchApiResource {
         }
         Response response = Response.status(Response.Status.NO_CONTENT).build();
         if (TextUtils.is(commandParam, "start")) {
-            Long jobInstanceId = jobRunner.runJob(jobId);
+            Long jobInstanceId = jobRunner.runJob(jobId, limitParam);
             response = Response.status(Response.Status.OK).entity("{batchJobId: " + jobInstanceId + "}").build();
         } else {
             throw new UnrecognizedQueryParamException("command", commandParam);

@@ -28,6 +28,7 @@ public class BatchConstants {
     public static final String JOB_PARAM_PARAMETER = "parameter";
     public static final String JOB_PARAM_TENANT_ID = "tenantIdentifier";
     public static final String JOB_PARAM_TENANT_DATE = "tenantDate";
+    public static final String JOB_PARAM_LIMIT_READ = "limitRead";
 
     public static final String DEFAULT_BATCH_DATE_FORMAT = "yyyy-MM-dd";
     public static final String DEFAULT_BATCH_DATETIME_FORMAT = "yyyy-MM-dd HH:mm";
