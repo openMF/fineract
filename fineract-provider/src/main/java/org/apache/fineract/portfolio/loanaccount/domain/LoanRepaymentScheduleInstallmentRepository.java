@@ -30,4 +30,7 @@ public interface LoanRepaymentScheduleInstallmentRepository
 
     @Query("select lrsi from LoanRepaymentScheduleInstallment lrsi where lrsi.loan.id=:loanId and lrsi.dueDate=:dueDate and lrsi.obligationsMet=:obligationsMet")
     LoanRepaymentScheduleInstallment fetchLoanRepaymentScheduleInstallmentByLoanIdAndDuedate(@Param("loanId") Long loanId, @Param("dueDate") Date dueDate, @Param("obligationsMet") boolean obligationsMet);
+
+    @Query("select min(lrsi.dueDate) from LoanRepaymentScheduleInstallment lrsi where lrsi.loan.id=:loanId and lrsi.obligationsMet=false")
+    Date fetchLoanRepaymentScheduleInstallmentUnpaidByLoanId(@Param("loanId") Long loanId);
 }

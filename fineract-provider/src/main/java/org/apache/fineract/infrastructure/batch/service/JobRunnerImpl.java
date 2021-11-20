@@ -63,11 +63,13 @@ public class JobRunnerImpl implements JobRunner {
     private final Step batchForLoansStep;
     private final Step autopayLoansStep;
     private final Step applyChargeForOverdueLoansStep;
+    private final Step taggingLoansStep;
 
     @Autowired
     public JobRunnerImpl(@Qualifier("batchJobLauncher") JobLauncher jobLauncher, final JobBuilderFactory jobBuilderFactory,
             JobExecutionListener jobExecutionListener, final ConfigurationDomainService configurationDomainService,
-            final Step batchForLoansStep, final Step applyChargeForOverdueLoansStep, final Step autopayLoansStep) {
+            final Step batchForLoansStep, final Step autopayLoansStep, final Step applyChargeForOverdueLoansStep,
+            final Step taggingLoansStep) {
         this.jobLauncher = jobLauncher;
         this.jobBuilderFactory = jobBuilderFactory;
         this.jobExecutionListener = jobExecutionListener;
@@ -77,6 +79,7 @@ public class JobRunnerImpl implements JobRunner {
         this.applyChargeForOverdueLoansStep = applyChargeForOverdueLoansStep;
         this.batchForLoansStep = batchForLoansStep;
         this.autopayLoansStep = autopayLoansStep;
+        this.taggingLoansStep = taggingLoansStep;
     }
 
     @Override
@@ -129,6 +132,7 @@ public class JobRunnerImpl implements JobRunner {
                 return jobBuilderFactory.get(BatchConstants.BATCH_COB_JOB_NAME)
                     .listener(jobExecutionListener).flow(autopayLoansStep)
                     .next(applyChargeForOverdueLoansStep)
+                    .next(taggingLoansStep)
                     .end().build();
             default:
                 return null;
@@ -147,7 +151,7 @@ public class JobRunnerImpl implements JobRunner {
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_DATE, dateOfTenant);
         jobParametersBuilder.addString("instance_id", UUID.randomUUID().toString(), true);
         if (parameter != null) {
-            LOG.debug("Adding parameters {}", parameter);
+            // LOG.debug("Adding parameters {}", parameter);
             jobParametersBuilder.addString(BatchConstants.JOB_PARAM_PARAMETER, parameter);
         }
 

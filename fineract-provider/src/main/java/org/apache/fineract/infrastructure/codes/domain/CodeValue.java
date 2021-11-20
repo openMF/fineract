@@ -79,6 +79,10 @@ public class CodeValue extends AbstractPersistableCustom {
         return this.label;
     }
 
+    public boolean isLabel(String label) {
+        return label.equals(this.label);
+    }
+
     public int position() {
         return this.position;
     }

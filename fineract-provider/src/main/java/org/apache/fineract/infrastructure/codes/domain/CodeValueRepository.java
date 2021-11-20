@@ -18,10 +18,14 @@
  */
 package org.apache.fineract.infrastructure.codes.domain;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface CodeValueRepository extends JpaRepository<CodeValue, Long>, JpaSpecificationExecutor<CodeValue> {
+
+    List<CodeValue> findByCodeName(String codeName);
 
     CodeValue findByCodeNameAndId(String codeName, Long id);
 

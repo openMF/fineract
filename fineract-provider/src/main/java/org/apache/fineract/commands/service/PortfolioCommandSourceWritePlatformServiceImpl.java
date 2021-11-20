@@ -71,10 +71,21 @@ public class PortfolioCommandSourceWritePlatformServiceImpl implements Portfolio
     @SuppressFBWarnings(value = {
             "DMI_RANDOM_USED_ONLY_ONCE" }, justification = "False positive for random object created and used only once")
     public CommandProcessingResult logCommandSource(final CommandWrapper wrapper) {
+        return logCommandSource(wrapper, null);
+    }
+
+    @Override
+    @SuppressWarnings("AvoidHidingCauseException")
+    @SuppressFBWarnings(value = {
+            "DMI_RANDOM_USED_ONLY_ONCE" }, justification = "False positive for random object created and used only once")
+    public CommandProcessingResult logCommandSource(final CommandWrapper wrapper, AppUser appUser) {
 
         boolean isApprovedByChecker = false;
+        if (appUser == null)
+            appUser = this.context.authenticatedUser(wrapper);
+
         // check if is update of own account details
-        if (wrapper.isUpdateOfOwnUserDetails(this.context.authenticatedUser(wrapper).getId())) {
+        if (wrapper.isUpdateOfOwnUserDetails(appUser.getId())) {
             // then allow this operation to proceed.
             // maker checker doesnt mean anything here.
             isApprovedByChecker = true; // set to true in case permissions have
@@ -83,7 +94,7 @@ public class PortfolioCommandSourceWritePlatformServiceImpl implements Portfolio
         } else {
             // if not user changing their own details - check user has
             // permission to perform specific task.
-            this.context.authenticatedUser(wrapper).validateHasPermissionTo(wrapper.getTaskPermissionName());
+            appUser.validateHasPermissionTo(wrapper.getTaskPermissionName());
         }
         validateIsUpdateAllowed();
 
@@ -102,7 +113,7 @@ public class PortfolioCommandSourceWritePlatformServiceImpl implements Portfolio
                 wrapper.getOrganisationCreditBureauId());
         while (numberOfRetries <= maxNumberOfRetries) {
             try {
-                result = this.processAndLogCommandService.processAndLogCommand(wrapper, command, isApprovedByChecker);
+                result = this.processAndLogCommandService.processAndLogCommand(wrapper, command, isApprovedByChecker, appUser);
                 LOG.debug("result " + result);
                 numberOfRetries = maxNumberOfRetries + 1;
             } catch (CannotAcquireLockException | ObjectOptimisticLockingFailureException exception) {

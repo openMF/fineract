@@ -33,7 +33,6 @@ import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleIns
 import org.apache.fineract.portfolio.loanaccount.service.LoanWritePlatformServiceJpaRepositoryImpl;
 import org.apache.fineract.portfolio.paymenttype.domain.PaymentType;
 import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepositoryWrapper;
-import org.apache.fineract.useradministration.domain.AppUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
@@ -88,12 +87,11 @@ public class AutopayLoansProcessor extends BatchProcessorBase implements ItemPro
             LoanRepaymentData loanRepaymentData = new LoanRepaymentData(entityId, dateOfTenantValue, amountDue.getAmount(), "", 
                 BatchConstants.DEFAULT_BATCH_DATE_LOCALE, BatchConstants.DEFAULT_BATCH_DATE_FORMAT, this.autopayPaymentType.getId().intValue());
 
-            final AppUser appUser = this.context.getAuthenticatedUserIfPresent();
             final String jsonData = gson.toJson(loanRepaymentData);
             // LOG.debug("Json {} ", jsonData);
             final JsonElement parsedCommand = this.fromApiJsonHelper.parse(jsonData);
 
-            JsonCommand command = new JsonCommand(entityId, jsonData, parsedCommand, this.fromApiJsonHelper, "LOAN", appUser);
+            JsonCommand command = new JsonCommand(entityId, jsonData, parsedCommand, this.fromApiJsonHelper, "LOAN", this.appUser);
 
             final boolean isRecoveryRepayment = false;
             final CommandProcessingResult processResult = loanWritePlatformService.makeLoanRepayment(entityId, command, isRecoveryRepayment);

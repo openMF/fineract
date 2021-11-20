@@ -28,6 +28,8 @@ import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.service.TenantDetailsService;
+import org.apache.fineract.useradministration.domain.AppUser;
+import org.apache.fineract.useradministration.domain.AppUserRepositoryWrapper;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,9 @@ public class BatchProcessorBase {
     @Autowired
     protected PlatformSecurityContext context;
 
+    @Autowired 
+    protected AppUserRepositoryWrapper appUserRepository;
+
     protected String batchStepName;
     protected String tenantIdentifier;
 
@@ -49,6 +54,7 @@ public class BatchProcessorBase {
     protected String dateOfTenantValue;
     protected Date dateOfTenant;
     protected FineractPlatformTenant tenant;
+    protected AppUser appUser;
 
     protected final Gson gson = new Gson();
 
@@ -60,5 +66,6 @@ public class BatchProcessorBase {
         this.tenant = BatchJobUtils.setTenant(tenantIdentifier, tenantDetailsService);
         this.dateOfTenantValue = parameters.getString(BatchConstants.JOB_PARAM_TENANT_DATE);
         this.dateOfTenant = DateUtils.createDate(this.dateOfTenantValue, BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
+        this.appUser = this.appUserRepository.fetchSystemUser();
     }
 }

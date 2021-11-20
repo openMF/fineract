@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "fbc19468-d2fd-489c-90a1-5360ac034bfb",
+		"_postman_id": "aa9f344a-0c9b-4166-a7aa-cff97f282d9f",
 		"name": "Pepper Soup Initial Configuration APIs",
 		"description": "Pepper Soup Initial Configuration APIs for setting up the Pepper Soup Instance.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -59,12 +59,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -116,12 +116,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -168,12 +168,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -225,12 +225,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -278,12 +278,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -336,12 +336,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -388,12 +388,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -440,12 +440,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -492,12 +492,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -544,12 +544,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -596,12 +596,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -648,12 +648,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -691,6 +691,110 @@
 								}
 							},
 							"response": []
+						},
+						{
+							"name": "loan_account_status_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"loan_account_status_tag\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "loan_delinquency_tag",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"loan_delinquency_tag\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes"
+									]
+								}
+							},
+							"response": []
 						}
 					]
 				},
@@ -705,12 +809,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -759,12 +863,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -813,12 +917,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -867,12 +971,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -921,12 +1025,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -975,12 +1079,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1029,12 +1133,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1083,12 +1187,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1137,12 +1241,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1191,12 +1295,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1245,12 +1349,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1299,12 +1403,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1353,12 +1457,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1407,12 +1511,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1461,12 +1565,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1515,12 +1619,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1569,12 +1673,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1623,12 +1727,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1678,12 +1782,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1733,12 +1837,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1788,12 +1892,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1843,12 +1947,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1897,12 +2001,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -1951,12 +2055,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2005,12 +2109,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2052,19 +2156,19 @@
 							"response": []
 						},
 						{
-							"name": "Gender Addition",
+							"name": "Gender Add Female",
 							"request": {
 								"auth": {
 									"type": "basic",
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2106,19 +2210,19 @@
 							"response": []
 						},
 						{
-							"name": "Gender Addition 2",
+							"name": "Gender Add Male",
 							"request": {
 								"auth": {
 									"type": "basic",
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2158,6 +2262,762 @@
 								}
 							},
 							"response": []
+						},
+						{
+							"name": "Loan Account Status 1",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"PENDING\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/41/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"41",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Account Status 2",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"ACTIVE\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/41/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"41",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Account Status 3",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"CLOSED\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/41/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"41",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Account Status 4",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"CANCELLED\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/41/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"41",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Delinquent 1",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"Delinquent 1\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/42/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"42",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Delinquent 3",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"Delinquent 3\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/42/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"42",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Delinquent 30",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"Delinquent 30\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/42/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"42",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Delinquent 60",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"Delinquent 60\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/42/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"42",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Delinquent 90",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"Delinquent 90\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/42/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"42",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Delinquent 120",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"Delinquent 120\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/42/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"42",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Delinquent 150",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"Delinquent 150\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/42/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"42",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Delinquent 180",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"Delinquent 180\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/42/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"42",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Delinquent 210",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"Delinquent 210\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/42/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"42",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Loan Delinquent 240",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"isActive\": true,\n    \"name\": \"Delinquent 240\"\n}"
+								},
+								"url": {
+									"raw": "{{url}}/codes/42/codevalues",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"codes",
+										"42",
+										"codevalues"
+									]
+								}
+							},
+							"response": []
 						}
 					]
 				},
@@ -2172,12 +3032,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2217,19 +3077,19 @@
 							"response": []
 						},
 						{
-							"name": "create datatable -scheduled payments",
+							"name": "create datatable-scheduled_payments",
 							"request": {
 								"auth": {
 									"type": "basic",
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2269,19 +3129,19 @@
 							"response": []
 						},
 						{
-							"name": "create datatable 3 -tags",
+							"name": "create datatable-client_tags",
 							"request": {
 								"auth": {
 									"type": "basic",
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2319,6 +3179,58 @@
 								}
 							},
 							"response": []
+						},
+						{
+							"name": "create datatable-loan_tags",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{secret}}",
+											"type": "string"
+										},
+										{
+											"key": "showPassword",
+											"value": false,
+											"type": "boolean"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Fineract-Platform-TenantId",
+										"value": "{{tenantId}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"datatableName\": \"dt_loan_tags\",\n    \"apptableName\": \"m_loan\",\n    \"multiRow\": true,\n    \"columns\": [\n        {\n            \"name\": \"account_status\",\n            \"type\": \"Dropdown\",\n            \"mandatory\": true,\n            \"code\": \"loan_account_status_tag\"\n        },\n        {\n            \"name\": \"delinquent\",\n            \"type\": \"Dropdown\",\n            \"mandatory\": false,\n            \"code\": \"loan_delinquency_tag\"\n        },\n        {\n            \"name\": \"charged_off\",\n            \"type\": \"Boolean\",\n            \"mandatory\": true\n        },\n        {\n            \"name\": \"paid_off\",\n            \"type\": \"Boolean\",\n            \"mandatory\": true\n        },\n        {\n            \"name\": \"tagged_at\",\n            \"type\": \"Datetime\",\n            \"mandatory\": true\n        }\n    ]\n}"
+								},
+								"url": {
+									"raw": "{{url}}/datatables",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"datatables"
+									]
+								}
+							},
+							"response": []
 						}
 					]
 				},
@@ -2333,12 +3245,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2385,12 +3297,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2437,12 +3349,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2489,12 +3401,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2546,12 +3458,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2598,12 +3510,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2650,12 +3562,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2702,12 +3614,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2754,12 +3666,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2806,12 +3718,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2858,12 +3770,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2910,12 +3822,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -2962,12 +3874,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3014,12 +3926,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3066,12 +3978,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3118,12 +4030,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3170,12 +4082,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3227,12 +4139,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3289,12 +4201,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3341,12 +4253,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3395,12 +4307,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3460,12 +4372,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3512,12 +4424,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3571,12 +4483,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3630,12 +4542,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3690,12 +4602,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3755,12 +4667,12 @@
 									"basic": [
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										},
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
@@ -3820,12 +4732,12 @@
 									"basic": [
 										{
 											"key": "password",
-											"value": "password",
+											"value": "{{secret}}",
 											"type": "string"
 										},
 										{
 											"key": "username",
-											"value": "mifos",
+											"value": "{{username}}",
 											"type": "string"
 										}
 									]
@@ -3861,12 +4773,12 @@
 		"basic": [
 			{
 				"key": "password",
-				"value": "password",
+				"value": "{{secret}}",
 				"type": "string"
 			},
 			{
 				"key": "username",
-				"value": "mifos",
+				"value": "{{username}}",
 				"type": "string"
 			}
 		]

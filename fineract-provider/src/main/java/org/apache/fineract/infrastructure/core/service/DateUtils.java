@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
@@ -118,5 +120,13 @@ public final class DateUtils {
         df.setTimeZone(getTimeZoneOfTenant());
         final String formattedSqlDate = df.format(date);
         return formattedSqlDate;
+    }
+
+    public static Long getDaysInBetween(final Date date1, final Date date2) {
+        if (date1 == null || date2 == null) {
+            return 0L;
+        }
+        final Long diff = date1.getTime() - date2.getTime();
+        return TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
     }
 }

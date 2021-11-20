@@ -83,21 +83,20 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
 
     private void sendMessage(final MessageBatchDataRequest message) {
         final String payload = gson.toJson(message);
-        LOG.debug("Writing: {}", message.getEntityIds().size());
-        LOG.debug("Sending: {}", payload);
+        // LOG.debug("Sending: {}", payload);
         // ActiveMQ
         if (profileUtils.isActiveProfile(JobConstants.SPRING_MESSAGING_PROFILE_NAME)) {
+            LOG.debug("{} shipment {} to MQ: {} items {}", batchStepName, chunkCounter++, queueName, message.getEntityIds().size());
             this.jmsTemplate.send(new ActiveMQQueue(this.queueName), new MessageCreator() {
 
                 @Override
                 public Message createMessage(Session session) throws JMSException {
-                    LOG.info("Sending {} to Queue {} with {} items", batchStepName, queueName, message.getEntityIds().size());
                     return session.createTextMessage(payload);
                 }
             });
             // SQS
         } else if (profileUtils.isActiveProfile(JobConstants.SPRING_MESSAGINGSQS_PROFILE_NAME)) {
-            LOG.info("Sending {} to Queue {} with {} items", batchStepName, queueName, message.getEntityIds().size());
+            LOG.debug("{} shipment {} to SQS: {} items {}", batchStepName, chunkCounter++, queueName, message.getEntityIds().size());
             this.sqsJmsTemplate.convertAndSend(this.queueName, payload);
         }
     }

@@ -18,6 +18,8 @@
  */
 package org.apache.fineract.infrastructure.codes.domain;
 
+import java.util.List;
+
 import org.apache.fineract.infrastructure.codes.exception.CodeValueNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -64,4 +66,11 @@ public class CodeValueRepositoryWrapper {
         return codeValue;
     }
 
+    public List<CodeValue> findByCodeNameWithNotFoundDetection(final String codeName) {
+        final List<CodeValue> codeValues = this.repository.findByCodeName(codeName);
+        if (codeValues == null) {
+            throw new CodeValueNotFoundException(codeName);
+        }
+        return codeValues;
+    }
 }

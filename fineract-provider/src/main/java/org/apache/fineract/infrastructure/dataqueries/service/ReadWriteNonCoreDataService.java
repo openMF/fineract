@@ -23,6 +23,7 @@ import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.dataqueries.data.DatatableData;
 import org.apache.fineract.infrastructure.dataqueries.data.GenericResultsetData;
+import org.apache.fineract.useradministration.domain.AppUser;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 public interface ReadWriteNonCoreDataService {
@@ -53,7 +54,7 @@ public interface ReadWriteNonCoreDataService {
 
     CommandProcessingResult createNewDatatableEntry(String datatable, Long appTableId, JsonCommand command);
 
-    CommandProcessingResult createNewDatatableEntry(String datatable, Long appTableId, String json);
+    CommandProcessingResult createNewDatatableEntry(String datatable, Long appTableId, String json, AppUser appUser);
 
     CommandProcessingResult createPPIEntry(String datatable, Long appTableId, JsonCommand command);
 

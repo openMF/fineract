@@ -45,6 +45,7 @@ public class BatchWriterBase {
     protected String queueName;
 
     protected int processed;
+    protected int chunkCounter;
 
     protected void initialize(StepExecution stepExecution) {
         this.stepExecution = stepExecution;
@@ -56,5 +57,6 @@ public class BatchWriterBase {
         this.gson = new Gson();
 
         this.processed = 0;
+        this.chunkCounter = 0;
     }
 }

@@ -85,6 +85,13 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
     @Override
     public CommandProcessingResult processAndLogCommand(final CommandWrapper wrapper, final JsonCommand command,
             final boolean isApprovedByChecker) {
+            return processAndLogCommand(wrapper, command, isApprovedByChecker, null);
+    }
+
+    @Transactional
+    @Override
+    public CommandProcessingResult processAndLogCommand(final CommandWrapper wrapper, final JsonCommand command,
+            final boolean isApprovedByChecker, AppUser maker) {
 
         final boolean rollbackTransaction = this.configurationDomainService.isMakerCheckerEnabledForTask(wrapper.taskPermissionName());
 
@@ -99,7 +106,8 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
             throw t;
         }
 
-        final AppUser maker = this.context.authenticatedUser(wrapper);
+        if (maker == null)
+            maker = this.context.authenticatedUser(wrapper);
 
         CommandSource commandSourceResult = null;
         if (command.commandId() != null) {

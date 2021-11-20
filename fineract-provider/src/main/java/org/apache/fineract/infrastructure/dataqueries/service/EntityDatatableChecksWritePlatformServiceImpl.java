@@ -235,7 +235,7 @@ public class EntityDatatableChecksWritePlatformServiceImpl implements EntityData
                     isMakerCheckerEnabled = true;
                 }
                 try {
-                    this.readWriteNonCoreDataService.createNewDatatableEntry(datatableName, entityId, datatableData.toString());
+                    this.readWriteNonCoreDataService.createNewDatatableEntry(datatableName, entityId, datatableData.toString(), user);
                 } catch (PlatformApiDataValidationException e) {
                     for (ApiParameterError error : e.getErrors()) {
                         error.setParameterName("datatables." + datatableName + "." + error.getParameterName());

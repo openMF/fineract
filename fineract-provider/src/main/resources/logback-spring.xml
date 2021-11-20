@@ -41,5 +41,6 @@
     <logger name="org.springframework.boot.web.embedded.tomcat.TomcatWebServer" level="info" />
     <logger name="org.apache.fineract.ServerApplication" level="info" />
     <logger name="org.springframework.batch" level="warn"/>
+    <logger name="com.amazon.sqs.javamessaging" level="warn" />
     <logger name="org.apache.fineract.infrastructure.batch" level="debug" />
 </configuration>

@@ -30,10 +30,19 @@ public class BatchConstants {
     public static final String JOB_PARAM_TENANT_DATE = "tenantDate";
 
     public static final String DEFAULT_BATCH_DATE_FORMAT = "yyyy-MM-dd";
+    public static final String DEFAULT_BATCH_DATETIME_FORMAT = "yyyy-MM-dd HH:mm";
     public static final String DEFAULT_BATCH_DATE_LOCALE = "en";
 
     public static final String JOB_PARAM_PENALTY_WAIT_PERIOD = "penaltyWaitPeriod";
     public static final String JOB_PARAM_BACKDATE_PENALTIES = "backdatePenalties";
 
+    // Batch Jobs Ids
     public static final Long BATCH_JOB_PROCESS_ID = 2L;
+
+    // DataTables used in Batch
+    public static final String LOAN_TAGS_DATATABLE = "dt_loan_tags";
+
+    // Codes used in Batch
+    public static final String LOAN_ACCOUNT_STATUS_CODE = "loan_account_status_tag";
+    public static final String LOAN_DELIQUENCY_CODE = "loan_delinquency_tag";
 }

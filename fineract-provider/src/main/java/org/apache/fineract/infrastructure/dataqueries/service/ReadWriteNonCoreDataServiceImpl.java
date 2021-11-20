@@ -374,15 +374,17 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
     @Transactional
     @Override
     public CommandProcessingResult createNewDatatableEntry(final String dataTableName, final Long appTableId, final JsonCommand command) {
-        return createNewDatatableEntry(dataTableName, appTableId, command.json());
+        return createNewDatatableEntry(dataTableName, appTableId, command.json(), null);
     }
 
     @Transactional
     @Override
-    public CommandProcessingResult createNewDatatableEntry(final String dataTableName, final Long appTableId, final String json) {
+    public CommandProcessingResult createNewDatatableEntry(final String dataTableName, final Long appTableId, final String json, AppUser appUser) {
         try {
+            if (appUser == null)
+                appUser = this.context.authenticatedUser();
             final String appTable = queryForApplicationTableName(dataTableName);
-            final CommandProcessingResult commandProcessingResult = checkMainResourceExistsWithinScope(appTable, appTableId);
+            final CommandProcessingResult commandProcessingResult = checkMainResourceExistsWithinScope(appTable, appTableId, appUser);
 
             final List<ResultsetColumnHeaderData> columnHeaders = this.genericDataService.fillResultsetColumnHeaders(dataTableName);
 
@@ -476,7 +478,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
 
         try {
             final String appTable = queryForApplicationTableName(dataTableName);
-            final CommandProcessingResult commandProcessingResult = checkMainResourceExistsWithinScope(appTable, appTableId);
+            final CommandProcessingResult commandProcessingResult = checkMainResourceExistsWithinScope(appTable, appTableId, this.context.authenticatedUser());
 
             final List<ResultsetColumnHeaderData> columnHeaders = this.genericDataService.fillResultsetColumnHeaders(dataTableName);
 
@@ -1011,7 +1013,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             final JsonCommand command) {
 
         final String appTable = queryForApplicationTableName(dataTableName);
-        final CommandProcessingResult commandProcessingResult = checkMainResourceExistsWithinScope(appTable, appTableId);
+        final CommandProcessingResult commandProcessingResult = checkMainResourceExistsWithinScope(appTable, appTableId, this.context.authenticatedUser());
 
         final GenericResultsetData grs = retrieveDataTableGenericResultSetForUpdate(appTable, dataTableName, appTableId, datatableId);
 
@@ -1091,7 +1093,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             throw new DatatableEntryRequiredException(dataTableName, appTableId);
         }
         final String appTable = queryForApplicationTableName(dataTableName);
-        final CommandProcessingResult commandProcessingResult = checkMainResourceExistsWithinScope(appTable, appTableId);
+        final CommandProcessingResult commandProcessingResult = checkMainResourceExistsWithinScope(appTable, appTableId, this.context.authenticatedUser());
         final String deleteOneToOneEntrySql = getDeleteEntriesSql(dataTableName, getFKField(appTable), appTableId);
 
         final int rowsDeleted = this.jdbcTemplate.update(deleteOneToOneEntrySql);
@@ -1110,7 +1112,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             throw new DatatableEntryRequiredException(dataTableName, appTableId);
         }
         final String appTable = queryForApplicationTableName(dataTableName);
-        final CommandProcessingResult commandProcessingResult = checkMainResourceExistsWithinScope(appTable, appTableId);
+        final CommandProcessingResult commandProcessingResult = checkMainResourceExistsWithinScope(appTable, appTableId, this.context.authenticatedUser());
 
         final String sql = getDeleteEntrySql(dataTableName, datatableId);
 
@@ -1124,7 +1126,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
 
         final String appTable = queryForApplicationTableName(dataTableName);
 
-        checkMainResourceExistsWithinScope(appTable, appTableId);
+        checkMainResourceExistsWithinScope(appTable, appTableId, this.context.authenticatedUser());
 
         final List<ResultsetColumnHeaderData> columnHeaders = this.genericDataService.fillResultsetColumnHeaders(dataTableName);
 
@@ -1186,9 +1188,9 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
         return scale;
     }
 
-    private CommandProcessingResult checkMainResourceExistsWithinScope(final String appTable, final Long appTableId) {
+    private CommandProcessingResult checkMainResourceExistsWithinScope(final String appTable, final Long appTableId, final AppUser appUser) {
 
-        final String sql = dataScopedSQL(appTable, appTableId);
+        final String sql = dataScopedSQL(appTable, appTableId, appUser);
         LOG.debug("data scoped sql: " + sql);
         final SqlRowSet rs = this.jdbcTemplate.queryForRowSet(sql);
 
@@ -1219,13 +1221,11 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
                 .build();
     }
 
-    private String dataScopedSQL(final String appTable, final Long appTableId) {
+    private String dataScopedSQL(final String appTable, final Long appTableId, final AppUser currentUser) {
         /*
          * unfortunately have to, one way or another, be able to restrict data to the users office hierarchy. Here, a
          * few key tables are done. But if additional fields are needed on other tables the same pattern applies
          */
-
-        final AppUser currentUser = this.context.authenticatedUser();
         String scopedSQL = null;
         /*
          * m_loan and m_savings_account are connected to an m_office thru either an m_client or an m_group If both it

@@ -26,12 +26,13 @@ import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
 import org.apache.fineract.infrastructure.batch.listeners.ItemCounterListener;
 import org.apache.fineract.infrastructure.batch.processor.ApplyChargeForOverdueLoansProcessor;
 import org.apache.fineract.infrastructure.batch.processor.AutopayLoansProcessor;
-import org.apache.fineract.infrastructure.batch.processor.BatchLoansProcessor;
+import org.apache.fineract.infrastructure.batch.processor.TaggingLoansProcessor;
 import org.apache.fineract.infrastructure.batch.reader.BatchLoansReader;
 import org.apache.fineract.infrastructure.batch.reader.BlockLoansReader;
 import org.apache.fineract.infrastructure.batch.writer.ApplyChargeForOverdueLoansWriter;
 import org.apache.fineract.infrastructure.batch.writer.AutopayLoansWriter;
 import org.apache.fineract.infrastructure.batch.writer.BatchLoansWriter;
+import org.apache.fineract.infrastructure.batch.writer.TaggingLoansWriter;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSourceService;
 import org.apache.fineract.infrastructure.core.utils.DatabaseUtils;
 import org.apache.fineract.infrastructure.core.utils.PropertyUtils;
@@ -232,11 +233,6 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
     // Processors
     @Bean
-    public BatchLoansProcessor batchLoansProcessor() {
-        return new BatchLoansProcessor();
-    }
-
-    @Bean
     public AutopayLoansProcessor autopayLoansProcessor() {
         return new AutopayLoansProcessor();
     }
@@ -244,6 +240,11 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     @Bean
     public ApplyChargeForOverdueLoansProcessor applyChargeForOverdueLoansProcessor() {
         return new ApplyChargeForOverdueLoansProcessor();
+    }
+
+    @Bean
+    public TaggingLoansProcessor taggingLoansProcessor() {
+        return new TaggingLoansProcessor();
     }
 
     // Writers
@@ -262,9 +263,14 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         return new ApplyChargeForOverdueLoansWriter(batchDestinations());
     }
 
+    @Bean
+    public TaggingLoansWriter taggingLoansWriter() {
+        return new TaggingLoansWriter(batchDestinations());
+    }
+
     // Steps
     @Bean
-    public Step batchForLoansStep(BatchLoansReader batchLoansReader, BatchLoansProcessor batchLoansProcessor,
+    public Step batchForLoansStep(BatchLoansReader batchLoansReader,
             BatchLoansWriter batchLoansWriter) {
         final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
         Step step = stepBuilderFactory.get("batchForLoansStep").<Long, Long>chunk(chunkSize).reader(batchLoansReader)
@@ -297,4 +303,17 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
         return step;
     }
+
+    @Bean
+    public Step taggingLoansStep(BlockLoansReader blockLoansReader,
+        TaggingLoansProcessor taggingLoansProcessor, TaggingLoansWriter taggingLoansWriter) {
+        final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
+        Step step = stepBuilderFactory.get("taggingLoansStep")
+                .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(blockLoansReader)
+                .processor(taggingLoansProcessor).writer(taggingLoansWriter).listener(itemCounterListener())
+                .build();
+
+        return step;
+    }
+
 }

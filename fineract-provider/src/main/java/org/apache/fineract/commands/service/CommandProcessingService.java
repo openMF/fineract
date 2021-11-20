@@ -28,6 +28,8 @@ public interface CommandProcessingService {
 
     CommandProcessingResult processAndLogCommand(CommandWrapper wrapper, JsonCommand command, boolean isApprovedByChecker);
 
+    CommandProcessingResult processAndLogCommand(CommandWrapper wrapper, JsonCommand command, boolean isApprovedByChecker, AppUser user);
+
     CommandProcessingResult processAndLogCommandKafka(CommandWrapper wrapper, JsonCommand command, boolean isApprovedByChecker);
 
     CommandProcessingResult logCommand(CommandSource commandSourceResult);
