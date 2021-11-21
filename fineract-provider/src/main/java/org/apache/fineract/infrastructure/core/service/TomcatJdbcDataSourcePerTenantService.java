@@ -20,15 +20,20 @@ package org.apache.fineract.infrastructure.core.service;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import javax.sql.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.fineract.infrastructure.core.boot.JDBCDriverConfig;
+import org.apache.fineract.infrastructure.core.domain.FineractPlatformDefaultTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 /**
@@ -54,11 +59,29 @@ public class TomcatJdbcDataSourcePerTenantService implements RoutingDataSourceSe
         this.tenantDataSource = tenantDataSource;
     }
 
+    @Autowired      
+    FineractPlatformDefaultTenant fineractPlatformDefaultTenant;
+
+    @Autowired
+    Environment environment;
+
+    private static final Logger LOG = LoggerFactory.getLogger(TomcatJdbcDataSourcePerTenantService.class);
+
     @Override
     public DataSource retrieveDataSource() {
         // default to tenant database datasource
         DataSource tenantDataSource = this.tenantDataSource;
-        final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
+
+        final FineractPlatformTenant tenant; 
+
+        if(this.fineractPlatformDefaultTenant.getFineractTenant().getTenantIdentifier().equalsIgnoreCase("default") && Arrays.stream(environment.getActiveProfiles()).anyMatch(env -> env.equalsIgnoreCase("singleTenant"))) {
+            tenant = this.fineractPlatformDefaultTenant.getFineractTenant();
+        } 
+        else {
+            tenant = ThreadLocalContextUtil.getTenant();
+            LOG.info("TENANT DB QUERY");
+        }
+
         if (tenant != null) {
             final FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
 
