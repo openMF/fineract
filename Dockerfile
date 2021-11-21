@@ -36,8 +36,6 @@ RUN wget -q https://jdbc.postgresql.org/download/postgresql-42.3.1.jar
 
 FROM azul/zulu-openjdk-alpine:11 AS fineract
 
-RUN apt-get update -qq && apt-get install -y wget curl
-
 COPY --from=builder /fineract/fineract-provider/build/libs /app
 COPY --from=builder /fineract/libs /app/libs
 
