@@ -23,7 +23,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import javax.ws.rs.POST;
+
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
@@ -61,7 +62,7 @@ public class BatchApiResource {
         this.jobRunner = jobRunner;
     }
 
-    @POST
+    @GET
     @Path("{jobId}")
     @Operation(summary = "Run a Job", description = "Manually Execute Specific Job.")
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "POST: jobs/1?command=executeJob") })

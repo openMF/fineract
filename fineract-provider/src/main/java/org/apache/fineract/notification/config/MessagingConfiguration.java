@@ -77,6 +77,7 @@ public class MessagingConfiguration {
     }
 
     @Bean
+    @Profile(JobConstants.SPRING_MESSAGING_PROFILE_NAME)
     public DefaultMessageListenerContainer messageListenerContainer() {
 
         DefaultMessageListenerContainer messageListenerContainer = new DefaultMessageListenerContainer();
