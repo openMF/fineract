@@ -101,9 +101,9 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
     }
 
     private boolean checkForUnreadNotifications(Long appUserId) {
-        String sql = "SELECT count(*) FROM notification_mapper WHERE user_id = ? AND is_read = " + sqlResolver.formatBoolValue(false);
-        int count = this.jdbcTemplate.queryForObject(sql, Integer.class, appUserId);
-        return (count > 0);
+        String sql = "SELECT EXISTS(SELECT 1 FROM notification_mapper WHERE user_id = ? AND is_read = " + sqlResolver.formatBoolValue(
+                false) + ")";
+        return Boolean.TRUE.equals(this.jdbcTemplate.queryForObject(sql, Boolean.class, appUserId));
     }
 
     @Override
