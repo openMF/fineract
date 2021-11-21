@@ -39,11 +39,12 @@ public class BlockLoansReader implements ItemReader<Long> {
     @BeforeStep
     public void before(StepExecution stepExecution) {
         this.stepExecution = stepExecution;
+        final String batchStepName = stepExecution.getStepName();
         JobParameters parameters = this.stepExecution.getJobExecution().getJobParameters();
         final String parameter = parameters.getString(BatchConstants.JOB_PARAM_PARAMETER);
         List<Long> loanIds = BatchJobUtils.getLoanIds(parameter);
         this.dataIterator = loanIds.iterator();
-        LOG.debug("{} processing {} Loan Ids", this.stepExecution.getId(), loanIds.size());
+        LOG.debug("{} - {} processing {} Loan Ids", batchStepName, this.stepExecution.getId(), loanIds.size());
     }
 
     @Override

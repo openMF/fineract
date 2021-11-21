@@ -2690,11 +2690,15 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     public void applyOverdueChargesForLoan(final Long loanId, Collection<OverdueLoanScheduleData> overdueLoanScheduleDatas) {
 
         Loan loan = null;
+        LoanProduct loanProduct = null;
         final List<Long> existingTransactionIds = new ArrayList<>();
         final List<Long> existingReversedTransactionIds = new ArrayList<>();
         boolean runInterestRecalculation = false;
         LocalDate recalculateFrom = DateUtils.getLocalDateOfTenant();
         LocalDate lastChargeDate = null;
+
+        final Boolean postJournalEntriesOnline = configurationDomainService.postJournalEntriesOnline();
+
         for (final OverdueLoanScheduleData overdueInstallment : overdueLoanScheduleDatas) {
 
             final JsonElement parsedCommand = this.fromApiJsonHelper.parse(overdueInstallment.toString());
@@ -2702,7 +2706,10 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                     null, null, null, loanId, null, null, null, null, null, null);
             LoanOverdueDTO overdueDTO = applyChargeToOverdueLoanInstallment(loanId, overdueInstallment.getChargeId(),
                     overdueInstallment.getPeriodNumber(), command, loan, existingTransactionIds, existingReversedTransactionIds);
-            loan = overdueDTO.getLoan();
+            if (loan == null) {
+                loan = overdueDTO.getLoan();
+                loanProduct = loan.getLoanProduct();
+            }
             runInterestRecalculation = runInterestRecalculation || overdueDTO.isRunInterestRecalculation();
             if (recalculateFrom.isAfter(overdueDTO.getRecalculateFrom())) {
                 recalculateFrom = overdueDTO.getRecalculateFrom();
@@ -2742,7 +2749,9 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 saveLoanWithDataIntegrityViolationChecks(loan);
             }
 
-            postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds);
+            if (loanProduct != null && !loanProduct.isAccountingDisabled() && postJournalEntriesOnline) {
+                postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds);
+            }
 
             if (loan.repaymentScheduleDetail().isInterestRecalculationEnabled() && runInterestRecalculation
                     && loan.isFeeCompoundingEnabledForInterestRecalculation()) {

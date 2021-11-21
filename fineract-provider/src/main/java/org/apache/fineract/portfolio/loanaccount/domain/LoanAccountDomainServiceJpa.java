@@ -72,6 +72,7 @@ import org.apache.fineract.portfolio.loanaccount.data.ScheduleGeneratorDTO;
 import org.apache.fineract.portfolio.loanaccount.service.LoanAccrualPlatformService;
 import org.apache.fineract.portfolio.loanaccount.service.LoanAssembler;
 import org.apache.fineract.portfolio.loanaccount.service.LoanUtilService;
+import org.apache.fineract.portfolio.loanproduct.domain.LoanProduct;
 import org.apache.fineract.portfolio.note.domain.Note;
 import org.apache.fineract.portfolio.note.domain.NoteRepository;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
@@ -238,7 +239,11 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
             this.noteRepository.save(note);
         }
 
-        postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer, isLoanToLoanTransfer);
+        final LoanProduct loanProduct = loan.getLoanProduct();
+        final Boolean postJournalEntriesOnline = configurationDomainService.postJournalEntriesOnline();
+        if (loanProduct != null && !loanProduct.isAccountingDisabled() && postJournalEntriesOnline) {
+            postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer, isLoanToLoanTransfer);
+        }
 
         recalculateAccruals(loan);
 

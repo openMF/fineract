@@ -395,4 +395,12 @@ public class ConfigurationDomainServiceJpa implements ConfigurationDomainService
         return defaultValue;
     }
 
+    @Override
+    public boolean postJournalEntriesOnline() {
+        final String propertyName = "post-journal-entries-online";
+        final GlobalConfigurationPropertyData property = getGlobalConfigurationPropertyData(propertyName);
+        if (property == null)
+            return true; // Default to true
+        return property.isEnabled();
+    }
 }

@@ -37,6 +37,6 @@ fineract:
       chunk:
         size: 1000
       listeners:
-        concurrency: 2
+        concurrency: 4
       queues:
         batchLoans: BATCH_LOANS_RQT

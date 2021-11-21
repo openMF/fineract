@@ -22,7 +22,6 @@ import java.util.List;
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
 import org.apache.fineract.infrastructure.batch.service.JobRunnerImpl;
-import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,14 +42,14 @@ public class BatchLoansEventSQSListener extends BatchEventBaseListener {
 
     @JmsListener(destination = "#{@batchDestinations.BatchLoansDestination}", concurrency = "#{@batchDestinations.ConcurrencyDestination}")
     public void receivedMessage(@Payload String payload) {
-        LOG.debug("receivedMessage ==== " + payload);
+        // LOG.debug("receivedMessage ==== " + payload);
         MessageBatchDataRequest messageData = gson.fromJson(payload, MessageBatchDataRequest.class);
         if (messageData != null) {
-            final FineractPlatformTenant tenant = setTenant(messageData.getTenantIdentifier());
-            LOG.debug("Tenant {}", tenant.getName());
+            setTenant(messageData.getTenantIdentifier());
+            // LOG.debug("Tenant {}", tenant.getName());
 
             List<Long> loanIds = getLoanIds(messageData.getEntityIds());
-            LOG.info("Job {} : {} loans", messageData.getBatchStepName(), loanIds.size());
+            LOG.debug("Job {} : {} loans", messageData.getBatchStepName(), loanIds.size());
             jobRunnerImpl.runJob(BatchConstants.BATCH_JOB_PROCESS_ID, gson.toJson(loanIds));
         }
     }

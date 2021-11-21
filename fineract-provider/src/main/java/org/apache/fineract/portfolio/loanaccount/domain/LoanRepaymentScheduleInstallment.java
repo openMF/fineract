@@ -228,6 +228,10 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
         return LocalDate.ofInstant(this.dueDate.toInstant(), DateUtils.getDateTimeZoneOfTenant());
     }
 
+    public Date getDueDateAsDate() {
+        return this.dueDate;
+    }
+
     public Money getPrincipal(final MonetaryCurrency currency) {
         return Money.of(currency, this.principal);
     }

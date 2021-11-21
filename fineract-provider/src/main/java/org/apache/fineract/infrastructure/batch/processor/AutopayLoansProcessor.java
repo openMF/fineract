@@ -18,6 +18,8 @@
  */
 package org.apache.fineract.infrastructure.batch.processor;
 
+import java.util.List;
+
 import com.google.gson.JsonElement;
 
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
@@ -26,6 +28,7 @@ import org.apache.fineract.infrastructure.batch.data.process.LoanRepaymentData;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
+import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
@@ -74,17 +77,21 @@ public class AutopayLoansProcessor extends BatchProcessorBase implements ItemPro
 
     @Override
     public MessageBatchDataResponse process(Long entityId) throws Exception {
-        final LoanRepaymentScheduleInstallment repaymentInstallment = this.loanRepaymentScheduleInstallmentRepository
-            .fetchLoanRepaymentScheduleInstallmentByLoanIdAndDuedate(entityId, dateOfTenant, false);
+        final List<LoanRepaymentScheduleInstallment> repaymentInstallments = this.loanRepaymentScheduleInstallmentRepository
+            .fetchLoanRepaymentScheduleInstallmentMaturedByLoanId(entityId, dateOfTenant, false);
 
         MessageBatchDataResponse response;
-        if (repaymentInstallment != null) {
+        if (!repaymentInstallments.isEmpty()) {
             // LOG.debug("Job Step {} to Loan Id {} : installment number {} : duedate {}", 
             //    batchStepName, entityId, repaymentInstallment.getInstallmentNumber(), repaymentInstallment.getDueDate());
 
+            // Process the first Item
+            LoanRepaymentScheduleInstallment repaymentInstallment = repaymentInstallments.get(0);
             final Loan loan = repaymentInstallment.getLoan();
             final Money amountDue = repaymentInstallment.getDue(loan.getCurrency());
-            LoanRepaymentData loanRepaymentData = new LoanRepaymentData(entityId, dateOfTenantValue, amountDue.getAmount(), "", 
+            final String dueDateVal = DateUtils.formatDate(repaymentInstallment.getDueDateAsDate(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
+            // LOG.debug("    autopaying loan {} for due date {}", entityId, dueDateVal);
+            LoanRepaymentData loanRepaymentData = new LoanRepaymentData(entityId, dueDateVal, amountDue.getAmount(), "", 
                 BatchConstants.DEFAULT_BATCH_DATE_LOCALE, BatchConstants.DEFAULT_BATCH_DATE_FORMAT, this.autopayPaymentType.getId().intValue());
 
             final String jsonData = gson.toJson(loanRepaymentData);

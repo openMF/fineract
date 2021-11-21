@@ -18,24 +18,20 @@
 #
 databaseChangeLog:
   - context: core_db
-  - include:
-      file: sql/liquibase/changelog/core/001_core-create.yaml
-  - include:
-      file: sql/liquibase/changelog/core/002_core-init.yaml
-#  - include:
-#      file: sql/liquibase/changelog/core/003_mysql-init-report.yaml
-#  - include:
-#      file: sql/liquibase/changelog/core/003_postgres-init-report.yaml
-  - include:
-      file: sql/liquibase/changelog/core/004_core-update.yaml
-  - include:
-      file: sql/liquibase/changelog/core/005_add_new_indexes_to_calendar_and_calendar_instance.yaml
-  - includeAll:
-      context: sampledata
-      path: sql/liquibase/changelog/core/sampledata
-  - include:
-      file: sql/liquibase/changelog/springbatch/001_springbatch-create.yaml
-  - include:
-      file: sql/liquibase/changelog/core/006_add_post_journal_entries_config.yaml
-
-
+  - changeSet:
+      id: 006_add_post_journal_entries_config-1
+      author: fineract
+      description: 006_add_post_journal_entries_config.yaml
+      changes:
+        - insert:
+            columns:
+              - column:
+                  name: name
+                  value: post-journal-entries-online
+              - column:
+                  name: enabled
+                  value: 0
+              - column:
+                  name: description
+                  value: Post the journal entries online if not in batch
+            tableName: c_configuration

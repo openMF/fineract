@@ -39,7 +39,6 @@ import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidati
 public final class DateUtils {
 
     private DateUtils() {
-
     }
 
     public static ZoneId getDateTimeZoneOfTenant() {
@@ -92,6 +91,12 @@ public final class DateUtils {
         }
     }
 
+    public static Date getDateFromLocalDate(final LocalDate localDate) {
+		ZoneId timeZoneOfTenant = getDateTimeZoneOfTenant();
+		ZonedDateTime zonedDateTime = localDate.atStartOfDay(timeZoneOfTenant);
+		return Date.from(zonedDateTime.toInstant());
+    }
+
     public static String formatToSqlDate(final Date date) {
         final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         df.setTimeZone(getTimeZoneOfTenant());
@@ -118,8 +123,13 @@ public final class DateUtils {
     public static String formatDate(final Date date, final String format) {
         final DateFormat df = new SimpleDateFormat(format);
         df.setTimeZone(getTimeZoneOfTenant());
-        final String formattedSqlDate = df.format(date);
-        return formattedSqlDate;
+        return df.format(date);
+    }
+
+    public static String formatDate(final LocalDate date, final String format) {
+        final DateFormat df = new SimpleDateFormat(format);
+        df.setTimeZone(getTimeZoneOfTenant());
+        return df.format(date);
     }
 
     public static Long getDaysInBetween(final Date date1, final Date date2) {
