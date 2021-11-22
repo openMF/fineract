@@ -187,7 +187,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         try {
             ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
             // The number of concurrent executions is 3.Wait for more queues.
-            taskExecutor.setCorePoolSize(3); // (4)
+            taskExecutor.setCorePoolSize(8); // (4)
             // java.lang.IllegalStateException: ThreadPoolTaskExecutor not initialized
             taskExecutor.initialize(); // (5)
 

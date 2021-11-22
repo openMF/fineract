@@ -69,15 +69,7 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
 
     @Override
     public void write(List<? extends Long> items) throws Exception {
-        List<Long> batchLoanIds = new ArrayList<Long>();
-        for (final Long loanId : items) {
-            if (loanId != null) {
-                batchLoanIds.add(loanId);
-                this.processed++;
-            }
-        }
-
-        MessageBatchDataRequest messageData = new MessageBatchDataRequest(batchStepName, tenantIdentifier, batchLoanIds);
+        MessageBatchDataRequest messageData = new MessageBatchDataRequest(batchStepName, tenantIdentifier, (List<Long>) items);
         sendMessage(messageData);
     }
 

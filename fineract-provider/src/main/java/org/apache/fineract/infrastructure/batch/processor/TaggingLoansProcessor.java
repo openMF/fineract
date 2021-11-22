@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
-
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
 import org.apache.fineract.infrastructure.batch.data.process.LoanTagsData;
@@ -57,7 +56,7 @@ public class TaggingLoansProcessor extends BatchProcessorBase implements ItemPro
     @Autowired
     private ReadWriteNonCoreDataService readWriteNonCoreDataService;
 
-    private DateTimeFormatter dateTimeFormatter;
+    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(BatchConstants.DEFAULT_BATCH_DATETIME_FORMAT);
 
     private List<CodeValue> loanAccountState;
     private List<CodeValue> deliquent;
@@ -67,22 +66,18 @@ public class TaggingLoansProcessor extends BatchProcessorBase implements ItemPro
         super.initialize(stepExecution);
         LOG.debug("Job Step {} : Tenant {}", this.batchStepName, this.tenant.getName());
         // Particular process parameters or properties
-        this.dateTimeFormatter = DateTimeFormatter
-            .ofPattern(BatchConstants.DEFAULT_BATCH_DATETIME_FORMAT);
-        this.loanAccountState = this.codeValueRepository
-            .findByCodeNameWithNotFoundDetection(BatchConstants.LOAN_ACCOUNT_STATUS_CODE);
-        this.deliquent = this.codeValueRepository
-            .findByCodeNameWithNotFoundDetection(BatchConstants.LOAN_DELIQUENCY_CODE);
+        this.loanAccountState = this.codeValueRepository.findByCodeNameWithNotFoundDetection(BatchConstants.LOAN_ACCOUNT_STATUS_CODE);
+        this.deliquent = this.codeValueRepository.findByCodeNameWithNotFoundDetection(BatchConstants.LOAN_DELIQUENCY_CODE);
     }
 
     @AfterStep
     public void after(StepExecution stepExecution) {
         LOG.debug(stepExecution.getSummary());
     }
-    
+
     @Override
     public MessageBatchDataResponse process(Long entityId) throws Exception {
-        
+
         final LocalDateTime taggedAtDateTime = DateUtils.getLocalDateTimeOfTenant();
         final String taggedAt = taggedAtDateTime.format(dateTimeFormatter);
         final boolean paidOff = false;
@@ -94,17 +89,17 @@ public class TaggingLoansProcessor extends BatchProcessorBase implements ItemPro
         if (deliquenLevel != null) {
             final String deliquenLabel = "Delinquent " + deliquenLevel;
             deliquency = this.codeByValue(this.deliquent, deliquenLabel);
-            chargedOff = (deliquenLevel >= 30 && deliquenLevel <= 120);    
+            chargedOff = (deliquenLevel >= 30 && deliquenLevel <= 120);
         }
-        
-        final LoanTagsData loanTagsData = new LoanTagsData(entityId, taggedAt, chargedOff, 
+
+        final LoanTagsData loanTagsData = new LoanTagsData(entityId, taggedAt, chargedOff,
             paidOff, accountStatus, deliquency);
         final String jsonData = loanTagsData.toJson();
         // LOG.debug("Json {} ", jsonData);
 
         final CommandProcessingResult result = this.readWriteNonCoreDataService.createNewDatatableEntry(
             BatchConstants.LOAN_TAGS_DATATABLE, entityId, jsonData, this.appUser);
-        final MessageBatchDataResponse response = new MessageBatchDataResponse(batchStepName, 
+        final MessageBatchDataResponse response = new MessageBatchDataResponse(batchStepName,
             tenantIdentifier, entityId, true, true, result.commandId());
         return response;
     }
@@ -157,7 +152,7 @@ public class TaggingLoansProcessor extends BatchProcessorBase implements ItemPro
         if (value == null)
             return null;
         for (CodeValue code : codes) {
-            if (code.isLabel(value)) 
+            if (code.isLabel(value))
                 return code.getId();
         }
         return null;

@@ -66,6 +66,6 @@ public class BatchProcessorBase {
         this.tenant = BatchJobUtils.setTenant(tenantIdentifier, tenantDetailsService);
         this.dateOfTenantValue = parameters.getString(BatchConstants.JOB_PARAM_TENANT_DATE);
         this.dateOfTenant = DateUtils.createDate(this.dateOfTenantValue, BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
-        this.appUser = this.appUserRepository.fetchSystemUser();
+        this.appUser = context.authenticatedUser();
     }
 }
