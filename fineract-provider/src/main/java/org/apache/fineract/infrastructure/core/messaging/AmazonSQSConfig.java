@@ -26,6 +26,8 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+
+import java.util.Optional;
 import java.util.Properties;
 import javax.annotation.PostConstruct;
 import javax.jms.Session;
@@ -50,6 +52,7 @@ public class AmazonSQSConfig {
     private String regionName;
     private String concurrency;
     private String awsAccountNo;
+    private Integer numberOfMessagesToPrefetch;
 
     private Properties messagingProperties;
     private AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
@@ -74,6 +77,16 @@ public class AmazonSQSConfig {
         if (awsAccountNo == null) {
             awsAccountNo = messagingProperties.getProperty("aws.messaging.accountno");
         }
+        numberOfMessagesToPrefetch = Integer.valueOf(getValue("DEFAULT_SQS_MESSAGE_PREFETCH", "1"));
+        if (numberOfMessagesToPrefetch == null)
+            numberOfMessagesToPrefetch = 1;
+    }
+
+    private String getValue(final String key, final String defaultVal) {
+        String propertyVal = this.environment.getProperty(key);
+        if (propertyVal == null)
+            return defaultVal;
+        return propertyVal;
     }
 
     private String getValue(final String key) {
@@ -86,7 +99,14 @@ public class AmazonSQSConfig {
 
     public SQSConnectionFactory sqsConnectionFactory() {
         AmazonSQS sqs = AmazonSQSClientBuilder.standard().withRegion(getRegion(regionName)).withCredentials(credentialsProvider).build();
-        return new SQSConnectionFactory(new ProviderConfiguration(), sqs);
+
+        ProviderConfiguration providerConfiguration = new ProviderConfiguration();
+            getNumberOfMessagesToPrefetch().ifPresent(providerConfiguration::setNumberOfMessagesToPrefetch);
+        return new SQSConnectionFactory(providerConfiguration, sqs);
+    }
+
+    public Optional<Integer> getNumberOfMessagesToPrefetch() {
+        return Optional.ofNullable(this.numberOfMessagesToPrefetch);
     }
 
     @Bean
