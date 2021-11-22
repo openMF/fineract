@@ -45,6 +45,7 @@
     <cache alias="codes" uses-template="defaultTemplate"/>
     <cache alias="hooks" uses-template="defaultTemplate"/>
     <cache alias="tfConfig" uses-template="defaultTemplate"/>
+    <cache alias="paymentType" uses-template="defaultTemplate"/>
     <cache alias="userTFAccessToken" uses-template="defaultTemplate">
         <expiry>
             <tti unit="seconds">7200</tti>

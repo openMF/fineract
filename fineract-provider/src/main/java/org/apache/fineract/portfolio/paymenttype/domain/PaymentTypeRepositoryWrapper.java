@@ -20,6 +20,7 @@ package org.apache.fineract.portfolio.paymenttype.domain;
 
 import org.apache.fineract.portfolio.paymenttype.exception.PaymentTypeNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -36,6 +37,7 @@ public class PaymentTypeRepositoryWrapper {
         return this.repository.findById(id).orElseThrow(() -> new PaymentTypeNotFoundException(id));
     }
 
+    @Cacheable(value = "paymentType", key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat(#name)")
     public PaymentType findByName(final String name) {
         return this.repository.findByName(name);
     }

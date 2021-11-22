@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.fineract.infrastructure.codes.exception.CodeValueNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 /**
@@ -66,6 +67,7 @@ public class CodeValueRepositoryWrapper {
         return codeValue;
     }
 
+    @Cacheable(value = "codes", key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat(#codename)")
     public List<CodeValue> findByCodeNameWithNotFoundDetection(final String codeName) {
         final List<CodeValue> codeValues = this.repository.findByCodeName(codeName);
         if (codeValues == null) {
