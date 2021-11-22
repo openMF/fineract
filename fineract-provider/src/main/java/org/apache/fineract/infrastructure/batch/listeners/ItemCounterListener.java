@@ -35,8 +35,7 @@ public class ItemCounterListener implements ChunkListener {
     @Override
     public void afterChunk(ChunkContext context) {
         StepExecution stepExecution = context.getStepContext().getStepExecution();
-        LOG.debug("Step {} : Context: {}, Items: {}", stepExecution.getStepName(), ++chunkCounter, stepExecution.getReadCount());
-        LOG.debug(stepExecution.getSummary());
+        LOG.debug("{}-{} : {}", ++chunkCounter, stepExecution.getStepName(), stepExecution.getSummary());
     }
 
     @Override

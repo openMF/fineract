@@ -46,7 +46,6 @@ public class TaggingLoansWriter extends BatchWriterBase implements ItemWriter<Me
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
         LOG.info("{} items processed {}", this.batchStepName, this.processed);
-        LOG.debug(stepExecution.getSummary());
         return stepExecution.getExitStatus();
     }
 
@@ -63,7 +62,7 @@ public class TaggingLoansWriter extends BatchWriterBase implements ItemWriter<Me
     }
 
     private void sendMessage(final MessageData message) {
-        final String payload = gson.toJson(message);
+        // final String payload = gson.toJson(message);
         // LOG.debug("Sending notification {}: {}", this.batchStepName, payload);
     }
 }

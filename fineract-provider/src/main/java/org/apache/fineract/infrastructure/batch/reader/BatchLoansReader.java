@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.service.BatchJobUtils;
-import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.security.service.TenantDetailsService;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepositoryWrapper;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
@@ -52,8 +51,8 @@ public class BatchLoansReader implements ItemReader<Long> {
         this.stepExecution = stepExecution;
         JobParameters parameters = this.stepExecution.getJobExecution().getJobParameters();
         final String tenantIdentifier = parameters.getString(BatchConstants.JOB_PARAM_TENANT_ID);
-        final FineractPlatformTenant tenant = BatchJobUtils.setTenant(tenantIdentifier, tenantDetailsService);
-        LOG.debug("Tenant {}", tenant.getName());
+        BatchJobUtils.setTenant(tenantIdentifier, tenantDetailsService);
+        // LOG.debug("Tenant {}", tenant.getName());
 
         Long limitRead = parameters.getLong(BatchConstants.JOB_PARAM_LIMIT_READ);
 
