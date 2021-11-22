@@ -19,6 +19,8 @@
 package org.apache.fineract.infrastructure.core.utils;
 
 import java.util.Arrays;
+
+import org.apache.fineract.infrastructure.core.boot.JDBCDriverConfig;
 import org.springframework.core.env.Environment;
 
 public class ProfileUtils {
@@ -29,8 +31,28 @@ public class ProfileUtils {
         this.environment = environment;
     }
 
+    public String[] getActiveProfiles() {
+        return environment.getActiveProfiles();
+    }
+
     public boolean isActiveProfile(String profile) {
-        String[] activeProfiles = environment.getActiveProfiles();
+        String[] activeProfiles = getActiveProfiles();
         return (Arrays.asList(activeProfiles).contains(profile));
+    }
+
+    public StringBuilder calcContext(JDBCDriverConfig driverConfig, StringBuilder context) {
+        if (context == null) {
+            context = new StringBuilder();
+        } else if (context.length() > 0) {
+            context.append(',');
+        }
+
+        context.append(driverConfig.getDialect().name().toLowerCase());
+
+        String[] profiles = getActiveProfiles();
+        if (profiles.length > 0) {
+            context.append(',').append(String.join(",", profiles));
+        }
+        return context;
     }
 }

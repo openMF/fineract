@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
-import org.springframework.core.env.Environment;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
@@ -42,10 +42,10 @@ public class TenantDatabaseUpgradeService {
 
     private final TenantDetailsService tenantDetailsService;
     private JDBCDriverConfig driverConfig;
+    private ProfileUtils profileUtils;
     private final LiquibaseProperties liquibaseProperties;
     private final ResourceLoader resourceLoader;
     protected final DataSource dataSource;
-    protected final Environment environment;
 
     @Autowired
     public TenantDatabaseUpgradeService(final TenantDetailsService detailsService,
@@ -53,68 +53,53 @@ public class TenantDatabaseUpgradeService {
                                         LiquibaseProperties liquibaseProperties,
                                         ResourceLoader resourceLoader,
                                         @Qualifier("hikariTenantDataSource") final DataSource dataSource,
-                                        Environment environment) {
+                                        final ApplicationContext context) {
         this.tenantDetailsService = detailsService;
         this.driverConfig = jdbcDriverConfig;
         this.liquibaseProperties = liquibaseProperties;
         this.resourceLoader = resourceLoader;
         this.dataSource = dataSource;
-        this.environment = environment;
+        this.profileUtils = new ProfileUtils(context.getEnvironment());
     }
 
     @PostConstruct
     public void upgradeAllTenants() throws LiquibaseException {
-        ProfileUtils profileUtils = new ProfileUtils(this.environment);
-
-        if (!liquibaseProperties.isEnabled() || 
-            !profileUtils.isActiveProfile(JobConstants.SPRING_UPGRADEDB_PROFILE_NAME)) {
+        if (!liquibaseProperties.isEnabled()) {
             return;
         }
-        upgradeTenantsDb();
+        if (profileUtils.isActiveProfile(JobConstants.SPRING_UPGRADEDB_PROFILE_NAME)) {
+            upgradeTenantsDb();
 
-        final List<FineractPlatformTenant> tenants = this.tenantDetailsService.findAllTenants();
-        if (tenants == null) {
-            return;
-        }
-        TenantAwareSpringLiquibase liquibase = createLiquibase(calcContext(new StringBuilder("core_db")).toString());
+            final List<FineractPlatformTenant> tenants = this.tenantDetailsService.findAllTenants();
+            if (tenants == null) {
+                return;
+            }
+            TenantAwareSpringLiquibase liquibase = createLiquibase(profileUtils.calcContext(this.driverConfig,
+                 new StringBuilder("core_db")).toString());
 
-        HashMap<Object, Object> dataSources = new HashMap<>();
-        for (FineractPlatformTenant tenant : tenants) {
-            FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
-            LOG.debug("Initialize liquibase for tenant " + tenant.getTenantIdentifier());
-            dataSources.put(tenant.getTenantIdentifier(), createTenantDataSource((HikariDataSource) dataSource, tenantConnection));
+            HashMap<Object, Object> dataSources = new HashMap<>();
+            for (FineractPlatformTenant tenant : tenants) {
+                FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
+                LOG.debug("Initialize liquibase for tenant " + tenant.getTenantIdentifier());
+                dataSources.put(tenant.getTenantIdentifier(), createTenantDataSource((HikariDataSource) dataSource, tenantConnection));
+            }
+            liquibase.setTargetDataSources(dataSources);
+            LOG.debug("Start liquibase on core database");
+            liquibase.afterPropertiesSet();
         }
-        liquibase.setTargetDataSources(dataSources);
-        LOG.debug("Start liquibase on core database");
-        liquibase.afterPropertiesSet();
     }
 
     /**
      * Initializes, and if required upgrades (using Liquibase) the Tenants DB itself.
      */
     private void upgradeTenantsDb() throws LiquibaseException {
-        TenantAwareSpringLiquibase liquibase = createLiquibase(calcContext(new StringBuilder("tenants_db")).toString());
+        TenantAwareSpringLiquibase liquibase = createLiquibase(profileUtils.calcContext(this.driverConfig,
+            new StringBuilder("tenants_db")).toString());
 
         liquibase.setDataSource(dataSource);
         LOG.debug("Start liquibase on list database " + dataSource);
 
         liquibase.afterPropertiesSet();
-    }
-
-    private StringBuilder calcContext(StringBuilder context) {
-        if (context == null) {
-            context = new StringBuilder();
-        } else if (context.length() > 0) {
-            context.append(',');
-        }
-
-        context.append(driverConfig.getDialect().name().toLowerCase());
-
-        String[] profiles = environment.getActiveProfiles();
-        if (profiles.length > 0) {
-            context.append(',').append(String.join(",", profiles));
-        }
-        return context;
     }
 
     private TenantAwareSpringLiquibase createLiquibase(String context) {
