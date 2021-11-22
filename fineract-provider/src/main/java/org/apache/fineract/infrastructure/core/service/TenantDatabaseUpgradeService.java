@@ -15,6 +15,8 @@ import liquibase.exception.LiquibaseException;
 import org.apache.fineract.infrastructure.core.boot.JDBCDriverConfig;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection;
+import org.apache.fineract.infrastructure.core.utils.ProfileUtils;
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.infrastructure.security.service.TenantDetailsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +64,10 @@ public class TenantDatabaseUpgradeService {
 
     @PostConstruct
     public void upgradeAllTenants() throws LiquibaseException {
-        if (!liquibaseProperties.isEnabled()) {
+        ProfileUtils profileUtils = new ProfileUtils(this.environment);
+
+        if (!liquibaseProperties.isEnabled() || 
+            !profileUtils.isActiveProfile(JobConstants.SPRING_UPGRADEDB_PROFILE_NAME)) {
             return;
         }
         upgradeTenantsDb();

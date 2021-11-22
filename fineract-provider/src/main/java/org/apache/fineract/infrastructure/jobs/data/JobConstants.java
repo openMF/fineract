@@ -27,6 +27,7 @@ public class JobConstants {
     public static final String QUARTZ_BATCH_PROFILE_NAME = "quartzJobs";
     public static final String SPRING_BATCH_PROFILE_NAME = "springBatch";
     public static final String SPRING_BATCH_WORKER_PROFILE_NAME = "springBatchWorker";
+    public static final String SPRING_UPGRADEDB_PROFILE_NAME = "upgradeDB";
 
     public static final String SPRING_MESSAGING_PROFILE_NAME = "messaging";
     public static final String SPRING_MESSAGINGSQS_PROFILE_NAME = "messagingSQS";

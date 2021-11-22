@@ -35,14 +35,12 @@ public class TenantAwareSpringLiquibase extends SpringLiquibase {
 
     private static Logger log = LoggerFactory.getLogger(TenantAwareSpringLiquibase.class);
 
-    //    @Nullable
     private Map<Object, Object> targetDataSources;
-    //    @Nullable
     private Map<String, DataSource> resolvedDataSources;
 
     private DataSourceLookup dataSourceLookup = new JndiDataSourceLookup();
 
-    public void setTargetDataSources(/*@Nullable*/ Map<Object, Object> targetDataSources) {
+    public void setTargetDataSources(Map<Object, Object> targetDataSources) {
         this.targetDataSources = targetDataSources;
     }
 
