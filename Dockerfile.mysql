@@ -36,6 +36,8 @@ RUN wget -q https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.23/mys
 
 FROM azul/zulu-openjdk-alpine:11 AS fineract
 
+RUN apk --no-cache add curl
+
 COPY --from=builder /fineract/fineract-provider/build/libs /app
 COPY --from=builder /fineract/libs /app/libs
 
@@ -48,6 +50,4 @@ RUN chmod 775 /entrypoint.sh
 EXPOSE 8443
 
 # removed temporarily: ENTRYPOINT ["/entrypoint.sh"]
-# ENTRYPOINT ["java", "-Dloader.path=/app/libs/", "-jar", "/app/fineract-provider.jar"]
-
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["java", "-Dloader.path=/app/libs/", "-jar", "/app/fineract-provider.jar"]
