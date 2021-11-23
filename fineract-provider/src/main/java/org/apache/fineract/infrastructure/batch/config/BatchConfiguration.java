@@ -104,7 +104,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
             this.jobLauncher = createJobLauncher();
             this.stepBuilderFactory = createStepBuilderFactory();
             this.corePoolSize = PropertyUtils.getInteger(context.getEnvironment(), 
-                BatchConstants.DEFAULT_BATCH_POOL_SIZE, "4");
+                BatchConstants.DEFAULT_BATCH_POOL_SIZE, "8");
         } catch (Exception e) {
             throw new BatchConfigurationException(e);
         }
@@ -164,7 +164,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         DefaultTransactionAttribute transactionAttribute = new DefaultTransactionAttribute();
         transactionAttribute.setPropagationBehavior(Propagation.REQUIRES_NEW.value());
         transactionAttribute.setIsolationLevel(Isolation.DEFAULT.value());
-        transactionAttribute.setTimeout(300);
+        transactionAttribute.setTimeout(30000);
         return transactionAttribute;
     }
 
