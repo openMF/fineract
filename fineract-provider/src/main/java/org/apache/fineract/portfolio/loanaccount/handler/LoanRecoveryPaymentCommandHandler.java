@@ -25,6 +25,7 @@ import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.portfolio.loanaccount.service.LoanWritePlatformService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @CommandType(entity = "LOAN", action = "RECOVERYPAYMENT")
@@ -38,6 +39,7 @@ public class LoanRecoveryPaymentCommandHandler implements NewCommandSourceHandle
     }
 
     @Override
+    @Transactional
     public CommandProcessingResult processCommand(JsonCommand command) {
         final boolean isRecoveryRepayment = true;
         return writePlatformService.makeLoanRepayment(command.getLoanId(), command, isRecoveryRepayment);

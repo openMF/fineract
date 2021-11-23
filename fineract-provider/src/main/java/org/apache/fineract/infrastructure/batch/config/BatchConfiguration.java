@@ -58,7 +58,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Scope;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Isolation;
@@ -74,12 +73,15 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
     @Autowired
     private ApplicationContext context;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
     
     private String databaseType;
     private Integer corePoolSize;
 
     private final Properties batchJobProperties;
-    private PlatformTransactionManager transactionManager;
+    // private PlatformTransactionManager transactionManager;
     private RoutingDataSourceService routingDataSourceService;
     private JobRepository jobRepository;
     private JobLauncher jobLauncher;
@@ -90,7 +92,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         routingDataSourceService = tomcatJdbcDataSourcePerTenantService;
         batchJobProperties = PropertyUtils.loadYamlProperties(BatchConstants.BATCH_PROPERTIES_FILE);
         this.databaseType = DatabaseUtils.getDatabaseType(getDataSource());
-        this.transactionManager = new DataSourceTransactionManager(getDataSource());
+        // this.transactionManager = new DataSourceTransactionManager(getDataSource());
     }
 
     @PostConstruct
