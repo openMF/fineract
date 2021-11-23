@@ -56,6 +56,8 @@ public interface ReadWriteNonCoreDataService {
 
     CommandProcessingResult createNewDatatableEntry(String datatable, Long appTableId, String json, AppUser appUser);
 
+    String createSQLForNewDatatableEntry(final String dataTableName, final Long appTableId, final String json, AppUser appUser);
+
     CommandProcessingResult createPPIEntry(String datatable, Long appTableId, JsonCommand command);
 
     CommandProcessingResult updateDatatableEntryOneToOne(String datatable, Long appTableId, JsonCommand command);

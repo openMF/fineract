@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.apache.fineract.infrastructure.batch.config.BatchDestinations;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
-import org.apache.fineract.infrastructure.batch.data.MessageData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
@@ -35,7 +34,7 @@ public class AutopayLoansWriter extends BatchWriterBase implements ItemWriter<Me
     public static final Logger LOG = LoggerFactory.getLogger(AutopayLoansWriter.class);
 
     public AutopayLoansWriter(BatchDestinations batchDestinations) {
-        super();
+        this.batchDestinations = batchDestinations;
     }
 
     @Override
@@ -51,18 +50,6 @@ public class AutopayLoansWriter extends BatchWriterBase implements ItemWriter<Me
 
     @Override
     public void write(List<? extends MessageBatchDataResponse> items) throws Exception {
-        for (final MessageBatchDataResponse processResult : items) {
-            if (processResult.wasChanged()) {
-                MessageData messageData = new MessageData(processResult.getBatchStepName(), processResult.getTenantIdentifier(), 
-                    processResult.getEntityId(), processResult.getPayload());
-                sendMessage(messageData);
-                this.processed++;
-            }
-        }
-    }
-
-    private void sendMessage(final MessageData message) {
-        // final String payload = gson.toJson(message);
-        // LOG.debug("Sending notification {}: {}", this.batchStepName, payload);
+        sendMessage(analyzeResults(items));
     }
 }

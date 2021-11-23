@@ -50,7 +50,6 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
     private JmsTemplate sqsJmsTemplate;
 
     public BatchLoansWriter(BatchDestinations batchDestinations) {
-        super();
         this.queueName = batchDestinations.getBatchLoansDestination();
         LOG.debug("Batch jobs communication using with the queue {}", queueName);
     }
@@ -69,7 +68,15 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
 
     @Override
     public void write(List<? extends Long> items) throws Exception {
-        MessageBatchDataRequest messageData = new MessageBatchDataRequest(batchStepName, tenantIdentifier, (List<Long>) items);
+        List<Long> batchLoanIds = new ArrayList<Long>();
+        for (final Long loanId : items) {
+            if (loanId != null) {
+                batchLoanIds.add(loanId);
+                this.processed++;
+            }
+        }
+
+        MessageBatchDataRequest messageData = new MessageBatchDataRequest(batchStepName, tenantIdentifier, batchLoanIds);
         sendMessage(messageData);
     }
 

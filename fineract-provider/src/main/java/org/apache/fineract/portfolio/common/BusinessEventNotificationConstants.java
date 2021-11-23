@@ -74,7 +74,8 @@ public class BusinessEventNotificationConstants {
         SHARE_PRODUCT_DIVIDENDS_CREATE("share_product_dividends_create"), //
         FIXED_DEPOSIT_ACCOUNT_CREATE("fixed_deposit_account_create"), //
         SHARE_ACCOUNT_APPROVE("share_account_approve"), //
-        RECURRING_DEPOSIT_ACCOUNT_CREATE("recurring_deposit_account_create");
+        RECURRING_DEPOSIT_ACCOUNT_CREATE("recurring_deposit_account_create"),
+        COB_STEP_EXECUTION("cob_step_execution");
 
         private final String value;
 
@@ -110,7 +111,8 @@ public class BusinessEventNotificationConstants {
         SHARE_ACCOUNT("share_account"), //
         SHARE_PRODUCT("share_product"), //
         DEPOSIT_ACCOUNT("deposit_account"), //
-        LOAN_PRODUCT("loan_product");
+        LOAN_PRODUCT("loan_product"),
+        BATCH_JOB("batch_job");
 
         private final String value;
 

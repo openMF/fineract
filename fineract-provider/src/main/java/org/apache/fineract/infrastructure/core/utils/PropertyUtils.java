@@ -21,6 +21,7 @@ package org.apache.fineract.infrastructure.core.utils;
 import java.util.Properties;
 
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 
 public class PropertyUtils {
@@ -33,5 +34,13 @@ public class PropertyUtils {
         } else {
             return new Properties();
         }
+    }
+
+    public static String getString(final Environment env, final String key, final String defaultVal) {
+        return env.getProperty(key, defaultVal);
+    }
+
+    public static Integer getInteger(final Environment env, final String key, final String defaultVal) {
+        return Integer.valueOf(env.getProperty(key, defaultVal));
     }
 }

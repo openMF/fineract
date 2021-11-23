@@ -27,12 +27,13 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 
-import java.util.Optional;
 import java.util.Properties;
 import javax.annotation.PostConstruct;
 import javax.jms.Session;
 import org.apache.fineract.infrastructure.core.utils.PropertyUtils;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -48,6 +49,8 @@ import org.springframework.util.ErrorHandler;
 @Profile(JobConstants.SPRING_MESSAGINGSQS_PROFILE_NAME)
 @EnableJms
 public class AmazonSQSConfig {
+
+    public static final Logger LOG = LoggerFactory.getLogger(AmazonSQSConfig.class);
 
     private String regionName;
     private String concurrency;
@@ -69,10 +72,11 @@ public class AmazonSQSConfig {
         if (regionName == null) {
             regionName = messagingProperties.getProperty("aws.messaging.region.name");
         }
-        concurrency = getValue("AWS_SQS_CONCURRENCY");
+        concurrency = getValue("AWS_SQS_CONCURRENCY", "1-1");
         if (concurrency == null) {
             concurrency = messagingProperties.getProperty("aws.messaging.concurrency");
         }
+        LOG.info("SQS concurrency {}", concurrency);
         awsAccountNo = getValue("AWS_ACCOUNT_NO");
         if (awsAccountNo == null) {
             awsAccountNo = messagingProperties.getProperty("aws.messaging.accountno");
@@ -80,6 +84,7 @@ public class AmazonSQSConfig {
         numberOfMessagesToPrefetch = Integer.valueOf(getValue("DEFAULT_SQS_MESSAGE_PREFETCH", "1"));
         if (numberOfMessagesToPrefetch == null)
             numberOfMessagesToPrefetch = 1;
+        LOG.info("SQS Number of Messages prefetch {}", numberOfMessagesToPrefetch);
     }
 
     private String getValue(final String key, final String defaultVal) {
@@ -101,12 +106,8 @@ public class AmazonSQSConfig {
         AmazonSQS sqs = AmazonSQSClientBuilder.standard().withRegion(getRegion(regionName)).withCredentials(credentialsProvider).build();
 
         ProviderConfiguration providerConfiguration = new ProviderConfiguration();
-            getNumberOfMessagesToPrefetch().ifPresent(providerConfiguration::setNumberOfMessagesToPrefetch);
+        providerConfiguration.setNumberOfMessagesToPrefetch(numberOfMessagesToPrefetch);
         return new SQSConnectionFactory(providerConfiguration, sqs);
-    }
-
-    public Optional<Integer> getNumberOfMessagesToPrefetch() {
-        return Optional.ofNullable(this.numberOfMessagesToPrefetch);
     }
 
     @Bean
@@ -120,6 +121,7 @@ public class AmazonSQSConfig {
         factory.setConnectionFactory(sqsConnectionFactory());
         factory.setDestinationResolver(new SQSDynamicDestinationResolver(awsAccountNo));
         factory.setConcurrency(concurrency);
+        factory.setMaxMessagesPerTask(numberOfMessagesToPrefetch);
         factory.setSessionAcknowledgeMode(Session.AUTO_ACKNOWLEDGE);
         factory.setErrorHandler(errorHandler());
         return factory;

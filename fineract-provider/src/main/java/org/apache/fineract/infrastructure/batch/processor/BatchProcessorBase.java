@@ -51,6 +51,7 @@ public class BatchProcessorBase {
     protected StepExecution stepExecution;
     protected JobParameters parameters;
 
+    protected int processed;
     protected String dateOfTenantValue;
     protected Date dateOfTenant;
     protected FineractPlatformTenant tenant;
@@ -66,6 +67,7 @@ public class BatchProcessorBase {
         this.tenant = BatchJobUtils.setTenant(tenantIdentifier, tenantDetailsService);
         this.dateOfTenantValue = parameters.getString(BatchConstants.JOB_PARAM_TENANT_DATE);
         this.dateOfTenant = DateUtils.createDate(this.dateOfTenantValue, BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
-        this.appUser = context.authenticatedUser();
+        this.appUser = this.appUserRepository.fetchSystemUser();
+        this.processed = 0;
     }
 }

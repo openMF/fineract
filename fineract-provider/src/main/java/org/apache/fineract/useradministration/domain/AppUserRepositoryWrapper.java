@@ -21,6 +21,7 @@ package org.apache.fineract.useradministration.domain;
 import org.apache.fineract.useradministration.exception.UserNotFoundException;
 import org.apache.fineract.useradministration.service.AppUserConstants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,6 +34,7 @@ public class AppUserRepositoryWrapper {
         this.appUserRepository = appUserRepository;
     }
 
+    @Cacheable(value = "users", key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat(#systemUser)")
     public AppUser fetchSystemUser() {
         AppUser user = this.appUserRepository.findAppUserByName(AppUserConstants.SYSTEM_USER_NAME);
         if (user == null) {

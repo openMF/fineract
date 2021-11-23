@@ -82,6 +82,7 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.google.gson.JsonArray;
@@ -377,7 +378,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
         return createNewDatatableEntry(dataTableName, appTableId, command.json(), null);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public CommandProcessingResult createNewDatatableEntry(final String dataTableName, final Long appTableId, final String json, AppUser appUser) {
         try {
@@ -428,6 +429,21 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
                     "Unknown data integrity issue with resource.");
 
         }
+    }
+
+    @Override
+    public String createSQLForNewDatatableEntry(final String dataTableName, final Long appTableId, final String json, AppUser appUser) {
+        if (appUser == null)
+            appUser = this.context.authenticatedUser();
+        final String appTable = queryForApplicationTableName(dataTableName);
+        checkMainResourceExistsWithinScope(appTable, appTableId, appUser);
+
+        final List<ResultsetColumnHeaderData> columnHeaders = this.genericDataService.fillResultsetColumnHeaders(dataTableName);
+
+        final Type typeOfMap = new TypeToken<Map<String, String>>() {}.getType();
+        final Map<String, String> dataParams = this.fromJsonHelper.extractDataMap(typeOfMap, json);
+
+        return getAddSql(columnHeaders, dataTableName, getFKField(appTable), appTableId, dataParams);
     }
 
     private String getAddSql(final List<ResultsetColumnHeaderData> columnHeaders, final String datatable, final String fkName,

@@ -34,6 +34,9 @@ public class BatchConstants {
     public static final String DEFAULT_BATCH_DATETIME_FORMAT = "yyyy-MM-dd HH:mm";
     public static final String DEFAULT_BATCH_DATE_LOCALE = "en";
 
+    // Settings
+    public static final String DEFAULT_BATCH_POOL_SIZE = "DEFAULT_BATCH_POOL_SIZE";
+
     public static final String JOB_PARAM_PENALTY_WAIT_PERIOD = "penaltyWaitPeriod";
     public static final String JOB_PARAM_BACKDATE_PENALTIES = "backdatePenalties";
 

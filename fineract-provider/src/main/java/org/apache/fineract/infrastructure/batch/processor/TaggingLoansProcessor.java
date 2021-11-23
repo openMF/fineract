@@ -72,7 +72,7 @@ public class TaggingLoansProcessor extends BatchProcessorBase implements ItemPro
 
     @AfterStep
     public void after(StepExecution stepExecution) {
-        LOG.debug(stepExecution.getSummary());
+        LOG.debug("{} items processed {}", this.batchStepName, this.processed);
     }
 
     @Override
@@ -85,20 +85,21 @@ public class TaggingLoansProcessor extends BatchProcessorBase implements ItemPro
         final Long accountStatus = this.getAccountStatus(entityId);
         final Integer deliquenLevel = this.getDeliquenLevel(entityId);
         boolean chargedOff = false;
-        Long deliquency = null;
+        Long deliquen = null;
         if (deliquenLevel != null) {
             final String deliquenLabel = "Delinquent " + deliquenLevel;
-            deliquency = this.codeByValue(this.deliquent, deliquenLabel);
+            deliquen = this.codeByValue(this.deliquent, deliquenLabel);
             chargedOff = (deliquenLevel >= 30 && deliquenLevel <= 120);
         }
 
         final LoanTagsData loanTagsData = new LoanTagsData(entityId, taggedAt, chargedOff,
-            paidOff, accountStatus, deliquency);
+            paidOff, accountStatus, deliquen);
         final String jsonData = loanTagsData.toJson();
         // LOG.debug("Json {} ", jsonData);
 
         final CommandProcessingResult result = this.readWriteNonCoreDataService.createNewDatatableEntry(
             BatchConstants.LOAN_TAGS_DATATABLE, entityId, jsonData, this.appUser);
+        this.processed++;
         final MessageBatchDataResponse response = new MessageBatchDataResponse(batchStepName,
             tenantIdentifier, entityId, true, true, result.commandId());
         return response;

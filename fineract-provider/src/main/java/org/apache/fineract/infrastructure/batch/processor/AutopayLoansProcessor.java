@@ -72,7 +72,7 @@ public class AutopayLoansProcessor extends BatchProcessorBase implements ItemPro
 
     @AfterStep
     public void after(StepExecution stepExecution) {
-        LOG.debug(stepExecution.getSummary());
+        LOG.debug("{} items processed {}", this.batchStepName, this.processed);
     }
 
     @Override
@@ -103,6 +103,7 @@ public class AutopayLoansProcessor extends BatchProcessorBase implements ItemPro
             final boolean isRecoveryRepayment = false;
             final CommandProcessingResult processResult = loanWritePlatformService.makeLoanRepayment(entityId, command, isRecoveryRepayment);
             response = new MessageBatchDataResponse(batchStepName, tenantIdentifier, entityId, true, true, processResult.getTransactionId());
+            this.processed++;
             // LOG.debug("processResult: {} ", processResult.getTransactionId());
         } else {
             // LOG.debug("Job Step {} to Loan Id {} : Not repayment for date {}", batchStepName, entityId, dateOfTenant);

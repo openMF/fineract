@@ -61,6 +61,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.interceptor.DefaultTransactionAttribute;
 
 
 @Profile(JobConstants.SPRING_BATCH_PROFILE_NAME)
@@ -73,6 +76,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     private ApplicationContext context;
     
     private String databaseType;
+    private Integer corePoolSize;
 
     private final Properties batchJobProperties;
     private PlatformTransactionManager transactionManager;
@@ -97,6 +101,8 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
             this.jobExplorer = createJobExplorer();
             this.jobLauncher = createJobLauncher();
             this.stepBuilderFactory = createStepBuilderFactory();
+            this.corePoolSize = PropertyUtils.getInteger(context.getEnvironment(), 
+                BatchConstants.DEFAULT_BATCH_POOL_SIZE, "4");
         } catch (Exception e) {
             throw new BatchConfigurationException(e);
         }
@@ -130,6 +136,11 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         return jobLauncher;
     }
 
+    @Override
+    public void setDataSource(DataSource batchDataSource) {
+        super.setDataSource(batchDataSource);
+    }
+
     protected DataSource getDataSource() {
         return routingDataSourceService.retrieveDataSource();
     }
@@ -145,6 +156,14 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
     protected StepBuilderFactory createStepBuilderFactory() {
         return new StepBuilderFactory(this.jobRepository, this.transactionManager);
+    }
+
+    protected DefaultTransactionAttribute getTransactionalAttributes() {
+        DefaultTransactionAttribute transactionAttribute = new DefaultTransactionAttribute();
+        transactionAttribute.setPropagationBehavior(Propagation.REQUIRES_NEW.value());
+        transactionAttribute.setIsolationLevel(Isolation.DEFAULT.value());
+        transactionAttribute.setTimeout(300);
+        return transactionAttribute;
     }
 
     @Override
@@ -172,7 +191,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
             JobRepositoryFactoryBean factory = new JobRepositoryFactoryBean();
             factory.setDatabaseType(databaseType);
             factory.setTransactionManager(getTransactionManager());
-            factory.setDataSource(this.getDataSource());
+            factory.setDataSource(getDataSource());
             factory.afterPropertiesSet();
             return factory.getObject();
         } catch (Exception e) {
@@ -186,10 +205,9 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     public JobLauncher batchJobLauncher() {
         try {
             ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-            // The number of concurrent executions is 3.Wait for more queues.
-            taskExecutor.setCorePoolSize(8); // (4)
-            // java.lang.IllegalStateException: ThreadPoolTaskExecutor not initialized
-            taskExecutor.initialize(); // (5)
+            // The number of concurrent executions is 8
+            taskExecutor.setCorePoolSize(corePoolSize);
+            taskExecutor.initialize();
 
             SimpleJobLauncher jobLauncher = new SimpleJobLauncher();
             jobLauncher.setJobRepository(batchJobRepository());
@@ -214,13 +232,15 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
             @Override
             public void beforeJob(JobExecution jobExecution) {
                 String jobName = jobExecution.getJobInstance().getJobName();
-                LOG.info("About to execute the job : {}", jobName);
+                final Long jobId = jobExecution.getJobInstance().getInstanceId();
+                LOG.info("==={}=== Starting execution {}", jobId, jobName);
             }
 
             @Override
             public void afterJob(JobExecution jobExecution) {
                 String jobName = jobExecution.getJobInstance().getJobName();
-                LOG.info("Finished execution {} {}", jobName, jobExecution.getExitStatus().getExitDescription());
+                final Long jobId = jobExecution.getJobInstance().getInstanceId();
+                LOG.info("==={}=== Finished execution {} {}", jobId, jobName, jobExecution.getExitStatus().getExitCode());
             }
         };
     }
@@ -275,7 +295,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
     @Bean
     public TaggingLoansWriter taggingLoansWriter() {
-        return new TaggingLoansWriter(batchDestinations());
+        return new TaggingLoansWriter();
     }
 
     // Steps
@@ -283,22 +303,19 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     public Step batchForLoansStep(BatchLoansReader batchLoansReader,
             BatchLoansWriter batchLoansWriter) {
         final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
-        Step step = stepBuilderFactory.get("batchForLoansStep").<Long, Long>chunk(chunkSize).reader(batchLoansReader)
+        return stepBuilderFactory.get("batchForLoansStep").<Long, Long>chunk(chunkSize).reader(batchLoansReader)
                 .writer(batchLoansWriter).listener(itemCounterListener()).build();
-
-        return step;
     }
 
     @Bean
-    public Step autopayLoansStep(BlockLoansReader blockLoansReader, AutopayLoansProcessor autopayLoansProcessor,
-            AutopayLoansWriter autopayLoansWriter) {
+    public Step autopayLoansStep(BlockLoansReader blockLoansReader, AutopayLoansProcessor autopayLoansProcessor, AutopayLoansWriter autopayLoansWriter) {
         final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
-        Step step = stepBuilderFactory.get("autopayLoansStep")
-                .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(blockLoansReader)
-                .processor(autopayLoansProcessor).writer(autopayLoansWriter).listener(itemCounterListener())
-                .build();
 
-        return step;
+        return stepBuilderFactory.get("autopayLoansStep")
+                .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(blockLoansReader)
+                .writer(autopayLoansWriter).processor(autopayLoansProcessor).listener(itemCounterListener())
+                .transactionAttribute(getTransactionalAttributes())
+                .build();
     }
 
     @Bean
@@ -306,24 +323,24 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
             ApplyChargeForOverdueLoansProcessor applyChargeForOverdueLoansProcessor,
             ApplyChargeForOverdueLoansWriter applyChargeForOverdueLoansWriter) {
         final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
-        Step step = stepBuilderFactory.get("applyChargeForOverdueLoansStep")
+        return stepBuilderFactory.get("applyChargeForOverdueLoansStep")
                 .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(blockLoansReader)
-                .processor(applyChargeForOverdueLoansProcessor).writer(applyChargeForOverdueLoansWriter).listener(itemCounterListener())
+                .writer(applyChargeForOverdueLoansWriter)
+                .processor(applyChargeForOverdueLoansProcessor).listener(itemCounterListener())
+                .transactionAttribute(getTransactionalAttributes())
                 .build();
-
-        return step;
     }
 
     @Bean
     public Step taggingLoansStep(BlockLoansReader blockLoansReader,
         TaggingLoansProcessor taggingLoansProcessor, TaggingLoansWriter taggingLoansWriter) {
         final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
-        Step step = stepBuilderFactory.get("taggingLoansStep")
+
+        return stepBuilderFactory.get("taggingLoansStep")
                 .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(blockLoansReader)
-                .processor(taggingLoansProcessor).writer(taggingLoansWriter).listener(itemCounterListener())
+                .writer(taggingLoansWriter)
+                .processor(taggingLoansProcessor).listener(itemCounterListener())
+                .transactionAttribute(getTransactionalAttributes())
                 .build();
-
-        return step;
     }
-
 }

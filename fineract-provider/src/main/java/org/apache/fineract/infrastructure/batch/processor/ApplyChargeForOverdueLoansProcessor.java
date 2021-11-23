@@ -58,7 +58,7 @@ public class ApplyChargeForOverdueLoansProcessor extends BatchProcessorBase impl
 
     @AfterStep
     public void after(StepExecution stepExecution) {
-        LOG.debug(stepExecution.getSummary());
+        LOG.debug("{} items processed {}", this.batchStepName, this.processed);
     }
     
     @Override
@@ -70,6 +70,7 @@ public class ApplyChargeForOverdueLoansProcessor extends BatchProcessorBase impl
         if (changed) {
             // LOG.debug("Job Step {} to Loan Id {} : {} matured installments", batchStepName, entityId, loanData.size());
             this.loanWritePlatformService.applyOverdueChargesForLoan(entityId, loanData);
+            this.processed++;
         }
 
         MessageBatchDataResponse response = new MessageBatchDataResponse(batchStepName, tenantIdentifier, entityId, true, changed, null);

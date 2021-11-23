@@ -206,6 +206,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -946,7 +947,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         return result;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public CommandProcessingResult makeLoanRepayment(final Long loanId, final JsonCommand command, final boolean isRecoveryRepayment) {
 
@@ -2686,11 +2687,11 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     public void applyOverdueChargesForLoan(final Long loanId, Collection<OverdueLoanScheduleData> overdueLoanScheduleDatas) {
 
         Loan loan = null;
-        LoanProduct loanProduct = null;
+        Integer loanProductAccountingRule = 0;
         final List<Long> existingTransactionIds = new ArrayList<>();
         final List<Long> existingReversedTransactionIds = new ArrayList<>();
         boolean runInterestRecalculation = false;
@@ -2708,7 +2709,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                     overdueInstallment.getPeriodNumber(), command, loan, existingTransactionIds, existingReversedTransactionIds);
             if (loan == null) {
                 loan = overdueDTO.getLoan();
-                loanProduct = loan.getLoanProduct();
+                loanProductAccountingRule = this.loanRepository.fetchAccountingRuleById(loanId);
             }
             runInterestRecalculation = runInterestRecalculation || overdueDTO.isRunInterestRecalculation();
             if (recalculateFrom.isAfter(overdueDTO.getRecalculateFrom())) {
@@ -2749,7 +2750,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 saveLoanWithDataIntegrityViolationChecks(loan);
             }
 
-            if (loanProduct != null && !loanProduct.isAccountingDisabled() && postJournalEntriesOnline) {
+            if (loanProductAccountingRule > 0 && postJournalEntriesOnline) {
                 postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds);
             }
 

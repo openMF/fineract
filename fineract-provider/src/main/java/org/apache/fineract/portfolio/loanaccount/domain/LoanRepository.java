@@ -67,6 +67,8 @@ public interface LoanRepository extends JpaRepository<Loan, Long>, JpaSpecificat
     String FIND_ACTIVE_LOANS_PRODUCT_IDS_BY_GROUP = "Select loan.loanProduct.id from Loan loan where "
             + "loan.group.id = :groupId and loan.loanStatus = :loanStatus and loan.client.id is NULL group by loan.loanProduct.id";
 
+    String FETCH_ACCOUNTING_RULE_BY_LOAN_ID = "Select loan.loanProduct.accountingRule from Loan loan where loan.id = :loanId";
+
     String DOES_CLIENT_HAVE_NON_CLOSED_LOANS = "select case when (count (loan) > 0) then 'true' else 'false' end from Loan loan where loan.client.id = :clientId and loan.loanStatus in (100,200,300,303,304,700)";
 
     String DOES_PRODUCT_HAVE_NON_CLOSED_LOANS = "select case when (count (loan) > 0) then 'true' else 'false' end from Loan loan where loan.loanProduct.id = :productId and loan.loanStatus in (100,200,300,303,304,700)";
@@ -171,4 +173,6 @@ public interface LoanRepository extends JpaRepository<Loan, Long>, JpaSpecificat
     @Query(FETCH_LOAN_STATUS_BY_ID)
     Integer fetchLoanStatusById(@Param("loanId") Long loanId);
 
+    @Query(FETCH_ACCOUNTING_RULE_BY_LOAN_ID)
+    Integer fetchAccountingRuleById(@Param("loanId") Long loanId);
 }

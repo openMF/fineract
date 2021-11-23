@@ -36,6 +36,8 @@ fineract:
       enabled: true
       chunk:
         size: 2000
+      messages:
+        prefetch: 1
       listeners:
         concurrency: 1
       queues:
