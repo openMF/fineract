@@ -37,9 +37,7 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
-import org.springframework.stereotype.Component;
 
-@Component
 public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long>, StepExecutionListener {
 
     public static final Logger LOG = LoggerFactory.getLogger(BatchLoansWriter.class);

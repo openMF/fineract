@@ -226,6 +226,10 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         return new BatchDestinations(batchJobProperties(), this.context.getEnvironment());
     }
 
+    @Bean BatchLoansWriter batchLoansWriter() {
+        return new BatchLoansWriter(batchDestinations());
+    }
+
     @Bean
     public JobExecutionListener jobExecutionListener() {
         return new JobExecutionListener() {
