@@ -30,4 +30,5 @@ public final class AppUserConstants {
 
     // TODO: Remove hard coding of system user name and make this a configurable parameter
     public static final String SYSTEM_USER_NAME = "system";
+    public static final String BATCH_USER_NAME = "batchuser";
 }

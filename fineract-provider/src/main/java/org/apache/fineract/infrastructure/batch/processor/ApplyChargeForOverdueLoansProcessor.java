@@ -33,7 +33,9 @@ import org.springframework.batch.core.annotation.AfterStep;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ApplyChargeForOverdueLoansProcessor extends BatchProcessorBase implements ItemProcessor<Long, MessageBatchDataResponse> {
 
     public static final Logger LOG = LoggerFactory.getLogger(ApplyChargeForOverdueLoansProcessor.class);

@@ -57,6 +57,7 @@ public class BatchWriterBase {
     protected Gson gson;
 
     protected String tenantIdentifier;
+    protected Long batchJobInstanceId;
     protected String batchStepName;
     protected String queueName;
 
@@ -66,6 +67,7 @@ public class BatchWriterBase {
     protected void initialize(StepExecution stepExecution) {
         this.stepExecution = stepExecution;
         this.batchStepName = stepExecution.getStepName();
+        this.batchJobInstanceId = stepExecution.getJobExecution().getJobInstance().getInstanceId();
         this.parameters = this.stepExecution.getJobExecution().getJobParameters();
         this.tenantIdentifier = this.parameters.getString(BatchConstants.JOB_PARAM_TENANT_ID);
         BatchJobUtils.setTenant(tenantIdentifier, tenantDetailsService);

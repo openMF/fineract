@@ -32,7 +32,9 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class BatchLoansReader implements ItemReader<Long> {
 
     public static final Logger LOG = LoggerFactory.getLogger(BatchLoansReader.class);
@@ -55,6 +57,8 @@ public class BatchLoansReader implements ItemReader<Long> {
         // LOG.debug("Tenant {}", tenant.getName());
 
         Long limitRead = parameters.getLong(BatchConstants.JOB_PARAM_LIMIT_READ);
+        if (limitRead == null)
+            limitRead = 0L;
 
         final Collection<Long> loansForBatchProcess = this.loanRepository.
             findActiveLoans(LoanStatus.ACTIVE.getValue(), limitRead.intValue());

@@ -23,7 +23,6 @@ import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
-import org.apache.fineract.infrastructure.batch.listeners.ItemCounterListener;
 import org.apache.fineract.infrastructure.batch.processor.ApplyChargeForOverdueLoansProcessor;
 import org.apache.fineract.infrastructure.batch.processor.AutopayLoansProcessor;
 import org.apache.fineract.infrastructure.batch.processor.TaggingLoansProcessor;
@@ -32,6 +31,7 @@ import org.apache.fineract.infrastructure.batch.reader.BlockLoansReader;
 import org.apache.fineract.infrastructure.batch.writer.ApplyChargeForOverdueLoansWriter;
 import org.apache.fineract.infrastructure.batch.writer.AutopayLoansWriter;
 import org.apache.fineract.infrastructure.batch.writer.BatchLoansWriter;
+import org.apache.fineract.infrastructure.batch.writer.LoanArrearsAgingWritter;
 import org.apache.fineract.infrastructure.batch.writer.TaggingLoansWriter;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSourceService;
 import org.apache.fineract.infrastructure.core.utils.DatabaseUtils;
@@ -81,7 +81,6 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     private Integer corePoolSize;
 
     private final Properties batchJobProperties;
-    // private PlatformTransactionManager transactionManager;
     private RoutingDataSourceService routingDataSourceService;
     private JobRepository jobRepository;
     private JobLauncher jobLauncher;
@@ -92,7 +91,6 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         routingDataSourceService = tomcatJdbcDataSourcePerTenantService;
         batchJobProperties = PropertyUtils.loadYamlProperties(BatchConstants.BATCH_PROPERTIES_FILE);
         this.databaseType = DatabaseUtils.getDatabaseType(getDataSource());
-        // this.transactionManager = new DataSourceTransactionManager(getDataSource());
     }
 
     @PostConstruct
@@ -247,66 +245,13 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         };
     }
 
-    @Bean
-    public ItemCounterListener itemCounterListener() {
-        return new ItemCounterListener();
-    }
-
-    // Readers
-    @Bean
-    public BatchLoansReader batchLoansReader() {
-        return new BatchLoansReader();
-    }
-
-    @Bean
-    public BlockLoansReader blockLoansReader() {
-        return new BlockLoansReader();
-    }
-
-    // Processors
-    @Bean
-    public AutopayLoansProcessor autopayLoansProcessor() {
-        return new AutopayLoansProcessor();
-    }
-
-    @Bean
-    public ApplyChargeForOverdueLoansProcessor applyChargeForOverdueLoansProcessor() {
-        return new ApplyChargeForOverdueLoansProcessor();
-    }
-
-    @Bean
-    public TaggingLoansProcessor taggingLoansProcessor() {
-        return new TaggingLoansProcessor();
-    }
-
-    // Writers
-    @Bean
-    public BatchLoansWriter batchLoansWriter() {
-        return new BatchLoansWriter(batchDestinations());
-    }
-
-    @Bean
-    public AutopayLoansWriter autopayLoansWriter() {
-        return new AutopayLoansWriter(batchDestinations());
-    }
-
-    @Bean
-    public ApplyChargeForOverdueLoansWriter applyChargeForOverdueLoansWriter() {
-        return new ApplyChargeForOverdueLoansWriter(batchDestinations());
-    }
-
-    @Bean
-    public TaggingLoansWriter taggingLoansWriter() {
-        return new TaggingLoansWriter();
-    }
-
     // Steps
     @Bean
     public Step batchForLoansStep(BatchLoansReader batchLoansReader,
             BatchLoansWriter batchLoansWriter) {
         final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
         return stepBuilderFactory.get("batchForLoansStep").<Long, Long>chunk(chunkSize).reader(batchLoansReader)
-                .writer(batchLoansWriter).listener(itemCounterListener()).build();
+                .writer(batchLoansWriter).build();
     }
 
     @Bean
@@ -315,7 +260,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
         return stepBuilderFactory.get("autopayLoansStep")
                 .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(blockLoansReader)
-                .writer(autopayLoansWriter).processor(autopayLoansProcessor).listener(itemCounterListener())
+                .writer(autopayLoansWriter).processor(autopayLoansProcessor)
                 .transactionAttribute(getTransactionalAttributes())
                 .build();
     }
@@ -328,7 +273,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         return stepBuilderFactory.get("applyChargeForOverdueLoansStep")
                 .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(blockLoansReader)
                 .writer(applyChargeForOverdueLoansWriter)
-                .processor(applyChargeForOverdueLoansProcessor).listener(itemCounterListener())
+                .processor(applyChargeForOverdueLoansProcessor)
                 .transactionAttribute(getTransactionalAttributes())
                 .build();
     }
@@ -341,7 +286,17 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         return stepBuilderFactory.get("taggingLoansStep")
                 .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(blockLoansReader)
                 .writer(taggingLoansWriter)
-                .processor(taggingLoansProcessor).listener(itemCounterListener())
+                .processor(taggingLoansProcessor)
+                .transactionAttribute(getTransactionalAttributes())
+                .build();
+    }
+
+    @Bean
+    public Step updateLoanArrearsAgingStep(BlockLoansReader blockLoansReader,
+        LoanArrearsAgingWritter loanArrearsAgingWritter) {
+        final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
+        return stepBuilderFactory.get("batchForLoansStep").<Long, Long>chunk(chunkSize).reader(blockLoansReader)
+                .writer(loanArrearsAgingWritter)
                 .transactionAttribute(getTransactionalAttributes())
                 .build();
     }

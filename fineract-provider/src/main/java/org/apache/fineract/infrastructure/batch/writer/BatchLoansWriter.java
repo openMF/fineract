@@ -18,7 +18,6 @@
  */
 package org.apache.fineract.infrastructure.batch.writer;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.jms.JMSException;
@@ -38,7 +37,9 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
+import org.springframework.stereotype.Component;
 
+@Component
 public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long>, StepExecutionListener {
 
     public static final Logger LOG = LoggerFactory.getLogger(BatchLoansWriter.class);
@@ -61,22 +62,15 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
 
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
-        LOG.info("{} items processed {}", this.batchStepName, this.processed);
-        LOG.debug(stepExecution.getSummary());
+        LOG.info("==={}=== {} {} with items processed {}", this.batchJobInstanceId, this.batchStepName, 
+            stepExecution.getExitStatus().getExitCode(), this.processed);
         return stepExecution.getExitStatus();
     }
 
     @Override
     public void write(List<? extends Long> items) throws Exception {
-        List<Long> batchLoanIds = new ArrayList<Long>();
-        for (final Long loanId : items) {
-            if (loanId != null) {
-                batchLoanIds.add(loanId);
-                this.processed++;
-            }
-        }
-
-        MessageBatchDataRequest messageData = new MessageBatchDataRequest(batchStepName, tenantIdentifier, batchLoanIds);
+        this.processed = this.processed + items.size();
+        MessageBatchDataRequest messageData = new MessageBatchDataRequest(batchStepName, tenantIdentifier, items);
         sendMessage(messageData);
     }
 

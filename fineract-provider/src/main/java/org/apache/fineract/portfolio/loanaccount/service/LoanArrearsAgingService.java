@@ -18,11 +18,15 @@
  */
 package org.apache.fineract.portfolio.loanaccount.service;
 
+import java.util.List;
+
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 
 public interface LoanArrearsAgingService {
 
     void updateLoanArrearsAgeingDetails();
+
+    int updateLoanArrearsAgeingDetails(List<Long> loanIds);
 
     void updateLoanArrearsAgeingDetailsWithOriginalSchedule(Loan loan);
 

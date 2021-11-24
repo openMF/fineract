@@ -18,25 +18,29 @@
  */
 package org.apache.fineract.infrastructure.batch.writer;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.fineract.infrastructure.batch.config.BatchDestinations;
-import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
+import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResults;
+import org.apache.fineract.portfolio.loanaccount.service.LoanArrearsAgingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AutopayLoansWriter extends BatchWriterBase implements ItemWriter<MessageBatchDataResponse>, StepExecutionListener {
+public class LoanArrearsAgingWritter extends BatchWriterBase implements ItemWriter<Long>, StepExecutionListener {
 
-    public static final Logger LOG = LoggerFactory.getLogger(AutopayLoansWriter.class);
-
-    public AutopayLoansWriter(BatchDestinations batchDestinations) {
-        this.batchDestinations = batchDestinations;
+    public static final Logger LOG = LoggerFactory.getLogger(LoanArrearsAgingWritter.class);
+    
+    @Autowired
+    private LoanArrearsAgingService loanArrearsAgingService;
+    
+    public LoanArrearsAgingWritter() {
     }
 
     @Override
@@ -52,7 +56,15 @@ public class AutopayLoansWriter extends BatchWriterBase implements ItemWriter<Me
     }
 
     @Override
-    public void write(List<? extends MessageBatchDataResponse> items) throws Exception {
-        sendMessage(analyzeResults(items));
+    public void write(List<? extends Long> items) throws Exception {
+        List<Long> loanIds = new ArrayList<>();
+        for (Long loanId:items)
+            loanIds.add(loanId);
+
+        final int totalItems = items.size();    
+        this.processed = loanArrearsAgingService.updateLoanArrearsAgeingDetails(loanIds);
+
+        MessageBatchDataResults message = new MessageBatchDataResults(this.tenantIdentifier, this.batchStepName, totalItems, this.processed, (totalItems - this.processed), true);
+        sendMessage(message);
     }
 }

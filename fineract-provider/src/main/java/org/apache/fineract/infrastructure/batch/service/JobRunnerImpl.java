@@ -66,12 +66,13 @@ public class JobRunnerImpl implements JobRunner {
     private final Step autopayLoansStep;
     private final Step applyChargeForOverdueLoansStep;
     private final Step taggingLoansStep;
+    private final Step updateLoanArrearsAgingStep;
 
     @Autowired
     public JobRunnerImpl(@Qualifier("batchJobLauncher") JobLauncher jobLauncher, final JobBuilderFactory jobBuilderFactory,
             JobExecutionListener jobExecutionListener, final ConfigurationDomainService configurationDomainService,
             final Step batchForLoansStep, final Step autopayLoansStep, final Step applyChargeForOverdueLoansStep,
-            final Step taggingLoansStep) {
+            final Step taggingLoansStep, final Step updateLoanArrearsAgingStep) {
         this.jobLauncher = jobLauncher;
         this.jobBuilderFactory = jobBuilderFactory;
         this.jobExecutionListener = jobExecutionListener;
@@ -82,6 +83,7 @@ public class JobRunnerImpl implements JobRunner {
         this.batchForLoansStep = batchForLoansStep;
         this.autopayLoansStep = autopayLoansStep;
         this.taggingLoansStep = taggingLoansStep;
+        this.updateLoanArrearsAgingStep = updateLoanArrearsAgingStep;
     }
 
     @Override
@@ -139,6 +141,7 @@ public class JobRunnerImpl implements JobRunner {
                     .listener(jobExecutionListener).flow(autopayLoansStep)
                     .next(applyChargeForOverdueLoansStep)
                     .next(taggingLoansStep)
+                    .next(updateLoanArrearsAgingStep)
                     .end().build();
             default:
                 return null;
@@ -170,8 +173,8 @@ public class JobRunnerImpl implements JobRunner {
             case 2:
                 final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();
                 final Boolean backdatePenalties = this.configurationDomainService.isBackdatePenaltiesEnabled();
-                LOG.debug("    penaltyWaitPeriodValue: " + penaltyWaitPeriodValue);
-                LOG.debug("    backdatePenalties:      " + backdatePenalties);
+                // LOG.debug("    penaltyWaitPeriodValue: " + penaltyWaitPeriodValue);
+                // LOG.debug("    backdatePenalties:      " + backdatePenalties);
                 jobParametersBuilder.addLong(BatchConstants.JOB_PARAM_PENALTY_WAIT_PERIOD, penaltyWaitPeriodValue);
                 jobParametersBuilder.addString(BatchConstants.JOB_PARAM_BACKDATE_PENALTIES, backdatePenalties.toString(),
                         backdatePenalties);

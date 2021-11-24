@@ -28,7 +28,9 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemReader;
+import org.springframework.stereotype.Component;
 
+@Component
 public class BlockLoansReader implements ItemReader<Long> {
 
     public static final Logger LOG = LoggerFactory.getLogger(BlockLoansReader.class);

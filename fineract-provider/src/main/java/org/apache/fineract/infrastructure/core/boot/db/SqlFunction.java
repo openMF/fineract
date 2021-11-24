@@ -81,7 +81,7 @@ public enum SqlFunction {
 
             return dialect.isMySql()
                     ? ("DATE_SUB(" + date + ", INTERVAL " + multiplier + ' ' + unit + ')')
-                    : ("(" + date + "::TIMESTAMP - " + multiplier + " * INTERVAL '1 " + unit + "')");
+                    : ("(" + date + " - INTERVAL '" + multiplier + " " + unit + "')");
         }
     },
     DATEDIFF() {

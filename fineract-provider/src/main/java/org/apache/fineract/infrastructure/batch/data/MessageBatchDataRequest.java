@@ -22,15 +22,15 @@ import java.util.List;
 
 public class MessageBatchDataRequest extends MessageBaseData {
 
-    private List<Long> entityIds;
+    private List<? extends Long> entityIds;
 
-    public MessageBatchDataRequest(String batchStepName, String tenantIdentifier, List<Long> entityIds) {
+    public MessageBatchDataRequest(String batchStepName, String tenantIdentifier, List<? extends Long> entityIds) {
         this.batchStepName = batchStepName;
         this.tenantIdentifier = tenantIdentifier;
         this.entityIds = entityIds;
     }
 
-    public List<Long> getEntityIds() {
+    public List<? extends Long> getEntityIds() {
         return entityIds;
     }
 

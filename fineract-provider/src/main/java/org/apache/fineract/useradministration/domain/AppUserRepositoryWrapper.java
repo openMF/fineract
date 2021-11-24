@@ -34,7 +34,7 @@ public class AppUserRepositoryWrapper {
         this.appUserRepository = appUserRepository;
     }
 
-    @Cacheable(value = "users", key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat(#systemUser)")
+    @Cacheable(value = "users", key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('systemUser')")
     public AppUser fetchSystemUser() {
         AppUser user = this.appUserRepository.findAppUserByName(AppUserConstants.SYSTEM_USER_NAME);
         if (user == null) {

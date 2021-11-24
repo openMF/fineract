@@ -27,7 +27,9 @@ import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.stereotype.Component;
 
+@Component
 public class TaggingLoansWriter extends BatchWriterBase implements ItemWriter<MessageBatchDataResponse>, StepExecutionListener {
 
     public static final Logger LOG = LoggerFactory.getLogger(TaggingLoansWriter.class);
@@ -42,7 +44,8 @@ public class TaggingLoansWriter extends BatchWriterBase implements ItemWriter<Me
 
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
-        LOG.info("{} items processed {}", this.batchStepName, this.processed);
+        LOG.info("==={}=== {} {} with items processed {}", this.batchJobInstanceId, this.batchStepName, 
+            stepExecution.getExitStatus().getExitCode(), this.processed);
         return stepExecution.getExitStatus();
     }
 
