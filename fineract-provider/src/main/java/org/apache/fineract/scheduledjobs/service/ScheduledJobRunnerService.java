@@ -18,11 +18,15 @@
  */
 package org.apache.fineract.scheduledjobs.service;
 
+import java.util.List;
+
 import org.apache.fineract.infrastructure.jobs.exception.JobExecutionException;
 
 public interface ScheduledJobRunnerService {
 
     void updateLoanSummaryDetails();
+
+    int updateLoanSummaryDetails(List<Long> loanIds);
 
     void updateLoanPaidInAdvance();
 

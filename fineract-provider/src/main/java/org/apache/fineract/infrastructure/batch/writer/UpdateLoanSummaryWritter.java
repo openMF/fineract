@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResults;
-import org.apache.fineract.portfolio.loanaccount.service.LoanArrearsAgingService;
+import org.apache.fineract.scheduledjobs.service.ScheduledJobRunnerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
@@ -33,14 +33,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LoanArrearsAgingWritter extends BatchWriterBase implements ItemWriter<Long>, StepExecutionListener {
+public class UpdateLoanSummaryWritter extends BatchWriterBase implements ItemWriter<Long>, StepExecutionListener {
 
-    public static final Logger LOG = LoggerFactory.getLogger(LoanArrearsAgingWritter.class);
+    public static final Logger LOG = LoggerFactory.getLogger(UpdateLoanSummaryWritter.class);
     
     @Autowired
-    private LoanArrearsAgingService loanArrearsAgingService;
+    private ScheduledJobRunnerService scheduledJobRunnerService;
     
-    public LoanArrearsAgingWritter() {
+    public UpdateLoanSummaryWritter() {
     }
 
     @Override
@@ -58,12 +58,11 @@ public class LoanArrearsAgingWritter extends BatchWriterBase implements ItemWrit
     @Override
     public void write(List<? extends Long> items) throws Exception {
         List<Long> loanIds = new ArrayList<>();
-        for (Long loanId:items) {
+        for (Long loanId:items)
             loanIds.add(loanId);
-        }
 
         final int totalItems = items.size();    
-        this.processed = loanArrearsAgingService.updateLoanArrearsAgeingDetails(loanIds);
+        this.processed = scheduledJobRunnerService.updateLoanSummaryDetails(loanIds);
 
         MessageBatchDataResults message = new MessageBatchDataResults(this.tenantIdentifier, this.batchStepName, totalItems, this.processed, (totalItems - this.processed), true);
         sendMessage(message);

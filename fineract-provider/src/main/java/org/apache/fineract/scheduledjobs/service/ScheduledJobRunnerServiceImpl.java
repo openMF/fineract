@@ -60,6 +60,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
@@ -110,16 +111,15 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
         this.scheduledJobDetailsRepository = scheduledJobDetailsRepository;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @Override
-    @CronTarget(jobName = JobName.UPDATE_LOAN_SUMMARY)
-    public void updateLoanSummaryDetails() {
+    public int updateLoanSummaryDetails(List<Long> loanIds) {
         final JdbcTemplate jdbcTemplate = new JdbcTemplate(this.dataSourceServiceFactory.determineDataSourceService().retrieveDataSource());
 
         boolean mySql = sqlResolver.getDialect().isMySql();
 
         String alias = mySql ? "l." : "";
-        final String selectPart = new StringBuilder(900)
+        StringBuilder selectPartSB = new StringBuilder(900)
                 .append(" (SELECT ml.id AS loan_id, ")
                 .append("SUM(mr.principal_amount) as principal_disbursed_derived, ")
                 .append("SUM(COALESCE(mr.principal_completed_derived,0)) as principal_repaid_derived, ")
@@ -144,10 +144,16 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
                 .append("SUM(COALESCE(mr.penalty_charges_writtenoff_derived,0)) as penalty_charges_writtenoff_derived ")
                 .append("FROM m_loan ml ")
                 .append("INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id ")
-                .append("WHERE ml.disbursedon_date is not null ")
-                .append("GROUP BY ml.id")
-                .append(") x")
-                .toString();
+                .append("WHERE ml.disbursedon_date is not null ");
+
+        if (loanIds != null && !loanIds.isEmpty()) {
+            String loanIdsAsString = loanIds.toString();
+            loanIdsAsString = loanIdsAsString.substring(1, loanIdsAsString.length() - 1);    
+            selectPartSB.append("and ml.id in (" + loanIdsAsString + ")");
+        }
+        selectPartSB.append("GROUP BY ml.id")
+                .append(") x");
+        final String selectPart = selectPartSB.toString();
 
         final String setPart = new StringBuilder(900)
                 .append(" SET ")
@@ -205,6 +211,14 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
         final int result = jdbcTemplate.update(updateSqlBuilder.toString());
 
         LOG.info("{}: Records affected by updateLoanSummaryDetails: {}", ThreadLocalContextUtil.getTenant().getName(), result);
+        return result;
+    }
+
+    @Transactional
+    @Override
+    @CronTarget(jobName = JobName.UPDATE_LOAN_SUMMARY)
+    public void updateLoanSummaryDetails() {
+        updateLoanSummaryDetails(null);
     }
 
     @Transactional

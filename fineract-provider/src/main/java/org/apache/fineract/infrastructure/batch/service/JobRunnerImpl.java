@@ -67,12 +67,13 @@ public class JobRunnerImpl implements JobRunner {
     private final Step applyChargeForOverdueLoansStep;
     private final Step taggingLoansStep;
     private final Step updateLoanArrearsAgingStep;
+    private final Step updateLoanSummaryStep;
 
     @Autowired
     public JobRunnerImpl(@Qualifier("batchJobLauncher") JobLauncher jobLauncher, final JobBuilderFactory jobBuilderFactory,
             JobExecutionListener jobExecutionListener, final ConfigurationDomainService configurationDomainService,
             final Step batchForLoansStep, final Step autopayLoansStep, final Step applyChargeForOverdueLoansStep,
-            final Step taggingLoansStep, final Step updateLoanArrearsAgingStep) {
+            final Step taggingLoansStep, final Step updateLoanArrearsAgingStep, final Step updateLoanSummaryStep) {
         this.jobLauncher = jobLauncher;
         this.jobBuilderFactory = jobBuilderFactory;
         this.jobExecutionListener = jobExecutionListener;
@@ -84,6 +85,7 @@ public class JobRunnerImpl implements JobRunner {
         this.autopayLoansStep = autopayLoansStep;
         this.taggingLoansStep = taggingLoansStep;
         this.updateLoanArrearsAgingStep = updateLoanArrearsAgingStep;
+        this.updateLoanSummaryStep = updateLoanSummaryStep;
     }
 
     @Override
@@ -141,7 +143,7 @@ public class JobRunnerImpl implements JobRunner {
                     .listener(jobExecutionListener).flow(autopayLoansStep)
                     .next(applyChargeForOverdueLoansStep)
                     .next(taggingLoansStep)
-                    .next(updateLoanArrearsAgingStep)
+                    .next(updateLoanSummaryStep)
                     .end().build();
             default:
                 return null;
