@@ -28,9 +28,7 @@ import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.stereotype.Component;
 
-@Component
 public class AutopayLoansWriter extends BatchWriterBase implements ItemWriter<MessageBatchDataResponse>, StepExecutionListener {
 
     public static final Logger LOG = LoggerFactory.getLogger(AutopayLoansWriter.class);

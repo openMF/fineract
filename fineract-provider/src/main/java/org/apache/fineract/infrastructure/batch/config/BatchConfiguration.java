@@ -230,6 +230,10 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         return new BatchLoansWriter(batchDestinations());
     }
 
+    @Bean AutopayLoansWriter autopayLoansWriter() {
+        return new AutopayLoansWriter(batchDestinations());
+    }
+
     @Bean
     public JobExecutionListener jobExecutionListener() {
         return new JobExecutionListener() {
