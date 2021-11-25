@@ -76,7 +76,6 @@ public final class DateUtils {
     }
 
     public static LocalDate parseLocalDate(final String stringDate, final String pattern) {
-
         try {
             final DateTimeFormatter dateStringFormat = DateTimeFormatter.ofPattern(pattern).withZone(getDateTimeZoneOfTenant());
             final ZonedDateTime dateTime = ZonedDateTime.parse(stringDate, dateStringFormat);
@@ -138,5 +137,11 @@ public final class DateUtils {
         }
         final Long diff = date1.getTime() - date2.getTime();
         return TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+    }
+
+    public static LocalDate fromDateToLocalDate(Date dateToConvert) {
+        return dateToConvert.toInstant()
+          .atZone(ZoneId.systemDefault())
+          .toLocalDate();
     }
 }

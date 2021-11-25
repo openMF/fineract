@@ -20,6 +20,7 @@ package org.apache.fineract.infrastructure.batch.processor;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Date;
 
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
@@ -60,10 +61,11 @@ public class ApplyChargeForOverdueLoansProcessor extends BatchProcessorBase impl
         this.penaltyWaitPeriodValue = parameters.getLong(BatchConstants.JOB_PARAM_PENALTY_WAIT_PERIOD);
         this.backdatePenalties = TextUtils.stringToBoolean(parameters.getString(BatchConstants.JOB_PARAM_BACKDATE_PENALTIES));
 
+        Date processDate = DateUtils.createDate(this.dateOfTenantValue, BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
         if (this.cobDateValue != null)
-            this.recalculateFrom = DateUtils.parseLocalDate(this.cobDateValue, BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
-        else
-            this.recalculateFrom = DateUtils.parseLocalDate(this.dateOfTenantValue, BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
+        processDate = DateUtils.createDate(this.cobDateValue, BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
+    
+        this.recalculateFrom = DateUtils.fromDateToLocalDate(processDate);
     }
 
     @AfterStep
