@@ -25,6 +25,8 @@ public class BatchConstants {
     public static final String BATCH_BLOCKLOANS_JOB_NAME = "blockLoansJob";
     public static final String BATCH_COB_JOB_NAME = "closeOfBusinessJob";
 
+    public static final String JOB_PARAM_COB_DATE = "cobDate";
+    public static final String JOB_PARAM_PARENT = "parentJob";
     public static final String JOB_PARAM_PARAMETER = "parameter";
     public static final String JOB_PARAM_TENANT_ID = "tenantIdentifier";
     public static final String JOB_PARAM_TENANT_DATE = "tenantDate";
@@ -41,7 +43,8 @@ public class BatchConstants {
     public static final String JOB_PARAM_BACKDATE_PENALTIES = "backdatePenalties";
 
     // Batch Jobs Ids
-    public static final Long BATCH_JOB_PROCESS_ID = 2L;
+    public static final Long BATCH_CHUNKJOB_PROCESS_ID = 1L;
+    public static final Long BATCH_COBJOB_PROCESS_ID = 2L;
 
     // DataTables used in Batch
     public static final String LOAN_TAGS_DATATABLE = "dt_loan_tags";

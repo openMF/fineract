@@ -18,8 +18,6 @@
  */
 package org.apache.fineract.infrastructure.batch.listeners;
 
-import java.util.List;
-import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
 import org.apache.fineract.infrastructure.batch.service.JobRunnerImpl;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
@@ -42,17 +40,20 @@ public class BatchLoansEventSQSListener extends BatchEventBaseListener {
     @Lazy
     private JobRunnerImpl jobRunnerImpl;
 
-    @JmsListener(destination = "#{@batchDestinations.BatchLoansDestination}", concurrency = "1-1", containerFactory = "jmsListenerContainerFactory")
+    @JmsListener(destination = "#{@batchDestinations.BatchLoansDestination}", concurrency = "#{@batchDestinations.ConcurrencyDestination}")
     public void receivedMessage(@Payload String payload) {
-        // LOG.debug("receivedMessage ==== " + payload);
-        MessageBatchDataRequest messageData = gson.fromJson(payload, MessageBatchDataRequest.class);
-        if (messageData != null) {
-            setTenant(messageData.getTenantIdentifier());
-            // LOG.debug("Tenant {}", tenant.getName());
+        try {
+            // LOG.debug("receivedMessage ==== " + payload);
+            MessageBatchDataRequest messageData = gson.fromJson(payload, MessageBatchDataRequest.class);
+            if (messageData != null) {
+                setTenant(messageData.getTenantIdentifier());
+                // LOG.debug("Tenant {}", tenant.getName());
 
-            List<Long> loanIds = getLoanIds(messageData.getEntityIds());
-            LOG.debug("Job {} : {} loans", messageData.getBatchStepName(), loanIds.size());
-            jobRunnerImpl.runJob(BatchConstants.BATCH_JOB_PROCESS_ID, gson.toJson(loanIds));
+                final Long jobInstanceId = jobRunnerImpl.runCOBJob(messageData);
+                LOG.debug("COB instance Id {}", jobInstanceId);
+            }
+        } catch (Throwable th) {
+            LOG.error("{}, {}", th.getMessage(), payload);
         }
     }
 }

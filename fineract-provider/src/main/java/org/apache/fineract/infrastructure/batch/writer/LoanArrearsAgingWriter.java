@@ -33,14 +33,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LoanArrearsAgingWritter extends BatchWriterBase implements ItemWriter<Long>, StepExecutionListener {
+public class LoanArrearsAgingWriter extends BatchWriterBase implements ItemWriter<Long>, StepExecutionListener {
 
-    public static final Logger LOG = LoggerFactory.getLogger(LoanArrearsAgingWritter.class);
+    public static final Logger LOG = LoggerFactory.getLogger(LoanArrearsAgingWriter.class);
     
     @Autowired
     private LoanArrearsAgingService loanArrearsAgingService;
     
-    public LoanArrearsAgingWritter() {
+    public LoanArrearsAgingWriter() {
     }
 
     @Override

@@ -31,7 +31,7 @@ import org.apache.fineract.infrastructure.batch.reader.BlockLoansReader;
 import org.apache.fineract.infrastructure.batch.writer.ApplyChargeForOverdueLoansWriter;
 import org.apache.fineract.infrastructure.batch.writer.AutopayLoansWriter;
 import org.apache.fineract.infrastructure.batch.writer.BatchLoansWriter;
-import org.apache.fineract.infrastructure.batch.writer.LoanArrearsAgingWritter;
+import org.apache.fineract.infrastructure.batch.writer.LoanArrearsAgingWriter;
 import org.apache.fineract.infrastructure.batch.writer.TaggingLoansWriter;
 import org.apache.fineract.infrastructure.batch.writer.UpdateLoanSummaryWritter;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSourceService;
@@ -242,14 +242,14 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
             public void beforeJob(JobExecution jobExecution) {
                 String jobName = jobExecution.getJobInstance().getJobName();
                 final Long jobId = jobExecution.getJobInstance().getInstanceId();
-                LOG.info("==={}=== Starting execution {}", jobId, jobName);
+                LOG.info("==={}=== Start Job {}", jobId, jobName);
             }
 
             @Override
             public void afterJob(JobExecution jobExecution) {
                 String jobName = jobExecution.getJobInstance().getJobName();
                 final Long jobId = jobExecution.getJobInstance().getInstanceId();
-                LOG.info("==={}=== Finished execution {} {}", jobId, jobName, jobExecution.getExitStatus().getExitCode());
+                LOG.info("==={}=== Ent Job {} {}", jobId, jobName, jobExecution.getExitStatus().getExitCode());
             }
         };
     }
@@ -264,12 +264,13 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     }
 
     @Bean
-    public Step autopayLoansStep(BlockLoansReader blockLoansReader, AutopayLoansProcessor autopayLoansProcessor, AutopayLoansWriter autopayLoansWriter) {
+    public Step autopayLoansStep(BlockLoansReader blockLoansReader, AutopayLoansProcessor autopayLoansProcessor, 
+        AutopayLoansWriter autopayLoansWriter) {
         final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
-
         return stepBuilderFactory.get("autopayLoansStep")
                 .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(blockLoansReader)
-                .writer(autopayLoansWriter).processor(autopayLoansProcessor)
+                .writer(autopayLoansWriter)
+                .processor(autopayLoansProcessor)
                 .transactionAttribute(getTransactionalAttributes())
                 .build();
     }
@@ -301,9 +302,9 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     }
 
     @Bean
-    public Step updateLoanArrearsAgingStep(BlockLoansReader blockLoansReader, LoanArrearsAgingWritter loanArrearsAgingWritter) {
+    public Step updateLoanArrearsAgingStep(BlockLoansReader blockLoansReader, LoanArrearsAgingWriter loanArrearsAgingWritter) {
         final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
-        return stepBuilderFactory.get("batchForLoansStep").<Long, Long>chunk(chunkSize).reader(blockLoansReader)
+        return stepBuilderFactory.get("updateLoanArrearsAgingStep").<Long, Long>chunk(chunkSize).reader(blockLoansReader)
                 .writer(loanArrearsAgingWritter)
                 .transactionAttribute(getTransactionalAttributes())
                 .build();
@@ -312,7 +313,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     @Bean
     public Step updateLoanSummaryStep(BlockLoansReader blockLoansReader, UpdateLoanSummaryWritter updateLoanSummaryWritter) {
         final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
-        return stepBuilderFactory.get("batchForLoansStep").<Long, Long>chunk(chunkSize).reader(blockLoansReader)
+        return stepBuilderFactory.get("updateLoanSummaryStep").<Long, Long>chunk(chunkSize).reader(blockLoansReader)
                 .writer(updateLoanSummaryWritter)
                 .transactionAttribute(getTransactionalAttributes())
                 .build();

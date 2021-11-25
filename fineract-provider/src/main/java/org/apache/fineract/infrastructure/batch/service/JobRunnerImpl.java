@@ -20,6 +20,7 @@ package org.apache.fineract.infrastructure.batch.service;
 
 import java.util.UUID;
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
+import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
 import org.apache.fineract.infrastructure.batch.exception.JobAlreadyCompletedException;
 import org.apache.fineract.infrastructure.batch.exception.JobAlreadyRunningException;
 import org.apache.fineract.infrastructure.batch.exception.JobIllegalRestartException;
@@ -54,8 +55,6 @@ public class JobRunnerImpl implements JobRunner {
 
     public static final Logger LOG = LoggerFactory.getLogger(JobRunnerImpl.class);
 
-    private Long limit;
-
     private final JobLauncher jobLauncher;
     private final JobBuilderFactory jobBuilderFactory;
     private final JobExecutionListener jobExecutionListener;
@@ -89,15 +88,13 @@ public class JobRunnerImpl implements JobRunner {
     }
 
     @Override
-    public Long runJob(final Long jobId, final Long limit) {
-        this.limit = 0L;
-        if (limit != null)
-            this.limit = limit;
-
-        LOG.debug("runJob ===== " + jobId);
+    public Long runChunkJob(final String cobDate, final Long limit) {
         try {
-            JobExecution jobExecution = this.jobLauncher.run(getJobById(jobId), getJobParametersById(jobId));
-            return jobExecution.getJobInstance().getId();
+            JobExecution jobExecution = this.jobLauncher.run(getJobById(BatchConstants.BATCH_CHUNKJOB_PROCESS_ID), 
+                getChunkerJobParameters(cobDate, limit));
+            Long jobInstanceId = jobExecution.getJobInstance().getInstanceId();
+            LOG.debug("runChunkJob ===== {}", jobInstanceId);
+            return jobInstanceId;
         } catch (JobExecutionAlreadyRunningException e) {
             throw new JobAlreadyRunningException();
         } catch (JobInstanceAlreadyCompleteException e) {
@@ -110,11 +107,14 @@ public class JobRunnerImpl implements JobRunner {
     }
 
     @Override
-    public Long runJob(final Long jobId, final String parameter) {
-        LOG.debug("runJob ===== " + jobId);
+    public Long runCOBJob(MessageBatchDataRequest messageData) {
         try {
-            JobExecution jobExecution = this.jobLauncher.run(getJobById(jobId), getJobParametersById(jobId, parameter));
-            return jobExecution.getJobInstance().getId();
+            JobExecution jobExecution = this.jobLauncher.run(
+                getJobById(BatchConstants.BATCH_COBJOB_PROCESS_ID), 
+                getCOBJobParameters(messageData));
+            Long jobInstanceId = jobExecution.getJobInstance().getInstanceId();
+            LOG.debug("runCOBJob ===== {} : {}", messageData.getJobInstanceId(), jobInstanceId);
+            return jobInstanceId;
         } catch (JobExecutionAlreadyRunningException e) {
             throw new JobAlreadyRunningException();
         } catch (JobInstanceAlreadyCompleteException e) {
@@ -129,7 +129,6 @@ public class JobRunnerImpl implements JobRunner {
     @Override
     public void stopJob(final Long jobId) {
         LOG.debug("stopJob ===== " + jobId);
-
     }
 
     private Job getJobById(final Long jobId) {
@@ -143,6 +142,7 @@ public class JobRunnerImpl implements JobRunner {
                     .listener(jobExecutionListener).flow(autopayLoansStep)
                     .next(applyChargeForOverdueLoansStep)
                     .next(taggingLoansStep)
+                    .next(updateLoanArrearsAgingStep)
                     .next(updateLoanSummaryStep)
                     .end().build();
             default:
@@ -150,39 +150,35 @@ public class JobRunnerImpl implements JobRunner {
         }
     }
 
-    private JobParameters getJobParametersById(final Long jobId) {
-        return getJobParametersById(jobId, null);
-    }
-
-    private JobParameters getJobParametersById(final Long jobId, final String parameter) {
+    private JobParameters getChunkerJobParameters(String cobDate, Long limit) {
         final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_ID, tenant.getTenantIdentifier());
         final String dateOfTenant = DateUtils.formatDate(DateUtils.getDateOfTenant(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_DATE, dateOfTenant);
         jobParametersBuilder.addString("instance_id", UUID.randomUUID().toString(), true);
-        if (parameter != null) {
-            // LOG.debug("Adding parameters {}", parameter);
-            jobParametersBuilder.addString(BatchConstants.JOB_PARAM_PARAMETER, parameter);
-        }
 
-        switch (jobId.intValue()) {
-            // Batch Chunker Job
-            case 1:
-                jobParametersBuilder.addLong(BatchConstants.JOB_PARAM_LIMIT_READ, this.limit);
-                break;
-            // Batch Close Of Bussines Job
-            case 2:
-                final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();
-                final Boolean backdatePenalties = this.configurationDomainService.isBackdatePenaltiesEnabled();
-                // LOG.debug("    penaltyWaitPeriodValue: " + penaltyWaitPeriodValue);
-                // LOG.debug("    backdatePenalties:      " + backdatePenalties);
-                jobParametersBuilder.addLong(BatchConstants.JOB_PARAM_PENALTY_WAIT_PERIOD, penaltyWaitPeriodValue);
-                jobParametersBuilder.addString(BatchConstants.JOB_PARAM_BACKDATE_PENALTIES, backdatePenalties.toString(),
-                        backdatePenalties);
-                break;
-        }
+        jobParametersBuilder.addString(BatchConstants.JOB_PARAM_COB_DATE, cobDate);
+        jobParametersBuilder.addLong(BatchConstants.JOB_PARAM_LIMIT_READ, limit);
         return jobParametersBuilder.toJobParameters();
     }
 
+    private JobParameters getCOBJobParameters(MessageBatchDataRequest messageData) {
+        final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
+        JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
+        jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_ID, tenant.getTenantIdentifier());
+        final String dateOfTenant = DateUtils.formatDate(DateUtils.getDateOfTenant(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
+        jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_DATE, dateOfTenant);
+        jobParametersBuilder.addString("instance_id", UUID.randomUUID().toString(), true);
+
+        jobParametersBuilder.addLong(BatchConstants.JOB_PARAM_PARENT, messageData.getJobInstanceId());
+        jobParametersBuilder.addString(BatchConstants.JOB_PARAM_PARAMETER, messageData.getEntityIdsAsString());
+
+        final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();
+        final Boolean backdatePenalties = this.configurationDomainService.isBackdatePenaltiesEnabled();
+        jobParametersBuilder.addLong(BatchConstants.JOB_PARAM_PENALTY_WAIT_PERIOD, penaltyWaitPeriodValue);
+        jobParametersBuilder.addString(BatchConstants.JOB_PARAM_BACKDATE_PENALTIES, backdatePenalties.toString(),
+                backdatePenalties);
+        return jobParametersBuilder.toJobParameters();
+    }
 }

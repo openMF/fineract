@@ -18,12 +18,10 @@
  */
 package org.apache.fineract.infrastructure.batch.listeners;
 
-import java.util.List;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
 import org.apache.fineract.infrastructure.batch.service.JobRunnerImpl;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
@@ -53,11 +51,7 @@ public class BatchLoansEventListener extends BatchEventBaseListener implements S
                 String payload = ((TextMessage) message).getText();
                 MessageBatchDataRequest messageData = gson.fromJson(payload, MessageBatchDataRequest.class);
                 if (messageData != null) {
-                    // LOG.debug("Tenant {}", tenant.getName());
-
-                    List<Long> loanIds = getLoanIds(messageData.getEntityIds());
-                    LOG.info("Job {} : {} loans", messageData.getBatchStepName(), loanIds.size());
-                    jobRunnerImpl.runJob(BatchConstants.BATCH_JOB_PROCESS_ID, gson.toJson(loanIds));
+                    jobRunnerImpl.runCOBJob(messageData);
                 }
             }
         } catch (JMSException e) {

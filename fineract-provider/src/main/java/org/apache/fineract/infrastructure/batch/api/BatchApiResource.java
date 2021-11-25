@@ -29,8 +29,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+
+import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.service.JobRunner;
 import org.apache.fineract.infrastructure.core.exception.UnrecognizedQueryParamException;
+import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.utils.TextUtils;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.infrastructure.security.exception.NoAuthorizationException;
@@ -68,7 +71,8 @@ public class BatchApiResource {
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "POST: jobs/1?command=executeJob") })
     public Response executeBatchJob(@PathParam("jobId") @Parameter(description = "jobId") final Long jobId,
             @QueryParam("command") @Parameter(description = "command") final String commandParam,
-            @QueryParam("limit") @Parameter(description = "limit") final Long limitParam) {
+            @QueryParam("cobDate") @Parameter(description = "cobDate") String cobDate,
+            @QueryParam("limit") @Parameter(description = "limit") final Long limit) {
         final boolean hasNotPermission = this.context.authenticatedUser().hasNotPermissionForAnyOf("ALL_FUNCTIONS", "EXECUTEJOB_SCHEDULER");
         if (hasNotPermission) {
             final String authorizationMessage = "User has no authority to execute scheduler jobs";
@@ -76,7 +80,10 @@ public class BatchApiResource {
         }
         Response response = Response.status(Response.Status.NO_CONTENT).build();
         if (TextUtils.is(commandParam, "start")) {
-            Long jobInstanceId = jobRunner.runJob(jobId, limitParam);
+            if (cobDate == null) {
+                cobDate = DateUtils.formatDate(DateUtils.getDateOfTenant(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
+            }
+            Long jobInstanceId = jobRunner.runChunkJob(cobDate, limit);
             response = Response.status(Response.Status.OK).entity("{batchJobId: " + jobInstanceId + "}").build();
         } else {
             throw new UnrecognizedQueryParamException("command", commandParam);

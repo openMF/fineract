@@ -68,7 +68,7 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
     @Override
     public void write(List<? extends Long> items) throws Exception {
         this.processed = this.processed + items.size();
-        MessageBatchDataRequest messageData = new MessageBatchDataRequest(batchStepName, tenantIdentifier, items);
+        MessageBatchDataRequest messageData = new MessageBatchDataRequest(batchJobInstanceId, batchStepName, tenantIdentifier, items);
         sendMessage(messageData);
     }
 

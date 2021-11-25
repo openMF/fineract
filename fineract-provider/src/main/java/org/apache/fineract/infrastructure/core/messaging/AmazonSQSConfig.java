@@ -28,6 +28,8 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 
 import java.util.Properties;
+import java.util.concurrent.Executors;
+
 import javax.annotation.PostConstruct;
 import javax.jms.Session;
 import org.apache.fineract.infrastructure.core.utils.PropertyUtils;
@@ -43,10 +45,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.core.JmsTemplate;
-import org.springframework.util.ErrorHandler;
 
 @Configuration
-@Profile(JobConstants.SPRING_MESSAGINGSQS_PROFILE_NAME)
+@Profile({ JobConstants.SPRING_BATCH_PROFILE_NAME, JobConstants.SPRING_MESSAGINGSQS_PROFILE_NAME })
 @EnableJms
 public class AmazonSQSConfig {
 
@@ -64,6 +65,8 @@ public class AmazonSQSConfig {
     @Autowired
     private ApplicationContext context;
 
+    private SQSConnectionFactory connectionFactory;
+
     @PostConstruct
     protected void init() {
         this.environment = this.context.getEnvironment();
@@ -72,7 +75,7 @@ public class AmazonSQSConfig {
         if (regionName == null) {
             regionName = messagingProperties.getProperty("aws.messaging.region.name");
         }
-        concurrency = getValue("AWS_SQS_CONCURRENCY", "1-1");
+        concurrency = getValue("AWS_SQS_CONCURRENCY", "1");
         if (concurrency == null) {
             concurrency = messagingProperties.getProperty("aws.messaging.concurrency");
         }
@@ -85,6 +88,8 @@ public class AmazonSQSConfig {
         if (numberOfMessagesToPrefetch == null)
             numberOfMessagesToPrefetch = 1;
         LOG.info("SQS Number of Messages prefetch {}", numberOfMessagesToPrefetch);
+
+        this.connectionFactory = sqsConnectionFactory();
     }
 
     private String getValue(final String key, final String defaultVal) {
@@ -96,10 +101,6 @@ public class AmazonSQSConfig {
 
     private String getValue(final String key) {
         return this.environment.getProperty(key);
-    }
-
-    public ErrorHandler errorHandler() {
-        return new DefaultErrorHandler();
     }
 
     public SQSConnectionFactory sqsConnectionFactory() {
@@ -118,18 +119,19 @@ public class AmazonSQSConfig {
     @Bean
     public DefaultJmsListenerContainerFactory jmsListenerContainerFactory() {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
-        factory.setConnectionFactory(sqsConnectionFactory());
+        factory.setConnectionFactory(this.connectionFactory);
         factory.setDestinationResolver(new SQSDynamicDestinationResolver(awsAccountNo));
         factory.setConcurrency(concurrency);
         factory.setMaxMessagesPerTask(numberOfMessagesToPrefetch);
         factory.setSessionAcknowledgeMode(Session.AUTO_ACKNOWLEDGE);
-        factory.setErrorHandler(errorHandler());
+        factory.setErrorHandler(new DefaultErrorHandler());
+        factory.setTaskExecutor(Executors.newFixedThreadPool(numberOfMessagesToPrefetch));
         return factory;
     }
 
     @Bean
     public JmsTemplate sqsJmsTemplate() {
-        return new JmsTemplate(sqsConnectionFactory());
+        return new JmsTemplate(this.connectionFactory);
     }
 
     private Regions getRegion(String regionName) {

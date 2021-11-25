@@ -49,6 +49,7 @@ public class BatchJobUtils {
     public static List<Long> getLoanIds(String str) {
         str = str.replace("[", "");
         str = str.replace("]", "");
+        str = str.replace(", ", ",");
         return Arrays.stream(str.split(",")).map(Long::valueOf).collect(Collectors.toList());
     }
 }

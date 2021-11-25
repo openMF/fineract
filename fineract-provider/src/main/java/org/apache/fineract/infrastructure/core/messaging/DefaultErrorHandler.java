@@ -28,6 +28,6 @@ public class DefaultErrorHandler implements ErrorHandler {
 
     @Override
     public void handleError(Throwable t) {
-        LOG.error(t.getCause().getMessage());
+        LOG.error("ERR: {},{},{}", t.getMessage(), t.getClass().getName(), t.getCause().getMessage());
     }
 }

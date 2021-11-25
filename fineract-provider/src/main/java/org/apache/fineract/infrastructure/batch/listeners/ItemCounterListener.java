@@ -23,7 +23,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ItemCounterListener implements ChunkListener {
 
     public static final Logger LOG = LoggerFactory.getLogger(ItemCounterListener.class);

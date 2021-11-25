@@ -18,11 +18,13 @@
  */
 package org.apache.fineract.infrastructure.batch.service;
 
+import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
+
 public interface JobRunner {
 
-    Long runJob(final Long jobId, final Long limit);
+    Long runChunkJob(final String cobDate, final Long limit);
 
-    Long runJob(final Long jobId, final String parameter);
+    Long runCOBJob(MessageBatchDataRequest messageData);
 
     void stopJob(final Long jobId);
 }

@@ -22,9 +22,11 @@ import java.util.List;
 
 public class MessageBatchDataRequest extends MessageBaseData {
 
+    private Long jobInstanceId;
     private List<? extends Long> entityIds;
 
-    public MessageBatchDataRequest(String batchStepName, String tenantIdentifier, List<? extends Long> entityIds) {
+    public MessageBatchDataRequest(Long jobInstanceId, String batchStepName, String tenantIdentifier, List<? extends Long> entityIds) {
+        this.jobInstanceId = jobInstanceId;
         this.batchStepName = batchStepName;
         this.tenantIdentifier = tenantIdentifier;
         this.entityIds = entityIds;
@@ -36,5 +38,18 @@ public class MessageBatchDataRequest extends MessageBaseData {
 
     public void setEntityIds(List<Long> entityIds) {
         this.entityIds = entityIds;
+    }
+
+    public String getEntityIdsAsString() {
+        String entityIdsVal = this.entityIds.toString();
+        return entityIdsVal.substring(1, entityIdsVal.length() - 1);    
+    }
+
+    public Long getJobInstanceId() {
+        return jobInstanceId;
+    }
+
+    public void setJobInstanceId(Long jobInstanceId) {
+        this.jobInstanceId = jobInstanceId;
     }
 }
