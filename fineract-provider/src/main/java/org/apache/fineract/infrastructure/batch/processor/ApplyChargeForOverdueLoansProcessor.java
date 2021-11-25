@@ -18,10 +18,12 @@
  */
 package org.apache.fineract.infrastructure.batch.processor;
 
+import java.time.LocalDate;
 import java.util.Collection;
 
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
+import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.utils.TextUtils;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.OverdueLoanScheduleData;
 import org.apache.fineract.portfolio.loanaccount.service.LoanReadPlatformService;
@@ -48,6 +50,7 @@ public class ApplyChargeForOverdueLoansProcessor extends BatchProcessorBase impl
 
     private Long penaltyWaitPeriodValue;
     private Boolean backdatePenalties;
+    private LocalDate recalculateFrom;
 
     @BeforeStep
     public void before(StepExecution stepExecution) {
@@ -56,6 +59,11 @@ public class ApplyChargeForOverdueLoansProcessor extends BatchProcessorBase impl
         // Particular process parameters or properties
         this.penaltyWaitPeriodValue = parameters.getLong(BatchConstants.JOB_PARAM_PENALTY_WAIT_PERIOD);
         this.backdatePenalties = TextUtils.stringToBoolean(parameters.getString(BatchConstants.JOB_PARAM_BACKDATE_PENALTIES));
+
+        if (this.cobDateValue != null)
+            this.recalculateFrom = DateUtils.parseLocalDate(this.cobDateValue, BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
+        else
+            this.recalculateFrom = DateUtils.parseLocalDate(this.dateOfTenantValue, BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
     }
 
     @AfterStep
@@ -71,7 +79,7 @@ public class ApplyChargeForOverdueLoansProcessor extends BatchProcessorBase impl
         boolean changed = !loanData.isEmpty();
         if (changed) {
             // LOG.debug("Job Step {} to Loan Id {} : {} matured installments", batchStepName, entityId, loanData.size());
-            this.loanWritePlatformService.applyOverdueChargesForLoan(entityId, loanData);
+            this.loanWritePlatformService.applyOverdueChargesForLoan(this.recalculateFrom, entityId, loanData, true);
             this.processed++;
         }
 

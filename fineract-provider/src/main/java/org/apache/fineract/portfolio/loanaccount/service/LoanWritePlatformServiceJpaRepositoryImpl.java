@@ -2688,14 +2688,12 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void applyOverdueChargesForLoan(final Long loanId, Collection<OverdueLoanScheduleData> overdueLoanScheduleDatas) {
-
+    public void applyOverdueChargesForLoan(LocalDate recalculateFrom, Long loanId, Collection<OverdueLoanScheduleData> overdueLoanScheduleDatas, boolean isInBatch) {
         Loan loan = null;
         Integer loanProductAccountingRule = 0;
         final List<Long> existingTransactionIds = new ArrayList<>();
         final List<Long> existingReversedTransactionIds = new ArrayList<>();
         boolean runInterestRecalculation = false;
-        LocalDate recalculateFrom = DateUtils.getLocalDateOfTenant();
         LocalDate lastChargeDate = null;
 
         final Boolean postJournalEntriesOnline = configurationDomainService.postJournalEntriesOnline();
@@ -2758,10 +2756,16 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                     && loan.isFeeCompoundingEnabledForInterestRecalculation()) {
                 this.loanAccountDomainService.recalculateAccruals(loan);
             }
-            this.businessEventNotifierService.notifyBusinessEventWasExecuted(BusinessEvents.LOAN_APPLY_OVERDUE_CHARGE,
+            if (!isInBatch) 
+                this.businessEventNotifierService.notifyBusinessEventWasExecuted(BusinessEvents.LOAN_APPLY_OVERDUE_CHARGE,
                     constructEntityMap(BusinessEntity.LOAN, loan));
-
         }
+    }
+
+    @Override
+    @Transactional
+    public void applyOverdueChargesForLoan(final Long loanId, Collection<OverdueLoanScheduleData> overdueLoanScheduleDatas) {
+        applyOverdueChargesForLoan(DateUtils.getLocalDateOfTenant(), loanId, overdueLoanScheduleDatas, false);
     }
 
     private void addInstallmentIfPenaltyAppliedAfterLastDueDate(Loan loan, LocalDate lastChargeDate) {

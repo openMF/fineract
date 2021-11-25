@@ -104,6 +104,8 @@ public interface LoanWritePlatformService {
 
     void applyOverdueChargesForLoan(Long loanId, Collection<OverdueLoanScheduleData> overdueLoanScheduleDatas);
 
+    void applyOverdueChargesForLoan(LocalDate recalculateFrom, Long loanId, Collection<OverdueLoanScheduleData> overdueLoanScheduleDatas, boolean isInBatch);
+
     void recalculateInterest(long loanId);
 
     CommandProcessingResult undoLastLoanDisbursal(Long loanId, JsonCommand command);
