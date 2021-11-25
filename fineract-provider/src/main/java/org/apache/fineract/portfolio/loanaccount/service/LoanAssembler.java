@@ -29,6 +29,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
+import javax.persistence.LockModeType;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
 import org.apache.fineract.infrastructure.codes.domain.CodeValueRepositoryWrapper;
@@ -90,6 +93,7 @@ import org.apache.fineract.portfolio.rate.domain.Rate;
 import org.apache.fineract.portfolio.rate.service.RateAssembler;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -145,6 +149,15 @@ public class LoanAssembler {
         this.workingDaysRepository = workingDaysRepository;
         this.loanUtilService = loanUtilService;
         this.rateAssembler = rateAssembler;
+    }
+
+    @Lock(LockModeType.WRITE)
+    public Loan assembleFromIdForUpdate(final Long accountId) {
+        final Loan loanAccount = this.loanRepository.findOneForUpdate(accountId, true);
+        loanAccount.setHelpers(defaultLoanLifecycleStateMachine(), this.loanSummaryWrapper,
+                this.loanRepaymentScheduleTransactionProcessorFactory);
+
+        return loanAccount;
     }
 
     public Loan assembleFrom(final Long accountId) {
