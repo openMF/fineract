@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResults;
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.portfolio.loanaccount.service.LoanArrearsAgingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +31,11 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile(JobConstants.SPRING_BATCH_PROFILE_NAME)
 public class LoanArrearsAgingWriter extends BatchWriterBase implements ItemWriter<Long>, StepExecutionListener {
 
     public static final Logger LOG = LoggerFactory.getLogger(LoanArrearsAgingWriter.class);

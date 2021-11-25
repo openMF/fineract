@@ -36,6 +36,6 @@ databaseChangeLog:
   - include:
       file: sql/liquibase/changelog/springbatch/001_springbatch-create.yaml
   - include:
+      file: sql/liquibase/changelog/springbatch/002_springbatch-extend_params.yaml
+  - include:
       file: sql/liquibase/changelog/core/006_add_post_journal_entries_config.yaml
-
-

@@ -46,7 +46,7 @@ public class BatchLoansEventListener extends BatchEventBaseListener implements S
     @JmsListener(destination = "#{@batchDestinations.BatchLoansDestination}", concurrency = "#{@batchDestinations.ConcurrencyDestination}")
     public void onMessage(Message message, Session session) {
         try {
-            LOG.debug("onMessage ==== " + message.getJMSMessageID());
+            // LOG.debug("onMessage ==== " + message.getJMSMessageID());
             if (message instanceof TextMessage) {
                 String payload = ((TextMessage) message).getText();
                 MessageBatchDataRequest messageData = gson.fromJson(payload, MessageBatchDataRequest.class);

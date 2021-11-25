@@ -117,7 +117,7 @@ public class JobRunnerImpl implements JobRunner {
                 getJobById(BatchConstants.BATCH_COBJOB_PROCESS_ID), 
                 getCOBJobParameters(messageData));
             Long jobInstanceId = jobExecution.getJobInstance().getInstanceId();
-            MessageJobResponse response = new MessageJobResponse(jobInstanceId, messageData.getIdentifier());
+            MessageJobResponse response = new MessageJobResponse(jobInstanceId, messageData.getJobInstanceId(), messageData.getIdentifier());
 
             LOG.debug("runCOBJob ===== {} : {}", messageData.getJobInstanceId(), jobInstanceId);
             return response;
@@ -179,6 +179,7 @@ public class JobRunnerImpl implements JobRunner {
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_DATE, dateOfTenant);
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_INSTANCE_ID, messageData.getIdentifier() , true);
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_COB_DATE, messageData.getCobDate());
+        jobParametersBuilder.addLong(BatchConstants.JOB_PARAM_PARENT_ID, messageData.getJobInstanceId());
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_PARAMETER, messageData.getEntityIdsAsString());
 
         final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();

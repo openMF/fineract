@@ -26,7 +26,8 @@ public class BatchConstants {
     public static final String BATCH_COB_JOB_NAME = "closeOfBusinessJob";
 
     public static final String JOB_PARAM_COB_DATE = "cobDate";
-    public static final String JOB_PARAM_INSTANCE_ID = "instance_id";
+    public static final String JOB_PARAM_PARENT_ID = "parentId";
+    public static final String JOB_PARAM_INSTANCE_ID = "instanceId";
     public static final String JOB_PARAM_PARAMETER = "parameter";
     public static final String JOB_PARAM_TENANT_ID = "tenantIdentifier";
     public static final String JOB_PARAM_TENANT_DATE = "tenantDate";

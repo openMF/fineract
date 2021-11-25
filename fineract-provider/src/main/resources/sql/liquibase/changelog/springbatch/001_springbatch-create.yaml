@@ -108,7 +108,7 @@ databaseChangeLog:
             type: VARCHAR(100)
         - column:
             name: STRING_VAL
-            type: VARCHAR(5120)
+            type: VARCHAR(250)
         - column:
             name: DATE_VAL
             type: datetime

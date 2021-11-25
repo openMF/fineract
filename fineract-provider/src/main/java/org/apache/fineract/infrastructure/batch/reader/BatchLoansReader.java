@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.service.BatchJobUtils;
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.infrastructure.security.service.TenantDetailsService;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepositoryWrapper;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
@@ -32,9 +33,11 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile(JobConstants.SPRING_BATCH_PROFILE_NAME)
 public class BatchLoansReader implements ItemReader<Long> {
 
     public static final Logger LOG = LoggerFactory.getLogger(BatchLoansReader.class);

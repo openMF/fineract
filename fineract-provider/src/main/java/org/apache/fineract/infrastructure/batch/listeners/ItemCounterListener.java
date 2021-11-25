@@ -18,14 +18,17 @@
  */
 package org.apache.fineract.infrastructure.batch.listeners;
 
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile(JobConstants.SPRING_BATCH_PROFILE_NAME)
 public class ItemCounterListener implements ChunkListener {
 
     public static final Logger LOG = LoggerFactory.getLogger(ItemCounterListener.class);

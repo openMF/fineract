@@ -22,10 +22,18 @@ import java.io.Serializable;
 
 public class MessageJobResponse implements Serializable {
     protected Long jobInstanceId;
+    protected Long parentId;
     protected String identifier;
+
+    public MessageJobResponse(Long jobInstanceId, Long parentId, String identifier) {
+        this.jobInstanceId = jobInstanceId;
+        this.parentId = parentId;
+        this.identifier = identifier;
+    }
     public MessageJobResponse(Long jobInstanceId, String identifier) {
         this.jobInstanceId = jobInstanceId;
         this.identifier = identifier;
+        this.parentId = null;
     }
     public Long getJobInstanceId() {
         return jobInstanceId;
@@ -38,5 +46,11 @@ public class MessageJobResponse implements Serializable {
     }
     public void setIdentifier(String identifier) {
         this.identifier = identifier;
+    }
+    public Long getParentId() {
+        return parentId;
+    }
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
     }
 }

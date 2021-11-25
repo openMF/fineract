@@ -22,15 +22,18 @@ import java.util.List;
 
 import org.apache.fineract.infrastructure.batch.config.BatchDestinations;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
+import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile(JobConstants.SPRING_BATCH_PROFILE_NAME)
 public class ApplyChargeForOverdueLoansWriter extends BatchWriterBase implements ItemWriter<MessageBatchDataResponse>, StepExecutionListener {
 
     public static final Logger LOG = LoggerFactory.getLogger(ApplyChargeForOverdueLoansWriter.class);

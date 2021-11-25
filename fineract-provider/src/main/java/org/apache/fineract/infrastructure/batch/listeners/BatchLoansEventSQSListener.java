@@ -52,7 +52,7 @@ public class BatchLoansEventSQSListener extends BatchEventBaseListener {
                 // LOG.debug("Tenant {}", tenant.getName());
 
                 response = jobRunnerImpl.runCOBJob(messageData);
-                LOG.debug("COB instance Id {}", response.getJobInstanceId());
+                LOG.debug("COB instance {} {}", response.getParentId(), response.getJobInstanceId());
                 return response;
             }
         } catch (Throwable th) {

@@ -87,7 +87,7 @@ public class CommandHandlerProvider implements ApplicationContextAware {
             final String[] commandHandlerBeans = this.applicationContext.getBeanNamesForAnnotation(CommandType.class);
             if (ArrayUtils.isNotEmpty(commandHandlerBeans)) {
                 for (final String commandHandlerName : commandHandlerBeans) {
-                    LOGGER.info("Register command handler '{}' ...", commandHandlerName);
+                    LOGGER.debug("Register command handler '{}' ...", commandHandlerName);
                     final CommandType commandType = this.applicationContext.findAnnotationOnBean(commandHandlerName, CommandType.class);
                     try {
                         this.registeredHandlers.put(commandType.entity() + "|" + commandType.action(), commandHandlerName);
