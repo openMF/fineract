@@ -2832,7 +2832,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         LocalDate lastChargeAppliedDate = dueDate;
         if (!scheduleDates.isEmpty()) {
             if (loan == null) {
-                loan = this.loanAssembler.assembleFrom(loanId);
+                loan = this.loanAssembler.assembleFromIdForUpdate(loanId);
                 checkClientOrGroupActive(loan);
                 existingTransactionIds.addAll(loan.findExistingTransactionIds());
                 existingReversedTransactionIds.addAll(loan.findExistingReversedTransactionIds());

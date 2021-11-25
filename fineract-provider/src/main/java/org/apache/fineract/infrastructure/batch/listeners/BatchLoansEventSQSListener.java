@@ -19,6 +19,7 @@
 package org.apache.fineract.infrastructure.batch.listeners;
 
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
+import org.apache.fineract.infrastructure.batch.data.MessageJobResponse;
 import org.apache.fineract.infrastructure.batch.service.JobRunnerImpl;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.slf4j.Logger;
@@ -41,7 +42,8 @@ public class BatchLoansEventSQSListener extends BatchEventBaseListener {
     private JobRunnerImpl jobRunnerImpl;
 
     @JmsListener(destination = "#{@batchDestinations.BatchLoansDestination}", concurrency = "#{@batchDestinations.ConcurrencyDestination}")
-    public void receivedMessage(@Payload String payload) {
+    public MessageJobResponse receivedMessage(@Payload String payload) {
+        MessageJobResponse response = null;
         try {
             // LOG.debug("receivedMessage ==== " + payload);
             MessageBatchDataRequest messageData = gson.fromJson(payload, MessageBatchDataRequest.class);
@@ -49,11 +51,13 @@ public class BatchLoansEventSQSListener extends BatchEventBaseListener {
                 setTenant(messageData.getTenantIdentifier());
                 // LOG.debug("Tenant {}", tenant.getName());
 
-                final Long jobInstanceId = jobRunnerImpl.runCOBJob(messageData);
-                LOG.debug("COB instance Id {}", jobInstanceId);
+                response = jobRunnerImpl.runCOBJob(messageData);
+                LOG.debug("COB instance Id {}", response.getJobInstanceId());
+                return response;
             }
         } catch (Throwable th) {
             LOG.error("{}, {}", th.getMessage(), payload);
         }
+        return response;
     }
 }

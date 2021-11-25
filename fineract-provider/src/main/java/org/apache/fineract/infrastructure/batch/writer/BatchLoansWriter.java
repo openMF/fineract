@@ -25,8 +25,10 @@ import javax.jms.Message;
 import javax.jms.Session;
 
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.config.BatchDestinations;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
+import org.apache.fineract.infrastructure.batch.service.BatchJobUtils;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,9 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
     @Autowired
     private JmsTemplate sqsJmsTemplate;
 
+    private String identifier;
+    private String cobDate;
+
     public BatchLoansWriter(BatchDestinations batchDestinations) {
         this.queueName = batchDestinations.getBatchLoansDestination();
         LOG.debug("Batch jobs communication using with the queue {}", queueName);
@@ -56,6 +61,8 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
     @Override
     public void beforeStep(StepExecution stepExecution) {
         initialize(stepExecution);
+        this.identifier = BatchJobUtils.getStringParam(this.parameters, BatchConstants.JOB_PARAM_INSTANCE_ID);
+        this.cobDate = BatchJobUtils.getStringParam(this.parameters, BatchConstants.JOB_PARAM_COB_DATE);
     }
 
     @Override
@@ -68,8 +75,8 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
     @Override
     public void write(List<? extends Long> items) throws Exception {
         this.processed = this.processed + items.size();
-        MessageBatchDataRequest messageData = new MessageBatchDataRequest(batchJobInstanceId, batchStepName, tenantIdentifier, items);
-        sendMessage(messageData);
+        sendMessage(new MessageBatchDataRequest(batchJobInstanceId, 
+            identifier, batchStepName, tenantIdentifier, cobDate, items));
     }
 
     private void sendMessage(final MessageBatchDataRequest message) {
@@ -77,7 +84,7 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
         // LOG.debug("Sending: {}", payload);
         // ActiveMQ
         if (profileUtils.isActiveProfile(JobConstants.SPRING_MESSAGING_PROFILE_NAME)) {
-            LOG.debug("{} shipment {} to MQ: {} items {}", batchStepName, chunkCounter++, queueName, message.getEntityIds().size());
+            LOG.debug("{} shipment {} to MQ: {} items {}", batchStepName, chunkCounter++, queueName, message.getEntityIdsQty());
             this.jmsTemplate.send(new ActiveMQQueue(this.queueName), new MessageCreator() {
 
                 @Override
@@ -87,7 +94,7 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
             });
             // SQS
         } else if (profileUtils.isActiveProfile(JobConstants.SPRING_MESSAGINGSQS_PROFILE_NAME)) {
-            LOG.debug("{} shipment {} to SQS: {} items {}", batchStepName, chunkCounter++, queueName, message.getEntityIds().size());
+            LOG.debug("{} shipment {} to SQS: {} items {}", batchStepName, chunkCounter++, queueName, message.getEntityIdsQty());
             this.sqsJmsTemplate.convertAndSend(this.queueName, payload);
         }
     }

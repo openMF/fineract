@@ -23,13 +23,24 @@ import java.util.List;
 public class MessageBatchDataRequest extends MessageBaseData {
 
     private Long jobInstanceId;
+    private String identifier;
+    private String cobDate;
     private List<? extends Long> entityIds;
 
-    public MessageBatchDataRequest(Long jobInstanceId, String batchStepName, String tenantIdentifier, List<? extends Long> entityIds) {
+    public MessageBatchDataRequest(Long jobInstanceId, String identifier, String batchStepName, 
+        String tenantIdentifier, String cobDate, List<? extends Long> entityIds) {
         this.jobInstanceId = jobInstanceId;
+        this.identifier = identifier;
+        this.cobDate = cobDate;
         this.batchStepName = batchStepName;
         this.tenantIdentifier = tenantIdentifier;
         this.entityIds = entityIds;
+    }
+
+    public Integer getEntityIdsQty() {
+        if (entityIds == null)
+            return 0;
+        return entityIds.size();
     }
 
     public List<? extends Long> getEntityIds() {
@@ -51,5 +62,21 @@ public class MessageBatchDataRequest extends MessageBaseData {
 
     public void setJobInstanceId(Long jobInstanceId) {
         this.jobInstanceId = jobInstanceId;
+    }
+
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
+    }
+
+    public String getCobDate() {
+        return cobDate;
+    }
+
+    public void setCobDate(String cobDate) {
+        this.cobDate = cobDate;
     }
 }

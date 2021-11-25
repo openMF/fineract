@@ -16,16 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.infrastructure.batch.service;
+package org.apache.fineract.infrastructure.batch.data;
 
-import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
-import org.apache.fineract.infrastructure.batch.data.MessageJobResponse;
+import java.io.Serializable;
 
-public interface JobRunner {
-
-    MessageJobResponse runChunkJob(final String cobDate, final Long limit);
-
-    MessageJobResponse runCOBJob(MessageBatchDataRequest messageData);
-
-    void stopJob(final Long jobId);
+public class MessageJobResponse implements Serializable {
+    protected Long jobInstanceId;
+    protected String identifier;
+    public MessageJobResponse(Long jobInstanceId, String identifier) {
+        this.jobInstanceId = jobInstanceId;
+        this.identifier = identifier;
+    }
+    public Long getJobInstanceId() {
+        return jobInstanceId;
+    }
+    public void setJobInstanceId(Long jobInstanceId) {
+        this.jobInstanceId = jobInstanceId;
+    }
+    public String getIdentifier() {
+        return identifier;
+    }
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
+    }
 }

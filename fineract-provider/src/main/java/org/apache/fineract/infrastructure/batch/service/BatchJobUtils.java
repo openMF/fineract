@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.security.service.TenantDetailsService;
+import org.springframework.batch.core.JobParameters;
 
 public class BatchJobUtils {
 
@@ -51,5 +52,13 @@ public class BatchJobUtils {
         str = str.replace("]", "");
         str = str.replace(", ", ",");
         return Arrays.stream(str.split(",")).map(Long::valueOf).collect(Collectors.toList());
+    }
+
+    public static String getStringParam(JobParameters parameters, String name) {
+        return parameters.getString(name);
+    }
+
+    public static Long getLongParam(JobParameters parameters, String name) {
+        return parameters.getLong(name);
     }
 }

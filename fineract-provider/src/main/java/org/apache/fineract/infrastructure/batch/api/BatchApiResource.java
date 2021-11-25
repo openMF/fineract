@@ -30,7 +30,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
+import com.google.gson.Gson;
+
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
+import org.apache.fineract.infrastructure.batch.data.MessageJobResponse;
 import org.apache.fineract.infrastructure.batch.service.JobRunner;
 import org.apache.fineract.infrastructure.core.exception.UnrecognizedQueryParamException;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
@@ -83,8 +86,9 @@ public class BatchApiResource {
             if (cobDate == null) {
                 cobDate = DateUtils.formatDate(DateUtils.getDateOfTenant(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
             }
-            Long jobInstanceId = jobRunner.runChunkJob(cobDate, limit);
-            response = Response.status(Response.Status.OK).entity("{batchJobId: " + jobInstanceId + "}").build();
+            MessageJobResponse result = jobRunner.runChunkJob(cobDate, limit);
+            final Gson gson = new Gson();
+            response = Response.status(Response.Status.OK).entity(gson.toJson(result)).build();
         } else {
             throw new UnrecognizedQueryParamException("command", commandParam);
         }
