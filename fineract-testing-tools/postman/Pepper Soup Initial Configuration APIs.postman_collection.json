@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "fbc19468-d2fd-489c-90a1-5360ac034bfb",
+		"_postman_id": "44171fba-b5a5-4ba8-88ed-1128fd7f486c",
 		"name": "Pepper Soup Initial Configuration APIs",
 		"description": "Pepper Soup Initial Configuration APIs for setting up the Pepper Soup Instance.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -2327,6 +2327,21 @@
 					"item": [
 						{
 							"name": "create charge product % late fees",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"chargeLatePercentId\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -2378,7 +2393,22 @@
 							"response": []
 						},
 						{
-							"name": "create charge product flat late fees Copy",
+							"name": "create charge product flat late fees",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"chargeLateFlatId\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -2431,6 +2461,21 @@
 						},
 						{
 							"name": "create charge product fixed returned payment",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"chargePaymentFlatId\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -2483,6 +2528,21 @@
 						},
 						{
 							"name": "create charge product snooze fee",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"chargeSnoozeId\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -2539,7 +2599,22 @@
 					"name": "gl accounts",
 					"item": [
 						{
-							"name": "COA1",
+							"name": "GL112601",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl112601\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -2591,7 +2666,22 @@
 							"response": []
 						},
 						{
-							"name": "COA2",
+							"name": "GL112603",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl112603\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -2643,7 +2733,22 @@
 							"response": []
 						},
 						{
-							"name": "COA3",
+							"name": "GL145800",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl145800\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -2695,7 +2800,22 @@
 							"response": []
 						},
 						{
-							"name": "COA4",
+							"name": "GL245000",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl245000\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -2747,7 +2867,22 @@
 							"response": []
 						},
 						{
-							"name": "COA5",
+							"name": "GL999999",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl999999\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -2799,7 +2934,22 @@
 							"response": []
 						},
 						{
-							"name": "COA6",
+							"name": "GL145023",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl145023\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -2851,7 +3001,22 @@
 							"response": []
 						},
 						{
-							"name": "COA7",
+							"name": "GL240005",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl240005\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -2903,7 +3068,22 @@
 							"response": []
 						},
 						{
-							"name": "COA8",
+							"name": "GL320000",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl320000\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -2955,7 +3135,22 @@
 							"response": []
 						},
 						{
-							"name": "COA9",
+							"name": "GL404000",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl404000\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -3007,7 +3202,22 @@
 							"response": []
 						},
 						{
-							"name": "COA10",
+							"name": "GL404007",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl404007\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -3059,7 +3269,22 @@
 							"response": []
 						},
 						{
-							"name": "COA11",
+							"name": "GL404008",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl404008\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -3111,7 +3336,22 @@
 							"response": []
 						},
 						{
-							"name": "COA12",
+							"name": "GL744007",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl744007\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -3163,7 +3403,22 @@
 							"response": []
 						},
 						{
-							"name": "COA13",
+							"name": "GL744037",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"gl744037\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -3221,6 +3476,21 @@
 					"item": [
 						{
 							"name": "create loan product",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"loanProductId\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -3257,7 +3527,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"currencyCode\": \"EUR\",\n    \"includeInBorrowerCycle\": \"false\",\n    \"useBorrowerCycle\": false,\n    \"digitsAfterDecimal\": \"2\",\n    \"inMultiplesOf\": \"0\",\n    \"repaymentFrequencyType\": 0,\n    \"interestRateFrequencyType\": 2,\n    \"amortizationType\": 1,\n    \"interestType\": 0,\n    \"interestCalculationPeriodType\": 1,\n    \"transactionProcessingStrategyId\": 1,\n    \"principalVariationsForBorrowerCycle\": [],\n    \"interestRateVariationsForBorrowerCycle\": [],\n    \"numberOfRepaymentVariationsForBorrowerCycle\": [],\n    \"multiDisburseLoan\": true,\n    \"accountingRule\": \"1\",\n    \"daysInYearType\": 1,\n    \"daysInMonthType\": 1,\n    \"isInterestRecalculationEnabled\": true,\n    \"interestRecalculationCompoundingMethod\": 0,\n    \"rescheduleStrategyMethod\": 2,\n    \"preClosureInterestCalculationStrategy\": 1,\n    \"isLinkedToFloatingInterestRates\": false,\n    \"allowVariableInstallments\": false,\n    \"name\": \"APP POC\",\n    \"shortName\": \"APP\",\n    \"description\": \"non-interest bearing product\",\n    \"installmentAmountInMultiplesOf\": \"1\",\n    \"minPrincipal\": \"100\",\n    \"principal\": \"1000\",\n    \"maxPrincipal\": \"10000\",\n    \"numberOfRepayments\": \"1\",\n    \"repaymentEvery\": \"30\",\n    \"minimumDaysBetweenDisbursalAndFirstRepayment\": \"30\",\n    \"allowPartialPeriodInterestCalcualtion\": true,\n    \"canDefineInstallmentAmount\": true,\n    \"principalThresholdForLastInstallment\": \"50\",\n    \"recalculationRestFrequencyType\": 1,\n    \"maxTrancheCount\": \"10\",\n    \"outstandingLoanBalance\": \"10000\",\n    \"paymentChannelToFundSourceMappings\": [],\n    \"feeToIncomeAccountMappings\": [],\n    \"penaltyToIncomeAccountMappings\": [],\n    \"charges\": [\n        {\n            \"id\": 1\n        },\n        {\n            \"id\": 2\n        }\n    ],\n    \"allowAttributeOverrides\": {\n        \"amortizationType\": true,\n        \"interestType\": true,\n        \"transactionProcessingStrategyId\": true,\n        \"interestCalculationPeriodType\": true,\n        \"inArrearsTolerance\": true,\n        \"repaymentEvery\": true,\n        \"graceOnPrincipalAndInterestPayment\": true,\n        \"graceOnArrearsAgeing\": true\n    },\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\",\n    \"rates\": [],\n    \"interestRatePerPeriod\": 0\n}"
+									"raw": "{\n    \"currencyCode\": \"EUR\",\n    \"includeInBorrowerCycle\": \"false\",\n    \"useBorrowerCycle\": false,\n    \"digitsAfterDecimal\": \"2\",\n    \"inMultiplesOf\": \"0\",\n    \"repaymentFrequencyType\": 0,\n    \"interestRateFrequencyType\": 2,\n    \"amortizationType\": 1,\n    \"interestType\": 0,\n    \"interestCalculationPeriodType\": 1,\n    \"transactionProcessingStrategyId\": 1,\n    \"principalVariationsForBorrowerCycle\": [],\n    \"interestRateVariationsForBorrowerCycle\": [],\n    \"numberOfRepaymentVariationsForBorrowerCycle\": [],\n    \"multiDisburseLoan\": true,\n    \"accountingRule\": \"1\",\n    \"daysInYearType\": 1,\n    \"daysInMonthType\": 1,\n    \"isInterestRecalculationEnabled\": true,\n    \"interestRecalculationCompoundingMethod\": 0,\n    \"rescheduleStrategyMethod\": 2,\n    \"preClosureInterestCalculationStrategy\": 1,\n    \"isLinkedToFloatingInterestRates\": false,\n    \"allowVariableInstallments\": false,\n    \"name\": \"APP POC\",\n    \"shortName\": \"APP\",\n    \"description\": \"non-interest bearing product\",\n    \"installmentAmountInMultiplesOf\": \"1\",\n    \"minPrincipal\": \"100\",\n    \"principal\": \"1000\",\n    \"maxPrincipal\": \"10000\",\n    \"numberOfRepayments\": \"1\",\n    \"repaymentEvery\": \"30\",\n    \"minimumDaysBetweenDisbursalAndFirstRepayment\": \"30\",\n    \"allowPartialPeriodInterestCalcualtion\": true,\n    \"canDefineInstallmentAmount\": true,\n    \"principalThresholdForLastInstallment\": \"50\",\n    \"recalculationRestFrequencyType\": 1,\n    \"maxTrancheCount\": \"10\",\n    \"outstandingLoanBalance\": \"10000\",\n    \"paymentChannelToFundSourceMappings\": [],\n    \"feeToIncomeAccountMappings\": [],\n    \"penaltyToIncomeAccountMappings\": [],\n    \"charges\": [\n        {\n            \"id\": {{chargeLatePercentId}}\n        },\n        {\n            \"id\": {{chargeLateFlatId}}\n        }\n    ],\n    \"allowAttributeOverrides\": {\n        \"amortizationType\": true,\n        \"interestType\": true,\n        \"transactionProcessingStrategyId\": true,\n        \"interestCalculationPeriodType\": true,\n        \"inArrearsTolerance\": true,\n        \"repaymentEvery\": true,\n        \"graceOnPrincipalAndInterestPayment\": true,\n        \"graceOnArrearsAgeing\": true\n    },\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\",\n    \"rates\": [],\n    \"interestRatePerPeriod\": 0\n}"
 								},
 								"url": {
 									"raw": "{{url}}/loanproducts",
@@ -3283,6 +3553,21 @@
 					"item": [
 						{
 							"name": "create test customer",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function() {",
+											"    pm.expect(pm.response.code).to.be.oneOf(200, 201, 202);",
+											"    pm.environment.set(\"clientId\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -3319,7 +3604,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"address\": [],\n    \"familyMembers\": [],\n    \"officeId\": 1,\n    \"legalFormId\": 1,\n    \"firstname\": \"{{$randomFirstName}}\",\n    \"lastname\": \"{{$randomLastName}}\",\n    \"mobileNo\": \"{{$randomPhoneNumber}}\",\n    \"genderId\": 36,\n    \"active\": true,\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\",\n    \"activationDate\": \"01 September 2021\",\n    \"submittedOnDate\": \"01 September 2021\",\n    \"dateOfBirth\": \"11 March 1991\",\n    \"savingsProductId\": null,\n    \"externalId\":{{$guid}}\n}"
+									"raw": "{\n    \"address\": [],\n    \"familyMembers\": [],\n    \"officeId\": {{officeId}},\n    \"legalFormId\": 1,\n    \"firstname\": \"{{$randomFirstName}}\",\n    \"lastname\": \"{{$randomLastName}}\",\n    \"mobileNo\": \"{{$randomPhoneNumber}}\",\n    \"genderId\": 36,\n    \"active\": true,\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\",\n    \"activationDate\": \"01 September 2021\",\n    \"submittedOnDate\": \"01 September 2021\",\n    \"dateOfBirth\": \"11 March 1991\",\n    \"savingsProductId\": null,\n    \"externalId\":{{$guid}}\n}"
 								},
 								"url": {
 									"raw": "{{url}}/clients",
@@ -3454,6 +3739,21 @@
 					"item": [
 						{
 							"name": "create test loan",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"loanId\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -3490,7 +3790,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"clientId\": \"1\",\n    \"productId\": 1,\n    \"disbursementData\": [\n        {\n            \"expectedDisbursementDate\": \"03 September 2021\",\n            \"principal\": \"100\"\n        },\n        {\n            \"expectedDisbursementDate\": \"04 September 2021\",\n            \"principal\": \"100\"\n        }\n    ],\n    \"principal\": 1000,\n    \"loanTermFrequency\": 30,\n    \"loanTermFrequencyType\": 0,\n    \"numberOfRepayments\": 1,\n    \"repaymentEvery\": 30,\n    \"repaymentFrequencyType\": 0,\n    \"interestRatePerPeriod\": 0,\n    \"amortizationType\": 1,\n    \"isEqualAmortization\": false,\n    \"interestType\": 0,\n    \"interestCalculationPeriodType\": 1,\n    \"allowPartialPeriodInterestCalcualtion\": true,\n    \"transactionProcessingStrategyId\": 1,\n    \"maxOutstandingLoanBalance\": 10000,\n    \"rates\": [],\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\",\n    \"loanType\": \"individual\",\n    \"expectedDisbursementDate\": \"03 September 2021\",\n    \"submittedOnDate\": \"03 September 2021\"\n}"
+									"raw": "{\n    \"clientId\": \"{{clientId}}\",\n    \"productId\": {{loanProductId}},\n    \"disbursementData\": [\n        {\n            \"expectedDisbursementDate\": \"03 September 2021\",\n            \"principal\": \"100\"\n        },\n        {\n            \"expectedDisbursementDate\": \"04 September 2021\",\n            \"principal\": \"100\"\n        }\n    ],\n    \"principal\": 1000,\n    \"loanTermFrequency\": 30,\n    \"loanTermFrequencyType\": 0,\n    \"numberOfRepayments\": 1,\n    \"repaymentEvery\": 30,\n    \"repaymentFrequencyType\": 0,\n    \"interestRatePerPeriod\": 0,\n    \"amortizationType\": 1,\n    \"isEqualAmortization\": false,\n    \"interestType\": 0,\n    \"interestCalculationPeriodType\": 1,\n    \"allowPartialPeriodInterestCalcualtion\": true,\n    \"transactionProcessingStrategyId\": 1,\n    \"maxOutstandingLoanBalance\": 10000,\n    \"rates\": [],\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\",\n    \"loanType\": \"individual\",\n    \"expectedDisbursementDate\": \"03 September 2021\",\n    \"submittedOnDate\": \"03 September 2021\"\n}"
 								},
 								"url": {
 									"raw": "{{url}}/loans",
@@ -3545,13 +3845,13 @@
 									"raw": "{\n    \"approvedOnDate\": \"03 September 2021\",\n    \"approvedLoanAmount\": 1000,\n    \"expectedDisbursementDate\": \"03 September 2021\",\n    \"disbursementData\": [\n        {\n            \"principal\": 100,\n            \"expectedDisbursementDate\": \"03 September 2021\"\n        },\n        {\n            \"principal\": 100,\n            \"expectedDisbursementDate\": \"04 September 2021\"\n        }\n    ],\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\"\n}"
 								},
 								"url": {
-									"raw": "{{url}}/loans/1?command=approve",
+									"raw": "{{url}}/loans/{{loanId}}?command=approve",
 									"host": [
 										"{{url}}"
 									],
 									"path": [
 										"loans",
-										"1"
+										"{{loanId}}"
 									],
 									"query": [
 										{
@@ -3565,6 +3865,21 @@
 						},
 						{
 							"name": "disburse test loan",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"disburseId\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -3604,13 +3919,13 @@
 									"raw": "{\n    \"actualDisbursementDate\": \"03 September 2021\",\n    \"paymentTypeId\": 1,\n    \"transactionAmount\": 100,\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\"\n}"
 								},
 								"url": {
-									"raw": "{{url}}/loans/1?command=disburse",
+									"raw": "{{url}}/loans/{{loanId}}?command=disburse",
 									"host": [
 										"{{url}}"
 									],
 									"path": [
 										"loans",
-										"1"
+										"{{loanId}}"
 									],
 									"query": [
 										{
@@ -3624,6 +3939,21 @@
 						},
 						{
 							"name": "create autopay test data",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"autopayId\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -3663,14 +3993,14 @@
 									"raw": "{\n    \"financial_instrument_cd_financial_instruments\": 19,\n    \"date_of_payment\": \"15 October 2021\",\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\"\n}"
 								},
 								"url": {
-									"raw": "{{url}}/datatables/dt_autopay_details/1?genericResultSet=true",
+									"raw": "{{url}}/datatables/dt_autopay_details/{{loanId}}?genericResultSet=true",
 									"host": [
 										"{{url}}"
 									],
 									"path": [
 										"datatables",
 										"dt_autopay_details",
-										"1"
+										"{{loanId}}"
 									],
 									"query": [
 										{
@@ -3684,6 +4014,21 @@
 						},
 						{
 							"name": "create scheduled payment test data",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"schedulepayId\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -3723,14 +4068,14 @@
 									"raw": "{\n    \"external_reference_id\": \"123\",\n    \"amount\": \"200\",\n    \"transaction_type_cd_transaction_type\": 21,\n    \"scheduled_date\": \"15 October 2021\",\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\"\n}"
 								},
 								"url": {
-									"raw": "{{url}}/datatables/dt_schedule_payments/1?genericResultSet=true",
+									"raw": "{{url}}/datatables/dt_schedule_payments/{{loanId}}?genericResultSet=true",
 									"host": [
 										"{{url}}"
 									],
 									"path": [
 										"datatables",
 										"dt_schedule_payments",
-										"1"
+										"{{loanId}}"
 									],
 									"query": [
 										{
@@ -3749,6 +4094,21 @@
 					"item": [
 						{
 							"name": "create test repayment data",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);",
+											"pm.test(\"Successful POST request\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+											"    pm.environment.set(\"transactionId\", jsonData.resourceId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
 							"request": {
 								"auth": {
 									"type": "basic",
@@ -3788,13 +4148,13 @@
 									"raw": "{\n    \"paymentTypeId\": 2,\n    \"transactionAmount\": \"200\",\n    \"transactionDate\": \"15 October 2021\",\n    \"locale\": \"en\",\n    \"dateFormat\": \"dd MMMM yyyy\"\n}"
 								},
 								"url": {
-									"raw": "{{url}}/loans/1/transactions?command=repayment",
+									"raw": "{{url}}/loans/{{loanId}}/transactions?command=repayment",
 									"host": [
 										"{{url}}"
 									],
 									"path": [
 										"loans",
-										"1",
+										"{{loanId}}",
 										"transactions"
 									],
 									"query": [
@@ -3839,13 +4199,13 @@
 									}
 								],
 								"url": {
-									"raw": "{{url}}/loans/1",
+									"raw": "{{url}}/loans/{{loanId}}",
 									"host": [
 										"{{url}}"
 									],
 									"path": [
 										"loans",
-										"1"
+										"{{loanId}}"
 									]
 								}
 							},
