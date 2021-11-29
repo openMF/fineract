@@ -1,0 +1,3090 @@
+{
+	"info": {
+		"_postman_id": "f6ee2a90-2a5f-4bcb-b072-d1da490d9218",
+		"name": "PepperSoupGETTest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "accountingrules/template",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/accountingrules/template",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"accountingrules",
+						"template"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "accountingrules",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/accountingrules",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"accountingrules"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "accountingrules/{{accountingRuleId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/accountingrules/{{accountingRuleId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"accountingrules",
+						"{{accountingRuleId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "accountnumberformats/template",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/accountnumberformats/template",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"accountnumberformats",
+						"template"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "accountnumberformats",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/accountnumberformats",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"accountnumberformats"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "accountnumberformats/{{accountNumberFormatId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/accountnumberformats/{{accountNumberFormatId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"accountnumberformats",
+						"{{accountNumberFormatId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "charges/template",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/charges/template",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"charges",
+						"template"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "charges",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/charges",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"charges"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "charges/{{chargeLatePercentId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/charges/{{chargeLatePercentId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"charges",
+						"{{chargeLatePercentId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "clients/template",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/clients/template",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"clients",
+						"template"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "clients",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/clients",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"clients"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "clients/{{clientId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/clients/{{clientId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"clients",
+						"{{clientId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "clients/addresses/template",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/clients/addresses/template",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"clients",
+						"addresses",
+						"template"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "clients/{{clientId}}/addresses",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/clients/{{clientId}}/addresses?type=0",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"clients",
+						"{{clientId}}",
+						"addresses"
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "clients/{{clientId}}/charges/template",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/clients/{{clientId}}/charges/template",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"clients",
+						"{{clientId}}",
+						"charges",
+						"template"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "clients/{{clientId}}/charges",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/clients/{{clientId}}/charges",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"clients",
+						"{{clientId}}",
+						"charges"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "clients/{{clientId}}/charges/{{clientChargeId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/clients/{{clientId}}/charges/{{clientChargeId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"clients",
+						"{{clientId}}",
+						"charges",
+						"{{clientChargeId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "clients/{{clientId}}/charges/accounts",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/clients/{{clientId}}/accounts",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"clients",
+						"{{clientId}}",
+						"accounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "clients/{{clientId}}/charges/obligeedetails",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/clients/{{clientId}}/obligeedetails",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"clients",
+						"{{clientId}}",
+						"obligeedetails"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "clients/{{clientId}}/charges/transactions",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/clients/{{clientId}}/transactions",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"clients",
+						"{{clientId}}",
+						"transactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "clients/{{clientId}}/charges/transactions/{{clientTransactionId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/clients/{{clientId}}/transactions/{{clientTransactionId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"clients",
+						"{{clientId}}",
+						"transactions",
+						"{{clientTransactionId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "codes",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/codes",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"codes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "codes/{{codeId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/codes/{{codeId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"codes",
+						"{{codeId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "codes/{{codeId}}/codevalues",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/codes/{{codeId}}/codevalues",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"codes",
+						"{{codeId}}",
+						"codevalues"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "currencies",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/currencies",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"currencies"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "datatables",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/datatables",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"datatables"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "datatables?apptable=m_loan",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/datatables?apptable=m_loan",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"datatables"
+					],
+					"query": [
+						{
+							"key": "apptable",
+							"value": "m_loan"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "datatables/dt_autopay_details",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/datatables/dt_autopay_details",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"datatables",
+						"dt_autopay_details"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "datatables/dt_autopay_details/{{loanId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/datatables/dt_autopay_details/{{loanId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"datatables",
+						"dt_autopay_details",
+						"{{loanId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "datatables/dt_autopay_details/{{loanId}}//{{autopayId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/datatables/dt_autopay_details/{{loanId}}/{{autopayId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"datatables",
+						"dt_autopay_details",
+						"{{loanId}}",
+						"{{autopayId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "glaccounts/template",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/glaccounts/template",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"glaccounts",
+						"template"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "glaccounts",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/glaccounts",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"glaccounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "glaccounts/{{gl112601}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/glaccounts/{{gl112601}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"glaccounts",
+						"{{gl112601}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "journalentries?loanId={{loanId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/journalentries?loanId={{loanId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"journalentries"
+					],
+					"query": [
+						{
+							"key": "loanId",
+							"value": "{{loanId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "journalentries/provisioning",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/journalentries/provisioning",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"journalentries",
+						"provisioning"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "journalentries/openingbalance?officeId={{officeId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/journalentries/openingbalance?officeId={{officeId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"journalentries",
+						"openingbalance"
+					],
+					"query": [
+						{
+							"key": "officeId",
+							"value": "{{officeId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loans/template?productId={{loanProductId}}&templateType=individual",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loans/template?productId={{loanProductId}}&templateType=individual",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loans",
+						"template"
+					],
+					"query": [
+						{
+							"key": "productId",
+							"value": "{{loanProductId}}"
+						},
+						{
+							"key": "templateType",
+							"value": "individual"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loans",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loans",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loans"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loans/repayments/downloadtemplate?dateFormat=dd MMMM yyyy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loans/repayments/downloadtemplate?dateFormat=dd MMMM yyyy",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loans",
+						"repayments",
+						"downloadtemplate"
+					],
+					"query": [
+						{
+							"key": "dateFormat",
+							"value": "dd MMMM yyyy"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loans/{{loanId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loans/{{loanId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loans",
+						"{{loanId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loans/{{loanId}}/charges/template",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loans/{{loanId}}/charges/template",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loans",
+						"{{loanId}}",
+						"charges",
+						"template"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loans/{{loanId}}/charges",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loans/{{loanId}}/charges",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loans",
+						"{{loanId}}",
+						"charges"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loans/{{loanId}}/charges/{{chargeLatePercentId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loans/{{loanId}}/charges/{{chargeLatePercentId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loans",
+						"{{loanId}}",
+						"charges",
+						"{{chargeLatePercentId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loans/{{loanId}}/disbursements/{{disburseId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loans/{{loanId}}/disbursements/{{disburseId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loans",
+						"{{loanId}}",
+						"disbursements",
+						"{{disburseId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loans/{{loanId}}/template?templateType=approval",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loans/{{loanId}}/template?templateType=approval",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loans",
+						"{{loanId}}",
+						"template"
+					],
+					"query": [
+						{
+							"key": "templateType",
+							"value": "approval"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loans/{{loanId}}/transactions/template?command=repayment",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loans/{{loanId}}/transactions/template?command=repayment",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loans",
+						"{{loanId}}",
+						"transactions",
+						"template"
+					],
+					"query": [
+						{
+							"key": "command",
+							"value": "repayment"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "rescheduleloans/template",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/rescheduleloans/template",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"rescheduleloans",
+						"template"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "rescheduleloans",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/rescheduleloans",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"rescheduleloans"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "rescheduleloans/{{rescheduleId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/rescheduleloans/{{rescheduleId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"rescheduleloans",
+						"{{rescheduleId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loanproducts/template",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loanproducts/template",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loanproducts",
+						"template"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loanproducts",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loanproducts",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loanproducts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "loanproducts/{{loanProductId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/loanproducts/{{loanProductId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"loanproducts",
+						"{{loanProductId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "roles",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/roles",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"roles"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "roles/{{roleId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/roles/{{roleId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"roles",
+						"{{roleId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "role/{{roleId}}/permissions",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/roles/{{roleId}}/permissions",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"roles",
+						"{{roleId}}",
+						"permissions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "userdetails",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/userdetails",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"userdetails"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "userdetail/template",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/userdetails/template",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"userdetails",
+						"template"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "userdetail/{{userId}}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "mifos",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Fineract-Platform-TenantId",
+						"value": "{{tenantId}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/userdetails/{{userId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"userdetails",
+						"{{userId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

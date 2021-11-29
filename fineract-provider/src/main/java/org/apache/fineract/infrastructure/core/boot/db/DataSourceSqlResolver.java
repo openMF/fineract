@@ -42,16 +42,7 @@ import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABL
 import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_DROP_FK;
 import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_DROP_INDEX;
 import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_DROP_UK;
-import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.CAST;
-import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.CURDATE;
-import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATE;
-import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATEADD;
-import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATEDIFF;
-import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATESUB;
-import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.GROUP_CONCAT;
-import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.LAST_INSERT_ID;
-import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.SCHEMA;
-import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.TIME;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.*;
 
 @Component
 public class DataSourceSqlResolver {
@@ -121,6 +112,10 @@ public class DataSourceSqlResolver {
         return DATEDIFF.formatSql(getDialect(), date1, date2);
     }
 
+    public String formatDateDiffMonth(@NotNull String date1, @NotNull String date2) {
+        return DATEDIFFMONTH.formatSql(getDialect(), date1, date2);
+    }
+
     public String formatCast(@NotNull String value, @NotNull String type) {
         return CAST.formatSql(getDialect(), value, type);
     }
@@ -135,6 +130,14 @@ public class DataSourceSqlResolver {
 
     public String formatGroupConcat(@NotNull String column) {
         return GROUP_CONCAT.formatSql(getDialect(), column);
+    }
+
+    public String formatSubstring(@NotNull String value, int start, int length) {
+        return SUBSTRING.formatSql(getDialect(), value, String.valueOf(start), String.valueOf(length));
+    }
+
+    public String formatSubstring(@NotNull String value, int start) {
+        return SUBSTRING.formatSql(getDialect(), value, String.valueOf(start));
     }
 
     // --- definitions ---
@@ -314,15 +317,18 @@ public class DataSourceSqlResolver {
 
     @NotNull
     public String formatDefaultValue(@NotNull JdbcJavaType columnType, Boolean nullable, Object defValue) {
-        if (defValue == NO_DEF_VALUE)
+        if (defValue == NO_DEF_VALUE) {
             return "";
+        }
 
         if (defValue == null) {
-            if (nullable)
+            if (nullable) {
                 return "NULL";
+            }
         }
-        else
+        else {
             return formatJdbcValue(columnType, defValue);
+        }
         return null;
     }
 
@@ -331,8 +337,9 @@ public class DataSourceSqlResolver {
     }
 
     public static String toDefinition(DataSourceDialect dialect, String dbName) {
-        if (dbName == null)
+        if (dbName == null) {
             return null;
+        }
         char esc = getDefinitionChar(dialect);
         return esc + dbName + esc;
     }
@@ -354,6 +361,19 @@ public class DataSourceSqlResolver {
         AFTER,
         LAST,
         ;
+    }
+
+    public enum DateUnit {
+        MICROSECOND,
+        MILLISECOND,
+        SECOND,
+        MINUTE,
+        HOUR,
+        DAY,
+        WEEK,
+        MONTH,
+        QUARTER,
+        YEAR
     }
 
     public static class ColumnPosition {
@@ -380,18 +400,5 @@ public class DataSourceSqlResolver {
         public static ColumnPosition after(@NotNull DataSourceDialect dialect, @NotNull String after) {
             return new ColumnPosition(dialect, ColumnPositionType.AFTER, after);
         }
-    }
-
-    public enum DateUnit {
-        MICROSECOND,
-        MILLISECOND,
-        SECOND,
-        MINUTE,
-        HOUR,
-        DAY,
-        WEEK,
-        MONTH,
-        QUARTER,
-        YEAR
     }
 }

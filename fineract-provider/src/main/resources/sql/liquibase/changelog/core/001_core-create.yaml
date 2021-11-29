@@ -11177,12 +11177,12 @@ databaseChangeLog:
               - column:
                   constraints:
                     nullable: false
-                  name: parameter_displayType
+                  name: parameter_display_type
                   type: VARCHAR(45)
               - column:
                   constraints:
                     nullable: false
-                  name: parameter_FormatType
+                  name: parameter_format_type
                   type: VARCHAR(10)
               - column:
                   constraints:
@@ -21010,4 +21010,3 @@ databaseChangeLog:
             referencedColumnNames: id
             referencedTableName: stretchy_report
             validate: true
-

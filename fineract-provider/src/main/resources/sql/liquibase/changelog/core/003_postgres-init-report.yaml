@@ -17,7 +17,7 @@
 # under the License.
 #
 databaseChangeLog:
-  - context: core_db AND postgres
+  - context: core_db and postgres
   - changeSet:
       id: 003_postgres-init-report-1
       author: fineract (generated)
@@ -1180,7 +1180,7 @@ databaseChangeLog:
                   name: parameter_display_type
                   value: none
               - column:
-                  name: parameter_FormatType
+                  name: parameter_format_type
                   value: number
               - column:
                   name: parameter_default
@@ -1215,7 +1215,7 @@ databaseChangeLog:
                   name: parameter_display_type
                   value: n/a
               - column:
-                  name: parameter_FormatType
+                  name: parameter_format_type
                   value: n/a
               - column:
                   name: parameter_default
@@ -7986,15 +7986,15 @@ databaseChangeLog:
               - column:
                   name: report_sql
                   value: select  ml.id as loanId,  COALESCE(mc.id,mc2.id) as id,  COALESCE(mc.firstname,mc2.firstname)
-              as firstname,  \nCOALESCE(mc.middlename,mc2.middlename,(\'\')) as middlename,
-              COALESCE(mc.lastname,mc2.lastname) as lastname,  \nCOALESCE(mc.display_name,mc2.display_name) as display_name,
-              COALESCE(mc.status_enum,mc2.status_enum) as status_enum, \nCOALESCE(mc.mobile_no,mc2.mobile_no) as mobile_no,
-              COALESCE(mg.office_id,mc2.office_id) as office_id, COALESCE(mg.staff_id,mc2.staff_id) as staff_id, \n
-              mg.id as group_id, mg.display_name as group_name, COALESCE(mc.email_address,mc2.email_address)
-              as emailAddress\nfrom m_loan ml left join m_group mg on mg.id = ml.group_id \n
-              left join m_group_client mgc on mgc.group_id = mg.id \nleft join m_client mc on mc.id = mgc.client_id \n
-              left join m_client mc2 on mc2.id = ml.client_id\nWHERE (mc.status_enum = 300 or mc2.status_enum = 300)
-              and (mc.email_address is not null or mc2.email_address is not null) and ml.id = ${loanId}\n
+                    as firstname,  \nCOALESCE(mc.middlename,mc2.middlename,(\'\')) as middlename,
+                    COALESCE(mc.lastname,mc2.lastname) as lastname,  \nCOALESCE(mc.display_name,mc2.display_name) as display_name,
+                    COALESCE(mc.status_enum,mc2.status_enum) as status_enum, \nCOALESCE(mc.mobile_no,mc2.mobile_no) as mobile_no,
+                    COALESCE(mg.office_id,mc2.office_id) as office_id, COALESCE(mg.staff_id,mc2.staff_id) as staff_id, \n
+                    mg.id as group_id, mg.display_name as group_name, COALESCE(mc.email_address,mc2.email_address)
+                    as emailAddress\nfrom m_loan ml left join m_group mg on mg.id = ml.group_id \n
+                    left join m_group_client mgc on mgc.group_id = mg.id \nleft join m_client mc on mc.id = mgc.client_id \n
+                    left join m_client mc2 on mc2.id = ml.client_id\nWHERE (mc.status_enum = 300 or mc2.status_enum = 300)
+                    and (mc.email_address is not null or mc2.email_address is not null) and ml.id = ${loanId}\n
               - column:
                   name: description
                   value: Loan and client data of approved loan
@@ -8027,15 +8027,15 @@ databaseChangeLog:
               - column:
                   name: report_sql
                   value: select  ml.id as loanId,  COALESCE(mc.id,mc2.id) as id,  COALESCE(mc.firstname,mc2.firstname)
-              as firstname,  \nCOALESCE(mc.middlename,mc2.middlename,(\'\')) as middlename,
-              COALESCE(mc.lastname,mc2.lastname) as lastname,  \nCOALESCE(mc.display_name,mc2.display_name) as display_name,
-              COALESCE(mc.status_enum,mc2.status_enum) as status_enum, \nCOALESCE(mc.mobile_no,mc2.mobile_no) as mobile_no,
-              COALESCE(mg.office_id,mc2.office_id) as office_id, COALESCE(mg.staff_id,mc2.staff_id) as staff_id, \n
-              mg.id as group_id, mg.display_name as group_name, COALESCE(mc.email_address,mc2.email_address)
-              as emailAddress\nfrom m_loan ml left join m_group mg on mg.id = ml.group_id \n
-              left join m_group_client mgc on mgc.group_id = mg.id \nleft join m_client mc on mc.id = mgc.client_id \n
-              left join m_client mc2 on mc2.id = ml.client_id\nWHERE (mc.status_enum = 300 or mc2.status_enum = 300) and
-              (mc.email_address is not null or mc2.email_address is not null) and ml.id = ${loanId}\n'
+                    as firstname,  \nCOALESCE(mc.middlename,mc2.middlename,(\'\')) as middlename,
+                    COALESCE(mc.lastname,mc2.lastname) as lastname,  \nCOALESCE(mc.display_name,mc2.display_name) as display_name,
+                    COALESCE(mc.status_enum,mc2.status_enum) as status_enum, \nCOALESCE(mc.mobile_no,mc2.mobile_no) as mobile_no,
+                    COALESCE(mg.office_id,mc2.office_id) as office_id, COALESCE(mg.staff_id,mc2.staff_id) as staff_id, \n
+                    mg.id as group_id, mg.display_name as group_name, COALESCE(mc.email_address,mc2.email_address)
+                    as emailAddress\nfrom m_loan ml left join m_group mg on mg.id = ml.group_id \n
+                    left join m_group_client mgc on mgc.group_id = mg.id \nleft join m_client mc on mc.id = mgc.client_id \n
+                    left join m_client mc2 on mc2.id = ml.client_id\nWHERE (mc.status_enum = 300 or mc2.status_enum = 300) and
+                    (mc.email_address is not null or mc2.email_address is not null) and ml.id = ${loanId}\n'
               - column:
                   name: description
                   value: Loan and client data of rejected loan
@@ -8068,17 +8068,17 @@ databaseChangeLog:
               - column:
                   name: report_sql
                   value: select  ml.id as loanId,  COALESCE(mc.id,mc2.id) as id,  COALESCE(mc.firstname,mc2.firstname)
-                  as firstname,  \nCOALESCE(mc.middlename,mc2.middlename,(\'\')) as middlename,
-                  COALESCE(mc.lastname,mc2.lastname) as lastname,  \nCOALESCE(mc.display_name,mc2.display_name)
-                  as display_name,  COALESCE(mc.status_enum,mc2.status_enum) as status_enum, \n
-                  COALESCE(mc.mobile_no,mc2.mobile_no) as mobile_no, COALESCE(mg.office_id,mc2.office_id) as office_id,
-                  COALESCE(mg.staff_id,mc2.staff_id) as staff_id, \nmg.id as group_id, mg.display_name as group_name,
-                  COALESCE(mc.email_address,mc2.email_address) as emailAddress, lt.amount as repaymentAmount \n
-                  from m_loan_transaction lt join m_loan ml on ml.id=lt.loan_id
-                  left join m_group mg on mg.id = ml.group_id \nleft join m_group_client mgc on mgc.group_id = mg.id \n
-                  left join m_client mc on mc.id = mgc.client_id \nleft join m_client mc2 on mc2.id = ml.client_id\n
-                  WHERE (mc.status_enum = 300 or mc2.status_enum = 300) and (mc.email_address is not null
-                  or mc2.email_address is not null) and ml.id = ${loanId} and lt.id = ${loanTransactionId}\n
+                    as firstname,  \nCOALESCE(mc.middlename,mc2.middlename,(\'\')) as middlename,
+                    COALESCE(mc.lastname,mc2.lastname) as lastname,  \nCOALESCE(mc.display_name,mc2.display_name)
+                    as display_name,  COALESCE(mc.status_enum,mc2.status_enum) as status_enum, \n
+                    COALESCE(mc.mobile_no,mc2.mobile_no) as mobile_no, COALESCE(mg.office_id,mc2.office_id) as office_id,
+                    COALESCE(mg.staff_id,mc2.staff_id) as staff_id, \nmg.id as group_id, mg.display_name as group_name,
+                    COALESCE(mc.email_address,mc2.email_address) as emailAddress, lt.amount as repaymentAmount \n
+                    from m_loan_transaction lt join m_loan ml on ml.id=lt.loan_id
+                    left join m_group mg on mg.id = ml.group_id \nleft join m_group_client mgc on mgc.group_id = mg.id \n
+                    left join m_client mc on mc.id = mgc.client_id \nleft join m_client mc2 on mc2.id = ml.client_id\n
+                    WHERE (mc.status_enum = 300 or mc2.status_enum = 300) and (mc.email_address is not null
+                    or mc2.email_address is not null) and ml.id = ${loanId} and lt.id = ${loanTransactionId}\n
               - column:
                   name: description
                   value: Loan and client data of loan repayment

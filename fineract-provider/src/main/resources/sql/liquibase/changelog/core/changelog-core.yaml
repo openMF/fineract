@@ -22,10 +22,12 @@ databaseChangeLog:
       file: sql/liquibase/changelog/core/001_core-create.yaml
   - include:
       file: sql/liquibase/changelog/core/002_core-init.yaml
-#  - include:
-#      file: sql/liquibase/changelog/core/003_mysql-init-report.yaml
-#  - include:
-#      file: sql/liquibase/changelog/core/003_postgres-init-report.yaml
+  - include:
+      context: mysql
+      file: sql/liquibase/changelog/core/003_mysql-init-report.yaml
+  - include:
+      context: postgres
+      file: sql/liquibase/changelog/core/003_postgres-init-report.yaml
   - include:
       file: sql/liquibase/changelog/core/004_core-update.yaml
   - include:
@@ -33,5 +35,3 @@ databaseChangeLog:
   - includeAll:
       context: sampledata
       path: sql/liquibase/changelog/core/sampledata
-
-

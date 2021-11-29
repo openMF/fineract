@@ -329,18 +329,18 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             if (StringUtils.isNotBlank(searchParameters.getExternalId())) {
                 whereBuilder.append(" and l.external_id = ?");
                 extraCriterias.add(searchParameters.getExternalId());
-                arrayPos = arrayPos + 1;
+                arrayPos++;
             }
             if (searchParameters.getOfficeId() != null) {
-                whereBuilder.append("and c.office_id =?");
+                whereBuilder.append(" and c.office_id =?");
                 extraCriterias.add(searchParameters.getOfficeId());
-                arrayPos = arrayPos + 1;
+                arrayPos++;
             }
 
             if (StringUtils.isNotBlank(searchParameters.getAccountNo())) {
                 whereBuilder.append(" and l.account_no = ?");
                 extraCriterias.add(searchParameters.getAccountNo());
-                arrayPos = arrayPos + 1;
+                arrayPos++;
             }
 
             sqlBuilder.append(whereBuilder);
@@ -361,10 +361,13 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     sqlBuilder.append(" offset ").append(searchParameters.getOffset());
                 }
             }
+        } else {
+            sqlBuilder.append(whereBuilder);
         }
+
         final Object[] objectArray = extraCriterias.toArray();
         final Object[] finalObjectArray = Arrays.copyOf(objectArray, arrayPos);
-        final String sqlCountRows = "SELECT count(*) " + this.loaanLoanMapper.from() + extraFromBuilder + whereBuilder.toString();
+        final String sqlCountRows = "SELECT count(*) " + this.loaanLoanMapper.from() + extraFromBuilder + whereBuilder;
         return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlCountRows, finalObjectArray, sqlBuilder.toString(), finalObjectArray, this.loaanLoanMapper);
     }
 
@@ -1599,10 +1602,14 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         }
 
         public String schema() {
-            return "dd.id as id,dd.expected_disburse_date as expectedDisbursementdate, dd.disbursedon_date as actualDisbursementdate,dd.principal as principal,dd.net_disbursal_amount as netDisbursalAmount,sum(lc.amount) chargeAmount, lc.amount_waived_derived waivedAmount, "
-                    + sqlResolver.formatGroupConcat(sqlResolver.formatCast("lc.id", "varchar")) + "loanChargeId "
-                    + "from m_loan l inner join m_loan_disbursement_detail dd on dd.loan_id = l.id left join m_loan_tranche_disbursement_charge tdc on tdc.disbursement_detail_id=dd.id "
-                    + "left join m_loan_charge lc on  lc.id=tdc.loan_charge_id and lc.is_active = " + sqlResolver.formatBoolValue(true);
+            return "dd.id as id, dd.expected_disburse_date as expectedDisbursementdate, dd.disbursedon_date as actualDisbursementdate, "
+                    + "dd.principal as principal, dd.net_disbursal_amount as netDisbursalAmount, sum(lc.amount) chargeAmount, "
+                    + "lc.amount_waived_derived waivedAmount, "
+                    + sqlResolver.formatGroupConcat(sqlResolver.formatCast("lc.id", "varchar")) + " loanChargeId "
+                    + "from m_loan l "
+                    + "inner join m_loan_disbursement_detail dd on dd.loan_id = l.id "
+                    + "left join m_loan_tranche_disbursement_charge tdc on tdc.disbursement_detail_id=dd.id "
+                    + "left join m_loan_charge lc on lc.id=tdc.loan_charge_id and lc.is_active = " + sqlResolver.formatBoolValue(true);
         }
 
         @Override
@@ -2278,14 +2285,19 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             sqlBuilder.append(" FROM m_loan l");
             sqlBuilder.append(" LEFT JOIN m_loan_transaction tr ON tr.loan_id = l.id AND tr.transaction_type_enum = ? and tr.is_reversed = ")
                     .append(sqlResolver.formatBoolValue(false));
-            sqlBuilder.append(" join m_currency rc on rc.code = l.currency_code ");
+            sqlBuilder.append(" JOIN m_currency rc on rc.code = l.currency_code");
             sqlBuilder.append(" JOIN m_loan_repayment_schedule ls ON ls.loan_id = l.id AND ls.completed_derived = ")
                     .append(sqlResolver.formatBoolValue(false));
-            sqlBuilder.append(" join( ");
-            sqlBuilder.append(" (select min(ls.duedate) datedue,ls.loan_id from m_loan_repayment_schedule ls  ");
+            sqlBuilder.append(" join((select min(ls.duedate) datedue,ls.loan_id from m_loan_repayment_schedule ls");
             sqlBuilder.append(" where ls.loan_id = ? and  ls.completed_derived = ")
-                    .append(sqlResolver.formatBoolValue(false)).append(")");
-            sqlBuilder.append(" )asq on asq.loan_id = ls.loan_id and asq.datedue = ls.duedate");
+                    .append(sqlResolver.formatBoolValue(false))
+                    .append(" GROUP BY ls.loan_id)) asq on asq.loan_id = ls.loan_id and asq.datedue = ls.duedate");
+            sqlBuilder.append(" WHERE l.id = ?");
+            sqlBuilder.append(" GROUP BY l.currency_code, l.currency_digits, l.currency_multiplesof, rc.name, rc.display_symbol, rc.internationalized_name_code, ls.duedate,")
+                    .append(" ls.principal_amount,ls.principal_completed_derived,ls.principal_writtenoff_derived,")
+                    .append(" ls.interest_amount,ls.interest_completed_derived,ls.interest_waived_derived,ls.interest_writtenoff_derived,")
+                    .append(" ls.fee_charges_amount,ls.fee_charges_completed_derived, ls.fee_charges_writtenoff_derived, ls.fee_charges_waived_derived,")
+                    .append(" ls.penalty_charges_amount, ls.penalty_charges_completed_derived, ls.penalty_charges_writtenoff_derived, ls.penalty_charges_waived_derived ");
             return sqlBuilder.toString();
         }
 

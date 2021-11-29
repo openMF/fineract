@@ -29,8 +29,9 @@ public enum SqlFunction {
     DATE() {
         @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
-            if (dialect.isMySql())
+            if (dialect.isMySql()) {
                 return formatSql(dialect, 1, params);
+            }
 
             validateParams(dialect, 1, params);
             return "CAST(" + params[0] + " AS DATE)";
@@ -39,8 +40,9 @@ public enum SqlFunction {
     TIME() {
         @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
-            if (dialect.isMySql())
+            if (dialect.isMySql()) {
                 return formatSql(dialect, 1, params);
+            }
 
             validateParams(dialect, 1, params);
             return "CAST(" + params[0] + " AS TIME)";
@@ -49,8 +51,9 @@ public enum SqlFunction {
     CURDATE() {
         @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
-            if (dialect.isMySql())
+            if (dialect.isMySql()) {
                 return formatSql(dialect, 0, params);
+            }
 
             validateParams(dialect, 0, params);
             return "CURRENT_DATE";
@@ -87,11 +90,22 @@ public enum SqlFunction {
     DATEDIFF() {
         @Override
         public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
-            if (dialect.isMySql())
+            if (dialect.isMySql()) {
                 return formatSql(dialect, 2, params);
+            }
 
             validateParams(dialect, 2, params);
             return "EXTRACT(DAY FROM (" + params[0] + "::TIMESTAMP - " + params[1] + "::TIMESTAMP))";
+        }
+    },
+    DATEDIFFMONTH() {
+        @Override
+        public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
+            validateParams(dialect, 2, params);
+            return dialect.isMySql()
+                    ? "TIMESTAMPDIFF(MONTH, " + params[1] + ", " + params[0] + ')'
+                    : "(EXTRACT(YEAR FROM AGE(" + params[0] + "::TIMESTAMP - " + params[1] + "::TIMESTAMP)) * 12" +
+                    " + EXTRACT(MONTH FROM AGE(" + params[0] + "::TIMESTAMP - " + params[1] + "::TIMESTAMP)))";
         }
     },
     CAST() {
@@ -131,6 +145,12 @@ public enum SqlFunction {
 
             validateParams(dialect, 1, params);
             return " STRING_AGG(" + params[0] + ", ',') ";
+        }
+    },
+    SUBSTRING() {
+        @Override
+        public String formatSql(@NotNull DataSourceDialect dialect, String... params) {
+            return formatSql(dialect, "SUBSTR", params.length > 2 ? 3 : 2, params);
         }
     },
     ;

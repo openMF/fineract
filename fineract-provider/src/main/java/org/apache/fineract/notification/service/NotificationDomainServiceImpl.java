@@ -65,7 +65,6 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
 
     private static final Logger LOG = LoggerFactory.getLogger(NotificationDomainServiceImpl.class);
 
-    @Autowired
     private Environment environment;
 
     private final BusinessEventNotifierService businessEventNotifierService;
@@ -81,11 +80,12 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
     private String notificationDataTopicName;
 
     @Autowired
-    public NotificationDomainServiceImpl(final BusinessEventNotifierService businessEventNotifierService,
+    public NotificationDomainServiceImpl(Environment environment, final BusinessEventNotifierService businessEventNotifierService,
             final PlatformSecurityContext context, final RoleRepository roleRepository,
             final TopicSubscriberReadPlatformService topicSubscriberReadPlatformService, final OfficeRepository officeRepository,
             final NotificationEventService notificationEvent, final NotificationKafkaEventService notificationKafkaEvent, final SpringEventPublisher springEventPublisher) {
 
+        this.environment = environment;
         this.businessEventNotifierService = businessEventNotifierService;
         this.context = context;
         this.roleRepository = roleRepository;
@@ -423,12 +423,9 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
         NotificationData notificationData = new NotificationData(objectType, objectIdentifier, eventType, appUserId, notificationContent,
                 false, false, tenantIdentifier, officeId, userIds);
         try {
-            if(Arrays.stream(environment.getActiveProfiles()).anyMatch(env -> env.equalsIgnoreCase("activeMqEnabled")))
-            {
+            if(Arrays.stream(environment.getActiveProfiles()).anyMatch(env -> env.equalsIgnoreCase("activeMqEnabled"))) {
                 this.notificationEvent.broadcastNotification(queue, notificationData);
-            } 
-            else if(Arrays.stream(environment.getActiveProfiles()).anyMatch(env -> env.equalsIgnoreCase("kafkaEnabled"))) 
-            {
+            } else if(Arrays.stream(environment.getActiveProfiles()).anyMatch(env -> env.equalsIgnoreCase("kafkaEnabled"))) {
                 this.notificationKafkaEvent.broadcastNotificationKafka(notificationDataTopicName, notificationData);
             }
         } catch (Exception e) {

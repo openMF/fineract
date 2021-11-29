@@ -352,8 +352,8 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
             accountsSummary.append("sa.sub_status_enum as subStatusEnum, ");
             accountsSummary.append("(select COALESCE(max(sat.transaction_date),sa.activatedon_date) ");
             accountsSummary.append("from m_savings_account_transaction as sat ");
-            accountsSummary.append("where sat.is_reversed = ").append(sqlResolver.formatBoolValue(false)+" ");
-            accountsSummary.append("and sat.transaction_type_enum in (1,2) ");
+            accountsSummary.append("where sat.is_reversed = ").append(sqlResolver.formatBoolValue(false));
+            accountsSummary.append(" and sat.transaction_type_enum in (1,2) ");
             accountsSummary.append("and sat.savings_account_id = sa.id) as lastActiveTransactionDate, ");
 
             accountsSummary.append("sa.closedon_date as closedOnDate,");
@@ -642,5 +642,4 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
         }
 
     }
-
 }
