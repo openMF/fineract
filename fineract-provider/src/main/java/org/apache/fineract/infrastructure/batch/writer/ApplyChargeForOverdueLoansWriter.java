@@ -49,8 +49,9 @@ public class ApplyChargeForOverdueLoansWriter extends BatchWriterBase implements
 
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
-        LOG.info("==={}=== {} {} with items processed {}", this.batchJobInstanceId, this.batchStepName, 
-            stepExecution.getExitStatus().getExitCode(), this.processed);
+        LOG.info("==={}=== {} {} with items processed {}", batchJobInstanceId.get(), batchStepName.get(),
+            stepExecution.getExitStatus().getExitCode(), processed.get());
+        cleanup();
         return stepExecution.getExitStatus();
     }
 

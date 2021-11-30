@@ -50,8 +50,8 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
     @Autowired
     private JmsTemplate sqsJmsTemplate;
 
-    private String identifier;
-    private String cobDate;
+    private final static ThreadLocal<String> identifier = new ThreadLocal<>();
+    private final static ThreadLocal<String> cobDate = new ThreadLocal<>();
 
     public BatchLoansWriter(BatchDestinations batchDestinations) {
         this.queueName = batchDestinations.getBatchLoansDestination();
@@ -61,22 +61,25 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
     @Override
     public void beforeStep(StepExecution stepExecution) {
         initialize(stepExecution);
-        this.identifier = BatchJobUtils.getStringParam(this.parameters, BatchConstants.JOB_PARAM_INSTANCE_ID);
-        this.cobDate = BatchJobUtils.getStringParam(this.parameters, BatchConstants.JOB_PARAM_COB_DATE);
+        identifier.set(BatchJobUtils.getStringParam(parameters.get(), BatchConstants.JOB_PARAM_INSTANCE_ID));
+        cobDate.set(BatchJobUtils.getStringParam(parameters.get(), BatchConstants.JOB_PARAM_COB_DATE));
     }
 
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
-        LOG.info("==={}=== {} {} with items processed {}", this.batchJobInstanceId, this.batchStepName, 
-            stepExecution.getExitStatus().getExitCode(), this.processed);
+        LOG.info("==={}=== {} {} with items processed {}", batchJobInstanceId.get(), batchStepName.get(),
+            stepExecution.getExitStatus().getExitCode(), processed.get());
+        cleanup();
+        identifier.remove();
+        cobDate.remove();
         return stepExecution.getExitStatus();
     }
 
     @Override
     public void write(List<? extends Long> items) throws Exception {
-        this.processed = this.processed + items.size();
-        sendMessage(new MessageBatchDataRequest(batchJobInstanceId, 
-            identifier, batchStepName, tenantIdentifier, cobDate, items));
+        processed.set(processed.get() + items.size());
+        sendMessage(new MessageBatchDataRequest(batchJobInstanceId.get(),
+            identifier.get(), batchStepName.get(), tenantIdentifier.get(), cobDate.get(), items));
     }
 
     private void sendMessage(final MessageBatchDataRequest message) {
@@ -84,7 +87,8 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
         // LOG.debug("Sending: {}", payload);
         // ActiveMQ
         if (profileUtils.isActiveProfile(JobConstants.SPRING_MESSAGING_PROFILE_NAME)) {
-            LOG.debug("{} shipment {} to MQ: {} items {}", batchStepName, chunkCounter++, queueName, message.getEntityIdsQty());
+            chunkCounter.set(chunkCounter.get()+1);
+            LOG.debug("{} shipment {} to MQ: {} items {}", batchStepName, chunkCounter.get(), queueName, message.getEntityIdsQty());
             this.jmsTemplate.send(new ActiveMQQueue(this.queueName), new MessageCreator() {
 
                 @Override
@@ -94,7 +98,8 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
             });
             // SQS
         } else if (profileUtils.isActiveProfile(JobConstants.SPRING_MESSAGINGSQS_PROFILE_NAME)) {
-            LOG.debug("{} shipment {} to SQS: {} items {}", batchStepName, chunkCounter++, queueName, message.getEntityIdsQty());
+            chunkCounter.set(chunkCounter.get()+1);
+            LOG.debug("{} shipment {} to SQS: {} items {}", batchStepName, chunkCounter.get(), queueName, message.getEntityIdsQty());
             this.sqsJmsTemplate.convertAndSend(this.queueName, payload);
         }
     }

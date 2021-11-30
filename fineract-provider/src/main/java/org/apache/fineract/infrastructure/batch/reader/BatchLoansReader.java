@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.annotation.AfterStep;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,13 +49,11 @@ public class BatchLoansReader implements ItemReader<Long> {
     @Autowired
     private TenantDetailsService tenantDetailsService;
 
-    private Iterator<Long> dataIterator;
-    private StepExecution stepExecution;
+    private final static ThreadLocal<Iterator<Long>> dataIterator = new ThreadLocal<>();
 
     @BeforeStep
     public void before(StepExecution stepExecution) {
-        this.stepExecution = stepExecution;
-        JobParameters parameters = this.stepExecution.getJobExecution().getJobParameters();
+        JobParameters parameters = stepExecution.getJobExecution().getJobParameters();
         final String tenantIdentifier = parameters.getString(BatchConstants.JOB_PARAM_TENANT_ID);
         BatchJobUtils.setTenant(tenantIdentifier, tenantDetailsService);
         // LOG.debug("Tenant {}", tenant.getName());
@@ -65,13 +64,18 @@ public class BatchLoansReader implements ItemReader<Long> {
 
         final Collection<Long> loansForBatchProcess = this.loanRepository.
             findActiveLoans(LoanStatus.ACTIVE.getValue(), limitRead.intValue());
-        this.dataIterator = loansForBatchProcess.iterator();
+        dataIterator.set(loansForBatchProcess.iterator());
+    }
+
+    @AfterStep
+    public void after() {
+        dataIterator.remove();
     }
 
     @Override
     public Long read() {
-        if (dataIterator != null && dataIterator.hasNext()) {
-            return dataIterator.next();
+        if (dataIterator.get() != null && dataIterator.get().hasNext()) {
+            return dataIterator.get().next();
         } else {
             return null;
         }

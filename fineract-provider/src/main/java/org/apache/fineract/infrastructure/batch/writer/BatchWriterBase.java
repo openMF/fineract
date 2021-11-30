@@ -18,10 +18,8 @@
  */
 package org.apache.fineract.infrastructure.batch.writer;
 
-import java.util.List;
-
 import com.google.gson.Gson;
-
+import java.util.List;
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.config.BatchDestinations;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
@@ -39,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 public class BatchWriterBase {
-    
+
     @Autowired
     protected TenantDetailsService tenantDetailsService;
 
@@ -49,49 +47,57 @@ public class BatchWriterBase {
     @Autowired
     protected BusinessEventNotifierService businessEventNotifierService;
 
-    protected StepExecution stepExecution;
-    protected JobParameters parameters;
+    protected final static ThreadLocal<JobParameters> parameters = new ThreadLocal<>();
     protected ProfileUtils profileUtils;
     protected BatchDestinations batchDestinations;
 
     protected Gson gson;
 
-    protected String tenantIdentifier;
-    protected Long batchJobInstanceId;
-    protected String batchStepName;
+    protected final static ThreadLocal<String> tenantIdentifier = new ThreadLocal<>();
+    protected final static ThreadLocal<Long> batchJobInstanceId = new ThreadLocal<>();
+    protected final static ThreadLocal<String> batchStepName = new ThreadLocal<>();
     protected String queueName;
 
-    protected int processed;
-    protected int chunkCounter;
+    protected final static ThreadLocal<Integer> processed = new ThreadLocal<>();
+    protected final static ThreadLocal<Integer> chunkCounter = new ThreadLocal<>();
 
     protected void initialize(StepExecution stepExecution) {
-        this.stepExecution = stepExecution;
-        this.batchStepName = stepExecution.getStepName();
-        this.batchJobInstanceId = stepExecution.getJobExecution().getJobInstance().getInstanceId();
-        this.parameters = this.stepExecution.getJobExecution().getJobParameters();
-        this.tenantIdentifier = this.parameters.getString(BatchConstants.JOB_PARAM_TENANT_ID);
-        BatchJobUtils.setTenant(tenantIdentifier, tenantDetailsService);
+        batchStepName.set(stepExecution.getStepName());
+        batchJobInstanceId.set(stepExecution.getJobExecution().getJobInstance().getInstanceId());
+        parameters.set(stepExecution.getJobExecution().getJobParameters());
+        tenantIdentifier.set(parameters.get().getString(BatchConstants.JOB_PARAM_TENANT_ID));
+        BatchJobUtils.setTenant(tenantIdentifier.get(), tenantDetailsService);
 
         this.profileUtils = new ProfileUtils(context.getEnvironment());
         this.gson = new Gson();
 
-        this.processed = 0;
-        this.chunkCounter = 0;
+        processed.set(0);
+        chunkCounter.set(0);
+    }
+
+    protected void cleanup() {
+        tenantIdentifier.remove();
+        batchJobInstanceId.remove();
+        batchStepName.remove();
+        parameters.remove();
+        processed.remove();
+        chunkCounter.remove();
     }
 
     protected MessageBatchDataResults analyzeResults(List<? extends MessageBatchDataResponse> items) {
         final int totalItems = items.size();
         for (final MessageBatchDataResponse processResult : items) {
             if (processResult.wasChanged())
-                this.processed++;
+                processed.set(processed.get() + 1);
         }
-        return new MessageBatchDataResults(this.tenantIdentifier, this.batchStepName, totalItems, this.processed, (totalItems - this.processed), true);
+        return new MessageBatchDataResults(tenantIdentifier.get(), batchStepName.get(), totalItems, processed.get(),
+                (totalItems - processed.get()), true);
     }
 
     protected void sendMessage(final MessageBatchDataResults message) {
         // final String payload = gson.toJson(message);
-        // LOG.debug("Sending notification {}: {}", this.batchStepName, payload);
+        // LOG.debug("Sending notification {}: {}", batchStepName.get(), payload);
         this.businessEventNotifierService.notifyBusinessEventWasExecuted(BusinessEvents.COB_STEP_EXECUTION,
-            ListUtils.constructEntityMap(BusinessEntity.BATCH_JOB, message));
+                ListUtils.constructEntityMap(BusinessEntity.BATCH_JOB, message));
     }
 }

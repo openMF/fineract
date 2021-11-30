@@ -52,43 +52,47 @@ public class ApplyChargeForOverdueLoansProcessor extends BatchProcessorBase impl
     @Autowired
     private LoanWritePlatformService loanWritePlatformService;
 
-    private Long penaltyWaitPeriodValue;
-    private Boolean backdatePenalties;
-    private LocalDate recalculateFrom;
+    private final static ThreadLocal<Long> penaltyWaitPeriodValue = new ThreadLocal<>();
+    private final static ThreadLocal<Boolean> backdatePenalties = new ThreadLocal<>();
+    private final static ThreadLocal<LocalDate> recalculateFrom = new ThreadLocal<>();
 
     @BeforeStep
     public void before(StepExecution stepExecution) {
-        super.initialize(stepExecution);
-        LOG.debug("Job Step {} : Tenant {}", this.batchStepName, this.tenant.getName());
+        initialize(stepExecution);
+        LOG.debug("Job Step {} : Tenant {}", batchStepName.get(), tenantIdentifier.get());
         // Particular process parameters or properties
-        this.penaltyWaitPeriodValue = parameters.getLong(BatchConstants.JOB_PARAM_PENALTY_WAIT_PERIOD);
-        this.backdatePenalties = TextUtils.stringToBoolean(parameters.getString(BatchConstants.JOB_PARAM_BACKDATE_PENALTIES));
+        penaltyWaitPeriodValue.set(parameters.get().getLong(BatchConstants.JOB_PARAM_PENALTY_WAIT_PERIOD));
+        backdatePenalties.set(TextUtils.stringToBoolean(parameters.get().getString(BatchConstants.JOB_PARAM_BACKDATE_PENALTIES)));
 
-        Date processDate = DateUtils.createDate(this.dateOfTenantValue, BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
-        if (this.cobDateValue != null)
-        processDate = DateUtils.createDate(this.cobDateValue, BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
+        Date processDate = DateUtils.createDate(dateOfTenantValue.get(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
+        if (cobDateValue.get() != null)
+        processDate = DateUtils.createDate(cobDateValue.get(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
     
-        this.recalculateFrom = DateUtils.fromDateToLocalDate(processDate);
+        recalculateFrom.set(DateUtils.fromDateToLocalDate(processDate));
     }
 
     @AfterStep
     public void after(StepExecution stepExecution) {
-        LOG.debug("{} items processed {}", this.batchStepName, this.processed);
+        LOG.debug("{} items processed {}", batchStepName.get(), processed.get());
+        cleanup();
+        penaltyWaitPeriodValue.remove();
+        backdatePenalties.remove();
+        recalculateFrom.remove();
     }
     
     @Override
     public MessageBatchDataResponse process(Long entityId) throws Exception {
         final Collection<OverdueLoanScheduleData> loanData = this.loanReadPlatformService
-                .retrieveOverdueInstallmentsByLoanId(penaltyWaitPeriodValue, backdatePenalties, entityId);
+                .retrieveOverdueInstallmentsByLoanId(penaltyWaitPeriodValue.get(), backdatePenalties.get(), entityId);
         
         boolean changed = !loanData.isEmpty();
         if (changed) {
             // LOG.debug("Job Step {} to Loan Id {} : {} matured installments", batchStepName, entityId, loanData.size());
-            this.loanWritePlatformService.applyOverdueChargesForLoan(this.recalculateFrom, entityId, loanData, true);
-            this.processed++;
+            this.loanWritePlatformService.applyOverdueChargesForLoan(recalculateFrom.get(), entityId, loanData, true);
+            processed.set(processed.get()+1);
         }
 
-        MessageBatchDataResponse response = new MessageBatchDataResponse(batchStepName, tenantIdentifier, entityId, true, changed, null);
+        MessageBatchDataResponse response = new MessageBatchDataResponse(batchStepName.get(), tenantIdentifier.get(), entityId, true, changed, null);
         return response;
     }
 }

@@ -18,13 +18,9 @@
  */
 package org.apache.fineract.infrastructure.batch.processor;
 
-import java.util.Date;
-
 import com.google.gson.Gson;
-
+import java.util.Date;
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
-import org.apache.fineract.infrastructure.batch.service.BatchJobUtils;
-import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.service.TenantDetailsService;
@@ -35,43 +31,49 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class BatchProcessorBase {
-    
+
     @Autowired
     protected TenantDetailsService tenantDetailsService;
 
     @Autowired
     protected PlatformSecurityContext context;
 
-    @Autowired 
+    @Autowired
     protected AppUserRepositoryWrapper appUserRepository;
 
-    protected String batchStepName;
-    protected String tenantIdentifier;
+    protected final static ThreadLocal<String> batchStepName = new ThreadLocal<>();
+    protected final static ThreadLocal<String> tenantIdentifier = new ThreadLocal<>();
 
-    protected StepExecution stepExecution;
-    protected JobParameters parameters;
+    protected final static ThreadLocal<JobParameters> parameters = new ThreadLocal<>();
 
-    protected int processed;
-    protected String dateOfTenantValue;
-    protected String cobDateValue;
-    protected Date dateOfTenant;
-    protected FineractPlatformTenant tenant;
+    protected final static ThreadLocal<Integer> processed = new ThreadLocal<>();
+    protected final static ThreadLocal<String> dateOfTenantValue = new ThreadLocal<>();
+    protected final static ThreadLocal<String> cobDateValue = new ThreadLocal<>();
+    protected final static ThreadLocal<Date> dateOfTenant = new ThreadLocal<>();
     protected AppUser appUser;
 
     protected final Gson gson = new Gson();
 
     protected void initialize(StepExecution stepExecution) {
-        this.stepExecution = stepExecution;
-        this.batchStepName = stepExecution.getStepName();
-        this.parameters = this.stepExecution.getJobExecution().getJobParameters();
-        this.tenantIdentifier = parameters.getString(BatchConstants.JOB_PARAM_TENANT_ID);
-        this.tenant = BatchJobUtils.setTenant(tenantIdentifier, tenantDetailsService);
+        batchStepName.set(stepExecution.getStepName());
+        parameters.set(stepExecution.getJobExecution().getJobParameters());
+        tenantIdentifier.set(parameters.get().getString(BatchConstants.JOB_PARAM_TENANT_ID));
 
-        this.dateOfTenantValue = parameters.getString(BatchConstants.JOB_PARAM_TENANT_DATE);
-        this.dateOfTenant = DateUtils.createDate(this.dateOfTenantValue, BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
-        this.cobDateValue = parameters.getString(BatchConstants.JOB_PARAM_COB_DATE);
-        
+        dateOfTenantValue.set(parameters.get().getString(BatchConstants.JOB_PARAM_TENANT_DATE));
+        dateOfTenant.set(DateUtils.createDate(dateOfTenantValue.get(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT));
+        cobDateValue.set(parameters.get().getString(BatchConstants.JOB_PARAM_COB_DATE));
+
         this.appUser = this.appUserRepository.fetchSystemUser();
-        this.processed = 0;
+        processed.set(0);
+    }
+
+    protected void cleanup() {
+        batchStepName.remove();
+        tenantIdentifier.remove();
+        parameters.remove();
+        processed.remove();
+        dateOfTenantValue.remove();
+        cobDateValue.remove();
+        dateOfTenant.remove();
     }
 }

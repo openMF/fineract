@@ -18,10 +18,8 @@
  */
 package org.apache.fineract.infrastructure.batch.processor;
 
-import java.util.List;
-
 import com.google.gson.JsonElement;
-
+import java.util.List;
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
 import org.apache.fineract.infrastructure.batch.data.process.LoanRepaymentData;
@@ -65,25 +63,27 @@ public class AutopayLoansProcessor extends BatchProcessorBase implements ItemPro
     @Autowired
     private PaymentTypeRepositoryWrapper paymentTypeRepository;
 
-    private PaymentType autopayPaymentType;
+    private final static ThreadLocal<PaymentType> autopayPaymentType = new ThreadLocal<>();
 
     @BeforeStep
     public void before(StepExecution stepExecution) {
-        super.initialize(stepExecution);
-        LOG.debug("Job Step {} : Tenant {}", this.batchStepName, this.tenant.getName());
+        initialize(stepExecution);
+        LOG.debug("Job Step {} : Tenant {}", batchStepName.get(), tenantIdentifier.get());
         // Particular process parameters or properties
-        this.autopayPaymentType = this.paymentTypeRepository.findByName("AUTOPAY");
+        autopayPaymentType.set(this.paymentTypeRepository.findByName("AUTOPAY"));
     }
 
     @AfterStep
     public void after(StepExecution stepExecution) {
-        LOG.debug("{} items processed {}", this.batchStepName, this.processed);
+        LOG.debug("{} items processed {}", batchStepName.get(), processed.get());
+        cleanup();
+        autopayPaymentType.remove();
     }
 
     @Override
     public MessageBatchDataResponse process(Long entityId) throws Exception {
-        final List<LoanRepaymentScheduleInstallment> repaymentInstallments = this.loanRepaymentScheduleInstallmentRepository
-            .fetchLoanRepaymentScheduleInstallmentMaturedByLoanId(entityId, dateOfTenant, false);
+        final List<LoanRepaymentScheduleInstallment> repaymentInstallments = this.loanRepaymentScheduleInstallmentRepository.fetchLoanRepaymentScheduleInstallmentMaturedByLoanId(
+                entityId, dateOfTenant.get(), false);
 
         MessageBatchDataResponse response;
         if (!repaymentInstallments.isEmpty()) {
@@ -94,10 +94,12 @@ public class AutopayLoansProcessor extends BatchProcessorBase implements ItemPro
             LoanRepaymentScheduleInstallment repaymentInstallment = repaymentInstallments.get(0);
             final Loan loan = repaymentInstallment.getLoan();
             final Money amountDue = repaymentInstallment.getDue(loan.getCurrency());
-            final String dueDateVal = DateUtils.formatDate(repaymentInstallment.getDueDateAsDate(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
+            final String dueDateVal = DateUtils.formatDate(repaymentInstallment.getDueDateAsDate(),
+                    BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
             // LOG.debug("    autopaying loan {} for due date {}", entityId, dueDateVal);
-            LoanRepaymentData loanRepaymentData = new LoanRepaymentData(entityId, dueDateVal, amountDue.getAmount(), "", 
-                BatchConstants.DEFAULT_BATCH_DATE_LOCALE, BatchConstants.DEFAULT_BATCH_DATE_FORMAT, this.autopayPaymentType.getId().intValue());
+            LoanRepaymentData loanRepaymentData = new LoanRepaymentData(entityId, dueDateVal, amountDue.getAmount(), "",
+                    BatchConstants.DEFAULT_BATCH_DATE_LOCALE, BatchConstants.DEFAULT_BATCH_DATE_FORMAT,
+                    autopayPaymentType.get().getId().intValue());
 
             final String jsonData = gson.toJson(loanRepaymentData);
             // LOG.debug("Json {} ", jsonData);
@@ -106,13 +108,15 @@ public class AutopayLoansProcessor extends BatchProcessorBase implements ItemPro
             JsonCommand command = new JsonCommand(entityId, jsonData, parsedCommand, this.fromApiJsonHelper, "LOAN", this.appUser);
 
             final boolean isRecoveryRepayment = false;
-            final CommandProcessingResult processResult = loanWritePlatformService.makeLoanRepayment(entityId, command, isRecoveryRepayment);
-            response = new MessageBatchDataResponse(batchStepName, tenantIdentifier, entityId, true, true, processResult.getTransactionId());
-            this.processed++;
+            final CommandProcessingResult processResult = loanWritePlatformService.makeLoanRepayment(entityId, command,
+                    isRecoveryRepayment);
+            response = new MessageBatchDataResponse(batchStepName.get(), tenantIdentifier.get(), entityId, true, true,
+                    processResult.getTransactionId());
+            processed.set(processed.get() + 1);
             // LOG.debug("processResult: {} ", processResult.getTransactionId());
         } else {
             // LOG.debug("Job Step {} to Loan Id {} : Not repayment for date {}", batchStepName, entityId, dateOfTenant);
-            response = new MessageBatchDataResponse(batchStepName, tenantIdentifier, entityId, true, false, null);
+            response = new MessageBatchDataResponse(batchStepName.get(), tenantIdentifier.get(), entityId, true, false, null);
         }
 
         return response;
