@@ -47,6 +47,7 @@ import org.springframework.batch.core.configuration.BatchConfigurationException;
 import org.springframework.batch.core.configuration.annotation.DefaultBatchConfigurer;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.explore.support.JobExplorerFactoryBean;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -199,6 +200,13 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
             e.printStackTrace();
             return null;
         }
+    }
+
+    @StepScope
+    @Profile(JobConstants.SPRING_BATCH_PROFILE_NAME)
+    @Bean(name = "blockLoansReader")
+    public BlockLoansReader blockLoansReader() {
+        return new BlockLoansReader();
     }
 
     @Bean(name = "batchJobLauncher")
