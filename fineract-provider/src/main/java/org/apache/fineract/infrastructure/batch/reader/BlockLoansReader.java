@@ -28,29 +28,28 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemReader;
+import org.springframework.stereotype.Component;
 
+@Component
 public class BlockLoansReader implements ItemReader<Long> {
 
     public static final Logger LOG = LoggerFactory.getLogger(BlockLoansReader.class);
-
-    private Iterator<Long> dataIterator;
-    private StepExecution stepExecution;
+    private ThreadLocal<Iterator<Long>> dataIterator;
 
     @BeforeStep
     public void before(StepExecution stepExecution) {
-        this.stepExecution = stepExecution;
         final String batchStepName = stepExecution.getStepName();
-        JobParameters parameters = this.stepExecution.getJobExecution().getJobParameters();
+        JobParameters parameters = stepExecution.getJobExecution().getJobParameters();
         final String parameter = parameters.getString(BatchConstants.JOB_PARAM_PARAMETER);
         List<Long> loanIds = BatchJobUtils.getLoanIds(parameter);
-        this.dataIterator = loanIds.iterator();
-        LOG.debug("{} - {} processing {} Loan Ids", batchStepName, this.stepExecution.getId(), loanIds.size());
+        this.dataIterator.set(loanIds.iterator());
+        LOG.debug("{} - {} processing {} Loan Ids", batchStepName, stepExecution.getId(), loanIds.size());
     }
 
     @Override
     public Long read() {
-        if (dataIterator != null && dataIterator.hasNext()) {
-            return dataIterator.next();
+        if (dataIterator.get() != null && dataIterator.get().hasNext()) {
+            return dataIterator.get().next();
         } else {
             return null;
         }
