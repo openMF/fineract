@@ -19,6 +19,18 @@
 package org.apache.fineract.infrastructure.core.boot.db;
 
 import org.apache.fineract.infrastructure.core.boot.JDBCDriverConfig;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.CAST;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.CURDATE;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATE;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATEADD;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATEDIFF;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATEDIFFMONTH;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.DATESUB;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.GROUP_CONCAT;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.LAST_INSERT_ID;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.SCHEMA;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.SUBSTRING;
+import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.TIME;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -42,7 +54,6 @@ import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABL
 import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_DROP_FK;
 import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_DROP_INDEX;
 import static org.apache.fineract.infrastructure.core.boot.db.SqlDefinition.TABLE_DROP_UK;
-import static org.apache.fineract.infrastructure.core.boot.db.SqlFunction.*;
 
 @Component
 public class DataSourceSqlResolver {
