@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
 public class BlockLoansReader implements ItemReader<Long> {
 
     public static final Logger LOG = LoggerFactory.getLogger(BlockLoansReader.class);
-    private ThreadLocal<Iterator<Long>> dataIterator = new ThreadLocal<>();
+    private static final ThreadLocal<Iterator<Long>> dataIterator = new ThreadLocal<>();
 
     @BeforeStep
     public void before(StepExecution stepExecution) {
@@ -42,7 +42,7 @@ public class BlockLoansReader implements ItemReader<Long> {
         JobParameters parameters = stepExecution.getJobExecution().getJobParameters();
         final String parameter = parameters.getString(BatchConstants.JOB_PARAM_PARAMETER);
         List<Long> loanIds = BatchJobUtils.getLoanIds(parameter);
-        this.dataIterator.set(loanIds.iterator());
+        dataIterator.set(loanIds.iterator());
         LOG.debug("{} - {} processing {} Loan Ids", batchStepName, stepExecution.getId(), loanIds.size());
     }
 
