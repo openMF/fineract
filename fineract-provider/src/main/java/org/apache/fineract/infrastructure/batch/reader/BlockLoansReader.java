@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
 public class BlockLoansReader implements ItemReader<Long> {
 
     public static final Logger LOG = LoggerFactory.getLogger(BlockLoansReader.class);
-    private ThreadLocal<Iterator<Long>> dataIterator;
+    private ThreadLocal<Iterator<Long>> dataIterator = new ThreadLocal<>();
 
     @BeforeStep
     public void before(StepExecution stepExecution) {
