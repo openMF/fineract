@@ -88,7 +88,7 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
         // ActiveMQ
         if (profileUtils.isActiveProfile(JobConstants.SPRING_MESSAGING_PROFILE_NAME)) {
             chunkCounter.set(chunkCounter.get()+1);
-            LOG.debug("{} shipment {} to MQ: {} items {}", batchStepName, chunkCounter.get(), queueName, message.getEntityIdsQty());
+            LOG.debug("{} shipment {} to MQ: {} items {}", batchStepName.get(), chunkCounter.get(), queueName, message.getEntityIdsQty());
             this.jmsTemplate.send(new ActiveMQQueue(this.queueName), new MessageCreator() {
 
                 @Override
@@ -99,7 +99,7 @@ public class BatchLoansWriter extends BatchWriterBase implements ItemWriter<Long
             // SQS
         } else if (profileUtils.isActiveProfile(JobConstants.SPRING_MESSAGINGSQS_PROFILE_NAME)) {
             chunkCounter.set(chunkCounter.get()+1);
-            LOG.debug("{} shipment {} to SQS: {} items {}", batchStepName, chunkCounter.get(), queueName, message.getEntityIdsQty());
+            LOG.debug("{} shipment {} to SQS: {} items {}", batchStepName.get(), chunkCounter.get(), queueName, message.getEntityIdsQty());
             this.sqsJmsTemplate.convertAndSend(this.queueName, payload);
         }
     }
