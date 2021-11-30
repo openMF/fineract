@@ -53,21 +53,20 @@ public class UpdateLoanSummaryWritter extends BatchWriterBase implements ItemWri
 
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
-        LOG.info("==={}=== {} {} with items processed {}", this.batchJobInstanceId, this.batchStepName, 
-            stepExecution.getExitStatus().getExitCode(), this.processed);
+        LOG.info("==={}=== {} {} with items processed {}", batchJobInstanceId.get(), batchStepName.get(), 
+            stepExecution.getExitStatus().getExitCode(), processed.get());
+        cleanup();
         return stepExecution.getExitStatus();
     }
 
     @Override
     public void write(List<? extends Long> items) throws Exception {
-        List<Long> loanIds = new ArrayList<>();
-        for (Long loanId:items)
-            loanIds.add(loanId);
+        List<Long> loanIds = new ArrayList<>(items);
 
         final int totalItems = items.size();    
-        this.processed = scheduledJobRunnerService.updateLoanSummaryDetails(loanIds);
+        processed.set(scheduledJobRunnerService.updateLoanSummaryDetails(loanIds));
 
-        MessageBatchDataResults message = new MessageBatchDataResults(this.tenantIdentifier, this.batchStepName, totalItems, this.processed, (totalItems - this.processed), true);
+        MessageBatchDataResults message = new MessageBatchDataResults(tenantIdentifier.get(), batchStepName.get(), totalItems, processed.get(), (totalItems - processed.get()), true);
         sendMessage(message);
     }
 }

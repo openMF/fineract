@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.annotation.AfterStep;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.stereotype.Component;
@@ -44,6 +45,11 @@ public class BlockLoansReader implements ItemReader<Long> {
         List<Long> loanIds = BatchJobUtils.getLoanIds(parameter);
         dataIterator.set(loanIds.iterator());
         LOG.debug("{} - {} processing {} Loan Ids", batchStepName, stepExecution.getId(), loanIds.size());
+    }
+
+    @AfterStep
+    public void after() {
+        dataIterator.remove();
     }
 
     @Override

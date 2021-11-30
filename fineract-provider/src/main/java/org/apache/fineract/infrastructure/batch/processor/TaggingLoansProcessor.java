@@ -63,21 +63,24 @@ public class TaggingLoansProcessor extends BatchProcessorBase implements ItemPro
 
     private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(BatchConstants.DEFAULT_BATCH_DATETIME_FORMAT);
 
-    private List<CodeValue> loanAccountState;
-    private List<CodeValue> deliquent;
+    private final static ThreadLocal<List<CodeValue>> loanAccountState = new ThreadLocal<>();
+    private final static ThreadLocal<List<CodeValue>> deliquent = new ThreadLocal<>();
 
     @BeforeStep
     public void before(StepExecution stepExecution) {
-        super.initialize(stepExecution);
-        LOG.debug("Job Step {} : Tenant {}", this.batchStepName, this.tenant.getName());
+        initialize(stepExecution);
+        LOG.debug("Job Step {} : Tenant {}", batchStepName.get(), tenantIdentifier.get());
         // Particular process parameters or properties
-        this.loanAccountState = this.codeValueRepository.findByCodeNameWithNotFoundDetection(BatchConstants.LOAN_ACCOUNT_STATUS_CODE);
-        this.deliquent = this.codeValueRepository.findByCodeNameWithNotFoundDetection(BatchConstants.LOAN_DELIQUENCY_CODE);
+        loanAccountState.set(this.codeValueRepository.findByCodeNameWithNotFoundDetection(BatchConstants.LOAN_ACCOUNT_STATUS_CODE));
+        deliquent.set(this.codeValueRepository.findByCodeNameWithNotFoundDetection(BatchConstants.LOAN_DELIQUENCY_CODE));
     }
 
     @AfterStep
     public void after(StepExecution stepExecution) {
-        LOG.debug("{} items processed {}", this.batchStepName, this.processed);
+        LOG.debug("{} items processed {}", batchStepName.get(), processed.get());
+        cleanup();
+        loanAccountState.remove();
+        deliquent.remove();
     }
 
     @Override
@@ -93,46 +96,43 @@ public class TaggingLoansProcessor extends BatchProcessorBase implements ItemPro
         Long deliquen = null;
         if (deliquenLevel != null) {
             final String deliquenLabel = "Delinquent " + deliquenLevel;
-            deliquen = this.codeByValue(this.deliquent, deliquenLabel);
+            deliquen = this.codeByValue(deliquent.get(), deliquenLabel);
             chargedOff = (deliquenLevel >= 30 && deliquenLevel <= 120);
         }
 
-        final LoanTagsData loanTagsData = new LoanTagsData(entityId, taggedAt, chargedOff,
-            paidOff, accountStatus, deliquen);
+        final LoanTagsData loanTagsData = new LoanTagsData(entityId, taggedAt, chargedOff, paidOff, accountStatus, deliquen);
         final String jsonData = loanTagsData.toJson();
         // LOG.debug("Json {} ", jsonData);
 
-        final CommandProcessingResult result = this.readWriteNonCoreDataService.createNewDatatableEntry(
-            BatchConstants.LOAN_TAGS_DATATABLE, entityId, jsonData, this.appUser);
-        this.processed++;
-        final MessageBatchDataResponse response = new MessageBatchDataResponse(batchStepName,
-            tenantIdentifier, entityId, true, true, result.commandId());
+        final CommandProcessingResult result = this.readWriteNonCoreDataService.createNewDatatableEntry(BatchConstants.LOAN_TAGS_DATATABLE,
+                entityId, jsonData, this.appUser);
+        processed.set(processed.get() + 1);
+        final MessageBatchDataResponse response = new MessageBatchDataResponse(batchStepName.get(), tenantIdentifier.get(), entityId, true,
+                true, result.commandId());
         return response;
     }
 
     private Long getAccountStatus(Long entityId) {
         final Integer loanAccountStatus = this.loanRepository.fetchLoanStatusById(entityId);
         if (loanAccountStatus >= 300 && loanAccountStatus <= 400)
-            return codeByValue(this.loanAccountState, "ACTIVE");
+            return codeByValue(loanAccountState.get(), "ACTIVE");
         else if (loanAccountStatus >= 400 && loanAccountStatus < 600)
-            return codeByValue(this.loanAccountState, "CANCELED");
+            return codeByValue(loanAccountState.get(), "CANCELED");
         else if (loanAccountStatus >= 600)
-            return codeByValue(this.loanAccountState, "CLOSED");
+            return codeByValue(loanAccountState.get(), "CLOSED");
         else
-            return codeByValue(this.loanAccountState, "PENDING");
+            return codeByValue(loanAccountState.get(), "PENDING");
     }
 
     private Integer getDeliquenLevel(Long entityId) {
-        final Date repaymentDate = this.loanRepaymentScheduleInstallmentRepository
-            .fetchLoanRepaymentScheduleInstallmentUnpaidByLoanId(entityId);
+        final Date repaymentDate = this.loanRepaymentScheduleInstallmentRepository.fetchLoanRepaymentScheduleInstallmentUnpaidByLoanId(
+                entityId);
         if (repaymentDate == null)
             return null;
 
-        final Long daysInBetween = DateUtils.getDaysInBetween(repaymentDate, dateOfTenant);
-        Integer deliquenLevel = 1;
+        long daysInBetween = DateUtils.getDaysInBetween(repaymentDate, dateOfTenant.get());
+        int deliquenLevel = 1;
         if (daysInBetween > 3 && daysInBetween <= 30)
-            deliquenLevel = 3;
-        else if (daysInBetween > 3 && daysInBetween <= 30)
             deliquenLevel = 3;
         else if (daysInBetween > 30 && daysInBetween <= 60)
             deliquenLevel = 30;
@@ -144,7 +144,7 @@ public class TaggingLoansProcessor extends BatchProcessorBase implements ItemPro
             deliquenLevel = 120;
         else if (daysInBetween > 150 && daysInBetween <= 180)
             deliquenLevel = 150;
-        else if (daysInBetween > 150 && daysInBetween <= 180)
+        else if (daysInBetween > 180 && daysInBetween <= 210)
             deliquenLevel = 180;
         else if (daysInBetween > 210 && daysInBetween <= 240)
             deliquenLevel = 210;
