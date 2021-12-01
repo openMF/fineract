@@ -65,4 +65,9 @@ public class MessageBatchDataResults extends MessageBaseData {
     public void setSuccess(boolean success) {
         this.success = success;
     }
+
+    @Override
+    public String toString() {
+        return "MessageBatchDataResults{" + "tenantIdentifier='" + tenantIdentifier + '\'' + ", batchStepName='" + batchStepName + '\'' + ", totalItems=" + totalItems + ", processedItems=" + processedItems + ", skippedItems=" + skippedItems + ", success=" + success + '}';
+    }
 }

@@ -28,6 +28,7 @@ import javax.annotation.PostConstruct;
 import javax.jms.Queue;
 
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResults;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
@@ -122,6 +123,8 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
         businessEventNotifierService.addBusinessEventPostListeners(BusinessEvents.SHARE_ACCOUNT_CREATE, new ShareAccountCreatedListener());
         businessEventNotifierService.addBusinessEventPostListeners(BusinessEvents.SHARE_ACCOUNT_APPROVE,
                 new ShareAccountApprovedListener());
+        businessEventNotifierService.addBusinessEventPostListeners(BusinessEvents.COB_STEP_EXECUTION,
+                new COBEventListener());
     }
 
     private abstract static class NotificationBusinessEventAdapter implements BusinessEventListener {
@@ -410,6 +413,20 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
                 shareAccount = (ShareAccount) entity;
                 buildNotification("ACTIVATE_SHAREACCOUNT", "shareAccount", shareAccount.getId(), "Share account approved", "approved",
                         context.authenticatedUser().getId(), shareAccount.getOfficeId());
+            }
+        }
+    }
+
+    private class COBEventListener extends NotificationBusinessEventAdapter {
+
+        @Override
+        public void businessEventWasExecuted(Map<BusinessEntity, Object> businessEventEntity) {
+            MessageBatchDataResults message;
+            Object entity = businessEventEntity.get(BusinessEntity.BATCH_JOB);
+            if (entity != null) {
+                message = (MessageBatchDataResults) entity;
+                buildNotification("READ_LOAN", "MessageBatchDataResults", 1L, message.toString(), "processed",
+                        context.authenticatedUser().getId(), 1L);
             }
         }
     }
