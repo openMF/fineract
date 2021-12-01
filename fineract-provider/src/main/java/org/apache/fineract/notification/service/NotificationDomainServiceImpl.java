@@ -449,6 +449,7 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
                 this.notificationKafkaEvent.broadcastNotificationKafka(notificationDataTopicName, notificationData);
             }
         } catch (Exception e) {
+            LOG.error(e.getMessage());
             this.springEventPublisher.broadcastNotification(notificationData);
         }
     }
