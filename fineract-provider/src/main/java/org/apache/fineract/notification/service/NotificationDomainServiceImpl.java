@@ -426,7 +426,7 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
             if (entity != null) {
                 message = (MessageBatchDataResults) entity;
                 buildNotification("READ_LOAN", "MessageBatchDataResults", 1L, message.toString(), "processed",
-                        context.authenticatedUser().getId(), 1L);
+                        1L, 1L);
             }
         }
     }
