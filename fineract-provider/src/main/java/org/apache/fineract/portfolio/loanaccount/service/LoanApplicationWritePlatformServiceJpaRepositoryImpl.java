@@ -1735,7 +1735,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
         try {
             List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
             for (LoanRepaymentScheduleInstallment installment : installments) {
-                if (installment.getId() == null) {
+                if (installment.isNew()) {
                     this.repaymentScheduleInstallmentRepository.save(installment);
                 }
             }

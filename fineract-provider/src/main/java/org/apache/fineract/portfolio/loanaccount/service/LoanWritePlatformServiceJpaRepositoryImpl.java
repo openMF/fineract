@@ -658,7 +658,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
             for (LoanRepaymentScheduleInstallment installment : installments) {
                 // installment.setPostDatedChecksToNull();
-                if (installment.getId() == null) {
+                if (installment.isNew()) {
                     this.repaymentScheduleInstallmentRepository.save(installment);
                 }
             }
@@ -681,7 +681,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         try {
             List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
             for (LoanRepaymentScheduleInstallment installment : installments) {
-                if (installment.getId() == null) {
+                if (installment.isNew()) {
                     this.repaymentScheduleInstallmentRepository.save(installment);
                 }
             }

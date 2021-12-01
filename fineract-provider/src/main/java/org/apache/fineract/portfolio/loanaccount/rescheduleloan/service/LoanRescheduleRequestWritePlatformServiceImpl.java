@@ -529,7 +529,7 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
         try {
             List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
             for (LoanRepaymentScheduleInstallment installment : installments) {
-                if (installment.getId() == null) {
+                if (installment.isNew()) {
                     this.repaymentScheduleInstallmentRepository.save(installment);
                 }
             }
