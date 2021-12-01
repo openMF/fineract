@@ -55,6 +55,7 @@ public class AmazonSQSConfig {
     private String concurrency;
     private String awsAccountNo;
     private Integer numberOfMessagesToPrefetch;
+    private Integer threadPoolSize;
 
     private Properties messagingProperties;
     private AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
@@ -74,7 +75,7 @@ public class AmazonSQSConfig {
         if (regionName == null) {
             regionName = messagingProperties.getProperty("aws.messaging.region.name");
         }
-        concurrency = getValue("AWS_SQS_CONCURRENCY", "1");
+        concurrency = getValue("DEFAULT_SQS_CONCURRENCY", "1");
         if (concurrency == null) {
             concurrency = messagingProperties.getProperty("aws.messaging.concurrency");
         }
@@ -87,6 +88,11 @@ public class AmazonSQSConfig {
         if (numberOfMessagesToPrefetch == null)
             numberOfMessagesToPrefetch = 1;
         LOG.info("SQS Number of Messages prefetch {}", numberOfMessagesToPrefetch);
+
+        threadPoolSize = Integer.valueOf(getValue("DEFAULT_SQS_THREAD_POOL", "1"));
+        if (threadPoolSize == null)
+            threadPoolSize = 1;
+        LOG.info("SQS Thread pool size {}", threadPoolSize);
 
         this.connectionFactory = sqsConnectionFactory();
     }
@@ -129,7 +135,7 @@ public class AmazonSQSConfig {
         factory.setMaxMessagesPerTask(numberOfMessagesToPrefetch);
         factory.setSessionAcknowledgeMode(Session.CLIENT_ACKNOWLEDGE);
         factory.setErrorHandler(new DefaultErrorHandler());
-        factory.setTaskExecutor(Executors.newFixedThreadPool(numberOfMessagesToPrefetch));
+        factory.setTaskExecutor(Executors.newFixedThreadPool(threadPoolSize));
         return factory;
     }
 
