@@ -40,7 +40,7 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 @Profile(JobConstants.SPRING_KAFKA_PROFILE_NAME)
 public class KafkaProducerConfiguration {
 
-    @Value("$FINERACT_DEFAULT_KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")
+    @Value("${FINERACT_DEFAULT_KAFKA_BOOTSTRAP_ADDRESS:localhost:9092}")
     private String bootstrapAddress;
 
     @Value("${FINERACT_DEFAULT_KAFKA_SECURITY_PROTOCOL:TEXTPLAIN}")
