@@ -312,11 +312,12 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
     private void saveAndFlushLoanWithDataIntegrityViolationChecks(final Loan loan) {
         try {
             List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
+            List<LoanRepaymentScheduleInstallment> installmentsAdded = new ArrayList<>();
             for (LoanRepaymentScheduleInstallment installment : installments) {
-                if (installment.getId() == null) {
-                    this.repaymentScheduleInstallmentRepository.save(installment);
-                }
+                if (installment.getId() == null)
+                    installmentsAdded.add(installment);
             }
+            this.repaymentScheduleInstallmentRepository.saveAll(installmentsAdded);
             this.loanRepositoryWrapper.saveAndFlush(loan);
         } catch (final JpaSystemException | DataIntegrityViolationException e) {
             final Throwable realCause = e.getCause();
