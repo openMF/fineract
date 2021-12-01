@@ -450,6 +450,7 @@ public class NotificationDomainServiceImpl implements NotificationDomainService 
             }
         } catch (Exception e) {
             LOG.error(e.getMessage());
+            e.printStackTrace();
             this.springEventPublisher.broadcastNotification(notificationData);
         }
     }

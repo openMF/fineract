@@ -32,7 +32,7 @@ import org.springframework.util.concurrent.ListenableFutureCallback;
 public class NotificationKafkaEventService {
 
     private static final Logger LOG = LoggerFactory.getLogger(NotificationKafkaEventService.class);
-  
+
     @Autowired
     private final KafkaTemplate<String, NotificationData> notificationDataKafkaTemplate;
 
@@ -40,21 +40,22 @@ public class NotificationKafkaEventService {
     public NotificationKafkaEventService(KafkaTemplate<String, NotificationData> kafkaTemplate) {
         this.notificationDataKafkaTemplate = kafkaTemplate;
     }
-    
-    public void broadcastNotificationKafka(final String destination, final NotificationData notificationData) {
 
+    public void broadcastNotificationKafka(final String destination, final NotificationData notificationData) {
+        LOG.debug(String.format("PARAMS destination: %s, notificationData: %s", destination, notificationData.toString()));
         StringBuilder key = new StringBuilder();
         key.append(notificationData.getOfficeId()).append(notificationData.getObjectIdentifier());
 
-        ListenableFuture<SendResult<String, NotificationData>> future = 
-            this.notificationDataKafkaTemplate.send(destination,key.toString(), notificationData);
+        ListenableFuture<SendResult<String, NotificationData>> future = this.notificationDataKafkaTemplate.send(destination, key.toString(),
+                notificationData);
 
         future.addCallback(new ListenableFutureCallback<SendResult<String, NotificationData>>() {
 
             @Override
             public void onSuccess(SendResult<String, NotificationData> result) {
-                LOG.info("Sent notificationData message=[" + notificationData.toString() + " with Id "
-                        + notificationData.getObjectIdentifier() + "] with offset=[" + result.getRecordMetadata().offset() + "]");
+                LOG.info(
+                        "Sent notificationData message=[" + notificationData.toString() + " with Id " + notificationData.getObjectIdentifier() + "] with offset=[" + result.getRecordMetadata()
+                                .offset() + "]");
             }
 
             @Override
