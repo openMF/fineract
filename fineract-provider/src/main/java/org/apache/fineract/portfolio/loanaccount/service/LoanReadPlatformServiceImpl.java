@@ -1582,12 +1582,12 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         
         // Only apply for duedate = yesterday (so that we don't apply
         // penalties on the duedate itself)
-        if (this.databaseType.equals(DatabaseUtils.POSTGRES_DATABASE_TYPE)) {
-            sqlBuilder.append(" and ls.duedate >= (NOW() - INTERVAL '" + (penaltyWaitPeriod + 1) + " DAY')");
-        } else {
-            sqlBuilder.append(" and ls.duedate >= DATE_SUB(CURDATE(),INTERVAL (? + 1) DAY)");
-            parameters.addValue("penaltyWaitPeriod", penaltyWaitPeriod);
-        }
+//        if (this.databaseType.equals(DatabaseUtils.POSTGRES_DATABASE_TYPE)) {
+//            sqlBuilder.append(" and ls.duedate >= (CURRENT_DATE - INTERVAL '" + (penaltyWaitPeriod + 1) + " DAY')");
+//        } else {
+//            sqlBuilder.append(" and ls.duedate >= DATE_SUB(CURDATE(),INTERVAL (? + 1) DAY)");
+//            parameters.addValue("penaltyWaitPeriod", penaltyWaitPeriod);
+//        }
 
         return template.query(sqlBuilder.toString(), parameters, rm);
     }
