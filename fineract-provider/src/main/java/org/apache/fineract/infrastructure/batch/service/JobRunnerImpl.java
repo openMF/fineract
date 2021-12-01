@@ -26,11 +26,13 @@ import org.apache.fineract.infrastructure.batch.exception.JobAlreadyCompletedExc
 import org.apache.fineract.infrastructure.batch.exception.JobAlreadyRunningException;
 import org.apache.fineract.infrastructure.batch.exception.JobIllegalRestartException;
 import org.apache.fineract.infrastructure.batch.exception.JobParameterInvalidException;
+import org.apache.fineract.infrastructure.batch.reader.BatchLoansReader;
+import org.apache.fineract.infrastructure.batch.writer.BatchLoansWriter;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
-import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
+import org.apache.fineract.infrastructure.security.service.TenantDetailsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
@@ -41,6 +43,7 @@ import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
@@ -60,28 +63,39 @@ public class JobRunnerImpl implements JobRunner {
     private final JobBuilderFactory jobBuilderFactory;
     private final JobExecutionListener jobExecutionListener;
     private final ConfigurationDomainService configurationDomainService;
+    private final TenantDetailsService tenantDetailsService;
 
+    private final BatchLoansReader batchLoansReader;
+    private final BatchLoansWriter batchLoansWriter;
     // Steps
-    private final Step batchForLoansStep;
+    private final StepBuilderFactory stepBuilderFactory;
     private final Step autopayLoansStep;
     private final Step applyChargeForOverdueLoansStep;
     private final Step taggingLoansStep;
     private final Step updateLoanArrearsAgingStep;
     private final Step updateLoanSummaryStep;
 
+    private Integer chunkSize;
+
     @Autowired
-    public JobRunnerImpl(@Qualifier("batchJobLauncher") JobLauncher jobLauncher, final JobBuilderFactory jobBuilderFactory,
-            JobExecutionListener jobExecutionListener, final ConfigurationDomainService configurationDomainService,
-            final Step batchForLoansStep, final Step autopayLoansStep, final Step applyChargeForOverdueLoansStep,
+    public JobRunnerImpl(@Qualifier("batchJobLauncher") JobLauncher jobLauncher, @Qualifier("stepBuilderFactory") StepBuilderFactory stepBuilderFactory, 
+            JobBuilderFactory jobBuilderFactory, JobExecutionListener jobExecutionListener, 
+            final ConfigurationDomainService configurationDomainService, final TenantDetailsService tenantDetailsService,
+            final BatchLoansReader batchLoansReader, final BatchLoansWriter batchLoansWriter,
+            final Step autopayLoansStep, final Step applyChargeForOverdueLoansStep,
             final Step taggingLoansStep, final Step updateLoanArrearsAgingStep, final Step updateLoanSummaryStep) {
         this.jobLauncher = jobLauncher;
         this.jobBuilderFactory = jobBuilderFactory;
         this.jobExecutionListener = jobExecutionListener;
 
+        this.tenantDetailsService = tenantDetailsService;
         this.configurationDomainService = configurationDomainService;
+
+        this.batchLoansReader = batchLoansReader;
+        this.batchLoansWriter = batchLoansWriter;
         // Steps
+        this.stepBuilderFactory = stepBuilderFactory;
         this.applyChargeForOverdueLoansStep = applyChargeForOverdueLoansStep;
-        this.batchForLoansStep = batchForLoansStep;
         this.autopayLoansStep = autopayLoansStep;
         this.taggingLoansStep = taggingLoansStep;
         this.updateLoanArrearsAgingStep = updateLoanArrearsAgingStep;
@@ -89,11 +103,12 @@ public class JobRunnerImpl implements JobRunner {
     }
 
     @Override
-    public MessageJobResponse runChunkJob(final String cobDate, final Long limit) {
+    public MessageJobResponse runChunkJob(final FineractPlatformTenant tenant, final String cobDate, final Integer chunkSize, final Long limit) {
         try {
+            this.chunkSize = chunkSize;
             final String uuid = UUID.randomUUID().toString();
             JobExecution jobExecution = this.jobLauncher.run(getJobById(BatchConstants.BATCH_CHUNKJOB_PROCESS_ID), 
-                getChunkerJobParameters(uuid, cobDate, limit));
+                getChunkerJobParameters(tenant, uuid, cobDate, limit));
             final Long jobInstanceId = jobExecution.getJobInstance().getInstanceId();
             MessageJobResponse response = new MessageJobResponse(jobInstanceId, uuid);
 
@@ -141,7 +156,8 @@ public class JobRunnerImpl implements JobRunner {
         switch (jobId.intValue()) {
             case 1:
                 return jobBuilderFactory.get(BatchConstants.BATCH_BLOCKLOANS_JOB_NAME)
-                    .listener(jobExecutionListener).flow(batchForLoansStep)
+                    .listener(jobExecutionListener)
+                    .flow(batchForLoansStep(this.batchLoansReader, this.batchLoansWriter, this.chunkSize))
                     .end().build();
             case 2:
                 return jobBuilderFactory.get(BatchConstants.BATCH_COB_JOB_NAME)
@@ -156,8 +172,7 @@ public class JobRunnerImpl implements JobRunner {
         }
     }
 
-    private JobParameters getChunkerJobParameters(String uuid, String cobDate, Long limit) {
-        final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
+    private JobParameters getChunkerJobParameters(final FineractPlatformTenant tenant, final String uuid, final String cobDate, final Long limit) {
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_ID, tenant.getTenantIdentifier());
         
@@ -171,11 +186,13 @@ public class JobRunnerImpl implements JobRunner {
     }
 
     private JobParameters getCOBJobParameters(MessageBatchDataRequest messageData) {
-        final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
+        BatchJobUtils.setTenant(messageData.getTenantIdentifier(), tenantDetailsService);
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
-        jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_ID, tenant.getTenantIdentifier());
+        jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_ID, messageData.getTenantIdentifier());
         
-        final String dateOfTenant = DateUtils.formatDate(DateUtils.getDateOfTenant(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
+        String dateOfTenant = messageData.getCobDate();
+        if (dateOfTenant.isEmpty())
+            dateOfTenant = DateUtils.formatDate(DateUtils.getDateOfTenant(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_TENANT_DATE, dateOfTenant);
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_INSTANCE_ID, messageData.getIdentifier() , true);
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_COB_DATE, messageData.getCobDate());
@@ -188,5 +205,10 @@ public class JobRunnerImpl implements JobRunner {
         jobParametersBuilder.addString(BatchConstants.JOB_PARAM_BACKDATE_PENALTIES, backdatePenalties.toString(),
                 backdatePenalties);
         return jobParametersBuilder.toJobParameters();
+    }
+
+    private Step batchForLoansStep(BatchLoansReader batchLoansReader, BatchLoansWriter batchLoansWriter, final int chunkSize) {
+        return stepBuilderFactory.get("batchForLoansStep").<Long, Long>chunk(chunkSize).reader(batchLoansReader)
+                .writer(batchLoansWriter).build();
     }
 }

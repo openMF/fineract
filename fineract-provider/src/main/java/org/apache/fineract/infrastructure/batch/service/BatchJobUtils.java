@@ -32,8 +32,12 @@ public class BatchJobUtils {
 
     public static FineractPlatformTenant setTenant(final String tenantIdentifier, final TenantDetailsService tenantDetailsService) {
         final FineractPlatformTenant tenant = tenantDetailsService.loadTenantById(tenantIdentifier);
-        ThreadLocalContextUtil.setTenant(tenant);
+        setTenant(tenant);
         return tenant;
+    }
+
+    public static void setTenant(final FineractPlatformTenant tenant) {
+        ThreadLocalContextUtil.setTenant(tenant);
     }
 
     public static List<Long> getLoanIds(Object obj, Gson gson) {

@@ -156,7 +156,7 @@ public class JobRegisterServiceImpl implements JobRegisterService, ApplicationLi
             } else if (profileUtils.isActiveProfile(JobConstants.SPRING_BATCH_PROFILE_NAME)) {
                 LOG.debug("Database for tenant {} : {}", tenant.getName(), tenant.getTenantIdentifier());
                 final BatchConfiguration batchConfiguration = new BatchConfiguration(
-                        this.dataSourceServiceFactory.determineDataSourceService());
+                    this.applicationContext, this.dataSourceServiceFactory.determineDataSourceService());
             }
         }
     }

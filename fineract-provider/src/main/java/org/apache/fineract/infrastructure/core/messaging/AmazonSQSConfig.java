@@ -42,13 +42,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
-import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.core.JmsTemplate;
 
 @Configuration
 @Profile({ JobConstants.SPRING_BATCH_PROFILE_NAME, JobConstants.SPRING_MESSAGINGSQS_PROFILE_NAME })
-@EnableJms
 public class AmazonSQSConfig {
 
     public static final Logger LOG = LoggerFactory.getLogger(AmazonSQSConfig.class);
@@ -66,6 +64,7 @@ public class AmazonSQSConfig {
     private ApplicationContext context;
 
     private SQSConnectionFactory connectionFactory;
+    private AmazonSQS sqsClient;
 
     @PostConstruct
     protected void init() {
@@ -104,11 +103,16 @@ public class AmazonSQSConfig {
     }
 
     public SQSConnectionFactory sqsConnectionFactory() {
-        AmazonSQS sqs = AmazonSQSClientBuilder.standard().withRegion(getRegion(regionName)).withCredentials(credentialsProvider).build();
-
+        this.sqsClient = AmazonSQSClientBuilder.standard().withRegion(getRegion(regionName)).withCredentials(credentialsProvider).build();
+    
         ProviderConfiguration providerConfiguration = new ProviderConfiguration();
         providerConfiguration.setNumberOfMessagesToPrefetch(numberOfMessagesToPrefetch);
-        return new SQSConnectionFactory(providerConfiguration, sqs);
+        return new SQSConnectionFactory(providerConfiguration, this.sqsClient);
+    }
+
+    @Bean
+    public AmazonSQS sqsClient() {
+        return this.sqsClient;
     }
 
     @Bean
@@ -123,7 +127,7 @@ public class AmazonSQSConfig {
         factory.setDestinationResolver(new SQSDynamicDestinationResolver(awsAccountNo));
         factory.setConcurrency(concurrency);
         factory.setMaxMessagesPerTask(numberOfMessagesToPrefetch);
-        factory.setSessionAcknowledgeMode(Session.AUTO_ACKNOWLEDGE);
+        factory.setSessionAcknowledgeMode(Session.CLIENT_ACKNOWLEDGE);
         factory.setErrorHandler(new DefaultErrorHandler());
         factory.setTaskExecutor(Executors.newFixedThreadPool(numberOfMessagesToPrefetch));
         return factory;

@@ -20,10 +20,11 @@ package org.apache.fineract.infrastructure.batch.service;
 
 import org.apache.fineract.infrastructure.batch.data.MessageBatchDataRequest;
 import org.apache.fineract.infrastructure.batch.data.MessageJobResponse;
+import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 
 public interface JobRunner {
 
-    MessageJobResponse runChunkJob(final String cobDate, final Long limit);
+    MessageJobResponse runChunkJob(final FineractPlatformTenant tenant, final String cobDate, final Integer chunkSize, final Long limit);
 
     MessageJobResponse runCOBJob(MessageBatchDataRequest messageData);
 

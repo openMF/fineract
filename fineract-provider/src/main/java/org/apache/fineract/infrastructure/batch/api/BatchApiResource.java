@@ -35,8 +35,10 @@ import com.google.gson.Gson;
 import org.apache.fineract.infrastructure.batch.config.BatchConstants;
 import org.apache.fineract.infrastructure.batch.data.MessageJobResponse;
 import org.apache.fineract.infrastructure.batch.service.JobRunner;
+import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.exception.UnrecognizedQueryParamException;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.core.utils.TextUtils;
 import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.apache.fineract.infrastructure.security.exception.NoAuthorizationException;
@@ -57,11 +59,6 @@ public class BatchApiResource {
     private final PlatformSecurityContext context;
     private final JobRunner jobRunner;
 
-    /**
-     * Constructs a 'BatchApiService' with context, toApiJsonSerializer, service and batchRequestJsonHelper.
-     *
-     * @param context
-     */
     @Autowired
     public BatchApiResource(final PlatformSecurityContext context, final JobRunner jobRunner) {
         this.context = context;
@@ -75,6 +72,7 @@ public class BatchApiResource {
     public Response executeBatchJob(@PathParam("jobId") @Parameter(description = "jobId") final Long jobId,
             @QueryParam("command") @Parameter(description = "command") final String commandParam,
             @QueryParam("cobDate") @Parameter(description = "cobDate") String cobDate,
+            @QueryParam("chunkSize") @Parameter(description = "chunkSize") Integer chunkSize,
             @QueryParam("limit") @Parameter(description = "limit") final Long limit) {
         final boolean hasNotPermission = this.context.authenticatedUser().hasNotPermissionForAnyOf("ALL_FUNCTIONS", "EXECUTEJOB_SCHEDULER");
         if (hasNotPermission) {
@@ -86,7 +84,11 @@ public class BatchApiResource {
             if (cobDate == null) {
                 cobDate = DateUtils.formatDate(DateUtils.getDateOfTenant(), BatchConstants.DEFAULT_BATCH_DATE_FORMAT);
             }
-            MessageJobResponse result = jobRunner.runChunkJob(cobDate, limit);
+            if (chunkSize == null) {
+                chunkSize = 100;
+            }
+            final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
+            MessageJobResponse result = jobRunner.runChunkJob(tenant, cobDate, chunkSize, limit);
             final Gson gson = new Gson();
             response = Response.status(Response.Status.OK).entity(gson.toJson(result)).build();
         } else {

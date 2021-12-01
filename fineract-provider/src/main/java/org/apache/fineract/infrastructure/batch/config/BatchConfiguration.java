@@ -26,7 +26,6 @@ import org.apache.fineract.infrastructure.batch.data.MessageBatchDataResponse;
 import org.apache.fineract.infrastructure.batch.processor.ApplyChargeForOverdueLoansProcessor;
 import org.apache.fineract.infrastructure.batch.processor.AutopayLoansProcessor;
 import org.apache.fineract.infrastructure.batch.processor.TaggingLoansProcessor;
-import org.apache.fineract.infrastructure.batch.reader.BatchLoansReader;
 import org.apache.fineract.infrastructure.batch.reader.BlockLoansReader;
 import org.apache.fineract.infrastructure.batch.writer.ApplyChargeForOverdueLoansWriter;
 import org.apache.fineract.infrastructure.batch.writer.AutopayLoansWriter;
@@ -72,7 +71,6 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
     public static final Logger LOG = LoggerFactory.getLogger(BatchConfiguration.class);
 
-    @Autowired
     private ApplicationContext context;
 
     @Autowired
@@ -80,6 +78,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
     private String databaseType;
     private Integer corePoolSize;
+    private Integer chunkSize = null;
 
     private final Properties batchJobProperties;
     private RoutingDataSourceService routingDataSourceService;
@@ -88,10 +87,15 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     private JobExplorer jobExplorer;
     private StepBuilderFactory stepBuilderFactory;
 
-    public BatchConfiguration(RoutingDataSourceService tomcatJdbcDataSourcePerTenantService) {
+    public BatchConfiguration(ApplicationContext context, RoutingDataSourceService tomcatJdbcDataSourcePerTenantService) {
+        this.context = context;
         routingDataSourceService = tomcatJdbcDataSourcePerTenantService;
         batchJobProperties = PropertyUtils.loadYamlProperties(BatchConstants.BATCH_PROPERTIES_FILE);
         this.databaseType = DatabaseUtils.getDatabaseType(getDataSource());
+        this.corePoolSize = PropertyUtils.getInteger(context.getEnvironment(), 
+            BatchConstants.DEFAULT_BATCH_POOL_SIZE, "8");
+        this.chunkSize = PropertyUtils.getInteger(context.getEnvironment(), 
+            BatchConstants.FINERACT_BATCH_JOBS_CHUNK_SIZE, "100");
     }
 
     @PostConstruct
@@ -221,6 +225,19 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
         }
     }
 
+    @Bean(name = "stepBuilderFactory")
+    @Scope("prototype")
+    public StepBuilderFactory stepBuilderFactory() {
+        return new StepBuilderFactory(this.jobRepository, this.transactionManager);
+    }
+
+    protected Integer getChunkSize() {
+        if (this.chunkSize == null)
+            return Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
+
+        return this.chunkSize;
+    }
+
     @Bean
     public BatchDestinations batchDestinations() {
         return new BatchDestinations(batchJobProperties(), this.context.getEnvironment());
@@ -256,17 +273,9 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
     // Steps
     @Bean
-    public Step batchForLoansStep(BatchLoansReader batchLoansReader,
-            BatchLoansWriter batchLoansWriter) {
-        final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
-        return stepBuilderFactory.get("batchForLoansStep").<Long, Long>chunk(chunkSize).reader(batchLoansReader)
-                .writer(batchLoansWriter).build();
-    }
-
-    @Bean
     public Step autopayLoansStep(BlockLoansReader blockLoansReader, AutopayLoansProcessor autopayLoansProcessor,
         AutopayLoansWriter autopayLoansWriter) {
-        final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
+        final int chunkSize = getChunkSize(); 
         return stepBuilderFactory.get("autopayLoansStep")
                 .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(blockLoansReader)
                 .writer(autopayLoansWriter)
@@ -279,7 +288,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     public Step applyChargeForOverdueLoansStep(BlockLoansReader blockLoansReader,
             ApplyChargeForOverdueLoansProcessor applyChargeForOverdueLoansProcessor,
             ApplyChargeForOverdueLoansWriter applyChargeForOverdueLoansWriter) {
-        final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
+        final int chunkSize = getChunkSize(); 
         return stepBuilderFactory.get("applyChargeForOverdueLoansStep")
                 .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(blockLoansReader)
                 .writer(applyChargeForOverdueLoansWriter)
@@ -291,8 +300,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
     @Bean
     public Step taggingLoansStep(BlockLoansReader blockLoansReader,
         TaggingLoansProcessor taggingLoansProcessor, TaggingLoansWriter taggingLoansWriter) {
-        final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
-
+        final int chunkSize = getChunkSize(); 
         return stepBuilderFactory.get("taggingLoansStep")
                 .<Long, MessageBatchDataResponse>chunk(chunkSize).reader(blockLoansReader)
                 .writer(taggingLoansWriter)
@@ -303,7 +311,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
     @Bean
     public Step updateLoanArrearsAgingStep(BlockLoansReader blockLoansReader, LoanArrearsAgingWriter loanArrearsAgingWritter) {
-        final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
+        final int chunkSize = getChunkSize(); 
         return stepBuilderFactory.get("updateLoanArrearsAgingStep").<Long, Long>chunk(chunkSize).reader(blockLoansReader)
                 .writer(loanArrearsAgingWritter)
                 .transactionAttribute(getTransactionalAttributes())
@@ -312,7 +320,7 @@ public class BatchConfiguration extends DefaultBatchConfigurer {
 
     @Bean
     public Step updateLoanSummaryStep(BlockLoansReader blockLoansReader, UpdateLoanSummaryWritter updateLoanSummaryWritter) {
-        final int chunkSize = Integer.parseInt(this.batchJobProperties.getProperty("fineract.batch.jobs.chunk.size", "1000"));
+        final int chunkSize = getChunkSize(); 
         return stepBuilderFactory.get("updateLoanSummaryStep").<Long, Long>chunk(chunkSize).reader(blockLoansReader)
                 .writer(updateLoanSummaryWritter)
                 .transactionAttribute(getTransactionalAttributes())

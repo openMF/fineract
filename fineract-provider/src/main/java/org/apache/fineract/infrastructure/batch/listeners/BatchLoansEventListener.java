@@ -28,6 +28,7 @@ import org.apache.fineract.infrastructure.jobs.data.JobConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.listener.SessionAwareMessageListener;
@@ -39,11 +40,13 @@ public class BatchLoansEventListener extends BatchEventBaseListener implements S
 
     private static final Logger LOG = LoggerFactory.getLogger(BatchLoansEventListener.class);
 
+    @Lazy
     @Autowired
     private JobRunnerImpl jobRunnerImpl;
 
     @Override
-    @JmsListener(destination = "#{@batchDestinations.BatchLoansDestination}", concurrency = "#{@batchDestinations.ConcurrencyDestination}")
+    @JmsListener(destination = "#{@batchDestinations.BatchLoansDestination}", 
+        concurrency = "#{@batchDestinations.ConcurrencyDestination}")
     public void onMessage(Message message, Session session) {
         try {
             // LOG.debug("onMessage ==== " + message.getJMSMessageID());

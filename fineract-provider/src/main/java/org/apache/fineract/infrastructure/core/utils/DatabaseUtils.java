@@ -36,6 +36,19 @@ public class DatabaseUtils {
         return getDatabaseType(new JdbcTemplate(dataSource));
     }
 
+    public static String getDatabaseName(DataSource dataSource) {
+        return getDatabaseName(new JdbcTemplate(dataSource));
+    }
+
+    public static String getDatabaseName(JdbcTemplate jdbcTemplate) {
+        return jdbcTemplate.execute(new ConnectionCallback<String>() {
+            @Override
+            public String doInConnection(Connection connection) throws SQLException, DataAccessException {
+                return connection.getCatalog();
+            }
+        });
+    }
+
     public static String getDatabaseType(JdbcTemplate jdbcTemplate) {
         return jdbcTemplate.execute(new ConnectionCallback<String>() {
             @Override

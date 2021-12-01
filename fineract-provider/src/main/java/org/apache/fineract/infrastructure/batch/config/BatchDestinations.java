@@ -32,6 +32,36 @@ public class BatchDestinations {
         this.environment = environment;
     }
 
+    public Integer getNumberOfMessages() {
+        String value = environment.getProperty("FINERACT_BATCH_QUEUES_NUMBER_OF_MESSAGES");
+        if (value != null)
+            return Integer.parseInt(value);
+        value = batchJobProperties.getProperty("fineract.batch.jobs.queues.number.messages");
+        if (value != null)
+            return Integer.parseInt(value);
+        return 1; // Default
+    }
+
+    public Integer getWaitTimeSeconds() {
+        String value = environment.getProperty("FINERACT_BATCH_QUEUES_WAITTIME_SECONDS");
+        if (value != null)
+            return Integer.parseInt(value);
+        value = batchJobProperties.getProperty("fineract.batch.jobs.queues.waittime");
+        if (value != null)
+            return Integer.parseInt(value);
+        return 1; // Default
+    }
+
+    public Integer getVisibilityTimeout() {
+        String value = environment.getProperty("FINERACT_BATCH_QUEUES_VISIBILITY_TIMEOUT");
+        if (value != null)
+            return Integer.parseInt(value);
+        value = batchJobProperties.getProperty("fineract.batch.jobs.queues.visibility.timeout");
+        if (value != null)
+            return Integer.parseInt(value);
+        return 20; // Default
+    }
+
     public String getConcurrencyDestination() {
         String value = environment.getProperty("FINERACT_BATCH_LISTENER_CONCURRENCY");
         if (value != null)

@@ -39,6 +39,7 @@ public class BatchConstants {
 
     // Settings
     public static final String DEFAULT_BATCH_POOL_SIZE = "DEFAULT_BATCH_POOL_SIZE";
+    public static final String FINERACT_BATCH_JOBS_CHUNK_SIZE = "FINERACT_BATCH_JOBS_CHUNK_SIZE";
 
     public static final String JOB_PARAM_PENALTY_WAIT_PERIOD = "penaltyWaitPeriod";
     public static final String JOB_PARAM_BACKDATE_PENALTIES = "backdatePenalties";

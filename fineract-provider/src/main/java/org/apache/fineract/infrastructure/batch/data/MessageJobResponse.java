@@ -24,6 +24,7 @@ public class MessageJobResponse implements Serializable {
     protected Long jobInstanceId;
     protected Long parentId;
     protected String identifier;
+    // protected String messageId;
 
     public MessageJobResponse(Long jobInstanceId, Long parentId, String identifier) {
         this.jobInstanceId = jobInstanceId;

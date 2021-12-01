@@ -394,6 +394,8 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
 
             final String sql = getAddSql(columnHeaders, dataTableName, getFKField(appTable), appTableId, dataParams);
 
+            LOG.debug("SQL: {}", sql);
+
             this.jdbcTemplate.update(sql);
 
             return commandProcessingResult; //
