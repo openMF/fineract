@@ -140,7 +140,7 @@ public class BulkImportEventListener implements ApplicationListener<BulkImportEv
         final Workbook workbook = event.getWorkbook();
         final Count count = importHandler.process(workbook, event.getLocale(), event.getDateFormat());
         importDocument.update(DateUtils.getLocalDateTimeOfTenant(), count.getSuccessCount(), count.getErrorCount());
-        this.importRepository.save(importDocument);
+        this.importRepository.saveAndFlush(importDocument);
 
         final Set<String> modifiedParams = new HashSet<>();
         modifiedParams.add("fileName");
@@ -166,5 +166,4 @@ public class BulkImportEventListener implements ApplicationListener<BulkImportEv
         ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
         this.documentService.updateDocument(documentCommand, bis);
     }
-
 }

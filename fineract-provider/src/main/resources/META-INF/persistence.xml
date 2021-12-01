@@ -21,21 +21,34 @@
 -->
 
 
-<persistence version="2.0"
-    xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
-
-    <persistence-unit name="jpa-pu" transaction-type="RESOURCE_LOCAL">
-        <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
+    <persistence-unit name="EclipseLink-PU" transaction-type="RESOURCE_LOCAL">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
         <properties>
-            <property name="openjpa.Compatibility" value="QuotedNumbersInQueries=true"/>
-            <!--
-            <property name="openjpa.jdbc.DBDictionary" value="org.apache.fineract.infrastructure.core.domain.MySQLDictionaryCustom"/>
-            -->
-<!--            <property name="openjpa.jdbc.DBDictionary" value="org.apache.fineract.infrastructure.core.domain.PostgreSQLDictionaryCustom"/>-->
-            <!--<property name="openjpa.InverseManager" value="true(Action=warn)"/> -->
-            <property name="openjpa.Log" value="slf4j"/>
-            <property name="openjpa.jdbc.MappingDefaults" value="ForeignKeyDeleteAction=CASCADE"/>
+            <property name="eclipselink.weaving" value="static" />
+            <property name="eclipselink.weaving.eager" value="false" />
+            <property name="eclipselink.weaving.internal" value="true" />
+            <property name="eclipselink.logging.level" value="INFO" />
+            <property name="eclipselink.target-database" value="PostgreSQL" />
+            <property name="eclipselink.jdbc.batch-writing" value="JDBC" />
+            <property name="eclipselink.jdbc.batch-writing.size" value="1000" />
+            <property name="eclipselink.persistence-context.flush-mode" value="auto" />
+            <property name="eclipselink.cache.shared.default" value="true" />
+            <property name="eclipselink.cache.type" value="SoftWeak" />
+            <property name="eclipselink.cache.size.default" value="1000" />
+            <property name="eclipselink.cache-usage" value="UseEntityDefault" />
+            <property name="eclipselink.cache-usage.indirection-policy" value="Exception" />
+            <property name="eclipselink.flush-clear.cache" value="DropInvalidate" />
+            <property name="eclipselink.query-result-cache" value="false" />
+            <property name="eclipselink.jdbc.cache-statements" value="true" />
+            <property name="eclipselink.jdbc.cache-statements.size" value="100" />
+            <property name="eclipselink.maintain-cache" value="false" />
+            <property name="eclipselink.persistence-context.persist-on-commit" value="true" />
+            <!--  Close EntityManager on commit, to avoid cost of resume -->
+            <property name="eclipselink.persistence-context.close-on-commit" value="true" />
         </properties>
     </persistence-unit>
 </persistence>

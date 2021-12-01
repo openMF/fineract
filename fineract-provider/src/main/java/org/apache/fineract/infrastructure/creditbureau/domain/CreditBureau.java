@@ -18,26 +18,31 @@
  */
 package org.apache.fineract.infrastructure.creditbureau.domain;
 
-import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
 
 @Entity
-@Table(name = "m_creditbureau")
+@Table(name = "m_creditbureau", uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "product", "country" , "implementation_key"}, name = "uk_creditbureau")})
 public class CreditBureau extends AbstractPersistableCustom {
 
+    @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "product", nullable = false)
     private String product;
 
+    @Column(name = "country", nullable = false)
     private String country;
 
+    @Column(name = "implementation_key", nullable = false)
     private String implementationKey;
 
-    public CreditBureau(String name, String product, String country, String implementationKey,
-            List<CreditBureauLoanProductMapping> CreditBureauLoanProductMapping) {
+    public CreditBureau(String name, String product, String country, String implementationKey) {
         this.name = name;
         this.product = product;
         this.country = country;
@@ -49,14 +54,12 @@ public class CreditBureau extends AbstractPersistableCustom {
     }
 
     public static CreditBureau fromJson(final JsonCommand command) {
-
         final String tname = command.stringValueOfParameterNamed("name");
         final String tproduct = command.stringValueOfParameterNamed("product");
         final String tcountry = command.stringValueOfParameterNamed("country");
         final String timplementationKey = command.stringValueOfParameterNamed("implementationKey");
 
-        return new CreditBureau(tname, tproduct, tcountry, timplementationKey, null);
-
+        return new CreditBureau(tname, tproduct, tcountry, timplementationKey);
     }
 
     public String getName() {

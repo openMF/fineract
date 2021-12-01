@@ -31,7 +31,7 @@ databaseChangeLog:
   - include:
       file: sql/liquibase/changelog/core/004_core-update.yaml
   - include:
-      file: sql/liquibase/changelog/core/005_add_new_indexes_to_calendar_and_calendar_instance.yaml
+      file: sql/liquibase/changelog/core/005_core-alter.yaml
   - includeAll:
       context: sampledata
       path: sql/liquibase/changelog/core/sampledata

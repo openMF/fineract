@@ -218,7 +218,7 @@ public class ClientChargeWritePlatformServiceJpaRepositoryImpl implements Client
             // create Waiver Transaction
             ClientTransaction clientTransaction = ClientTransaction.waiver(client, client.getOffice(), transactionDate, waivedAmount,
                     clientCharge.getCurrency().getCode(), getAppUserIfPresent());
-            this.clientTransactionRepository.save(clientTransaction);
+            this.clientTransactionRepository.saveAndFlush(clientTransaction);
 
             // update charge paid by associations
             final ClientChargePaidBy chargePaidBy = ClientChargePaidBy.instance(clientTransaction, clientCharge, waivedAmount.getAmount());
@@ -458,5 +458,4 @@ public class ClientChargeWritePlatformServiceJpaRepositoryImpl implements Client
         throw new PlatformDataIntegrityException("error.msg.client.charges.unknown.data.integrity.issue",
                 "Unknown data integrity issue with resource.");
     }
-
 }

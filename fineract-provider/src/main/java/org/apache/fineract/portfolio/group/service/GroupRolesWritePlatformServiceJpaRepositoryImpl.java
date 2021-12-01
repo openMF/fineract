@@ -86,7 +86,7 @@ public class GroupRolesWritePlatformServiceJpaRepositoryImpl implements GroupRol
                 throw new ClientNotInGroupException(clientId, command.getGroupId());
             }
             final GroupRole groupRole = GroupRole.createGroupRole(group, client, role);
-            this.groupRoleRepository.save(groupRole);
+            this.groupRoleRepository.saveAndFlush(groupRole);
             return new CommandProcessingResultBuilder().withClientId(client.getId()).withGroupId(group.getId())
                     .withEntityId(groupRole.getId()).build();
 
@@ -168,5 +168,4 @@ public class GroupRolesWritePlatformServiceJpaRepositoryImpl implements GroupRol
         this.groupRoleRepository.delete(groupRole);
         return new CommandProcessingResultBuilder().withEntityId(groupRole.getId()).build();
     }
-
 }

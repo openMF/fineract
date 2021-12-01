@@ -37,9 +37,9 @@ public class JobParameter extends AbstractPersistableCustom {
     @Column(name = "parameter_value", nullable = true)
     private String parameterValue;
 
-    public JobParameter() {}
+    private JobParameter() {}
 
-    public JobParameter(final Long jobId, final String parameterName, final String parameterValue) {
+    private JobParameter(final Long jobId, final String parameterName, final String parameterValue) {
         this.jobId = jobId;
         this.parameterName = parameterName;
         this.parameterValue = parameterValue;

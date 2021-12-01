@@ -94,10 +94,10 @@ public class CreditBureauCommandFromApiJsonDeserializer {
             baseDataValidator.reset().parameter("creditBureauId").value(creditBureauId).notNull().notBlank().longGreaterThanZero();
         }
 
-        final String is_activeParameter = "isActive";
-        if (this.fromApiJsonHelper.parameterExists(is_activeParameter, element)) {
-            final boolean isActive = this.fromApiJsonHelper.extractBooleanNamed("isActive", element);
-            baseDataValidator.reset().parameter("isActive").value(isActive).notNull().notBlank().trueOrFalseRequired(isActive);
+        final String isActiveParameter = "isActive";
+        if (this.fromApiJsonHelper.parameterExists(isActiveParameter, element)) {
+            final boolean isActive = this.fromApiJsonHelper.extractBooleanNamed(isActiveParameter, element);
+            baseDataValidator.reset().parameter(isActiveParameter).value(isActive).notNull().notBlank().trueOrFalseRequired(isActive);
         }
 
         throwExceptionIfValidationWarningsExist(dataValidationErrors);

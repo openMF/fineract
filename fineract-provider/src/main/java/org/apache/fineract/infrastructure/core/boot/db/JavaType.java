@@ -19,7 +19,6 @@
 package org.apache.fineract.infrastructure.core.boot.db;
 
 import org.apache.fineract.infrastructure.core.exception.PlatformServiceUnavailableException;
-import org.apache.openjpa.enhance.PersistenceCapable;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -84,7 +83,7 @@ public enum JavaType {
 
     PC(null),
     LOCALE(Locale.class),
-    PC_UNTYPED(PersistenceCapable.class),
+    PC_UNTYPED(null),
     CALENDAR(Calendar.class),
     OID(null),
     INPUT_STREAM(InputStream.class),

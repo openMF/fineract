@@ -10733,7 +10733,7 @@ databaseChangeLog:
               - column:
                   constraints:
                     nullable: false
-                  name: business_rule_id
+                  name: businessRule_id
                   type: INTEGER
               - column:
                   name: param_value
@@ -11177,12 +11177,12 @@ databaseChangeLog:
               - column:
                   constraints:
                     nullable: false
-                  name: parameter_display_type
+                  name: parameter_displayType
                   type: VARCHAR(45)
               - column:
                   constraints:
                     nullable: false
-                  name: parameter_format_type
+                  name: parameter_FormatType
                   type: VARCHAR(10)
               - column:
                   constraints:

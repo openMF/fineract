@@ -44,7 +44,7 @@ public class CreditReportReadPlatformServiceImpl implements CreditReportReadPlat
     private static final class CreditReportDataMapper implements RowMapper<CreditReportData> {
 
         public String schema() {
-            return " c.id as id, c.creditBureauId as creditBureauId , c.nationalId as nationalId from m_creditreport c ";
+            return " c.id as id, c.creditbureau_id as creditBureauId , c.national_id as nationalId from m_creditreport c ";
         }
 
         @Override
@@ -65,7 +65,7 @@ public class CreditReportReadPlatformServiceImpl implements CreditReportReadPlat
         this.context.authenticatedUser();
 
         final CreditReportDataMapper rm = new CreditReportDataMapper();
-        final String sql = " select " + rm.schema() + " where c.creditBureauId = ? ";
+        final String sql = " select " + rm.schema() + " where c.creditbureau_id = ? ";
 
         return this.jdbcTemplate.query(sql, rm, new Object[] { creditBureauId });
 

@@ -185,11 +185,124 @@ public class LoanProduct extends AbstractPersistableCustom {
     @Column(name = "can_use_for_topup", nullable = false)
     private boolean canUseForTopup = false;
 
-    @Column(name = "is_equal_amortization", nullable = false)
-    private boolean isEqualAmortization = false;
-
     @Column(name = "fixed_principal_percentage_per_installment", scale = 2, precision = 5, nullable = true)
     private BigDecimal fixedPrincipalPercentagePerInstallment;
+
+    private LoanProduct() {
+        this.loanProductRelatedDetail = null;
+        this.loanProductMinMaxConstraints = null;
+    }
+
+    private LoanProduct(final Fund fund, final LoanTransactionProcessingStrategy transactionProcessingStrategy, final String name,
+                       final String shortName, final String description, final MonetaryCurrency currency, final BigDecimal defaultPrincipal,
+                       final BigDecimal defaultMinPrincipal, final BigDecimal defaultMaxPrincipal,
+                       final BigDecimal defaultNominalInterestRatePerPeriod, final BigDecimal defaultMinNominalInterestRatePerPeriod,
+                       final BigDecimal defaultMaxNominalInterestRatePerPeriod, final PeriodFrequencyType interestPeriodFrequencyType,
+                       final BigDecimal defaultAnnualNominalInterestRate, final InterestMethod interestMethod,
+                       final InterestCalculationPeriodMethod interestCalculationPeriodMethod, final boolean considerPartialPeriodInterest,
+                       final Integer repayEvery, final PeriodFrequencyType repaymentFrequencyType, final Integer defaultNumberOfInstallments,
+                       final Integer defaultMinNumberOfInstallments, final Integer defaultMaxNumberOfInstallments,
+                       final Integer graceOnPrincipalPayment, final Integer recurringMoratoriumOnPrincipalPeriods,
+                       final Integer graceOnInterestPayment, final Integer graceOnInterestCharged, final AmortizationMethod amortizationMethod,
+                       final BigDecimal inArrearsTolerance, final List<Charge> charges, final AccountingRuleType accountingRuleType,
+                       final boolean includeInBorrowerCycle, final LocalDate startDate, final LocalDate closeDate, final String externalId,
+                       final boolean useBorrowerCycle, final Set<LoanProductBorrowerCycleVariations> loanProductBorrowerCycleVariations,
+                       final boolean multiDisburseLoan, final Integer maxTrancheCount, final BigDecimal outstandingLoanBalance,
+                       final Integer graceOnArrearsAgeing, final Integer overdueDaysForNPA, final DaysInMonthType daysInMonthType,
+                       final DaysInYearType daysInYearType, final boolean isInterestRecalculationEnabled,
+                       final LoanProductInterestRecalculationDetails productInterestRecalculationDetails,
+                       final Integer minimumDaysBetweenDisbursalAndFirstRepayment, final boolean holdGuarantorFunds,
+                       final LoanProductGuaranteeDetails loanProductGuaranteeDetails, final BigDecimal principalThresholdForLastInstallment,
+                       final boolean accountMovesOutOfNPAOnlyOnArrearsCompletion, final boolean canDefineEmiAmount,
+                       final Integer installmentAmountInMultiplesOf, final LoanProductConfigurableAttributes loanProductConfigurableAttributes,
+                       Boolean isLinkedToFloatingInterestRates, FloatingRate floatingRate, BigDecimal interestRateDifferential,
+                       BigDecimal minDifferentialLendingRate, BigDecimal maxDifferentialLendingRate, BigDecimal defaultDifferentialLendingRate,
+                       Boolean isFloatingInterestRateCalculationAllowed, final Boolean isVariableInstallmentsAllowed,
+                       final Integer minimumGapBetweenInstallments, final Integer maximumGapBetweenInstallments,
+                       final boolean syncExpectedWithDisbursementDate, final boolean canUseForTopup, final boolean isEqualAmortization,
+                       final List<Rate> rates, final BigDecimal fixedPrincipalPercentagePerInstallment) {
+        this.fund = fund;
+        this.transactionProcessingStrategy = transactionProcessingStrategy;
+        this.name = name.trim();
+        this.shortName = shortName.trim();
+        if (StringUtils.isNotBlank(description)) {
+            this.description = description.trim();
+        } else {
+            this.description = null;
+        }
+
+        if (charges != null) {
+            this.charges = charges;
+        }
+
+        this.isLinkedToFloatingInterestRate = isLinkedToFloatingInterestRates == null ? false : isLinkedToFloatingInterestRates;
+        if (isLinkedToFloatingInterestRate) {
+            this.floatingRates = new LoanProductFloatingRates(floatingRate, this, interestRateDifferential, minDifferentialLendingRate,
+                    maxDifferentialLendingRate, defaultDifferentialLendingRate, isFloatingInterestRateCalculationAllowed);
+        }
+
+        this.allowVariabeInstallments = isVariableInstallmentsAllowed == null ? false : isVariableInstallmentsAllowed;
+
+        if (allowVariabeInstallments) {
+            this.variableInstallmentConfig = new LoanProductVariableInstallmentConfig(this, minimumGapBetweenInstallments,
+                    maximumGapBetweenInstallments);
+        }
+
+        this.loanProductRelatedDetail = new LoanProductRelatedDetail(currency, defaultPrincipal, defaultNominalInterestRatePerPeriod,
+                interestPeriodFrequencyType, defaultAnnualNominalInterestRate, interestMethod, interestCalculationPeriodMethod,
+                considerPartialPeriodInterest, repayEvery, repaymentFrequencyType, defaultNumberOfInstallments, graceOnPrincipalPayment,
+                recurringMoratoriumOnPrincipalPeriods, graceOnInterestPayment, graceOnInterestCharged, amortizationMethod,
+                inArrearsTolerance, graceOnArrearsAgeing, daysInMonthType.getValue(), daysInYearType.getValue(),
+                isInterestRecalculationEnabled, isEqualAmortization);
+
+        this.loanProductRelatedDetail.validateRepaymentPeriodWithGraceSettings();
+
+        this.loanProductMinMaxConstraints = new LoanProductMinMaxConstraints(defaultMinPrincipal, defaultMaxPrincipal,
+                defaultMinNominalInterestRatePerPeriod, defaultMaxNominalInterestRatePerPeriod, defaultMinNumberOfInstallments,
+                defaultMaxNumberOfInstallments);
+
+        if (accountingRuleType != null) {
+            this.accountingRule = accountingRuleType.getValue();
+        }
+        this.includeInBorrowerCycle = includeInBorrowerCycle;
+        this.useBorrowerCycle = useBorrowerCycle;
+
+        if (startDate != null) {
+            this.startDate = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        }
+
+        if (closeDate != null) {
+            this.closeDate = Date.from(closeDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        }
+
+        this.externalId = externalId;
+        this.borrowerCycleVariations = loanProductBorrowerCycleVariations;
+        for (LoanProductBorrowerCycleVariations borrowerCycleVariations : this.borrowerCycleVariations) {
+            borrowerCycleVariations.updateLoanProduct(this);
+        }
+        if (loanProductConfigurableAttributes != null) {
+            this.loanConfigurableAttributes = loanProductConfigurableAttributes;
+            loanConfigurableAttributes.updateLoanProduct(this);
+        }
+
+        this.loanProducTrancheDetails = new LoanProductTrancheDetails(multiDisburseLoan, maxTrancheCount, outstandingLoanBalance);
+        this.overdueDaysForNPA = overdueDaysForNPA;
+        this.productInterestRecalculationDetails = productInterestRecalculationDetails;
+        this.minimumDaysBetweenDisbursalAndFirstRepayment = minimumDaysBetweenDisbursalAndFirstRepayment;
+        this.holdGuaranteeFunds = holdGuarantorFunds;
+        this.loanProductGuaranteeDetails = loanProductGuaranteeDetails;
+        this.principalThresholdForLastInstallment = principalThresholdForLastInstallment;
+        this.accountMovesOutOfNPAOnlyOnArrearsCompletion = accountMovesOutOfNPAOnlyOnArrearsCompletion;
+        this.canDefineInstallmentAmount = canDefineEmiAmount;
+        this.installmentAmountInMultiplesOf = installmentAmountInMultiplesOf;
+        this.syncExpectedWithDisbursementDate = syncExpectedWithDisbursementDate;
+        this.canUseForTopup = canUseForTopup;
+        this.fixedPrincipalPercentagePerInstallment = fixedPrincipalPercentagePerInstallment;
+
+        if (rates != null) {
+            this.rates = rates;
+        }
+    }
 
     public static LoanProduct assembleFromJson(final Fund fund, final LoanTransactionProcessingStrategy loanTransactionProcessingStrategy,
             final List<Charge> productCharges, final JsonCommand command, final AprCalculator aprCalculator, FloatingRate floatingRate,
@@ -566,123 +679,6 @@ public class LoanProduct extends AbstractPersistableCustom {
                 }
             }
             this.borrowerCycleVariations.removeAll(remove);
-        }
-    }
-
-    protected LoanProduct() {
-        this.loanProductRelatedDetail = null;
-        this.loanProductMinMaxConstraints = null;
-    }
-
-    public LoanProduct(final Fund fund, final LoanTransactionProcessingStrategy transactionProcessingStrategy, final String name,
-            final String shortName, final String description, final MonetaryCurrency currency, final BigDecimal defaultPrincipal,
-            final BigDecimal defaultMinPrincipal, final BigDecimal defaultMaxPrincipal,
-            final BigDecimal defaultNominalInterestRatePerPeriod, final BigDecimal defaultMinNominalInterestRatePerPeriod,
-            final BigDecimal defaultMaxNominalInterestRatePerPeriod, final PeriodFrequencyType interestPeriodFrequencyType,
-            final BigDecimal defaultAnnualNominalInterestRate, final InterestMethod interestMethod,
-            final InterestCalculationPeriodMethod interestCalculationPeriodMethod, final boolean considerPartialPeriodInterest,
-            final Integer repayEvery, final PeriodFrequencyType repaymentFrequencyType, final Integer defaultNumberOfInstallments,
-            final Integer defaultMinNumberOfInstallments, final Integer defaultMaxNumberOfInstallments,
-            final Integer graceOnPrincipalPayment, final Integer recurringMoratoriumOnPrincipalPeriods,
-            final Integer graceOnInterestPayment, final Integer graceOnInterestCharged, final AmortizationMethod amortizationMethod,
-            final BigDecimal inArrearsTolerance, final List<Charge> charges, final AccountingRuleType accountingRuleType,
-            final boolean includeInBorrowerCycle, final LocalDate startDate, final LocalDate closeDate, final String externalId,
-            final boolean useBorrowerCycle, final Set<LoanProductBorrowerCycleVariations> loanProductBorrowerCycleVariations,
-            final boolean multiDisburseLoan, final Integer maxTrancheCount, final BigDecimal outstandingLoanBalance,
-            final Integer graceOnArrearsAgeing, final Integer overdueDaysForNPA, final DaysInMonthType daysInMonthType,
-            final DaysInYearType daysInYearType, final boolean isInterestRecalculationEnabled,
-            final LoanProductInterestRecalculationDetails productInterestRecalculationDetails,
-            final Integer minimumDaysBetweenDisbursalAndFirstRepayment, final boolean holdGuarantorFunds,
-            final LoanProductGuaranteeDetails loanProductGuaranteeDetails, final BigDecimal principalThresholdForLastInstallment,
-            final boolean accountMovesOutOfNPAOnlyOnArrearsCompletion, final boolean canDefineEmiAmount,
-            final Integer installmentAmountInMultiplesOf, final LoanProductConfigurableAttributes loanProductConfigurableAttributes,
-            Boolean isLinkedToFloatingInterestRates, FloatingRate floatingRate, BigDecimal interestRateDifferential,
-            BigDecimal minDifferentialLendingRate, BigDecimal maxDifferentialLendingRate, BigDecimal defaultDifferentialLendingRate,
-            Boolean isFloatingInterestRateCalculationAllowed, final Boolean isVariableInstallmentsAllowed,
-            final Integer minimumGapBetweenInstallments, final Integer maximumGapBetweenInstallments,
-            final boolean syncExpectedWithDisbursementDate, final boolean canUseForTopup, final boolean isEqualAmortization,
-            final List<Rate> rates, final BigDecimal fixedPrincipalPercentagePerInstallment) {
-        this.fund = fund;
-        this.transactionProcessingStrategy = transactionProcessingStrategy;
-        this.name = name.trim();
-        this.shortName = shortName.trim();
-        if (StringUtils.isNotBlank(description)) {
-            this.description = description.trim();
-        } else {
-            this.description = null;
-        }
-
-        if (charges != null) {
-            this.charges = charges;
-        }
-
-        this.isLinkedToFloatingInterestRate = isLinkedToFloatingInterestRates == null ? false : isLinkedToFloatingInterestRates;
-        if (isLinkedToFloatingInterestRate) {
-            this.floatingRates = new LoanProductFloatingRates(floatingRate, this, interestRateDifferential, minDifferentialLendingRate,
-                    maxDifferentialLendingRate, defaultDifferentialLendingRate, isFloatingInterestRateCalculationAllowed);
-        }
-
-        this.allowVariabeInstallments = isVariableInstallmentsAllowed == null ? false : isVariableInstallmentsAllowed;
-
-        if (allowVariabeInstallments) {
-            this.variableInstallmentConfig = new LoanProductVariableInstallmentConfig(this, minimumGapBetweenInstallments,
-                    maximumGapBetweenInstallments);
-        }
-
-        this.loanProductRelatedDetail = new LoanProductRelatedDetail(currency, defaultPrincipal, defaultNominalInterestRatePerPeriod,
-                interestPeriodFrequencyType, defaultAnnualNominalInterestRate, interestMethod, interestCalculationPeriodMethod,
-                considerPartialPeriodInterest, repayEvery, repaymentFrequencyType, defaultNumberOfInstallments, graceOnPrincipalPayment,
-                recurringMoratoriumOnPrincipalPeriods, graceOnInterestPayment, graceOnInterestCharged, amortizationMethod,
-                inArrearsTolerance, graceOnArrearsAgeing, daysInMonthType.getValue(), daysInYearType.getValue(),
-                isInterestRecalculationEnabled, isEqualAmortization);
-
-        this.loanProductRelatedDetail.validateRepaymentPeriodWithGraceSettings();
-
-        this.loanProductMinMaxConstraints = new LoanProductMinMaxConstraints(defaultMinPrincipal, defaultMaxPrincipal,
-                defaultMinNominalInterestRatePerPeriod, defaultMaxNominalInterestRatePerPeriod, defaultMinNumberOfInstallments,
-                defaultMaxNumberOfInstallments);
-
-        if (accountingRuleType != null) {
-            this.accountingRule = accountingRuleType.getValue();
-        }
-        this.includeInBorrowerCycle = includeInBorrowerCycle;
-        this.useBorrowerCycle = useBorrowerCycle;
-
-        if (startDate != null) {
-            this.startDate = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        }
-
-        if (closeDate != null) {
-            this.closeDate = Date.from(closeDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        }
-
-        this.externalId = externalId;
-        this.borrowerCycleVariations = loanProductBorrowerCycleVariations;
-        for (LoanProductBorrowerCycleVariations borrowerCycleVariations : this.borrowerCycleVariations) {
-            borrowerCycleVariations.updateLoanProduct(this);
-        }
-        if (loanProductConfigurableAttributes != null) {
-            this.loanConfigurableAttributes = loanProductConfigurableAttributes;
-            loanConfigurableAttributes.updateLoanProduct(this);
-        }
-
-        this.loanProducTrancheDetails = new LoanProductTrancheDetails(multiDisburseLoan, maxTrancheCount, outstandingLoanBalance);
-        this.overdueDaysForNPA = overdueDaysForNPA;
-        this.productInterestRecalculationDetails = productInterestRecalculationDetails;
-        this.minimumDaysBetweenDisbursalAndFirstRepayment = minimumDaysBetweenDisbursalAndFirstRepayment;
-        this.holdGuaranteeFunds = holdGuarantorFunds;
-        this.loanProductGuaranteeDetails = loanProductGuaranteeDetails;
-        this.principalThresholdForLastInstallment = principalThresholdForLastInstallment;
-        this.accountMovesOutOfNPAOnlyOnArrearsCompletion = accountMovesOutOfNPAOnlyOnArrearsCompletion;
-        this.canDefineInstallmentAmount = canDefineEmiAmount;
-        this.installmentAmountInMultiplesOf = installmentAmountInMultiplesOf;
-        this.syncExpectedWithDisbursementDate = syncExpectedWithDisbursementDate;
-        this.canUseForTopup = canUseForTopup;
-        this.isEqualAmortization = isEqualAmortization;
-        this.fixedPrincipalPercentagePerInstallment = fixedPrincipalPercentagePerInstallment;
-
-        if (rates != null) {
-            this.rates = rates;
         }
     }
 
@@ -1443,11 +1439,7 @@ public class LoanProduct extends AbstractPersistableCustom {
     }
 
     public boolean isEqualAmortization() {
-        return isEqualAmortization;
-    }
-
-    public void setEqualAmortization(boolean isEqualAmortization) {
-        this.isEqualAmortization = isEqualAmortization;
+        return loanProductRelatedDetail.isEqualAmortization();
     }
 
     public List<Rate> getRates() {

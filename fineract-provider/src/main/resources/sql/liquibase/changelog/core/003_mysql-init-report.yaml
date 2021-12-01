@@ -37,10 +37,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: startDate
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: date
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: date
             - column:
                 name: parameter_default
@@ -71,10 +71,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: endDate
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: date
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: date
             - column:
                 name: parameter_default
@@ -105,10 +105,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: obligDateType
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: select
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -141,10 +141,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Office
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: select
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -181,10 +181,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Loan Officer
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: select
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -222,10 +222,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Currency
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: select
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -259,10 +259,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Fund
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: select
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -296,10 +296,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Loan Purpose
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: select
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -335,10 +335,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: parType
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: select
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -373,10 +373,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Product
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: select
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -411,10 +411,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Enter Account No
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: text
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: string
             - column:
                 name: parameter_default
@@ -445,10 +445,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Product
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: select
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -482,10 +482,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: transactionId
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: text
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: string
             - column:
                 name: parameter_default
@@ -516,10 +516,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Enter Center Id
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: text
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: string
             - column:
                 name: parameter_default
@@ -550,10 +550,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: GLAccountNO
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: select
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -585,10 +585,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: As On
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: date
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: date
             - column:
                 name: parameter_default
@@ -619,10 +619,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: SavingsAccountDormancyStatus
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: select
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -655,10 +655,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: n/a
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: n/a
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: n/a
             - column:
                 name: parameter_default
@@ -700,10 +700,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: n/a
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: n/a
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: n/a
             - column:
                 name: parameter_default
@@ -718,7 +718,7 @@ databaseChangeLog:
             - column:
                 name: parameter_sql
                 value: select sp.parameter_name, sp.parameter_variable, sp.parameter_label,
-                  sp.`parameter_display_type`, \\r sp.`parameter_format_type`, sp.parameter_default,
+                  sp.`parameter_displayType`, \\r sp.`parameter_FormatType`, sp.parameter_default,
                   sp.`selectOne`,  sp.`selectAll`, spp.parameter_name as parentParameterName\\r
                   from stretchy_parameter sp\\r left join stretchy_parameter spp on spp.id
                   = sp.parent_id\\r where isnull(sp.special)\\r and exists \\r   (select
@@ -744,10 +744,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Cycle X Number
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: text
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -778,10 +778,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Cycle Y Number
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: text
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -812,10 +812,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: From X Number
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: text
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -846,10 +846,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: To Y Number
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: text
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -880,10 +880,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Overdue X Number
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: text
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -914,10 +914,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Overdue Y Number
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: text
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -948,10 +948,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Loan
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: none
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -987,10 +987,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Client
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: none
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -1025,10 +1025,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Group
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: none
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -1063,10 +1063,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Loan Type
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: select
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -1100,10 +1100,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Savings
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: none
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -1136,10 +1136,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: Savings Transaction
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: none
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: number
             - column:
                 name: parameter_default
@@ -1171,10 +1171,10 @@ databaseChangeLog:
                 name: parameter_label
                 value: n/a
             - column:
-                name: parameter_display_type
+                name: parameter_displayType
                 value: n/a
             - column:
-                name: parameter_format_type
+                name: parameter_FormatType
                 value: n/a
             - column:
                 name: parameter_default

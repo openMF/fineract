@@ -21,22 +21,29 @@ package org.apache.fineract.infrastructure.creditbureau.domain;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
 
 @Entity
-@Table(name = "m_organisation_creditbureau")
+@Table(name = "m_organisation_creditbureau", uniqueConstraints = {@UniqueConstraint(columnNames = {"creditbureau_id"}, name = "uk_organisation_creditbureau")})
 public class OrganisationCreditBureau extends AbstractPersistableCustom {
 
-    private String alias;
-
     @OneToOne
+    @JoinColumn(name = "creditbureau_id", nullable = false)
     private CreditBureau creditbureau;
 
+    @Column(name = "alias", nullable = false)
+    private String alias;
+
+    @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
     @OneToMany(mappedBy = "organisation_creditbureau", cascade = CascadeType.ALL)
@@ -73,10 +80,6 @@ public class OrganisationCreditBureau extends AbstractPersistableCustom {
         return this.creditbureau;
     }
 
-    public void setCreditBureau(CreditBureau creditbureau) {
-        this.creditbureau = creditbureau;
-    }
-
     public boolean isActive() {
         return this.isActive;
     }
@@ -88,9 +91,4 @@ public class OrganisationCreditBureau extends AbstractPersistableCustom {
     public List<CreditBureauLoanProductMapping> getCreditBureauLoanProductMapping() {
         return this.creditBureauLoanProductMapping;
     }
-
-    public void setCreditBureauLoanProductMapping(List<CreditBureauLoanProductMapping> creditBureauLoanProductMapping) {
-        this.creditBureauLoanProductMapping = creditBureauLoanProductMapping;
-    }
-
 }

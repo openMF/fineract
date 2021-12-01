@@ -64,7 +64,7 @@ import org.apache.fineract.useradministration.domain.AppUser;
 public class LoanTransaction extends AbstractPersistableCustom {
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "loan_id", nullable = false)
+    @JoinColumn(name = "loan_id", referencedColumnName = "id", nullable = false)
     private Loan loan;
 
     @ManyToOne
@@ -133,8 +133,7 @@ public class LoanTransaction extends AbstractPersistableCustom {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "loanTransaction")
     private Set<LoanCollateralManagement> loanCollateralManagementSet = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JoinColumn(name = "loan_transaction_id", referencedColumnName = "id", nullable = false)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER, mappedBy = "loanTransaction")
     private Set<LoanTransactionToRepaymentScheduleMapping> loanTransactionToRepaymentScheduleMappings = new HashSet<>();
 
     protected LoanTransaction() {

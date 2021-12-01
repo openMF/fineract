@@ -96,10 +96,6 @@ public class CreditBureauConfiguration extends AbstractPersistableCustom {
         return this.organisationCreditbureau;
     }
 
-    public void setOrganisation_creditbureau(OrganisationCreditBureau organisation_creditbureau) {
-        this.organisationCreditbureau = organisation_creditbureau;
-    }
-
     public Map<String, Object> update(final JsonCommand command) {
 
         final Map<String, Object> actualChanges = new LinkedHashMap<>(1);

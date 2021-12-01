@@ -1,0 +1,182 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Flyway counterpair: V375__adding_index_on_calendar_and_calendar_instance.sql
+databaseChangeLog:
+  - context: core_db
+  - changeSet:
+      id: 005_core-alter-1
+      author: fineract
+      description: Add new index on calendar and calendar_instance table
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  descending: false
+                  name: entity_id
+              - column:
+                  descending: false
+                  name: entity_type_enum
+            indexName: unique_m_calendar_instance_entity_id_entity_type_enum
+            tableName: m_calendar_instance
+            unique: true
+        - createIndex:
+            columns:
+              - column:
+                  descending: false
+                  name: calendar_type_enum
+            indexName: unique_m_calendar_calendar_type_enum
+            tableName: m_calendar
+  - changeSet:
+      id: 005_core-alter-2
+      author: fineract
+      description: Add new index on calendar and calendar_instance table
+      changes:
+        -  renameColumn:
+             columnDataType:  BOOLEAN
+             newColumnName:  is_active
+             oldColumnName:  IsActive
+             tableName: m_adhoc
+        -  renameColumn:
+             columnDataType:  BOOLEAN
+             newColumnName:  is_active
+             oldColumnName:  isActive
+             tableName: m_creditbureau_loanproduct_mapping
+        -  renameColumn:
+             columnDataType:  BOOLEAN
+             newColumnName:  is_active
+             oldColumnName:  isActive
+             tableName: m_organisation_creditbureau
+        -  renameColumn:
+             columnDataType:  VARCHAR(100)
+             newColumnName:  implementation_key
+             oldColumnName:  implementationKey
+             tableName: m_creditbureau
+        -  renameColumn:
+             columnDataType:  VARCHAR(128)
+             newColumnName:  token_type
+             oldColumnName:  tokenType
+             tableName: m_creditbureau_token
+        -  renameColumn:
+             columnDataType:  VARCHAR(128)
+             newColumnName:  expires_in
+             oldColumnName:  expiresIn
+             tableName: m_creditbureau_token
+        -  renameColumn:
+             columnDataType:  DATE
+             newColumnName:  expiry_date
+             oldColumnName:  expiryDate
+             tableName: m_creditbureau_token
+        -  renameColumn:
+             columnDataType:  BIGINT
+             newColumnName:  creditbureau_id
+             oldColumnName:  creditBureauId
+             tableName: m_creditreport
+        -  renameColumn:
+             columnDataType:  VARCHAR(128)
+             newColumnName:  national_id
+             oldColumnName:  nationalId
+             tableName: m_creditreport
+        -  renameColumn:
+             columnDataType:  BLOB
+             newColumnName:  credit_reports
+             oldColumnName:  creditReports
+             tableName: m_creditreport
+        -  renameColumn:
+             columnDataType:  BOOLEAN
+             newColumnName:  select_one
+             oldColumnName:  selectOne
+             tableName: stretchy_parameter
+        -  renameColumn:
+             columnDataType:  BOOLEAN
+             newColumnName:  select_all
+             oldColumnName:  selectAll
+             tableName: stretchy_parameter
+        -  renameColumn:
+             columnDataType:  VARCHAR(45)
+             newColumnName:  parameter_display_type
+             oldColumnName:  parameter_displayType
+             tableName: stretchy_parameter
+        -  renameColumn:
+             columnDataType:  VARCHAR(10)
+             newColumnName:  parameter_format_type
+             oldColumnName:  parameter_FormatType
+             tableName: stretchy_parameter
+        -  renameColumn:
+             columnDataType:  INTEGER
+             newColumnName:  business_rule_id
+             oldColumnName:  businessRule_id
+             tableName: scheduled_email_campaign
+  - changeSet:
+      id: 005_core-alter-3
+      author: fineract
+      changes:
+        - modifyDataType:
+            newDataType: BOOLEAN
+            columnName: special
+            tableName: stretchy_parameter
+        - modifyDataType:
+            newDataType: BOOLEAN
+            columnName: select_one
+            tableName: stretchy_parameter
+        - modifyDataType:
+            newDataType: BOOLEAN
+            columnName: select_all
+            tableName: stretchy_parameter
+  - changeSet:
+      id: 005_core-alter-4
+      author: fineract
+      changes:
+        - dropUniqueConstraint:
+            uniqueColumns: alias, creditbureau_id
+            constraintName: morgcb
+            tableName: m_organisation_creditbureau
+        - addUniqueConstraint:
+            columnNames: creditbureau_id
+            constraintName: uk_organisation_creditbureau
+            tableName: m_organisation_creditbureau
+        - dropUniqueConstraint:
+            uniqueColumns: name, product, country, implementation_key
+            constraintName: unique impl
+            tableName: m_creditbureau
+        - addUniqueConstraint:
+            columnNames: name, product, country, implementation_key
+            constraintName: uk_creditbureau
+            tableName: m_creditbureau
+        - dropForeignKeyConstraint:
+            constraintName: cbConfigfk1
+            baseTableName: m_creditbureau_configuration
+        - update:
+            columns:
+              - column:
+                  name: organisation_creditbureau_id
+                  valueComputed: "(SELECT id FROM m_organisation_creditbureau WHERE creditbureau_id = m_creditbureau_configuration.organisation_creditbureau_id)"
+            where: organisation_creditbureau_id IS NOT NULL
+            tableName: m_creditbureau_configuration
+        - addForeignKeyConstraint:
+            baseColumnNames: organisation_creditbureau_id
+            baseTableName: m_creditbureau_configuration
+            constraintName: fk_creditbureau_configuration_organisation_creditbureau
+            deferrable: false
+            initiallyDeferred: false
+            onDelete: NO ACTION
+            onUpdate: NO ACTION
+            referencedColumnNames: id
+            referencedTableName: m_organisation_creditbureau
+            validate: true

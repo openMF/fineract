@@ -214,7 +214,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
                 defaultLoanLifecycleStateMachine(), existingTransactionIds, existingReversedTransactionIds, isRecoveryRepayment,
                 scheduleGeneratorDTO, currentUser, isHolidayValidationDone);
 
-        saveLoanTransactionWithDataIntegrityViolationChecks(newRepaymentTransaction);
+        saveAndFlushLoanTransactionWithDataIntegrityViolationChecks(newRepaymentTransaction);
 
         /***
          * TODO Vishwas Batch save is giving me a HibernateOptimisticLockingFailureException, looping and saving for the
@@ -226,7 +226,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
         if (changedTransactionDetail != null) {
             for (Map.Entry<Long, LoanTransaction> mapEntry : changedTransactionDetail.getNewTransactionMappings().entrySet()) {
-                saveLoanTransactionWithDataIntegrityViolationChecks(mapEntry.getValue());
+                saveAndFlushLoanTransactionWithDataIntegrityViolationChecks(mapEntry.getValue());
                 // update loan with references to the newly created transactions
                 loan.addLoanTransaction(mapEntry.getValue());
                 updateLoanTransaction(mapEntry.getKey(), mapEntry.getValue());
@@ -284,9 +284,9 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
         return newRepaymentTransaction;
     }
 
-    private void saveLoanTransactionWithDataIntegrityViolationChecks(LoanTransaction newRepaymentTransaction) {
+    private void saveAndFlushLoanTransactionWithDataIntegrityViolationChecks(LoanTransaction newRepaymentTransaction) {
         try {
-            LoanTransaction loanTransaction = this.loanTransactionRepository.save(newRepaymentTransaction);
+            this.loanTransactionRepository.saveAndFlush(newRepaymentTransaction);
 
         } catch (final JpaSystemException | DataIntegrityViolationException e) {
             final Throwable realCause = e.getCause();
@@ -305,12 +305,6 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
     private void saveAndFlushLoanWithDataIntegrityViolationChecks(final Loan loan) {
         try {
-            List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
-            for (LoanRepaymentScheduleInstallment installment : installments) {
-                if (installment.getId() == null) {
-                    this.repaymentScheduleInstallmentRepository.save(installment);
-                }
-            }
             this.loanRepositoryWrapper.saveAndFlush(loan);
         } catch (final JpaSystemException | DataIntegrityViolationException e) {
             final Throwable realCause = e.getCause();
@@ -327,14 +321,9 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
     }
 
     @Override
+    @Transactional
     public void saveLoanWithDataIntegrityViolationChecks(final Loan loan) {
         try {
-            List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
-            for (LoanRepaymentScheduleInstallment installment : installments) {
-                if (installment.getId() == null) {
-                    this.repaymentScheduleInstallmentRepository.save(installment);
-                }
-            }
             this.loanRepositoryWrapper.save(loan);
         } catch (final JpaSystemException | DataIntegrityViolationException e) {
             final Throwable realCause = e.getCause();
@@ -384,7 +373,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
             loan.makeChargePayment(chargeId, defaultLoanLifecycleStateMachine(), existingTransactionIds, existingReversedTransactionIds,
                     holidayDetailDTO, newPaymentTransaction, installmentNumber);
         }
-        saveLoanTransactionWithDataIntegrityViolationChecks(newPaymentTransaction);
+        saveAndFlushLoanTransactionWithDataIntegrityViolationChecks(newPaymentTransaction);
         saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
 
         if (StringUtils.isNotBlank(noteText)) {
@@ -461,8 +450,8 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
         loan.makeRefund(newRefundTransaction, defaultLoanLifecycleStateMachine(), existingTransactionIds, existingReversedTransactionIds,
                 allowTransactionsOnHoliday, holidays, workingDays, allowTransactionsOnNonWorkingDay);
 
-        saveLoanTransactionWithDataIntegrityViolationChecks(newRefundTransaction);
-        this.loanRepositoryWrapper.save(loan);
+        saveAndFlushLoanTransactionWithDataIntegrityViolationChecks(newRefundTransaction);
+        this.loanTransactionRepository.saveAndFlush(newRefundTransaction);
 
         if (StringUtils.isNotBlank(noteText)) {
             final Note note = Note.loanTransactionNote(loan, newRefundTransaction, noteText);
@@ -504,7 +493,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
         disbursementTransaction.updateLoan(loan);
         loan.addLoanTransaction(disbursementTransaction);
-        saveLoanTransactionWithDataIntegrityViolationChecks(disbursementTransaction);
+        saveAndFlushLoanTransactionWithDataIntegrityViolationChecks(disbursementTransaction);
         saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
 
         if (StringUtils.isNotBlank(noteText)) {
@@ -519,7 +508,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
     @Override
     public void reverseTransfer(final LoanTransaction loanTransaction) {
         loanTransaction.reverse();
-        saveLoanTransactionWithDataIntegrityViolationChecks(loanTransaction);
+        saveAndFlushLoanTransactionWithDataIntegrityViolationChecks(loanTransaction);
     }
 
     /*
@@ -581,7 +570,6 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
                 throw new GeneralPlatformDomainRuleException(globalisationMessageCode, e.getMessage(), e);
             }
         }
-
     }
 
     private void generateLoanScheduleAccrualData(final LocalDate accruedTill,
@@ -659,8 +647,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
         loan.makeRefundForActiveLoan(newRefundTransaction, defaultLoanLifecycleStateMachine(), existingTransactionIds,
                 existingReversedTransactionIds, allowTransactionsOnHoliday, holidays, workingDays, allowTransactionsOnNonWorkingDay);
 
-        this.loanTransactionRepository.save(newRefundTransaction);
-        this.loanRepositoryWrapper.save(loan);
+        this.loanTransactionRepository.saveAndFlush(newRefundTransaction);
 
         if (StringUtils.isNotBlank(noteText)) {
             final Note note = Note.loanTransactionNote(loan, newRefundTransaction, noteText);
@@ -756,7 +743,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
          ***/
 
         for (LoanTransaction newTransaction : newTransactions) {
-            saveLoanTransactionWithDataIntegrityViolationChecks(newTransaction);
+            saveAndFlushLoanTransactionWithDataIntegrityViolationChecks(newTransaction);
             transactionIds.add(newTransaction.getId());
         }
         changes.put("transactions", transactionIds);
@@ -764,7 +751,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
         if (changedTransactionDetail != null) {
             for (Map.Entry<Long, LoanTransaction> mapEntry : changedTransactionDetail.getNewTransactionMappings().entrySet()) {
-                saveLoanTransactionWithDataIntegrityViolationChecks(mapEntry.getValue());
+                saveAndFlushLoanTransactionWithDataIntegrityViolationChecks(mapEntry.getValue());
                 // update loan with references to the newly created transactions
                 loan.getLoanTransactions().add(mapEntry.getValue());
                 updateLoanTransaction(mapEntry.getKey(), mapEntry.getValue());

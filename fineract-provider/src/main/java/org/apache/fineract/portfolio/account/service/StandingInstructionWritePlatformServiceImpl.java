@@ -122,21 +122,17 @@ public class StandingInstructionWritePlatformServiceImpl implements StandingInst
 
         Long standingInstructionId = null;
         try {
+            AccountTransferDetails standingInstruction = null;
             if (isSavingsToSavingsAccountTransfer(fromAccountType, toAccountType)) {
-                final AccountTransferDetails standingInstruction = this.standingInstructionAssembler
-                        .assembleSavingsToSavingsTransfer(command);
-                this.accountTransferDetailRepository.save(standingInstruction);
-                standingInstructionId = standingInstruction.accountTransferStandingInstruction().getId();
+                standingInstruction = this.standingInstructionAssembler.assembleSavingsToSavingsTransfer(command);
             } else if (isSavingsToLoanAccountTransfer(fromAccountType, toAccountType)) {
-                final AccountTransferDetails standingInstruction = this.standingInstructionAssembler.assembleSavingsToLoanTransfer(command);
-                this.accountTransferDetailRepository.save(standingInstruction);
-                standingInstructionId = standingInstruction.accountTransferStandingInstruction().getId();
+                standingInstruction = this.standingInstructionAssembler.assembleSavingsToLoanTransfer(command);
             } else if (isLoanToSavingsAccountTransfer(fromAccountType, toAccountType)) {
-
-                final AccountTransferDetails standingInstruction = this.standingInstructionAssembler.assembleLoanToSavingsTransfer(command);
-                this.accountTransferDetailRepository.save(standingInstruction);
+                standingInstruction = this.standingInstructionAssembler.assembleLoanToSavingsTransfer(command);
+            }
+            if (standingInstruction != null) {
+                this.accountTransferDetailRepository.saveAndFlush(standingInstruction);
                 standingInstructionId = standingInstruction.accountTransferStandingInstruction().getId();
-
             }
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             final Throwable throwable = dve.getMostSpecificCause();
