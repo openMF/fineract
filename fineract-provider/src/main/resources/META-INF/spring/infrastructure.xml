@@ -38,6 +38,18 @@
                 <property name="showSql" value="false" />
             </bean>
         </property>
+        <property name="persistenceUnitPostProcessors">
+            <list>
+                <!-- custom implementation to avoid xml entity class declarations -->
+                <bean class="org.apache.fineract.infrastructure.jpa.CustomPersistenceUnitPostProcessor">
+                    <property name="packages">
+                        <list value-type="java.lang.String">
+                            <value>org.apache.fineract</value>
+                        </list>
+                    </property>
+                </bean>
+            </list>
+        </property>
     </bean>
 
     <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
