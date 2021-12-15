@@ -228,10 +228,37 @@ task setBlankPassword {
     }
 }
 
-bootRun {
-    jvmArgs = [
-        "-Dspring.output.ansi.enabled=ALWAYS"
-    ]
+task weave(type: JavaExec, dependsOn: classes) {
+    description = 'Performs EclipseLink static weaving of entity classes'
+    group = 'build'
+    def mainSS = sourceSets.main
+    def source = mainSS.java.classesDirectory.get()
+    def resources = mainSS.output.resourcesDir
+    def target = source // in-place weaving
+    inputs.files source, resources
+    outputs.dir target
+    main 'org.eclipse.persistence.tools.weaving.jpa.StaticWeave'
+    args '-persistenceinfo', source,
+            '-classpath', configurations.runtimeClasspath.asPath,
+            source,
+            target
+    classpath configurations.runtimeClasspath
+    doFirst {
+        // workaround for EclipseLink bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=295031
+        // copy resources into the classesDir
+        copy {
+            from "src/main/resources/"
+            into source
+        }
+    }
+}
+
+bootJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes 'Main-Class': 'org.springframework.boot.loader.PropertiesLauncher'
+    }
+    dependsOn weave
 }
 
 springBoot {
