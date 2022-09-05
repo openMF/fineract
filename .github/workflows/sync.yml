@@ -1,4 +1,4 @@
-ame: Sync Upstream Fineract
+name: Sync Upstream Fineract
 
 env:
   UPSTREAM_URL: "https://github.com/apache/fineract.git"
