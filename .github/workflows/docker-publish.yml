@@ -1,0 +1,50 @@
+name: Publish Fineract to Docker Hub
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_USER: ${{ secrets.DOCKER_USER }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 17
+
+      - name: Docker Hub Login
+        env:
+          DOCKER_USER: ${{secrets.DOCKER_USER}}
+          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+        run: |
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER --password-stdin
+
+      - name: Build with Gradle
+        run: ./gradlew :fineract-provider:clean -Djib.to.image=openmf/fineract:latest :fineract-provider:jibDockerBuild -x test
+
+      - name: Docker Hub Push
+        run: docker image push openmf/fineract:latest
+
+      # TODO: @vidakovic Github CodeQL code scans need to be enabled for this repository; this is a paid service; discuss with community
+
+      #- uses: anchore/scan-action@v2
+      #  id: scan
+      #  with:
+      #    image: "openmf/fineract:latest"
+      #    acs-report-enable: true
+
+      #- name: upload Anchore scan SARIF report
+      #  uses: github/codeql-action/upload-sarif@v2
+      #  with:
+      #    sarif_file: ${{ steps.scan.outputs.sarif }}
+      #    category: docker
