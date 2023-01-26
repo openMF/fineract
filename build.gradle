@@ -97,7 +97,7 @@ allprojects  {
 
     jgitver {
         strategy 'PATTERN'
-        versionPattern ( project.hasProperty('fineract.release.version') ? '${v}' : '${M}.${m}.${p}-${meta.GIT_SHA1_8}' )
+        versionPattern ( project.hasProperty('fineract.release.version') ? '${M}.${m}.' + project.getProperty('fineract.release.version') + '-${meta.GIT_SHA1_8}'  : '${M}.${m}.${p}-${meta.GIT_SHA1_8}' )
     }
 
     repositories {
@@ -712,7 +712,7 @@ configure(project.fineractPublishProjects) {
         }
 
         repositories {
-            def releaseUrl = 'https://mifos.jfrog.io/artifactory/libs-release-local'
+            def releaseUrl = 'https://mifos.jfrog.io/artifactory/libs-snapshot-local'
             def stagingUrl = 'https://mifos.jfrog.io/artifactory/libs-snapshot-local'
 
             maven {
