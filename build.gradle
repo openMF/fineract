@@ -906,9 +906,13 @@ configure(project.fineractPublishProjects) {
     publishing {
         publications {
             mavenJava(MavenPublication) {
-                groupId = 'org.apache.fineract'
-                artifactId = project.name
-                version = "${project.version}-SNAPSHOT"
+                groupId 'org.apache.fineract'
+                artifactId project.name
+                if (project.hasProperty('fineract.release.version')) {
+                    version "${project.version}"
+                } else {
+                    version "${project.version}-SNAPSHOT"
+                }
 
                 from components.java
 
