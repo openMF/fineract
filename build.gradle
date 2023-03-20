@@ -752,7 +752,7 @@ tasks.withType(GenerateMavenPom).all {
         File file = new File("$buildDir/publications/maven/pom-default.xml")
         def text = file.text
         def pattern = "(?s)(<dependencyManagement>.+?<dependencies>)(.+?)(</dependencies>.+?</dependencyManagement>)"
-        Matcher matcher = text =~ pattern
+        java.util.regex.Matcher matcher = text =~ pattern
         if (matcher.find()) {
             text = text.replaceFirst(pattern, "")
             def firstDeps = matcher.group(2)
