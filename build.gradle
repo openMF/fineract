@@ -119,21 +119,22 @@ gradle clean bootRun'''
 
 version = '0.0.0-SNAPSHOT'
 
-gitVersioning.apply {
-    refs {
-        considerTagsOnBranches = true
-        describeTagPattern = '.*(\\d+\\.\\d+\\.\\d+).*'
-        describeTagFirstParent = false
+if (project.hasProperty('fineract.release.version')) {
+    gitVersioning.apply {
+        refs {
+            considerTagsOnBranches = true
 
-        branch("release\\/\\d+\\.\\d+\\.\\d+") {
-            version = '${describe.tag.version.major}.${describe.tag.version.minor}.${describe.tag.version.patch}'
+            tag("(?<version>.*)") {
+                version = "0.0.${project.getProperty('fineract.release.version')}-\${commit.short}"
+            }
+
+            branch(".+") {
+                version = "0.0.${project.getProperty('fineract.release.version')}-\${commit.short}"
+            }
         }
-        branch("maintenance\\/\\d+\\.\\d+") {
-            version = '${describe.tag.version.major}.${describe.tag.version.minor}.${describe.tag.version.patch}'
+        rev {
+            version = "0.0.${project.getProperty('fineract.release.version')}-\${commit.short}"
         }
-    }
-    rev {
-        version = '${describe.tag.version.major}.${describe.tag.version.minor.next}.${describe.tag.version.patch}-SNAPSHOT'
     }
 }
 
@@ -725,10 +726,6 @@ configure(project.fineractCustomProjects) {
 configure(project.fineractPublishProjects) {
     apply plugin: 'maven-publish'
 
-    if (!project.hasProperty('noSign')) {
-        apply plugin: 'signing'
-    }
-
     publishing {
         publications {
             mavenJava(MavenPublication) {
@@ -782,12 +779,6 @@ configure(project.fineractPublishProjects) {
                     password "${findProperty('fineract.config.password')}"
                 }
             }
-        }
-    }
-
-    if (!project.hasProperty('noSign')) {
-        signing {
-            sign publishing.publications.mavenJava
         }
     }
 }
