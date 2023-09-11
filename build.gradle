@@ -1,4 +1,4 @@
-    /**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -141,24 +141,22 @@ gradle clean bootRun'''
 
 version = '0.0.0-SNAPSHOT'
 
-gitVersioning.apply {
-    refs {
-        considerTagsOnBranches = true
-        describeTagPattern = '.*(\\d+\\.\\d+\\.\\d+).*'
-        describeTagFirstParent = false
+if (project.hasProperty('fineract.release.version')) {
+    gitVersioning.apply {
+        refs {
+            considerTagsOnBranches = true
 
-        branch("release\\/\\d+\\.\\d+\\.\\d+") {
-            version = '${describe.tag.version.major}.${describe.tag.version.minor}.${describe.tag.version.patch}'
+            tag("(?<version>.*)") {
+                version = "0.0.${project.getProperty('fineract.release.version')}-\${commit.short}"
+            }
+
+            branch(".+") {
+                version = "0.0.${project.getProperty('fineract.release.version')}-\${commit.short}"
+            }
         }
-        branch("maintenance\\/\\d+\\.\\d+") {
-            version = '${describe.tag.version.major}.${describe.tag.version.minor}.${describe.tag.version.patch}'
+        rev {
+            version = "0.0.${project.getProperty('fineract.release.version')}-\${commit.short}"
         }
-        tag("(\\d+\\.\\d+\\.\\d+)") {
-            version = '${describe.tag.version.major}.${describe.tag.version.minor}.${describe.tag.version.patch}'
-        }
-    }
-    rev {
-        version = '${describe.tag.version.major}.${describe.tag.version.minor.next}.0-SNAPSHOT'
     }
 }
 
@@ -284,91 +282,92 @@ allprojects  {
         verbose = false
         reportDir = file("$buildDir/reports/rat")
         excludes = [
-            '**/src/main/templates/**/*.mustache',
-            '**/.dockerignore',
-            '**/*.launch',
-            '**/licenses/**',
-            '**/*.md',
-            '**/*.adoc',
-            '**/*.puml',
-            '**/*.github/**',
-            '**/MANIFEST.MF',
-            '**/spring.factories',
-            '**/org.springframework.boot.autoconfigure.AutoConfiguration.imports',
-            '**/*.json',
-            '**/*.json.template',
-            '**/*.txt',
-            '**/*.log',
-            '**/fineractdev-eclipse-preferences.epf',
-            '**/features/**',
-            '**/templates/**',
-            '**/results/**',
-            '**/.classpath',
-            '**/.project',
-            '**/.idea/**',
-            '**/*.ipr',
-            '**/*.iws',
-            '**/.settings/**',
-            '**/bin/**',
-            '**/.git/**',
-            '**/.gitignore',
-            '**/.openapi-generator-ignore',
-            '**/.gitkeep',
-            '**/*.iml',
-            '**/config/swagger/templates/**',
-            // Notice files
-            '**/NOTICE_RELEASE',
-            '**/NOTICE_SOURCE',
-            // gradle
-            '**/.gradle/**',
-            '**/gradlew',
-            '**/gradlew.bat',
-            '**/gradle/wrapper/gradle-wrapper.properties',
-            '**/caches/**',
-            '**/daemon/**',
-            '**/native/**',
-            '**/wrapper/**',
-            '**/build/**',
-            // Api Docs
-            '**/legacy-docs/*.*',
-            '**/docs/system-architecture/.htaccess',
-            '**/docs/system-architecture/404.html',
-            '**/docs/system-architecture/index.html',
-            '**/docs/system-architecture/**/*.xml',
-            '**/bootstrap-3.0.0/assets/application.js',
-            '**/system-architecture/js/plugins.js',
-            // Apache License
-            '**/bootstrap-3.0.0/assets/less.js',
-            '**/css/bootstrap-3.0.0/**/*.*',
-            // Public Domain See http://www.JSON.org/js.html
-            '**/bootstrap-3.0.0/assets/json2.js.htm',
-            // MIT License
-            '**/modernizr-2.6.2.min.js',
-            '**/css/normalize.css',
-            '**/assets/filesaver.js',
-            '**/css/fonts/glyphicons-halflings-regular.svg',
-            '**/assets/jszip.js',
-            '**/assets/jquery.js',
-            '**/legacy-docs/jquery-1.7.min.js',
-            '**/css/toc-0.1.2/**/*.*',
-            '**/docs/system-architecture/css/main.css',
-            '**/system-architecture/js/vendor/jquery-1.9.1.min.js',
-            '**/system-architecture/js/vendor/toc-0.1.2/jquery.toc.min.js',
-            '**/assets/respond.min.js',
-            '**/assets/html5shiv.js',
-            // BSD License
-            '**/assets/uglify.js',
-            // Ignore out folder
-            '**/out/**',
-            // Git build info
-            "**/git.properties",
-            ".mailmap",
-            '**/images/diag-*.svg',
-            '**/*.avsc',
-            "**/generated/**/*MapperImpl.java",
-            '**/META-INF/fineract-test.config',
-            // Apache-specific GitHub metadata settings file
-            '/.asf.yaml'
+                '**/src/main/templates/**/*.mustache',
+                '**/.dockerignore',
+                '**/*.launch',
+                '**/licenses/**',
+                '**/*.md',
+                '**/*.adoc',
+                '**/*.puml',
+                '**/*.github/**',
+                '**/MANIFEST.MF',
+                '**/spring.factories',
+                '**/org.springframework.boot.autoconfigure.AutoConfiguration.imports',
+                '**/*.json',
+                '**/*.json.template',
+                '**/*.txt',
+                '**/*.log',
+                '**/fineractdev-eclipse-preferences.epf',
+                '**/features/**',
+                '**/templates/**',
+                '**/results/**',
+                '**/.classpath',
+                '**/.project',
+                '**/.idea/**',
+                '**/*.ipr',
+                '**/*.iws',
+                '**/.settings/**',
+                '**/bin/**',
+                '**/.git/**',
+                '**/.gitignore',
+                '**/.openapi-generator-ignore',
+                '**/.gitkeep',
+                '**/*.iml',
+                '**/config/swagger/templates/**',
+                // Notice files
+                '**/NOTICE_RELEASE',
+                '**/NOTICE_SOURCE',
+                // gradle
+                '**/.gradle/**',
+                '**/gradlew',
+                '**/gradlew.bat',
+                '**/gradle/wrapper/gradle-wrapper.properties',
+                '**/caches/**',
+                '**/daemon/**',
+                '**/native/**',
+                '**/wrapper/**',
+                '**/build/**',
+                // Api Docs
+                '**/legacy-docs/*.*',
+                '**/docs/system-architecture/.htaccess',
+                '**/docs/system-architecture/404.html',
+                '**/docs/system-architecture/index.html',
+                '**/docs/system-architecture/**/*.xml',
+                '**/bootstrap-3.0.0/assets/application.js',
+                '**/system-architecture/js/plugins.js',
+                // Apache License
+                '**/bootstrap-3.0.0/assets/less.js',
+                '**/css/bootstrap-3.0.0/**/*.*',
+                // Public Domain See http://www.JSON.org/js.html
+                '**/bootstrap-3.0.0/assets/json2.js.htm',
+                // MIT License
+                '**/modernizr-2.6.2.min.js',
+                '**/css/normalize.css',
+                '**/assets/filesaver.js',
+                '**/css/fonts/glyphicons-halflings-regular.svg',
+                '**/assets/jszip.js',
+                '**/assets/jquery.js',
+                '**/legacy-docs/jquery-1.7.min.js',
+                '**/css/toc-0.1.2/**/*.*',
+                '**/docs/system-architecture/css/main.css',
+                '**/system-architecture/js/vendor/jquery-1.9.1.min.js',
+                '**/system-architecture/js/vendor/toc-0.1.2/jquery.toc.min.js',
+                '**/assets/respond.min.js',
+                '**/assets/html5shiv.js',
+                // BSD License
+                '**/assets/uglify.js',
+                // Ignore out folder
+                '**/out/**',
+                // Git build info
+                "**/git.properties",
+                ".mailmap",
+                '**/images/diag-*.svg',
+                '**/*.avsc',
+                "**/generated/**/*MapperImpl.java",
+                '**/META-INF/fineract-test.config',
+                // Apache-specific GitHub metadata settings file
+                '/.asf.yaml',
+                '**/*.sh'
         ]
     }
 }
