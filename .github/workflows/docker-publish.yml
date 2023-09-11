@@ -3,7 +3,7 @@ name: Publish Fineract to Docker Hub
 on:
   push:
     branches:
-      - develop
+      - develop-mifos
   workflow_dispatch:
 
 jobs:
