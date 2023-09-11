@@ -3,14 +3,14 @@ name: Publish Fineract client to Mifos Artifactory
 on:
   push:
     branches:
-      - develop
+      - develop-mifos
 
 permissions:
   contents: write
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
       ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
