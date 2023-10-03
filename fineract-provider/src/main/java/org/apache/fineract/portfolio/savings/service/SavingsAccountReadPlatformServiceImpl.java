@@ -366,10 +366,10 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             sqlBuilder.append("null as paidByAmount, null as chargesPaidById, ");
             sqlBuilder.append(
                     "null as chargeId, null as chargeAmount, null as chargeTimeType, null as isPenaltyCharge, ");
-            sqlBuilder.append("txd.id as taxDetailsId, txd.amount as taxAmount, ");
+            sqlBuilder.append("null as taxDetailsId, null as taxAmount, ");
             sqlBuilder.append("apm.gl_account_id as glAccountIdForInterestOnSavings, apm1.gl_account_id as glAccountIdForSavingsControl, ");
             sqlBuilder.append(
-                    "mtc.id as taxComponentId, mtc.debit_account_id as debitAccountId, mtc.credit_account_id as creditAccountId, mtc.percentage as taxPercentage ");
+                    "null as taxComponentId, null as debitAccountId, null as creditAccountId, null as taxPercentage ");
             sqlBuilder.append("from m_savings_account sa ");
             sqlBuilder.append("join m_savings_product sp ON sa.product_id = sp.id ");
             sqlBuilder.append("join m_currency curr on curr.code = sa.currency_code ");
@@ -382,7 +382,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             sqlBuilder.append("left join m_group g ON g.id = sa.group_id ");
             sqlBuilder.append("left join m_tax_group tg on tg.id = sa.tax_group_id ");
 //            sqlBuilder.append("left join  m_savings_account_transaction_tax_details txd on txd.savings_transaction_id = tr.id ");
-            sqlBuilder.append("left join m_tax_component mtc on mtc.id = txd.tax_component_id ");
+//            sqlBuilder.append("left join m_tax_component mtc on mtc.id = txd.tax_component_id ");
             sqlBuilder.append("left join acc_product_mapping apm on apm.product_id = sp.id and apm.financial_account_type=3 ");
             sqlBuilder.append("left join acc_product_mapping apm1 on apm1.product_id = sp.id and apm1.financial_account_type=2 ");
 

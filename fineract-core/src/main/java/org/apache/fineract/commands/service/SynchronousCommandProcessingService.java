@@ -85,7 +85,7 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
     private final Gson gson = GoogleGsonSerializerHelper.createSimpleGson();
 
     @Override
-//    @Retry(name = "executeCommand", fallbackMethod = "fallbackExecuteCommand")
+    @Retry(name = "executeCommand", fallbackMethod = "fallbackExecuteCommand")
     public CommandProcessingResult executeCommand(final CommandWrapper wrapper, final JsonCommand command,
             final boolean isApprovedByChecker) {
         // Do not store the idempotency key because of the exception handling
