@@ -21,7 +21,6 @@ package org.apache.fineract.portfolio.savings.domain;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -96,7 +95,7 @@ public final class SavingsAccountTransaction extends AbstractPersistableCustom {
     @Column(name = "balance_number_of_days_derived", nullable = true)
     private Integer balanceNumberOfDays;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccountTransaction", orphanRemoval = true, fetch = FetchType.EAGER)
+//    @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccountTransaction", orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<SavingsAccountChargePaidBy> savingsAccountChargesPaid = new HashSet<>();
 
     @Column(name = "overdraft_amount_derived", scale = 6, precision = 19, nullable = true)
@@ -118,7 +117,7 @@ public final class SavingsAccountTransaction extends AbstractPersistableCustom {
     @Column(name = "is_loan_disbursement", length = 1, nullable = true)
     private boolean isLoanDisbursement;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER, mappedBy = "savingsAccountTransaction")
+//    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER, mappedBy = "savingsAccountTransaction")
     private List<SavingsAccountTransactionTaxDetails> taxDetails = new ArrayList<>();
 
     @Column(name = "release_id_of_hold_amount", length = 20)
