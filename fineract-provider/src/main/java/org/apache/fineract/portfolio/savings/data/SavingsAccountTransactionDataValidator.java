@@ -296,10 +296,10 @@ public class SavingsAccountTransactionDataValidator {
         }
 
         // compare two dates now
-        if (lastTransactionDate != null && transactionDate.isBefore(lastTransactionDate)) {
-            baseDataValidator.parameter(SavingsApiConstants.dateParamName).value(lastTransactionDate).failWithCode(
-                    "validation.msg.date.can.not.be.before.last.transaction.date", "Amount can be put on hold only after last transaction");
-        }
+//        if (lastTransactionDate != null && transactionDate.isBefore(lastTransactionDate)) {
+//            baseDataValidator.parameter(SavingsApiConstants.dateParamName).value(lastTransactionDate).failWithCode(
+//                    "validation.msg.date.can.not.be.before.last.transaction.date", "Amount can be put on hold only after last transaction");
+//        }
 
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
