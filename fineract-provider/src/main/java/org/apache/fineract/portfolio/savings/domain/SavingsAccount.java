@@ -309,6 +309,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
     protected List<SavingsAccountTransaction> transactions = new ArrayList<>();
 
 //    @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccount", orphanRemoval = true, fetch = FetchType.LAZY)
+    @Transient
     protected Set<SavingsAccountCharge> charges = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccount", orphanRemoval = true, fetch = FetchType.LAZY)

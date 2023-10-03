@@ -18,13 +18,8 @@
  */
 package org.apache.fineract.portfolio.savings.domain;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -96,6 +91,7 @@ public final class SavingsAccountTransaction extends AbstractPersistableCustom {
     private Integer balanceNumberOfDays;
 
 //    @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccountTransaction", orphanRemoval = true, fetch = FetchType.EAGER)
+    @Transient
     private Set<SavingsAccountChargePaidBy> savingsAccountChargesPaid = new HashSet<>();
 
     @Column(name = "overdraft_amount_derived", scale = 6, precision = 19, nullable = true)
@@ -118,6 +114,7 @@ public final class SavingsAccountTransaction extends AbstractPersistableCustom {
     private boolean isLoanDisbursement;
 
 //    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER, mappedBy = "savingsAccountTransaction")
+    @Transient
     private List<SavingsAccountTransactionTaxDetails> taxDetails = new ArrayList<>();
 
     @Column(name = "release_id_of_hold_amount", length = 20)

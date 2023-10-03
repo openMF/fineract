@@ -18,11 +18,8 @@
  */
 package org.apache.fineract.portfolio.savings.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
 
@@ -32,6 +29,7 @@ public class SavingsAccountChargePaidBy extends AbstractPersistableCustom {
 
 //    @ManyToOne
 //    @JoinColumn(name = "savings_account_transaction_id", nullable = false)
+    @Transient
     private SavingsAccountTransaction savingsAccountTransaction;
 
     @ManyToOne
