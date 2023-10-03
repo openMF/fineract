@@ -363,9 +363,9 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             sqlBuilder.append("pd.payment_type_id as paymentType,pd.account_number as accountNumber,pd.check_number as checkNumber, ");
             sqlBuilder.append("pd.receipt_number as receiptNumber, pd.bank_number as bankNumber,pd.routing_code as routingCode, ");
             sqlBuilder.append("pt.value as paymentTypeName, ");
-            sqlBuilder.append("msacpb.amount as paidByAmount, msacpb.id as chargesPaidById, ");
+            sqlBuilder.append("null as paidByAmount, null as chargesPaidById, ");
             sqlBuilder.append(
-                    "msac.id as chargeId, msac.amount as chargeAmount, msac.charge_time_enum as chargeTimeType, msac.is_penalty as isPenaltyCharge, ");
+                    "null as chargeId, null as chargeAmount, null as chargeTimeType, null as isPenaltyCharge, ");
             sqlBuilder.append("txd.id as taxDetailsId, txd.amount as taxAmount, ");
             sqlBuilder.append("apm.gl_account_id as glAccountIdForInterestOnSavings, apm1.gl_account_id as glAccountIdForSavingsControl, ");
             sqlBuilder.append(
@@ -377,7 +377,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             sqlBuilder.append("left join m_payment_detail pd on pd.id = tr.payment_detail_id ");
             sqlBuilder.append("left join m_payment_type pt on pt.id = pd.payment_type_id ");
 //            sqlBuilder.append("left join m_savings_account_charge_paid_by msacpb on msacpb.savings_account_transaction_id = tr.id ");
-            sqlBuilder.append("left join m_savings_account_charge msac on msac.id = msacpb.savings_account_charge_id ");
+//            sqlBuilder.append("left join m_savings_account_charge msac on msac.id = msacpb.savings_account_charge_id ");
             sqlBuilder.append("left join m_client c ON c.id = sa.client_id ");
             sqlBuilder.append("left join m_group g ON g.id = sa.group_id ");
             sqlBuilder.append("left join m_tax_group tg on tg.id = sa.tax_group_id ");
