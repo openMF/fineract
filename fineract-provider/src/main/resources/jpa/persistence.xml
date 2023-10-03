@@ -117,6 +117,8 @@
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <properties>
             <property name="eclipselink.weaving" value="static" />
+            <property name="eclipselink.jdbc.batch-writing" value="Buffered" />
+            <property name="eclipselink.jdbc.batch-writing.size" value="500" />
         </properties>
     </persistence-unit>
 </persistence>

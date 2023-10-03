@@ -31,7 +31,10 @@ public class StatementLoggingCustomizer implements EntityManagerFactoryCustomize
 
     @Override
     public Map<String, Object> additionalVendorProperties() {
-        return Map.of("eclipselink.logging.level.sql", SessionLog.FINE_LABEL, PersistenceUnitProperties.LOGGING_PARAMETERS,
-                Boolean.TRUE.toString());
+        return Map.of("eclipselink.logging.level.sql", SessionLog.FINE_LABEL,
+                PersistenceUnitProperties.LOGGING_PARAMETERS, Boolean.TRUE.toString(),
+                PersistenceUnitProperties.BATCH_WRITING, "Buffered",
+                PersistenceUnitProperties.BATCH_WRITING_SIZE, "1000"
+        );
     }
 }
