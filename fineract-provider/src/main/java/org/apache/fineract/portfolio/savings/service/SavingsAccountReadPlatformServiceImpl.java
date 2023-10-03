@@ -376,7 +376,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             sqlBuilder.append("join m_savings_account_transaction tr on sa.id = tr.savings_account_id ");
             sqlBuilder.append("left join m_payment_detail pd on pd.id = tr.payment_detail_id ");
             sqlBuilder.append("left join m_payment_type pt on pt.id = pd.payment_type_id ");
-            sqlBuilder.append("left join m_savings_account_charge_paid_by msacpb on msacpb.savings_account_transaction_id = tr.id ");
+//            sqlBuilder.append("left join m_savings_account_charge_paid_by msacpb on msacpb.savings_account_transaction_id = tr.id ");
             sqlBuilder.append("left join m_savings_account_charge msac on msac.id = msacpb.savings_account_charge_id ");
             sqlBuilder.append("left join m_client c ON c.id = sa.client_id ");
             sqlBuilder.append("left join m_group g ON g.id = sa.group_id ");
