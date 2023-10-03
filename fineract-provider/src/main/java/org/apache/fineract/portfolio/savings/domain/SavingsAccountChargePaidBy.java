@@ -31,7 +31,7 @@ import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
 public class SavingsAccountChargePaidBy extends AbstractPersistableCustom {
 
     @ManyToOne
-    @JoinColumn(name = "savings_account_transaction_id", nullable = false)
+//    @JoinColumn(name = "savings_account_transaction_id", nullable = false)
     private SavingsAccountTransaction savingsAccountTransaction;
 
     @ManyToOne

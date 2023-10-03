@@ -33,7 +33,7 @@ import org.apache.fineract.portfolio.tax.domain.TaxComponent;
 public class SavingsAccountTransactionTaxDetails extends AbstractPersistableCustom {
 
     @ManyToOne
-    @JoinColumn(name = "savings_transaction_id", nullable = false)
+//    @JoinColumn(name = "savings_transaction_id", nullable = false)
     private SavingsAccountTransaction savingsAccountTransaction;
 
     @ManyToOne
