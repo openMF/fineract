@@ -249,8 +249,12 @@ public class SavingsAccountDomainServiceJpa implements SavingsAccountDomainServi
 
     private void updateExistingTransactionsDetails(SavingsAccount account, Set<Long> existingTransactionIds,
             Set<Long> existingReversedTransactionIds) {
-        existingTransactionIds.addAll(account.findExistingTransactionIds());
-        existingReversedTransactionIds.addAll(account.findExistingReversedTransactionIds());
+
+        List<Long> existingTransactionIdsResult = savingsAccountTransactionRepository.findAllTransactionIds(account.getId());
+        List<Long> ExistingReversedTransactionIdsResult = savingsAccountTransactionRepository.findAllTransactionIds(account.getId(), true);
+
+        existingTransactionIds.addAll(existingTransactionIdsResult);
+        existingReversedTransactionIds.addAll(ExistingReversedTransactionIdsResult);
     }
 
     private Long saveTransactionToGenerateTransactionId(final SavingsAccountTransaction transaction) {

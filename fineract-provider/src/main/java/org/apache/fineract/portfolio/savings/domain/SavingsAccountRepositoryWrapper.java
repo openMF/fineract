@@ -61,7 +61,7 @@ public class SavingsAccountRepositoryWrapper {
     public SavingsAccount findOneWithNotFoundDetection(final Long savingsId) {
         final SavingsAccount account = this.repository.findById(savingsId)
                 .orElseThrow(() -> new SavingsAccountNotFoundException(savingsId));
-        account.loadLazyCollections();
+//        account.loadLazyCollections();
         return account;
     }
 
@@ -86,7 +86,7 @@ public class SavingsAccountRepositoryWrapper {
         if (account == null) {
             throw new SavingsAccountNotFoundException(savingsId);
         }
-        account.loadLazyCollections();
+//        account.loadLazyCollections();
         return account;
     }
 

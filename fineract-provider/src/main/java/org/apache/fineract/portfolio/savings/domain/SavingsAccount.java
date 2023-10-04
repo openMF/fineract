@@ -1426,25 +1426,28 @@ public class SavingsAccount extends AbstractPersistableCustom {
 
     public boolean isBeforeLastPostingPeriod(final LocalDate transactionDate, final boolean backdatedTxnsAllowedTill) {
 
-        boolean transactionBeforeLastInterestPosting = false;
+        // TODO USE JPQL instead of reading all transactions
+//        boolean transactionBeforeLastInterestPosting = false;
+//
+//        if (!backdatedTxnsAllowedTill) {
+//            for (final SavingsAccountTransaction transaction : retrieveListOfTransactions()) {
+//                if ((transaction.isInterestPostingAndNotReversed() || transaction.isOverdraftInterestAndNotReversed())
+//                        && transaction.isAfter(transactionDate) && !transaction.isReversalTransaction()) {
+//                    transactionBeforeLastInterestPosting = true;
+//                    break;
+//                }
+//            }
+//        } else {
+//            if (this.summary.getInterestPostedTillDate() == null) {
+//                return false;
+//            }
+//
+//            transactionBeforeLastInterestPosting = this.summary.getInterestPostedTillDate().isAfter(transactionDate);
+//        }
+//
+//        return transactionBeforeLastInterestPosting;
 
-        if (!backdatedTxnsAllowedTill) {
-            for (final SavingsAccountTransaction transaction : retrieveListOfTransactions()) {
-                if ((transaction.isInterestPostingAndNotReversed() || transaction.isOverdraftInterestAndNotReversed())
-                        && transaction.isAfter(transactionDate) && !transaction.isReversalTransaction()) {
-                    transactionBeforeLastInterestPosting = true;
-                    break;
-                }
-            }
-        } else {
-            if (this.summary.getInterestPostedTillDate() == null) {
-                return false;
-            }
-
-            transactionBeforeLastInterestPosting = this.summary.getInterestPostedTillDate().isAfter(transactionDate);
-        }
-
-        return transactionBeforeLastInterestPosting;
+        return false;
     }
 
     public void validateAccountBalanceDoesNotBecomeNegative(final BigDecimal transactionAmount, final boolean isException,
@@ -1948,6 +1951,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
         return ids;
     }
 
+    @Deprecated
     public Collection<Long> findExistingReversedTransactionIds() {
 
         final Collection<Long> ids = new ArrayList<>();
