@@ -511,6 +511,9 @@ public class SavingsAccount extends AbstractPersistableCustom {
         final List<PostingPeriod> postingPeriods = calculateInterestUsing(mc, interestPostingUpToDate, isInterestTransfer,
                 isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth, postInterestOnDate, backdatedTxnsAllowedTill,
                 postReversals);
+        if (postingPeriods.isEmpty()) {
+            return;
+        }
 
         Money interestPostedToDate = Money.zero(this.currency);
 
@@ -827,7 +830,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
         // update existing transactions so derived balance fields are
         // correct.
 
-        recalculateDailyBalances(openingAccountBalance, upToInterestCalculationDate, backdatedTxnsAllowedTill, postReversals);
+        // recalculateDailyBalances(openingAccountBalance, upToInterestCalculationDate, backdatedTxnsAllowedTill, postReversals);
 
         // 1. default to calculate interest based on entire history OR
         // 2. determine latest 'posting period' and find interest credited to
@@ -850,11 +853,14 @@ public class SavingsAccount extends AbstractPersistableCustom {
         if (postInterestOnDate != null) {
             postedAsOnDates.add(postInterestOnDate);
         }
-        final List<LocalDateInterval> postingPeriodIntervals = this.savingsHelper.determineInterestPostingPeriods(
+        final List<LocalDateInterval> postingPeriodIntervals = new ArrayList<>();
+                /*this.savingsHelper.determineInterestPostingPeriods(
                 getStartInterestCalculationDate(), upToInterestCalculationDate, postingPeriodType, financialYearBeginningMonth,
-                postedAsOnDates);
-
+                postedAsOnDates);*/
         final List<PostingPeriod> allPostingPeriods = new ArrayList<>();
+        if (postingPeriodIntervals.isEmpty()) {
+            return allPostingPeriods;
+        }
 
         Money periodStartingBalance;
         if (this.startInterestCalculationDate != null && !this.getStartInterestCalculationDate().equals(this.getActivationLocalDate())) {
