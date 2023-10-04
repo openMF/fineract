@@ -287,19 +287,19 @@ public class SavingsAccountTransactionDataValidator {
                 }
             }
         }
-        LocalDate lastTransactionDate = null;
-
-        if (!backdatedTxnsAllowedTill) {
-            lastTransactionDate = account.retrieveLastTransactionDate();
-        } else {
-            lastTransactionDate = account.retrieveLastTransactionDateWithPivotConfig();
-        }
-
-        // compare two dates now
-//        if (lastTransactionDate != null && transactionDate.isBefore(lastTransactionDate)) {
-//            baseDataValidator.parameter(SavingsApiConstants.dateParamName).value(lastTransactionDate).failWithCode(
-//                    "validation.msg.date.can.not.be.before.last.transaction.date", "Amount can be put on hold only after last transaction");
+//        LocalDate lastTransactionDate = null;
+//
+//        if (!backdatedTxnsAllowedTill) {
+//            lastTransactionDate = account.retrieveLastTransactionDate();
+//        } else {
+//            lastTransactionDate = account.retrieveLastTransactionDateWithPivotConfig();
 //        }
+//
+//        // compare two dates now
+////        if (lastTransactionDate != null && transactionDate.isBefore(lastTransactionDate)) {
+////            baseDataValidator.parameter(SavingsApiConstants.dateParamName).value(lastTransactionDate).failWithCode(
+////                    "validation.msg.date.can.not.be.before.last.transaction.date", "Amount can be put on hold only after last transaction");
+////        }
 
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }

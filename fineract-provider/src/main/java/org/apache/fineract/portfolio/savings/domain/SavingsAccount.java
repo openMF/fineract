@@ -71,7 +71,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.fineract.infrastructure.ApplicationContextProvider;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.configuration.service.TemporaryConfigurationServiceContainer;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
@@ -311,6 +314,9 @@ public class SavingsAccount extends AbstractPersistableCustom {
 //    @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccount", orphanRemoval = true, fetch = FetchType.LAZY)
     @Transient
     protected Set<SavingsAccountCharge> charges = new HashSet<>();
+
+    @Transient
+    protected List<SavingsAccountTransaction> newlyCreatedTransactions = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccount", orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<SavingsOfficerAssignmentHistory> savingsOfficerHistory = new HashSet<>();
@@ -1933,12 +1939,15 @@ public class SavingsAccount extends AbstractPersistableCustom {
     }
 
     public Collection<Long> findExistingTransactionIds() {
-        final Collection<Long> ids = new ArrayList<>();
-        List<SavingsAccountTransaction> trans = getTransactions();
-        for (final SavingsAccountTransaction transaction : trans) {
-            ids.add(transaction.getId());
-        }
-        return ids;
+        return ApplicationContextProvider.getApplicationContext().getBean(SavingsAccountTransactionRepository.class)
+                .findAllTransactionIds(getId());
+
+//        final Collection<Long> ids = new ArrayList<>();
+//        List<SavingsAccountTransaction> trans = getTransactions();
+//        for (final SavingsAccountTransaction transaction : trans) {
+//            ids.add(transaction.getId());
+//        }
+//        return ids;
     }
 
     public Collection<Long> findCurrentTransactionIdsWithPivotDateConfig() {
@@ -1951,19 +1960,20 @@ public class SavingsAccount extends AbstractPersistableCustom {
         return ids;
     }
 
-    @Deprecated
     public Collection<Long> findExistingReversedTransactionIds() {
+        return ApplicationContextProvider.getApplicationContext().getBean(SavingsAccountTransactionRepository.class)
+                .findAllTransactionIds(getId(), true);
 
-        final Collection<Long> ids = new ArrayList<>();
-        List<SavingsAccountTransaction> trans = getTransactions();
-        // time consuming
-        for (final SavingsAccountTransaction transaction : trans) {
-            if (transaction.isReversed()) {
-                ids.add(transaction.getId());
-            }
-        }
-
-        return ids;
+//        final Collection<Long> ids = new ArrayList<>();
+//        List<SavingsAccountTransaction> trans = getTransactions();
+//        // time consuming
+//        for (final SavingsAccountTransaction transaction : trans) {
+//            if (transaction.isReversed()) {
+//                ids.add(transaction.getId());
+//            }
+//        }
+//
+//        return ids;
     }
 
     public Collection<Long> findCurrentReversedTransactionIdsWithPivotDateConfig() {
@@ -2974,10 +2984,16 @@ public class SavingsAccount extends AbstractPersistableCustom {
 
     public void addTransaction(final SavingsAccountTransaction transaction) {
         this.transactions.add(transaction);
+
+        // Helper to track the new transactions
+        this.newlyCreatedTransactions.add(transaction);
     }
 
     public void addTransactionToExisting(final SavingsAccountTransaction transaction) {
         this.savingsAccountTransactions.add(transaction);
+
+        // Helper to track the new transactions
+        this.newlyCreatedTransactions.add(transaction);
     }
 
     public void setStatus(final Integer status) {

@@ -34,8 +34,8 @@ public interface SavingsAccountTransactionRepository
     @Query("select sat.id from SavingsAccountTransaction sat where sat.savingsAccount.id = :savingAccountId")
     List<Long> findAllTransactionIds(@Param("savingAccountId") Long savingAccountId);
 
-    @Query("select sat.id from SavingsAccountTransaction sat where sat.savingsAccount.id = :savingAccountId and sat.reversed = :isReversed")
-    List<Long> findAllTransactionIds(@Param("savingAccountId") Long savingAccountId, @Param("isReversed") boolean isReversal);
+    @Query("select sat.id from SavingsAccountTransaction sat where sat.savingsAccount.id = :savingAccountId and sat.reversed = :reversed")
+    List<Long> findAllTransactionIds(@Param("savingAccountId") Long savingAccountId, @Param("reversed") boolean reversed);
 
     @Query("select sat from SavingsAccountTransaction sat where sat.id = :transactionId and sat.savingsAccount.id = :savingsId")
     SavingsAccountTransaction findOneByIdAndSavingsAccountId(@Param("transactionId") Long transactionId,
@@ -59,4 +59,9 @@ public interface SavingsAccountTransactionRepository
     @Query("select sat from SavingsAccountTransaction sat where sat.savingsAccount.id = :savingsId and sat.dateOf <= :transactionDate and sat.reversed=false")
     List<SavingsAccountTransaction> findBySavingsAccountIdAndLessThanDateOfAndReversedIsFalse(@Param("savingsId") Long savingsId,
             @Param("transactionDate") LocalDate transactionDate, Pageable pageable);
+
+    // trans.isInterestPosting() && trans.isNotReversed() && !trans.isReversalTransaction() && trans.isManualTransaction()
+    // (transactionType = (INTEREST_POSTING || OVERDRAFT_INTEREST)) & !reversed & !reversalTransaction & isManualTransaction
+    @Query("select sat.dateOf from SavingsAccountTransaction sat where sat.savingsAccount.id = :savingId and sat.typeOf IN :transactionTypes and sat.reversed = :reversed and sat.reversalTransaction = :reversalTransaction and sat.isManualTransaction = :isManualTransaction")
+    List<LocalDate> findAllManualPostingDates(@Param("savingId") Long accountId, @Param("transactionTypes") List<Integer> transactionTypes, @Param("reversed") boolean reserved, boolean reversalTransaction, boolean isManualTransaction);
 }
