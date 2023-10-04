@@ -54,6 +54,9 @@ import org.springframework.util.CollectionUtils;
 @Table(name = "m_savings_account_transaction")
 public final class SavingsAccountTransaction extends AbstractPersistableCustom {
 
+    @Version
+    int version;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "savings_account_id", referencedColumnName = "id", nullable = false)
     private SavingsAccount savingsAccount;
