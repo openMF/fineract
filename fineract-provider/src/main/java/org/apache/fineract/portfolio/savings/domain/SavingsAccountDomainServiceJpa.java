@@ -219,7 +219,7 @@ public class SavingsAccountDomainServiceJpa implements SavingsAccountDomainServi
 
         this.savingsAccountRepository.saveAndFlush(account);
 
-        postJournalEntries(account, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer, backdatedTxnsAllowedTill);
+//        postJournalEntries(account, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer, backdatedTxnsAllowedTill);
         businessEventNotifierService.notifyPostBusinessEvent(new SavingsDepositBusinessEvent(deposit));
         return deposit;
     }
