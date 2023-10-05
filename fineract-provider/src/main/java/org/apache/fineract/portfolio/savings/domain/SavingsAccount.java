@@ -129,6 +129,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
+@Slf4j
 @Entity
 @Table(name = "m_savings_account", uniqueConstraints = { @UniqueConstraint(columnNames = { "account_no" }, name = "sa_account_no_UNIQUE"),
         @UniqueConstraint(columnNames = { "external_id" }, name = "sa_external_id_UNIQUE") })
@@ -784,13 +785,23 @@ public class SavingsAccount extends AbstractPersistableCustom {
     }
 
     public List<LocalDate> getManualPostingDates() {
-        List<LocalDate> transactions = new ArrayList<>();
-        for (SavingsAccountTransaction trans : this.transactions) {
-            if (trans.isInterestPosting() && trans.isNotReversed() && !trans.isReversalTransaction() && trans.isManualTransaction()) {
-                transactions.add(trans.getTransactionLocalDate());
-            }
-        }
-        return transactions;
+//        List<LocalDate> transactions = new ArrayList<>();
+//        for (SavingsAccountTransaction trans : this.transactions) {
+//            if (trans.isInterestPosting() && trans.isNotReversed() && !trans.isReversalTransaction() && trans.isManualTransaction()) {
+//                transactions.add(trans.getTransactionLocalDate());
+//            }
+//        }
+//        return transactions;
+
+        // (transactionType = (INTEREST_POSTING || OVERDRAFT_INTEREST)
+        List<Integer> transactionTypes = Arrays.asList(SavingsAccountTransactionType.INTEREST_POSTING.getId(),
+                SavingsAccountTransactionType.OVERDRAFT_INTEREST.getId());
+
+        // trans.isInterestPosting() && trans.isNotReversed() && !trans.isReversalTransaction() && trans.isManualTransaction()
+        // (transactionType = (INTEREST_POSTING || OVERDRAFT_INTEREST)) & !reversed & !reversalTransaction & isManualTransaction
+
+        return ApplicationContextProvider.getApplicationContext().getBean(SavingsAccountTransactionRepository.class)
+                .findAllManualPostingDates(getId(), transactionTypes, false, false, true);
     }
 
     public List<LocalDate> getManualPostingDatesWithPivotConfig() {
@@ -2986,14 +2997,22 @@ public class SavingsAccount extends AbstractPersistableCustom {
         this.transactions.add(transaction);
 
         // Helper to track the new transactions
-        this.newlyCreatedTransactions.add(transaction);
+        if (this.newlyCreatedTransactions.contains(transaction)) {
+            log.info(">>>>>>>>>>>>>> DUPLICATED ENRTY");
+        } else {
+            this.newlyCreatedTransactions.add(transaction);
+        }
     }
 
     public void addTransactionToExisting(final SavingsAccountTransaction transaction) {
         this.savingsAccountTransactions.add(transaction);
 
         // Helper to track the new transactions
-        this.newlyCreatedTransactions.add(transaction);
+        if (this.newlyCreatedTransactions.contains(transaction)) {
+            log.info(">>>>>>>>>>>>>> DUPLICATED ENRTY");
+        } else {
+            this.newlyCreatedTransactions.add(transaction);
+        }
     }
 
     public void setStatus(final Integer status) {

@@ -85,7 +85,6 @@ public class SavingsAccountRepositoryWrapper {
         if (account == null) {
             throw new SavingsAccountNotFoundException(savingsId);
         }
-//        account.loadLazyCollections();
         return account;
     }
 
