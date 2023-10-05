@@ -130,8 +130,8 @@ public class SavingsAccountDomainServiceJpa implements SavingsAccountDomainServi
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
 
-        account.validateAccountBalanceDoesNotBecomeNegative(transactionAmount, transactionBooleanValues.isExceptionForBalanceCheck(),
-                depositAccountOnHoldTransactions, backdatedTxnsAllowedTill);
+//        account.validateAccountBalanceDoesNotBecomeNegative(transactionAmount, transactionBooleanValues.isExceptionForBalanceCheck(),
+//                depositAccountOnHoldTransactions, backdatedTxnsAllowedTill);
 
         saveTransactionToGenerateTransactionId(withdrawal);
         if (backdatedTxnsAllowedTill) {
