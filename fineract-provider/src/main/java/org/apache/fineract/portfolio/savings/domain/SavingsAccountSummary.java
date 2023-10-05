@@ -25,7 +25,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
+
+import jakarta.validation.constraints.NotNull;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.apache.fineract.infrastructure.core.service.MathUtil;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.portfolio.savings.domain.interest.PostingPeriod;
@@ -110,6 +113,58 @@ public final class SavingsAccountSummary {
         this.accountBalance = Money.of(currency, this.totalDeposits).plus(this.totalInterestPosted).minus(this.totalWithdrawals)
                 .minus(this.totalWithdrawalFees).minus(this.totalAnnualFees).minus(this.totalFeeCharge).minus(this.totalPenaltyCharge)
                 .minus(totalOverdraftInterestDerived).minus(totalWithholdTax).getAmount();
+    }
+
+    public void updateSummary(@NotNull SavingsAccountTransaction transaction) {
+        if (transaction.isReversalTransaction()) {
+            transaction.setRunningBalance(accountBalance);
+            return;
+        }
+        BigDecimal amount = transaction.getAmount();
+        if ((transaction.isDepositAndNotReversed() || transaction.isDividendPayoutAndNotReversed())) {
+            totalDeposits = MathUtil.add(totalDeposits, amount);
+            accountBalance = MathUtil.add(accountBalance, amount);
+        }
+        if (transaction.isWithdrawal() && transaction.isNotReversed()) {
+            totalWithdrawals = MathUtil.add(totalWithdrawals, amount);
+            accountBalance = MathUtil.subtract(accountBalance, amount);
+        }
+        if (transaction.isInterestPostingAndNotReversed() && transaction.isNotReversed()) {
+            totalInterestPosted = MathUtil.add(totalInterestPosted, amount);
+            accountBalance = MathUtil.add(accountBalance, amount);
+        }
+        if (transaction.isWithdrawalFeeAndNotReversed() && transaction.isNotReversed()) {
+            totalWithdrawalFees = MathUtil.add(totalWithdrawalFees, amount);
+            accountBalance = MathUtil.subtract(accountBalance, amount);
+        }
+        if (transaction.isAnnualFeeAndNotReversed() && transaction.isNotReversed()) {
+            totalAnnualFees = MathUtil.add(totalAnnualFees, amount);
+            accountBalance = MathUtil.subtract(accountBalance, amount);
+        }
+        if (transaction.isFeeChargeAndNotReversed()) {
+            totalFeeCharge = MathUtil.add(totalFeeCharge, amount);
+            accountBalance = MathUtil.subtract(accountBalance, amount);
+        }
+        if (transaction.isPenaltyChargeAndNotReversed()) {
+            totalPenaltyCharge = MathUtil.add(totalPenaltyCharge, amount);
+            accountBalance = MathUtil.subtract(accountBalance, amount);
+        }
+        if (transaction.isWaiveFeeChargeAndNotReversed()) {
+            totalFeeChargesWaived = MathUtil.add(totalFeeChargesWaived, amount);
+        }
+        if (transaction.isWaivePenaltyChargeAndNotReversed()) {
+            totalPenaltyChargesWaived = MathUtil.add(totalPenaltyChargesWaived, amount);
+        }
+        if (transaction.isOverdraftInterestAndNotReversed()) {
+            totalOverdraftInterestDerived = MathUtil.add(totalOverdraftInterestDerived, amount);
+            accountBalance = MathUtil.subtract(accountBalance, amount);
+        }
+        if (transaction.isWithHoldTaxAndNotReversed()) {
+            totalWithholdTax = MathUtil.add(totalWithholdTax, amount);
+            accountBalance = MathUtil.subtract(accountBalance, amount);
+        }
+        transaction.setRunningBalance(accountBalance);
+//        updateRunningBalanceAndPivotDate(false, transactions, null, null, null, currency);
     }
 
     public void updateSummaryWithPivotConfig(final MonetaryCurrency currency, final SavingsAccountTransactionSummaryWrapper wrapper,

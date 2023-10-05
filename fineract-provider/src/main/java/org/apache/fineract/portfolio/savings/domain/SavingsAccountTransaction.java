@@ -484,6 +484,10 @@ public final class SavingsAccountTransaction extends AbstractPersistableCustom {
         this.runningBalance = balance.getAmount();
     }
 
+    void setRunningBalance(final BigDecimal balance) {
+        this.runningBalance = balance;
+    }
+
     public void updateCumulativeBalanceAndDates(final MonetaryCurrency currency, final LocalDate endOfBalanceDate) {
         // balance end date should not be before transaction date
         if (endOfBalanceDate != null && endOfBalanceDate.isBefore(this.transactionLocalDate())) {
