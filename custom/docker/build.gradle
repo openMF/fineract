@@ -39,7 +39,6 @@ jib {
         creationTime = 'USE_CURRENT_TIMESTAMP'
         mainClass = 'org.apache.fineract.ServerApplication'
         jvmFlags = [
-            '-Xms1G',
             '-XshowSettings:vm',
             '-XX:+UseContainerSupport',
             '-XX:+UseStringDeduplication',
