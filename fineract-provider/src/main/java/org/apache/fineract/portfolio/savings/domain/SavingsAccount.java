@@ -847,7 +847,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
         // update existing transactions so derived balance fields are
         // correct.
 
-        // recalculateDailyBalances(openingAccountBalance, upToInterestCalculationDate, backdatedTxnsAllowedTill, postReversals);
+        recalculateDailyBalances(openingAccountBalance, upToInterestCalculationDate, backdatedTxnsAllowedTill, postReversals);
 
         // 1. default to calculate interest based on entire history OR
         // 2. determine latest 'posting period' and find interest credited to
@@ -1186,10 +1186,11 @@ public class SavingsAccount extends AbstractPersistableCustom {
             this.sub_status = SavingsAccountSubStatusEnum.NONE.getValue();
         }
 
-        if (backdatedTxnsAllowedTill) {
-            this.summary.updateSummaryWithPivotConfig(this.currency, this.savingsAccountTransactionSummaryWrapper, transaction,
-                    this.savingsAccountTransactions);
-        }
+//        if (backdatedTxnsAllowedTill) {
+//            this.summary.updateSummaryWithPivotConfig(this.currency, this.savingsAccountTransactionSummaryWrapper, transaction,
+//                    this.savingsAccountTransactions);
+
+        summary.updateSummary(transaction);
 
         return transaction;
     }
@@ -1322,10 +1323,9 @@ public class SavingsAccount extends AbstractPersistableCustom {
                 || this.sub_status.equals(SavingsAccountSubStatusEnum.DORMANT.getValue())) {
             this.sub_status = SavingsAccountSubStatusEnum.NONE.getValue();
         }
-        if (backdatedTxnsAllowedTill) {
-            this.summary.updateSummaryWithPivotConfig(this.currency, this.savingsAccountTransactionSummaryWrapper, transaction,
-                    this.savingsAccountTransactions);
-        }
+
+        summary.updateSummary(transaction);
+
         return transaction;
     }
 

@@ -63,5 +63,6 @@ public interface SavingsAccountTransactionRepository
     // trans.isInterestPosting() && trans.isNotReversed() && !trans.isReversalTransaction() && trans.isManualTransaction()
     // (transactionType = (INTEREST_POSTING || OVERDRAFT_INTEREST)) & !reversed & !reversalTransaction & isManualTransaction
     @Query("select sat.dateOf from SavingsAccountTransaction sat where sat.savingsAccount.id = :savingId and sat.typeOf IN :transactionTypes and sat.reversed = :reversed and sat.reversalTransaction = :reversalTransaction and sat.isManualTransaction = :isManualTransaction")
-    List<LocalDate> findAllManualPostingDates(@Param("savingId") Long accountId, @Param("transactionTypes") List<Integer> transactionTypes, @Param("reversed") boolean reserved, @Param("reversalTransaction") boolean reversalTransaction, @Param("isManualTransaction") boolean isManualTransaction);
+    List<LocalDate> findAllManualPostingDates(@Param("savingId") Long accountId, @Param("transactionTypes") List<Integer> transactionTypes, @Param("reversed") boolean reserved, boolean reversalTransaction, boolean isManualTransaction);
+
 }
