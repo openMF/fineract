@@ -3866,7 +3866,9 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
             if (loanTransaction.isRefund() || loanTransaction.isRefundForActiveLoan()) {
                 totalPaidInRepayments = totalPaidInRepayments.minus(loanTransaction.getAmount(currency));
             } else if (loanTransaction.isCreditBalanceRefund() || loanTransaction.isChargeback()) {
-                totalPaidInRepayments = totalPaidInRepayments.minus(loanTransaction.getOverPaymentPortion(currency));
+                if (loanTransaction.getPrincipalPortion(currency).isZero()) {
+                    totalPaidInRepayments = totalPaidInRepayments.minus(loanTransaction.getOverPaymentPortion(currency));
+                }
             }
         }
 
