@@ -1744,8 +1744,9 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
                 responseLoanProductsRequestLP2AdvancedPaymentInterestInterestRecognitionOnDisbursementEmi36030AccrualActivity);
     }
 
+
     public static AdvancedPaymentData createPaymentAllocation(String transactionType, String futureInstallmentAllocationRule,
-            LoanProductPaymentAllocationRule.AllocationTypesEnum... rules) {
+                                                              LoanProductPaymentAllocationRule.AllocationTypesEnum... rules) {
         AdvancedPaymentData advancedPaymentData = new AdvancedPaymentData();
         advancedPaymentData.setTransactionType(transactionType);
         advancedPaymentData.setFutureInstallmentAllocationRule(futureInstallmentAllocationRule);
