@@ -31,6 +31,5 @@ fineract-provider/src/main/generated/
 **/out/
 gradleExp/
 
-Debug.feature
 .run/
 .java-version
