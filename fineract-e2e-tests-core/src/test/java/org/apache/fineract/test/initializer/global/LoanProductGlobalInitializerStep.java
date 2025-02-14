@@ -1717,7 +1717,8 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
                 TestContextKey.DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_ACCELERATE_MATURITY_CHARGE_OFF_BEHAVIOUR_LAST_INSTALLMENT_STRATEGY,
                 responseLoanProductsRequestAdvCustomAccelerateMaturityChargeOffBehaviourLastInstallmentStrategyProgressiveLoanSchedule);
 
-        // LP2 with progressive loan schedule + horizontal + interest EMI + interestRecognitionOnDisbursementDate = true + 360/30 + accrual activity
+        // LP2 with progressive loan schedule + horizontal + interest EMI + interestRecognitionOnDisbursementDate = true
+        // + 360/30 + accrual activity
         String name73 = DefaultLoanProduct.LP2_ADV_PYMNT_INTEREST_RECOGNITION_DISBURSEMENT_DAILY_EMI_360_30_ACCRUAL_ACTIVITY.getName();
         PostLoanProductsRequest loanProductsRequestLP2AdvancedPaymentInterestRecognitionOnDisbursementEmi36030AccrualActivity = loanProductsRequestFactory
                 .defaultLoanProductsRequestLP2Emi()//
@@ -1744,9 +1745,8 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
                 responseLoanProductsRequestLP2AdvancedPaymentInterestInterestRecognitionOnDisbursementEmi36030AccrualActivity);
     }
 
-
     public static AdvancedPaymentData createPaymentAllocation(String transactionType, String futureInstallmentAllocationRule,
-                                                              LoanProductPaymentAllocationRule.AllocationTypesEnum... rules) {
+            LoanProductPaymentAllocationRule.AllocationTypesEnum... rules) {
         AdvancedPaymentData advancedPaymentData = new AdvancedPaymentData();
         advancedPaymentData.setTransactionType(transactionType);
         advancedPaymentData.setFutureInstallmentAllocationRule(futureInstallmentAllocationRule);
