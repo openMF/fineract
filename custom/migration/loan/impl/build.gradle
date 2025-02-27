@@ -25,3 +25,5 @@ base {
 }
 
 apply from: 'dependencies.gradle'
+
+apply plugin: 'java-library'
