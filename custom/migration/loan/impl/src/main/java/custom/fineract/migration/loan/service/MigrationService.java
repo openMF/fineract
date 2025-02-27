@@ -16,13 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package custom.fineract.migration.loan.service;
 
-dependencies {
-    implementation(project(':fineract-core'))
-    implementation(project(':fineract-loan'))
-    implementation('org.springframework.boot:spring-boot-starter')
-    implementation('org.springframework.boot:spring-boot-starter-data-jpa')
-    implementation('org.eclipse.persistence:org.eclipse.persistence.jpa') {
-        exclude group: 'org.eclipse.persistence', module: 'jakarta.persistence'
-    }
+import java.util.Optional;
+
+/**
+ * Interface for migration service operations.
+ */
+public interface MigrationService {
+
+    /**
+     * Finds the last migration status for a given loan ID.
+     *
+     * @param loanId
+     *            the ID of the loan
+     * @return Optional containing the status string if found, empty Optional otherwise
+     */
+    Optional<String> findLastStatus(Long loanId);
 }
