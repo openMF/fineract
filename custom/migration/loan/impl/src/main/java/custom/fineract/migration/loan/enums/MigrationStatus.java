@@ -16,14 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package custom.fineract.migration.loan.enums;
 
-dependencies {
-    implementation(project(':fineract-core'))
-    implementation(project(':fineract-loan'))
-    implementation('com.google.code.gson:gson')
-    implementation('org.springframework.boot:spring-boot-starter')
-    implementation('org.springframework.boot:spring-boot-starter-data-jpa')
-    implementation('org.eclipse.persistence:org.eclipse.persistence.jpa') {
-        exclude group: 'org.eclipse.persistence', module: 'jakarta.persistence'
-    }
+public enum MigrationStatus {
+
+    MIGRATION_COMPLETED, MIGRATION_IN_PROGRESS
+
 }
