@@ -35,6 +35,12 @@
             <column name="status" type="varchar(100)">
                 <constraints nullable="false"/>
             </column>
+            <column name="created_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
         </createTable>
 
         <addForeignKeyConstraint baseTableName="dt_migration"
