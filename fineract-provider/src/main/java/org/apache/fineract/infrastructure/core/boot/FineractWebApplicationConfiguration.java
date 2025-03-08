@@ -49,8 +49,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 @EnableWebSecurity
 @EnableConfigurationProperties({ FineractProperties.class, LiquibaseProperties.class })
-@ComponentScan(basePackages = "org.apache.fineract.**")
-@IntegrationComponentScan(basePackages = "org.apache.fineract.**")
+@ComponentScan(basePackages = { "org.apache.fineract.**", "com.belat.fineract.**" })
+@IntegrationComponentScan(basePackages = { "org.apache.fineract.**", "com.belat.fineract.**" })
 @Conditional(FineractWebApplicationCondition.class)
 @Slf4j
 // The class needs to be abstract for some reason, otherwise the tests start to fail...

@@ -57,7 +57,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @Configuration
 @EnableJpaAuditing
-@EnableJpaRepositories(basePackages = { "org.apache.fineract.**.domain", "org.apache.fineract.**.repository" })
+@EnableJpaRepositories(basePackages = { "org.apache.fineract.**.domain", "org.apache.fineract.**.repository",
+        "com.belat.fineract.**.domain" })
 @EnableConfigurationProperties(JpaProperties.class)
 @Import(JpaAuditingHandlerRegistrar.class)
 public class JPAConfig extends JpaBaseConfiguration {
@@ -97,6 +98,7 @@ public class JPAConfig extends JpaBaseConfiguration {
     protected String[] getPackagesToScan() {
         Set<String> packagesToScan = new HashSet<>();
         packagesToScan.add("org.apache.fineract");
+        packagesToScan.add("com.belat.fineract");
         emFactoryCustomizers.forEach(c -> packagesToScan.addAll(c.additionalPackagesToScan()));
         return packagesToScan.toArray(String[]::new);
     }
