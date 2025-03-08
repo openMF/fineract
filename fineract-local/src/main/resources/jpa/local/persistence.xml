@@ -211,6 +211,7 @@
         <class>org.apache.fineract.portfolio.floatingrates.domain.FloatingRatePeriod</class>
         <!-- Fineract Branch module -->
         <class>org.apache.fineract.organisation.thirdparty.domain.ThirdParty</class>
+        <class>com.belat.fineract.portfolio.promissorynote.domain.PromissoryNote</class>
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <properties>
             <property name="eclipselink.weaving" value="static" />
