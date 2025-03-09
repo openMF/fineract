@@ -26,14 +26,13 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.fineract.infrastructure.core.domain.AbstractAuditableWithUTCDateTimeCustom;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccount;
-
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -56,7 +55,7 @@ public class PromissoryNote extends AbstractAuditableWithUTCDateTimeCustom<Long>
     @JoinColumn(name = "investor_savings_account_id", nullable = false, referencedColumnName = "id")
     private SavingsAccount investorSavingsAccount;
 
-    @Column(name = "investment_amount" , nullable = false)
+    @Column(name = "investment_amount", nullable = false)
     private BigDecimal investmentAmount;
 
     @Column(name = "promissory_note_number", length = 20, unique = true, nullable = false)

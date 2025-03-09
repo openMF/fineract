@@ -222,6 +222,8 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                     // for applications other than GSIM
                     generateAccountNumber(account);
                 }
+            } else {
+                this.savingAccountRepository.saveAndFlush(account);
             }
             // end of gsim
             final Long savingsId = account.getId();

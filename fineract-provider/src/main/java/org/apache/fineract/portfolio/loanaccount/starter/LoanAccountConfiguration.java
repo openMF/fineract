@@ -142,6 +142,7 @@ import org.apache.fineract.portfolio.loanaccount.service.LoanWritePlatformServic
 import org.apache.fineract.portfolio.loanaccount.service.ReplayedTransactionBusinessEventService;
 import org.apache.fineract.portfolio.loanaccount.service.ReplayedTransactionBusinessEventServiceImpl;
 import org.apache.fineract.portfolio.loanaccount.service.ReprocessLoanTransactionsService;
+import org.apache.fineract.portfolio.loanaccount.service.fund.LoanFundServiceImpl;
 import org.apache.fineract.portfolio.loanproduct.domain.LoanProductRepository;
 import org.apache.fineract.portfolio.loanproduct.service.LoanDropdownReadPlatformService;
 import org.apache.fineract.portfolio.loanproduct.service.LoanProductReadPlatformService;
@@ -203,14 +204,15 @@ public class LoanAccountConfiguration {
             EntityDatatableChecksWritePlatformService entityDatatableChecksWritePlatformService, GLIMAccountInfoRepository glimRepository,
             LoanRepository loanRepository, GSIMReadPlatformService gsimReadPlatformService,
             LoanLifecycleStateMachine defaultLoanLifecycleStateMachine, LoanAccrualsProcessingService loanAccrualsProcessingService,
-            LoanDownPaymentTransactionValidator loanDownPaymentTransactionValidator, LoanScheduleService loanScheduleService) {
+            LoanDownPaymentTransactionValidator loanDownPaymentTransactionValidator, LoanScheduleService loanScheduleService,
+            LoanFundServiceImpl loanFundServiceImpl) {
         return new LoanApplicationWritePlatformServiceJpaRepositoryImpl(context, loanApplicationTransitionValidator,
                 loanApplicationValidator, loanRepositoryWrapper, noteRepository, loanAssembler,
                 loanRepaymentScheduleTransactionProcessorFactory, calendarRepository, calendarInstanceRepository, savingsAccountRepository,
                 accountAssociationsRepository, businessEventNotifierService, loanScheduleAssembler, loanUtilService,
                 calendarReadPlatformService, entityDatatableChecksWritePlatformService, glimRepository, loanRepository,
                 gsimReadPlatformService, defaultLoanLifecycleStateMachine, loanAccrualsProcessingService,
-                loanDownPaymentTransactionValidator, loanScheduleService);
+                loanDownPaymentTransactionValidator, loanScheduleService, loanFundServiceImpl);
     }
 
     @Bean

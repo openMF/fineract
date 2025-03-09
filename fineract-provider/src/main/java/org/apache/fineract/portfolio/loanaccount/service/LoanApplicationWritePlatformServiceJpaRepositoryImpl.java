@@ -85,6 +85,7 @@ import org.apache.fineract.portfolio.loanaccount.loanschedule.service.LoanSchedu
 import org.apache.fineract.portfolio.loanaccount.serialization.LoanApplicationTransitionValidator;
 import org.apache.fineract.portfolio.loanaccount.serialization.LoanApplicationValidator;
 import org.apache.fineract.portfolio.loanaccount.serialization.LoanDownPaymentTransactionValidator;
+import org.apache.fineract.portfolio.loanaccount.service.fund.LoanFundServiceImpl;
 import org.apache.fineract.portfolio.loanproduct.LoanProductConstants;
 import org.apache.fineract.portfolio.loanproduct.domain.RecalculationFrequencyType;
 import org.apache.fineract.portfolio.note.domain.Note;
@@ -125,6 +126,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
     private final LoanAccrualsProcessingService loanAccrualsProcessingService;
     private final LoanDownPaymentTransactionValidator loanDownPaymentTransactionValidator;
     private final LoanScheduleService loanScheduleService;
+    private final LoanFundServiceImpl loanFundServiceImpl;
 
     @Transactional
     @Override
@@ -563,6 +565,9 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             createNote(noteText, loan).ifPresent(note -> changes.put("note", noteText));
             businessEventNotifierService.notifyPostBusinessEvent(new LoanApprovedBusinessEvent(loan));
         }
+
+        // Create the Fund client and savings account
+        loanFundServiceImpl.createFundAccount(loan, command);
 
         return new CommandProcessingResultBuilder() //
                 .withCommandId(command.commandId()) //
