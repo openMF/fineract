@@ -111,7 +111,7 @@ public class PromissoryNoteWritePlatformServiceImpl implements PromissoryNoteWri
         promissoryNote.setInvestmentAmount(getAmountFromJson(element));
         promissoryNote.setFundSavingsAccount(savingsAccountRepository.findById(getFundSavingAccountIdFromJson(element)).orElseThrow(() -> new SavingsAccountNotFoundException(getFundSavingAccountIdFromJson(element))));
         promissoryNote
-                .setInvestorSavingsAccount(savingsAccountRepository.findById(getInvestorSavingAccountIdFromJson(element)).orElseThrow(() -> new SavingsAccountNotFoundException(getFundSavingAccountIdFromJson(element))));
+                .setInvestorSavingsAccount(savingsAccountRepository.findById(getInvestorSavingAccountIdFromJson(element)).orElseThrow(() -> new SavingsAccountNotFoundException(getInvestorSavingAccountIdFromJson(element))));
         promissoryNote.setCurrencyCode(getCurrencyCodeFromJson(element));
         promissoryNote.setPromissoryNoteNumber(promissoryNote.getFundSavingsAccount().getAccountNumber());
 
@@ -131,7 +131,7 @@ public class PromissoryNoteWritePlatformServiceImpl implements PromissoryNoteWri
     }
 
     private Long getInvestorSavingAccountIdFromJson(JsonElement json) {
-        return fromApiJsonHelper.extractLongNamed(PromissoryNoteConstants.fundSavingsAccountIdParamName, json);
+        return fromApiJsonHelper.extractLongNamed(PromissoryNoteConstants.investorSavingsAccountIdParamName, json);
     }
 
     private String getCurrencyCodeFromJson(JsonElement json) {
