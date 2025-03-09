@@ -62,7 +62,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="version" type="BIGINT">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
         </createTable>
     </changeSet>

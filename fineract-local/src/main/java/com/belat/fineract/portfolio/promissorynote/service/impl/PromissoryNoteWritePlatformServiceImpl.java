@@ -22,6 +22,7 @@ import com.belat.fineract.portfolio.promissorynote.api.PromissoryNoteConstants;
 import com.belat.fineract.portfolio.promissorynote.domain.PromissoryNote;
 import com.belat.fineract.portfolio.promissorynote.domain.PromissoryNoteRepository;
 import com.belat.fineract.portfolio.promissorynote.domain.PromissoryNoteStatus;
+import com.belat.fineract.portfolio.promissorynote.exception.PromissoryAlreadyBeenAssignedException;
 import com.belat.fineract.portfolio.promissorynote.service.PromissoryNoteWritePlatformService;
 import com.google.gson.JsonElement;
 import jakarta.transaction.Transactional;
@@ -44,6 +45,7 @@ import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountRepository;
+import org.apache.fineract.portfolio.savings.exception.SavingsAccountNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -65,6 +67,7 @@ public class PromissoryNoteWritePlatformServiceImpl implements PromissoryNoteWri
         promissoryNumberFund = promissoryNumberFund.substring(promissoryNumberFund.indexOf("_") + 1);
         String promissoryNumberInvestor = String.valueOf(promissoryNote.getInvestorSavingsAccount().getClient().getId());
         promissoryNote.setPromissoryNoteNumber(paddingNumberPromissory(promissoryNumberInvestor, promissoryNumberFund));
+
         promissoryNote = noteRepository.save(promissoryNote);
 
         return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(promissoryNote.getId()).build();
@@ -106,9 +109,9 @@ public class PromissoryNoteWritePlatformServiceImpl implements PromissoryNoteWri
 
         promissoryNote.setStatus(PromissoryNoteStatus.ACTIVE);
         promissoryNote.setInvestmentAmount(getAmountFromJson(element));
-        promissoryNote.setFundSavingsAccount(savingsAccountRepository.findById(getFundSavingAccountIdFromJson(element)).orElseThrow());
+        promissoryNote.setFundSavingsAccount(savingsAccountRepository.findById(getFundSavingAccountIdFromJson(element)).orElseThrow(() -> new SavingsAccountNotFoundException(getFundSavingAccountIdFromJson(element))));
         promissoryNote
-                .setInvestorSavingsAccount(savingsAccountRepository.findById(getInvestorSavingAccountIdFromJson(element)).orElseThrow());
+                .setInvestorSavingsAccount(savingsAccountRepository.findById(getInvestorSavingAccountIdFromJson(element)).orElseThrow(() -> new SavingsAccountNotFoundException(getFundSavingAccountIdFromJson(element))));
         promissoryNote.setCurrencyCode(getCurrencyCodeFromJson(element));
         promissoryNote.setPromissoryNoteNumber(promissoryNote.getFundSavingsAccount().getAccountNumber());
 
@@ -146,7 +149,17 @@ public class PromissoryNoteWritePlatformServiceImpl implements PromissoryNoteWri
         for (int i = 0; i < number; i++) {
             newNumber = newNumber.concat("0");
         }
-        return numberFund.concat("_" + newNumber.concat(clientId));
+
+        String promissoryNoteNumber = numberFund.concat("_" + newNumber.concat(clientId));
+        validatePromissoryNoteNumber(promissoryNoteNumber);
+        return promissoryNoteNumber;
+    }
+
+    private void validatePromissoryNoteNumber(String number) {
+        PromissoryNote promissoryNote = noteRepository.retrieveOneByPromissoryNoteNumber(number);
+        if (promissoryNote != null) {
+            throw new PlatformApiDataValidationException("error.msg.resource.has.assigned", "The promissory note already exists", number);
+        }
     }
 
 }
