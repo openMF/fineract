@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +51,7 @@ import org.apache.fineract.client.services.LoansApi;
 import org.apache.fineract.test.data.AssetExternalizationTransferStatus;
 import org.apache.fineract.test.data.AssetExternalizationTransferStatusReason;
 import org.apache.fineract.test.data.TransactionType;
+import org.apache.fineract.test.helper.BigDecimalHelper;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.messaging.EventAssertion;
 import org.apache.fineract.test.messaging.event.assetexternalization.LoanAccountSnapshotEvent;
@@ -198,7 +198,7 @@ public class EventCheckHelper {
                     Long clientIdExpected = body.getClientId();
                     BigDecimal principalDisbursedActual = loanAccountDataV1.getSummary().getPrincipalDisbursed();
                     Double principalDisbursedExpectedDouble = body.getSummary().getPrincipalDisbursed();
-                    BigDecimal principalDisbursedExpected = new BigDecimal(principalDisbursedExpectedDouble, MathContext.DECIMAL64);
+                    BigDecimal principalDisbursedExpected = BigDecimal.valueOf(principalDisbursedExpectedDouble);
                     String actualDisbursementDateActual = loanAccountDataV1.getTimeline().getActualDisbursementDate();
                     String actualDisbursementDateExpected = FORMATTER_EVENTS.format(body.getTimeline().getActualDisbursementDate());
                     String currencyCodeActual = loanAccountDataV1.getSummary().getCurrency().getCode();
@@ -210,8 +210,7 @@ public class EventCheckHelper {
                     BigDecimal totalUnpaidPayableNotDueInterestExpected = body.getSummary().getTotalUnpaidPayableNotDueInterest();
                     BigDecimal totalInterestPaymentWaiverActual = loanAccountDataV1.getSummary().getTotalInterestPaymentWaiver();
                     Double totalInterestPaymentWaiverExpectedDouble = body.getSummary().getTotalInterestPaymentWaiver();
-                    BigDecimal totalInterestPaymentWaiverExpected = new BigDecimal(totalInterestPaymentWaiverExpectedDouble,
-                            MathContext.DECIMAL64);
+                    BigDecimal totalInterestPaymentWaiverExpected = BigDecimal.valueOf(totalInterestPaymentWaiverExpectedDouble);
                     BigDecimal delinquentInterestActual = loanAccountDataV1.getDelinquent().getDelinquentInterest();
                     BigDecimal delinquentInterestExpected = body.getDelinquent().getDelinquentInterest();
                     BigDecimal delinquentFeeActual = loanAccountDataV1.getDelinquent().getDelinquentFee();
@@ -336,12 +335,12 @@ public class EventCheckHelper {
         ExternalTransferData filtered = content.stream().filter(t -> transferId.equals(t.getTransferId())).reduce((first, second) -> second)
                 .orElseThrow(() -> new IllegalStateException("No element found"));
 
-        BigDecimal totalOutstandingBalanceAmountExpected = zeroConversion(filtered.getDetails().getTotalOutstanding());
-        BigDecimal outstandingPrincipalPortionExpected = zeroConversion(filtered.getDetails().getTotalPrincipalOutstanding());
-        BigDecimal outstandingFeePortionExpected = zeroConversion(filtered.getDetails().getTotalFeeChargesOutstanding());
-        BigDecimal outstandingPenaltyPortionExpected = zeroConversion(filtered.getDetails().getTotalPenaltyChargesOutstanding());
-        BigDecimal outstandingInterestPortionExpected = zeroConversion(filtered.getDetails().getTotalInterestOutstanding());
-        BigDecimal overPaymentPortionExpected = zeroConversion(filtered.getDetails().getTotalOverpaid());
+        BigDecimal totalOutstandingBalanceAmountExpected = BigDecimalHelper.scale(filtered.getDetails().getTotalOutstanding(), 8);
+        BigDecimal outstandingPrincipalPortionExpected = BigDecimalHelper.scale(filtered.getDetails().getTotalPrincipalOutstanding(), 8);
+        BigDecimal outstandingFeePortionExpected = BigDecimalHelper.scale(filtered.getDetails().getTotalFeeChargesOutstanding(), 8);
+        BigDecimal outstandingPenaltyPortionExpected = BigDecimalHelper.scale(filtered.getDetails().getTotalPenaltyChargesOutstanding(), 8);
+        BigDecimal outstandingInterestPortionExpected = BigDecimalHelper.scale(filtered.getDetails().getTotalInterestOutstanding(), 8);
+        BigDecimal overPaymentPortionExpected = BigDecimalHelper.scale(filtered.getDetails().getTotalOverpaid(), 8);
 
         eventAssertion.assertEvent(LoanOwnershipTransferEvent.class, loanId).extractingData(LoanOwnershipTransferDataV1::getLoanId)
                 .isEqualTo(loanId).extractingData(LoanOwnershipTransferDataV1::getAssetOwnerExternalId)
@@ -368,17 +367,17 @@ public class EventCheckHelper {
                 .orElseThrow(() -> new IllegalStateException("No element found"));
 
         BigDecimal totalOutstandingBalanceAmountExpected = filtered.getDetails() == null ? null
-                : zeroConversion(filtered.getDetails().getTotalOutstanding());
+                : BigDecimalHelper.scale(filtered.getDetails().getTotalOutstanding(), 8);
         BigDecimal outstandingPrincipalPortionExpected = filtered.getDetails() == null ? null
-                : zeroConversion(filtered.getDetails().getTotalPrincipalOutstanding());
+                : BigDecimalHelper.scale(filtered.getDetails().getTotalPrincipalOutstanding(), 8);
         BigDecimal outstandingFeePortionExpected = filtered.getDetails() == null ? null
-                : zeroConversion(filtered.getDetails().getTotalFeeChargesOutstanding());
+                : BigDecimalHelper.scale(filtered.getDetails().getTotalFeeChargesOutstanding(), 8);
         BigDecimal outstandingPenaltyPortionExpected = filtered.getDetails() == null ? null
-                : zeroConversion(filtered.getDetails().getTotalPenaltyChargesOutstanding());
+                : BigDecimalHelper.scale(filtered.getDetails().getTotalPenaltyChargesOutstanding(), 8);
         BigDecimal outstandingInterestPortionExpected = filtered.getDetails() == null ? null
-                : zeroConversion(filtered.getDetails().getTotalInterestOutstanding());
+                : BigDecimalHelper.scale(filtered.getDetails().getTotalInterestOutstanding(), 8);
         BigDecimal overPaymentPortionExpected = filtered.getDetails() == null ? null
-                : zeroConversion(filtered.getDetails().getTotalOverpaid());
+                : BigDecimalHelper.scale(filtered.getDetails().getTotalOverpaid(), 8);
 
         AssetExternalizationTransferStatus transferStatusType = AssetExternalizationTransferStatus.valueOf(transferStatus);
         String transferStatusExpected = transferStatusType.getValue();
@@ -415,12 +414,12 @@ public class EventCheckHelper {
         String ownerExternalIdExpected = filtered.getStatus().getValue().equals("BUYBACK") ? null : filtered.getOwner().getExternalId();
         String settlementDateExpected = filtered.getStatus().getValue().equals("BUYBACK") ? null
                 : FORMATTER_EVENTS.format(filtered.getSettlementDate());
-        BigDecimal totalOutstandingBalanceAmountExpected = zeroConversion(filtered.getDetails().getTotalOutstanding());
-        BigDecimal outstandingPrincipalPortionExpected = zeroConversion(filtered.getDetails().getTotalPrincipalOutstanding());
-        BigDecimal outstandingFeePortionExpected = zeroConversion(filtered.getDetails().getTotalFeeChargesOutstanding());
-        BigDecimal outstandingPenaltyPortionExpected = zeroConversion(filtered.getDetails().getTotalPenaltyChargesOutstanding());
-        BigDecimal outstandingInterestPortionExpected = zeroConversion(filtered.getDetails().getTotalInterestOutstanding());
-        BigDecimal overPaymentPortionExpected = zeroConversion(filtered.getDetails().getTotalOverpaid());
+        BigDecimal totalOutstandingBalanceAmountExpected = BigDecimalHelper.scale(filtered.getDetails().getTotalOutstanding(), 8);
+        BigDecimal outstandingPrincipalPortionExpected = BigDecimalHelper.scale(filtered.getDetails().getTotalPrincipalOutstanding(), 8);
+        BigDecimal outstandingFeePortionExpected = BigDecimalHelper.scale(filtered.getDetails().getTotalFeeChargesOutstanding(), 8);
+        BigDecimal outstandingPenaltyPortionExpected = BigDecimalHelper.scale(filtered.getDetails().getTotalPenaltyChargesOutstanding(), 8);
+        BigDecimal outstandingInterestPortionExpected = BigDecimalHelper.scale(filtered.getDetails().getTotalInterestOutstanding(), 8);
+        BigDecimal overPaymentPortionExpected = BigDecimalHelper.scale(filtered.getDetails().getTotalOverpaid(), 8);
 
         eventAssertion.assertEvent(LoanAccountSnapshotEvent.class, loanId).extractingData(LoanAccountDataV1::getId).isEqualTo(loanId)
                 .extractingData(LoanAccountDataV1::getExternalOwnerId).isEqualTo(ownerExternalIdExpected)
@@ -518,9 +517,5 @@ public class EventCheckHelper {
 
             return null;
         });
-    }
-
-    private BigDecimal zeroConversion(BigDecimal input) {
-        return input.compareTo(new BigDecimal("0.000000")) == 0 ? new BigDecimal(input.toEngineeringString()) : input.setScale(8);
     }
 }

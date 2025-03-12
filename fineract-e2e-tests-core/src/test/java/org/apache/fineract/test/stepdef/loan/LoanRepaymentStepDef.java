@@ -27,7 +27,6 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -57,6 +56,7 @@ import org.apache.fineract.test.data.TransactionType;
 import org.apache.fineract.test.data.paymenttype.DefaultPaymentType;
 import org.apache.fineract.test.data.paymenttype.PaymentTypeResolver;
 import org.apache.fineract.test.factory.LoanRequestFactory;
+import org.apache.fineract.test.helper.BigDecimalHelper;
 import org.apache.fineract.test.helper.ErrorHelper;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.ErrorResponse;
@@ -546,11 +546,11 @@ public class LoanRepaymentStepDef extends AbstractStepDef {
 
         List<GetLoansLoanIdRepaymentPeriod> periods = getLoansLoanIdResponseCall.body().getRepaymentSchedule().getPeriods();
 
-        BigDecimal expectedAmount = new BigDecimal(totalAmount / (periods.size() - 1)).setScale(0, RoundingMode.HALF_DOWN);
-        BigDecimal lastExpectedAmount = new BigDecimal(totalAmount).setScale(0, RoundingMode.HALF_DOWN);
+        BigDecimal expectedAmount = BigDecimalHelper.convert(totalAmount / (periods.size() - 1), 0);
+        BigDecimal lastExpectedAmount = BigDecimalHelper.convert(totalAmount, 0);
 
         for (int i = 1; i < periods.size(); i++) {
-            BigDecimal actualAmount = new BigDecimal(periods.get(i).getPrincipalOriginalDue()).setScale(0, RoundingMode.HALF_DOWN);
+            BigDecimal actualAmount = BigDecimalHelper.convert(periods.get(i).getPrincipalOriginalDue(), 0);
 
             if (i == periods.size() - 1) {
                 assertThat(actualAmount.compareTo(lastExpectedAmount))

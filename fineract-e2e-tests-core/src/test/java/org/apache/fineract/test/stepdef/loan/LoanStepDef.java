@@ -38,7 +38,6 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -111,6 +110,7 @@ import org.apache.fineract.test.data.loanproduct.LoanProductResolver;
 import org.apache.fineract.test.data.paymenttype.DefaultPaymentType;
 import org.apache.fineract.test.data.paymenttype.PaymentTypeResolver;
 import org.apache.fineract.test.factory.LoanRequestFactory;
+import org.apache.fineract.test.helper.BigDecimalHelper;
 import org.apache.fineract.test.helper.CodeHelper;
 import org.apache.fineract.test.helper.ErrorHelper;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
@@ -642,7 +642,7 @@ public class LoanStepDef extends AbstractStepDef {
                 .principal(new BigDecimal(principal))//
                 .interestRatePerPeriod(interestRate)//
                 .enableAutoRepaymentForDownPayment(true)//
-                .disbursedAmountPercentageForDownPayment(new BigDecimal(percentage))//
+                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(percentage))//
                 .interestType(interestTypeValue)//
                 .interestCalculationPeriodType(interestCalculationPeriodValue)//
                 .amortizationType(amortizationTypeValue)//
@@ -715,7 +715,7 @@ public class LoanStepDef extends AbstractStepDef {
                 .principal(new BigDecimal(principal))//
                 .interestRatePerPeriod(interestRate)//
                 .enableAutoRepaymentForDownPayment(false)//
-                .disbursedAmountPercentageForDownPayment(new BigDecimal(percentage))//
+                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(percentage))//
                 .interestType(interestTypeValue)//
                 .interestCalculationPeriodType(interestCalculationPeriodValue)//
                 .amortizationType(amortizationTypeValue)//
@@ -1097,7 +1097,7 @@ public class LoanStepDef extends AbstractStepDef {
             for (int i = 0; i < loanChargePaidByList.size(); i++) {
                 List<LoanChargePaidByDataV1> loanChargePaidByListEvent = loanTransactionDataV1.getLoanChargePaidByList();
                 loanChargePaidByListEvent.sort(Comparator.comparing(LoanChargePaidByDataV1::getChargeId));
-                String amountEventActual = loanChargePaidByListEvent.get(i).getAmount().setScale(1, RoundingMode.HALF_DOWN).toString();
+                String amountEventActual = BigDecimalHelper.scale(loanChargePaidByListEvent.get(i).getAmount(), 1).toString();
                 String nameEventActual = loanChargePaidByListEvent.get(i).getName();
 
                 String amountActual = String.valueOf(loanChargePaidByList.get(i).getAmount());
@@ -2913,7 +2913,7 @@ public class LoanStepDef extends AbstractStepDef {
                 .graceOnInterestPayment(graceOnInterestCharged).transactionProcessingStrategyCode(transactionProcessingStrategyCodeValue);
 
         if (withEmi) {
-            loansRequest.fixedEmiAmount(new BigDecimal(555));
+            loansRequest.fixedEmiAmount(BigDecimal.valueOf(555));
         }
 
         final Response<PostLoansResponse> response = loansApi.calculateLoanScheduleOrSubmitLoanApplication(loansRequest, "").execute();
@@ -3020,13 +3020,13 @@ public class LoanStepDef extends AbstractStepDef {
         final Long loanProductId = loanProductResolver.resolve(product);
 
         final PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId).productId(loanProductId)
-                .principal(new BigDecimal(100)).numberOfRepayments(6).submittedOnDate(date).expectedDisbursementDate(date)
+                .principal(BigDecimal.valueOf(100)).numberOfRepayments(6).submittedOnDate(date).expectedDisbursementDate(date)
                 .loanTermFrequency(6)//
                 .loanTermFrequencyType(LoanTermFrequencyType.MONTHS.value)//
                 .repaymentEvery(1)//
                 .repaymentFrequencyType(RepaymentFrequencyType.MONTHS.value)//
                 .interestRateFrequencyType(3)//
-                .interestRatePerPeriod(new BigDecimal(7))//
+                .interestRatePerPeriod(BigDecimal.valueOf(7))//
                 .interestType(InterestType.DECLINING_BALANCE.value)//
                 .interestCalculationPeriodType(isInterestRecalculation ? InterestCalculationPeriodTime.DAILY.value
                         : InterestCalculationPeriodTime.SAME_AS_REPAYMENT_PERIOD.value)//
@@ -3060,13 +3060,13 @@ public class LoanStepDef extends AbstractStepDef {
         final Long loanProductId = loanProductResolver.resolve(product);
 
         final PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId).productId(loanProductId)
-                .principal(new BigDecimal(100)).numberOfRepayments(6).submittedOnDate(date).expectedDisbursementDate(date)
+                .principal(BigDecimal.valueOf(100)).numberOfRepayments(6).submittedOnDate(date).expectedDisbursementDate(date)
                 .loanTermFrequency(6)//
                 .loanTermFrequencyType(LoanTermFrequencyType.MONTHS.value)//
                 .repaymentEvery(1)//
                 .repaymentFrequencyType(RepaymentFrequencyType.MONTHS.value)//
                 .interestRateFrequencyType(3)//
-                .interestRatePerPeriod(new BigDecimal(7))//
+                .interestRatePerPeriod(BigDecimal.valueOf(7))//
                 .interestType(InterestType.DECLINING_BALANCE.value)//
                 .interestCalculationPeriodType(isInterestRecalculation ? InterestCalculationPeriodTime.DAILY.value
                         : InterestCalculationPeriodTime.SAME_AS_REPAYMENT_PERIOD.value)//
@@ -3256,7 +3256,7 @@ public class LoanStepDef extends AbstractStepDef {
                 paidActual += period.getTotalPaidForPeriod();
             }
         }
-        BigDecimal paidActualBd = new BigDecimal(paidActual).setScale(2, RoundingMode.HALF_DOWN);
+        BigDecimal paidActualBd = BigDecimalHelper.convert(paidActual, 2);
 
         for (int i = 0; i < header.size(); i++) {
             String headerName = header.get(i);

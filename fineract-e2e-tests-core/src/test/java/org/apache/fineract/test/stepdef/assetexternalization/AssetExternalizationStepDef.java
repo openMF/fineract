@@ -43,7 +43,6 @@ import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.io.IOException;
-import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +59,7 @@ import org.apache.fineract.client.models.PostLoansResponse;
 import org.apache.fineract.client.services.ExternalAssetOwnersApi;
 import org.apache.fineract.client.util.JSON;
 import org.apache.fineract.test.data.AssetExternalizationErrorMessage;
+import org.apache.fineract.test.helper.BigDecimalHelper;
 import org.apache.fineract.test.helper.ErrorHelper;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.ErrorResponse;
@@ -514,7 +514,7 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
                 actualValues.add(t.getGlAccountCode());
                 actualValues.add(t.getGlAccountName());
                 actualValues.add(t.getEntryType().getValue());
-                actualValues.add(t.getAmount().setScale(2, RoundingMode.HALF_DOWN).toString());
+                actualValues.add(BigDecimalHelper.scale(t.getAmount(), 2).toString());
                 return actualValues;
             }).collect(Collectors.toList());
 
@@ -575,7 +575,7 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
                 actualValues.add(t.getGlAccountCode());
                 actualValues.add(t.getGlAccountName());
                 actualValues.add(t.getEntryType().getValue());
-                actualValues.add(t.getAmount().setScale(2, RoundingMode.HALF_DOWN).toString());
+                actualValues.add(BigDecimalHelper.scale(t.getAmount(), 2).toString());
                 return actualValues;
             }).collect(Collectors.toList());
 

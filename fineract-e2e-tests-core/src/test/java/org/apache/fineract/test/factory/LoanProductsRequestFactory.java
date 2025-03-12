@@ -811,7 +811,7 @@ public class LoanProductsRequestFactory {
                 .description(DESCRIPTION_LP2)//
                 .enableDownPayment(true)//
                 .enableAutoRepaymentForDownPayment(true)//
-                .disbursedAmountPercentageForDownPayment(new BigDecimal(25))//
+                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(25))//
                 .fundId(FUND_ID)//
                 .startDate(null)//
                 .closeDate(null)//
@@ -924,7 +924,7 @@ public class LoanProductsRequestFactory {
                 .description(DESCRIPTION_INTEREST_FLAT_LP2)//
                 .enableDownPayment(true)//
                 .enableAutoRepaymentForDownPayment(true)//
-                .disbursedAmountPercentageForDownPayment(new BigDecimal(25))//
+                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(25))//
                 .fundId(FUND_ID)//
                 .startDate(null)//
                 .closeDate(null)//

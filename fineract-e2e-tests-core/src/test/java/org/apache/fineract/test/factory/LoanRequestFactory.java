@@ -68,7 +68,7 @@ public class LoanRequestFactory {
     public static final Integer DEFAULT_REPAYMENT_FREQUENCY_TYPE = RepaymentFrequencyType.DAYS.value;
     public static final Integer DEFAULT_REAGING_FREQUENCY_NUMBER = 1;
     public static final String DEFAULT_REAGING_FREQUENCY_TYPE = "MONTHS";
-    public static final BigDecimal DEFAULT_INTEREST_RATE_PER_PERIOD = new BigDecimal(0);
+    public static final BigDecimal DEFAULT_INTEREST_RATE_PER_PERIOD = BigDecimal.valueOf(0);
     public static final Integer DEFAULT_INTEREST_TYPE = InterestType.FLAT.value;
     public static final Integer DEFAULT_INTEREST_CALCULATION_PERIOD_TYPE_SAME_AS_REPAYMENT_PERIOD = InterestCalculationPeriodTime.SAME_AS_REPAYMENT_PERIOD.value;
     public static final Integer DEFAULT_AMORTIZATION_TYPE = 1;
@@ -105,7 +105,7 @@ public class LoanRequestFactory {
                 .transactionProcessingStrategyCode(DEFAULT_TRANSACTION_PROCESSING_STRATEGY_CODE)//
                 .dateFormat(DATE_FORMAT)//
                 .graceOnArrearsAgeing(3)//
-                .maxOutstandingLoanBalance(new BigDecimal(10000));
+                .maxOutstandingLoanBalance(BigDecimal.valueOf(10000));
     }
 
     public PutLoansLoanIdRequest modifySubmittedOnDateOnLoan(Long clientId, String newSubmittedOnDate) {

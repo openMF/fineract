@@ -32,7 +32,7 @@ public final class SavingsAccountRequestFactory {
     public static final String DEFAULT_SUBMITTED_ON_DATE = "";
     public static final String DEFAULT_APPROVED_ON_DATE = "";
     public static final String DEFAULT_ACTIVATED_ON_DATE = "";
-    public static final BigDecimal DEFAULT_REPAYMENT_TRANSACTION_AMOUNT = new BigDecimal(1);
+    public static final BigDecimal DEFAULT_REPAYMENT_TRANSACTION_AMOUNT = BigDecimal.valueOf(1);
     public static final Integer DEFAULT_PAYMENT_TYPE_ID = 2;
     public static final Integer EUR_SAVING_PRODUCT_ID = 1;
     public static final Integer USD_SAVING_PRODUCT_ID = 2;

@@ -26,7 +26,6 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -56,6 +55,7 @@ import org.apache.fineract.client.services.UsersApi;
 import org.apache.fineract.client.util.JSON;
 import org.apache.fineract.test.data.DelinquencyRange;
 import org.apache.fineract.test.data.LoanStatus;
+import org.apache.fineract.test.helper.BigDecimalHelper;
 import org.apache.fineract.test.helper.ErrorHelper;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.ErrorResponse;
@@ -569,7 +569,7 @@ public class LoanDelinquencyStepDef extends AbstractStepDef {
 
             List<String> actualValuesList = List.of(String.valueOf(installmentLevelDelinquency.get(i - 1).getRangeId()),
                     installmentLevelDelinquency.get(i - 1).getClassification(),
-                    installmentLevelDelinquency.get(i - 1).getDelinquentAmount().setScale(2, RoundingMode.HALF_DOWN).toString());
+                    BigDecimalHelper.scale(installmentLevelDelinquency.get(i - 1).getDelinquentAmount(), 2).toString());
             assertThat(actualValuesList)
                     .as(ErrorMessageHelper.wrongValueInLineInInstallmentLevelDelinquencyData(i, actualValuesList, expectedValuesList))
                     .isEqualTo(expectedValuesList);
