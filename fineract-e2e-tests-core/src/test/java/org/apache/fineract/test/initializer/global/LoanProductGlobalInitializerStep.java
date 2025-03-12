@@ -25,7 +25,6 @@ import static org.apache.fineract.test.factory.LoanProductsRequestFactory.INTERE
 import static org.apache.fineract.test.factory.LoanProductsRequestFactory.LOAN_ACCOUNTING_RULE_NONE;
 import static org.apache.fineract.test.factory.LoanProductsRequestFactory.REPAYMENT_FREQUENCY_TYPE_MONTHS;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -49,6 +48,7 @@ import org.apache.fineract.test.data.RecalculationRestFrequencyType;
 import org.apache.fineract.test.data.TransactionProcessingStrategyCode;
 import org.apache.fineract.test.data.loanproduct.DefaultLoanProduct;
 import org.apache.fineract.test.factory.LoanProductsRequestFactory;
+import org.apache.fineract.test.helper.BigDecimalHelper;
 import org.apache.fineract.test.support.TestContext;
 import org.apache.fineract.test.support.TestContextKey;
 import org.springframework.stereotype.Component;
@@ -590,7 +590,7 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
                 .defaultLoanProductsRequestLP2Emi()//
                 .name(name37)//
                 .enableDownPayment(true)//
-                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(25))//
+                .disbursedAmountPercentageForDownPayment(BigDecimalHelper.valueOf(25))//
                 .daysInYearType(DaysInYearType.DAYS360.value)//
                 .daysInMonthType(DaysInMonthType.DAYS30.value)//
                 .paymentAllocation(List.of(//
@@ -633,7 +633,7 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
                 .defaultLoanProductsRequestLP2Emi()//
                 .name(name31)//
                 .enableDownPayment(true)//
-                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(25))//
+                .disbursedAmountPercentageForDownPayment(BigDecimalHelper.valueOf(25))//
                 .daysInYearType(DaysInYearType.DAYS360.value)//
                 .daysInMonthType(DaysInMonthType.DAYS30.value)//
                 .paymentAllocation(List.of(//
@@ -1026,7 +1026,7 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
                 .defaultLoanProductsRequestLP2Emi()//
                 .name(name49)//
                 .enableDownPayment(true)//
-                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(25))//
+                .disbursedAmountPercentageForDownPayment(BigDecimalHelper.valueOf(25))//
                 .daysInYearType(DaysInYearType.DAYS360.value)//
                 .daysInMonthType(DaysInMonthType.DAYS30.value)//
                 .isInterestRecalculationEnabled(true)//
@@ -1166,7 +1166,7 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
                 .defaultLoanProductsRequestLP2Emi()//
                 .name(name53)//
                 .enableDownPayment(true)//
-                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(25))//
+                .disbursedAmountPercentageForDownPayment(BigDecimalHelper.valueOf(25))//
                 .daysInYearType(DaysInYearType.DAYS360.value)//
                 .daysInMonthType(DaysInMonthType.DAYS30.value)//
                 .isInterestRecalculationEnabled(true)//
@@ -1368,7 +1368,7 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
                 .defaultLoanProductsRequestLP2Emi()//
                 .name(name60)//
                 .enableDownPayment(true)//
-                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(25))//
+                .disbursedAmountPercentageForDownPayment(BigDecimalHelper.valueOf(25))//
                 .enableAutoRepaymentForDownPayment(true)//
                 .enableAccrualActivityPosting(true)//
                 .paymentAllocation(List.of(//

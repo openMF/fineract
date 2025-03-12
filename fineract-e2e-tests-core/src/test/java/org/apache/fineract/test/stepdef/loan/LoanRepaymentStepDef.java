@@ -546,11 +546,11 @@ public class LoanRepaymentStepDef extends AbstractStepDef {
 
         List<GetLoansLoanIdRepaymentPeriod> periods = getLoansLoanIdResponseCall.body().getRepaymentSchedule().getPeriods();
 
-        BigDecimal expectedAmount = BigDecimalHelper.convert(totalAmount / (periods.size() - 1), 0);
-        BigDecimal lastExpectedAmount = BigDecimalHelper.convert(totalAmount, 0);
+        BigDecimal expectedAmount = BigDecimalHelper.valueOf(totalAmount / (periods.size() - 1), 0);
+        BigDecimal lastExpectedAmount = BigDecimalHelper.valueOf(totalAmount, 0);
 
         for (int i = 1; i < periods.size(); i++) {
-            BigDecimal actualAmount = BigDecimalHelper.convert(periods.get(i).getPrincipalOriginalDue(), 0);
+            BigDecimal actualAmount = BigDecimalHelper.valueOf(periods.get(i).getPrincipalOriginalDue(), 0);
 
             if (i == periods.size() - 1) {
                 assertThat(actualAmount.compareTo(lastExpectedAmount))
@@ -613,7 +613,7 @@ public class LoanRepaymentStepDef extends AbstractStepDef {
         eventAssertionBuilder
                 .extractingBigDecimal(
                         loanTransactionAdjustmentDataV1 -> loanTransactionAdjustmentDataV1.getTransactionToAdjust().getAmount())
-                .isEqualTo(BigDecimal.valueOf(targetTransaction.getAmount()));
+                .isEqualTo(BigDecimalHelper.valueOf(targetTransaction.getAmount()));
         eventAssertionBuilder
                 .extractingData(
                         loanTransactionAdjustmentDataV1 -> loanTransactionAdjustmentDataV1.getTransactionToAdjust().getManuallyReversed())
@@ -629,7 +629,7 @@ public class LoanRepaymentStepDef extends AbstractStepDef {
             eventAssertionBuilder
                     .extractingBigDecimal(
                             loanTransactionAdjustmentDataV1 -> loanTransactionAdjustmentDataV1.getNewTransactionDetail().getAmount())
-                    .isEqualTo(BigDecimal.valueOf(amountValue));
+                    .isEqualTo(BigDecimalHelper.valueOf(amountValue));
             eventAssertionBuilder.extractingData(
                     loanTransactionAdjustmentDataV1 -> loanTransactionAdjustmentDataV1.getNewTransactionDetail().getExternalOwnerId())
                     .isEqualTo(externalOwnerId);

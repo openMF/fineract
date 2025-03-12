@@ -20,7 +20,6 @@ package org.apache.fineract.test.stepdef.loan;
 
 import io.cucumber.java.en.When;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +37,7 @@ import org.apache.fineract.client.services.LoansApi;
 import org.apache.fineract.test.data.paymenttype.DefaultPaymentType;
 import org.apache.fineract.test.data.paymenttype.PaymentTypeResolver;
 import org.apache.fineract.test.factory.LoanRequestFactory;
+import org.apache.fineract.test.helper.BigDecimalHelper;
 import org.apache.fineract.test.helper.ErrorHelper;
 import org.apache.fineract.test.messaging.EventAssertion;
 import org.apache.fineract.test.messaging.event.EventCheckHelper;
@@ -175,7 +175,8 @@ public class LoanChargeBackStepDef extends AbstractStepDef {
         // verify payload for loanId, transactionId, transactionType, amount
         eventAssertion.assertEvent(LoanChargebackTransactionEvent.class, transactionId).extractingData(LoanTransactionDataV1::getLoanId)
                 .isEqualTo(loanId).extractingData(LoanTransactionDataV1::getType).isEqualTo(expectedEventTransactionType)
-                .extractingBigDecimal(LoanTransactionDataV1::getAmount).isEqualTo(BigDecimal.valueOf(transactionResponseBody.getAmount()));
+                .extractingBigDecimal(LoanTransactionDataV1::getAmount)
+                .isEqualTo(BigDecimalHelper.valueOf(transactionResponseBody.getAmount()));
 
     }
 }

@@ -19,23 +19,38 @@
 package org.apache.fineract.test.helper;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 
 public final class BigDecimalHelper {
 
-    private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_EVEN;
+    public static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_EVEN;
+    public static final int SCALE = 2;
+    public static final MathContext MATH_CONTEXT = new MathContext(SCALE, ROUNDING_MODE);
 
     private BigDecimalHelper() {}
 
-    public static BigDecimal convert(Double value) {
-        return BigDecimal.valueOf(value);
+    public static BigDecimal scale(BigDecimal input, int scale) {
+        return input.setScale(scale, ROUNDING_MODE);
     }
 
-    public static BigDecimal convert(Double value, int scale) {
+    public static BigDecimal valueOf(Double value, int scale) {
         return BigDecimal.valueOf(value).setScale(scale, ROUNDING_MODE);
     }
 
-    public static BigDecimal scale(BigDecimal input, int scale) {
-        return input.setScale(scale, ROUNDING_MODE);
+    public static BigDecimal valueOf(int value) {
+        return BigDecimal.valueOf(value).setScale(SCALE, ROUNDING_MODE);
+    }
+
+    public static BigDecimal valueOf(long l) {
+        return BigDecimal.valueOf(l).setScale(SCALE, ROUNDING_MODE);
+    }
+
+    public static BigDecimal valueOf(Double value) {
+        return BigDecimal.valueOf(value).setScale(SCALE, ROUNDING_MODE);
+    }
+
+    public static BigDecimal valueOf(String value) {
+        return new BigDecimal(value).setScale(SCALE, ROUNDING_MODE);
     }
 }

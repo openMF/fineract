@@ -654,7 +654,7 @@ public class LoanDelinquencyStepDef extends AbstractStepDef {
                     Long loanLevelDelinquencyRangeIdExpected = delinquencyRange.getId();
                     String loanLevelDelinquencyRangeExpected = delinquencyRange.getClassification();
                     String loanLevelDelinquentDateExpected = FORMATTER.format(delinquent.getDelinquentDate());
-                    BigDecimal loanLevelTotalAmountExpected = BigDecimal.valueOf(delinquent.getDelinquentAmount());
+                    BigDecimal loanLevelTotalAmountExpected = BigDecimalHelper.valueOf(delinquent.getDelinquentAmount());
 
                     assertThat(loanLevelDelinquencyRangeId)//
                             .as(ErrorMessageHelper.wrongValueInLoanDelinquencyRangeChangeBusinessEvent4(loanLevelDelinquencyRangeId,

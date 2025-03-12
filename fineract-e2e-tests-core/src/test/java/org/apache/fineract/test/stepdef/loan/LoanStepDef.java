@@ -448,7 +448,7 @@ public class LoanStepDef extends AbstractStepDef {
         String loanProduct = loanData.get(0);
         String submitDate = loanData.get(1);
         String principal = loanData.get(2);
-        BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        BigDecimal interestRate = BigDecimalHelper.valueOf(loanData.get(3));
         String interestTypeStr = loanData.get(4);
         String interestCalculationPeriodStr = loanData.get(5);
         String amortizationTypeStr = loanData.get(6);
@@ -489,7 +489,7 @@ public class LoanStepDef extends AbstractStepDef {
 
         PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId)//
                 .productId(loanProductId)//
-                .principal(new BigDecimal(principal))//
+                .principal(BigDecimalHelper.valueOf(principal))//
                 .interestRatePerPeriod(interestRate)//
                 .enableDownPayment(false)//
                 .interestType(interestTypeValue)//
@@ -520,7 +520,7 @@ public class LoanStepDef extends AbstractStepDef {
         String loanProduct = loanData.get(0);
         String submitDate = loanData.get(1);
         String principal = loanData.get(2);
-        BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        BigDecimal interestRate = BigDecimalHelper.valueOf(loanData.get(3));
         String interestTypeStr = loanData.get(4);
         String interestCalculationPeriodStr = loanData.get(5);
         String amortizationTypeStr = loanData.get(6);
@@ -561,7 +561,7 @@ public class LoanStepDef extends AbstractStepDef {
 
         PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId)//
                 .productId(loanProductId)//
-                .principal(new BigDecimal(principal))//
+                .principal(BigDecimalHelper.valueOf(principal))//
                 .interestRatePerPeriod(interestRate)//
                 .enableDownPayment(true)//
                 .interestType(interestTypeValue)//
@@ -598,7 +598,7 @@ public class LoanStepDef extends AbstractStepDef {
         String loanProduct = loanData.get(0);
         String submitDate = loanData.get(1);
         String principal = loanData.get(2);
-        BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        BigDecimal interestRate = BigDecimalHelper.valueOf(loanData.get(3));
         String interestTypeStr = loanData.get(4);
         String interestCalculationPeriodStr = loanData.get(5);
         String amortizationTypeStr = loanData.get(6);
@@ -639,10 +639,10 @@ public class LoanStepDef extends AbstractStepDef {
 
         PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId)//
                 .productId(loanProductId)//
-                .principal(new BigDecimal(principal))//
+                .principal(BigDecimalHelper.valueOf(principal))//
                 .interestRatePerPeriod(interestRate)//
                 .enableAutoRepaymentForDownPayment(true)//
-                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(percentage))//
+                .disbursedAmountPercentageForDownPayment(BigDecimalHelper.valueOf(percentage))//
                 .interestType(interestTypeValue)//
                 .interestCalculationPeriodType(interestCalculationPeriodValue)//
                 .amortizationType(amortizationTypeValue)//
@@ -671,7 +671,7 @@ public class LoanStepDef extends AbstractStepDef {
         String loanProduct = loanData.get(0);
         String submitDate = loanData.get(1);
         String principal = loanData.get(2);
-        BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        BigDecimal interestRate = BigDecimalHelper.valueOf(loanData.get(3));
         String interestTypeStr = loanData.get(4);
         String interestCalculationPeriodStr = loanData.get(5);
         String amortizationTypeStr = loanData.get(6);
@@ -712,10 +712,10 @@ public class LoanStepDef extends AbstractStepDef {
 
         PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId)//
                 .productId(loanProductId)//
-                .principal(new BigDecimal(principal))//
+                .principal(BigDecimalHelper.valueOf(principal))//
                 .interestRatePerPeriod(interestRate)//
                 .enableAutoRepaymentForDownPayment(false)//
-                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(percentage))//
+                .disbursedAmountPercentageForDownPayment(BigDecimalHelper.valueOf(percentage))//
                 .interestType(interestTypeValue)//
                 .interestCalculationPeriodType(interestCalculationPeriodValue)//
                 .amortizationType(amortizationTypeValue)//
@@ -744,7 +744,7 @@ public class LoanStepDef extends AbstractStepDef {
         String loanProduct = loanData.get(0);
         String submitDate = loanData.get(1);
         String principal = loanData.get(2);
-        BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        BigDecimal interestRate = BigDecimalHelper.valueOf(loanData.get(3));
         String interestTypeStr = loanData.get(4);
         String interestCalculationPeriodStr = loanData.get(5);
         String amortizationTypeStr = loanData.get(6);
@@ -785,7 +785,7 @@ public class LoanStepDef extends AbstractStepDef {
 
         PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId)//
                 .productId(loanProductId)//
-                .principal(new BigDecimal(principal))//
+                .principal(BigDecimalHelper.valueOf(principal))//
                 .interestRatePerPeriod(interestRate)//
                 .interestType(interestTypeValue)//
                 .interestCalculationPeriodType(interestCalculationPeriodValue)//
@@ -817,7 +817,7 @@ public class LoanStepDef extends AbstractStepDef {
         String loanProduct = loanData.get(0);
         String submitDate = loanData.get(1);
         String principal = loanData.get(2);
-        BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        BigDecimal interestRate = BigDecimalHelper.valueOf(loanData.get(3));
         String interestTypeStr = loanData.get(4);
         String interestCalculationPeriodStr = loanData.get(5);
         String amortizationTypeStr = loanData.get(6);
@@ -858,7 +858,7 @@ public class LoanStepDef extends AbstractStepDef {
 
         PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId)//
                 .productId(loanProductId)//
-                .principal(new BigDecimal(principal))//
+                .principal(BigDecimalHelper.valueOf(principal))//
                 .interestRatePerPeriod(interestRate)//
                 .interestType(interestTypeValue)//
                 .interestCalculationPeriodType(interestCalculationPeriodValue)//
@@ -898,7 +898,7 @@ public class LoanStepDef extends AbstractStepDef {
         String loanProduct = loanData.get(0);
         String submitDate = loanData.get(1);
         String principal = loanData.get(2);
-        BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        BigDecimal interestRate = BigDecimalHelper.valueOf(loanData.get(3));
         String interestTypeStr = loanData.get(4);
         String interestCalculationPeriodStr = loanData.get(5);
         String amortizationTypeStr = loanData.get(6);
@@ -939,7 +939,7 @@ public class LoanStepDef extends AbstractStepDef {
 
         PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId)//
                 .productId(loanProductId)//
-                .principal(new BigDecimal(principal))//
+                .principal(BigDecimalHelper.valueOf(principal))//
                 .interestRatePerPeriod(interestRate)//
                 .interestType(interestTypeValue)//
                 .interestCalculationPeriodType(interestCalculationPeriodValue)//
@@ -977,7 +977,7 @@ public class LoanStepDef extends AbstractStepDef {
         String loanProduct = loanData.get(0);
         String submitDate = loanData.get(1);
         String principal = loanData.get(2);
-        BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        BigDecimal interestRate = BigDecimalHelper.valueOf(loanData.get(3));
         String interestTypeStr = loanData.get(4);
         String interestCalculationPeriodStr = loanData.get(5);
         String amortizationTypeStr = loanData.get(6);
@@ -1018,7 +1018,7 @@ public class LoanStepDef extends AbstractStepDef {
 
         PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId)//
                 .productId(loanProductId)//
-                .principal(new BigDecimal(principal))//
+                .principal(BigDecimalHelper.valueOf(principal))//
                 .interestRatePerPeriod(interestRate)//
                 .interestType(interestTypeValue)//
                 .interestCalculationPeriodType(interestCalculationPeriodValue)//
@@ -1130,7 +1130,7 @@ public class LoanStepDef extends AbstractStepDef {
         Long clientId = clientResponse.body().getClientId();
         Integer repaymentFrequency = loanTermFrequency / numberOfRepayments;
 
-        PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId).principal(new BigDecimal(principal))
+        PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId).principal(BigDecimalHelper.valueOf(principal))
                 .loanTermFrequency(loanTermFrequency).loanTermFrequencyType(LoanTermFrequencyType.MONTHS.value)
                 .numberOfRepayments(numberOfRepayments).repaymentEvery(repaymentFrequency)
                 .repaymentFrequencyType(RepaymentFrequencyType.MONTHS.value).submittedOnDate(submitDate)
@@ -1209,7 +1209,7 @@ public class LoanStepDef extends AbstractStepDef {
         Long clientId = clientResponse.body().getClientId();
         Integer repaymentFrequency = loanTermFrequency / numberOfRepayments;
 
-        PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId).principal(new BigDecimal(principal))
+        PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId).principal(BigDecimalHelper.valueOf(principal))
                 .loanTermFrequency(loanTermFrequency).loanTermFrequencyType(LoanTermFrequencyType.MONTHS.value)
                 .numberOfRepayments(numberOfRepayments).repaymentEvery(repaymentFrequency)
                 .repaymentFrequencyType(RepaymentFrequencyType.MONTHS.value).submittedOnDate(submitDate)
@@ -1227,7 +1227,7 @@ public class LoanStepDef extends AbstractStepDef {
         Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         long loanId = loanResponse.body().getLoanId();
         PostLoansLoanIdRequest approveRequest = LoanRequestFactory.defaultLoanApproveRequest().approvedOnDate(approveDate)
-                .approvedLoanAmount(new BigDecimal(approvedAmount)).expectedDisbursementDate(expectedDisbursementDate);
+                .approvedLoanAmount(BigDecimalHelper.valueOf(approvedAmount)).expectedDisbursementDate(expectedDisbursementDate);
 
         Response<PostLoansLoanIdResponse> loanApproveResponse = loansApi.stateTransitions(loanId, approveRequest, "approve").execute();
         testContext().set(TestContextKey.LOAN_APPROVAL_RESPONSE, loanApproveResponse);
@@ -1274,7 +1274,7 @@ public class LoanStepDef extends AbstractStepDef {
         Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_SECOND_LOAN_RESPONSE);
         long loanId = loanResponse.body().getLoanId();
         PostLoansLoanIdRequest approveRequest = LoanRequestFactory.defaultLoanApproveRequest().approvedOnDate(approveDate)
-                .approvedLoanAmount(new BigDecimal(approvedAmount)).expectedDisbursementDate(expectedDisbursementDate);
+                .approvedLoanAmount(BigDecimalHelper.valueOf(approvedAmount)).expectedDisbursementDate(expectedDisbursementDate);
 
         Response<PostLoansLoanIdResponse> loanApproveResponse = loansApi.stateTransitions(loanId, approveRequest, "approve").execute();
         testContext().set(TestContextKey.LOAN_APPROVAL_SECOND_LOAN_RESPONSE, loanApproveResponse);
@@ -1301,7 +1301,7 @@ public class LoanStepDef extends AbstractStepDef {
         Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         long loanId = loanResponse.body().getLoanId();
         PostLoansLoanIdRequest approveRequest = LoanRequestFactory.defaultLoanApproveRequest().approvedOnDate(approveDate)
-                .approvedLoanAmount(new BigDecimal(approvedAmount)).expectedDisbursementDate(expectedDisbursementDate);
+                .approvedLoanAmount(BigDecimalHelper.valueOf(approvedAmount)).expectedDisbursementDate(expectedDisbursementDate);
 
         Response<PostLoansLoanIdResponse> loanApproveResponse = loansApi.stateTransitions(loanId, approveRequest, "approve").execute();
         ErrorResponse errorDetails = ErrorResponse.from(loanApproveResponse);
@@ -1314,7 +1314,7 @@ public class LoanStepDef extends AbstractStepDef {
         Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         long loanId = loanResponse.body().getLoanId();
         PostLoansLoanIdRequest approveRequest = LoanRequestFactory.defaultLoanApproveRequest().approvedOnDate(approveDate)
-                .approvedLoanAmount(new BigDecimal(approvedAmount)).expectedDisbursementDate(expectedDisbursementDate);
+                .approvedLoanAmount(BigDecimalHelper.valueOf(approvedAmount)).expectedDisbursementDate(expectedDisbursementDate);
 
         Response<PostLoansLoanIdResponse> loanApproveResponse = loansApi.stateTransitions(loanId, approveRequest, "approve").execute();
         ErrorResponse errorDetails = ErrorResponse.from(loanApproveResponse);
@@ -1329,7 +1329,7 @@ public class LoanStepDef extends AbstractStepDef {
         String resourceId = String.valueOf(loanId);
 
         PostLoansLoanIdRequest disburseRequest = LoanRequestFactory.defaultLoanDisburseRequest()
-                .actualDisbursementDate(actualDisbursementDate).transactionAmount(new BigDecimal(transactionAmount));
+                .actualDisbursementDate(actualDisbursementDate).transactionAmount(BigDecimalHelper.valueOf(transactionAmount));
 
         Response<PostLoansLoanIdResponse> loanDisburseResponse = loansApi.stateTransitions(loanId, disburseRequest, "disburse").execute();
         testContext().set(TestContextKey.LOAN_DISBURSE_RESPONSE, loanDisburseResponse);
@@ -1353,7 +1353,7 @@ public class LoanStepDef extends AbstractStepDef {
         String resourceId = String.valueOf(loanId);
 
         PostLoansLoanIdRequest disburseRequest = LoanRequestFactory.defaultLoanDisburseRequest()
-                .actualDisbursementDate(actualDisbursementDate).transactionAmount(new BigDecimal(transactionAmount));
+                .actualDisbursementDate(actualDisbursementDate).transactionAmount(BigDecimalHelper.valueOf(transactionAmount));
 
         Response<PostLoansLoanIdResponse> loanDisburseResponse = loansApi
                 .stateTransitions(loanId, disburseRequest, "disburseWithoutAutoDownPayment").execute();
@@ -1378,8 +1378,8 @@ public class LoanStepDef extends AbstractStepDef {
         assertNotNull(loanResponse.body());
         final long loanId = loanResponse.body().getLoanId();
         final PostLoansLoanIdRequest disburseRequest = LoanRequestFactory.defaultLoanDisburseRequest()
-                .actualDisbursementDate(actualDisbursementDate).transactionAmount(new BigDecimal(transactionAmount))
-                .fixedEmiAmount(new BigDecimal(fixedEmiAmount));
+                .actualDisbursementDate(actualDisbursementDate).transactionAmount(BigDecimalHelper.valueOf(transactionAmount))
+                .fixedEmiAmount(BigDecimalHelper.valueOf(fixedEmiAmount));
         performLoanDisbursementAndVerifyStatus(loanId, disburseRequest);
     }
 
@@ -1390,8 +1390,8 @@ public class LoanStepDef extends AbstractStepDef {
         assertNotNull(loanResponse.body());
         final long loanId = loanResponse.body().getLoanId();
         final PostLoansLoanIdRequest disburseRequest = LoanRequestFactory.defaultLoanDisburseRequest()
-                .actualDisbursementDate(actualDisbursementDate).transactionAmount(new BigDecimal(transactionAmount))
-                .fixedEmiAmount(new BigDecimal(fixedEmiAmount)).adjustRepaymentDate(adjustRepaymentDate);
+                .actualDisbursementDate(actualDisbursementDate).transactionAmount(BigDecimalHelper.valueOf(transactionAmount))
+                .fixedEmiAmount(BigDecimalHelper.valueOf(fixedEmiAmount)).adjustRepaymentDate(adjustRepaymentDate);
         performLoanDisbursementAndVerifyStatus(loanId, disburseRequest);
     }
 
@@ -1400,7 +1400,7 @@ public class LoanStepDef extends AbstractStepDef {
         Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_SECOND_LOAN_RESPONSE);
         long loanId = loanResponse.body().getLoanId();
         PostLoansLoanIdRequest disburseRequest = LoanRequestFactory.defaultLoanDisburseRequest()
-                .actualDisbursementDate(actualDisbursementDate).transactionAmount(new BigDecimal(transactionAmount));
+                .actualDisbursementDate(actualDisbursementDate).transactionAmount(BigDecimalHelper.valueOf(transactionAmount));
 
         Response<PostLoansLoanIdResponse> loanDisburseResponse = loansApi.stateTransitions(loanId, disburseRequest, "disburse").execute();
         testContext().set(TestContextKey.LOAN_DISBURSE_SECOND_LOAN_RESPONSE, loanDisburseResponse);
@@ -1625,7 +1625,7 @@ public class LoanStepDef extends AbstractStepDef {
         Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         long loanId = loanResponse.body().getLoanId();
         PostLoansLoanIdRequest disburseRequest = LoanRequestFactory.defaultLoanDisburseRequest()
-                .actualDisbursementDate(actualDisbursementDate).transactionAmount(new BigDecimal(transactionAmount));
+                .actualDisbursementDate(actualDisbursementDate).transactionAmount(BigDecimalHelper.valueOf(transactionAmount));
 
         Response<PostLoansLoanIdResponse> loanDisburseResponse = loansApi.stateTransitions(loanId, disburseRequest, "disburse").execute();
         testContext().set(TestContextKey.LOAN_DISBURSE_RESPONSE, loanDisburseResponse);
@@ -1639,7 +1639,7 @@ public class LoanStepDef extends AbstractStepDef {
         Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         long loanId = loanResponse.body().getLoanId();
         PostLoansLoanIdRequest disburseRequest = LoanRequestFactory.defaultLoanDisburseRequest()
-                .actualDisbursementDate(actualDisbursementDate).transactionAmount(new BigDecimal(transactionAmount));
+                .actualDisbursementDate(actualDisbursementDate).transactionAmount(BigDecimalHelper.valueOf(transactionAmount));
 
         Response<PostLoansLoanIdResponse> loanDisburseResponse = loansApi.stateTransitions(loanId, disburseRequest, "disburse").execute();
         testContext().set(TestContextKey.LOAN_DISBURSE_RESPONSE, loanDisburseResponse);
@@ -1656,7 +1656,7 @@ public class LoanStepDef extends AbstractStepDef {
         Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         long loanId = loanResponse.body().getLoanId();
         PostLoansLoanIdRequest disburseRequest = LoanRequestFactory.defaultLoanDisburseRequest()
-                .actualDisbursementDate(actualDisbursementDate).transactionAmount(new BigDecimal(transactionAmount));
+                .actualDisbursementDate(actualDisbursementDate).transactionAmount(BigDecimalHelper.valueOf(transactionAmount));
 
         Response<PostLoansLoanIdResponse> loanDisburseResponse = loansApi.stateTransitions(loanId, disburseRequest, "disburse").execute();
         testContext().set(TestContextKey.LOAN_DISBURSE_RESPONSE, loanDisburseResponse);
@@ -2703,7 +2703,7 @@ public class LoanStepDef extends AbstractStepDef {
         Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         long loanId = loanResponse.body().getLoanId();
         PostLoansLoanIdRequest disburseRequest = LoanRequestFactory.defaultLoanDisburseRequest()
-                .actualDisbursementDate(actualDisbursementDate).transactionAmount(new BigDecimal(transactionAmount));
+                .actualDisbursementDate(actualDisbursementDate).transactionAmount(BigDecimalHelper.valueOf(transactionAmount));
 
         String futureApproveDateISO = FORMATTER_EVENTS.format(FORMATTER.parse(futureApproveDate));
         Response<PostLoansLoanIdResponse> loanDisburseResponse = loansApi.stateTransitions(loanId, disburseRequest, "disburse").execute();
@@ -2864,7 +2864,7 @@ public class LoanStepDef extends AbstractStepDef {
         final String loanProduct = loanData.get(0);
         final String submitDate = loanData.get(1);
         final String principal = loanData.get(2);
-        final BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        final BigDecimal interestRate = BigDecimalHelper.valueOf(loanData.get(3));
         final String interestTypeStr = loanData.get(4);
         final String interestCalculationPeriodStr = loanData.get(5);
         final String amortizationTypeStr = loanData.get(6);
@@ -2904,7 +2904,7 @@ public class LoanStepDef extends AbstractStepDef {
         final String transactionProcessingStrategyCodeValue = processingStrategyCode.getValue();
 
         final PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId).productId(loanProductId)
-                .principal(new BigDecimal(principal)).interestRatePerPeriod(interestRate).interestType(interestTypeValue)
+                .principal(BigDecimalHelper.valueOf(principal)).interestRatePerPeriod(interestRate).interestType(interestTypeValue)
                 .interestCalculationPeriodType(interestCalculationPeriodValue).amortizationType(amortizationTypeValue)
                 .loanTermFrequency(loanTermFrequency).loanTermFrequencyType(loanTermFrequencyTypeValue)
                 .numberOfRepayments(numberOfRepayments).repaymentEvery(repaymentFrequency)
@@ -2913,7 +2913,7 @@ public class LoanStepDef extends AbstractStepDef {
                 .graceOnInterestPayment(graceOnInterestCharged).transactionProcessingStrategyCode(transactionProcessingStrategyCodeValue);
 
         if (withEmi) {
-            loansRequest.fixedEmiAmount(BigDecimal.valueOf(555));
+            loansRequest.fixedEmiAmount(BigDecimalHelper.valueOf(555));
         }
 
         final Response<PostLoansResponse> response = loansApi.calculateLoanScheduleOrSubmitLoanApplication(loansRequest, "").execute();
@@ -2927,7 +2927,7 @@ public class LoanStepDef extends AbstractStepDef {
         final String loanProduct = loanData.get(0);
         final String submitDate = loanData.get(1);
         final String principal = loanData.get(2);
-        final BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        final BigDecimal interestRate = BigDecimalHelper.valueOf(loanData.get(3));
         final String interestTypeStr = loanData.get(4);
         final String interestCalculationPeriodStr = loanData.get(5);
         final String amortizationTypeStr = loanData.get(6);
@@ -2973,7 +2973,7 @@ public class LoanStepDef extends AbstractStepDef {
         final PostLoansRequest loansRequest = loanRequestFactory//
                 .defaultLoansRequest(clientId)//
                 .productId(loanProductId)//
-                .principal(new BigDecimal(principal))//
+                .principal(BigDecimalHelper.valueOf(principal))//
                 .interestRatePerPeriod(interestRate)//
                 .interestType(interestTypeValue)//
                 .interestCalculationPeriodType(interestCalculationPeriodValue)//
@@ -3020,13 +3020,13 @@ public class LoanStepDef extends AbstractStepDef {
         final Long loanProductId = loanProductResolver.resolve(product);
 
         final PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId).productId(loanProductId)
-                .principal(BigDecimal.valueOf(100)).numberOfRepayments(6).submittedOnDate(date).expectedDisbursementDate(date)
+                .principal(BigDecimalHelper.valueOf(100)).numberOfRepayments(6).submittedOnDate(date).expectedDisbursementDate(date)
                 .loanTermFrequency(6)//
                 .loanTermFrequencyType(LoanTermFrequencyType.MONTHS.value)//
                 .repaymentEvery(1)//
                 .repaymentFrequencyType(RepaymentFrequencyType.MONTHS.value)//
                 .interestRateFrequencyType(3)//
-                .interestRatePerPeriod(BigDecimal.valueOf(7))//
+                .interestRatePerPeriod(BigDecimalHelper.valueOf(7))//
                 .interestType(InterestType.DECLINING_BALANCE.value)//
                 .interestCalculationPeriodType(isInterestRecalculation ? InterestCalculationPeriodTime.DAILY.value
                         : InterestCalculationPeriodTime.SAME_AS_REPAYMENT_PERIOD.value)//
@@ -3060,13 +3060,13 @@ public class LoanStepDef extends AbstractStepDef {
         final Long loanProductId = loanProductResolver.resolve(product);
 
         final PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId).productId(loanProductId)
-                .principal(BigDecimal.valueOf(100)).numberOfRepayments(6).submittedOnDate(date).expectedDisbursementDate(date)
+                .principal(BigDecimalHelper.valueOf(100)).numberOfRepayments(6).submittedOnDate(date).expectedDisbursementDate(date)
                 .loanTermFrequency(6)//
                 .loanTermFrequencyType(LoanTermFrequencyType.MONTHS.value)//
                 .repaymentEvery(1)//
                 .repaymentFrequencyType(RepaymentFrequencyType.MONTHS.value)//
                 .interestRateFrequencyType(3)//
-                .interestRatePerPeriod(BigDecimal.valueOf(7))//
+                .interestRatePerPeriod(BigDecimalHelper.valueOf(7))//
                 .interestType(InterestType.DECLINING_BALANCE.value)//
                 .interestCalculationPeriodType(isInterestRecalculation ? InterestCalculationPeriodTime.DAILY.value
                         : InterestCalculationPeriodTime.SAME_AS_REPAYMENT_PERIOD.value)//
@@ -3256,7 +3256,7 @@ public class LoanStepDef extends AbstractStepDef {
                 paidActual += period.getTotalPaidForPeriod();
             }
         }
-        BigDecimal paidActualBd = BigDecimalHelper.convert(paidActual, 2);
+        BigDecimal paidActualBd = BigDecimalHelper.valueOf(paidActual);
 
         for (int i = 0; i < header.size(); i++) {
             String headerName = header.get(i);

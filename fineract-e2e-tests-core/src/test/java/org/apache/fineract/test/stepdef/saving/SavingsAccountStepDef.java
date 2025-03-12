@@ -20,7 +20,6 @@ package org.apache.fineract.test.stepdef.saving;
 
 import io.cucumber.java.en.And;
 import java.io.IOException;
-import java.math.BigDecimal;
 import org.apache.fineract.client.models.PostClientsResponse;
 import org.apache.fineract.client.models.PostSavingsAccountTransactionsRequest;
 import org.apache.fineract.client.models.PostSavingsAccountTransactionsResponse;
@@ -31,6 +30,7 @@ import org.apache.fineract.client.models.PostSavingsAccountsResponse;
 import org.apache.fineract.client.services.SavingsAccountApi;
 import org.apache.fineract.client.services.SavingsAccountTransactionsApi;
 import org.apache.fineract.test.factory.SavingsAccountRequestFactory;
+import org.apache.fineract.test.helper.BigDecimalHelper;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -133,7 +133,7 @@ public class SavingsAccountStepDef extends AbstractStepDef {
         long savingsAccountID = savingsAccountResponse.body().getSavingsId();
 
         PostSavingsAccountTransactionsRequest depositRequest = SavingsAccountRequestFactory.defaultDepositRequest()
-                .transactionDate(depositDate).transactionAmount(BigDecimal.valueOf(depositAmount));
+                .transactionDate(depositDate).transactionAmount(BigDecimalHelper.valueOf(depositAmount));
 
         Response<PostSavingsAccountTransactionsResponse> depositResponse = savingsAccountTransactionsApi
                 .transaction2(savingsAccountID, depositRequest, "deposit").execute();
@@ -147,7 +147,7 @@ public class SavingsAccountStepDef extends AbstractStepDef {
         long savingsAccountID = savingsAccountResponse.body().getSavingsId();
 
         PostSavingsAccountTransactionsRequest depositRequest = SavingsAccountRequestFactory.defaultDepositRequest()
-                .transactionDate(depositDate).transactionAmount(BigDecimal.valueOf(depositAmount));
+                .transactionDate(depositDate).transactionAmount(BigDecimalHelper.valueOf(depositAmount));
 
         Response<PostSavingsAccountTransactionsResponse> depositResponse = savingsAccountTransactionsApi
                 .transaction2(savingsAccountID, depositRequest, "deposit").execute();
@@ -161,7 +161,7 @@ public class SavingsAccountStepDef extends AbstractStepDef {
         long savingsAccountID = savingsAccountResponse.body().getSavingsId();
 
         PostSavingsAccountTransactionsRequest withdrawRequest = SavingsAccountRequestFactory.defaultWithdrawRequest()
-                .transactionDate(transcationDate).transactionAmount(BigDecimal.valueOf(withdrawAmount));
+                .transactionDate(transcationDate).transactionAmount(BigDecimalHelper.valueOf(withdrawAmount));
 
         Response<PostSavingsAccountTransactionsResponse> withdrawalResponse = savingsAccountTransactionsApi
                 .transaction2(savingsAccountID, withdrawRequest, "withdrawal").execute();
@@ -175,7 +175,7 @@ public class SavingsAccountStepDef extends AbstractStepDef {
         long savingsAccountID = savingsAccountResponse.body().getSavingsId();
 
         PostSavingsAccountTransactionsRequest withdrawRequest = SavingsAccountRequestFactory.defaultWithdrawRequest()
-                .transactionDate(transcationDate).transactionAmount(BigDecimal.valueOf(withdrawAmount));
+                .transactionDate(transcationDate).transactionAmount(BigDecimalHelper.valueOf(withdrawAmount));
 
         Response<PostSavingsAccountTransactionsResponse> withdrawalResponse = savingsAccountTransactionsApi
                 .transaction2(savingsAccountID, withdrawRequest, "withdrawal").execute();

@@ -26,7 +26,6 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +47,7 @@ import org.apache.fineract.client.util.JSON;
 import org.apache.fineract.test.data.ChargeProductType;
 import org.apache.fineract.test.data.ErrorMessageType;
 import org.apache.fineract.test.factory.LoanChargeRequestFactory;
+import org.apache.fineract.test.helper.BigDecimalHelper;
 import org.apache.fineract.test.helper.ErrorHelper;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.ErrorResponse;
@@ -261,7 +261,7 @@ public class LoanChargeStepDef extends AbstractStepDef {
 
         eventAssertion.assertEvent(LoanAddChargeEvent.class, loanChargeResponse.body().getResourceId())
                 .extractingData(LoanChargeDataV1::getName).isEqualTo(body.getName()).extractingBigDecimal(LoanChargeDataV1::getAmount)
-                .isEqualTo(BigDecimal.valueOf(body.getAmount())).extractingData(LoanChargeDataV1::getDueDate)
+                .isEqualTo(BigDecimalHelper.valueOf(body.getAmount())).extractingData(LoanChargeDataV1::getDueDate)
                 .isEqualTo(formatter.format(body.getDueDate()));
     }
 

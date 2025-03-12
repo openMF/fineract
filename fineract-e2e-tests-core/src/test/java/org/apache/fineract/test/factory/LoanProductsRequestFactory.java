@@ -20,7 +20,6 @@ package org.apache.fineract.test.factory;
 
 import static org.apache.fineract.test.data.TransactionProcessingStrategyCode.ADVANCED_PAYMENT_ALLOCATION;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +53,7 @@ import org.apache.fineract.test.data.codevalue.CodeValueResolver;
 import org.apache.fineract.test.data.codevalue.DefaultCodeValue;
 import org.apache.fineract.test.data.paymenttype.DefaultPaymentType;
 import org.apache.fineract.test.data.paymenttype.PaymentTypeResolver;
+import org.apache.fineract.test.helper.BigDecimalHelper;
 import org.apache.fineract.test.helper.CodeHelper;
 import org.apache.fineract.test.helper.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -811,7 +811,7 @@ public class LoanProductsRequestFactory {
                 .description(DESCRIPTION_LP2)//
                 .enableDownPayment(true)//
                 .enableAutoRepaymentForDownPayment(true)//
-                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(25))//
+                .disbursedAmountPercentageForDownPayment(BigDecimalHelper.valueOf(25))//
                 .fundId(FUND_ID)//
                 .startDate(null)//
                 .closeDate(null)//
@@ -924,7 +924,7 @@ public class LoanProductsRequestFactory {
                 .description(DESCRIPTION_INTEREST_FLAT_LP2)//
                 .enableDownPayment(true)//
                 .enableAutoRepaymentForDownPayment(true)//
-                .disbursedAmountPercentageForDownPayment(BigDecimal.valueOf(25))//
+                .disbursedAmountPercentageForDownPayment(BigDecimalHelper.valueOf(25))//
                 .fundId(FUND_ID)//
                 .startDate(null)//
                 .closeDate(null)//

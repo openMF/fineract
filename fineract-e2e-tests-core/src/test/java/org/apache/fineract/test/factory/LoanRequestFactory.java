@@ -38,6 +38,7 @@ import org.apache.fineract.test.data.RepaymentFrequencyType;
 import org.apache.fineract.test.data.TransactionProcessingStrategyCode;
 import org.apache.fineract.test.data.loanproduct.DefaultLoanProduct;
 import org.apache.fineract.test.data.loanproduct.LoanProductResolver;
+import org.apache.fineract.test.helper.BigDecimalHelper;
 import org.apache.fineract.test.helper.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -60,15 +61,15 @@ public class LoanRequestFactory {
     public static final String DEFAULT_EXTERNAL_ID = "";
     public static final Long DEFAULT_PAYMENT_TYPE_ID = 4L;
     public static final Long DEFAULT_PAYMENT_TYPE_ID_CHARGEBACK = 8L;
-    public static final BigDecimal DEFAULT_PRINCIPAL = BigDecimal.valueOf(1000L);
-    public static final BigDecimal DEFAULT_APPROVED_AMOUNT = BigDecimal.valueOf(1000L);
-    public static final BigDecimal DEFAULT_DISBURSED_AMOUNT = BigDecimal.valueOf(1000L);
+    public static final BigDecimal DEFAULT_PRINCIPAL = BigDecimalHelper.valueOf(1000L);
+    public static final BigDecimal DEFAULT_APPROVED_AMOUNT = BigDecimalHelper.valueOf(1000L);
+    public static final BigDecimal DEFAULT_DISBURSED_AMOUNT = BigDecimalHelper.valueOf(1000L);
     public static final Integer DEFAULT_LOAN_TERM_FREQUENCY = 30;
     public static final Integer DEFAULT_LOAN_TERM_FREQUENCY_TYPE = LoanTermFrequencyType.DAYS.value;
     public static final Integer DEFAULT_REPAYMENT_FREQUENCY_TYPE = RepaymentFrequencyType.DAYS.value;
     public static final Integer DEFAULT_REAGING_FREQUENCY_NUMBER = 1;
     public static final String DEFAULT_REAGING_FREQUENCY_TYPE = "MONTHS";
-    public static final BigDecimal DEFAULT_INTEREST_RATE_PER_PERIOD = BigDecimal.valueOf(0);
+    public static final BigDecimal DEFAULT_INTEREST_RATE_PER_PERIOD = BigDecimalHelper.valueOf(0);
     public static final Integer DEFAULT_INTEREST_TYPE = InterestType.FLAT.value;
     public static final Integer DEFAULT_INTEREST_CALCULATION_PERIOD_TYPE_SAME_AS_REPAYMENT_PERIOD = InterestCalculationPeriodTime.SAME_AS_REPAYMENT_PERIOD.value;
     public static final Integer DEFAULT_AMORTIZATION_TYPE = 1;
@@ -105,7 +106,7 @@ public class LoanRequestFactory {
                 .transactionProcessingStrategyCode(DEFAULT_TRANSACTION_PROCESSING_STRATEGY_CODE)//
                 .dateFormat(DATE_FORMAT)//
                 .graceOnArrearsAgeing(3)//
-                .maxOutstandingLoanBalance(BigDecimal.valueOf(10000));
+                .maxOutstandingLoanBalance(BigDecimalHelper.valueOf(10000));
     }
 
     public PutLoansLoanIdRequest modifySubmittedOnDateOnLoan(Long clientId, String newSubmittedOnDate) {
