@@ -18,6 +18,9 @@
  */
 package custom.fineract.migration.loan.service;
 
+import static custom.fineract.migration.loan.constants.DtMigrationNames.STATUS_COLUMN;
+
+import custom.fineract.migration.loan.constants.DtMigrationNames;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,13 +38,13 @@ public class MigrationServiceImpl implements MigrationService {
 
     @Override
     public Optional<String> findLastStatus(final Long loanId) {
-        final GenericResultsetData resultSet = readWriteNonCoreDataService.retrieveDataTableGenericResultSet("dt_migration", loanId,
-                "id desc", null);
+        final GenericResultsetData resultSet = readWriteNonCoreDataService
+                .retrieveDataTableGenericResultSet(DtMigrationNames.DATATABLE_NAME, loanId, "id desc", null);
         if (resultSet != null && !resultSet.getData().isEmpty()) {
             final Map<String, Integer> columnMap = IntStream.range(0, resultSet.getColumnHeaders().size()).boxed()
                     .collect(Collectors.toMap(i -> resultSet.getColumnHeaders().get(i).getColumnName(), i -> i));
 
-            final Object status = resultSet.getData().get(0).getRow().get(columnMap.get("status"));
+            final Object status = resultSet.getData().get(0).getRow().get(columnMap.get(STATUS_COLUMN));
             return Optional.ofNullable((String) status);
         }
 

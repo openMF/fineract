@@ -16,17 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package custom.fineract.migration.loan.constants;
 
-dependencies {
-    implementation(project(':fineract-core'))
-    implementation(project(':fineract-loan'))
-    implementation(project(':fineract-provider'))
-    implementation('com.google.code.gson:gson')
-    implementation('org.springframework.boot:spring-boot-starter')
-    implementation('org.springframework.boot:spring-boot-starter-data-jpa')
-    implementation('org.projectlombok:lombok')
-    annotationProcessor('org.projectlombok:lombok')
-    implementation('org.eclipse.persistence:org.eclipse.persistence.jpa') {
-        exclude group: 'org.eclipse.persistence', module: 'jakarta.persistence'
-    }
+public final class DtMigrationNames {
+
+    private DtMigrationNames() {}
+
+    public static final String DATATABLE_NAME = "dt_migration";
+    public static final String STATUS_COLUMN = "status";
+
 }
