@@ -18,12 +18,11 @@
  */
 description = 'Custom loan migration'
 
-group = 'custom.migration.loan'
+group = 'custom.fineract.migration.loan'
 
 base {
     archivesName = 'custom-fineract-migration-loan'
 }
 
-apply from: 'dependencies.gradle'
-
 apply plugin: 'java-library'
+apply from: 'dependencies.gradle'
