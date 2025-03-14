@@ -18,12 +18,16 @@
  */
 package org.apache.fineract.portfolio.loanaccount.domain;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -32,10 +36,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.fineract.accounting.journalentry.service.JournalEntryWritePlatformService;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
+import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.infrastructure.core.exception.GeneralPlatformDomainRuleException;
+import org.apache.fineract.infrastructure.core.exception.PlatformDataIntegrityException;
+import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
 import org.apache.fineract.infrastructure.core.service.MathUtil;
@@ -74,9 +81,12 @@ import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.organisation.workingdays.domain.WorkingDays;
 import org.apache.fineract.organisation.workingdays.domain.WorkingDaysRepositoryWrapper;
+import org.apache.fineract.portfolio.account.data.AccountAssociationsData;
+import org.apache.fineract.portfolio.account.domain.AccountAssociationType;
 import org.apache.fineract.portfolio.account.domain.AccountTransferStandingInstruction;
 import org.apache.fineract.portfolio.account.domain.StandingInstructionRepository;
 import org.apache.fineract.portfolio.account.domain.StandingInstructionStatus;
+import org.apache.fineract.portfolio.account.service.AccountAssociationsReadPlatformService;
 import org.apache.fineract.portfolio.client.domain.Client;
 import org.apache.fineract.portfolio.client.exception.ClientNotActiveException;
 import org.apache.fineract.portfolio.collateralmanagement.domain.ClientCollateralManagement;
@@ -116,6 +126,8 @@ import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 import org.apache.fineract.portfolio.repaymentwithpostdatedchecks.data.PostDatedChecksStatus;
 import org.apache.fineract.portfolio.repaymentwithpostdatedchecks.domain.PostDatedChecks;
 import org.apache.fineract.portfolio.repaymentwithpostdatedchecks.domain.PostDatedChecksRepository;
+import org.apache.fineract.portfolio.savings.service.SavingsAccountWritePlatformService;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -156,7 +168,10 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
     private final LoanChargeValidator loanChargeValidator;
     private final LoanRefundService loanRefundService;
     private final LoanAccountService loanAccountService;
+    private final ApplicationContext applicationContext;
     private final ReprocessLoanTransactionsService reprocessLoanTransactionsService;
+    private final SavingsAccountWritePlatformService savingsAccountWritePlatformService;
+    private final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService;
 
     @Transactional
     @Override
@@ -320,7 +335,53 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
             }
         }
 
+        // Make deposits
+        createSavingFundDeposit(loan.getId(), newRepaymentTransaction);
+
         return newRepaymentTransaction;
+    }
+
+    private void createSavingFundDeposit(final Long loanId, final LoanTransaction newRepaymentTransaction) {
+        Map<String, BigDecimal> portionsMap = new LinkedHashMap<>();
+        portionsMap.put("I", newRepaymentTransaction.getInterestPortion());
+        portionsMap.put("P", newRepaymentTransaction.getPrincipalPortion());
+        portionsMap.put("C",
+                newRepaymentTransaction.getFeeChargesPortion() != null && newRepaymentTransaction.getPenaltyChargesPortion() != null
+                        ? newRepaymentTransaction.getFeeChargesPortion().add(newRepaymentTransaction.getPenaltyChargesPortion())
+                        : (newRepaymentTransaction.getFeeChargesPortion() != null ? newRepaymentTransaction.getFeeChargesPortion()
+                                : newRepaymentTransaction.getPenaltyChargesPortion()));
+
+        AccountAssociationsData accountAssociations = accountAssociationsReadPlatformService
+                .retriveLoanAssociations(loanId, AccountAssociationType.LINKED_ACCOUNT_ASSOCIATION.getValue()).stream().findFirst()
+                .orElseThrow(() -> new PlatformDataIntegrityException("err.msg.not.found.saving.fund.relation",
+                        "Not found saving fund relation to deposit"));
+
+        for (Map.Entry<String, BigDecimal> entry : portionsMap.entrySet()) {
+            BigDecimal value = entry.getValue();
+            if (value != null) {
+                // Create deposit data
+                JsonObject depositJson = createSavingFundDepositData(value,
+                        entry.getKey().concat(" - ").concat(String.valueOf(newRepaymentTransaction.getId())));
+
+                JsonCommand depositCommand = JsonCommand.from(String.valueOf(depositJson), JsonParser.parseString(depositJson.toString()),
+                        new FromJsonHelper());
+
+                // Create saving deposit
+                savingsAccountWritePlatformService.deposit(accountAssociations.linkedAccount().getId(), depositCommand);
+            }
+        }
+    }
+
+    private JsonObject createSavingFundDepositData(final BigDecimal amount, final String note) {
+        JsonObject accountJson = new JsonObject();
+        accountJson.addProperty("transactionAmount", amount);
+        accountJson.addProperty("dateFormat", DateUtils.DEFAULT_DATE_FORMAT);
+        accountJson.addProperty("locale", Locale.ENGLISH.toString());
+        accountJson.addProperty("transactionDate", DateUtils.getBusinessLocalDate().format(DateUtils.DEFAULT_DATE_FORMATTER));
+        accountJson.addProperty("note", note);
+        accountJson.addProperty("paymentTypeId",
+                applicationContext.getEnvironment().getProperty("fineract.loan.to.saving.fund.transaction.payment.type.id"));
+        return accountJson;
     }
 
     private LoanBusinessEvent getLoanRepaymentTypeBusinessEvent(LoanTransactionType repaymentTransactionType, boolean isRecoveryRepayment,
