@@ -18,6 +18,9 @@
  */
 package custom.fineract.migration.loan.service;
 
+import static custom.fineract.migration.loan.constants.DtMigrationNames.STATUS_COLUMN;
+
+import custom.fineract.migration.loan.constants.DtMigrationNames;
 import custom.fineract.migration.loan.enums.MigrationStatus;
 import java.util.List;
 import java.util.Objects;
@@ -62,23 +65,24 @@ public class CustomExternalBusinessEventConfigurationServiceImpl implements Exte
 
     private boolean doesDtMigrationTableExist() {
         try {
-            return readWriteNonCoreDataService.retrieveDatatable("dt_migration") != null;
+            return readWriteNonCoreDataService.retrieveDatatable(DtMigrationNames.DATATABLE_NAME) != null;
         } catch (Exception e) {
             return false;
         }
     }
 
     private List<MigrationStatus> getMigrationStatuses() {
-        return readWriteNonCoreDataService.queryDataTable("dt_migration", "status", null, "status").stream().map(jsonObject -> {
-            if (jsonObject.has("status")) {
-                try {
-                    return MigrationStatus.valueOf(jsonObject.get("status").getAsString());
-                } catch (IllegalArgumentException e) {
+        return readWriteNonCoreDataService.queryDataTable(DtMigrationNames.DATATABLE_NAME, STATUS_COLUMN, null, STATUS_COLUMN).stream()
+                .map(jsonObject -> {
+                    if (jsonObject.has(STATUS_COLUMN)) {
+                        try {
+                            return MigrationStatus.valueOf(jsonObject.get(STATUS_COLUMN).getAsString());
+                        } catch (IllegalArgumentException e) {
+                            return null;
+                        }
+                    }
                     return null;
-                }
-            }
-            return null;
-        }).filter(Objects::nonNull).collect(Collectors.toList());
+                }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
 }
