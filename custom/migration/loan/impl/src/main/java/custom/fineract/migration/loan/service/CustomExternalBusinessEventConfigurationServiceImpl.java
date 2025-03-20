@@ -18,15 +18,14 @@
  */
 package custom.fineract.migration.loan.service;
 
-import static custom.fineract.migration.loan.constants.DtMigrationNames.STATUS_COLUMN;
+import static custom.fineract.migration.loan.enums.MigrationStatus.MIGRATION_COMPLETED;
+import static custom.fineract.migration.loan.enums.MigrationStatus.MIGRATION_IN_PROGRESS;
 
 import custom.fineract.migration.loan.constants.DtMigrationNames;
 import custom.fineract.migration.loan.enums.MigrationStatus;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.infrastructure.dataqueries.service.ReadWriteNonCoreDataService;
+import org.apache.fineract.infrastructure.dataqueries.service.DatatableReadService;
 import org.apache.fineract.infrastructure.event.business.domain.BusinessEvent;
 import org.apache.fineract.infrastructure.event.business.service.ExternalBusinessEventConfigurationService;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,7 +35,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomExternalBusinessEventConfigurationServiceImpl implements ExternalBusinessEventConfigurationService {
 
-    private final ReadWriteNonCoreDataService readWriteNonCoreDataService;
+    private final MigrationService migrationService;
+    private final DatatableReadService datatableReadService;
 
     @Value("${custom.migration.loan.migration.events}")
     private List<String> migrationEvents;
@@ -49,14 +49,13 @@ public class CustomExternalBusinessEventConfigurationServiceImpl implements Exte
             return true;
         }
 
-        final List<MigrationStatus> migrationStatuses = getMigrationStatuses();
+        final List<MigrationStatus> migrationStatuses = migrationService.findStatuses(businessEvent.getAggregateRootId());
 
-        if (migrationStatuses.contains(MigrationStatus.MIGRATION_COMPLETED)) {
+        if (migrationStatuses.contains(MIGRATION_COMPLETED)) {
             return true;
         }
 
-        if (migrationStatuses.contains(MigrationStatus.MIGRATION_IN_PROGRESS)
-                && !migrationStatuses.contains(MigrationStatus.MIGRATION_COMPLETED)) {
+        if (migrationStatuses.contains(MIGRATION_IN_PROGRESS) && !migrationStatuses.contains(MIGRATION_COMPLETED)) {
             return migrationEvents.contains(eventType);
         }
 
@@ -65,24 +64,10 @@ public class CustomExternalBusinessEventConfigurationServiceImpl implements Exte
 
     private boolean doesDtMigrationTableExist() {
         try {
-            return readWriteNonCoreDataService.retrieveDatatable(DtMigrationNames.DATATABLE_NAME) != null;
+            return datatableReadService.retrieveDatatable(DtMigrationNames.DATATABLE_NAME) != null;
         } catch (Exception e) {
             return false;
         }
-    }
-
-    private List<MigrationStatus> getMigrationStatuses() {
-        return readWriteNonCoreDataService.queryDataTable(DtMigrationNames.DATATABLE_NAME, STATUS_COLUMN, null, STATUS_COLUMN).stream()
-                .map(jsonObject -> {
-                    if (jsonObject.has(STATUS_COLUMN)) {
-                        try {
-                            return MigrationStatus.valueOf(jsonObject.get(STATUS_COLUMN).getAsString());
-                        } catch (IllegalArgumentException e) {
-                            return null;
-                        }
-                    }
-                    return null;
-                }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
 }

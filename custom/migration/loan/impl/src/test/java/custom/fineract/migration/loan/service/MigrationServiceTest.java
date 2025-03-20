@@ -33,7 +33,7 @@ import org.apache.fineract.infrastructure.core.service.database.DatabaseType;
 import org.apache.fineract.infrastructure.dataqueries.data.GenericResultsetData;
 import org.apache.fineract.infrastructure.dataqueries.data.ResultsetColumnHeaderData;
 import org.apache.fineract.infrastructure.dataqueries.data.ResultsetRowData;
-import org.apache.fineract.infrastructure.dataqueries.service.ReadWriteNonCoreDataService;
+import org.apache.fineract.infrastructure.dataqueries.service.DatatableReadService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -44,7 +44,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class MigrationServiceTest {
 
     @Mock
-    private ReadWriteNonCoreDataService readWriteNonCoreDataService;
+    private DatatableReadService datatableReadService;
 
     @InjectMocks
     private MigrationServiceImpl migrationService;
@@ -59,10 +59,10 @@ class MigrationServiceTest {
                 ResultsetColumnHeaderData.basic("status", "VARCHAR", DatabaseType.MYSQL),
                 ResultsetColumnHeaderData.basic("loan_id", "INT", DatabaseType.MYSQL));
 
-        final ResultsetRowData rowData = ResultsetRowData.create(Arrays.asList(2, TEST_STATUS, 1, 1, "SOME_STATUS", 1));
-        final GenericResultsetData resultSet = new GenericResultsetData(columnHeaders, Arrays.asList(rowData));
+        final ResultsetRowData rowData = ResultsetRowData.create(Arrays.asList(2, TEST_STATUS, 1));
+        final GenericResultsetData resultSet = new GenericResultsetData(columnHeaders, List.of(rowData));
 
-        when(readWriteNonCoreDataService.retrieveDataTableGenericResultSet(eq("dt_migration"), eq(TEST_LOAN_ID), eq("id desc"), any()))
+        when(datatableReadService.retrieveDataTableGenericResultSet(eq("dt_migration"), eq(TEST_LOAN_ID), eq("id desc"), any()))
                 .thenReturn(resultSet);
 
         final Optional<String> result = migrationService.findLastStatus(TEST_LOAN_ID);
@@ -79,7 +79,7 @@ class MigrationServiceTest {
 
         final GenericResultsetData resultSet = new GenericResultsetData(columnHeaders, new ArrayList<>());
 
-        when(readWriteNonCoreDataService.retrieveDataTableGenericResultSet(eq("dt_migration"), eq(TEST_LOAN_ID), eq("id desc"), any()))
+        when(datatableReadService.retrieveDataTableGenericResultSet(eq("dt_migration"), eq(TEST_LOAN_ID), eq("id desc"), any()))
                 .thenReturn(resultSet);
 
         final Optional<String> result = migrationService.findLastStatus(TEST_LOAN_ID);
@@ -89,7 +89,7 @@ class MigrationServiceTest {
 
     @Test
     void findLastStatus_WhenResultSetIsNull_ShouldReturnEmpty() {
-        when(readWriteNonCoreDataService.retrieveDataTableGenericResultSet(
+        when(datatableReadService.retrieveDataTableGenericResultSet(
             eq("dt_migration"), eq(TEST_LOAN_ID), eq("id desc"), any()))
             .thenReturn(null);
 
@@ -106,9 +106,9 @@ class MigrationServiceTest {
                 ResultsetColumnHeaderData.basic("loan_id", "INT", DatabaseType.MYSQL));
 
         final ResultsetRowData rowData = ResultsetRowData.create(Arrays.asList(2, null, 1));
-        final GenericResultsetData resultSet = new GenericResultsetData(columnHeaders, Arrays.asList(rowData));
+        final GenericResultsetData resultSet = new GenericResultsetData(columnHeaders, List.of(rowData));
 
-        when(readWriteNonCoreDataService.retrieveDataTableGenericResultSet(eq("dt_migration"), eq(TEST_LOAN_ID), eq("id desc"), any()))
+        when(datatableReadService.retrieveDataTableGenericResultSet(eq("dt_migration"), eq(TEST_LOAN_ID), eq("id desc"), any()))
                 .thenReturn(resultSet);
 
         final Optional<String> result = migrationService.findLastStatus(TEST_LOAN_ID);
