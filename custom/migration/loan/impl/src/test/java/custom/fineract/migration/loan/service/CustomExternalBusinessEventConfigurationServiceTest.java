@@ -23,12 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.gson.JsonObject;
+import custom.fineract.migration.loan.enums.MigrationStatus;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 import org.apache.fineract.infrastructure.dataqueries.data.DatatableData;
-import org.apache.fineract.infrastructure.dataqueries.service.ReadWriteNonCoreDataService;
+import org.apache.fineract.infrastructure.dataqueries.service.DatatableReadService;
 import org.apache.fineract.infrastructure.event.business.domain.BusinessEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class CustomExternalBusinessEventConfigurationServiceTest {
 
     @Mock
-    private ReadWriteNonCoreDataService readWriteNonCoreDataService;
+    private DatatableReadService datatableReadService;
+
+    @Mock
+    private MigrationService migrationService;
 
     private CustomExternalBusinessEventConfigurationServiceImpl service;
 
@@ -48,7 +51,7 @@ public class CustomExternalBusinessEventConfigurationServiceTest {
     void setUp() throws Exception {
         final List<String> mockMigrationEvents = List.of("LoanCreatedBusinessEvent", "LoanDisbursalBusinessEvent",
                 "LoanTransactionMakeRepaymentPostBusinessEvent");
-        service = new CustomExternalBusinessEventConfigurationServiceImpl(readWriteNonCoreDataService);
+        service = new CustomExternalBusinessEventConfigurationServiceImpl(migrationService, datatableReadService);
         final Field field = CustomExternalBusinessEventConfigurationServiceImpl.class.getDeclaredField("migrationEvents");
         field.setAccessible(true);
         field.set(service, mockMigrationEvents);
@@ -56,7 +59,7 @@ public class CustomExternalBusinessEventConfigurationServiceTest {
 
     @Test
     void testIsExternalEventConfiguredForPosting_NoDtMigrationTable() {
-        when(readWriteNonCoreDataService.retrieveDatatable("dt_migration")).thenThrow(new RuntimeException());
+        when(datatableReadService.retrieveDatatable("dt_migration")).thenThrow(new RuntimeException());
 
         final BusinessEvent<?> event = mock(BusinessEvent.class);
         when(event.getType()).thenReturn("LoanCreatedBusinessEvent");
@@ -66,44 +69,38 @@ public class CustomExternalBusinessEventConfigurationServiceTest {
 
     @Test
     void testIsExternalEventConfiguredForPosting_MigrationCompleted() {
-        when(readWriteNonCoreDataService.retrieveDatatable("dt_migration")).thenReturn(mock(DatatableData.class));
-        when(readWriteNonCoreDataService.queryDataTable("dt_migration", "status", null, "status"))
-                .thenReturn(Collections.singletonList(createJsonObject("MIGRATION_COMPLETED")));
-
+        when(datatableReadService.retrieveDatatable("dt_migration")).thenReturn(mock(DatatableData.class));
         final BusinessEvent<?> event = mock(BusinessEvent.class);
         when(event.getType()).thenReturn("LoanCreatedBusinessEvent");
+        when(event.getAggregateRootId()).thenReturn(1L);
+
+        when(migrationService.findStatuses(1L)).thenReturn(Collections.singletonList(MigrationStatus.MIGRATION_COMPLETED));
 
         assertTrue(service.isExternalEventConfiguredForPosting(event));
     }
 
     @Test
     void testIsExternalEventConfiguredForPosting_MigrationInProgressAndEventInList() {
-        when(readWriteNonCoreDataService.retrieveDatatable("dt_migration")).thenReturn(mock(DatatableData.class));
-        when(readWriteNonCoreDataService.queryDataTable("dt_migration", "status", null, "status"))
-                .thenReturn(Collections.singletonList(createJsonObject("MIGRATION_IN_PROGRESS")));
-
+        when(datatableReadService.retrieveDatatable("dt_migration")).thenReturn(mock(DatatableData.class));
         final BusinessEvent<?> event = mock(BusinessEvent.class);
         when(event.getType()).thenReturn("LoanCreatedBusinessEvent");
+        when(event.getAggregateRootId()).thenReturn(1L);
+
+        when(migrationService.findStatuses(1L)).thenReturn(Collections.singletonList(MigrationStatus.MIGRATION_IN_PROGRESS));
 
         assertTrue(service.isExternalEventConfiguredForPosting(event));
     }
 
     @Test
     void testIsExternalEventConfiguredForPosting_MigrationInProgressAndEventNotInList() {
-        when(readWriteNonCoreDataService.retrieveDatatable("dt_migration")).thenReturn(mock(DatatableData.class));
-        when(readWriteNonCoreDataService.queryDataTable("dt_migration", "status", null, "status"))
-                .thenReturn(Collections.singletonList(createJsonObject("MIGRATION_IN_PROGRESS")));
-
+        when(datatableReadService.retrieveDatatable("dt_migration")).thenReturn(mock(DatatableData.class));
         final BusinessEvent<?> event = mock(BusinessEvent.class);
         when(event.getType()).thenReturn("SomeOtherEvent");
+        when(event.getAggregateRootId()).thenReturn(1L);
+
+        when(migrationService.findStatuses(1L)).thenReturn(Collections.singletonList(MigrationStatus.MIGRATION_IN_PROGRESS));
 
         assertFalse(service.isExternalEventConfiguredForPosting(event));
-    }
-
-    private JsonObject createJsonObject(final String status) {
-        final JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("status", status);
-        return jsonObject;
     }
 
 }

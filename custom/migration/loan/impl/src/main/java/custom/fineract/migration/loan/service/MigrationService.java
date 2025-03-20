@@ -18,6 +18,8 @@
  */
 package custom.fineract.migration.loan.service;
 
+import custom.fineract.migration.loan.enums.MigrationStatus;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,4 +35,14 @@ public interface MigrationService {
      * @return Optional containing the status string if found, empty Optional otherwise
      */
     Optional<String> findLastStatus(Long loanId);
+
+    /**
+     * Finds all migration statuses for a given loan ID.
+     *
+     * @param loanId
+     *            the ID of the loan
+     * @return List of status strings
+     */
+    List<MigrationStatus> findStatuses(Long loanId);
+
 }

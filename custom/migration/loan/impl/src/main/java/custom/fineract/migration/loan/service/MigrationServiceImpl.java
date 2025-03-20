@@ -21,34 +21,65 @@ package custom.fineract.migration.loan.service;
 import static custom.fineract.migration.loan.constants.DtMigrationNames.STATUS_COLUMN;
 
 import custom.fineract.migration.loan.constants.DtMigrationNames;
+import custom.fineract.migration.loan.enums.MigrationStatus;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.dataqueries.data.GenericResultsetData;
-import org.apache.fineract.infrastructure.dataqueries.service.ReadWriteNonCoreDataService;
+import org.apache.fineract.infrastructure.dataqueries.service.DatatableReadService;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class MigrationServiceImpl implements MigrationService {
 
-    private final ReadWriteNonCoreDataService readWriteNonCoreDataService;
+    private final DatatableReadService datatableReadService;
 
     @Override
     public Optional<String> findLastStatus(final Long loanId) {
-        final GenericResultsetData resultSet = readWriteNonCoreDataService
-                .retrieveDataTableGenericResultSet(DtMigrationNames.DATATABLE_NAME, loanId, "id desc", null);
+        final GenericResultsetData resultSet = datatableReadService.retrieveDataTableGenericResultSet(DtMigrationNames.DATATABLE_NAME,
+                loanId, "id desc", null);
         if (resultSet != null && !resultSet.getData().isEmpty()) {
-            final Map<String, Integer> columnMap = IntStream.range(0, resultSet.getColumnHeaders().size()).boxed()
-                    .collect(Collectors.toMap(i -> resultSet.getColumnHeaders().get(i).getColumnName(), i -> i));
+            final Map<String, Integer> columnMap = determineColumns(resultSet);
 
             final Object status = resultSet.getData().get(0).getRow().get(columnMap.get(STATUS_COLUMN));
             return Optional.ofNullable((String) status);
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    public List<MigrationStatus> findStatuses(final Long loanId) {
+        final GenericResultsetData resultSet = datatableReadService.retrieveDataTableGenericResultSet(DtMigrationNames.DATATABLE_NAME,
+                loanId, null, null);
+        if (resultSet != null && !resultSet.getData().isEmpty()) {
+            final Map<String, Integer> columnMap = determineColumns(resultSet);
+
+            return resultSet.getData().stream().map(row -> {
+                final Object status = row.getRow().get(columnMap.get(STATUS_COLUMN));
+                if (status != null) {
+                    try {
+                        return MigrationStatus.valueOf(status.toString());
+                    } catch (IllegalArgumentException e) {
+                        return null;
+                    }
+                }
+                return null;
+            }).filter(Objects::nonNull).collect(Collectors.toList());
+        }
+
+        return new ArrayList<>();
+    }
+
+    private Map<String, Integer> determineColumns(final GenericResultsetData resultSet) {
+        return IntStream.range(0, resultSet.getColumnHeaders().size()).boxed()
+                .collect(Collectors.toMap(i -> resultSet.getColumnHeaders().get(i).getColumnName(), i -> i));
     }
 
 }
