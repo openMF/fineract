@@ -26,9 +26,7 @@ import org.apache.fineract.infrastructure.event.business.domain.datatable.Datata
 import org.apache.fineract.infrastructure.event.business.domain.loan.LoanAccountSnapshotBusinessEvent;
 import org.apache.fineract.infrastructure.event.business.service.BusinessEventNotifierService;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepository;
-import org.springframework.stereotype.Service;
 
-@Service
 @RequiredArgsConstructor
 public class MigrationCompletedListener implements BusinessEventListener<DatatableEntryCreatedBusinessEvent> {
 
@@ -46,7 +44,7 @@ public class MigrationCompletedListener implements BusinessEventListener<Datatab
             return;
         }
 
-        final Long loanId = event.getDatatableEntryDetails().getEntityId();
+        final Long loanId = event.getDatatableEntryDetails().getAppTableId();
 
         loanRepository.findById(loanId)
                 .ifPresent(loan -> businessEventNotifierService.notifyPostBusinessEvent(new LoanAccountSnapshotBusinessEvent(loan)));

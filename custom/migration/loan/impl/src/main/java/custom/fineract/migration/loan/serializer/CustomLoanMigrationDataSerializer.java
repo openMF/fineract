@@ -25,9 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.event.business.domain.loan.LoanBusinessEvent;
 import org.apache.fineract.infrastructure.event.external.service.serialization.serializer.ExternalEventCustomDataSerializer;
 import org.apache.fineract.infrastructure.event.external.service.support.ByteBufferConverter;
-import org.springframework.stereotype.Component;
 
-@Component
 @RequiredArgsConstructor
 public class CustomLoanMigrationDataSerializer implements ExternalEventCustomDataSerializer<LoanBusinessEvent> {
 

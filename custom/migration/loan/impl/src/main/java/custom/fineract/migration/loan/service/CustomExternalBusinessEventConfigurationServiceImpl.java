@@ -21,53 +21,39 @@ package custom.fineract.migration.loan.service;
 import static custom.fineract.migration.loan.enums.MigrationStatus.MIGRATION_COMPLETED;
 import static custom.fineract.migration.loan.enums.MigrationStatus.MIGRATION_IN_PROGRESS;
 
-import custom.fineract.migration.loan.constants.DtMigrationNames;
 import custom.fineract.migration.loan.enums.MigrationStatus;
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.infrastructure.dataqueries.service.DatatableReadService;
 import org.apache.fineract.infrastructure.event.business.domain.BusinessEvent;
 import org.apache.fineract.infrastructure.event.business.service.ExternalBusinessEventConfigurationService;
+import org.apache.fineract.infrastructure.event.business.service.ExternalBusinessEventConfigurationServiceImpl;
+import org.apache.fineract.infrastructure.event.external.repository.ExternalEventConfigurationRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
-@Service
 @RequiredArgsConstructor
 public class CustomExternalBusinessEventConfigurationServiceImpl implements ExternalBusinessEventConfigurationService {
 
+    private final ExternalEventConfigurationRepository eventConfigurationRepository;
     private final MigrationService migrationService;
-    private final DatatableReadService datatableReadService;
+    private ExternalBusinessEventConfigurationService fallbackExternalBusinessEventConfigurationService;
 
     @Value("${custom.migration.loan.migration.events}")
     private List<String> migrationEvents;
 
+    @PostConstruct
+    public void init() {
+        fallbackExternalBusinessEventConfigurationService = new ExternalBusinessEventConfigurationServiceImpl(eventConfigurationRepository);
+    }
+
     @Override
     public boolean isExternalEventConfiguredForPosting(final BusinessEvent<?> businessEvent) {
         final String eventType = businessEvent.getType();
-
-        if (!doesDtMigrationTableExist()) {
-            return true;
-        }
-
         final List<MigrationStatus> migrationStatuses = migrationService.findStatuses(businessEvent.getAggregateRootId());
-
-        if (migrationStatuses.contains(MIGRATION_COMPLETED)) {
-            return true;
-        }
-
         if (migrationStatuses.contains(MIGRATION_IN_PROGRESS) && !migrationStatuses.contains(MIGRATION_COMPLETED)) {
             return migrationEvents.contains(eventType);
-        }
-
-        return false;
-    }
-
-    private boolean doesDtMigrationTableExist() {
-        try {
-            return datatableReadService.retrieveDatatable(DtMigrationNames.DATATABLE_NAME) != null;
-        } catch (Exception e) {
-            return false;
+        } else {
+            return fallbackExternalBusinessEventConfigurationService.isExternalEventConfiguredForPosting(businessEvent);
         }
     }
-
 }

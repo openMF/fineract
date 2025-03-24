@@ -20,6 +20,7 @@ package custom.fineract.migration.loan.service;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -27,12 +28,14 @@ import custom.fineract.migration.loan.enums.MigrationStatus;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
-import org.apache.fineract.infrastructure.dataqueries.data.DatatableData;
 import org.apache.fineract.infrastructure.dataqueries.service.DatatableReadService;
 import org.apache.fineract.infrastructure.event.business.domain.BusinessEvent;
+import org.apache.fineract.infrastructure.event.external.repository.ExternalEventConfigurationRepository;
+import org.apache.fineract.infrastructure.event.external.repository.domain.ExternalEventConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -45,22 +48,28 @@ public class CustomExternalBusinessEventConfigurationServiceTest {
     @Mock
     private MigrationService migrationService;
 
+    @Mock
+    private ExternalEventConfigurationRepository externalEventConfigurationRepository;
+
+    @InjectMocks
     private CustomExternalBusinessEventConfigurationServiceImpl service;
 
     @BeforeEach
     void setUp() throws Exception {
         final List<String> mockMigrationEvents = List.of("LoanCreatedBusinessEvent", "LoanDisbursalBusinessEvent",
                 "LoanTransactionMakeRepaymentPostBusinessEvent");
-        service = new CustomExternalBusinessEventConfigurationServiceImpl(migrationService, datatableReadService);
         final Field field = CustomExternalBusinessEventConfigurationServiceImpl.class.getDeclaredField("migrationEvents");
         field.setAccessible(true);
         field.set(service, mockMigrationEvents);
+        service.init();
     }
 
     @Test
     void testIsExternalEventConfiguredForPosting_NoDtMigrationTable() {
-        when(datatableReadService.retrieveDatatable("dt_migration")).thenThrow(new RuntimeException());
-
+        ExternalEventConfiguration externalEventConfiguration = new ExternalEventConfiguration();
+        externalEventConfiguration.setEnabled(true);
+        when(externalEventConfigurationRepository.findExternalEventConfigurationByTypeWithNotFoundDetection(anyString()))
+                .thenReturn(externalEventConfiguration);
         final BusinessEvent<?> event = mock(BusinessEvent.class);
         when(event.getType()).thenReturn("LoanCreatedBusinessEvent");
 
@@ -69,7 +78,10 @@ public class CustomExternalBusinessEventConfigurationServiceTest {
 
     @Test
     void testIsExternalEventConfiguredForPosting_MigrationCompleted() {
-        when(datatableReadService.retrieveDatatable("dt_migration")).thenReturn(mock(DatatableData.class));
+        ExternalEventConfiguration externalEventConfiguration = new ExternalEventConfiguration();
+        externalEventConfiguration.setEnabled(true);
+        when(externalEventConfigurationRepository.findExternalEventConfigurationByTypeWithNotFoundDetection(anyString()))
+                .thenReturn(externalEventConfiguration);
         final BusinessEvent<?> event = mock(BusinessEvent.class);
         when(event.getType()).thenReturn("LoanCreatedBusinessEvent");
         when(event.getAggregateRootId()).thenReturn(1L);
@@ -81,7 +93,6 @@ public class CustomExternalBusinessEventConfigurationServiceTest {
 
     @Test
     void testIsExternalEventConfiguredForPosting_MigrationInProgressAndEventInList() {
-        when(datatableReadService.retrieveDatatable("dt_migration")).thenReturn(mock(DatatableData.class));
         final BusinessEvent<?> event = mock(BusinessEvent.class);
         when(event.getType()).thenReturn("LoanCreatedBusinessEvent");
         when(event.getAggregateRootId()).thenReturn(1L);
@@ -93,7 +104,6 @@ public class CustomExternalBusinessEventConfigurationServiceTest {
 
     @Test
     void testIsExternalEventConfiguredForPosting_MigrationInProgressAndEventNotInList() {
-        when(datatableReadService.retrieveDatatable("dt_migration")).thenReturn(mock(DatatableData.class));
         final BusinessEvent<?> event = mock(BusinessEvent.class);
         when(event.getType()).thenReturn("SomeOtherEvent");
         when(event.getAggregateRootId()).thenReturn(1L);

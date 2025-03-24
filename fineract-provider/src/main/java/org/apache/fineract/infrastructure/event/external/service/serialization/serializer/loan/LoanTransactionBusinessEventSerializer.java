@@ -19,9 +19,9 @@
 package org.apache.fineract.infrastructure.event.external.service.serialization.serializer.loan;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.fineract.avro.generator.ByteBufferSerializable;
@@ -70,8 +70,12 @@ public class LoanTransactionBusinessEventSerializer implements BusinessEventSeri
     }
 
     protected Map<String, ByteBuffer> collectCustomData(final LoanTransactionBusinessEvent event) {
-        return externalEventCustomDataSerializers.stream().collect(Collectors.toMap(ExternalEventCustomDataSerializer::key,
-                serializer -> serializer.serialize(event), (existing, replacement) -> replacement));
+        return externalEventCustomDataSerializers.stream().collect(HashMap::new, (map, serializer) -> {
+            ByteBuffer buffer = serializer.serialize(event);
+            if (buffer != null) {
+                map.put(serializer.key(), buffer);
+            }
+        }, HashMap::putAll);
     }
 
 }

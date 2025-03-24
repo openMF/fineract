@@ -32,9 +32,7 @@ import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.dataqueries.data.GenericResultsetData;
 import org.apache.fineract.infrastructure.dataqueries.service.DatatableReadService;
-import org.springframework.stereotype.Service;
 
-@Service
 @RequiredArgsConstructor
 public class MigrationServiceImpl implements MigrationService {
 
