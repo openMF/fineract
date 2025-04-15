@@ -404,11 +404,6 @@ configure(project.fineractJavaProjects) {
 
     group = 'org.apache.fineract'
 
-    /* define the valid syntax level for source files */
-    // sourceCompatibility = JavaVersion.VERSION_17
-    // /* define binary compatibility version */
-    // targetCompatibility = JavaVersion.VERSION_17
-
     /* http://stackoverflow.com/questions/19653311/jpa-repository-works-in-idea-and-production-but-not-in-gradle */
     sourceSets.main.output.resourcesDir = sourceSets.main.java.classesDirectory
     sourceSets.test.output.resourcesDir = sourceSets.test.java.classesDirectory
