@@ -194,7 +194,7 @@ class FineractPlugin implements Plugin<Project> {
 
                 String version = project.properties?['fineract.release.version']
                 String issue = project.properties?['fineract.release.issue']
-                String date = project.properties?['fineract.release.date']
+                String date = project.properties?['fineract.releaseBranch.date']
 
                 if(!version || !issue || !date) {
                     TextIO textIO = TextIoFactory.getTextIO()
@@ -225,7 +225,7 @@ class FineractPlugin implements Plugin<Project> {
 
                 this.context?.project?['fineract.release.version'] = version
                 this.context?.project?['fineract.release.issue'] = issue
-                this.context?.project?['fineract.release.date'] = date
+                this.context?.project?['fineract.releaseBranch.date'] = date
 
                 if(step.email) {
                     emailService.send( processEmailParams(step.email, this.context) )
