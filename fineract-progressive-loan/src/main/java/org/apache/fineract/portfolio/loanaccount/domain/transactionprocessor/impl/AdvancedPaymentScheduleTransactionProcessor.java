@@ -1867,9 +1867,8 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
         } else if (FutureInstallmentAllocationRule.NEXT_LAST_INSTALLMENT.equals(futureInstallmentAllocationRule)) {
             // try to resolve as current installment ( not due )
             inAdvanceInstallments = installments.stream().filter(installment -> installment.getTotalPaid(currency).isGreaterThanZero())
-                    .filter(e -> loanTransaction.isBefore(e.getDueDate())).filter(f -> loanTransaction.isAfter(f.getFromDate())
-                            || (loanTransaction.isOn(f.getFromDate()) && f.getInstallmentNumber() == 1))
-                    .toList();
+                    .filter(e -> loanTransaction.isBefore(e.getDueDate()))
+                    .filter(f -> loanTransaction.isAfter(f.getFromDate()) || loanTransaction.isOn(f.getFromDate())).toList();
             // if there is no current installment, resolve similar to LAST_INSTALLMENT
             if (inAdvanceInstallments.isEmpty()) {
                 inAdvanceInstallments = installments.stream().filter(installment -> installment.getTotalPaid(currency).isGreaterThanZero())
@@ -1993,7 +1992,7 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
                                 .filter(LoanRepaymentScheduleInstallment::isNotFullyPaidOff) //
                                 .filter(e -> context.getLoanTransaction().isBefore(e.getDueDate())) //
                                 .filter(f -> context.getLoanTransaction().isAfter(f.getFromDate())
-                                        || (context.getLoanTransaction().isOn(f.getFromDate()) && f.getInstallmentNumber() == 1)) //
+                                        || context.getLoanTransaction().isOn(f.getFromDate())) //
                                 .toList(); //
                         // if there is no current installment, resolve similar to LAST_INSTALLMENT
                         if (inAdvanceInstallments.isEmpty()) {
@@ -2299,8 +2298,7 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
                                     currentInstallments = context.getCtx().getInstallments().stream().filter(predicate)
                                             .filter(e -> context.getLoanTransaction().isBefore(e.getDueDate()))
                                             .filter(f -> context.getLoanTransaction().isAfter(f.getFromDate())
-                                                    || (context.getLoanTransaction().isOn(f.getFromDate())
-                                                            && f.getInstallmentNumber() == 1))
+                                                    || context.getLoanTransaction().isOn(f.getFromDate()))
                                             .toList();
                                     // if there is no current in advance installment resolve similar to LAST_INSTALLMENT
                                     if (currentInstallments.isEmpty()) {
