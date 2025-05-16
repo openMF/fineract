@@ -84,7 +84,7 @@ public class ReprocessLoanTransactionsServiceImpl implements ReprocessLoanTransa
             final LoanRepaymentScheduleProcessingWrapper wrapper = new LoanRepaymentScheduleProcessingWrapper();
             wrapper.reprocess(loan.getCurrency(), loan.getDisbursementDate(), loan.getRepaymentScheduleInstallments(),
                     loan.getActiveCharges());
-            loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumTotalOfChargesDueAtDisbursement());
+            loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumOfAllChargesDueAtDisbursementEvents());
         }
 
         removeOrModifyTransactionAssociatedWithLoanChargeIfDueAtDisbursement(loan, loanCharge);

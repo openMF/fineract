@@ -477,7 +477,7 @@ public class LoanChargeWritePlatformServiceImpl implements LoanChargeWritePlatfo
             final BigDecimal amount = loanChargeService.calculateAmountPercentageAppliedTo(loan, loanCharge);
             final Map<String, Object> loanChargeChanges = loanCharge.update(command, amount);
             changes.putAll(loanChargeChanges);
-            loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumTotalOfChargesDueAtDisbursement());
+            loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumOfAllChargesDueAtDisbursementEvents());
         }
 
         if (!loanCharge.isDueAtDisbursement()) {
@@ -1486,7 +1486,7 @@ public class LoanChargeWritePlatformServiceImpl implements LoanChargeWritePlatfo
 
         scheduleGeneratorDTO.setRecalculateFrom(transactionDate);
 
-        loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumTotalOfChargesDueAtDisbursement());
+        loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumOfAllChargesDueAtDisbursementEvents());
 
         existingTransactionIds.addAll(loan.findExistingTransactionIds());
         existingReversedTransactionIds.addAll(loan.findExistingReversedTransactionIds());

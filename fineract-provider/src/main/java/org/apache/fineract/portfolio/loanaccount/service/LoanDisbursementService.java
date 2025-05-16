@@ -41,8 +41,10 @@ import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.infrastructure.core.serialization.JsonParserHelper;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.portfolio.charge.domain.Charge;
+import org.apache.fineract.portfolio.charge.domain.ChargeCalculationType;
 import org.apache.fineract.portfolio.charge.domain.ChargeTimeType;
 import org.apache.fineract.portfolio.loanaccount.api.LoanApiConstants;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
@@ -226,37 +228,110 @@ public class LoanDisbursementService {
             LoanDisbursementDetails loanDisbursementDetail = loan.fetchLoanDisbursementsById(disbursementID);
             existingDisbursementList.remove(disbursementID);
             if (loanDisbursementDetail.actualDisbursementDate() == null) {
-                LocalDate actualDisbursementDate = null;
-                LoanDisbursementDetails disbursementDetails = new LoanDisbursementDetails(expectedDisbursementDate, actualDisbursementDate,
-                        principal, loan.getNetDisbursalAmount(), false);
-                disbursementDetails.updateLoan(loan);
-                if (!loanDisbursementDetail.equals(disbursementDetails)) {
-                    loanDisbursementDetail.copy(disbursementDetails);
+                LoanDisbursementDetails originalDetailsCopy = new LoanDisbursementDetails(loanDisbursementDetail.expectedDisbursementDate(),
+                        loanDisbursementDetail.actualDisbursementDate(), loanDisbursementDetail.principal(),
+                        loanDisbursementDetail.getNetDisbursalAmount(), loanDisbursementDetail.isReversed());
+
+                // Proposed new details for the tranche
+                LoanDisbursementDetails newProposedDetails = new LoanDisbursementDetails(expectedDisbursementDate, null, principal,
+                        loan.getNetDisbursalAmount(), false);
+
+                if (!originalDetailsCopy.equals(newProposedDetails)) {
+                    loanDisbursementDetail.copy(newProposedDetails);
+
+                    for (LoanTrancheCharge productTrancheCharge : loan.getTrancheCharges()) {
+                        Charge chargeDefinition = productTrancheCharge.getCharge();
+                        if (chargeDefinition.getChargeTimeType().equals(ChargeTimeType.TRANCHE_DISBURSEMENT.getValue())) {
+                            LoanCharge existingTrancheSpecificCharge = findExistingTrancheChargeForDisbursement(loan, chargeDefinition,
+                                    loanDisbursementDetail);
+                            if (existingTrancheSpecificCharge != null) {
+                                BigDecimal newTranchePrincipal = loanDisbursementDetail.principal(); // Use updated
+                                                                                                     // principal
+                                LocalDate newTrancheDueDate = loanDisbursementDetail.expectedDisbursementDate(); // Use
+                                                                                                                 // updated
+                                                                                                                 // date
+
+                                BigDecimal chargeDefAmountOrRate = chargeDefinition.getAmount();
+
+                                BigDecimal newCalculatedChargeAmount = calculateChargeAmountForTranche(chargeDefinition,
+                                        newTranchePrincipal, chargeDefAmountOrRate, loan.getCurrency());
+
+                                existingTrancheSpecificCharge.update(chargeDefAmountOrRate, newTrancheDueDate, newTranchePrincipal, null,
+                                        newCalculatedChargeAmount);
+                            }
+                        }
+                    }
+
                     actualChanges.put("disbursementDetailId", disbursementID);
                     actualChanges.put(RECALCULATE_LOAN_SCHEDULE, true);
                 }
             }
         } else {
-            final var disbursementDetails = loan.addLoanDisbursementDetails(expectedDisbursementDate, principal);
-            for (LoanTrancheCharge trancheCharge : loan.getTrancheCharges()) {
-                Charge chargeDefinition = trancheCharge.getCharge();
-                ExternalId externalId = ExternalId.empty();
-                if (TemporaryConfigurationServiceContainer.isExternalIdAutoGenerationEnabled()) {
-                    externalId = ExternalId.generate();
-                }
-                final LoanCharge loanCharge = new LoanCharge(loan, chargeDefinition, principal, null, null, null, expectedDisbursementDate,
-                        null, null, BigDecimal.ZERO, externalId);
-                LoanTrancheDisbursementCharge loanTrancheDisbursementCharge = new LoanTrancheDisbursementCharge(loanCharge,
-                        disbursementDetails);
-                loanCharge.updateLoanTrancheDisbursementCharge(loanTrancheDisbursementCharge);
+            final var disbursementDetailsEntity = loan.addLoanDisbursementDetails(expectedDisbursementDate, principal);
+            for (LoanTrancheCharge productTrancheCharge : loan.getTrancheCharges()) {
+                Charge chargeDefinition = productTrancheCharge.getCharge();
+                if (chargeDefinition.getChargeTimeType().equals(ChargeTimeType.TRANCHE_DISBURSEMENT.getValue())) {
+                    ExternalId externalId = ExternalId.empty();
+                    if (TemporaryConfigurationServiceContainer.isExternalIdAutoGenerationEnabled()) {
+                        externalId = ExternalId.generate();
+                    }
 
-                loanChargeValidator.validateChargeAdditionForDisbursedLoan(loan, loanCharge);
-                loanChargeValidator.validateChargeHasValidSpecifiedDateIfApplicable(loan, loanCharge, loan.getDisbursementDate());
-                loanChargeService.addLoanCharge(loan, loanCharge);
+                    BigDecimal tranchePrincipalForCharge = disbursementDetailsEntity.principal();
+                    BigDecimal chargeDefAmountOrRate = chargeDefinition.getAmount();
+                    BigDecimal specificChargeAmount = calculateChargeAmountForTranche(chargeDefinition, tranchePrincipalForCharge,
+                            chargeDefAmountOrRate, loan.getCurrency());
+
+                    final LoanCharge loanCharge = new LoanCharge(loan, chargeDefinition, tranchePrincipalForCharge, chargeDefAmountOrRate,
+                            null, null, expectedDisbursementDate, null, null, specificChargeAmount, externalId);
+
+                    LoanTrancheDisbursementCharge loanTrancheDisbursementCharge = new LoanTrancheDisbursementCharge(loanCharge,
+                            disbursementDetailsEntity);
+                    loanCharge.updateLoanTrancheDisbursementCharge(loanTrancheDisbursementCharge);
+
+                    loanChargeValidator.validateChargeAdditionForDisbursedLoan(loan, loanCharge);
+                    loanChargeValidator.validateChargeHasValidSpecifiedDateIfApplicable(loan, loanCharge, loan.getDisbursementDate());
+                    loanChargeService.addLoanCharge(loan, loanCharge);
+                }
             }
             actualChanges.put(LoanApiConstants.disbursementDataParameterName, expectedDisbursementDate + "-" + principal);
             actualChanges.put(RECALCULATE_LOAN_SCHEDULE, true);
         }
+    }
+
+    private LoanCharge findExistingTrancheChargeForDisbursement(final Loan loan, final Charge chargeDefinition,
+            final LoanDisbursementDetails disbursementDetail) {
+        for (LoanCharge lc : loan.getCharges()) {
+            if (lc.getCharge().equals(chargeDefinition) && lc.isTrancheDisbursementCharge()) {
+                LoanTrancheDisbursementCharge link = lc.getTrancheDisbursementCharge();
+                if (link != null && link.getloanDisbursementDetails().equals(disbursementDetail)) {
+                    return lc;
+                }
+            }
+        }
+        return null;
+    }
+
+    private BigDecimal calculateChargeAmountForTranche(final Charge chargeDefinition, final BigDecimal tranchePrincipal,
+            final BigDecimal amountOrPercentageFromDefinition, final MonetaryCurrency currency) {
+        BigDecimal calculatedAmount = BigDecimal.ZERO;
+        ChargeCalculationType calculationType = ChargeCalculationType.fromInt(chargeDefinition.getChargeCalculation());
+        switch (calculationType) {
+            case FLAT:
+                calculatedAmount = amountOrPercentageFromDefinition;
+            break;
+            case PERCENT_OF_DISBURSEMENT_AMOUNT:
+                calculatedAmount = LoanCharge.percentageOf(tranchePrincipal, amountOrPercentageFromDefinition);
+            break;
+            default:
+            break;
+        }
+        if (chargeDefinition.getMinCap() != null && calculatedAmount.compareTo(chargeDefinition.getMinCap()) < 0) {
+            calculatedAmount = chargeDefinition.getMinCap();
+        }
+        if (chargeDefinition.getMaxCap() != null && calculatedAmount.compareTo(chargeDefinition.getMaxCap()) > 0) {
+            calculatedAmount = chargeDefinition.getMaxCap();
+        }
+        return Money.of(currency, calculatedAmount).getAmount();
     }
 
     private void removeDisbursementAndAssociatedCharges(final Loan loan, final Map<String, Object> actualChanges,

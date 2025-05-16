@@ -567,7 +567,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             loanScheduleService.regenerateRepaymentSchedule(loan, scheduleGeneratorDTO);
         }
 
-        loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumTotalOfChargesDueAtDisbursement());
+        loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumOfAllChargesDueAtDisbursementEvents());
         loan.updateLoanRepaymentPeriodsDerivedFields(actualDisbursementDate1);
         loanTransactionValidator.validateActivityNotBeforeClientOrGroupTransferDate(loan, LoanEvent.LOAN_DISBURSED,
                 actualDisbursementDate1);
@@ -3200,7 +3200,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
 
                 loanScheduleService.regenerateRepaymentSchedule(loan, scheduleGeneratorDTO);
                 if (isDisbursedAmountChanged) {
-                    loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumTotalOfChargesDueAtDisbursement());
+                    loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumOfAllChargesDueAtDisbursementEvents());
                 }
             } else if (loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
                 for (final LoanRepaymentScheduleInstallment period : loan.getRepaymentScheduleInstallments()) {

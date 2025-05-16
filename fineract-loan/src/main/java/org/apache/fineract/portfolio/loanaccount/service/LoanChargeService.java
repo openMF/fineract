@@ -59,7 +59,7 @@ public class LoanChargeService {
         for (final LoanCharge loanCharge : charges) {
             recalculateLoanCharge(loan, loanCharge, penaltyWaitPeriod);
         }
-        loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumTotalOfChargesDueAtDisbursement());
+        loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumOfAllChargesDueAtDisbursementEvents());
     }
 
     public void recalculateLoanCharge(final Loan loan, final LoanCharge loanCharge, final int penaltyWaitPeriod) {
@@ -245,7 +245,7 @@ public class LoanChargeService {
             loan.setCharges(new HashSet<>());
         }
         loan.getLoanCharges().add(loanCharge);
-        loan.setSummary(loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumTotalOfChargesDueAtDisbursement()));
+        loan.setSummary(loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumOfAllChargesDueAtDisbursementEvents()));
 
         // store Id's of existing loan transactions and existing reversed loan transactions
         final SingleLoanChargeRepaymentScheduleProcessingWrapper wrapper = new SingleLoanChargeRepaymentScheduleProcessingWrapper();
@@ -305,7 +305,7 @@ public class LoanChargeService {
         for (Long id : existingCharges) {
             fetchLoanChargesById(loan, id).setActive(false);
         }
-        loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumTotalOfChargesDueAtDisbursement());
+        loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(loan.deriveSumOfAllChargesDueAtDisbursementEvents());
     }
 
     private List<Long> fetchAllLoanChargeIds(final Loan loan) {

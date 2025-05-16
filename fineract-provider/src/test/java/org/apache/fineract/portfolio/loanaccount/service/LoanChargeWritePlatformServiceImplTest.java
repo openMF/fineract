@@ -201,7 +201,7 @@ class LoanChargeWritePlatformServiceImplTest {
         when(loanChargeService.calculateAmountPercentageAppliedTo(any(Loan.class), any(LoanCharge.class))).thenReturn(BigDecimal.TEN);
         when(loan.fetchNumberOfInstallmensAfterExceptions()).thenReturn(5);
         when(loan.updateSummaryWithTotalFeeChargesDueAtDisbursement(any(BigDecimal.class))).thenReturn(null);
-        when(loan.deriveSumTotalOfChargesDueAtDisbursement()).thenReturn(BigDecimal.ZERO);
+        when(loan.deriveSumOfAllChargesDueAtDisbursementEvents()).thenReturn(BigDecimal.ZERO);
         when(loanCharge.getDueLocalDate()).thenReturn(LocalDate.now(ZoneId.systemDefault()));
         when(loanCharge.getEffectiveDueDate()).thenReturn(LocalDate.now(ZoneId.systemDefault()));
 

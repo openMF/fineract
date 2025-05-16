@@ -514,7 +514,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom<Long> {
         this.loanStatus = loanStatus;
         if (loanCharges != null && !loanCharges.isEmpty()) {
             this.charges = associateChargesWithThisLoan(loanCharges);
-            this.summary = updateSummaryWithTotalFeeChargesDueAtDisbursement(deriveSumTotalOfChargesDueAtDisbursement());
+            this.summary = updateSummaryWithTotalFeeChargesDueAtDisbursement(deriveSumOfAllChargesDueAtDisbursementEvents());
         } else {
             this.charges = null;
             this.summary = new LoanSummary();
@@ -551,7 +551,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom<Long> {
         this.fixedPrincipalPercentagePerInstallment = fixedPrincipalPercentagePerInstallment;
 
         // Add net get net disbursal amount from charges and principal
-        this.netDisbursalAmount = this.approvedPrincipal.subtract(deriveSumTotalOfChargesDueAtDisbursement());
+        this.netDisbursalAmount = this.approvedPrincipal.subtract(deriveSumTotalOfChargesDeductedAtDisbursement());
         this.loanStatus = LoanStatus.SUBMITTED_AND_PENDING_APPROVAL;
         this.externalId = externalId;
         this.termFrequency = loanApplicationTerms.getLoanTermFrequency();
@@ -561,7 +561,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom<Long> {
         this.interestChargedFromDate = loanApplicationTerms.getInterestChargedFromDate();
         this.submittedOnDate = submittedOnDate != null ? submittedOnDate : DateUtils.getBusinessLocalDate();
 
-        updateSummaryWithTotalFeeChargesDueAtDisbursement(deriveSumTotalOfChargesDueAtDisbursement());
+        updateSummaryWithTotalFeeChargesDueAtDisbursement(deriveSumOfAllChargesDueAtDisbursementEvents());
 
         // Copy interest recalculation settings if interest recalculation is enabled
         if (this.loanRepaymentScheduleDetail.isInterestRecalculationEnabled()) {
@@ -599,11 +599,16 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom<Long> {
         this.summary.updateTotalWaived(this.summary.getTotalWaived().subtract(amountWaived));
     }
 
-    public BigDecimal deriveSumTotalOfChargesDueAtDisbursement() {
-        return getActiveCharges().stream() //
-                .filter(LoanCharge::isDueAtDisbursement) //
-                .map(LoanCharge::amount) //
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    public BigDecimal deriveSumTotalOfChargesDeductedAtDisbursement() {
+        return getActiveCharges().stream()
+                .filter(lc -> lc.isDueAtDisbursement() && !lc.isTrancheDisbursementCharge()
+                        && !lc.getChargePaymentMode().isPaymentModeAccountTransfer()) // Also exclude account transfers
+                .map(LoanCharge::amount).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal deriveSumOfAllChargesDueAtDisbursementEvents() {
+        return getActiveCharges().stream().filter(LoanCharge::isDueAtDisbursement) // Includes both regular and tranche
+                .map(LoanCharge::amount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private Set<LoanCharge> associateChargesWithThisLoan(final Set<LoanCharge> loanCharges) {
@@ -1800,19 +1805,32 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom<Long> {
         }
     }
 
-    public void updateLoanToLastDisbursalState(LoanDisbursementDetails disbursementDetail) {
-        for (final LoanCharge charge : getActiveCharges()) {
-            if (charge.isOverdueInstallmentCharge()) {
-                charge.setActive(false);
-            } else if (charge.isTrancheDisbursementCharge() && disbursementDetail.getDisbursementDate()
-                    .equals(charge.getTrancheDisbursementCharge().getloanDisbursementDetails().actualDisbursementDate())) {
+    // In Loan.java
+    public void updateLoanToLastDisbursalState(LoanDisbursementDetails disbursementDetailToUndo) { // Service layer
+                                                                                                   // should pass this
+        for (final LoanCharge charge : new ArrayList<>(getActiveCharges())) { // Iterate over a copy
+            if (charge.isTrancheDisbursementCharge() && charge.getTrancheDisbursementCharge() != null
+                    && charge.getTrancheDisbursementCharge().getloanDisbursementDetails().equals(disbursementDetailToUndo)) {
+
                 charge.resetToOriginal(getCurrency());
+            } else if (charge.isOverdueInstallmentCharge()) {
+                charge.setActive(false);
             }
         }
-        this.loanRepaymentScheduleDetail.setPrincipal(getDisbursedAmount().subtract(disbursementDetail.principal()));
-        disbursementDetail.updateActualDisbursementDate(null);
-        disbursementDetail.reverse();
+
+        BigDecimal newPrincipalDisbursedForSchedule = BigDecimal.ZERO;
+        for (LoanDisbursementDetails ldd : getDisbursementDetails()) {
+            if (!ldd.equals(disbursementDetailToUndo) && ldd.actualDisbursementDate() != null && !ldd.isReversed()) {
+                newPrincipalDisbursedForSchedule = newPrincipalDisbursedForSchedule.add(ldd.principal());
+            }
+        }
+        getLoanRepaymentScheduleDetail().setPrincipal(newPrincipalDisbursedForSchedule);
+
+        disbursementDetailToUndo.updateActualDisbursementDate(null);
+        disbursementDetailToUndo.reverse();
         updateLoanSummaryDerivedFields();
+
+        updateLoanOutstandingBalances();
     }
 
     private int adjustNumberOfRepayments() {
@@ -2093,7 +2111,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom<Long> {
     }
 
     public void adjustNetDisbursalAmount(BigDecimal adjustedAmount) {
-        this.netDisbursalAmount = adjustedAmount.subtract(this.deriveSumTotalOfChargesDueAtDisbursement());
+        this.netDisbursalAmount = adjustedAmount.subtract(this.deriveSumTotalOfChargesDeductedAtDisbursement());
     }
 
     /**
