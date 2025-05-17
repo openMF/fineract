@@ -569,8 +569,12 @@ public class LoanCharge extends AbstractAuditableWithUTCDateTimeCustom<Long> {
     }
 
     public boolean isDueAtDisbursement() {
-        return ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.DISBURSEMENT)
-                || ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.TRANCHE_DISBURSEMENT);
+        return ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.DISBURSEMENT) || 
+               ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.TRANCHE_DISBURSEMENT);
+    }
+    
+    public boolean isTrancheDisbursementCharge() {
+        return ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.TRANCHE_DISBURSEMENT);
     }
 
     public boolean isSpecifiedDueDate() {
@@ -924,6 +928,39 @@ public class LoanCharge extends AbstractAuditableWithUTCDateTimeCustom<Long> {
     public void updateLoanTrancheDisbursementCharge(final LoanTrancheDisbursementCharge loanTrancheDisbursementCharge) {
         this.loanTrancheDisbursementCharge = loanTrancheDisbursementCharge;
     }
+    
+    public LoanTrancheDisbursementCharge getTrancheDisbursementCharge() {
+        return this.loanTrancheDisbursementCharge;
+    }
+
+
+    
+    /**
+     * Checks if this charge is a tranche disbursement charge for a specific disbursement date
+     * 
+     * @param disbursementDate the disbursement date to check
+     * @return true if this is a tranche disbursement charge for the specified date
+     */
+    public boolean isTrancheDisbursementChargeForDate(final LocalDate disbursementDate) {
+        if (!isTrancheDisbursementCharge() || disbursementDate == null) {
+            return false;
+        }
+        
+        if (this.loanTrancheDisbursementCharge == null) {
+            return false;
+        }
+        
+        LoanDisbursementDetails disbursementDetails = this.loanTrancheDisbursementCharge.getloanDisbursementDetails();
+        if (disbursementDetails == null) {
+            return false;
+        }
+        
+        // Check if this tranche charge is for the specified disbursement date
+        return (disbursementDetails.expectedDisbursementDate() != null && 
+                disbursementDetails.expectedDisbursementDate().equals(disbursementDate)) ||
+               (disbursementDetails.actualDisbursementDate() != null && 
+                disbursementDetails.actualDisbursementDate().equals(disbursementDate));
+    }
 
     public void updateWaivedAmount(MonetaryCurrency currency) {
         if (isInstalmentFee()) {
@@ -953,10 +990,6 @@ public class LoanCharge extends AbstractAuditableWithUTCDateTimeCustom<Long> {
             }
         }
 
-    }
-
-    public LoanTrancheDisbursementCharge getTrancheDisbursementCharge() {
-        return this.loanTrancheDisbursementCharge; // TODO delete duplicated method
     }
 
     public Money undoPaidOrPartiallyAmountBy(final Money incrementBy, final Integer installmentNumber, final Money feeAmount) {
@@ -1007,10 +1040,6 @@ public class LoanCharge extends AbstractAuditableWithUTCDateTimeCustom<Long> {
 
     public boolean isDisbursementCharge() {
         return ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.DISBURSEMENT);
-    }
-
-    public boolean isTrancheDisbursementCharge() {
-        return ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.TRANCHE_DISBURSEMENT);
     }
 
     public boolean isDueDateCharge() {

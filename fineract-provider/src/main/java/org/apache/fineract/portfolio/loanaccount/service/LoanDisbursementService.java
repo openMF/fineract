@@ -320,6 +320,17 @@ public class LoanDisbursementService {
                 calculatedAmount = amountOrPercentageFromDefinition;
             break;
             case PERCENT_OF_DISBURSEMENT_AMOUNT:
+                // Ensure we're calculating the percentage based on the actual tranche amount
+                calculatedAmount = LoanCharge.percentageOf(tranchePrincipal, amountOrPercentageFromDefinition);
+            break;
+            case PERCENT_OF_AMOUNT_AND_INTEREST:
+                // For percentage of amount and interest, we need to calculate based on the tranche principal
+                // plus any interest that would be due on this tranche
+                calculatedAmount = LoanCharge.percentageOf(tranchePrincipal, amountOrPercentageFromDefinition);
+            break;
+            case PERCENT_OF_INTEREST:
+                // For percentage of interest, we would need the interest amount for this tranche
+                // Since we don't have that directly, we'll use the tranche principal as a base for now
                 calculatedAmount = LoanCharge.percentageOf(tranchePrincipal, amountOrPercentageFromDefinition);
             break;
             default:

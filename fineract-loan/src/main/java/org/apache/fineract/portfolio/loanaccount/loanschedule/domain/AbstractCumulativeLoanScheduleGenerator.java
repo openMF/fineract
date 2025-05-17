@@ -51,8 +51,10 @@ import org.apache.fineract.portfolio.loanaccount.data.LoanTermVariationsData;
 import org.apache.fineract.portfolio.loanaccount.data.OutstandingAmountsDTO;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanCharge;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanDisbursementDetails;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanInterestRecalcualtionAdditionalDetails;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanTrancheDisbursementCharge;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransaction;
 import org.apache.fineract.portfolio.loanaccount.domain.transactionprocessor.LoanRepaymentScheduleTransactionProcessor;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanScheduleDTO;
@@ -1963,10 +1965,29 @@ public abstract class AbstractCumulativeLoanScheduleGenerator implements LoanSch
             Collection<LoanTermVariationsData> termVariations);
 
     private BigDecimal deriveTotalChargesDueAtTimeOfDisbursement(final Set<LoanCharge> loanCharges) {
+        return deriveTotalChargesDueAtTimeOfDisbursement(loanCharges, null);
+    }
+
+    private BigDecimal deriveTotalChargesDueAtTimeOfDisbursement(final Set<LoanCharge> loanCharges, final LocalDate disbursementDate) {
         BigDecimal chargesDueAtTimeOfDisbursement = BigDecimal.ZERO;
         for (final LoanCharge loanCharge : loanCharges) {
-            if (loanCharge.isDueAtDisbursement()) {
+            if (loanCharge.isDueAtDisbursement() && !loanCharge.isTrancheDisbursementCharge()) {
+                // Regular disbursement charges
                 chargesDueAtTimeOfDisbursement = chargesDueAtTimeOfDisbursement.add(loanCharge.amount());
+            } else if (loanCharge.isTrancheDisbursementCharge()) {
+                // For tranche disbursement charges, we need to handle them differently
+                if (disbursementDate != null) {
+                    // If a specific disbursement date is provided, only include charges for that date
+                    if (loanCharge.isTrancheDisbursementChargeForDate(disbursementDate)) {
+                        chargesDueAtTimeOfDisbursement = chargesDueAtTimeOfDisbursement.add(loanCharge.amount());
+                    }
+                } else {
+                    // If no specific date is provided, include all tranche disbursement charges
+                    // that are not fully paid and not waived
+                    if (!loanCharge.isFullyPaid() && !loanCharge.isWaived()) {
+                        chargesDueAtTimeOfDisbursement = chargesDueAtTimeOfDisbursement.add(loanCharge.amount());
+                    }
+                }
             }
         }
         return chargesDueAtTimeOfDisbursement;
@@ -2086,7 +2107,24 @@ public abstract class AbstractCumulativeLoanScheduleGenerator implements LoanSch
         Money cumulative = Money.zero(monetaryCurrency);
 
         for (final LoanCharge loanCharge : loanCharges) {
-            if (!loanCharge.isDueAtDisbursement() && loanCharge.isFeeCharge()) {
+            if (loanCharge.isTrancheDisbursementCharge()) {
+                // Handle tranche disbursement charges specifically
+                if (loanCharge.isDueInPeriod(periodStart, periodEnd, isFirstPeriod)) {
+                    if (loanCharge.getChargeCalculation().isPercentageBased()) {
+                        // For percentage-based charges, recalculate based on the tranche amount
+                        LoanTrancheDisbursementCharge trancheDisbursementCharge = loanCharge.getTrancheDisbursementCharge();
+                        if (trancheDisbursementCharge != null) {
+                            Money trancheAmount = Money.of(monetaryCurrency,
+                                    trancheDisbursementCharge.getloanDisbursementDetails().principal());
+                            cumulative = calculateSpecificDueDateChargeWithPercentage(
+                                    trancheAmount, totalInterestChargedForFullLoanTerm, cumulative, loanCharge, mc);
+                        }
+                    } else {
+                        // For flat charges
+                        cumulative = cumulative.plus(loanCharge.amount());
+                    }
+                }
+            } else if (!loanCharge.isDueAtDisbursement() && loanCharge.isFeeCharge()) {
                 boolean isDue = loanCharge.isDueInPeriod(periodStart, periodEnd, isFirstPeriod);
                 if (loanCharge.isInstalmentFee() && isInstallmentChargeApplicable) {
                     cumulative = calculateInstallmentCharge(principalInterestForThisPeriod, cumulative, loanCharge, mc);
