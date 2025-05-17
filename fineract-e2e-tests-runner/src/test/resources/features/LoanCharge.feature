@@ -4804,7 +4804,7 @@ Feature: LoanCharge
     When Admin updates charge "CHARGE_LOAN_TRANCHE_DISBURSEMENT_CHARGE_AMOUNT" with "FLAT" calculation type and 10.0 EUR amount
     When Admin creates a fully customized loan with charges and disbursement details and following data:
       | LoanProduct                                                                                | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            | charge calculation type                        | charge amount | 1st_tranche_disb_expected_date | 1st_tranche_disb_principal | 2nd_tranche_disb_expected_date | 2nd_tranche_disb_principal |
-      | LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALC_DAILY_MULTIDISBURSE_EXPECT_TRANCHE | 01 January 2024   | 130            | 7                      | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 6                 | MONTHS                | 1              | MONTHS                 | 6                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION | CHARGE_LOAN_TRANCHE_DISBURSEMENT_CHARGE_AMOUNT | 10.0          | 01 January 2024                | 100.0                      | 01 February 2024               | 30.0                       |
+      | LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALC_DAILY_MULTIDISBURSE_EXPECT_TRANCHE | 01 January 2024   | 130            | 7                      | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 6                 | MONTHS                | 1              | MONTHS                 | 6                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION | CHARGE_LOAN_TRANCHE_DISBURSEMENT_CHARGE_AMOUNT | 10.0          | 01 January 2024                | 100.0                      | 03 March 2024                  | 30.0                       |
     Then Loan Charges tab has the following data:
       | Name                               | isPenalty | Payment due at       | Due as of       | Calculation type | Due  | Paid | Waived | Outstanding |
       | Tranche Disbursement Charge Amount | false     | Tranche Disbursement | 01 January 2024 | Flat             | 10.0 | 0.0  | 0.0    | 10.0        |
@@ -4876,6 +4876,7 @@ Feature: LoanCharge
       | 01 March 2024    | Repayment                           | 17.01  | 16.52     | 0.49     | 0.0  | 0.0       | 67.05        | false    | false    |
     # Add additional disbursement on 03 March 2024
     When Admin sets the business date to "03 March 2024"
+    And Admin successfully add disbursement detail to the loan on "03 March 2024" with 30 EUR transaction amount
     And Admin successfully disburse the loan on "03 March 2024" with "30" EUR transaction amount
     Then Loan Repayment schedule has 6 periods, with the following data for periods:
       | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid  | In advance | Late | Outstanding |
@@ -4915,7 +4916,7 @@ Feature: LoanCharge
     When Admin updates charge "CHARGE_LOAN_TRANCHE_DISBURSEMENT_CHARGE_PERCENT" with "PERCENTAGE_DISBURSEMENT_AMOUNT" calculation type and 1.0 % of transaction amount
     When Admin creates a fully customized loan with charges and disbursement details and following data:
       | LoanProduct                                                                                | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            | charge calculation type                         | charge amount | 1st_tranche_disb_expected_date | 1st_tranche_disb_principal | 2nd_tranche_disb_expected_date | 2nd_tranche_disb_principal |
-      | LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALC_DAILY_MULTIDISBURSE_EXPECT_TRANCHE | 01 January 2024   | 130            | 7                      | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 6                 | MONTHS                | 1              | MONTHS                 | 6                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION | CHARGE_LOAN_TRANCHE_DISBURSEMENT_CHARGE_PERCENT | 1.0           | 01 January 2024                | 100.0                      | 01 February 2024               | 30.0                       |
+      | LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALC_DAILY_MULTIDISBURSE_EXPECT_TRANCHE | 01 January 2024   | 130            | 7                      | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 6                 | MONTHS                | 1              | MONTHS                 | 6                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION | CHARGE_LOAN_TRANCHE_DISBURSEMENT_CHARGE_PERCENT | 1.0           | 01 January 2024                | 100.0                      | 03 March 2024                  | 30.0                       |
     Then Loan Charges tab has the following data:
       | Name                                | isPenalty | Payment due at       | Due as of       | Calculation type                | Due | Paid | Waived | Outstanding |
       | Tranche Disbursement Charge Percent | false     | Tranche Disbursement | 01 January 2024 | % Disbursement Amount           | 1.0 | 0.0  | 0.0    | 1.0         |
@@ -4987,6 +4988,7 @@ Feature: LoanCharge
       | 01 March 2024    | Repayment                           | 17.01  | 16.52     | 0.49     | 0.0  | 0.0       | 67.05        | false    | false    |
     # Second disbursement
     When Admin sets the business date to "03 March 2024"
+    And Admin successfully add disbursement detail to the loan on "03 March 2024" with 30 EUR transaction amount
     When Admin successfully disburse the loan on "03 March 2024" with "30" EUR transaction amount
     Then Loan Repayment schedule has 6 periods, with the following data for periods:
       | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid  | In advance | Late | Outstanding |
@@ -5098,6 +5100,7 @@ Feature: LoanCharge
       | 01 March 2024    | Repayment                           | 17.01  | 16.52     | 0.49     | 0.0  | 0.0       | 67.05        | false    | false    |
     # Second disbursement
     When Admin sets the business date to "03 March 2024"
+    And Admin successfully add disbursement detail to the loan on "03 March 2024" with 30 EUR transaction amount
     When Admin successfully disburse the loan on "03 March 2024" with "100" EUR transaction amount
     Then Loan Repayment schedule has 6 periods, with the following data for periods:
       | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid  | In advance | Late | Outstanding |
@@ -5209,6 +5212,7 @@ Feature: LoanCharge
       | 01 March 2024    | Repayment                           | 17.01  | 16.52     | 0.49     | 0.0  | 0.0       | 67.05        | false    | false    |
     # Second disbursement
     When Admin sets the business date to "03 March 2024"
+    And Admin successfully add disbursement detail to the loan on "03 March 2024" with 30 EUR transaction amount
     When Admin successfully disburse the loan on "03 March 2024" with "100" EUR transaction amount
     Then Loan Repayment schedule has 6 periods, with the following data for periods:
       | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid  | In advance | Late | Outstanding |
@@ -5339,6 +5343,7 @@ Feature: LoanCharge
       | 01 March 2024    | Repayment                           | 17.01  | 16.52     | 0.49     | 0.0  | 0.0       | 67.05        | false    | false    |
     # Second disbursement
     When Admin sets the business date to "03 March 2024"
+    And Admin successfully add disbursement detail to the loan on "03 March 2024" with 30 EUR transaction amount
     When Admin successfully disburse the loan on "03 March 2024" with "100" EUR transaction amount
     Then Loan Repayment schedule has 6 periods, with the following data for periods:
       | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid  | In advance | Late | Outstanding |
@@ -5497,6 +5502,7 @@ Feature: LoanCharge
       | 01 March 2024    | Repayment                           | 17.01  | 16.52     | 0.49     | 0.0  | 0.0       | 67.05        | false    | false    |
     # Second disbursement
     When Admin sets the business date to "03 March 2024"
+    And Admin successfully add disbursement detail to the loan on "03 March 2024" with 30 EUR transaction amount
     When Admin successfully disburse the loan on "03 March 2024" with "100" EUR transaction amount
     Then Loan Repayment schedule has 6 periods, with the following data for periods:
       | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid  | In advance | Late | Outstanding |
