@@ -31,6 +31,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.UriInfo;
+import java.time.OffsetDateTime;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.commands.data.AuditData;
 import org.apache.fineract.commands.data.AuditSearchData;
@@ -40,6 +41,7 @@ import org.apache.fineract.infrastructure.core.api.ApiRequestParameterHelper;
 import org.apache.fineract.infrastructure.core.data.PaginationParameters;
 import org.apache.fineract.infrastructure.core.serialization.ApiRequestJsonSerializationSettings;
 import org.apache.fineract.infrastructure.core.serialization.ToApiJsonSerializer;
+import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.utils.SQLBuilder;
 import org.springframework.stereotype.Component;
@@ -74,7 +76,6 @@ public class AuditsApiResource {
             @QueryParam("orderBy") @Parameter(description = "orderBy") final String orderBy,
             @QueryParam("sortOrder") @Parameter(description = "sortOrder") final String sortOrder,
             @QueryParam("paged") @Parameter(description = "paged") final Boolean paged) {
-
         context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
         final PaginationParameters parameters = PaginationParameters.builder().paged(Boolean.TRUE.equals(paged)).limit(limit).offset(offset)
                 .orderBy(orderBy).sortOrder(sortOrder).build();
@@ -95,7 +96,6 @@ public class AuditsApiResource {
     public AuditData retrieveAuditEntry(@PathParam("auditId") @Parameter final Long auditId) {
         context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
         return auditReadPlatformService.retrieveAuditEntry(auditId);
-
     }
 
     @GET
@@ -110,19 +110,23 @@ public class AuditsApiResource {
     }
 
     private SQLBuilder getExtraCriteria(AuditRequest auditRequest) {
-
         SQLBuilder extraCriteria = new SQLBuilder();
         extraCriteria.addNonNullCriteria("aud.action_name = ", auditRequest.getActionName());
         if (auditRequest.getEntityName() != null) {
             extraCriteria.addCriteria("aud.entity_name like", auditRequest.getEntityName() + "%");
         }
         extraCriteria.addNonNullCriteria("aud.resource_id = ", auditRequest.getResourceId());
+        extraCriteria.addNonNullCriteria("aud.subresource_id = ", auditRequest.getSubresourceId());
+        extraCriteria.addNonNullCriteria("aud.resource_identifier = ", auditRequest.getResourceIdentifier());
+        extraCriteria.addNonNullCriteria("aud.transaction_id = ", auditRequest.getTransactionId());
         extraCriteria.addNonNullCriteria("aud.maker_id = ", auditRequest.getMakerId());
         extraCriteria.addNonNullCriteria("aud.checker_id = ", auditRequest.getCheckerId());
-        extraCriteria.addNonNullCriteria("aud.made_on_date >= ", auditRequest.getMakerDateTimeFrom());
-        extraCriteria.addNonNullCriteria("aud.made_on_date <= ", auditRequest.getMakerDateTimeTo());
-        extraCriteria.addNonNullCriteria("aud.checked_on_date >= ", auditRequest.getCheckerDateTimeFrom());
-        extraCriteria.addNonNullCriteria("aud.checked_on_date <= ", auditRequest.getCheckerDateTimeTo());
+        addDateTimeCriteria("made_on_date", "made_on_date_utc", ">=", auditRequest.getMakerDateTimeFrom(), extraCriteria);
+        addDateTimeCriteria("made_on_date", "made_on_date_utc", "<", DateUtils.plusDays(auditRequest.getMakerDateTimeTo(), 1),
+                extraCriteria);
+        addDateTimeCriteria("checked_on_date", "checked_on_date_utc", ">=", auditRequest.getCheckerDateTimeFrom(), extraCriteria);
+        addDateTimeCriteria("checked_on_date", "checked_on_date_utc", "<", DateUtils.plusDays(auditRequest.getCheckerDateTimeTo(), 1),
+                extraCriteria);
         extraCriteria.addNonNullCriteria("aud.status = ", auditRequest.getStatus());
         extraCriteria.addNonNullCriteria("aud.office_id = ", auditRequest.getOfficeId());
         extraCriteria.addNonNullCriteria("aud.group_id = ", auditRequest.getGroupId());
@@ -131,5 +135,15 @@ public class AuditsApiResource {
         extraCriteria.addNonNullCriteria("aud.savings_account_id = ", auditRequest.getSavingsAccountId());
 
         return extraCriteria;
+    }
+
+    private void addDateTimeCriteria(String oldName, String newName, String operator, OffsetDateTime dateTime, SQLBuilder criteria) {
+        if (dateTime != null) {
+            String oldCriteria = SQLBuilder.validateCriteria("aud." + oldName + ' ' + operator);
+            String newCriteria = SQLBuilder.validateCriteria("aud." + newName + ' ' + operator);
+            criteria.addCriteria("(" + oldCriteria + " ? OR " + newCriteria + " ?)");
+            criteria.addArgument(dateTime);
+            criteria.addArgument(dateTime);
+        }
     }
 }

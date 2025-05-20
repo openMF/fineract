@@ -18,6 +18,8 @@
  */
 package org.apache.fineract.infrastructure.security.utils;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,9 +58,33 @@ public class SQLBuilder {
      *            The name of the column to be filtered, and an operator; e.g. "name =" or "age >" (but without '?'
      *            placeholder)
      * @param argument
-     *            The argument to be filtered on (e.g. "Michael" or 123). The null value is explicitly permitted.
+     *            The argument to be filtered on (e.g. "Michael" or 123). The null value is omitted.
      */
     public void addCriteria(String criteria, Object argument) {
+        criteria = validateCriteria(criteria);
+        if (argument != null) {
+            criteria += " ?";
+        }
+        addCriteria(criteria);
+        addArgument(argument);
+    }
+
+    public void addCriteria(String criteria) {
+        if (sb.length() > 0) {
+            sb.append("  AND  ");
+        }
+        sb.append(criteria);
+        crts.add(criteria);
+    }
+
+    public void addArgument(Object argument) {
+        if (argument != null) {
+            args.add(argument);
+        }
+    }
+
+    @NotNull
+    public static String validateCriteria(String criteria) {
         if (criteria == null || criteria.trim().isEmpty()) {
             throw new IllegalArgumentException("criteria cannot be null");
         }
@@ -91,14 +117,7 @@ public class SQLBuilder {
             // arguments)
             throw new IllegalArgumentException("criteria must end with valid SQL operator for WHERE: " + trimmedCriteria);
         }
-
-        if (sb.length() > 0) {
-            sb.append("  AND  ");
-        }
-        sb.append(trimmedCriteria);
-        sb.append(" ?");
-        crts.add(trimmedCriteria);
-        args.add(argument);
+        return trimmedCriteria;
     }
 
     /**

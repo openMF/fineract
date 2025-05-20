@@ -21,10 +21,14 @@ package org.apache.fineract.commands.data.request;
 import jakarta.ws.rs.QueryParam;
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Locale;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.fineract.infrastructure.core.serialization.JsonParserHelper;
+import org.apache.fineract.infrastructure.core.service.DateUtils;
 
 @Setter
 @Getter
@@ -40,18 +44,22 @@ public class AuditRequest implements Serializable {
     private String entityName;
     @QueryParam("resourceId")
     private Long resourceId;
+    @QueryParam("subresourceId")
+    private Long subresourceId;
+    @QueryParam("resourceIdentifier")
+    private String resourceIdentifier;
     @QueryParam("makerId")
     private Long makerId;
     @QueryParam("makerDateTimeFrom")
-    private ZonedDateTime makerDateTimeFrom;
+    private String makerDateFromString;
     @QueryParam("makerDateTimeTo")
-    private ZonedDateTime makerDateTimeTo;
+    private String makerDateToString;
     @QueryParam("checkerId")
     private Long checkerId;
     @QueryParam("checkerDateTimeFrom")
-    private ZonedDateTime checkerDateTimeFrom;
+    private String checkerDateFromString;
     @QueryParam("checkerDateTimeTo")
-    private ZonedDateTime checkerDateTimeTo;
+    private String checkerDateToString;
     @QueryParam("status")
     private String status;
     @QueryParam("clientId")
@@ -64,7 +72,34 @@ public class AuditRequest implements Serializable {
     private Long groupId;
     @QueryParam("savingsAccountId")
     private Long savingsAccountId;
-    @QueryParam("processingResult")
-    private String processingResult;
+    @QueryParam("transactionId")
+    private String transactionId;
+    @QueryParam("locale")
+    private String localeString;
+    @QueryParam("dateFormat")
+    private String dateFormat;
 
+    public Locale getLocale() {
+        return localeString == null ? null : JsonParserHelper.localeFromString(localeString);
+    }
+
+    public OffsetDateTime getMakerDateTimeFrom() {
+        return makerDateFromString == null ? null
+                : DateUtils.parseLocalDate(makerDateFromString, dateFormat, getLocale()).atStartOfDay(ZoneOffset.UTC).toOffsetDateTime();
+    }
+
+    public OffsetDateTime getMakerDateTimeTo() {
+        return makerDateToString == null ? null
+                : DateUtils.parseLocalDate(makerDateToString, dateFormat, getLocale()).atStartOfDay(ZoneOffset.UTC).toOffsetDateTime();
+    }
+
+    public OffsetDateTime getCheckerDateTimeFrom() {
+        return checkerDateFromString == null ? null
+                : DateUtils.parseLocalDate(checkerDateFromString, dateFormat, getLocale()).atStartOfDay(ZoneOffset.UTC).toOffsetDateTime();
+    }
+
+    public OffsetDateTime getCheckerDateTimeTo() {
+        return checkerDateToString == null ? null
+                : DateUtils.parseLocalDate(checkerDateToString, dateFormat, getLocale()).atStartOfDay(ZoneOffset.UTC).toOffsetDateTime();
+    }
 }
