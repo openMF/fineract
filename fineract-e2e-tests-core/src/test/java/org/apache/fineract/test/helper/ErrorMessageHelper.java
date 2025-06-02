@@ -146,6 +146,10 @@ public final class ErrorMessageHelper {
         return String.format("Adding charge to Loan: %s is not allowed. Loan Account is Charged-off", loanIdStr);
     }
 
+    public static String addDisbursementExceedApprovedAmountFailure() {
+        return "Loan can't be disbursed,disburse amount is exceeding approved principal ";
+    }
+
     public static String addCapitalizedIncomeExceedApprovedAmountFailure() {
         return "Failed data validation due to: exceeds.approved.amount.";
     }
