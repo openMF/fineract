@@ -19,12 +19,19 @@
 package org.apache.fineract.test.stepdef.hook;
 
 import io.cucumber.java.After;
+import org.apache.fineract.test.stepdef.loan.LoanStepDef;
 import org.apache.fineract.test.support.TestContext;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.IOException;
 
 public class TestContextLifecycleHook {
+    @Autowired
+    LoanStepDef loanStepDef;
 
     @After
-    public void tearDown() {
+    public void tearDown() throws IOException {
+        loanStepDef.closeLoan();
         TestContext.INSTANCE.reset();
     }
 }
