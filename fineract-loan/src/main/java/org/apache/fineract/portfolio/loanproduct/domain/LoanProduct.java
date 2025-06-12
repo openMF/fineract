@@ -556,6 +556,10 @@ public class LoanProduct extends AbstractPersistableCustom<Long> {
         return AccountingRuleType.ACCRUAL_PERIODIC.equals(this.accountingRule);
     }
 
+    public boolean isProgressiveLoanProduct() {
+        return LoanScheduleType.PROGRESSIVE.equals(this.loanProductRelatedDetail.getLoanScheduleType());
+    }
+
     public Money getPrincipalAmount() {
         return this.loanProductRelatedDetail.getPrincipal();
     }
