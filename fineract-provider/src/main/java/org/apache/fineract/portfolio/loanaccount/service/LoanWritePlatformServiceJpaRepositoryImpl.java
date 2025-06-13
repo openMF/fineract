@@ -2428,6 +2428,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         } else {
             loanScheduleService.recalculateScheduleFromLastTransaction(loan, null, existingTransactionIds, existingReversedTransactionIds,
                     true);
+            loanBalanceService.updateLoanSummaryDerivedFields(loan);
             loan = saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
             businessEventNotifierService.notifyPostBusinessEvent(new LoanInterestRecalculationBusinessEvent(loan));
         }
