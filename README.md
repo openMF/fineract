@@ -148,6 +148,11 @@ UnsupportedClassVersionError: com.example.package/ClassName has been compiled by
 These builds are run in [short-lived virtual machines](https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners), so locally reproducing the same may require additional effort, such as these extra clean-up procedures:
 
 ```bash
+# Might fix `error: cannot find symbol` or other intermittent failures.
+# `doc` here is a placeholder for any task(s) you are trying to run.
+# 💚 This is generally very safe to run between builds.
+./gradlew --refresh-dependencies doc
+
 # Destroy anything untracked by git.
 # ⚠️ This may delete something important, e.g. a finely-tuned IDE configuration.
 git clean --force -dx
