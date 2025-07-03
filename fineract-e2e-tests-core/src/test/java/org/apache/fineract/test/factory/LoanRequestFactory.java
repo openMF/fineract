@@ -312,4 +312,9 @@ public class LoanRequestFactory {
     public static PostLoansLoanIdRequest defaultLoanContractTerminationRequest() {
         return new PostLoansLoanIdRequest().dateFormat(DATE_FORMAT).locale(DEFAULT_LOCALE).note("Contract Termination");
     }
+
+    public static PostLoansLoanIdTransactionsRequest defaultBuyDownFeeIncomeRequest() {
+        return new PostLoansLoanIdTransactionsRequest().transactionDate(DEFAULT_TRANSACTION_DATE).dateFormat(DATE_FORMAT)
+                .locale(DEFAULT_LOCALE).note("Buy Down Fee");
+    }
 }
