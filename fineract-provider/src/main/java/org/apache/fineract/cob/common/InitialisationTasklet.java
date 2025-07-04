@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.cob.loan.LoanCOBConstant;
+import org.apache.fineract.cob.COBConstant;
 import org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType;
 import org.apache.fineract.infrastructure.core.domain.ActionContext;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
@@ -56,7 +56,7 @@ public class InitialisationTasklet implements Tasklet {
         ThreadLocalContextUtil.setActionContext(ActionContext.COB);
 
         String businessDateString = Objects.requireNonNull((String) chunkContext.getStepContext().getStepExecution().getJobExecution()
-                .getExecutionContext().get(LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME));
+                .getExecutionContext().get(COBConstant.BUSINESS_DATE_PARAMETER_NAME));
         LocalDate businessDate = LocalDate.parse(businessDateString, DateTimeFormatter.ISO_DATE);
 
         businessDates.put(BusinessDateType.COB_DATE, businessDate);

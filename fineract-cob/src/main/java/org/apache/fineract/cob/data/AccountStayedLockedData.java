@@ -18,19 +18,15 @@
  */
 package org.apache.fineract.cob.data;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import org.apache.fineract.infrastructure.core.domain.ExternalId;
 
-@AllArgsConstructor
 @Getter
-@NoArgsConstructor
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
-@EqualsAndHashCode
-public class LoanCOBParameter {
+@AllArgsConstructor
+public class AccountStayedLockedData {
 
-    private Long minLoanId;
-    private Long maxLoanId;
+    private Long id;
+    private ExternalId externalId;
+    private String accountNo;
 }

@@ -18,13 +18,15 @@
  */
 package org.apache.fineract.cob.data;
 
-import java.util.List;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 @AllArgsConstructor
-public class LoanAccountsStayedLockedData {
+public class AccountCOBPartition {
 
-    private List<LoanAccountStayedLockedData> loanAccounts;
+    private Long minId;
+    private Long maxId;
+    private Long pageNo;
+    private Long count;
 }

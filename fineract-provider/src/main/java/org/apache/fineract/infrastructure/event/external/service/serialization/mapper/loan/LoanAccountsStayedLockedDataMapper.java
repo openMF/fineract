@@ -19,12 +19,14 @@
 package org.apache.fineract.infrastructure.event.external.service.serialization.mapper.loan;
 
 import org.apache.fineract.avro.loan.v1.LoanAccountsStayedLockedDataV1;
-import org.apache.fineract.cob.data.LoanAccountsStayedLockedData;
+import org.apache.fineract.cob.data.AccountsStayedLockedData;
 import org.apache.fineract.infrastructure.event.external.service.serialization.mapper.support.AvroMapperConfig;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(config = AvroMapperConfig.class)
 public interface LoanAccountsStayedLockedDataMapper {
 
-    LoanAccountsStayedLockedDataV1 map(LoanAccountsStayedLockedData loanAccountStayedLockedData);
+    @Mapping(target = "loanAccounts", source = "accounts")
+    LoanAccountsStayedLockedDataV1 map(AccountsStayedLockedData loanAccountStayedLockedData);
 }

@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.cob.COBBusinessStepService;
+import org.apache.fineract.cob.COBConstant;
 import org.apache.fineract.cob.data.BusinessStepNameAndOrder;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.springframework.batch.core.ExitStatus;
@@ -77,7 +78,7 @@ public abstract class AbstractLoanItemProcessor implements ItemProcessor<Loan, L
     protected void setBusinessDate(StepExecution stepExecution) {
         this.businessDate = LocalDate.parse(
                 Objects.requireNonNull(
-                        (String) stepExecution.getJobExecution().getExecutionContext().get(LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME)),
+                        (String) stepExecution.getJobExecution().getExecutionContext().get(COBConstant.BUSINESS_DATE_PARAMETER_NAME)),
                 DateTimeFormatter.ISO_DATE);
     }
 

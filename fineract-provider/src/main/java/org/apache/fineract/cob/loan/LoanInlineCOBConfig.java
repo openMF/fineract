@@ -19,6 +19,7 @@
 package org.apache.fineract.cob.loan;
 
 import org.apache.fineract.cob.COBBusinessStepService;
+import org.apache.fineract.cob.COBConstant;
 import org.apache.fineract.cob.common.CustomJobParameterResolver;
 import org.apache.fineract.cob.common.ResetContextTasklet;
 import org.apache.fineract.cob.conditions.LoanCOBEnabledCondition;
@@ -135,7 +136,7 @@ public class LoanInlineCOBConfig {
     public ExecutionContextPromotionListener inlineCobPromotionListener() {
         ExecutionContextPromotionListener listener = new ExecutionContextPromotionListener();
         listener.setKeys(new String[] { LoanCOBConstant.LOAN_COB_PARAMETER, LoanCOBConstant.BUSINESS_STEPS,
-                LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME });
+                COBConstant.BUSINESS_DATE_PARAMETER_NAME });
         return listener;
     }
 }

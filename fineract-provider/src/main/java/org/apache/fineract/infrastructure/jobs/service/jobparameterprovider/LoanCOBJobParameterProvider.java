@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.cob.loan.LoanCOBConstant;
+import org.apache.fineract.cob.COBConstant;
 import org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.jobs.data.JobParameterDTO;
@@ -60,10 +60,9 @@ public class LoanCOBJobParameterProvider extends AbstractJobParameterProvider<Lo
         Set<JobParameterDTO> jobParameterDTOListWithCorrectBusinessDate = jobParameterDTOset.isEmpty() ? new HashSet<>()
                 : new HashSet<>(jobParameterDTOset);
         Optional<JobParameterDTO> optionalBusinessDateJobParameter = jobParameterDTOListWithCorrectBusinessDate.stream()
-                .filter(jobParameterDTO -> LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME.equals(jobParameterDTO.getParameterName()))
-                .findFirst();
+                .filter(jobParameterDTO -> COBConstant.BUSINESS_DATE_PARAMETER_NAME.equals(jobParameterDTO.getParameterName())).findFirst();
         if (optionalBusinessDateJobParameter.isEmpty()) {
-            jobParameterDTOListWithCorrectBusinessDate.add(new JobParameterDTO(LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME,
+            jobParameterDTOListWithCorrectBusinessDate.add(new JobParameterDTO(COBConstant.BUSINESS_DATE_PARAMETER_NAME,
                     ThreadLocalContextUtil.getBusinessDateByType(BusinessDateType.COB_DATE).format(DateTimeFormatter.ISO_DATE)));
         }
         return jobParameterDTOListWithCorrectBusinessDate;

@@ -115,7 +115,7 @@ public class CobPartitioningTest extends BaseLoanIntegrationTest {
     }
 
     @Test
-    public void testLoanCOBPartitioningQuery() throws InterruptedException {
+    public void testAccountCOBPartitioningQuery() throws InterruptedException {
         try {
             ExecutorService executorService = Executors.newFixedThreadPool(10);
             globalConfigurationHelper.manageConfigurations(GlobalConfigurationConstants.ENABLE_AUTO_GENERATED_EXTERNAL_ID, true);

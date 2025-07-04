@@ -28,9 +28,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.cob.COBBusinessStepService;
+import org.apache.fineract.cob.data.AccountCOBParameter;
+import org.apache.fineract.cob.data.AccountCOBPartition;
 import org.apache.fineract.cob.data.BusinessStepNameAndOrder;
-import org.apache.fineract.cob.data.LoanCOBParameter;
-import org.apache.fineract.cob.data.LoanCOBPartition;
 import org.apache.fineract.infrastructure.jobs.service.JobName;
 import org.apache.fineract.infrastructure.springbatch.PropertyService;
 import org.springframework.batch.core.JobExecution;
@@ -46,7 +46,7 @@ import org.springframework.util.StopWatch;
 
 @Slf4j
 @RequiredArgsConstructor
-public class LoanCOBPartitioner implements Partitioner {
+public class AccountCOBPartitioner implements Partitioner {
 
     public static final String PARTITION_PREFIX = "partition_";
 
@@ -81,30 +81,30 @@ public class LoanCOBPartitioner implements Partitioner {
         }
         StopWatch sw = new StopWatch();
         sw.start();
-        List<LoanCOBPartition> loanCOBPartitions = new ArrayList<>(
-                retrieveLoanIdService.retrieveLoanCOBPartitions(numberOfDays, businessDate, isCatchUp != null && isCatchUp, partitionSize));
+        List<AccountCOBPartition> loanCOBPartitions = new ArrayList<>(retrieveLoanIdService.retrieveAccountCOBPartitions(numberOfDays,
+                businessDate, isCatchUp != null && isCatchUp, partitionSize));
         sw.stop();
         // if there is no loan to be closed, we still would like to create at least one partition
 
         if (loanCOBPartitions.size() == 0) {
-            loanCOBPartitions.add(new LoanCOBPartition(0L, 0L, 1L, 0L));
+            loanCOBPartitions.add(new AccountCOBPartition(0L, 0L, 1L, 0L));
         }
         log.info(
-                "LoanCOBPartitioner found {} loans to be processed as part of COB. {} partitions were created using partition size {}. RetrieveLoanCOBPartitions was executed in {} ms.",
+                "AccountCOBPartitioner found {} loans to be processed as part of COB. {} partitions were created using partition size {}. RetrieveAccountCOBPartitions was executed in {} ms.",
                 getLoanCount(loanCOBPartitions), loanCOBPartitions.size(), partitionSize, sw.getTotalTimeMillis());
         return loanCOBPartitions.stream()
                 .collect(Collectors.toMap(l -> PARTITION_PREFIX + l.getPageNo(), l -> createNewPartition(cobBusinessSteps, l)));
     }
 
-    private long getLoanCount(List<LoanCOBPartition> loanCOBPartitions) {
-        return loanCOBPartitions.stream().map(LoanCOBPartition::getCount).reduce(0L, Long::sum);
+    private long getLoanCount(List<AccountCOBPartition> loanCOBPartitions) {
+        return loanCOBPartitions.stream().map(AccountCOBPartition::getCount).reduce(0L, Long::sum);
     }
 
-    private ExecutionContext createNewPartition(Set<BusinessStepNameAndOrder> cobBusinessSteps, LoanCOBPartition loanCOBPartition) {
+    private ExecutionContext createNewPartition(Set<BusinessStepNameAndOrder> cobBusinessSteps, AccountCOBPartition loanCOBPartition) {
         ExecutionContext executionContext = new ExecutionContext();
         executionContext.put(LoanCOBConstant.BUSINESS_STEPS, cobBusinessSteps);
         executionContext.put(LoanCOBConstant.LOAN_COB_PARAMETER,
-                new LoanCOBParameter(loanCOBPartition.getMinId(), loanCOBPartition.getMaxId()));
+                new AccountCOBParameter(loanCOBPartition.getMinId(), loanCOBPartition.getMaxId()));
         executionContext.put("partition", PARTITION_PREFIX + loanCOBPartition.getPageNo());
         return executionContext;
     }

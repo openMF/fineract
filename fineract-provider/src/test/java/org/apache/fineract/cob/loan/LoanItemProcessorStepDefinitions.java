@@ -32,6 +32,7 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.TreeMap;
 import org.apache.fineract.cob.COBBusinessStepService;
+import org.apache.fineract.cob.COBConstant;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
@@ -54,7 +55,7 @@ public class LoanItemProcessorStepDefinitions implements En {
     public LoanItemProcessorStepDefinitions() {
         Given("/^The LoanItemProcessor.process method with item (.*)$/", (String loanItem) -> {
             JobExecution jobExecution = new JobExecution(1L);
-            jobExecution.getExecutionContext().put(LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME,
+            jobExecution.getExecutionContext().put(COBConstant.BUSINESS_DATE_PARAMETER_NAME,
                     LocalDate.now(ZoneId.systemDefault()).toString());
             StepExecution stepExecution = new StepExecution("test", jobExecution);
             ExecutionContext stepExecutionContext = new ExecutionContext();

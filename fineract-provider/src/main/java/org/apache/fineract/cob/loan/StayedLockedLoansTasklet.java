@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.cob.data.LoanAccountStayedLockedData;
-import org.apache.fineract.cob.data.LoanAccountsStayedLockedData;
-import org.apache.fineract.cob.data.LoanIdAndExternalIdAndAccountNo;
+import org.apache.fineract.cob.data.AccountIdAndExternalIdAndAccountNo;
+import org.apache.fineract.cob.data.AccountStayedLockedData;
+import org.apache.fineract.cob.data.AccountsStayedLockedData;
 import org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.event.business.service.BusinessEventNotifierService;
@@ -43,21 +43,21 @@ public class StayedLockedLoansTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        LoanAccountsStayedLockedData lockedLoanAccounts = buildLoanAccountData();
-        if (!lockedLoanAccounts.getLoanAccounts().isEmpty()) {
+        AccountsStayedLockedData lockedLoanAccounts = buildLoanAccountData();
+        if (!lockedLoanAccounts.getAccounts().isEmpty()) {
             businessEventNotifierService.notifyPostBusinessEvent(new LoanAccountsStayedLockedBusinessEvent(lockedLoanAccounts));
         }
         return RepeatStatus.FINISHED;
     }
 
-    private LoanAccountsStayedLockedData buildLoanAccountData() {
+    private AccountsStayedLockedData buildLoanAccountData() {
         LocalDate cobBusinessDate = ThreadLocalContextUtil.getBusinessDateByType(BusinessDateType.COB_DATE);
-        List<LoanIdAndExternalIdAndAccountNo> stayedLockedLoanAccounts = retrieveLoanIdService
+        List<AccountIdAndExternalIdAndAccountNo> stayedLockedLoanAccounts = retrieveLoanIdService
                 .findAllStayedLockedByCobBusinessDate(cobBusinessDate);
-        List<LoanAccountStayedLockedData> loanAccounts = new ArrayList<>();
+        List<AccountStayedLockedData> loanAccounts = new ArrayList<>();
         stayedLockedLoanAccounts.forEach(loanAccount -> {
-            loanAccounts.add(new LoanAccountStayedLockedData(loanAccount.getId(), loanAccount.getExternalId(), loanAccount.getAccountNo()));
+            loanAccounts.add(new AccountStayedLockedData(loanAccount.getId(), loanAccount.getExternalId(), loanAccount.getAccountNo()));
         });
-        return new LoanAccountsStayedLockedData(loanAccounts);
+        return new AccountsStayedLockedData(loanAccounts);
     }
 }

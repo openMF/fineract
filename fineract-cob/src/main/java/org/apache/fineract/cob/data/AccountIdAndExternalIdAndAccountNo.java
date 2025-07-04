@@ -18,15 +18,13 @@
  */
 package org.apache.fineract.cob.data;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import org.apache.fineract.infrastructure.core.domain.ExternalId;
 
-@Data
-@AllArgsConstructor
-public class LoanCOBPartition {
+public interface AccountIdAndExternalIdAndAccountNo {
 
-    private Long minId;
-    private Long maxId;
-    private Long pageNo;
-    private Long count;
+    Long getId();
+
+    ExternalId getExternalId();
+
+    String getAccountNo();
 }

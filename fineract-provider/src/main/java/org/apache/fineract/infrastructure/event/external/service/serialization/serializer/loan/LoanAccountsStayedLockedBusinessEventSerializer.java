@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.fineract.avro.generator.ByteBufferSerializable;
 import org.apache.fineract.avro.loan.v1.LoanAccountsStayedLockedDataV1;
-import org.apache.fineract.cob.data.LoanAccountsStayedLockedData;
+import org.apache.fineract.cob.data.AccountsStayedLockedData;
 import org.apache.fineract.cob.loan.LoanAccountsStayedLockedBusinessEvent;
 import org.apache.fineract.infrastructure.event.business.domain.BusinessEvent;
 import org.apache.fineract.infrastructure.event.external.service.serialization.mapper.loan.LoanAccountsStayedLockedDataMapper;
@@ -43,7 +43,7 @@ public class LoanAccountsStayedLockedBusinessEventSerializer implements Business
     @Override
     public <T> ByteBufferSerializable toAvroDTO(BusinessEvent<T> rawEvent) {
         LoanAccountsStayedLockedBusinessEvent event = (LoanAccountsStayedLockedBusinessEvent) rawEvent;
-        LoanAccountsStayedLockedData loanAccounts = event.get();
+        AccountsStayedLockedData loanAccounts = event.get();
         return mapper.map(loanAccounts);
     }
 

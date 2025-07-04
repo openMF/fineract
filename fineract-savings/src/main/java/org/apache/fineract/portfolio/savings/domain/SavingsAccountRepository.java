@@ -19,7 +19,11 @@
 package org.apache.fineract.portfolio.savings.domain;
 
 import jakarta.persistence.LockModeType;
+import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
+import org.apache.fineract.cob.data.AccountIdAndExternalIdAndAccountNo;
+import org.apache.fineract.cob.data.AccountIdAndLastClosedBusinessDate;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -70,4 +74,32 @@ public interface SavingsAccountRepository extends JpaRepository<SavingsAccount, 
 
     @Query("SELECT sa.id FROM SavingsAccount sa WHERE sa.externalId = :externalId")
     Long findIdByExternalId(@Param("externalId") ExternalId externalId);
+
+    @Query("select savingsAccount.id, savingsAccount.externalId, savingsAccount.accountNumber from SavingsAccountLock lock left join SavingsAccount savingsAccount on lock.savingsAccountId = savingsAccount.id where lock.lockPlacedOnCobBusinessDate = :cobBusinessDate")
+    List<AccountIdAndExternalIdAndAccountNo> findAllStayedLockedByCobBusinessDate(@Param("cobBusinessDate") LocalDate cobBusinessDate);
+
+    @Query("select savingsAccount.id, savingsAccount.lastClosedBusinessDate from SavingsAccount savingsAccount where savingsAccount.status in :savingsStatuses and savingsAccount.lastClosedBusinessDate = (select min(savingsAccount.lastClosedBusinessDate) from SavingsAccount sa where sa"
+            + ".status in :savingsStatuses and savingsAccount.lastClosedBusinessDate < :cobBusinessDate)")
+    List<AccountIdAndLastClosedBusinessDate> findOldestCOBProcessedSavings(@Param("cobBusinessDate") LocalDate cobBusinessDate,
+            @Param("savingsStatuses") Collection<Integer> savingsStatuses);
+
+    @Query("select savingsAccount.id, savingsAccount.lastClosedBusinessDate from SavingsAccount savingsAccount where savingsAccount.id IN :savingsIds and savingsAccount.status in :savingsStatuses and savingsAccount.lastClosedBusinessDate < :cobBusinessDate")
+    List<AccountIdAndLastClosedBusinessDate> findAllSavingsBehindBySavingsIdsAndStatuses(@Param("cobBusinessDate") LocalDate cobBusinessDate,
+            @Param("savingsIds") List<Long> savingsIds, @Param("savingsStatuses") Collection<Integer> savingsStatuses);
+
+    @Query("select savingsAccount.id, savingsAccount.lastClosedBusinessDate from SavingsAccount savingsAccount where savingsAccount.id IN :savingsIds and savingsAccount.status in :savingsStatuses and (savingsAccount.lastClosedBusinessDate < :cobBusinessDate or "
+            + "savingsAccount.lastClosedBusinessDate is null)")
+    List<AccountIdAndLastClosedBusinessDate> findAllSavingsBehindOrNullBySavingsIdsAndStatuses(@Param("cobBusinessDate") LocalDate cobBusinessDate,
+            @Param("savingsIds") List<Long> savingsIds, @Param("savingsStatuses") Collection<Integer> savingsStatuses);
+
+    @Query("select savingsAccount.id from SavingsAccount savingsAccount where savingsAccount.id BETWEEN :minAccountId and :maxAccountId and savingsAccount.status in :savingsStatuses and :cobBusinessDate = savingsAccount.lastClosedBusinessDate")
+    List<Long> findAllSavingsByLastClosedBusinessDateNotNullAndMinAndMaxSavingsIdAndStatuses(@Param("minAccountId") Long minAccountId,
+            @Param("maxAccountId") Long maxAccountId, @Param("cobBusinessDate") LocalDate cobBusinessDate,
+            @Param("savingsStatuses") Collection<Integer> savingsStatuses);
+
+    @Query("select savingsAccount.id from SavingsAccount savingsAccount where savingsAccount.id BETWEEN :minAccountId and :maxAccountId and savingsAccount.status in :savingsStatuses and (:cobBusinessDate = savingsAccount.lastClosedBusinessDate or savingsAccount.lastClosedBusinessDate is NULL)")
+    List<Long> findAllSavingsByLastClosedBusinessDateAndMinAndMaxSavingsIdAndStatuses(@Param("minAccountId") Long minAccountId,
+            @Param("maxAccountId") Long maxAccountId, @Param("cobBusinessDate") LocalDate cobBusinessDate,
+            @Param("savingsStatuses") Collection<Integer> savingsStatuses);
+
 }

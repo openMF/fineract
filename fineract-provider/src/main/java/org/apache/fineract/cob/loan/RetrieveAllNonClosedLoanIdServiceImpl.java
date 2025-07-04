@@ -26,10 +26,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.cob.data.LoanCOBParameter;
-import org.apache.fineract.cob.data.LoanCOBPartition;
-import org.apache.fineract.cob.data.LoanIdAndExternalIdAndAccountNo;
-import org.apache.fineract.cob.data.LoanIdAndLastClosedBusinessDate;
+import org.apache.fineract.cob.data.AccountCOBParameter;
+import org.apache.fineract.cob.data.AccountCOBPartition;
+import org.apache.fineract.cob.data.AccountIdAndExternalIdAndAccountNo;
+import org.apache.fineract.cob.data.AccountIdAndLastClosedBusinessDate;
 import org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepository;
@@ -49,7 +49,7 @@ public class RetrieveAllNonClosedLoanIdServiceImpl implements RetrieveLoanIdServ
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Override
-    public List<LoanCOBPartition> retrieveLoanCOBPartitions(Long numberOfDays, LocalDate businessDate, boolean isCatchUp,
+    public List<AccountCOBPartition> retrieveAccountCOBPartitions(Long numberOfDays, LocalDate businessDate, boolean isCatchUp,
             int partitionSize) {
         StringBuilder sql = new StringBuilder();
         sql.append("select min(id) as min, max(id) as max, page, count(id) as count from ");
@@ -71,43 +71,43 @@ public class RetrieveAllNonClosedLoanIdServiceImpl implements RetrieveLoanIdServ
         return namedParameterJdbcTemplate.query(sql.toString(), parameters, RetrieveAllNonClosedLoanIdServiceImpl::mapRow);
     }
 
-    private static LoanCOBPartition mapRow(ResultSet rs, int rowNum) throws SQLException {
-        return new LoanCOBPartition(rs.getLong("min"), rs.getLong("max"), rs.getLong("page"), rs.getLong("count"));
+    private static AccountCOBPartition mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return new AccountCOBPartition(rs.getLong("min"), rs.getLong("max"), rs.getLong("page"), rs.getLong("count"));
     }
 
     @Override
-    public List<LoanIdAndLastClosedBusinessDate> retrieveLoanIdsBehindDate(LocalDate businessDate, List<Long> loanIds) {
+    public List<AccountIdAndLastClosedBusinessDate> retrieveLoanIdsBehindDate(LocalDate businessDate, List<Long> loanIds) {
         return loanRepository.findAllLoansBehindByLoanIdsAndStatuses(businessDate, loanIds, NON_CLOSED_LOAN_STATUSES);
     }
 
     @Override
-    public List<LoanIdAndLastClosedBusinessDate> retrieveLoanIdsBehindDateOrNull(LocalDate businessDate, List<Long> loanIds) {
+    public List<AccountIdAndLastClosedBusinessDate> retrieveLoanIdsBehindDateOrNull(LocalDate businessDate, List<Long> loanIds) {
         return loanRepository.findAllLoansBehindOrNullByLoanIdsAndStatuses(businessDate, loanIds, NON_CLOSED_LOAN_STATUSES);
     }
 
     @Override
-    public List<LoanIdAndLastClosedBusinessDate> retrieveLoanIdsOldestCobProcessed(LocalDate businessDate) {
+    public List<AccountIdAndLastClosedBusinessDate> retrieveLoanIdsOldestCobProcessed(LocalDate businessDate) {
         return loanRepository.findOldestCOBProcessedLoan(businessDate, NON_CLOSED_LOAN_STATUSES);
     }
 
     @Override
-    public List<Long> retrieveAllNonClosedLoansByLastClosedBusinessDateAndMinAndMaxLoanId(LoanCOBParameter loanCOBParameter,
+    public List<Long> retrieveAllNonClosedLoansByLastClosedBusinessDateAndMinAndMaxLoanId(AccountCOBParameter loanCOBParameter,
             boolean isCatchUp) {
         if (isCatchUp) {
             return loanRepository.findAllLoansByLastClosedBusinessDateNotNullAndMinAndMaxLoanIdAndStatuses(
-                    loanCOBParameter.getMinLoanId(), loanCOBParameter.getMaxLoanId(), ThreadLocalContextUtil
+                    loanCOBParameter.getMinAccountId(), loanCOBParameter.getMaxAccountId(), ThreadLocalContextUtil
                             .getBusinessDateByType(BusinessDateType.COB_DATE).minusDays(LoanCOBConstant.NUMBER_OF_DAYS_BEHIND),
                     NON_CLOSED_LOAN_STATUSES);
         } else {
             return loanRepository.findAllLoansByLastClosedBusinessDateAndMinAndMaxLoanIdAndStatuses(
-                    loanCOBParameter.getMinLoanId(), loanCOBParameter.getMaxLoanId(), ThreadLocalContextUtil
+                    loanCOBParameter.getMinAccountId(), loanCOBParameter.getMaxAccountId(), ThreadLocalContextUtil
                             .getBusinessDateByType(BusinessDateType.COB_DATE).minusDays(LoanCOBConstant.NUMBER_OF_DAYS_BEHIND),
                     NON_CLOSED_LOAN_STATUSES);
         }
     }
 
     @Override
-    public List<LoanIdAndExternalIdAndAccountNo> findAllStayedLockedByCobBusinessDate(LocalDate cobBusinessDate) {
+    public List<AccountIdAndExternalIdAndAccountNo> findAllStayedLockedByCobBusinessDate(LocalDate cobBusinessDate) {
         return loanRepository.findAllStayedLockedByCobBusinessDate(cobBusinessDate);
     }
 

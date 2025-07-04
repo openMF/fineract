@@ -16,17 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.cob.data;
+package org.apache.fineract.cob;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import org.apache.fineract.infrastructure.core.domain.ExternalId;
+public final class COBConstant {
 
-@Getter
-@AllArgsConstructor
-public class LoanAccountStayedLockedData {
+    public static final String IS_CATCH_UP_PARAMETER_NAME = "IS_CATCH_UP";
+    public static final String SAVINGS_COB_CUSTOM_JOB_PARAMETER_KEY = "CUSTOM_JOB_PARAMETER_ID";
 
-    private Long id;
-    private ExternalId externalId;
-    private String accountNo;
+    public static final String BUSINESS_DATE_PARAMETER_NAME = "BusinessDate";
+    public static final Long NUMBER_OF_DAYS_BEHIND = 1L;
+
+    private COBConstant() {
+
+    }
 }

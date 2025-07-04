@@ -25,6 +25,7 @@ dependencies {
     }
 
     implementation(project(path: ':fineract-core'))
+    implementation(project(path: ':fineract-cob'))
     implementation(project(path: ':fineract-command'))
     implementation(project(path: ':fineract-validation'))
     implementation(project(path: ':fineract-accounting'))
@@ -80,9 +81,6 @@ dependencies {
 
             'com.google.guava:guava',
             'com.google.code.gson:gson',
-
-            'jakarta.jms:jakarta.jms-api',
-            'jakarta.management.j2ee:jakarta.management.j2ee-api',
 
             'com.squareup.retrofit2:retrofit',
             'com.squareup.okhttp3:okhttp',

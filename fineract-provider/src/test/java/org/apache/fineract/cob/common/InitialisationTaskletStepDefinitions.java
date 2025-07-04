@@ -29,7 +29,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import org.apache.fineract.cob.loan.LoanCOBConstant;
+import org.apache.fineract.cob.COBConstant;
 import org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType;
 import org.apache.fineract.infrastructure.core.domain.ActionContext;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
@@ -70,7 +70,7 @@ public class InitialisationTaskletStepDefinitions implements En {
             businessDates.put(BusinessDateType.COB_DATE, cobBusinessDate);
             ThreadLocalContextUtil.setBusinessDates(businessDates);
             JobExecution jobExecution = new JobExecution(1L);
-            jobExecution.getExecutionContext().put(LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME,
+            jobExecution.getExecutionContext().put(COBConstant.BUSINESS_DATE_PARAMETER_NAME,
                     cobBusinessDate.format(DateTimeFormatter.ISO_DATE));
             StepExecution stepExecution = new StepExecution("step", jobExecution);
             StepContext stepContext = new StepContext(stepExecution);

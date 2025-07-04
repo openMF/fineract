@@ -22,7 +22,7 @@ import static org.mockito.Mockito.times;
 
 import java.time.LocalDate;
 import java.util.List;
-import org.apache.fineract.cob.data.LoanCOBPartition;
+import org.apache.fineract.cob.data.AccountCOBPartition;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -48,10 +48,10 @@ public class RetrieveAllNonClosedLoanIdServiceImplTest {
     @Captor
     private ArgumentCaptor<SqlParameterSource> paramsCaptor;
     @Captor
-    private ArgumentCaptor<RowMapper<LoanCOBPartition>> rowMapper;
+    private ArgumentCaptor<RowMapper<AccountCOBPartition>> rowMapper;
 
     @Test
-    public void testRetrieveLoanCOBPartitionsNoCatchup() {
+    public void testRetrieveAccountCOBPartitionsNoCatchup() {
         String expectedSQL = """
                 select min(id) as min, max(id) as max, page, count(id) as count from
                   (select  floor(((row_number() over(order by id))-1) / :pageSize) as page, t.* from
@@ -59,11 +59,11 @@ public class RetrieveAllNonClosedLoanIdServiceImplTest {
                  group by page
                  order by page
                 """;
-        testRetrieveLoanCOBPartitions(expectedSQL, false);
+        testRetrieveAccountCOBPartitions(expectedSQL, false);
     }
 
     @Test
-    public void testRetrieveLoanCOBPartitionsCatchup() {
+    public void testRetrieveAccountCOBPartitionsCatchup() {
         String expectedSQL = """
                 select min(id) as min, max(id) as max, page, count(id) as count from
                  (select  floor(((row_number() over(order by id))-1) / :pageSize) as page, t.* from
@@ -71,14 +71,14 @@ public class RetrieveAllNonClosedLoanIdServiceImplTest {
                  group by page
                  order by page
                 """;
-        testRetrieveLoanCOBPartitions(expectedSQL, true);
+        testRetrieveAccountCOBPartitions(expectedSQL, true);
     }
 
-    private void testRetrieveLoanCOBPartitions(String expectedSQL, boolean isCatchup) {
+    private void testRetrieveAccountCOBPartitions(String expectedSQL, boolean isCatchup) {
         RetrieveAllNonClosedLoanIdServiceImpl service = new RetrieveAllNonClosedLoanIdServiceImpl(loanRepository,
                 namedParameterJdbcTemplate);
         LocalDate businessDate = LocalDate.parse("2023-06-28");
-        service.retrieveLoanCOBPartitions(1L, businessDate, isCatchup, 5);
+        service.retrieveAccountCOBPartitions(1L, businessDate, isCatchup, 5);
         Mockito.verify(namedParameterJdbcTemplate, times(1)).query(sqlCaptor.capture(), paramsCaptor.capture(), rowMapper.capture());
         Assertions.assertEquals(normalize(expectedSQL), normalize(sqlCaptor.getValue()));
         Assertions.assertEquals(5, paramsCaptor.getValue().getValue("pageSize"));

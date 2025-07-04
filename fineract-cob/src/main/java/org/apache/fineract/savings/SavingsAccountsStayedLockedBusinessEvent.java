@@ -16,15 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.cob.data;
+package org.apache.fineract.cob.savings;
 
-import org.apache.fineract.infrastructure.core.domain.ExternalId;
+import org.apache.fineract.cob.data.AccountsStayedLockedData;
+import org.apache.fineract.infrastructure.event.business.domain.AbstractBusinessEvent;
 
-public interface LoanIdAndExternalIdAndAccountNo {
+public class SavingsAccountsStayedLockedBusinessEvent extends AbstractBusinessEvent<AccountsStayedLockedData> {
 
-    Long getId();
+    private static final String CATEGORY = "Savings COB";
+    private static final String TYPE = "SavingsAccountsStayedLockedBusinessEvent";
 
-    ExternalId getExternalId();
+    public SavingsAccountsStayedLockedBusinessEvent(AccountsStayedLockedData value) {
+        super(value);
+    }
 
-    String getAccountNo();
+    @Override
+    public String getType() {
+        return TYPE;
+    }
+
+    @Override
+    public String getCategory() {
+        return CATEGORY;
+    }
+
+    @Override
+    public Long getAggregateRootId() {
+        return null;
+    }
 }

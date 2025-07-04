@@ -18,15 +18,15 @@
  */
 package org.apache.fineract.cob.loan;
 
-import org.apache.fineract.cob.data.LoanAccountsStayedLockedData;
+import org.apache.fineract.cob.data.AccountsStayedLockedData;
 import org.apache.fineract.infrastructure.event.business.domain.AbstractBusinessEvent;
 
-public class LoanAccountsStayedLockedBusinessEvent extends AbstractBusinessEvent<LoanAccountsStayedLockedData> {
+public class LoanAccountsStayedLockedBusinessEvent extends AbstractBusinessEvent<AccountsStayedLockedData> {
 
     private static final String CATEGORY = "Loan COB";
     private static final String TYPE = "LoanAccountsStayedLockedBusinessEvent";
 
-    public LoanAccountsStayedLockedBusinessEvent(LoanAccountsStayedLockedData value) {
+    public LoanAccountsStayedLockedBusinessEvent(AccountsStayedLockedData value) {
         super(value);
     }
 

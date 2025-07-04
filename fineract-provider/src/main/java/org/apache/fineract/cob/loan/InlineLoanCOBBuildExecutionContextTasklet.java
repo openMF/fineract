@@ -30,6 +30,7 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.cob.COBBusinessStepService;
+import org.apache.fineract.cob.COBConstant;
 import org.apache.fineract.cob.common.CustomJobParameterResolver;
 import org.apache.fineract.cob.data.BusinessStepNameAndOrder;
 import org.apache.fineract.cob.exceptions.CustomJobParameterNotFoundException;
@@ -67,7 +68,7 @@ public class InlineLoanCOBBuildExecutionContextTasklet implements Tasklet {
                 getLoanIdsFromJobParameters(chunkContext));
         contribution.getStepExecution().getExecutionContext().put(LoanCOBConstant.BUSINESS_STEPS, cobBusinessSteps);
         String businessDateString = getBusinessDateFromJobParameters(chunkContext);
-        contribution.getStepExecution().getExecutionContext().put(LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME, businessDateString);
+        contribution.getStepExecution().getExecutionContext().put(COBConstant.BUSINESS_DATE_PARAMETER_NAME, businessDateString);
         LocalDate businessDate = LocalDate.parse(businessDateString, DateTimeFormatter.ISO_DATE);
         businessDates.put(BusinessDateType.COB_DATE, businessDate);
         businessDates.put(BusinessDateType.BUSINESS_DATE, businessDate.plusDays(1));
@@ -76,15 +77,14 @@ public class InlineLoanCOBBuildExecutionContextTasklet implements Tasklet {
     }
 
     private String getBusinessDateFromJobParameters(ChunkContext chunkContext) {
-        Long customJobParameterId = (Long) chunkContext.getStepContext().getJobParameters()
-                .get(LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME);
+        Long customJobParameterId = (Long) chunkContext.getStepContext().getJobParameters().get(COBConstant.BUSINESS_DATE_PARAMETER_NAME);
         CustomJobParameter customJobParameter = customJobParameterRepository.findById(customJobParameterId)
                 .orElseThrow(() -> new LoanNotFoundException(customJobParameterId));
         String parameterJson = customJobParameter.getParameterJson();
         Set<JobParameterDTO> jobParameters = gson.fromJson(parameterJson, new TypeToken<HashSet<JobParameterDTO>>() {}.getType());
         JobParameterDTO businessDateParameter = jobParameters.stream()
-                .filter(jobParameterDTO -> jobParameterDTO.getParameterName().equals(LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME))
-                .findFirst().orElseThrow(() -> new CustomJobParameterNotFoundException(LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME));
+                .filter(jobParameterDTO -> jobParameterDTO.getParameterName().equals(COBConstant.BUSINESS_DATE_PARAMETER_NAME)).findFirst()
+                .orElseThrow(() -> new CustomJobParameterNotFoundException(COBConstant.BUSINESS_DATE_PARAMETER_NAME));
         return businessDateParameter.getParameterValue();
     }
 

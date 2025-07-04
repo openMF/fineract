@@ -58,6 +58,7 @@ public enum JobName {
     PURGE_EXTERNAL_EVENTS("Purge External Events"), //
     PURGE_PROCESSED_COMMANDS("Purge Processed Commands"), //
     ACCRUAL_ACTIVITY_POSTING("Accrual Activity Posting"), //
+    SAVINGS_COB("Savings COB"), //
     ;
 
     private final String name;

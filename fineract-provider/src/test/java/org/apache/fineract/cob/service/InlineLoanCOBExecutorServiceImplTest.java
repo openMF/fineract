@@ -34,7 +34,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
-import org.apache.fineract.cob.data.LoanIdAndLastClosedBusinessDate;
+import org.apache.fineract.cob.data.AccountIdAndLastClosedBusinessDate;
 import org.apache.fineract.cob.exceptions.LoanAccountLockCannotBeOverruledException;
 import org.apache.fineract.cob.loan.RetrieveLoanIdService;
 import org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType;
@@ -82,7 +82,7 @@ class InlineLoanCOBExecutorServiceImplTest {
     @Test
     void shouldExceptionThrownIfLoanIsAlreadyLocked() {
         JsonCommand command = mock(JsonCommand.class);
-        LoanIdAndLastClosedBusinessDate loan = mock(LoanIdAndLastClosedBusinessDate.class);
+        AccountIdAndLastClosedBusinessDate loan = mock(AccountIdAndLastClosedBusinessDate.class);
         ThreadLocalContextUtil.setTenant(new FineractPlatformTenant(1L, "default", "Default", "Asia/Kolkata", null));
         HashMap<BusinessDateType, LocalDate> businessDates = new HashMap<>();
         LocalDate businessDate = LocalDate.now(ZoneId.systemDefault());
@@ -104,9 +104,9 @@ class InlineLoanCOBExecutorServiceImplTest {
     @Test
     void shouldListBePartitioned() {
         JsonCommand command = mock(JsonCommand.class);
-        LoanIdAndLastClosedBusinessDate loan1 = mock(LoanIdAndLastClosedBusinessDate.class);
-        LoanIdAndLastClosedBusinessDate loan2 = mock(LoanIdAndLastClosedBusinessDate.class);
-        LoanIdAndLastClosedBusinessDate loan3 = mock(LoanIdAndLastClosedBusinessDate.class);
+        AccountIdAndLastClosedBusinessDate loan1 = mock(AccountIdAndLastClosedBusinessDate.class);
+        AccountIdAndLastClosedBusinessDate loan2 = mock(AccountIdAndLastClosedBusinessDate.class);
+        AccountIdAndLastClosedBusinessDate loan3 = mock(AccountIdAndLastClosedBusinessDate.class);
         ThreadLocalContextUtil.setTenant(new FineractPlatformTenant(1L, "default", "Default", "Asia/Kolkata", null));
         HashMap<BusinessDateType, LocalDate> businessDates = new HashMap<>();
         LocalDate businessDate = LocalDate.now(ZoneId.systemDefault());
@@ -129,9 +129,9 @@ class InlineLoanCOBExecutorServiceImplTest {
     @Test
     void shouldOldestCloseBusinessDateReturnWithCorrectDate()
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        LoanIdAndLastClosedBusinessDate loan1 = mock(LoanIdAndLastClosedBusinessDate.class);
-        LoanIdAndLastClosedBusinessDate loan2 = mock(LoanIdAndLastClosedBusinessDate.class);
-        LoanIdAndLastClosedBusinessDate loan3 = mock(LoanIdAndLastClosedBusinessDate.class);
+        AccountIdAndLastClosedBusinessDate loan1 = mock(AccountIdAndLastClosedBusinessDate.class);
+        AccountIdAndLastClosedBusinessDate loan2 = mock(AccountIdAndLastClosedBusinessDate.class);
+        AccountIdAndLastClosedBusinessDate loan3 = mock(AccountIdAndLastClosedBusinessDate.class);
         when(loan1.getLastClosedBusinessDate()).thenReturn(null);
         when(loan2.getLastClosedBusinessDate()).thenReturn(LocalDate.of(2023, 1, 10));
         when(loan3.getLastClosedBusinessDate()).thenReturn(LocalDate.of(2023, 1, 11));

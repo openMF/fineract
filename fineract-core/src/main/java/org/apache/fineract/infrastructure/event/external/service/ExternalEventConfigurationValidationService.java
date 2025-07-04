@@ -77,6 +77,8 @@ public class ExternalEventConfigurationValidationService implements Initializing
             log.debug("Missing from eventClasses: {}", CollectionUtils.subtract(eventClasses, eventConfigurations));
             log.debug("Missing from eventConfigurations: {}", CollectionUtils.subtract(eventConfigurations, eventClasses));
         }
+        log.info("Missing from eventClasses: {}", CollectionUtils.subtract(eventClasses, eventConfigurations));
+        log.info("Missing from eventConfigurations: {}", CollectionUtils.subtract(eventConfigurations, eventClasses));
 
         if (eventClasses.size() != eventConfigurations.size()) {
             throw new ExternalEventConfigurationNotFoundException();

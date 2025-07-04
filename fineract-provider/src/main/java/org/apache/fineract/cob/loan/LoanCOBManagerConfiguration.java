@@ -22,6 +22,8 @@ import static org.apache.fineract.cob.loan.LoanCOBConstant.JOB_NAME;
 
 import java.util.List;
 import org.apache.fineract.cob.COBBusinessStepService;
+import org.apache.fineract.cob.COBConstant;
+import org.apache.fineract.cob.ResolveAccountCOBCustomJobParametersTasklet;
 import org.apache.fineract.cob.common.CustomJobParameterResolver;
 import org.apache.fineract.cob.conditions.BatchManagerCondition;
 import org.apache.fineract.cob.listener.COBExecutionListenerRunner;
@@ -82,8 +84,8 @@ public class LoanCOBManagerConfiguration {
 
     @Bean
     @StepScope
-    public LoanCOBPartitioner partitioner() {
-        return new LoanCOBPartitioner(propertyService, cobBusinessStepService, retrieveLoanIdService, jobOperator, jobExplorer,
+    public AccountCOBPartitioner partitioner() {
+        return new AccountCOBPartitioner(propertyService, cobBusinessStepService, retrieveLoanIdService, jobOperator, jobExplorer,
                 LoanCOBConstant.NUMBER_OF_DAYS_BEHIND);
     }
 
@@ -109,8 +111,8 @@ public class LoanCOBManagerConfiguration {
 
     @Bean
     @JobScope
-    public ResolveLoanCOBCustomJobParametersTasklet resolveCustomJobParametersTasklet() {
-        return new ResolveLoanCOBCustomJobParametersTasklet(customJobParameterResolver);
+    public ResolveAccountCOBCustomJobParametersTasklet resolveCustomJobParametersTasklet() {
+        return new ResolveAccountCOBCustomJobParametersTasklet(customJobParameterResolver);
     }
 
     @Bean
@@ -132,7 +134,7 @@ public class LoanCOBManagerConfiguration {
     @Bean
     public ExecutionContextPromotionListener customJobParametersPromotionListener() {
         ExecutionContextPromotionListener listener = new ExecutionContextPromotionListener();
-        listener.setKeys(new String[] { LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME, LoanCOBConstant.IS_CATCH_UP_PARAMETER_NAME });
+        listener.setKeys(new String[] { COBConstant.BUSINESS_DATE_PARAMETER_NAME, LoanCOBConstant.IS_CATCH_UP_PARAMETER_NAME });
         return listener;
     }
 }

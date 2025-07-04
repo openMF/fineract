@@ -36,8 +36,9 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.fineract.cob.COBConstant;
 import org.apache.fineract.cob.conditions.LoanCOBEnabledCondition;
-import org.apache.fineract.cob.data.LoanIdAndLastClosedBusinessDate;
+import org.apache.fineract.cob.data.AccountIdAndLastClosedBusinessDate;
 import org.apache.fineract.cob.domain.LoanAccountLock;
 import org.apache.fineract.cob.domain.LoanAccountLockRepository;
 import org.apache.fineract.cob.domain.LockOwner;
@@ -111,7 +112,7 @@ public class InlineLoanCOBExecutorServiceImpl implements InlineExecutorService<L
     @Override
     public void execute(List<Long> loanIds, String jobName) {
         LocalDate cobBusinessDate = ThreadLocalContextUtil.getBusinessDateByType(BusinessDateType.COB_DATE);
-        List<LoanIdAndLastClosedBusinessDate> loansToBeProcessed = getLoansToBeProcessed(loanIds, cobBusinessDate);
+        List<AccountIdAndLastClosedBusinessDate> loansToBeProcessed = getLoansToBeProcessed(loanIds, cobBusinessDate);
         LocalDate executingBusinessDate = getOldestCOBBusinessDate(loansToBeProcessed).plusDays(1);
         if (!loansToBeProcessed.isEmpty()) {
             while (!DateUtils.isAfter(executingBusinessDate, cobBusinessDate)) {
@@ -121,7 +122,8 @@ public class InlineLoanCOBExecutorServiceImpl implements InlineExecutorService<L
         }
     }
 
-    private List<Long> getLoanIdsToBeProcessed(List<LoanIdAndLastClosedBusinessDate> loansToBeProcessed, LocalDate executingBusinessDate) {
+    private List<Long> getLoanIdsToBeProcessed(List<AccountIdAndLastClosedBusinessDate> loansToBeProcessed,
+            LocalDate executingBusinessDate) {
         List<Long> loanIdsToBeProcessed = new ArrayList<>();
         loansToBeProcessed.forEach(loan -> {
             if (loan.getLastClosedBusinessDate() != null) {
@@ -159,16 +161,16 @@ public class InlineLoanCOBExecutorServiceImpl implements InlineExecutorService<L
         }
     }
 
-    private LocalDate getOldestCOBBusinessDate(List<LoanIdAndLastClosedBusinessDate> loans) {
-        LoanIdAndLastClosedBusinessDate oldestLoan = loans.stream().min(Comparator
-                .comparing(LoanIdAndLastClosedBusinessDate::getLastClosedBusinessDate, Comparator.nullsLast(Comparator.naturalOrder())))
+    private LocalDate getOldestCOBBusinessDate(List<AccountIdAndLastClosedBusinessDate> loans) {
+        AccountIdAndLastClosedBusinessDate oldestLoan = loans.stream().min(Comparator
+                .comparing(AccountIdAndLastClosedBusinessDate::getLastClosedBusinessDate, Comparator.nullsLast(Comparator.naturalOrder())))
                 .orElse(null);
         return oldestLoan != null && oldestLoan.getLastClosedBusinessDate() != null ? oldestLoan.getLastClosedBusinessDate()
                 : ThreadLocalContextUtil.getBusinessDateByType(BusinessDateType.COB_DATE).minusDays(1);
     }
 
-    private List<LoanIdAndLastClosedBusinessDate> getLoansToBeProcessed(List<Long> loanIds, LocalDate cobBusinessDate) {
-        List<LoanIdAndLastClosedBusinessDate> loanIdAndLastClosedBusinessDates = new ArrayList<>();
+    private List<AccountIdAndLastClosedBusinessDate> getLoansToBeProcessed(List<Long> loanIds, LocalDate cobBusinessDate) {
+        List<AccountIdAndLastClosedBusinessDate> loanIdAndLastClosedBusinessDates = new ArrayList<>();
         List<List<Long>> partitions = Lists.partition(loanIds, fineractProperties.getQuery().getInClauseParameterSizeLimit());
         partitions.forEach(partition -> loanIdAndLastClosedBusinessDates
                 .addAll(retrieveLoanIdService.retrieveLoanIdsBehindDateOrNull(cobBusinessDate, partition)));
@@ -206,13 +208,13 @@ public class InlineLoanCOBExecutorServiceImpl implements InlineExecutorService<L
         JobParameterDTO loanIdsParameterDTO = new JobParameterDTO(LoanCOBConstant.LOAN_IDS_PARAMETER_NAME, parameterJson);
         Set<JobParameterDTO> loanIdJobParameter = Collections.singleton(loanIdsParameterDTO);
         Long loanIdsJobParameterId = customJobParameterRepository.save(loanIdJobParameter);
-        JobParameterDTO businessDateParameterDTO = new JobParameterDTO(LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME,
+        JobParameterDTO businessDateParameterDTO = new JobParameterDTO(COBConstant.BUSINESS_DATE_PARAMETER_NAME,
                 businessDate.format(DateTimeFormatter.ISO_DATE));
         Set<JobParameterDTO> businessDateJobParameter = Collections.singleton(businessDateParameterDTO);
         Long businessDateJobParameterId = customJobParameterRepository.save(businessDateJobParameter);
         Map<String, JobParameter<?>> jobParameterMap = new HashMap<>();
         jobParameterMap.put(SpringBatchJobConstants.CUSTOM_JOB_PARAMETER_ID_KEY, new JobParameter<>(loanIdsJobParameterId, Long.class));
-        jobParameterMap.put(LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME, new JobParameter<>(businessDateJobParameterId, Long.class));
+        jobParameterMap.put(COBConstant.BUSINESS_DATE_PARAMETER_NAME, new JobParameter<>(businessDateJobParameterId, Long.class));
         return jobParameterMap;
     }
 

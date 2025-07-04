@@ -54,6 +54,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.LocalDate;
@@ -341,6 +343,9 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
     private BigDecimal savingsOnHoldAmount;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "account", orphanRemoval = true, fetch = FetchType.LAZY)
     protected List<InteropIdentifier> identifiers = new ArrayList<>();
+
+    @Column(name = "last_closed_business_date")
+    private LocalDate lastClosedBusinessDate;
 
     public transient ConfigurationDomainService configurationDomainService;
 

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.cob.loan;
+package org.apache.fineract.cob;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,14 +28,14 @@ import org.springframework.batch.repeat.RepeatStatus;
 
 @Slf4j
 @RequiredArgsConstructor
-public class ResolveLoanCOBCustomJobParametersTasklet implements Tasklet {
+public class ResolveAccountCOBCustomJobParametersTasklet implements Tasklet {
 
     private final CustomJobParameterResolver customJobParameterResolver;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        customJobParameterResolver.resolve(contribution, chunkContext, LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME,
-                LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME);
+        customJobParameterResolver.resolve(contribution, chunkContext, COBConstant.BUSINESS_DATE_PARAMETER_NAME,
+                COBConstant.BUSINESS_DATE_PARAMETER_NAME);
         return RepeatStatus.FINISHED;
     }
 }
