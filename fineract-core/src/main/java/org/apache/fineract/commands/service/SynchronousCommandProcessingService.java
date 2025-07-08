@@ -132,10 +132,6 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
                 storeCommandIdInContext(commandSource); // Store command id as a request attribute
             }
 
-            if (isEnclosingTransaction) {
-                BatchRequestContextHolder.addCommandSource(commandSource);
-            }
-
             setIdempotencyKeyStoreFlag(true);
 
             return executeCommand(wrapper, command, isApprovedByChecker, commandSource, user, isEnclosingTransaction);

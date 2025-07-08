@@ -18,11 +18,8 @@
  */
 package org.apache.fineract.infrastructure.core.domain;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.apache.fineract.commands.domain.CommandSource;
 import org.springframework.transaction.TransactionStatus;
 
 public final class BatchRequestContextHolder {
@@ -34,8 +31,6 @@ public final class BatchRequestContextHolder {
     private static final ThreadLocal<Optional<TransactionStatus>> batchTransaction = ThreadLocal.withInitial(Optional::empty);
 
     private static final ThreadLocal<Boolean> isEnclosingTransaction = new ThreadLocal<>();
-
-    private static final ThreadLocal<List<CommandSource>> commandSources = ThreadLocal.withInitial(ArrayList::new);
 
     /**
      * True if the batch attributes are set
@@ -92,7 +87,6 @@ public final class BatchRequestContextHolder {
 
     public static void resetIsEnclosingTransaction() {
         isEnclosingTransaction.remove();
-        commandSources.get().clear();
     }
 
     /**
@@ -136,15 +130,4 @@ public final class BatchRequestContextHolder {
     public static void resetTransaction() {
         batchTransaction.set(Optional.empty());
     }
-
-    public static void addCommandSource(final CommandSource commandSource) {
-        if (isEnclosingTransaction() && commandSource != null) {
-            commandSources.get().add(commandSource);
-        }
-    }
-
-    public static List<CommandSource> getCommandSources() {
-        return new ArrayList<>(commandSources.get());
-    }
-
 }

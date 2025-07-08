@@ -19,7 +19,6 @@
 package org.apache.fineract.batch.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -42,10 +41,7 @@ import org.apache.fineract.batch.domain.BatchRequest;
 import org.apache.fineract.batch.domain.BatchResponse;
 import org.apache.fineract.batch.exception.ErrorInfo;
 import org.apache.fineract.commands.configuration.RetryConfigurationAssembler;
-import org.apache.fineract.commands.domain.CommandSource;
-import org.apache.fineract.commands.service.CommandSourceService;
 import org.apache.fineract.infrastructure.core.config.FineractProperties;
-import org.apache.fineract.infrastructure.core.domain.BatchRequestContextHolder;
 import org.apache.fineract.infrastructure.core.domain.FineractRequestContextHolder;
 import org.apache.fineract.infrastructure.core.exception.ErrorHandler;
 import org.apache.fineract.infrastructure.core.filters.BatchRequestPreprocessor;
@@ -79,9 +75,6 @@ class BatchApiServiceImplTest {
     private ErrorHandler errorHandler;
 
     @Mock
-    private CommandSourceService commandSourceService;
-
-    @Mock
     private RetryRegistry registry;
 
     @Mock
@@ -104,7 +97,7 @@ class BatchApiServiceImplTest {
     @BeforeEach
     void setUp() {
         batchApiService = new BatchApiServiceImpl(strategyProvider, resolutionHelper, transactionManager, errorHandler, List.of(),
-                batchPreprocessors, retryConfigurationAssembler, commandSourceService);
+                batchPreprocessors, retryConfigurationAssembler);
         batchApiService.setEntityManager(entityManager);
         request = new BatchRequest();
         request.setRequestId(1L);
@@ -232,32 +225,6 @@ class BatchApiServiceImplTest {
         assertEquals(200, result.get(0).getStatusCode());
         assertTrue(result.get(0).getBody().contains("Success"));
         Mockito.verifyNoInteractions(entityManager);
-    }
-
-    @Test
-    void testFailedCommandSourceEntriesAreSavedOnBatchFailure() {
-        final List<BatchRequest> requestList = List.of(request);
-        when(strategyProvider.getCommandStrategy(any())).thenReturn(commandStrategy);
-        when(commandStrategy.execute(any(), any())).thenThrow(new RuntimeException("Test failure"));
-
-        final ErrorInfo errorInfo = mock(ErrorInfo.class);
-        when(errorInfo.getMessage()).thenReturn("Test failure");
-        when(errorInfo.getStatusCode()).thenReturn(500);
-        when(errorHandler.handle(any())).thenReturn(errorInfo);
-
-        when(transactionManager.getTransaction(any()))
-                .thenReturn(new DefaultTransactionStatus("txn_name", null, true, true, false, false, false, null));
-
-        final CommandSource mockCommandSource = mock(CommandSource.class);
-        BatchRequestContextHolder.setIsEnclosingTransaction(true);
-        BatchRequestContextHolder.addCommandSource(mockCommandSource);
-
-        final BatchResponse result = batchApiService.handleBatchRequestsWithEnclosingTransaction(requestList, uriInfo).getFirst();
-        assertNotNull(result);
-        assertEquals(500, result.getStatusCode());
-        assertTrue(result.getBody().contains("Test failure"));
-
-        verify(commandSourceService, times(1)).saveFailedCommandSourcesNewTransaction(any());
     }
 
     private static final class RetryException extends RuntimeException {}

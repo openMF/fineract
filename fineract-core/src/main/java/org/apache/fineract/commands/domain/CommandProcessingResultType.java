@@ -34,8 +34,7 @@ public enum CommandProcessingResultType {
     AWAITING_APPROVAL(2, "commandProcessingResultType.awaiting.approval"), //
     REJECTED(3, "commandProcessingResultType.rejected"), //
     UNDER_PROCESSING(4, "commandProcessingResultType.underProcessing"), //
-    ERROR(5, "commandProcessingResultType.error"), //
-    ROLLBACK(6, "commandProcessingResultType.rollback");
+    ERROR(5, "commandProcessingResultType.error");
 
     private static final Map<Integer, CommandProcessingResultType> BY_ID = Arrays.stream(values())
             .collect(Collectors.toMap(CommandProcessingResultType::getValue, v -> v));
