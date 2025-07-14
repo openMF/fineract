@@ -3362,7 +3362,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         final Map<String, Object> actualChanges = new LinkedHashMap<>();
         List<LoanTransaction> loanTransactions = loan.retrieveListOfTransactionsByType(LoanTransactionType.DISBURSEMENT);
         loanTransactions.sort(Comparator.comparing(LoanTransaction::getId));
-        final LoanTransaction lastDisbursalTransaction = loanTransactions.getLast();
+        final LoanTransaction lastDisbursalTransaction = loanTransactions.get(loanTransactions.size() - 1);
         final LocalDate lastTransactionDate = lastDisbursalTransaction.getTransactionDate();
 
         existingTransactionIds.addAll(loanTransactionRepository.findTransactionIdsByLoan(loan));

@@ -26,8 +26,10 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -250,13 +252,14 @@ public final class ProgressiveEMICalculator implements EMICalculator {
                 .filter(rp -> !rp.isFullyPaid()) //
                 .toList(); //
 
-        if (CollectionUtils.isEmpty(unpaidRepaymentPeriods)
-                || unpaidRepaymentPeriods.getLast().equals(scheduleModel.repaymentPeriods().getLast())) {
+        if (CollectionUtils.isEmpty(unpaidRepaymentPeriods) || Objects.equals(unpaidRepaymentPeriods.get(unpaidRepaymentPeriods.size() - 1), //
+                scheduleModel.repaymentPeriods().get(scheduleModel.repaymentPeriods().size() - 1))) { //
             return Optional.empty();
         }
 
-        RepaymentPeriod latestNotLastOpenRepaymentPeriod = unpaidRepaymentPeriods.getLast();
-        if (DateUtils.isBefore(transactionDate, latestNotLastOpenRepaymentPeriod.getDueDate())) {
+        RepaymentPeriod latestNotLastOpenRepaymentPeriod = unpaidRepaymentPeriods.get(unpaidRepaymentPeriods.size() - 1);
+        if (latestNotLastOpenRepaymentPeriod == null
+                || DateUtils.isBefore(transactionDate, latestNotLastOpenRepaymentPeriod.getDueDate())) {
             return Optional.empty();
         }
 
@@ -909,8 +912,8 @@ public final class ProgressiveEMICalculator implements EMICalculator {
 
         final MathContext mc = scheduleModel.mc();
         final CurrencyData currency = scheduleModel.loanProductRelatedDetail().getCurrencyData();
-        RepaymentPeriod first = repaymentPeriods.getFirst();
-        RepaymentPeriod last = repaymentPeriods.getLast();
+        RepaymentPeriod first = repaymentPeriods.iterator().next();
+        RepaymentPeriod last = repaymentPeriods.get(repaymentPeriods.size() - 1);
         Money sumOfInterest = Money.zero(currency);
         for (RepaymentPeriod rp : repaymentPeriods) {
             Money interest = rp.calculateCalculatedDueInterest();
@@ -1021,7 +1024,9 @@ public final class ProgressiveEMICalculator implements EMICalculator {
 
     private Optional<RepaymentPeriod> getPeriodWithUnrecognizedInterest(RepaymentPeriod lastUnpaidRepaymentPeriod,
             ProgressiveLoanInterestScheduleModel scheduleModelCopy) {
-        for (RepaymentPeriod period : scheduleModelCopy.repaymentPeriods().reversed()) {
+        List<RepaymentPeriod> copyPeriods = scheduleModelCopy.repaymentPeriods();
+        Collections.reverse(copyPeriods);
+        for (RepaymentPeriod period : copyPeriods) {
             if (MathUtil.isGreaterThanZero(period.getUnrecognizedInterest())
                     && period.getDueDate().isAfter(lastUnpaidRepaymentPeriod.getDueDate())) {
                 return Optional.of(period);

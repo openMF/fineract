@@ -220,7 +220,7 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
         }
 
         MoneyHolder overpaymentHolder = new MoneyHolder(Money.zero(currency));
-        final Loan loan = loanTransactions.getFirst().getLoan();
+        final Loan loan = loanTransactions.iterator().next().getLoan();
         List<LoanTermVariationsData> loanTermVariations = loan.getActiveLoanTermVariations().stream().map(LoanTermVariations::toData)
                 .collect(Collectors.toCollection(ArrayList::new));
         final Integer installmentAmountInMultiplesOf = loan.getLoanProduct().getInstallmentAmountInMultiplesOf();
@@ -566,7 +566,8 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
                 if (!loanTransactionMapped) {
                     if (transactionDate.equals(pastDueDate)) {
                         // Transaction is on Maturity date, no additional installment is needed
-                        LoanRepaymentScheduleInstallment currentInstallment = installmentToBeProcessed.getLast();
+                        LoanRepaymentScheduleInstallment currentInstallment = installmentToBeProcessed
+                                .get(installmentToBeProcessed.size() - 1);
 
                         emiCalculator.creditPrincipal(model, transactionDate, transactionAmount);
                         updateRepaymentPeriods(loanTransaction, progressiveTransactionCtx);
@@ -840,7 +841,7 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
             // New installment will be added (N+1 scenario)
             if (!loanTransactionMapped) {
                 if (loanTransaction.getTransactionDate().equals(pastDueDate)) {
-                    LoanRepaymentScheduleInstallment currentInstallment = ctx.getInstallments().getLast();
+                    LoanRepaymentScheduleInstallment currentInstallment = ctx.getInstallments().get(ctx.getInstallments().size() - 1);
                     recognizeAmountsAfterChargeback(ctx, transactionDate, currentInstallment, chargebackAllocation);
                 } else {
                     Loan loan = loanTransaction.getLoan();
@@ -1488,7 +1489,7 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
 
     public void recalculateInterestForDate(LocalDate targetDate, ProgressiveTransactionCtx ctx) {
         if (ctx.getInstallments() != null && !ctx.getInstallments().isEmpty()) {
-            Loan loan = ctx.getInstallments().getFirst().getLoan();
+            Loan loan = ctx.getInstallments().iterator().next().getLoan();
             if (loan.isInterestBearingAndInterestRecalculationEnabled() && !loan.isNpa() && !ctx.isChargedOff()
                     && !ctx.isContractTerminated()) {
 
@@ -1806,7 +1807,8 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
                         .map(LoanCharge::getDueDate).max(LocalDate::compareTo);
 
                 if (latestDueDate.isPresent()) {
-                    final LoanRepaymentScheduleInstallment lastInstallment = installmentsUpToTransactionDate.getLast();
+                    final LoanRepaymentScheduleInstallment lastInstallment = installmentsUpToTransactionDate
+                            .get(installmentsUpToTransactionDate.size() - 1);
 
                     final LoanRepaymentScheduleInstallment installmentForCharges = new LoanRepaymentScheduleInstallment(loan,
                             lastInstallment.getInstallmentNumber() + 1, currentInstallment.getDueDate(), latestDueDate.get(),
@@ -2840,7 +2842,7 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
             return;
         }
 
-        final RepaymentPeriod lastPeriod = periodsBeforeAccelerateMaturity.getLast();
+        final RepaymentPeriod lastPeriod = periodsBeforeAccelerateMaturity.get(periodsBeforeAccelerateMaturity.size() - 1);
 
         final List<RepaymentPeriod> periodsToRemove = repaymentPeriods.stream().filter(rp -> rp.getFromDate().isAfter(transactionDate))
                 .toList();

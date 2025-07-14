@@ -314,7 +314,7 @@ public class LoanDisbursementDetailsIntegrationTest {
         getLoansLoanIdResponse = this.loanTransactionHelper.getLoan(requestSpec, responseSpec, loanId);
         assertNotNull(getLoansLoanIdResponse);
         this.loanTransactionHelper.printRepaymentSchedule(getLoansLoanIdResponse);
-        final BigDecimal limit = BigDecimal.TWO;
+        final BigDecimal limit = BigDecimal.valueOf(2);
         evaluateEqualInstallmentsForRepaymentSchedule(getLoansLoanIdResponse.getRepaymentSchedule(), limit);
         log.info("-----------MULTI DISBURSAL LOAN EQUAL INSTALLMENTS SUCCESSFULLY-------");
     }
