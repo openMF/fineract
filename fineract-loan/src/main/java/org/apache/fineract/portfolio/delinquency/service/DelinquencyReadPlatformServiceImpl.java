@@ -81,6 +81,7 @@ public class DelinquencyReadPlatformServiceImpl implements DelinquencyReadPlatfo
     private final DelinquencyEffectivePauseHelper delinquencyEffectivePauseHelper;
     private final ConfigurationDomainService configurationDomainService;
     private final LoanTransactionRepository loanTransactionRepository;
+    private final PossibleNextRepaymentCalculationServiceDiscovery possibleNextRepaymentCalculationServiceDiscovery;
 
     @Override
     public List<DelinquencyRangeData> retrieveAllDelinquencyRanges() {
@@ -152,6 +153,12 @@ public class DelinquencyReadPlatformServiceImpl implements DelinquencyReadPlatfo
             collectionData = loanDelinquencyDomainService.getOverdueCollectionData(loan, effectiveDelinquencyList);
             collectionData.setAvailableDisbursementAmount(calculateAvailableDisbursementAmount(loan));
             collectionData.setNextPaymentDueDate(possibleNextRepaymentDate(nextPaymentDueDateConfig, loan));
+            PossibleNextRepaymentCalculationService possibleNextRepaymentCalculationService = possibleNextRepaymentCalculationServiceDiscovery
+                    .getService(loan);
+            if (possibleNextRepaymentCalculationService != null) {
+                collectionData.setNextPaymentAmount(
+                        possibleNextRepaymentCalculationService.possibleNextRepaymentAmount(loan, collectionData.getNextPaymentDueDate()));
+            }
 
             final LoanTransaction lastPayment = loan.getLastPaymentTransaction();
             if (lastPayment != null) {
