@@ -23,6 +23,7 @@ import org.apache.fineract.infrastructure.accountnumberformat.domain.AccountNumb
 import org.apache.fineract.infrastructure.codes.domain.CodeValueRepositoryWrapper;
 import org.apache.fineract.infrastructure.codes.service.CodeValueReadPlatformService;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
+import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.apache.fineract.infrastructure.core.exception.ErrorHandler;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
@@ -316,7 +317,7 @@ public class LoanAccountConfiguration {
             LoanDownPaymentTransactionValidator loanDownPaymentTransactionValidator, LoanChargeValidator loanChargeValidator,
             LoanScheduleService loanScheduleService, ReprocessLoanTransactionsService reprocessLoanTransactionsService,
             LoanAccountService loanAccountService, LoanAdjustmentService loanAdjustmentService, LoanChargeService loanChargeService,
-            LoanJournalEntryPoster loanJournalEntryPoster) {
+            LoanJournalEntryPoster loanJournalEntryPoster, FineractProperties fineractProperties) {
         return new LoanChargeWritePlatformServiceImpl(loanChargeApiJsonValidator, loanAssembler, chargeRepository,
                 businessEventNotifierService, loanTransactionRepository, accountTransfersWritePlatformService, loanRepositoryWrapper,
                 loanAccountDomainService, loanChargeRepository, loanWritePlatformService, loanUtilService, loanChargeReadPlatformService,
@@ -324,7 +325,7 @@ public class LoanAccountConfiguration {
                 loanRepaymentScheduleTransactionProcessorFactory, externalIdFactory, accountTransferDetailRepository, loanChargeAssembler,
                 paymentDetailWritePlatformService, noteRepository, loanAccrualsProcessingService, loanDownPaymentTransactionValidator,
                 loanChargeValidator, loanScheduleService, reprocessLoanTransactionsService, loanAccountService, loanAdjustmentService,
-                loanChargeService, loanJournalEntryPoster);
+                loanChargeService, loanJournalEntryPoster, fineractProperties);
     }
 
     @Bean

@@ -88,6 +88,8 @@ public class FineractProperties {
 
     private RetryProperties retry;
 
+    private CustomProperties custom;
+
     @Getter
     @Setter
     public static class FineractTenantProperties {
@@ -652,4 +654,19 @@ public class FineractProperties {
             }
         }
     }
+
+    @Setter
+    @Getter
+    public static class CustomProperties {
+
+        private CustomLoanProperties loan;
+
+        @Setter
+        @Getter
+        public static class CustomLoanProperties {
+
+            String overdueStartDate;
+        }
+    }
+
 }
