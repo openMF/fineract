@@ -778,6 +778,9 @@ public class JsonParserHelper {
 
         if (localeParts.length == 1) {
             languageCode = localeParts[0];
+            if ("es".equals(languageCode)) {
+                countryCode = "MX";
+            }
         }
 
         if (localeParts.length == 2) {
