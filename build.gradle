@@ -40,6 +40,7 @@ buildscript {
                 'fineract-tax',
                 'fineract-loan',
                 'fineract-savings',
+                'fineract-pentaho',
                 'fineract-report',
                 'integration-tests',
                 'twofactor-tests',
@@ -68,6 +69,7 @@ buildscript {
                 'fineract-tax',
                 'fineract-loan',
                 'fineract-savings',
+                'fineract-pentaho',
                 'fineract-report',
                 'fineract-branch',
                 'fineract-document',
@@ -78,6 +80,7 @@ buildscript {
         npmRepository = 'https://npm.pkg.github.com'
     }
     repositories {
+        maven { url "${rootProject.projectDir}/libs" }
         maven { url 'https://plugins.gradle.org/m2/' }
     }
 
@@ -161,6 +164,7 @@ allprojects  {
     group = 'org.apache.fineract'
 
     repositories {
+        maven { url "${rootProject.projectDir}/libs" }
         mavenCentral()
     }
 
@@ -344,6 +348,7 @@ allprojects  {
             '**/*.avsc',
             "**/generated/**/*MapperImpl.java",
             '**/META-INF/fineract-test.config',
+            '**/fineract-pentaho/**',
             // Apache-specific GitHub metadata settings file
             '/.asf.yaml',
             '**/*.sh'

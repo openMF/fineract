@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.burgstaller</groupId>
+  <artifactId>okhttp-digest</artifactId>
+  <version>1.10</version>
+  <name>digest authentication for okhttp</name>
+  <url>https://github.com/rburgst/okhttp-digest</url>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>rburgst</id>
+      <name>Rainer Burgstaller</name>
+      <email>rburgst@gmail.com</email>
+    </developer>
+  </developers>
+  <scm>
+    <connection>https://github.com/rburgst/okhttp-digest.git</connection>
+    <developerConnection>https://github.com/rburgst/okhttp-digest.git</developerConnection>
+    <url>https://github.com/rburgst/okhttp-digest</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <version>3.5.0</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>

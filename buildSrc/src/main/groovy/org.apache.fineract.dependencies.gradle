@@ -218,8 +218,7 @@ dependencyManagement {
 
         dependencySet(group: 'org.apache.poi', version: '5.4.1') {
             entry 'poi'
-            entry 'poi-ooxml'
-            entry 'poi-ooxml-schemas'
+            entry 'poi-ooxml-full'
         }
 
         dependencySet(group: 'io.rest-assured', version: '5.5.1') {

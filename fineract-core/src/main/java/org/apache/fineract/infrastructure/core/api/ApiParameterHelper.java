@@ -136,4 +136,12 @@ public final class ApiParameterHelper {
     public static boolean genericResultSetPassed(final MultivaluedMap<String, String> queryParams) {
         return queryParams.getFirst("genericResultSet") != null;
     }
+
+    public static String extractDateFormat(final MultivaluedMap<String, String> queryParams) {
+        String dateFormat = "dd MMMM yyyy";
+        if (queryParams.getFirst("dateFormat") != null) {
+            dateFormat = queryParams.getFirst("dateFormat");
+        }
+        return dateFormat;
+    }
 }

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>commons-database</artifactId>
+  <packaging>pom</packaging>
+
+  <parent>
+    <groupId>org.pentaho</groupId>
+    <artifactId>pentaho-ce-jar-parent-pom</artifactId>
+    <version>9.4.0.0-343</version>
+  </parent>
+
+  <name>Pentaho Commons Database</name>
+  <url>http://www.pentaho.org</url>
+
+  <licenses>
+    <license>
+      <name>GNU Lesser General Public License, Version 2.1</name>
+      <url>https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <modules>
+    <module>model</module>
+    <module>gwt</module>
+  </modules>
+
+  <properties>
+    <license.licenseName>lgpl_v2_1</license.licenseName>
+  </properties>
+
+  <scm>
+    <developerConnection>scm:git:git@github.com:pentaho/pentaho-commons-database.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
+  
+
+  
+
+</project>

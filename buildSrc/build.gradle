@@ -38,6 +38,7 @@ description = 'Fineract Gradle Plugin'
 
 repositories {
     gradlePluginPortal()
+    maven { url "${rootProject.projectDir}/libs" }
     mavenCentral()
 }
 
