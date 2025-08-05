@@ -38,7 +38,6 @@ import io.cucumber.java.ParameterType;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -57,16 +56,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.avro.loan.v1.LoanAccountDataV1;
 import org.apache.fineract.avro.loan.v1.LoanChargePaidByDataV1;
 import org.apache.fineract.avro.loan.v1.LoanStatusEnumDataV1;
 import org.apache.fineract.avro.loan.v1.LoanTransactionDataV1;
 import org.apache.fineract.client.models.AdvancedPaymentData;
-import org.apache.fineract.client.models.BusinessDateData;
-import org.apache.fineract.client.models.BusinessDateRequest;
-import org.apache.fineract.client.models.BusinessDateResponse;
 import org.apache.fineract.client.models.BusinessDateResponse;
 import org.apache.fineract.client.models.BuyDownFeeAmortizationDetails;
 import org.apache.fineract.client.models.CapitalizedIncomeDetails;
@@ -90,8 +85,6 @@ import org.apache.fineract.client.models.GetLoansLoanIdTransactions;
 import org.apache.fineract.client.models.GetLoansLoanIdTransactionsResponse;
 import org.apache.fineract.client.models.GetLoansLoanIdTransactionsTemplateResponse;
 import org.apache.fineract.client.models.GetLoansLoanIdTransactionsTransactionIdResponse;
-import org.apache.fineract.client.models.InlineJobRequest;
-import org.apache.fineract.client.models.InlineJobResponse;
 import org.apache.fineract.client.models.IsCatchUpRunningDTO;
 import org.apache.fineract.client.models.LoanProductChargeData;
 import org.apache.fineract.client.models.OldestCOBProcessedLoanDTO;
@@ -117,7 +110,6 @@ import org.apache.fineract.client.models.PutLoansLoanIdRequest;
 import org.apache.fineract.client.models.PutLoansLoanIdResponse;
 import org.apache.fineract.client.services.BusinessDateManagementApi;
 import org.apache.fineract.client.services.LoanBuyDownFeesApi;
-import org.apache.fineract.client.services.InlineJobApi;
 import org.apache.fineract.client.services.LoanCapitalizedIncomeApi;
 import org.apache.fineract.client.services.LoanCobCatchUpApi;
 import org.apache.fineract.client.services.LoanDisbursementDetailsApi;
@@ -195,7 +187,7 @@ public class LoanStepDef extends AbstractStepDef {
     private static final Gson GSON = new JSON().getGson();
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
     private static final DateTimeFormatter FORMATTER_EVENTS = DateTimeFormatter.ofPattern(DATE_FORMAT_EVENTS);
-    private static final String TYPE_BUSINESS_DATE = "BUSINESS_DATE";
+    private static final String TRANSACTION_DATE_FORMAT = "dd MMMM yyyy";
 
     @Autowired
     private BusinessDateHelper businessDateHelper;
@@ -258,16 +250,13 @@ public class LoanStepDef extends AbstractStepDef {
     private JobPollingProperties jobPollingProperties;
 
     @Autowired
-    private LoanRepaymentStepDef loanRepaymentStepDef;
-
-    @Autowired
-    private BusinessDateManagementApi businessDateManagementApi;
+    private BusinessDateManagementApi businessDateApi;
 
     @Autowired
     private InlineCOBStepDef inlineCOBStepDef;
 
     @Autowired
-    private InlineJobApi inlineJobApi;
+    private LoanRepaymentStepDef loanRepaymentStepDef;
 
     @When("Admin creates a new Loan")
     public void createLoan() throws IOException {
@@ -441,8 +430,8 @@ public class LoanStepDef extends AbstractStepDef {
 
     @When("Customer makes {string} transaction with {string} payment type on {string} with {double} EUR transaction amount and system-generated Idempotency key and interestRefundCalculation {booleanValue}")
     public void createTransactionWithAutoIdempotencyKeyAndWithInterestRefundCalculationFlagProvided(final String transactionTypeInput,
-            final String transactionPaymentType, final String transactionDate, final double transactionAmount,
-            final boolean interestRefundCalculation) throws IOException {
+                                                                                                    final String transactionPaymentType, final String transactionDate, final double transactionAmount,
+                                                                                                    final boolean interestRefundCalculation) throws IOException {
         eventStore.reset();
         final Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         assert loanResponse.body() != null;
@@ -483,7 +472,7 @@ public class LoanStepDef extends AbstractStepDef {
         final GetLoansLoanIdTransactions refundTransaction = transactions.stream()
                 .filter(t -> t.getType() != null
                         && (transactionType.equals(TransactionType.PAYOUT_REFUND) ? "Payout Refund" : "Merchant Issued Refund")
-                                .equals(t.getType().getValue())
+                        .equals(t.getType().getValue())
                         && t.getDate() != null && transactionDate.equals(FORMATTER.format(t.getDate())))
                 .findFirst().orElseThrow(() -> new IllegalStateException("No refund transaction found for loan " + loanId));
 
@@ -497,7 +486,7 @@ public class LoanStepDef extends AbstractStepDef {
 
     @When("Admin manually adds Interest Refund for {string} transaction made on invalid date {string} with {double} EUR interest refund amount")
     public void addInterestRefundTransactionManuallyWithInvalidDate(final String transactionTypeInput, final String transactionDate,
-            final double amount) throws IOException {
+                                                                    final double amount) throws IOException {
         final Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         final long loanId = loanResponse.body().getLoanId();
         final TransactionType transactionType = TransactionType.valueOf(transactionTypeInput);
@@ -511,7 +500,7 @@ public class LoanStepDef extends AbstractStepDef {
         final GetLoansLoanIdTransactions refundTransaction = transactions.stream()
                 .filter(t -> t.getType() != null
                         && (transactionType.equals(TransactionType.PAYOUT_REFUND) ? "Payout Refund" : "Merchant Issued Refund")
-                                .equals(t.getType().getValue()))
+                        .equals(t.getType().getValue()))
                 .findFirst().orElseThrow(() -> new IllegalStateException("No refund transaction found for loan " + loanId));
 
         final Response<PostLoansLoanIdTransactionsResponse> adjustmentResponse = addInterestRefundTransaction(amount,
@@ -522,7 +511,7 @@ public class LoanStepDef extends AbstractStepDef {
 
     @When("Admin fails to add Interest Refund for {string} transaction made on {string} with {double} EUR interest refund amount")
     public void addInterestRefundTransactionManuallyFailsInNonPayout(final String transactionTypeInput, final String transactionDate,
-            final double amount) throws IOException {
+                                                                     final double amount) throws IOException {
         final Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         final long loanId = loanResponse.body().getLoanId();
         final TransactionType transactionType = TransactionType.valueOf(transactionTypeInput);
@@ -550,7 +539,7 @@ public class LoanStepDef extends AbstractStepDef {
 
     @Then("Admin fails to add duplicate Interest Refund for {string} transaction made on {string} with {double} EUR interest refund amount")
     public void failToAddManualInterestRefundIfAlreadyExists(final String transactionTypeInput, final String transactionDate,
-            final double amount) throws IOException {
+                                                             final double amount) throws IOException {
         final Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         final long loanId = loanResponse.body().getLoanId();
         final TransactionType transactionType = TransactionType.valueOf(transactionTypeInput);
@@ -564,7 +553,7 @@ public class LoanStepDef extends AbstractStepDef {
         final GetLoansLoanIdTransactions refundTransaction = transactions.stream()
                 .filter(t -> t.getType() != null
                         && (transactionType.equals(TransactionType.PAYOUT_REFUND) ? "Payout Refund" : "Merchant Issued Refund")
-                                .equals(t.getType().getValue())
+                        .equals(t.getType().getValue())
                         && t.getDate() != null && transactionDate.equals(FORMATTER.format(t.getDate())))
                 .findFirst().orElseThrow(() -> new IllegalStateException("No refund transaction found for loan " + loanId));
 
@@ -579,7 +568,7 @@ public class LoanStepDef extends AbstractStepDef {
 
     @Then("Admin fails to add Interest Refund {string} transaction after reverse made on {string} with {double} EUR interest refund amount")
     public void failToAddManualInterestRefundIfReversed(final String transactionTypeInput, final String transactionDate,
-            final double amount) throws IOException {
+                                                        final double amount) throws IOException {
         final Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         final long loanId = loanResponse.body().getLoanId();
         final TransactionType transactionType = TransactionType.valueOf(transactionTypeInput);
@@ -593,7 +582,7 @@ public class LoanStepDef extends AbstractStepDef {
         final GetLoansLoanIdTransactions refundTransaction = transactions.stream()
                 .filter(t -> t.getType() != null
                         && (transactionType.equals(TransactionType.PAYOUT_REFUND) ? "Payout Refund" : "Merchant Issued Refund")
-                                .equals(t.getType().getValue())
+                        .equals(t.getType().getValue())
                         && t.getDate() != null && transactionDate.equals(FORMATTER.format(t.getDate())))
                 .findFirst().orElseThrow(() -> new IllegalStateException("No refund transaction found for loan " + loanId));
 
@@ -1431,10 +1420,10 @@ public class LoanStepDef extends AbstractStepDef {
                         .isEqualTo(nameExpected);
 
                 assertThat(amountEventActual).as(ErrorMessageHelper
-                        .wrongDataInLoanTransactionMakeRepaymentPostEventLoanChargePaidByListAmount(amountEventActual, amountExpected))
+                                .wrongDataInLoanTransactionMakeRepaymentPostEventLoanChargePaidByListAmount(amountEventActual, amountExpected))
                         .isEqualTo(amountExpected);
                 assertThat(nameEventActual).as(ErrorMessageHelper
-                        .wrongDataInLoanTransactionMakeRepaymentPostEventLoanChargePaidByListName(nameEventActual, nameExpected))
+                                .wrongDataInLoanTransactionMakeRepaymentPostEventLoanChargePaidByListName(nameEventActual, nameExpected))
                         .isEqualTo(nameExpected);
             }
             return null;
@@ -2167,7 +2156,7 @@ public class LoanStepDef extends AbstractStepDef {
         Double totalUnpaidPayableDueInterestActual = loanDetailsResponse.body().getSummary().getTotalUnpaidPayableDueInterest()
                 .doubleValue();
         assertThat(totalUnpaidPayableDueInterestActual).as(ErrorMessageHelper
-                .wrongAmountInTotalUnpaidPayableDueInterest(totalUnpaidPayableDueInterestActual, totalUnpaidPayableDueInterestExpected))
+                        .wrongAmountInTotalUnpaidPayableDueInterest(totalUnpaidPayableDueInterestActual, totalUnpaidPayableDueInterestExpected))
                 .isEqualTo(totalUnpaidPayableDueInterestExpected);
     }
 
@@ -3417,7 +3406,7 @@ public class LoanStepDef extends AbstractStepDef {
                     final boolean containsExpectedValues = actualValuesList.stream()
                             .anyMatch(actualValues -> actualValues.equals(expectedValues));
                     assertThat(containsExpectedValues).as(ErrorMessageHelper
-                            .wrongValueInLineInChargeOffReasonOptions(data.indexOf(expectedValues), actualValuesList, expectedValues))
+                                    .wrongValueInLineInChargeOffReasonOptions(data.indexOf(expectedValues), actualValuesList, expectedValues))
                             .isTrue();
 
                     assertThat(linesActual).as(ErrorMessageHelper.wrongNumberOfLinesInChargeOffReasonOptions(linesActual, linesExpected))
@@ -3449,7 +3438,7 @@ public class LoanStepDef extends AbstractStepDef {
                     final boolean containsExpectedValues = actualValuesList.stream()
                             .anyMatch(actualValues -> actualValues.equals(expectedValues));
                     assertThat(containsExpectedValues).as(ErrorMessageHelper
-                            .wrongValueInLineInChargeOffReasonOptions(data.indexOf(expectedValues), actualValuesList, expectedValues))
+                                    .wrongValueInLineInChargeOffReasonOptions(data.indexOf(expectedValues), actualValuesList, expectedValues))
                             .isTrue();
 
                     assertThat(linesActual).as(ErrorMessageHelper.wrongNumberOfLinesInChargeOffReasonOptions(linesActual, linesExpected))
@@ -4159,7 +4148,8 @@ public class LoanStepDef extends AbstractStepDef {
             switch (headerName) {
                 case "Transaction date" -> actualValues.add(t.getDate() == null ? null : FORMATTER.format(t.getDate()));
                 case "Transaction Type" -> actualValues.add(t.getType().getValue() == null ? null : t.getType().getValue());
-                case "Amount" -> actualValues.add(t.getAmount() == null ? null : new Utils.DoubleFormatter(t.getAmount().doubleValue()).format());
+                case "Amount" ->
+                        actualValues.add(t.getAmount() == null ? null : new Utils.DoubleFormatter(t.getAmount().doubleValue()).format());
                 case "Principal" -> actualValues.add(
                         t.getPrincipalPortion() == null ? null : new Utils.DoubleFormatter(t.getPrincipalPortion().doubleValue()).format());
                 case "Interest" -> actualValues.add(
@@ -4198,8 +4188,8 @@ public class LoanStepDef extends AbstractStepDef {
                         .add(t.getNotYetAmortizedAmount() == null ? new Utils.DoubleFormatter(new BigDecimal("0.0").doubleValue()).format()
                                 : new Utils.DoubleFormatter(t.getNotYetAmortizedAmount().doubleValue()).format());
                 case "Adjusted Amount" ->
-                    actualValues.add(t.getAdjustedAmount() == null ? new Utils.DoubleFormatter(new BigDecimal("0.0").doubleValue()).format()
-                            : new Utils.DoubleFormatter(t.getAdjustedAmount().doubleValue()).format());
+                        actualValues.add(t.getAdjustedAmount() == null ? new Utils.DoubleFormatter(new BigDecimal("0.0").doubleValue()).format()
+                                : new Utils.DoubleFormatter(t.getAdjustedAmount().doubleValue()).format());
                 case "Charged Off Amount" -> actualValues
                         .add(t.getChargedOffAmount() == null ? new Utils.DoubleFormatter(new BigDecimal("0.0").doubleValue()).format()
                                 : new Utils.DoubleFormatter(t.getChargedOffAmount().doubleValue()).format());
@@ -4214,8 +4204,8 @@ public class LoanStepDef extends AbstractStepDef {
         for (String headerName : header) {
             switch (headerName) {
                 case "Amount" ->
-                    actualValues.add(t.getAmount() == null ? new Utils.DoubleFormatter(new BigDecimal("0.0").doubleValue()).format()
-                            : new Utils.DoubleFormatter(t.getAmount().doubleValue()).format());
+                        actualValues.add(t.getAmount() == null ? new Utils.DoubleFormatter(new BigDecimal("0.0").doubleValue()).format()
+                                : new Utils.DoubleFormatter(t.getAmount().doubleValue()).format());
                 case "Amortized Amount" -> actualValues
                         .add(t.getAmortizedAmount() == null ? new Utils.DoubleFormatter(new BigDecimal("0.0").doubleValue()).format()
                                 : new Utils.DoubleFormatter(t.getAmortizedAmount().doubleValue()).format());
@@ -4238,10 +4228,13 @@ public class LoanStepDef extends AbstractStepDef {
         List<String> actualValues = new ArrayList<>();
         for (String headerName : header) {
             switch (headerName) {
-                case "Expected Disbursement On" -> actualValues.add(t.getExpectedDisbursementDate() == null ? null : FORMATTER.format(t.getExpectedDisbursementDate()));
-                case "Disbursed On" -> actualValues.add(t.getActualDisbursementDate() == null ? null : FORMATTER.format(t.getActualDisbursementDate()));
+                case "Expected Disbursement On" ->
+                        actualValues.add(t.getExpectedDisbursementDate() == null ? null : FORMATTER.format(t.getExpectedDisbursementDate()));
+                case "Disbursed On" ->
+                        actualValues.add(t.getActualDisbursementDate() == null ? null : FORMATTER.format(t.getActualDisbursementDate()));
                 case "Principal" -> actualValues.add(t.getPrincipal() == null ? null : String.valueOf(t.getPrincipal()));
-                case "Net Disbursal Amount" -> actualValues.add(t.getNetDisbursalAmount() == null ? null : String.valueOf(t.getNetDisbursalAmount()));
+                case "Net Disbursal Amount" ->
+                        actualValues.add(t.getNetDisbursalAmount() == null ? null : String.valueOf(t.getNetDisbursalAmount()));
                 default -> throw new IllegalStateException(String.format("Header name %s cannot be found", headerName));
             }
         }
@@ -4253,8 +4246,10 @@ public class LoanStepDef extends AbstractStepDef {
         for (String headerName : header) {
             switch (headerName) {
                 case "Nr" -> actualValues.add(repaymentPeriod.getPeriod() == null ? null : String.valueOf(repaymentPeriod.getPeriod()));
-                case "Days" -> actualValues.add(repaymentPeriod.getDaysInPeriod() == null ? null : String.valueOf(repaymentPeriod.getDaysInPeriod()));
-                case "Date" -> actualValues.add(repaymentPeriod.getDueDate() == null ? null : FORMATTER.format(repaymentPeriod.getDueDate()));
+                case "Days" ->
+                        actualValues.add(repaymentPeriod.getDaysInPeriod() == null ? null : String.valueOf(repaymentPeriod.getDaysInPeriod()));
+                case "Date" ->
+                        actualValues.add(repaymentPeriod.getDueDate() == null ? null : FORMATTER.format(repaymentPeriod.getDueDate()));
                 case "Paid date" -> actualValues.add(repaymentPeriod.getObligationsMetOnDate() == null ? null
                         : FORMATTER.format(repaymentPeriod.getObligationsMetOnDate()));
                 case "Balance of loan" -> actualValues.add(repaymentPeriod.getPrincipalLoanBalanceOutstanding() == null ? null
@@ -4356,15 +4351,19 @@ public class LoanStepDef extends AbstractStepDef {
             switch (headerName) {
                 case "Term Type Id" -> actualValues
                         .add(emiVariation.getTermType().getId() == null ? null : String.valueOf(emiVariation.getTermType().getId()));
-                case "Term Type Code" -> actualValues.add(emiVariation.getTermType().getCode() == null ? null : emiVariation.getTermType().getCode());
-                case "Term Type Value" -> actualValues.add(emiVariation.getTermType().getValue() == null ? null : emiVariation.getTermType().getValue());
+                case "Term Type Code" ->
+                        actualValues.add(emiVariation.getTermType().getCode() == null ? null : emiVariation.getTermType().getCode());
+                case "Term Type Value" ->
+                        actualValues.add(emiVariation.getTermType().getValue() == null ? null : emiVariation.getTermType().getValue());
                 case "Applicable From" -> actualValues.add(emiVariation.getTermVariationApplicableFrom() == null ? null
                         : FORMATTER.format(emiVariation.getTermVariationApplicableFrom()));
                 case "Decimal Value" -> actualValues.add(emiVariation.getDecimalValue() == null ? null
                         : new Utils.DoubleFormatter(emiVariation.getDecimalValue().doubleValue()).format());
-                case "Date Value" -> actualValues.add(emiVariation.getDateValue() == null ? null : FORMATTER.format(emiVariation.getDateValue()));
+                case "Date Value" ->
+                        actualValues.add(emiVariation.getDateValue() == null ? null : FORMATTER.format(emiVariation.getDateValue()));
                 case "Is Specific To Installment" -> actualValues.add(String.valueOf(emiVariation.getIsSpecificToInstallment()));
-                case "Is Processed" -> actualValues.add(emiVariation.getIsProcessed() == null ? null : String.valueOf(emiVariation.getIsProcessed()));
+                case "Is Processed" ->
+                        actualValues.add(emiVariation.getIsProcessed() == null ? null : String.valueOf(emiVariation.getIsProcessed()));
             }
         }
         return actualValues;
@@ -4376,7 +4375,8 @@ public class LoanStepDef extends AbstractStepDef {
         final List<String> actualValues = new ArrayList<>();
         for (String headerName : header) {
             switch (headerName) {
-                case "Charge-Off Reason Name" -> actualValues.add(chargeOffReasonOption.getName() == null ? null : chargeOffReasonOption.getName());
+                case "Charge-Off Reason Name" ->
+                        actualValues.add(chargeOffReasonOption.getName() == null ? null : chargeOffReasonOption.getName());
                 case "Description" -> {
                     assertNotNull(chargeOffReasonOption.getDescription());
                     actualValues
@@ -4385,7 +4385,8 @@ public class LoanStepDef extends AbstractStepDef {
                 }
                 case "Position" -> actualValues
                         .add(chargeOffReasonOption.getPosition() == null ? null : String.valueOf(chargeOffReasonOption.getPosition()));
-                case "Is Active" -> actualValues.add(chargeOffReasonOption.getActive() == null ? null : String.valueOf(chargeOffReasonOption.getActive()));
+                case "Is Active" ->
+                        actualValues.add(chargeOffReasonOption.getActive() == null ? null : String.valueOf(chargeOffReasonOption.getActive()));
                 case "Is Mandatory" -> actualValues
                         .add(chargeOffReasonOption.getMandatory() == null ? null : String.valueOf(chargeOffReasonOption.getMandatory()));
             }
@@ -4526,9 +4527,12 @@ public class LoanStepDef extends AbstractStepDef {
                 case "Principal" -> actualValues.add(t.getPrincipalPortion() == null ? null : String.valueOf(t.getPrincipalPortion()));
                 case "Interest" -> actualValues.add(t.getInterestPortion() == null ? null : String.valueOf(t.getInterestPortion()));
                 case "Fees" -> actualValues.add(t.getFeeChargesPortion() == null ? null : String.valueOf(t.getFeeChargesPortion()));
-                case "Penalties" -> actualValues.add(t.getPenaltyChargesPortion() == null ? null : String.valueOf(t.getPenaltyChargesPortion()));
-                case "Loan Balance" -> actualValues.add(t.getOutstandingLoanBalance() == null ? null : String.valueOf(t.getOutstandingLoanBalance()));
-                case "Overpayment" -> actualValues.add(t.getOverpaymentPortion() == null ? null : String.valueOf(t.getOverpaymentPortion()));
+                case "Penalties" ->
+                        actualValues.add(t.getPenaltyChargesPortion() == null ? null : String.valueOf(t.getPenaltyChargesPortion()));
+                case "Loan Balance" ->
+                        actualValues.add(t.getOutstandingLoanBalance() == null ? null : String.valueOf(t.getOutstandingLoanBalance()));
+                case "Overpayment" ->
+                        actualValues.add(t.getOverpaymentPortion() == null ? null : String.valueOf(t.getOverpaymentPortion()));
                 default -> throw new IllegalStateException(String.format("Header name %s cannot be found", headerName));
             }
         }
@@ -4971,7 +4975,7 @@ public class LoanStepDef extends AbstractStepDef {
     }
 
     public void checkCapitalizedIncomeTransactionData(String resourceId, List<CapitalizedIncomeDetails> capitalizedIncomeTrn,
-            DataTable table) {
+                                                      DataTable table) {
         List<List<String>> data = table.asLists();
         for (int i = 1; i < data.size(); i++) {
             List<String> expectedValues = data.get(i);
@@ -5124,7 +5128,7 @@ public class LoanStepDef extends AbstractStepDef {
     }
 
     public Response<PostLoansLoanIdTransactionsResponse> adjustBuyDownFee(final String transactionPaymentType, final String transactionDate,
-            final String amount, final Long transactionId) throws IOException {
+                                                                          final String amount, final Long transactionId) throws IOException {
         final Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         final long loanId = loanResponse.body().getLoanId();
 
@@ -5144,7 +5148,7 @@ public class LoanStepDef extends AbstractStepDef {
 
     @And("Admin adds buy down fee with {string} payment type to the loan on {string} with {string} EUR transaction amount")
     public void adminAddsBuyDownFeesToTheLoanOnWithEURTransactionAmount(final String transactionPaymentType, final String transactionDate,
-            final String amount) throws IOException {
+                                                                        final String amount) throws IOException {
         final Response<PostLoansLoanIdTransactionsResponse> buyDownFeesIncomeResponse = addBuyDownFeeToTheLoanOnWithEURTransactionAmount(
                 transactionPaymentType, transactionDate, amount);
         testContext().set(TestContextKey.LOAN_BUY_DOWN_FEE_RESPONSE, buyDownFeesIncomeResponse);
@@ -5153,7 +5157,7 @@ public class LoanStepDef extends AbstractStepDef {
 
     @And("Admin adds buy down fee adjustment with {string} payment type to the loan on {string} with {string} EUR transaction amount")
     public void adminAddsBuyDownFeesAdjustmentToTheLoan(final String transactionPaymentType, final String transactionDate,
-            final String amount) throws IOException {
+                                                        final String amount) throws IOException {
         final Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         final long loanId = loanResponse.body().getLoanId();
 
@@ -5446,7 +5450,7 @@ public class LoanStepDef extends AbstractStepDef {
     }
 
     private Response<PostLoansLoanIdTransactionsResponse> addInterestRefundTransaction(final double amount, final Long transactionId,
-            final String transactionDate) throws IOException {
+                                                                                       final String transactionDate) throws IOException {
         final Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         assert loanResponse.body() != null;
         final long loanId = loanResponse.body().getLoanId();
@@ -5540,6 +5544,10 @@ public class LoanStepDef extends AbstractStepDef {
 
     @Then("Close Loan")
     public void closeLoan() throws IOException {
+        if (null == testContext().get(TestContextKey.LOAN_CREATE_RESPONSE)) {
+            log.info("No loan was created - Loan closing step is not necessary");
+            return;
+        }
         inlineCOBStepDef.runInlineCOB();
 
         final Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
