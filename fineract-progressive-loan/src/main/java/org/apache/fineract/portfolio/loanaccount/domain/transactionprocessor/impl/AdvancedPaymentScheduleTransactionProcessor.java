@@ -1565,7 +1565,7 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
         LocalDate toDate = currentInstallment.getDueDate();
         ProgressiveLoanInterestScheduleModel model = ctx.getModel();
         boolean prepayAttempt = ctx.isPrepayAttempt();
-        LoanInterestRecalculationDetails loanInterestRecalculationDetails = ctx.getInstallments().getFirst().getLoan()
+        LoanInterestRecalculationDetails loanInterestRecalculationDetails = ctx.getInstallments().get(0).getLoan()
                 .getLoanInterestRecalculationDetails();
 
         if (!currentDate.equals(model.lastOverdueBalanceChange())) {
