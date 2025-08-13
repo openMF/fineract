@@ -1551,7 +1551,8 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
     public void recalculateInterestForDate(LocalDate targetDate, ProgressiveTransactionCtx ctx, boolean updateInstallments) {
         if (ctx.getInstallments() != null && !ctx.getInstallments().isEmpty()) {
             Loan loan = ctx.getInstallments().iterator().next().getLoan();
-            if (isInterestRecalculationSupported(ctx, loan)  && !loan.isNpa() && !loan.getLoanInterestRecalculationDetails().disallowInterestCalculationOnPastDue()) {
+            if (isInterestRecalculationSupported(ctx, loan) && !loan.isNpa()
+                    && !loan.getLoanInterestRecalculationDetails().disallowInterestCalculationOnPastDue()) {
 
                 boolean modelHasUpdates = rework(targetDate, ctx);
                 if (modelHasUpdates && updateInstallments) {
