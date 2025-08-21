@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -1012,7 +1013,10 @@ public final class ProgressiveEMICalculator implements EMICalculator {
         });
 
         if (reallocationAmount.get().isGreaterThanZero()) {
-            repaymentPeriods.reversed().forEach(rp -> {
+
+            ListIterator<RepaymentPeriod> it = repaymentPeriods.listIterator(repaymentPeriods.size());
+            while (it.hasPrevious()) {
+                RepaymentPeriod rp = it.previous();
                 if (reallocationAmount.get().isGreaterThanZero() && !rp.isFullyPaid()) {
                     Money minimumNewEmi = MathUtil.max(rp.getEmi().minus(reallocationAmount.get()), Money.zero(currency), true);
                     Money alreadyPaidEmi = rp.getTotalPaidAmount().minus(rp.getTotalCreditedAmount(), mc)
@@ -1022,7 +1026,7 @@ public final class ProgressiveEMICalculator implements EMICalculator {
                     rp.setEmi(newEmi);
                     rp.getInterestPeriods().forEach(InterestPeriod::updateOutstandingLoanBalance);
                 }
-            });
+            }
         }
 
     }

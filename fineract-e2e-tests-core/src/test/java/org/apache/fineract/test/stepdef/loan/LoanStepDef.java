@@ -5416,7 +5416,7 @@ public class LoanStepDef extends AbstractStepDef {
         ErrorResponse errorDetails = ErrorResponse.from(modifyLoanAvailableDisbursementAmountResponse);
         assertThat(errorDetails.getHttpStatusCode()).isEqualTo(403);
 
-        Object errorArgs = errorDetails.getErrors().getFirst().getArgs().getFirst().getValue();
+        Object errorArgs = errorDetails.getErrors().get(0).getArgs().get(0).getValue();
         String developerMessage;
         if (errorArgs instanceof Map errorArgsMap) {
             developerMessage = (String) errorArgsMap.get("developerMessage");
