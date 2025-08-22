@@ -1380,7 +1380,7 @@ public class LoanTransactionAccrualActivityPostingTest extends BaseLoanIntegrati
             loanTransactionHelper.makeLoanRepayment(repaymentDate1, 150.0F, loanId.get().intValue());
 
             verifyTransactions(loanId.get(),
-                    transaction(150.0, "Repayment", repaymentDate1, 851.52, 148.48, 1.52, 0.0, 0.0, 0.0, 0.0, false), //
+                    transaction(150.0, "Repayment", repaymentDate1, 851.24, 148.76, 1.24, 0.0, 0.0, 0.0, 0.0, false), //
                     transaction(1.52, "Accrual Activity", repaymentPeriod1DueDate, 0.0, 0.0, 1.52, 0.0, 0.0, 0.0, 0.0, false), //
                     transaction(1.52, "Accrual", repaymentPeriod1DueDate, 0.0, 0.0, 1.52, 0.0, 0.0, 0.0, 0.0, false), //
                     transaction(1000.0, "Disbursement", disbursementDay, 1000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false));

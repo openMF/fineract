@@ -21,7 +21,6 @@ package org.apache.fineract.portfolio.loanaccount.service;
 import jakarta.persistence.FlushModeType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.core.persistence.FlushModeHandler;
@@ -38,6 +37,7 @@ import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentSchedulePro
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransaction;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionComparator;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionRepository;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.apache.fineract.portfolio.loanproduct.domain.CreditAllocationTransactionType;
 import org.springframework.stereotype.Service;
 
@@ -48,10 +48,51 @@ public class LoanBalanceService {
     private final CapitalizedIncomeBalanceService capitalizedIncomeBalanceService;
     private final FlushModeHandler flushModeHandler;
     private final LoanTransactionRepository loanTransactionRepository;
+    private final LoanTransactionService loanTransactionService;
+
+    public Money calculateOverpaymentAmount(final Loan loan) {
+        Money totalPaidInRepayments = loanTransactionService.calculateTotalPaidInRepayments(loan);
+
+        final MonetaryCurrency currency = loan.getCurrency();
+        Money cumulativeTotalPaidOnInstallments = Money.zero(currency);
+        Money cumulativeTotalWaivedOnInstallments = Money.zero(currency);
+        List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
+        for (final LoanRepaymentScheduleInstallment scheduledRepayment : installments) {
+            cumulativeTotalPaidOnInstallments = cumulativeTotalPaidOnInstallments
+                    .plus(scheduledRepayment.getPrincipalCompleted(currency).plus(scheduledRepayment.getInterestPaid(currency)))
+                    .plus(scheduledRepayment.getFeeChargesPaid(currency)).plus(scheduledRepayment.getPenaltyChargesPaid(currency));
+
+            cumulativeTotalWaivedOnInstallments = cumulativeTotalWaivedOnInstallments.plus(scheduledRepayment.getInterestWaived(currency));
+        }
+
+        final List<LoanTransactionType> loanTransactionTypes = List.of(LoanTransactionType.REFUND, //
+                LoanTransactionType.REFUND_FOR_ACTIVE_LOAN, //
+                LoanTransactionType.CREDIT_BALANCE_REFUND, //
+                LoanTransactionType.CHARGEBACK);
+        for (final LoanTransaction loanTransaction : loanTransactionRepository.fetchNonReversedByLoanAndTransactionTypes(loan,
+                loanTransactionTypes)) {
+            if (loanTransaction.isRefund() || loanTransaction.isRefundForActiveLoan()) {
+                totalPaidInRepayments = totalPaidInRepayments.minus(loanTransaction.getAmount(currency));
+            } else if (loanTransaction.isCreditBalanceRefund()) {
+                if (loanTransaction.getPrincipalPortion(currency).isZero()) {
+                    totalPaidInRepayments = totalPaidInRepayments.minus(loanTransaction.getOverPaymentPortion(currency));
+                }
+            } else if (loanTransaction.isChargeback()) {
+                if (loanTransaction.getPrincipalPortion(currency).isZero() && loan.getCreditAllocationRules().stream() //
+                        .filter(car -> car.getTransactionType().equals(CreditAllocationTransactionType.CHARGEBACK)) //
+                        .findAny() //
+                        .isEmpty()) {
+                    totalPaidInRepayments = totalPaidInRepayments.minus(loanTransaction.getOverPaymentPortion(currency));
+                }
+            }
+        }
+
+        // if total paid in transactions doesn't match repayment schedule then there's an overpayment.
+        return totalPaidInRepayments.minus(cumulativeTotalPaidOnInstallments);
+    }
 
     public Money calculateTotalOverpayment(final Loan loan) {
         Money totalPaidInRepayments = loan.getTotalPaidInRepayments();
-
         final MonetaryCurrency currency = loan.getCurrency();
         Money cumulativeTotalPaidOnInstallments = Money.zero(currency);
         Money cumulativeTotalWaivedOnInstallments = Money.zero(currency);
@@ -105,8 +146,11 @@ public class LoanBalanceService {
         });
     }
 
-    public void refreshSummaryAndBalancesForDisbursedLoan(final Loan loan) {
-        final Money overpaidBy = calculateTotalOverpayment(loan);
+    private void refreshSummaryAndBalancesForDisbursedLoan(final Loan loan) {
+        refreshSummaryAndBalancesForDisbursedLoan(loan, calculateTotalOverpayment(loan));
+    }
+
+    public void refreshSummaryAndBalancesForDisbursedLoan(final Loan loan, final Money overpaidBy) {
         loan.setTotalOverpaid(null);
         if (!overpaidBy.isLessThanZero()) {
             loan.setTotalOverpaid(overpaidBy.getAmountDefaultedToNullIfZero());
@@ -131,12 +175,7 @@ public class LoanBalanceService {
 
     public void updateLoanOutstandingBalances(Loan loan) {
         Money outstanding = Money.zero(loan.getCurrency());
-        final List<LoanTransaction> loanTransactions = new ArrayList<>();
-        for (final LoanTransaction transaction : loan.getLoanTransactions()) {
-            if (transaction.isNotReversed() && !transaction.isNonMonetaryTransaction()) {
-                loanTransactions.add(transaction);
-            }
-        }
+        final List<LoanTransaction> loanTransactions = loanTransactionService.fetchNonReversedMonetaryTransactionsByLoan(loan);
         loanTransactions.sort(LoanTransactionComparator.INSTANCE);
 
         for (LoanTransaction loanTransaction : loanTransactions) {

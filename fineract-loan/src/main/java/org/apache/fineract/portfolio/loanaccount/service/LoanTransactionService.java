@@ -25,10 +25,13 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransaction;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionComparator;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionRepository;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -36,6 +39,17 @@ import org.springframework.stereotype.Service;
 public class LoanTransactionService {
 
     private final LoanTransactionRepository loanTransactionRepository;
+
+    public static final List<LoanTransactionType> PAYMENT_LOAN_TRANSACTION_TYPES = List.of(LoanTransactionType.REPAYMENT, //
+            LoanTransactionType.MERCHANT_ISSUED_REFUND, //
+            LoanTransactionType.PAYOUT_REFUND, //
+            LoanTransactionType.GOODWILL_CREDIT, //
+            LoanTransactionType.CHARGE_REFUND, //
+            LoanTransactionType.CHARGE_ADJUSTMENT, //
+            LoanTransactionType.DOWN_PAYMENT, //
+            LoanTransactionType.INTEREST_PAYMENT_WAIVER, //
+            LoanTransactionType.INTEREST_REFUND, //
+            LoanTransactionType.CAPITALIZED_INCOME_ADJUSTMENT);
 
     public List<LoanTransaction> retrieveListOfTransactionsForReprocessing(final Loan loan) {
         return loan.getLoanTransactions().stream().filter(loanTransactionForReprocessingPredicate())
@@ -54,6 +68,44 @@ public class LoanTransactionService {
         return transaction -> transaction.isNotReversed()
                 && (transaction.isChargeOff() || transaction.isReAge() || transaction.isAccrualActivity() || transaction.isReAmortize()
                         || !transaction.isNonMonetaryTransaction() || transaction.isContractTermination());
+    }
+
+    public Optional<LoanTransaction> findLastLoanTransactionByType(final Loan loan, final LoanTransactionType loanTransactionType) {
+        return loanTransactionRepository.findNonReversedByLoanAndType(loan, loanTransactionType, PageRequest.of(0, 1)) //
+                .stream().findFirst();
+    }
+
+    public List<LoanTransaction> fetchNonReversedMonetaryTransactionsByLoan(final Loan loan, final LoanTransaction newLoanTransaction) {
+        List<LoanTransaction> loanTransactions = loanTransactionRepository.findNonReversedMonetaryTransactionsByLoan(loan);
+        loanTransactions.add(newLoanTransaction);
+        loanTransactions.sort(LoanTransactionComparator.INSTANCE);
+        return loanTransactions;
+    }
+
+    public List<LoanTransaction> fetchNonReversedMonetaryTransactionsByLoan(final Loan loan) {
+        List<LoanTransaction> loanTransactions = loanTransactionRepository.findNonReversedMonetaryTransactionsByLoan(loan);
+        loanTransactions.sort(LoanTransactionComparator.INSTANCE);
+        return loanTransactions;
+    }
+
+    public Money calculateTotalPaidInRepayments(final Loan loan) {
+        return Money.of(loan.getCurrency(),
+                loanTransactionRepository.sumTotalAmountByLoanAndTransactionTypes(loan, PAYMENT_LOAN_TRANSACTION_TYPES));
+    }
+
+    private boolean hasChargeOffTransaction(final Loan loan) {
+        return loanTransactionRepository.hasChargeOffTransaction(loan);
+    }
+
+    public boolean hasContractTerminationTransaction(final Loan loan) {
+        return loanTransactionRepository.hasContractTerminationTransaction(loan);
+    }
+
+    public boolean shouldRegenerateRepaymentSchedule(final Loan loan) {
+        final boolean hasChargeOffTransaction = hasChargeOffTransaction(loan);
+        final boolean hasContractTerminationTransaction = hasContractTerminationTransaction(loan);
+        return loan.isProgressiveSchedule()
+                && ((hasChargeOffTransaction && loan.hasAccelerateChargeOffStrategy()) || hasContractTerminationTransaction);
     }
 
 }

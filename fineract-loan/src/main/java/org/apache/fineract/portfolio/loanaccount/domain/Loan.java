@@ -1806,16 +1806,8 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom<Long> {
         return false;
     }
 
-    public boolean hasChargeOffTransaction() {
-        return getLoanTransactions().stream().anyMatch(LoanTransaction::isChargeOff);
-    }
-
     public boolean hasAccelerateChargeOffStrategy() {
         return LoanChargeOffBehaviour.ACCELERATE_MATURITY.equals(getLoanProductRelatedDetail().getChargeOffBehaviour());
-    }
-
-    public boolean hasContractTerminationTransaction() {
-        return getLoanTransactions().stream().anyMatch(t -> t.isContractTermination() && t.isNotReversed());
     }
 
 }
