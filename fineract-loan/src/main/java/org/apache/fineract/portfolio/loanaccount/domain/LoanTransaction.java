@@ -914,6 +914,10 @@ public class LoanTransaction extends AbstractAuditableWithUTCDateTimeCustom<Long
                 retainMappings.add(newMapping);
             }
         }
+
+        if (retainMappings != null) {
+            retainMappings.removeIf(LoanTransactionToRepaymentScheduleMapping::isZeroAmount);
+        }
     }
 
     public void updateLoanChargePaidMappings(final Collection<LoanChargePaidBy> updatedMappings) {
