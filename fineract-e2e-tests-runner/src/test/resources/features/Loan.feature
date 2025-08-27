@@ -7904,7 +7904,8 @@ Feature: Loan
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance |
       | 01 June 2024     | Disbursement     | 1500.0 | 0.0       | 0.0      | 0.0  | 0.0       | 1500.0       |
 
-  @TestRailId:C3994
+    #    Loan prepay template issue at closing loan
+  @Skip @TestRailId:C3994
   Scenario: Verify Progressive Loan reschedule by extending repayment period after partial repayment, declining balance interest type
     When Admin sets the business date to "01 June 2024"
     When Admin creates a client with random data

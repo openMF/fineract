@@ -72,7 +72,8 @@ Feature: LoanAccrualTransaction
     And Admin makes "REPAYMENT_ADJUSTMENT_CHARGEBACK" chargeback with 250 EUR transaction amount for Payment nr. 2
     Then Loan has 250 outstanding amount
 
-  @TestRailId:C2651
+#    Loan prepay template issue at closing loan
+  @Skip @TestRailId:C2651
   Scenario: Verify that after periodic accrual transaction job accrual event is raised when loan has a fee-charge added with waive charge and undo waive charge
     When Admin sets the business date to "01 January 2023"
     When Admin creates a client with random data

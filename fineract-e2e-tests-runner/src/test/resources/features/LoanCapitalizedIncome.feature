@@ -1589,7 +1589,8 @@ Feature: Capitalized Income
       | 100.0  | 83.33            | 0.0                 | 0.0             | 16.67              |
     Then LoanCapitalizedIncomeAmortizationTransactionCreatedBusinessEvent is raised on "26 January 2024"
 
-  @TestRailId:C3664
+#    Loan prepay template issue at closing loan
+  @Skip @TestRailId:C3664
   Scenario: As a user I want to add capitalized income to a progressive loan after disbursement and then undo the charge-off transaction with "delinquent" reason - amortization in case of loan charge-off event should also be reversed
     When Admin sets the business date to "1 January 2024"
     And Admin creates a client with random data

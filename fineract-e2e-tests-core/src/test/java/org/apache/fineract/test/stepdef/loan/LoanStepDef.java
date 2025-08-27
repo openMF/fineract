@@ -3150,6 +3150,7 @@ public class LoanStepDef extends AbstractStepDef {
         Long loanId = loanCreateResponse.body().getLoanId();
         String loanExternalId = loanCreateResponse.body().getResourceExternalId();
         Response<DeleteLoansLoanIdResponse> deleteLoanResponse = loansApi.deleteLoanApplication1(loanExternalId).execute();
+        testContext().set(TestContextKey.LOAN_DELETE_RESPONSE, deleteLoanResponse);
         assertThat(deleteLoanResponse.body().getLoanId()).isEqualTo(loanId);
         assertThat(deleteLoanResponse.body().getResourceExternalId()).isEqualTo(loanExternalId);
     }
@@ -5544,45 +5545,57 @@ public class LoanStepDef extends AbstractStepDef {
 
     @Then("Close Loan")
     public void closeLoan() throws IOException {
-        if (null == testContext().get(TestContextKey.LOAN_CREATE_RESPONSE)) {
+        final Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        final Response<DeleteLoansLoanIdResponse> deleteLoanResponse = testContext().get(TestContextKey.LOAN_DELETE_RESPONSE);
+
+        if (loanResponse == null) {
             log.info("No loan was created - Loan closing step is not necessary");
             return;
+        } else if (loanResponse.body() == null) {
+            log.info("Loan created testContext is null - Loan closing step is not necessary");
+            return;
+        } else if (deleteLoanResponse != null) {
+            log.info("Loan was already deleted - Loan closing step is not necessary");
+            return;
         }
+
+        log.info("--- Closing loan... ---");
         inlineCOBStepDef.runInlineCOB();
 
-        final Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         final long loanId = loanResponse.body().getLoanId();
-
-        final Response<GetLoansLoanIdTransactionsTemplateResponse> template = loanTransactionsApi
-                .retrieveTransactionTemplate(loanId, "prepayLoan", null, null, null, null).execute();
-        ErrorHelper.checkSuccessfulApiCall(template);
-
         final Response<GetLoansLoanIdResponse> loanDetailsResponse = loansApi.retrieveLoan(loanId, false, "transactions", "", "").execute();
         ErrorHelper.checkSuccessfulApiCall(loanDetailsResponse);
 
-        Double amount = template.body().getAmount();
-        LocalDate date = template.body().getDate();
-        String dateStr = FORMATTER.format(date);
-        Integer id = loanDetailsResponse.body().getStatus().getId();
+        Response<BusinessDateResponse> businessDateResponse = businessDateApi.getBusinessDate(BusinessDateHelper.BUSINESS_DATE).execute();
+        ErrorHelper.checkSuccessfulApiCall(businessDateResponse);
+        String currentBusinessDate = FORMATTER.format(businessDateResponse.body().getDate());
+        Integer loanStatusId = loanDetailsResponse.body().getStatus().getId();
 
         // TODO debug!
-        log.info("Status id of loan at the end of testcase: {}", id);
-        log.info("Amount to pay at the end of testcase (from prepay template): {}", amount);
-        log.info("Actual date for loan close: {}", dateStr);
+        log.info("Status id of loan at the end of testcase: {}", loanStatusId);
 
-
-        switch (id) {
+        switch (loanStatusId) {
             case 300:
+                final Response<GetLoansLoanIdTransactionsTemplateResponse> template = loanTransactionsApi
+                        .retrieveTransactionTemplate(loanId, "prepayLoan", null, null, null, null).execute();
+                ErrorHelper.checkSuccessfulApiCall(template);
+                Double amount = template.body().getAmount();
+                LocalDate date = template.body().getDate();
+                String dateStr = FORMATTER.format(date);
+
+                log.info("Amount to pay at the end of testcase (from prepay template): {}", amount);
+                log.info("Actual date for loan close: {}", dateStr);
+
                 closeActiveLoan(amount, dateStr);
                 checkClosedLoan(loanId);
                 break;
             case 200:
                 undoLoanApproval();
-                rejectLoan(dateStr);
+                rejectLoan(currentBusinessDate);
                 checkClosedLoan(loanId);
                 break;
             case 100:
-                rejectLoan(dateStr);
+                rejectLoan(currentBusinessDate);
                 checkClosedLoan(loanId);
                 break;
             default:
