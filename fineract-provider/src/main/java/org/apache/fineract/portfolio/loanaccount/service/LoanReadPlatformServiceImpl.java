@@ -492,8 +492,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
                 final Loan loan = loanRepositoryWrapper.findOneWithNotFoundDetection(loanId);
                 BigDecimal capitalizedIncomeBalance = BigDecimal.ZERO;
                 if (loan.getLoanProduct().getLoanProductRelatedDetail().isEnableIncomeCapitalization()) {
-                    capitalizedIncomeBalance = loanCapitalizedIncomeBalanceRepository.findAllByLoanId(loanId).stream()
-                            .map(LoanCapitalizedIncomeBalance::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+                    capitalizedIncomeBalance = loanCapitalizedIncomeBalanceRepository.findAllByLoanIdAndDeletedFalseAndClosedFalse(loanId)
+                            .stream().map(LoanCapitalizedIncomeBalance::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
                 }
                 transactionAmount = loan.getLoanProduct().isAllowApprovedDisbursedAmountsOverApplied()
                         ? loanMaximumAmountCalculator.getOverAppliedMax(loan)
@@ -516,7 +516,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
             break;
             case CAPITALIZED_INCOME_ADJUSTMENT:
                 final LoanCapitalizedIncomeBalance loanCapitalizedIncomeBalance = loanCapitalizedIncomeBalanceRepository
-                        .findByLoanIdAndLoanTransactionId(loanId, transactionId);
+                        .findByLoanIdAndLoanTransactionIdAndDeletedFalseAndClosedFalse(loanId, transactionId);
 
                 transactionAmount = (loanCapitalizedIncomeBalance == null) ? BigDecimal.ZERO
                         : loanCapitalizedIncomeBalance.getAmount()
@@ -526,8 +526,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
                         paymentOptions, retriveLoanCurrencyData(loanId), classificationOptions);
             break;
             case BUY_DOWN_FEE_ADJUSTMENT:
-                final LoanBuyDownFeeBalance loanBuyDownFeeBalance = loanBuyDownFeeBalanceRepository.findByLoanIdAndLoanTransactionId(loanId,
-                        transactionId);
+                final LoanBuyDownFeeBalance loanBuyDownFeeBalance = loanBuyDownFeeBalanceRepository
+                        .findByLoanIdAndLoanTransactionIdAndDeletedFalseAndClosedFalse(loanId, transactionId);
 
                 transactionAmount = (loanBuyDownFeeBalance == null) ? BigDecimal.ZERO
                         : loanBuyDownFeeBalance.getAmount().subtract(MathUtil.nullToZero(loanBuyDownFeeBalance.getAmountAdjustment()));
@@ -2513,6 +2513,19 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService, Loa
         }
 
         return resolvedLoanId;
+    }
+
+    @Override
+    public Long getResolvedLoanTransactionId(final Long transactionId, final ExternalId externalTransactionId) {
+        Long resolvedLoanTransactionId = transactionId;
+        if (resolvedLoanTransactionId == null) {
+            externalTransactionId.throwExceptionIfEmpty();
+            resolvedLoanTransactionId = retrieveLoanTransactionIdByExternalId(externalTransactionId);
+            if (resolvedLoanTransactionId == null) {
+                throw new LoanTransactionNotFoundException(externalTransactionId);
+            }
+        }
+        return resolvedLoanTransactionId;
     }
 
     private LoanTransaction deriveDefaultInterestWaiverTransaction(final Loan loan) {
