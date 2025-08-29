@@ -280,11 +280,10 @@ public class LoanTransactionDataTest {
         BigDecimal transactionAmount = new BigDecimal("3000.00");
         Collection<PaymentTypeData> paymentOptions = mock(Collection.class);
         CurrencyData currency = new CurrencyData("USD", "US Dollar", 2, 0, "$", "USD");
-        List<CodeValueData> classificationOptions = mock(List.class);
 
         // When
         LoanTransactionData result = LoanTransactionData.loanTransactionDataForCreditTemplate(transactionType, transactionDate,
-                transactionAmount, paymentOptions, currency, classificationOptions);
+                transactionAmount, paymentOptions, currency);
 
         // Then
         assertEquals(transactionType, result.getType());
@@ -296,7 +295,6 @@ public class LoanTransactionDataTest {
         assertEquals(ExternalId.empty(), result.getExternalId());
         assertEquals(ExternalId.empty(), result.getExternalLoanId());
         assertEquals(ExternalId.empty(), result.getReversalExternalId());
-        assertEquals(classificationOptions, result.getClassificationOptions());
     }
 
     @Test
