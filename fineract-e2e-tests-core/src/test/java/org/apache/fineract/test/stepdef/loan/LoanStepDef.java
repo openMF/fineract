@@ -5759,11 +5759,11 @@ public class LoanStepDef extends AbstractStepDef {
             return transactionTypeExpected.equals(t.getType().getCode().substring(20));
         }).toList();
 
-        final Response<LoanAmortizationAllocationResponse> loanAmortizationAllocationResponse = transactionsMatch.getFirst().getType()
-                .getCode().substring(20).equals(GetLoansLoanIdLoanTransactionEnumData.SERIALIZED_NAME_CAPITALIZED_INCOME)
-                        ? loanCapitalizedIncomeApi.retrieveCapitalizedIncomeAllocationData(loanId, transactionsMatch.getFirst().getId())
+        final Response<LoanAmortizationAllocationResponse> loanAmortizationAllocationResponse = transactionsMatch.get(0).getType().getCode()
+                .substring(20).equals(GetLoansLoanIdLoanTransactionEnumData.SERIALIZED_NAME_CAPITALIZED_INCOME)
+                        ? loanCapitalizedIncomeApi.retrieveCapitalizedIncomeAllocationData(loanId, transactionsMatch.get(0).getId())
                                 .execute()
-                        : loanBuyDownFeesApi.retrieveBuyDownFeesAllocationData(loanId, transactionsMatch.getFirst().getId()).execute();
+                        : loanBuyDownFeesApi.retrieveBuyDownFeesAllocationData(loanId, transactionsMatch.get(0).getId()).execute();
         ErrorHelper.checkSuccessfulApiCall(loanAmortizationAllocationResponse);
 
         checkLoanAmortizationAllocationMappingData(resourceId, loanAmortizationAllocationResponse.body(), table);
