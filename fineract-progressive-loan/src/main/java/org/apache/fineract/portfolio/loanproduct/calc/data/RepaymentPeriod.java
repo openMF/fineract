@@ -316,7 +316,7 @@ public class RepaymentPeriod {
     public Money getOutstandingLoanBalance() {
         if (outstandingBalanceCalculation == null) {
             outstandingBalanceCalculation = Memo.of(() -> {
-                InterestPeriod lastInterestPeriod = getInterestPeriods().get(getInterestPeriods().size() - 1);
+                InterestPeriod lastInterestPeriod = getInterestPeriods().getLast();
                 Money calculatedOutStandingLoanBalance = lastInterestPeriod.getOutstandingLoanBalance() //
                         .plus(lastInterestPeriod.getBalanceCorrectionAmount(), getMc()) //
                         .plus(lastInterestPeriod.getCapitalizedIncomePrincipal(), getMc()) //
@@ -358,12 +358,12 @@ public class RepaymentPeriod {
     }
 
     public InterestPeriod getFirstInterestPeriod() {
-        return getInterestPeriods().get(0);
+        return getInterestPeriods().getFirst();
     }
 
     public InterestPeriod getLastInterestPeriod() {
         List<InterestPeriod> interestPeriods = getInterestPeriods();
-        return interestPeriods.get(interestPeriods.size() - 1);
+        return interestPeriods.getLast();
     }
 
     public Optional<InterestPeriod> findInterestPeriod(@NotNull LocalDate transactionDate) {

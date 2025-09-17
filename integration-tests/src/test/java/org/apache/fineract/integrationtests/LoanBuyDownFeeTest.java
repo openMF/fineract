@@ -659,7 +659,7 @@ public class LoanBuyDownFeeTest extends BaseLoanIntegrationTest {
         assertNotNull(amortizationDetails);
         assertFalse(amortizationDetails.isEmpty());
 
-        final BuyDownFeeAmortizationDetails amortizationDetail = amortizationDetails.get(0);
+        final BuyDownFeeAmortizationDetails amortizationDetail = amortizationDetails.getFirst();
         assertNotNull(amortizationDetail);
         assertNotNull(amortizationDetail.getId());
         assertEquals(loanId, amortizationDetail.getLoanId());

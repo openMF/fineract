@@ -5402,7 +5402,7 @@ public class LoanStepDef extends AbstractStepDef {
         ErrorResponse errorDetails = ErrorResponse.from(modifyLoanApprovedAmountResponse);
         assertThat(errorDetails.getHttpStatusCode()).isEqualTo(403);
 
-        Object errorArgs = errorDetails.getErrors().get(0).getArgs().get(0).getValue();
+        Object errorArgs = errorDetails.getErrors().getFirst().getArgs().getFirst().getValue();
         String developerMessage;
         if (errorArgs instanceof Map errorArgsMap) {
             developerMessage = (String) errorArgsMap.get("developerMessage");
@@ -5428,7 +5428,7 @@ public class LoanStepDef extends AbstractStepDef {
         ErrorResponse errorDetails = ErrorResponse.from(modifyLoanApprovedAmountResponse);
         assertThat(errorDetails.getHttpStatusCode()).isEqualTo(403);
 
-        Object errorArgs = errorDetails.getErrors().get(0).getArgs().get(0).getValue();
+        Object errorArgs = errorDetails.getErrors().getFirst().getArgs().getFirst().getValue();
         String developerMessage;
         if (errorArgs instanceof Map errorArgsMap) {
             developerMessage = (String) errorArgsMap.get("developerMessage");
@@ -5455,7 +5455,7 @@ public class LoanStepDef extends AbstractStepDef {
         ErrorResponse errorDetails = ErrorResponse.from(modifyLoanApprovedAmountResponse);
         assertThat(errorDetails.getHttpStatusCode()).isEqualTo(403);
 
-        Object errorArgs = errorDetails.getErrors().get(0).getArgs().get(0).getValue();
+        Object errorArgs = errorDetails.getErrors().getFirst().getArgs().getFirst().getValue();
         String developerMessage;
         if (errorArgs instanceof Map errorArgsMap) {
             developerMessage = (String) errorArgsMap.get("developerMessage");
@@ -5515,7 +5515,7 @@ public class LoanStepDef extends AbstractStepDef {
         ErrorResponse errorDetails = ErrorResponse.from(modifyLoanAvailableDisbursementAmountResponse);
         assertThat(errorDetails.getHttpStatusCode()).isEqualTo(403);
 
-        Object errorArgs = errorDetails.getErrors().get(0).getArgs().get(0).getValue();
+        Object errorArgs = errorDetails.getErrors().getFirst().getArgs().getFirst().getValue();
         String developerMessage;
         if (errorArgs instanceof Map errorArgsMap) {
             developerMessage = (String) errorArgsMap.get("developerMessage");
@@ -5541,7 +5541,7 @@ public class LoanStepDef extends AbstractStepDef {
         ErrorResponse errorDetails = ErrorResponse.from(modifyLoanAvailableDisbursementAmountResponse);
         assertThat(errorDetails.getHttpStatusCode()).isEqualTo(403);
 
-        Object errorArgs = errorDetails.getErrors().get(0).getArgs().get(0).getValue();
+        Object errorArgs = errorDetails.getErrors().getFirst().getArgs().getFirst().getValue();
         String developerMessage;
         if (errorArgs instanceof Map errorArgsMap) {
             developerMessage = (String) errorArgsMap.get("developerMessage");
@@ -5567,7 +5567,7 @@ public class LoanStepDef extends AbstractStepDef {
         ErrorResponse errorDetails = ErrorResponse.from(modifyLoanAvailableDisbursementAmountResponse);
         assertThat(errorDetails.getHttpStatusCode()).isEqualTo(403);
 
-        Object errorArgs = errorDetails.getErrors().get(0).getArgs().get(0).getValue();
+        Object errorArgs = errorDetails.getErrors().getFirst().getArgs().getFirst().getValue();
         String developerMessage;
         if (errorArgs instanceof Map errorArgsMap) {
             developerMessage = (String) errorArgsMap.get("developerMessage");
@@ -5759,11 +5759,11 @@ public class LoanStepDef extends AbstractStepDef {
             return transactionTypeExpected.equals(t.getType().getCode().substring(20));
         }).toList();
 
-        final Response<LoanAmortizationAllocationResponse> loanAmortizationAllocationResponse = transactionsMatch.get(0).getType().getCode()
-                .substring(20).equals(GetLoansLoanIdLoanTransactionEnumData.SERIALIZED_NAME_CAPITALIZED_INCOME)
-                        ? loanCapitalizedIncomeApi.retrieveCapitalizedIncomeAllocationData(loanId, transactionsMatch.get(0).getId())
+        final Response<LoanAmortizationAllocationResponse> loanAmortizationAllocationResponse = transactionsMatch.getFirst().getType()
+                .getCode().substring(20).equals(GetLoansLoanIdLoanTransactionEnumData.SERIALIZED_NAME_CAPITALIZED_INCOME)
+                        ? loanCapitalizedIncomeApi.retrieveCapitalizedIncomeAllocationData(loanId, transactionsMatch.getFirst().getId())
                                 .execute()
-                        : loanBuyDownFeesApi.retrieveBuyDownFeesAllocationData(loanId, transactionsMatch.get(0).getId()).execute();
+                        : loanBuyDownFeesApi.retrieveBuyDownFeesAllocationData(loanId, transactionsMatch.getFirst().getId()).execute();
         ErrorHelper.checkSuccessfulApiCall(loanAmortizationAllocationResponse);
 
         checkLoanAmortizationAllocationMappingData(resourceId, loanAmortizationAllocationResponse.body(), table);

@@ -20,7 +20,7 @@ If you are interested in contributing to this project, but perhaps don't quite k
 
 REQUIREMENTS
 ============
-* `Java >= 17` (Azul Zulu JVM is tested by our CI on GitHub Actions)
+* `Java >= 21` (Azul Zulu JVM is tested by our CI on GitHub Actions)
 * MariaDB `11.5.2`
 
 You can run the required version of the database server in a container, instead of having to install it, like this:
@@ -33,7 +33,7 @@ and stop and destroy it like this:
 
 <br>Beware that this database container database keeps its state inside the container and not on the host filesystem.  It is lost when you destroy (rm) this container.  This is typically fine for development.  See [Caveats: Where to Store Data on the database container documentation](https://hub.docker.com/_/mariadb) re. how to make it persistent instead of ephemeral.<br>
 
-Tomcat v9 is only required if you wish to deploy the Fineract WAR to a separate external servlet container.  Note that you do not require to install Tomcat to develop Fineract, or to run it in production if you use the self-contained JAR, which transparently embeds a servlet container using Spring Boot.  (Until FINERACT-730, Tomcat 7/8 were also supported, but now Tomcat 9 is required.)
+Tomcat v10 is only required if you wish to deploy the Fineract WAR to a separate external servlet container.  Note that you do not require to install Tomcat to develop Fineract, or to run it in production if you use the self-contained JAR, which transparently embeds a servlet container using Spring Boot.  (Until FINERACT-730, Tomcat 7/8 were also supported, but now Tomcat 10 is required.)
 
 <br>IMPORTANT: If you use MySQL or MariaDB
 ============
@@ -95,7 +95,7 @@ For details about security during development and deployment, see <https://finer
 ============
 1. Clone the repository or download and extract the archive file to your local directory.
 2. Run `./gradlew :fineract-war:clean :fineract-war:war` to build a traditional WAR file which will be created at `fineract-war/build/libs` directory.
-3. Deploy this WAR to your Tomcat v9 Servlet Container.
+3. Deploy this WAR to your Tomcat v10 Servlet Container.
 
 We recommend using the JAR instead of the WAR file deployment, because it's much easier.
 
@@ -145,7 +145,7 @@ You might see something like this if a Java 11 executable (class file format ver
 UnsupportedClassVersionError: com.example.package/ClassName has been compiled by a more recent version of the Java Runtime (class file version 65.0), this version of the Java Runtime only recognizes class file versions up to 55.0
 ```
 
-These builds are run in [short-lived virtual machines](https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners), so locally reproducing the same may require additional effort, such as these extra clean-up procedures:
+The GitHub builds are run in [short-lived virtual machines](https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners), so locally reproducing the same may require additional effort, such as these extra clean-up procedures:
 
 ```bash
 # Might fix `error: cannot find symbol` or other intermittent failures.

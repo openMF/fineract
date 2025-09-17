@@ -91,9 +91,10 @@ public class LoanAccrualActivityProcessingServiceImpl implements LoanAccrualActi
             final LocalDate dueDate = installment.getDueDate();
             final List<LoanTransaction> existingActivities = existingActivitiesByDate.getOrDefault(dueDate, Collections.emptyList());
 
-            final LoanTransaction existingActivity = existingActivities.iterator().hasNext() ? existingActivities.iterator().next() : null;
+            final boolean hasExisting = !existingActivities.isEmpty();
+            final LoanTransaction existingActivity = hasExisting ? existingActivities.getFirst() : null;
             makeOrReplayActivity(loan, installment, existingActivity);
-            if (existingActivity != null) {
+            if (hasExisting) {
                 existingActivities.remove(existingActivity);
                 existingActivities.forEach(this::reverseAccrualActivityTransaction);
             }
@@ -144,9 +145,8 @@ public class LoanAccrualActivityProcessingServiceImpl implements LoanAccrualActi
                     // Reverse and recreate if inconsistent or duplicate
                     installmentAccruals.forEach(this::reverseAccrualActivityTransaction);
                     makeAccrualActivityTransaction(loan, installment, installment.getDueDate());
-                } else if (!validateActivityTransaction(installment, installmentAccruals.iterator().next())) {
-                    reverseReplayAccrualActivityTransaction(loan, installmentAccruals.iterator().next(), installment,
-                            installment.getDueDate());
+                } else if (!validateActivityTransaction(installment, installmentAccruals.getFirst())) {
+                    reverseReplayAccrualActivityTransaction(loan, installmentAccruals.getFirst(), installment, installment.getDueDate());
                 }
             }
         }

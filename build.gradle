@@ -143,9 +143,12 @@ gitVersioning.apply {
         branch("maintenance\\/\\d+\\.\\d+") {
             version = '${describe.tag.version.major}.${describe.tag.version.minor}.${describe.tag.version.patch}'
         }
+        tag("(\\d+\\.\\d+\\.\\d+)") {
+            version = '${describe.tag.version.major}.${describe.tag.version.minor}.${describe.tag.version.patch}'
+        }
     }
     rev {
-        version = '${describe.tag.version.major}.${describe.tag.version.minor.next}.${describe.tag.version.patch}-SNAPSHOT'
+        version = '${describe.tag.version.major}.${describe.tag.version.minor.next}.0-SNAPSHOT'
     }
 }
 
@@ -374,8 +377,9 @@ configure(project.fineractJavaProjects) {
     apply plugin: 'idea'
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
         withSourcesJar()
         withJavadocJar()
     }
@@ -748,12 +752,6 @@ configure(project.fineractJavaProjects) {
     tasks.withType(Javadoc) {
         options.addStringOption('Xdoclint:none', '-quiet')
         options.encoding = 'UTF-8'
-        // Disable strict checking to prevent build failures on invalid javadoc
-        options.addBooleanOption('html5', true)
-        // Add this if you're using Java 17 records or other modern features
-        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
-            options.addBooleanOption('html5', true)
-        }
         // Ignore any errors during javadoc generation
         failOnError = false
     }

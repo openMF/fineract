@@ -152,8 +152,8 @@ class BatchApiServiceImplTest {
 
         List<BatchResponse> result = batchApiService.handleBatchRequestsWithEnclosingTransaction(requestList, uriInfo);
         assertEquals(1, result.size());
-        assertEquals(200, result.iterator().next().getStatusCode());
-        assertTrue(result.iterator().next().getBody().contains("Success"));
+        assertEquals(200, result.getFirst().getStatusCode());
+        assertTrue(result.getFirst().getBody().contains("Success"));
 
         verify(transactionManager, times(2)).commit(any());
         verify(entityManager, times(2)).flush();
@@ -175,8 +175,8 @@ class BatchApiServiceImplTest {
                 .thenReturn(new DefaultTransactionStatus("txn_name", null, true, true, false, false, false, null));
         List<BatchResponse> result = batchApiService.handleBatchRequestsWithEnclosingTransaction(requestList, uriInfo);
         assertEquals(1, result.size());
-        assertEquals(200, result.iterator().next().getStatusCode());
-        assertTrue(result.iterator().next().getBody().contains("Success"));
+        assertEquals(200, result.getFirst().getStatusCode());
+        assertTrue(result.getFirst().getBody().contains("Success"));
         Mockito.verify(entityManager, times(2)).flush();
     }
 
@@ -198,8 +198,8 @@ class BatchApiServiceImplTest {
                 .thenReturn(new DefaultTransactionStatus("txn_name", null, true, true, false, false, false, null));
         List<BatchResponse> result = batchApiService.handleBatchRequestsWithEnclosingTransaction(requestList, uriInfo);
         assertEquals(1, result.size());
-        assertEquals(500, result.iterator().next().getStatusCode());
-        assertTrue(result.iterator().next().getBody().contains("Failed"));
+        assertEquals(500, result.getFirst().getStatusCode());
+        assertTrue(result.getFirst().getBody().contains("Failed"));
         Mockito.verify(entityManager, times(3)).flush();
     }
 

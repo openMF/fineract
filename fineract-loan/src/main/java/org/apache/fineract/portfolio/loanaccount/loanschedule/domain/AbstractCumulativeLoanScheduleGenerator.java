@@ -404,7 +404,7 @@ public abstract class AbstractCumulativeLoanScheduleGenerator implements LoanSch
         // this condition is to add the interest from grace period if not
         // already applied.
         if (scheduleParams.getTotalOutstandingInterestPaymentDueToGrace().isGreaterThanZero()) {
-            LoanScheduleModelPeriod installment = periods.get(periods.size() - 1);
+            LoanScheduleModelPeriod installment = periods.getLast();
             installment.addInterestAmount(scheduleParams.getTotalOutstandingInterestPaymentDueToGrace());
             scheduleParams.addTotalRepaymentExpected(scheduleParams.getTotalOutstandingInterestPaymentDueToGrace());
             scheduleParams.addTotalCumulativeInterest(scheduleParams.getTotalOutstandingInterestPaymentDueToGrace());
@@ -2518,10 +2518,9 @@ public abstract class AbstractCumulativeLoanScheduleGenerator implements LoanSch
 
         }
 
-        if (!retainedInstallments.isEmpty()
-                && retainedInstallments.get(retainedInstallments.size() - 1).getRescheduleInterestPortion() != null) {
+        if (!retainedInstallments.isEmpty() && retainedInstallments.getLast().getRescheduleInterestPortion() != null) {
             loanApplicationTerms.setInterestTobeApproppriated(
-                    Money.of(loan.getCurrency(), retainedInstallments.get(retainedInstallments.size() - 1).getRescheduleInterestPortion()));
+                    Money.of(loan.getCurrency(), retainedInstallments.getLast().getRescheduleInterestPortion()));
         }
         LoanScheduleModel loanScheduleModel = generate(mc, loanApplicationTerms, loan.getActiveCharges(), holidayDetailDTO,
                 loanScheduleParams);

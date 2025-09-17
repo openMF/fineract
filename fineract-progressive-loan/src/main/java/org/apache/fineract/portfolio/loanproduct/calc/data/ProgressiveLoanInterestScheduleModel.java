@@ -162,13 +162,13 @@ public class ProgressiveLoanInterestScheduleModel {
         if (repaymentPeriods.isEmpty()) {
             return 0;
         }
-        final RepaymentPeriod firstPeriod = repaymentPeriods.iterator().next();
+        final RepaymentPeriod firstPeriod = repaymentPeriods.getFirst();
         final RepaymentPeriod lastPeriod = repaymentPeriods.size() > 1 ? getLastRepaymentPeriod() : firstPeriod;
         return DateUtils.getExactDifferenceInDays(firstPeriod.getFromDate(), lastPeriod.getDueDate());
     }
 
     public LocalDate getStartDate() {
-        return !repaymentPeriods.isEmpty() ? repaymentPeriods.iterator().next().getFromDate() : null;
+        return !repaymentPeriods.isEmpty() ? repaymentPeriods.getFirst().getFromDate() : null;
     }
 
     public LocalDate getMaturityDate() {
@@ -295,7 +295,7 @@ public class ProgressiveLoanInterestScheduleModel {
         } else {
             return repaymentPeriod.getInterestPeriods().stream()
                     .filter(ip -> date.isAfter(ip.getFromDate()) && !date.isAfter(ip.getDueDate())).reduce((first, second) -> second)
-                    .orElse(repaymentPeriod.getInterestPeriods().iterator().next());
+                    .orElse(repaymentPeriod.getInterestPeriods().getFirst());
         }
     }
 
@@ -370,7 +370,7 @@ public class ProgressiveLoanInterestScheduleModel {
 
     @NotNull
     public RepaymentPeriod getLastRepaymentPeriod() {
-        return repaymentPeriods.get(repaymentPeriods.size() - 1);
+        return repaymentPeriods.getLast();
     }
 
     public boolean isLastRepaymentPeriod(@NotNull RepaymentPeriod repaymentPeriod) {

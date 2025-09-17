@@ -473,7 +473,7 @@ public abstract class AbstractLoanRepaymentScheduleTransactionProcessor implemen
 
     protected void reprocessInstallments(LocalDate disbursementDate, List<LoanTransaction> transactions,
             List<LoanRepaymentScheduleInstallment> installments, MonetaryCurrency currency) {
-        LoanRepaymentScheduleInstallment lastInstallment = installments.get(installments.size() - 1);
+        LoanRepaymentScheduleInstallment lastInstallment = installments.getLast();
         if (lastInstallment.isAdditional() && lastInstallment.getDue(currency).isZero()) {
             installments.remove(lastInstallment);
         }
@@ -603,7 +603,7 @@ public abstract class AbstractLoanRepaymentScheduleTransactionProcessor implemen
             // New installment will be added (N+1 scenario)
             if (!loanTransactionMapped) {
                 if (loanTransaction.getTransactionDate().equals(pastDueDate)) {
-                    LoanRepaymentScheduleInstallment currentInstallment = installmentToBeProcessed.get(installmentToBeProcessed.size() - 1);
+                    LoanRepaymentScheduleInstallment currentInstallment = installmentToBeProcessed.getLast();
                     currentInstallment.addToCreditedPrincipal(transactionAmount.getAmount());
                     currentInstallment.addToPrincipal(transactionDate, transactionAmount);
                     if (repaidAmount.isGreaterThanZero()) {
@@ -644,7 +644,7 @@ public abstract class AbstractLoanRepaymentScheduleTransactionProcessor implemen
         final Set<LoanCharge> loanPenalties = extractPenaltyCharges(charges);
         Integer installmentNumber = null;
         if (loanTransaction.isChargePayment() && installments.size() == 1) {
-            installmentNumber = installments.iterator().next().getInstallmentNumber();
+            installmentNumber = installments.getFirst().getInstallmentNumber();
         }
 
         if (loanTransaction.isNotWaiver() && !loanTransaction.isAccrual() && !loanTransaction.isAccrualActivity()) {
@@ -958,7 +958,7 @@ public abstract class AbstractLoanRepaymentScheduleTransactionProcessor implemen
         if (!CollectionUtils.isEmpty(chargesWithSpecificDueDate)) {
             chargesWithSpecificDueDate
                     .sort((charge1, charge2) -> DateUtils.compare(charge1.getEffectiveDueDate(), charge2.getEffectiveDueDate()));
-            latestCharge = chargesWithSpecificDueDate.get(chargesWithSpecificDueDate.size() - 1);
+            latestCharge = chargesWithSpecificDueDate.getLast();
         }
         return latestCharge;
     }
