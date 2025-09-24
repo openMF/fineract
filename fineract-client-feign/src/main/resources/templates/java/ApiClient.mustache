@@ -1,0 +1,29 @@
+{{>generatedAnnotation}}
+@jakarta.annotation.Generated(
+    value = "{{generatorClass}}",
+    date = "{{generatedDate}}",
+    comments = "{{#useOas2}}Swagger{{/useOas2}}{{^useOas2}}OpenAPI{{/useOas2}} version: {{appVersion}}"
+)
+{{#operations}}
+public interface {{classname}}Client {
+{{#operation}}
+    /**
+     * {{summary}}
+     * {{notes}}
+     *
+     * @param {{#allParams}}{{{paramName}}} {{description}}{{#hasMore}} (required){{/hasMore}}{{^hasMore}} ({{#required}}required{{/required}}{{^required}}optional{{^isNullable}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}{{/isNullable}}{{#defaultValue}}{{^isString}} {{.}}{{/isString}}{{/defaultValue}}{{^defaultValue}}{{#isEnumRef}}{{#allowableValues}}, must be one of {{#enumVars}}{{{value}}}{{^-last}}, {{/-last}}{{/enumVars}}{{/allowableValues}}{{/isEnumRef}}{{/defaultValue}}{{#minimum}}, minimum={{minimum}}{{/minimum}}{{#maximum}}, maximum={{maximum}}{{/maximum}}{{/required}}){{/hasMore}}{{#hasMore}}, {{/hasMore}}{{/allParams}}
+     * @return {{^vendorExtensions.x-java-is-response-void}}Response with status and {{/vendorExtensions.x-java-is-response-void}}{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}}
+     */
+    @RequestLine("{{httpMethod}} {{path}}")
+    @Headers({
+        "Content-Type: {{consumes}}",
+        "Accept: {{produces}}"
+    })
+    {{#returnType}}{{{returnType}}} {{/returnType}}{{^returnType}}void {{/returnType}}{{operationId}}({{#allParams}}
+        @Param("{{baseName}}") {{#isFile}}{{{dataType}}}{{/isFile}}{{^isFile}}{{{dataType}}}{{/isFile}} {{paramName}}{{#hasMore}},{{/hasMore}}
+    {{/allParams}});
+
+{{/operation}}
+}
+{{/operations}}
+}
