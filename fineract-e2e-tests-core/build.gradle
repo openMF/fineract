@@ -102,3 +102,26 @@ dependencies {
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs.add("-parameters")
 }
+
+// Configure the jar task to include test classes and resources
+tasks.named('jar') {
+    from sourceSets.test.output
+    
+    // Include the test resources
+    from(sourceSets.test.resources) {
+        // Handle duplicate files by using the first one found
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+    
+    // Include the manifest with the classpath
+    manifest {
+        attributes(
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version,
+            'Built-By': System.getProperty('user.name'),
+            'Built-Date': new Date(),
+            'Created-By': 'Gradle ' + gradle.gradleVersion,
+            'Build-Jdk': System.getProperty('java.version')
+        )
+    }
+}
