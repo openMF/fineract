@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.portfolio.loanaccount.api;
 
+import com.google.gson.JsonElement;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -52,6 +53,7 @@ import org.apache.fineract.commands.service.CommandWrapperBuilder;
 import org.apache.fineract.commands.service.PortfolioCommandSourceWritePlatformService;
 import org.apache.fineract.infrastructure.core.api.ApiRequestParameterHelper;
 import org.apache.fineract.infrastructure.core.api.DateParam;
+import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.api.jersey.Pagination;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.data.DateFormat;
@@ -59,6 +61,7 @@ import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.infrastructure.core.exception.UnrecognizedQueryParamException;
 import org.apache.fineract.infrastructure.core.serialization.ApiRequestJsonSerializationSettings;
 import org.apache.fineract.infrastructure.core.serialization.DefaultToApiJsonSerializer;
+import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.infrastructure.core.service.CommandParameterUtil;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
@@ -69,8 +72,10 @@ import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.apache.fineract.portfolio.loanaccount.exception.InvalidLoanTransactionTypeException;
 import org.apache.fineract.portfolio.loanaccount.exception.LoanNotFoundException;
 import org.apache.fineract.portfolio.loanaccount.exception.LoanTransactionNotFoundException;
+import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanScheduleData;
 import org.apache.fineract.portfolio.loanaccount.service.LoanChargePaidByReadService;
 import org.apache.fineract.portfolio.loanaccount.service.LoanReadPlatformService;
+import org.apache.fineract.portfolio.loanaccount.service.reaging.LoanReAgingService;
 import org.apache.fineract.portfolio.paymenttype.data.PaymentTypeData;
 import org.apache.fineract.portfolio.paymenttype.service.PaymentTypeReadPlatformService;
 import org.springframework.data.domain.Page;
@@ -101,9 +106,12 @@ public class LoanTransactionsApiResource {
     private final LoanReadPlatformService loanReadPlatformService;
     private final ApiRequestParameterHelper apiRequestParameterHelper;
     private final DefaultToApiJsonSerializer<LoanTransactionData> toApiJsonSerializer;
+    private final DefaultToApiJsonSerializer<LoanScheduleData> loanScheduleToApiJsonSerializer;
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
     private final PaymentTypeReadPlatformService paymentTypeReadPlatformService;
     private final LoanChargePaidByReadService loanChargePaidByReadService;
+    private final LoanReAgingService loanReAgingService;
+    private final FromJsonHelper fromJsonHelper;
 
     @GET
     @Path("{loanId}/transactions/template")
@@ -772,5 +780,51 @@ public class LoanTransactionsApiResource {
         } else {
             throw new IllegalArgumentException("loanId and loanExternalId cannot be both null");
         }
+    }
+
+    @POST
+    @Path("{loanId}/transactions/reage-preview")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Preview Re-Age Schedule", description = "Generates a preview of the re-aged loan schedule based on the provided parameters without creating any transactions or modifying the loan.")
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = LoanTransactionsApiResourceSwagger.PostLoansLoanIdTransactionsRequest.class)))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanScheduleData.class))) })
+    public String previewReAgeSchedule(@PathParam("loanId") @Parameter(description = "loanId", required = true) final Long loanId,
+            @Parameter(hidden = true) final String apiRequestBodyAsJson, @Context final UriInfo uriInfo) {
+        final LoanScheduleData result = previewReAgeScheduleInternal(loanId, null, apiRequestBodyAsJson);
+        final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
+        return this.loanScheduleToApiJsonSerializer.serialize(settings, result, new HashSet<>());
+    }
+
+    @POST
+    @Path("external-id/{loanExternalId}/transactions/reage-preview")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Preview Re-Age Schedule", description = "Generates a preview of the re-aged loan schedule based on the provided parameters without creating any transactions or modifying the loan.")
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = LoanTransactionsApiResourceSwagger.PostLoansLoanIdTransactionsRequest.class)))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanScheduleData.class))) })
+    public String previewReAgeSchedule(
+            @PathParam("loanExternalId") @Parameter(description = "loanExternalId", required = true) final String loanExternalId,
+            @Parameter(hidden = true) final String apiRequestBodyAsJson, @Context final UriInfo uriInfo) {
+
+        final LoanScheduleData result = previewReAgeScheduleInternal(null, loanExternalId, apiRequestBodyAsJson);
+        final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
+        return this.loanScheduleToApiJsonSerializer.serialize(settings, result, new HashSet<>());
+    }
+
+    private LoanScheduleData previewReAgeScheduleInternal(final Long loanId, final String loanExternalIdStr,
+            final String apiRequestBodyAsJson) {
+        this.context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
+
+        final ExternalId loanExternalId = ExternalIdFactory.produce(loanExternalIdStr);
+        final Long resolvedLoanId = loanId == null ? loanReadPlatformService.getResolvedLoanId(loanExternalId) : loanId;
+
+        final JsonElement parsedCommand = this.fromJsonHelper.parse(apiRequestBodyAsJson);
+        final JsonCommand command = JsonCommand.from(apiRequestBodyAsJson, parsedCommand, this.fromJsonHelper, null, null, null, null, null,
+                resolvedLoanId, null, null, null, null, null, null, null, null);
+
+        return loanReAgingService.previewReAge(resolvedLoanId, command);
     }
 }
