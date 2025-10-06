@@ -3,7 +3,7 @@ name: Publish Fineract client to Mifos Artifactory
 on:
   push:
     branches:
-      - develop-mifos
+      - develop
 
 permissions:
   contents: write
