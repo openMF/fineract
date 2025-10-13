@@ -52,6 +52,7 @@
   <include relativeToChangelogFile="true" file="parts/1027_add_capitalized_income_transaction_type.xml"/>
   <include relativeToChangelogFile="true" file="parts/1029_step_1_migration_installment_amount_in_multiples_of.xml"/>
   <include relativeToChangelogFile="true" file="parts/1029_step_2_migration_installment_amount_in_multiples_of.xml"/>
+  <include relativeToChangelogFile="true" file="parts/1029_step_3_migration_installment_amount_in_multiples_of.xml"/>
   <include relativeToChangelogFile="true" file="parts/1030_add_loan_undo_contract_termination_event.xml"/>
   <include relativeToChangelogFile="true" file="parts/1031_loan_merchant_buy_down_fee.xml"/>
   <include relativeToChangelogFile="true" file="parts/1032_add_classification_to_loan_transaction.xml"/>

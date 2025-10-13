@@ -83,7 +83,7 @@ public class InternalProgressiveLoanApiResource implements InitializingBean {
         }
 
         return writePlatformService.readProgressiveLoanInterestScheduleModel(loanId, loan.getLoanRepaymentScheduleDetail(),
-                loan.getInstallmentAmountInMultiplesOf()).orElse(null);
+                loan.getLoanProductRelatedDetail().getInstallmentAmountInMultiplesOf()).orElse(null);
     }
 
     private ProgressiveLoanInterestScheduleModel reprocessTransactionsAndGetModel(final Loan loan) {

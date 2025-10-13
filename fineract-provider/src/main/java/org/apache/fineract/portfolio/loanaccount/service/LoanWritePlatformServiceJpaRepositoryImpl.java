@@ -435,8 +435,9 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                             .getDisbursedAmountPercentageForDownPayment();
                     Money downPaymentMoney = Money.of(loan.getCurrency(),
                             MathUtil.percentageOf(amountToDisburse.getAmount(), disbursedAmountPercentageForDownPayment, 19));
-                    if (loan.getInstallmentAmountInMultiplesOf() != null) {
-                        downPaymentMoney = Money.roundToMultiplesOf(downPaymentMoney, loan.getInstallmentAmountInMultiplesOf());
+                    if (loan.getLoanProductRelatedDetail().getInstallmentAmountInMultiplesOf() != null) {
+                        downPaymentMoney = Money.roundToMultiplesOf(downPaymentMoney,
+                                loan.getLoanProductRelatedDetail().getInstallmentAmountInMultiplesOf());
                     }
                     final AccountTransferDTO accountTransferDTO = new AccountTransferDTO(actualDisbursementDate,
                             downPaymentMoney.getAmount(), PortfolioAccountType.SAVINGS, PortfolioAccountType.LOAN,
