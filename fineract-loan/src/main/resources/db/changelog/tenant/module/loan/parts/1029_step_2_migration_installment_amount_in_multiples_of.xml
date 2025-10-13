@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet author="fineract" id="1029-step-2" context="postgresql" runInTransaction="false">
+        <sql splitStatements="false">
+            DO $$
+            DECLARE
+            v_rows_updated INTEGER;
+                v_batch_count INTEGER := 0;
+                v_total_updated BIGINT := 0;
+                v_start_time TIMESTAMP := NOW();
+                v_duration NUMERIC;
+            BEGIN
+                RAISE NOTICE 'Starting batch update at % with batch size: 10000', v_start_time;
+
+                LOOP
+            WITH batch AS (
+                        SELECT l.id, lp.installment_amount_in_multiples_of
+                        FROM m_loan l
+                        INNER JOIN m_product_loan lp ON lp.id = l.product_id
+                        WHERE (l.installment_amount_in_multiples_of IS NULL
+                               OR l.installment_amount_in_multiples_of IS DISTINCT FROM lp.installment_amount_in_multiples_of)
+                          AND lp.installment_amount_in_multiples_of IS NOT NULL
+                        ORDER BY l.id
+                        LIMIT 10000
+                        FOR UPDATE OF l SKIP LOCKED
+                    )
+            UPDATE m_loan
+            SET installment_amount_in_multiples_of = batch.installment_amount_in_multiples_of FROM batch
+            WHERE m_loan.id = batch.id;
+
+            GET DIAGNOSTICS v_rows_updated = ROW_COUNT;
+            v_batch_count := v_batch_count + 1;
+                    v_total_updated := v_total_updated + v_rows_updated;
+
+                    RAISE NOTICE 'Batch %: Updated % rows. Total: %', v_batch_count, v_rows_updated, v_total_updated;
+
+                    EXIT WHEN v_rows_updated = 0;
+            COMMIT;
+
+            PERFORM pg_sleep(0.1);
+            END LOOP;
+
+                v_duration := EXTRACT(EPOCH FROM (NOW() - v_start_time));
+
+                RAISE NOTICE 'Completed at %. Total rows updated: %. Duration: % seconds', NOW(), v_total_updated, v_duration;
+            END $$;
+        </sql>
+    </changeSet>
+</databaseChangeLog>
