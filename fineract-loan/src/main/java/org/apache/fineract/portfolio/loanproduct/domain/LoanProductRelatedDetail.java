@@ -207,6 +207,9 @@ public class LoanProductRelatedDetail implements LoanProductMinimumRepaymentSche
     @Column(name = "is_merchant_buy_down_fee")
     private boolean merchantBuyDownFee = true;
 
+    @Column(name = "installment_amount_in_multiples_of")
+    private Integer installmentAmountInMultiplesOf;
+
     public static LoanProductRelatedDetail createFrom(final CurrencyData currencyData, final BigDecimal principal,
             final BigDecimal nominalInterestRatePerPeriod, final PeriodFrequencyType interestRatePeriodFrequencyType,
             final BigDecimal nominalAnnualInterestRate, final InterestMethod interestMethod,
@@ -224,9 +227,9 @@ public class LoanProductRelatedDetail implements LoanProductMinimumRepaymentSche
             final DaysInYearCustomStrategyType daysInYearCustomStrategy, final boolean enableIncomeCapitalization,
             final LoanCapitalizedIncomeCalculationType capitalizedIncomeCalculationType,
             final LoanCapitalizedIncomeStrategy capitalizedIncomeStrategy, final LoanCapitalizedIncomeType capitalizedIncomeType,
-            final boolean enableBuyDownFee, final LoanBuyDownFeeCalculationType buyDownFeeCalculationType,
-            final LoanBuyDownFeeStrategy buyDownFeeStrategy, final LoanBuyDownFeeIncomeType buyDownFeeIncomeType,
-            final boolean merchantBuyDownFee) {
+            final Integer installmentAmountInMultiplesOf, final boolean enableBuyDownFee,
+            final LoanBuyDownFeeCalculationType buyDownFeeCalculationType, final LoanBuyDownFeeStrategy buyDownFeeStrategy,
+            final LoanBuyDownFeeIncomeType buyDownFeeIncomeType, final boolean merchantBuyDownFee) {
 
         final MonetaryCurrency currency = MonetaryCurrency.fromCurrencyData(currencyData);
         return new LoanProductRelatedDetail(currency, principal, nominalInterestRatePerPeriod, interestRatePeriodFrequencyType,
@@ -237,8 +240,8 @@ public class LoanProductRelatedDetail implements LoanProductMinimumRepaymentSche
                 isEqualAmortization, enableDownPayment, disbursedAmountPercentageForDownPayment, enableAutoRepaymentForDownPayment,
                 loanScheduleType, loanScheduleProcessingType, fixedLength, enableAccrualActivityPosting, supportedInterestRefundTypes,
                 chargeOffBehaviour, interestRecognitionOnDisbursementDate, daysInYearCustomStrategy, enableIncomeCapitalization,
-                capitalizedIncomeCalculationType, capitalizedIncomeStrategy, capitalizedIncomeType, enableBuyDownFee,
-                buyDownFeeCalculationType, buyDownFeeStrategy, buyDownFeeIncomeType, merchantBuyDownFee);
+                capitalizedIncomeCalculationType, capitalizedIncomeStrategy, capitalizedIncomeType, installmentAmountInMultiplesOf,
+                enableBuyDownFee, buyDownFeeCalculationType, buyDownFeeStrategy, buyDownFeeIncomeType, merchantBuyDownFee);
     }
 
     protected LoanProductRelatedDetail() {
@@ -262,9 +265,9 @@ public class LoanProductRelatedDetail implements LoanProductMinimumRepaymentSche
             final DaysInYearCustomStrategyType daysInYearCustomStrategy, final boolean enableIncomeCapitalization,
             final LoanCapitalizedIncomeCalculationType capitalizedIncomeCalculationType,
             final LoanCapitalizedIncomeStrategy capitalizedIncomeStrategy, final LoanCapitalizedIncomeType capitalizedIncomeType,
-            final boolean enableBuyDownFee, final LoanBuyDownFeeCalculationType buyDownFeeCalculationType,
-            final LoanBuyDownFeeStrategy buyDownFeeStrategy, final LoanBuyDownFeeIncomeType buyDownFeeIncomeType,
-            final boolean merchantBuyDownFee) {
+            final Integer installmentAmountInMultiplesOf, final boolean enableBuyDownFee,
+            final LoanBuyDownFeeCalculationType buyDownFeeCalculationType, final LoanBuyDownFeeStrategy buyDownFeeStrategy,
+            final LoanBuyDownFeeIncomeType buyDownFeeIncomeType, final boolean merchantBuyDownFee) {
         this.currency = currency;
         this.principal = defaultPrincipal;
         this.nominalInterestRatePerPeriod = defaultNominalInterestRatePerPeriod;
@@ -306,6 +309,7 @@ public class LoanProductRelatedDetail implements LoanProductMinimumRepaymentSche
         this.capitalizedIncomeCalculationType = capitalizedIncomeCalculationType;
         this.capitalizedIncomeStrategy = capitalizedIncomeStrategy;
         this.capitalizedIncomeType = capitalizedIncomeType;
+        this.installmentAmountInMultiplesOf = installmentAmountInMultiplesOf;
         this.enableBuyDownFee = enableBuyDownFee;
         this.buyDownFeeCalculationType = buyDownFeeCalculationType;
         this.buyDownFeeStrategy = buyDownFeeStrategy;

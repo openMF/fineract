@@ -56,6 +56,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
 import org.apache.fineract.infrastructure.core.domain.AbstractAuditableWithUTCDateTimeCustom;
@@ -1822,4 +1823,14 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom<Long> {
         return getLoanTransactions().stream().anyMatch(t -> t.isContractTermination() && t.isNotReversed());
     }
 
+    public Integer getInstallmentAmountInMultiplesOf() {
+        Integer storedInstallmentAmountInMultiplesOfOnLoan = getLoanProductRelatedDetail().getInstallmentAmountInMultiplesOf();
+        Integer storedInstallmentAmountInMultiplesOfOnLoanProduct = getLoanProduct().getLoanProductRelatedDetail()
+                .getInstallmentAmountInMultiplesOf();
+        if (ObjectUtils.compare(storedInstallmentAmountInMultiplesOfOnLoan, storedInstallmentAmountInMultiplesOfOnLoanProduct) == 0) {
+            return storedInstallmentAmountInMultiplesOfOnLoan;
+        } else {
+            return storedInstallmentAmountInMultiplesOfOnLoanProduct;
+        }
+    }
 }

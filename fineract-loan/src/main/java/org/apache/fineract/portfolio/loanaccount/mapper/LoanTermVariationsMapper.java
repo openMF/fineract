@@ -112,7 +112,7 @@ public class LoanTermVariationsMapper {
                 scheduleGeneratorDTO.getCalculatedRepaymentsStartingFromDate(), loan.getInArrearsTolerance(),
                 loan.getLoanRepaymentScheduleDetail(), loan.getLoanProduct().isMultiDisburseLoan(), loan.getFixedEmiAmount(),
                 disbursementData, loan.getMaxOutstandingLoanBalance(), interestChargedFromDate,
-                loan.getLoanProduct().getPrincipalThresholdForLastInstallment(), loan.getLoanProduct().getInstallmentAmountInMultiplesOf(),
+                loan.getLoanProduct().getPrincipalThresholdForLastInstallment(), loan.getInstallmentAmountInMultiplesOf(),
                 recalculationFrequencyType, restCalendarInstance, compoundingMethod, compoundingCalendarInstance, compoundingFrequencyType,
                 loan.getLoanProduct().preCloseInterestCalculationStrategy(), rescheduleStrategyMethod, calendar,
                 loan.getApprovedPrincipal(), annualNominalInterestRate, loanTermVariations, calendarHistoryDataWrapper,

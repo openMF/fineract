@@ -163,6 +163,7 @@ public class LoanDownPaymentHandlerServiceImplTest {
         when(downPaymentMoney.getCurrencyCode()).thenReturn(loanCurrency.getCode());
         when(overPaymentPortionMoney.getCurrencyCode()).thenReturn(loanCurrency.getCode());
 
+        when(loanRepaymentRelatedDetail.getInstallmentAmountInMultiplesOf()).thenReturn(10);
         when(loanForProcessing.getLoanRepaymentScheduleDetail()).thenReturn(loanRepaymentRelatedDetail);
         when(loanForProcessing.getLoanProductRelatedDetail()).thenReturn(loanRepaymentRelatedDetail);
         when(loanRepaymentRelatedDetail.isInterestRecalculationEnabled()).thenReturn(true);
@@ -171,7 +172,6 @@ public class LoanDownPaymentHandlerServiceImplTest {
         when(loanForProcessing.getCurrency()).thenReturn(loanCurrency);
         when(loanForProcessing.loanCurrency()).thenReturn(loanCurrency);
         when(loanForProcessing.getLoanProduct()).thenReturn(loanProduct);
-        when(loanProduct.getInstallmentAmountInMultiplesOf()).thenReturn(10);
         when(loanForProcessing.getLoanProductRelatedDetail()).thenReturn(loanProductRelatedDetail);
         when(loanTransactionProcessingService.reprocessLoanTransactions(any(), any(), any(), any(), any(), any()))
                 .thenReturn(changedTransactionDetail);

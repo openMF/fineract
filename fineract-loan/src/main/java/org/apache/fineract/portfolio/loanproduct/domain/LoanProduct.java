@@ -182,9 +182,6 @@ public class LoanProduct extends AbstractPersistableCustom<Long> {
     @Column(name = "can_define_fixed_emi_amount")
     private boolean canDefineInstallmentAmount;
 
-    @Column(name = "instalment_amount_in_multiples_of")
-    private Integer installmentAmountInMultiplesOf;
-
     @Column(name = "is_linked_to_floating_interest_rates", nullable = false)
     private boolean isLinkedToFloatingInterestRate;
 
@@ -343,7 +340,8 @@ public class LoanProduct extends AbstractPersistableCustom<Long> {
                 enableAutoRepaymentForDownPayment, loanScheduleType, loanScheduleProcessingType, fixedLength, enableAccrualActivityPosting,
                 supportedInterestRefundTypes, chargeOffBehaviour, isInterestRecognitionOnDisbursementDate, daysInYearCustomStrategy,
                 enableIncomeCapitalization, capitalizedIncomeCalculationType, capitalizedIncomeStrategy, capitalizedIncomeType,
-                enableBuyDownFee, buyDownFeeCalculationType, buyDownFeeStrategy, buyDownFeeIncomeType, merchantBuyDownFee);
+                installmentAmountInMultiplesOf, enableBuyDownFee, buyDownFeeCalculationType, buyDownFeeStrategy, buyDownFeeIncomeType,
+                merchantBuyDownFee);
 
         this.loanProductMinMaxConstraints = new LoanProductMinMaxConstraints(defaultMinPrincipal, defaultMaxPrincipal,
                 defaultMinNominalInterestRatePerPeriod, defaultMaxNominalInterestRatePerPeriod, defaultMinNumberOfInstallments,
@@ -375,7 +373,6 @@ public class LoanProduct extends AbstractPersistableCustom<Long> {
         this.principalThresholdForLastInstallment = principalThresholdForLastInstallment;
         this.accountMovesOutOfNPAOnlyOnArrearsCompletion = accountMovesOutOfNPAOnlyOnArrearsCompletion;
         this.canDefineInstallmentAmount = canDefineEmiAmount;
-        this.installmentAmountInMultiplesOf = installmentAmountInMultiplesOf;
         this.syncExpectedWithDisbursementDate = syncExpectedWithDisbursementDate;
         this.canUseForTopup = canUseForTopup;
         this.fixedPrincipalPercentagePerInstallment = fixedPrincipalPercentagePerInstallment;

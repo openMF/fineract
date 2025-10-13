@@ -82,7 +82,6 @@ import org.apache.fineract.portfolio.loanproduct.calc.EMICalculator;
 import org.apache.fineract.portfolio.loanproduct.calc.data.ProgressiveLoanInterestScheduleModel;
 import org.apache.fineract.portfolio.loanproduct.domain.AllocationType;
 import org.apache.fineract.portfolio.loanproduct.domain.CreditAllocationTransactionType;
-import org.apache.fineract.portfolio.loanproduct.domain.LoanProduct;
 import org.apache.fineract.portfolio.loanproduct.domain.LoanProductRelatedDetail;
 import org.apache.fineract.portfolio.loanproduct.domain.PaymentAllocationTransactionType;
 import org.apache.fineract.portfolio.loanproduct.domain.PaymentAllocationType;
@@ -533,12 +532,12 @@ class AdvancedPaymentScheduleTransactionProcessorTest {
         Money disbursementMoney = Money.of(currency, postMaturityDisbursementAmount);
 
         LoanProductRelatedDetail loanProductRelatedDetail = mock(LoanProductRelatedDetail.class);
-        LoanProduct loanProduct = mock(LoanProduct.class);
-        when(loanProduct.getInstallmentAmountInMultiplesOf()).thenReturn(null);
+        org.apache.fineract.portfolio.loanproduct.domain.LoanProduct loanProduct = mock(
+                org.apache.fineract.portfolio.loanproduct.domain.LoanProduct.class);
+        when(loanProductRelatedDetail.getInstallmentAmountInMultiplesOf()).thenReturn(null);
         when(loanProductRelatedDetail.isEnableDownPayment()).thenReturn(false);
 
         Loan loan = mock(Loan.class);
-        when(loan.getLoanProduct()).thenReturn(loanProduct);
         when(loan.getLoanRepaymentScheduleDetail()).thenReturn(loanProductRelatedDetail);
 
         LoanRepaymentScheduleInstallment installment1 = spy(

@@ -1690,8 +1690,8 @@ public final class LoanApplicationTerms {
                 this.loanScheduleProcessingType, this.fixedLength, this.enableAccrualActivityPosting, this.supportedInterestRefundTypes,
                 this.chargeOffBehaviour, this.interestRecognitionOnDisbursementDate, this.daysInYearCustomStrategy,
                 this.enableIncomeCapitalization, this.capitalizedIncomeCalculationType, this.capitalizedIncomeStrategy,
-                this.capitalizedIncomeType, this.enableBuyDownFee, this.buyDownFeeCalculationType, this.buyDownFeeStrategy,
-                this.buyDownFeeIncomeType, this.merchantBuyDownFee);
+                this.capitalizedIncomeType, this.installmentAmountInMultiplesOf, this.enableBuyDownFee, this.buyDownFeeCalculationType,
+                this.buyDownFeeStrategy, this.buyDownFeeIncomeType, this.merchantBuyDownFee);
     }
 
     public LoanProductMinimumRepaymentScheduleRelatedDetail toLoanProductRelatedDetailMinimumData() {
