@@ -2900,6 +2900,11 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
         loanTransaction.updateComponentsAndTotal(outstandingPrincipalBalance.get(), Money.zero(currency), Money.zero(currency),
                 Money.zero(currency));
 
+        if (outstandingPrincipalBalance.get().isZero()) {
+            loanTransaction.reverse();
+            return;
+        }
+
         Money calculatedPrincipal = Money.zero(currency);
         Money adjustCalculatedPrincipal = Money.zero(currency);
         if (outstandingPrincipalBalance.get().isGreaterThanZero()) {
