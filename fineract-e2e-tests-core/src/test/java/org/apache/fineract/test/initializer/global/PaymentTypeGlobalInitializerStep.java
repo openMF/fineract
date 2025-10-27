@@ -18,12 +18,13 @@
  */
 package org.apache.fineract.test.initializer.global;
 
-import java.io.IOException;
+import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
+
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.PaymentTypeRequest;
-import org.apache.fineract.client.services.PaymentTypeApi;
 import org.apache.fineract.test.factory.PaymentTypesRequestFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -43,10 +44,10 @@ public class PaymentTypeGlobalInitializerStep implements FineractGlobalInitializ
     public static final String PAYMENT_TYPE_REPAYMENT_ADJUSTMENT_CHARGEBACK = "REPAYMENT_ADJUSTMENT_CHARGEBACK";
     public static final String PAYMENT_TYPE_REPAYMENT_ADJUSTMENT_REFUND = "REPAYMENT_ADJUSTMENT_REFUND";
 
-    private final PaymentTypeApi paymentTypeApi;
+    private final FineractFeignClient fineractClient;
 
     @Override
-    public void initialize() throws Exception {
+    public void initialize() {
         List<String> paymentTypes = new ArrayList<>();
         paymentTypes.add(PAYMENT_TYPE_AUTOPAY);
         paymentTypes.add(PAYMENT_TYPE_DOWN_PAYMENT);
@@ -62,11 +63,7 @@ public class PaymentTypeGlobalInitializerStep implements FineractGlobalInitializ
             PaymentTypeRequest postPaymentTypesRequest = PaymentTypesRequestFactory.defaultPaymentTypeRequest(paymentType, paymentType,
                     false, position);
 
-            try {
-                paymentTypeApi.createPaymentType(postPaymentTypesRequest).execute();
-            } catch (IOException e) {
-                throw new RuntimeException("Error while creating payment type", e);
-            }
+            executeVoid(() -> fineractClient.paymentType().createPaymentType(postPaymentTypesRequest));
         });
     }
 }

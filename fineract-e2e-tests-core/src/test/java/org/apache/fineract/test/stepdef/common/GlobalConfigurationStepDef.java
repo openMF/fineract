@@ -49,17 +49,17 @@ public class GlobalConfigurationStepDef {
     private static final Gson GSON = new JSON().getGson();
 
     @Given("Global configuration {string} is disabled")
-    public void disableGlobalConfiguration(String configKey) throws IOException {
+    public void disableGlobalConfiguration(String configKey) {
         globalConfigurationHelper.disableGlobalConfiguration(configKey, 0L);
     }
 
     @Given("Global configuration {string} is enabled")
-    public void enableGlobalConfiguration(String configKey) throws IOException {
+    public void enableGlobalConfiguration(String configKey) {
         globalConfigurationHelper.enableGlobalConfiguration(configKey, 0L);
     }
 
     @When("Global config {string} value set to {string}")
-    public void setGlobalConfigValueString(String configKey, String configValue) throws IOException {
+    public void setGlobalConfigValueString(String configKey, String configValue) {
         globalConfigurationHelper.setGlobalConfigValueString(configKey, configValue);
     }
 

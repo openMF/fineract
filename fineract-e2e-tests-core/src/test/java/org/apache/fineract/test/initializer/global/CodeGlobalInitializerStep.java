@@ -18,15 +18,15 @@
  */
 package org.apache.fineract.test.initializer.global;
 
-import java.io.IOException;
+import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
+
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.PostCodeValuesDataRequest;
 import org.apache.fineract.client.models.PostCodesRequest;
 import org.apache.fineract.client.models.PutCodeValuesDataRequest;
-import org.apache.fineract.client.services.CodeValuesApi;
-import org.apache.fineract.client.services.CodesApi;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -114,11 +114,10 @@ public class CodeGlobalInitializerStep implements FineractGlobalInitializerStep 
     public static final String CODE_VALUE_WRITE_OFF_REASON_TEST_2 = "Forgiven";
     public static final String CODE_VALUE_WRITE_OFF_REASON_TEST_3 = "Test";
 
-    private final CodesApi codesApi;
-    private final CodeValuesApi codeValuesApi;
+    private final FineractFeignClient fineractClient;
 
     @Override
-    public void initialize() throws Exception {
+    public void initialize() {
         createCodeNames();
         createCodeValues();
     }
@@ -266,11 +265,7 @@ public class CodeGlobalInitializerStep implements FineractGlobalInitializerStep 
             postCodeValuesDataRequest.name(name);
             postCodeValuesDataRequest.position(position);
 
-            try {
-                codeValuesApi.createCodeValue(codeId, postCodeValuesDataRequest).execute();
-            } catch (IOException e) {
-                throw new RuntimeException("Error while creating code value", e);
-            }
+            executeVoid(() -> fineractClient.codeValues().createCodeValue(codeId, postCodeValuesDataRequest));
         });
     }
 
@@ -282,11 +277,7 @@ public class CodeGlobalInitializerStep implements FineractGlobalInitializerStep 
             putCodeValuesDataRequest.name(name);
             putCodeValuesDataRequest.position(position);
 
-            try {
-                codeValuesApi.updateCodeValue(codeId, (long) position, putCodeValuesDataRequest).execute();
-            } catch (IOException e) {
-                throw new RuntimeException("Error while updating code value", e);
-            }
+            executeVoid(() -> fineractClient.codeValues().updateCodeValue(codeId, (long) position, putCodeValuesDataRequest));
         });
     }
 
@@ -302,11 +293,7 @@ public class CodeGlobalInitializerStep implements FineractGlobalInitializerStep 
 
         codesNameList.forEach(codeName -> {
             PostCodesRequest postCodesRequest = new PostCodesRequest();
-            try {
-                codesApi.createCode(postCodesRequest.name(codeName)).execute();
-            } catch (IOException e) {
-                throw new RuntimeException("Error while creating code", e);
-            }
+            executeVoid(() -> fineractClient.codes().createCode(postCodesRequest.name(codeName)));
         });
     }
 }

@@ -18,9 +18,11 @@
  */
 package org.apache.fineract.test.initializer.global;
 
+import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
+
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.PostFinancialActivityAccountsRequest;
-import org.apache.fineract.client.services.MappingFinancialActivitiesToAccountsApi;
 import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
@@ -30,13 +32,13 @@ public class FinancialActivityMappingGlobalInitializerStep implements FineractGl
     public static final Long FINANCIAL_ACTIVITY_ID_ASSET_TRANSFER = 100L;
     public static final Long GL_ACCOUNT_ID_ASSET_TRANSFER = 21L;
 
-    private final MappingFinancialActivitiesToAccountsApi mappingFinancialActivitiesToAccountsApi;
+    private final FineractFeignClient fineractClient;
 
     @Override
-    public void initialize() throws Exception {
+    public void initialize() {
 
         PostFinancialActivityAccountsRequest request = new PostFinancialActivityAccountsRequest()
                 .financialActivityId(FINANCIAL_ACTIVITY_ID_ASSET_TRANSFER).glAccountId(GL_ACCOUNT_ID_ASSET_TRANSFER);
-        mappingFinancialActivitiesToAccountsApi.createGLAccount(request).execute();
+        executeVoid(() -> fineractClient.mappingFinancialActivitiesToAccounts().createGLAccount(request));
     }
 }

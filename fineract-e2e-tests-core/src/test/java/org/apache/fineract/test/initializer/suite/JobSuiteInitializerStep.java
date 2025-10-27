@@ -18,11 +18,13 @@
  */
 package org.apache.fineract.test.initializer.suite;
 
-import java.io.IOException;
+import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
+
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.GetJobsResponse;
 import org.apache.fineract.client.models.PutJobsJobIDRequest;
-import org.apache.fineract.client.services.SchedulerJobApi;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -33,23 +35,23 @@ public class JobSuiteInitializerStep implements FineractSuiteInitializerStep {
     public static final String EVERY_1_SECONDS = "0/1 * * * * ?";
     public static final String EVERY_60_SECONDS = "0 0/1 * * * ?";
 
-    private final SchedulerJobApi jobApi;
+    private final FineractFeignClient fineractClient;
 
     @Override
-    public void initializeForSuite() throws Exception {
+    public void initializeForSuite() {
         updateExternalEventJobFrequency(EVERY_1_SECONDS);
     }
 
     @Override
-    public void resetAfterSuite() throws Exception {
+    public void resetAfterSuite() {
         updateExternalEventJobFrequency(EVERY_60_SECONDS);
     }
 
-    private void updateExternalEventJobFrequency(String cronExpression) throws IOException {
-        GetJobsResponse externalEventJobResponse = jobApi.retrieveAll8().execute().body().stream()
+    private void updateExternalEventJobFrequency(String cronExpression) {
+        GetJobsResponse externalEventJobResponse = ok(() -> fineractClient.schedulerJob().retrieveAll8()).stream()
                 .filter(r -> r.getDisplayName().equals(SEND_ASYNCHRONOUS_EVENTS_JOB_NAME)).findAny()
                 .orElseThrow(() -> new IllegalStateException(SEND_ASYNCHRONOUS_EVENTS_JOB_NAME + " is not found"));
         Long jobId = externalEventJobResponse.getJobId();
-        jobApi.updateJobDetail(jobId, new PutJobsJobIDRequest().cronExpression(cronExpression)).execute();
+        executeVoid(() -> fineractClient.schedulerJob().updateJobDetail(jobId, new PutJobsJobIDRequest().cronExpression(cronExpression)));
     }
 }

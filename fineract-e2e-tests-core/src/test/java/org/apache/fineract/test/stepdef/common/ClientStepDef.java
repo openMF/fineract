@@ -86,10 +86,9 @@ public class ClientStepDef extends AbstractStepDef {
 
     @When("Admin creates a client with Firstname {string} and Lastname {string} with address")
     public void createClientWithAddress(String firstName, String lastName) throws IOException {
-        Long addressTypeId = codeHelper.createAddressTypeCodeValue(Utils.randomNameGenerator("Residential address", 4)).body()
-                .getResourceId();
-        Long countryId = codeHelper.createCountryCodeValue(Utils.randomNameGenerator("Hungary", 4)).body().getResourceId();
-        Long stateId = codeHelper.createStateCodeValue(Utils.randomNameGenerator("Budapest", 4)).body().getResourceId();
+        Long addressTypeId = codeHelper.createAddressTypeCodeValue(Utils.randomNameGenerator("Residential address", 4)).getResourceId();
+        Long countryId = codeHelper.createCountryCodeValue(Utils.randomNameGenerator("Hungary", 4)).getResourceId();
+        Long stateId = codeHelper.createStateCodeValue(Utils.randomNameGenerator("Budapest", 4)).getResourceId();
         String city = "Budapest";
         boolean addressIsActive = true;
         String postalCode = "1000";

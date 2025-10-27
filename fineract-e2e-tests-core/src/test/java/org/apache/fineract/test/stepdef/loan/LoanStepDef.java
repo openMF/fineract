@@ -5851,10 +5851,9 @@ public class LoanStepDef extends AbstractStepDef {
         PostCodeValuesDataRequest codeValueRequest = new PostCodeValuesDataRequest().name(classificationName + "_value").isActive(true)
                 .position(1);
 
-        Response<PostCodeValueDataResponse> response = codeHelper.createCodeValue(code.getId(), codeValueRequest);
-        ErrorHelper.checkSuccessfulApiCall(response);
+        PostCodeValueDataResponse response = codeHelper.createCodeValue(code.getId(), codeValueRequest);
 
-        return response.body().getSubResourceId();
+        return response.getSubResourceId();
     }
 
     @And("Loan Amortization Allocation Mapping for {string} transaction created on {string} contains the following data:")

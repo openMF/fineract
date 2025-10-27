@@ -18,36 +18,34 @@
  */
 package org.apache.fineract.test.initializer.suite;
 
-import static java.lang.System.lineSeparator;
+import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.ExternalEventConfigurationItemResponse;
 import org.apache.fineract.client.models.ExternalEventConfigurationResponse;
 import org.apache.fineract.client.models.ExternalEventConfigurationUpdateRequest;
-import org.apache.fineract.client.services.ExternalEventConfigurationApi;
 import org.springframework.stereotype.Component;
-import retrofit2.Response;
 
 @RequiredArgsConstructor
 @Component
 public class ExternalEventSuiteInitializerStep implements FineractSuiteInitializerStep {
 
-    private final ExternalEventConfigurationApi eventConfigurationApi;
+    private final FineractFeignClient fineractClient;
 
     @Override
-    public void initializeForSuite() throws Exception {
+    public void initializeForSuite() {
         Map<String, Boolean> eventConfigMap = new HashMap<>();
 
-        Response<ExternalEventConfigurationResponse> response = eventConfigurationApi.getExternalEventConfigurations().execute();
-        if (!response.isSuccessful()) {
-            String responseBody = response.errorBody().string();
-            throw new RuntimeException("Cannot configure external events due to " + lineSeparator() + responseBody);
-        }
+        ExternalEventConfigurationResponse response = ok(
+                () -> fineractClient.externalEventConfiguration().getExternalEventConfigurations());
 
-        List<ExternalEventConfigurationItemResponse> externalEventConfiguration = response.body().getExternalEventConfiguration();
+        List<ExternalEventConfigurationItemResponse> externalEventConfiguration = response.getExternalEventConfiguration();
         externalEventConfiguration.forEach(e -> {
             eventConfigMap.put(e.getType(), true);
         });
@@ -55,6 +53,6 @@ public class ExternalEventSuiteInitializerStep implements FineractSuiteInitializ
         ExternalEventConfigurationUpdateRequest request = new ExternalEventConfigurationUpdateRequest()
                 .externalEventConfigurations(eventConfigMap);
 
-        eventConfigurationApi.updateExternalEventConfigurations("", request).execute();
+        executeVoid(() -> fineractClient.externalEventConfiguration().updateExternalEventConfigurations(request, Collections.emptyMap()));
     }
 }

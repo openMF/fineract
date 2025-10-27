@@ -18,14 +18,15 @@
  */
 package org.apache.fineract.test.initializer.global;
 
-import java.io.IOException;
+import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.DelinquencyBucketRequest;
 import org.apache.fineract.client.models.DelinquencyRangeRequest;
-import org.apache.fineract.client.services.DelinquencyRangeAndBucketsManagementApi;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -39,15 +40,15 @@ public class DelinquencyGlobalInitializerStep implements FineractGlobalInitializ
     public static final List<Integer> DEFAULT_DELINQUENCY_RANGES = Arrays.asList(1, 3, 30, 60, 90, 120, 150, 180, 240);
     public static final String DEFAULT_DELINQUENCY_BUCKET_NAME = "Default delinquency bucket";
 
-    private final DelinquencyRangeAndBucketsManagementApi delinquencyApi;
+    private final FineractFeignClient fineractClient;
 
     @Override
-    public void initialize() throws Exception {
+    public void initialize() {
         setDefaultDelinquencyRanges();
         setDefaultDelinquencyBucket();
     }
 
-    public void setDefaultDelinquencyRanges() throws IOException {
+    public void setDefaultDelinquencyRanges() {
         for (int i = 0; i < DEFAULT_DELINQUENCY_RANGES.size() - 1; i++) {
             DelinquencyRangeRequest postDelinquencyRangeRequest = new DelinquencyRangeRequest();
             postDelinquencyRangeRequest.classification("Delinquency range " + DEFAULT_DELINQUENCY_RANGES.get(i).toString());
@@ -60,7 +61,7 @@ public class DelinquencyGlobalInitializerStep implements FineractGlobalInitializ
                 postDelinquencyRangeRequest.maximumAgeDays(DEFAULT_DELINQUENCY_RANGES.get(i + 1));
             }
 
-            delinquencyApi.createDelinquencyRange(postDelinquencyRangeRequest).execute();
+            executeVoid(() -> fineractClient.delinquencyRangeAndBucketsManagement().createDelinquencyRange(postDelinquencyRangeRequest));
         }
 
         DelinquencyRangeRequest lastRange = new DelinquencyRangeRequest();
@@ -69,10 +70,10 @@ public class DelinquencyGlobalInitializerStep implements FineractGlobalInitializ
         lastRange.minimumAgeDays(DEFAULT_DELINQUENCY_RANGES.get(DEFAULT_DELINQUENCY_RANGES.size() - 1) + 1);
         lastRange.maximumAgeDays(null);
 
-        delinquencyApi.createDelinquencyRange(lastRange).execute();
+        executeVoid(() -> fineractClient.delinquencyRangeAndBucketsManagement().createDelinquencyRange(lastRange));
     }
 
-    public void setDefaultDelinquencyBucket() throws IOException {
+    public void setDefaultDelinquencyBucket() {
         List<Long> rangesNr = new ArrayList<>();
 
         for (int i = 1; i < DEFAULT_DELINQUENCY_RANGES.size() + 1; i++) {
@@ -84,6 +85,6 @@ public class DelinquencyGlobalInitializerStep implements FineractGlobalInitializ
         postDelinquencyBucketRequest.name(DEFAULT_DELINQUENCY_BUCKET_NAME);
         postDelinquencyBucketRequest.ranges(rangesNr);
 
-        delinquencyApi.createDelinquencyBucket(postDelinquencyBucketRequest).execute();
+        executeVoid(() -> fineractClient.delinquencyRangeAndBucketsManagement().createDelinquencyBucket(postDelinquencyBucketRequest));
     }
 }

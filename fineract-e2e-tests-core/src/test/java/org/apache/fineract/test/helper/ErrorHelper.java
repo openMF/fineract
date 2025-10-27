@@ -20,6 +20,7 @@ package org.apache.fineract.test.helper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import feign.FeignException;
 import java.io.IOException;
 import java.util.List;
 import org.apache.fineract.client.models.BatchResponse;
@@ -29,6 +30,7 @@ public final class ErrorHelper {
 
     private ErrorHelper() {}
 
+    @Deprecated
     public static void checkSuccessfulApiCall(Response response) throws IOException {
         assertThat(response.isSuccessful()).as(ErrorMessageHelper.requestFailed(response)).isTrue();
 
@@ -37,6 +39,7 @@ public final class ErrorHelper {
         }
     }
 
+    @Deprecated
     public static void checkFailedApiCall(Response response, int requiredCode) throws IOException {
         assertThat(!response.isSuccessful()).as(ErrorMessageHelper.requestFailed(response)).isTrue();
 
@@ -45,8 +48,25 @@ public final class ErrorHelper {
         }
     }
 
+    @Deprecated
     public static void checkSuccessfulBatchApiCall(Response<List<BatchResponse>> batchResponseList) {
         batchResponseList.body().forEach(response -> {
+            assertThat(response.getStatusCode()).as(ErrorMessageHelper.batchRequestFailedWithCode(response)).isEqualTo(200);
+        });
+    }
+
+    public static void checkFailedFeignCall(Runnable feignCall, int expectedStatusCode) {
+        try {
+            feignCall.run();
+            throw new AssertionError("Request should have failed with status code: " + expectedStatusCode + " but succeeded");
+        } catch (FeignException e) {
+            assertThat(e.status()).as("Expected status code: " + expectedStatusCode + " but got: " + e.status())
+                    .isEqualTo(expectedStatusCode);
+        }
+    }
+
+    public static void checkSuccessfulBatchFeignCall(List<BatchResponse> batchResponseList) {
+        batchResponseList.forEach(response -> {
             assertThat(response.getStatusCode()).as(ErrorMessageHelper.batchRequestFailedWithCode(response)).isEqualTo(200);
         });
     }

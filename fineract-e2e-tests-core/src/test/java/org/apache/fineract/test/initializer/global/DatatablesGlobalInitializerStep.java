@@ -18,12 +18,14 @@
  */
 package org.apache.fineract.test.initializer.global;
 
+import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
+
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.PostColumnHeaderData;
 import org.apache.fineract.client.models.PostDataTablesRequest;
-import org.apache.fineract.client.services.DataTablesApi;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -71,10 +73,10 @@ public class DatatablesGlobalInitializerStep implements FineractGlobalInitialize
     public static final String DATA_TABLE_3_COLUMN_5_TYPE = "Dropdown";
     public static final String DATA_TABLE_3_COLUMN_5_CODE = "active_duty_tag";
 
-    private final DataTablesApi dataTablesApi;
+    private final FineractFeignClient fineractClient;
 
     @Override
-    public void initialize() throws Exception {
+    public void initialize() {
         // autopay
         PostColumnHeaderData column1 = new PostColumnHeaderData();
         column1.name(DATA_TABLE_1_COLUMN_1_NAME);
@@ -97,7 +99,7 @@ public class DatatablesGlobalInitializerStep implements FineractGlobalInitialize
         postDataTablesRequest.multiRow(true);
         postDataTablesRequest.columns(columns);
 
-        dataTablesApi.createDatatable(postDataTablesRequest).execute();
+        executeVoid(() -> fineractClient.dataTables().createDatatable(postDataTablesRequest));
 
         // scheduled payments
         PostColumnHeaderData columnScheduled1 = new PostColumnHeaderData();
@@ -134,7 +136,7 @@ public class DatatablesGlobalInitializerStep implements FineractGlobalInitialize
         postDataTablesRequestScheduled.multiRow(true);
         postDataTablesRequestScheduled.columns(columnsScheduled);
 
-        dataTablesApi.createDatatable(postDataTablesRequestScheduled).execute();
+        executeVoid(() -> fineractClient.dataTables().createDatatable(postDataTablesRequestScheduled));
 
         // 3 tags
         PostColumnHeaderData column3Tags1 = new PostColumnHeaderData();
@@ -181,6 +183,6 @@ public class DatatablesGlobalInitializerStep implements FineractGlobalInitialize
         postDataTablesRequest3Tags.multiRow(false);
         postDataTablesRequest3Tags.columns(columns3Tags);
 
-        dataTablesApi.createDatatable(postDataTablesRequest3Tags).execute();
+        executeVoid(() -> fineractClient.dataTables().createDatatable(postDataTablesRequest3Tags));
     }
 }
