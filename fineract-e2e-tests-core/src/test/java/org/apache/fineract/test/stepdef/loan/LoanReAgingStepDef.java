@@ -18,38 +18,39 @@
  */
 package org.apache.fineract.test.stepdef.loan;
 
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
+
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.PostLoansLoanIdTransactionsRequest;
 import org.apache.fineract.client.models.PostLoansLoanIdTransactionsResponse;
 import org.apache.fineract.client.models.PostLoansResponse;
-import org.apache.fineract.client.services.LoanTransactionsApi;
 import org.apache.fineract.test.factory.LoanRequestFactory;
-import org.apache.fineract.test.helper.ErrorHelper;
 import org.apache.fineract.test.messaging.EventAssertion;
 import org.apache.fineract.test.messaging.event.loan.LoanReAgeEvent;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
 import org.springframework.beans.factory.annotation.Autowired;
-import retrofit2.Response;
 
 @Slf4j
 public class LoanReAgingStepDef extends AbstractStepDef {
 
     @Autowired
-    private LoanTransactionsApi loanTransactionsApi;
+    private FineractFeignClient fineractClient;
 
     @Autowired
     private EventAssertion eventAssertion;
 
     @When("Admin creates a Loan re-aging transaction with the following data:")
     public void createReAgingTransaction(DataTable table) throws IOException {
-        Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        long loanId = loanResponse.body().getLoanId();
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
 
         List<String> data = table.asLists().get(1);
         int frequencyNumber = Integer.parseInt(data.get(0));
@@ -64,16 +65,15 @@ public class LoanReAgingStepDef extends AbstractStepDef {
                 .startDate(startDate)//
                 .numberOfInstallments(numberOfInstallments);//
 
-        Response<PostLoansLoanIdTransactionsResponse> response = loanTransactionsApi.executeLoanTransaction(loanId, reAgingRequest, "reAge")
-                .execute();
-        ErrorHelper.checkSuccessfulApiCall(response);
+        PostLoansLoanIdTransactionsResponse response = ok(() -> fineractClient.loanTransactions().executeLoanTransaction(loanId,
+                reAgingRequest, Map.<String, Object>of("command", "reAge")));
         testContext().set(TestContextKey.LOAN_REAGING_RESPONSE, response);
     }
 
     @When("Admin creates a Loan re-aging transaction by Loan external ID with the following data:")
     public void createReAgingTransactionByLoanExternalId(DataTable table) throws IOException {
-        Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        String loanExternalId = loanResponse.body().getResourceExternalId();
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        String loanExternalId = loanResponse.getResourceExternalId();
 
         List<String> data = table.asLists().get(1);
         int frequencyNumber = Integer.parseInt(data.get(0));
@@ -88,27 +88,25 @@ public class LoanReAgingStepDef extends AbstractStepDef {
                 .startDate(startDate)//
                 .numberOfInstallments(numberOfInstallments);//
 
-        Response<PostLoansLoanIdTransactionsResponse> response = loanTransactionsApi
-                .executeLoanTransaction1(loanExternalId, reAgingRequest, "reAge").execute();
-        ErrorHelper.checkSuccessfulApiCall(response);
+        PostLoansLoanIdTransactionsResponse response = ok(() -> fineractClient.loanTransactions().executeLoanTransaction1(loanExternalId,
+                reAgingRequest, Map.<String, Object>of("command", "reAge")));
         testContext().set(TestContextKey.LOAN_REAGING_RESPONSE, response);
     }
 
     @When("Admin successfully undo Loan re-aging transaction")
     public void undoReAgingTransaction() throws IOException {
-        Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        long loanId = loanResponse.body().getLoanId();
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
 
-        Response<PostLoansLoanIdTransactionsResponse> response = loanTransactionsApi
-                .executeLoanTransaction(loanId, new PostLoansLoanIdTransactionsRequest(), "undoReAge").execute();
-        ErrorHelper.checkSuccessfulApiCall(response);
+        PostLoansLoanIdTransactionsResponse response = ok(() -> fineractClient.loanTransactions().executeLoanTransaction(loanId,
+                new PostLoansLoanIdTransactionsRequest(), Map.<String, Object>of("command", "undoReAge")));
         testContext().set(TestContextKey.LOAN_REAGING_UNDO_RESPONSE, response);
     }
 
     @Then("LoanReAgeBusinessEvent is created")
     public void checkLoanReAmortizeBusinessEventCreated() {
-        Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        long loanId = loanResponse.body().getLoanId();
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
 
         eventAssertion.assertEventRaised(LoanReAgeEvent.class, loanId);
     }

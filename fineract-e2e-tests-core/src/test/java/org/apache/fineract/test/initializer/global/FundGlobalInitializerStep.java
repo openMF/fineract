@@ -23,12 +23,15 @@ import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.models.FundData;
 import org.apache.fineract.client.models.FundRequest;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -41,10 +44,23 @@ public class FundGlobalInitializerStep implements FineractGlobalInitializerStep 
 
     @Override
     public void initialize() {
+        List<FundData> existingFunds = new ArrayList<>();
+        try {
+            existingFunds = fineractClient.funds().retrieveFunds();
+        } catch (Exception e) {
+            log.debug("Could not retrieve existing funds, will create them", e);
+        }
+
+        final List<FundData> funds = existingFunds;
         List<String> fundNames = new ArrayList<>();
         fundNames.add(FUNDS_LENDER_A);
         fundNames.add(FUNDS_LENDER_B);
         fundNames.forEach(name -> {
+            boolean fundExists = funds.stream().anyMatch(f -> name.equals(f.getName()));
+            if (fundExists) {
+                return;
+            }
+
             FundRequest postFundsRequest = new FundRequest();
             postFundsRequest.name(name);
             executeVoid(() -> fineractClient.funds().createFund(postFundsRequest));

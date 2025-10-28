@@ -24,12 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.gson.Gson;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import org.apache.fineract.client.feign.FeignException;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.CurrencyUpdateRequest;
-import org.apache.fineract.client.services.CurrencyApi;
-import org.apache.fineract.client.services.DefaultApi;
 import org.apache.fineract.client.util.JSON;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.ErrorResponse;
@@ -40,11 +39,9 @@ public class GlobalConfigurationStepDef {
 
     @Autowired
     private GlobalConfigurationHelper globalConfigurationHelper;
-    @Autowired
-    private DefaultApi defaultApi;
 
     @Autowired
-    private CurrencyApi currencyApi;
+    private FineractFeignClient fineractClient;
 
     private static final Gson GSON = new JSON().getGson();
 
@@ -64,49 +61,62 @@ public class GlobalConfigurationStepDef {
     }
 
     @When("Global config {string} value set to {string} through DefaultApi")
-    public void setGlobalConfigValueStringDefaultApi(String configKey, String configValue) throws IOException {
+    public void setGlobalConfigValueStringDefaultApi(String configKey, String configValue) {
         Long configValueLong = Long.valueOf(configValue);
-        defaultApi.updateGlobalConfiguration(configKey, configValueLong);
+        fineractClient.defaultApi().updateGlobalConfiguration(configKey, configValueLong);
     }
 
     @When("Update currency with incorrect empty value outcomes with an error")
-    public void updateCurrencyEmptyValueFailure() throws IOException {
+    public void updateCurrencyEmptyValueFailure() {
         var request = new CurrencyUpdateRequest();
-        var currencyResponse = currencyApi.updateCurrencies(request.currencies(Collections.emptyList())).execute();
-        final ErrorResponse errorDetails = ErrorResponse.from(currencyResponse);
-        assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.setCurrencyEmptyValueFailure()).isEqualTo(400);
-        assertThat(errorDetails.getSingleError().getDeveloperMessage()).isEqualTo(ErrorMessageHelper.setCurrencyEmptyValueFailure());
+        try {
+            fineractClient.currency().updateCurrencies(request.currencies(Collections.emptyList()));
+            throw new AssertionError("Expected FeignException but request succeeded");
+        } catch (FeignException e) {
+            final ErrorResponse errorDetails = ErrorResponse.fromFeignException(e);
+            assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.setCurrencyEmptyValueFailure()).isEqualTo(400);
+            assertThat(errorDetails.getSingleError().getDeveloperMessageWithoutPrefix())
+                    .isEqualTo(ErrorMessageHelper.setCurrencyEmptyValueFailure());
+        }
     }
 
     @When("Update currency as NULL value outcomes with an error")
-    public void updateCurrencyNullValueFailure() throws IOException {
+    public void updateCurrencyNullValueFailure() {
         var request = new CurrencyUpdateRequest();
-        var currencyResponse = currencyApi.updateCurrencies(request.currencies(null)).execute();
         Integer httpStatusCodeExpected = 400;
 
-        String errorBody = currencyResponse.errorBody().string();
-        ErrorResponse errorResponse = GSON.fromJson(errorBody, ErrorResponse.class);
-        Integer httpStatusCodeActual = errorResponse.getHttpStatusCode();
-        List<String> developerMessagesActual = errorResponse.getErrors().stream().map(ErrorResponse.Error::getDeveloperMessage).toList();
+        try {
+            fineractClient.currency().updateCurrencies(request.currencies(null));
+            throw new AssertionError("Expected FeignException but request succeeded");
+        } catch (FeignException e) {
+            ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
+            Integer httpStatusCodeActual = errorResponse.getHttpStatusCode();
+            List<String> developerMessagesActual = errorResponse.getErrors().stream()
+                    .map(ErrorResponse.Error::getDeveloperMessageWithoutPrefix).toList();
 
-        List<String> developerMessagesExpected = asList(ErrorMessageHelper.setCurrencyEmptyValueFailure(),
-                ErrorMessageHelper.setCurrencyNullValueMandatoryFailure());
+            List<String> developerMessagesExpected = asList(ErrorMessageHelper.setCurrencyEmptyValueFailure(),
+                    ErrorMessageHelper.setCurrencyNullValueMandatoryFailure());
 
-        assertThat(httpStatusCodeActual)
-                .as(ErrorMessageHelper.wrongErrorCodeInFailedChargeAdjustment(httpStatusCodeActual, httpStatusCodeExpected))
-                .isEqualTo(httpStatusCodeExpected);
-        assertThat(developerMessagesActual)
-                .as(ErrorMessageHelper.wrongErrorMessage(developerMessagesActual.toString(), developerMessagesExpected.toString()))
-                .containsAll(developerMessagesExpected);
+            assertThat(httpStatusCodeActual)
+                    .as(ErrorMessageHelper.wrongErrorCodeInFailedChargeAdjustment(httpStatusCodeActual, httpStatusCodeExpected))
+                    .isEqualTo(httpStatusCodeExpected);
+            assertThat(developerMessagesActual)
+                    .as(ErrorMessageHelper.wrongErrorMessage(developerMessagesActual.toString(), developerMessagesExpected.toString()))
+                    .containsAll(developerMessagesExpected);
+        }
     }
 
     @When("Update currency as {string} value outcomes with an error")
-    public void updateCurrencyIncorrectValueFailure(String currency) throws IOException {
+    public void updateCurrencyIncorrectValueFailure(String currency) {
         var request = new CurrencyUpdateRequest();
-        var currencyResponse = currencyApi.updateCurrencies(request.currencies(Collections.singletonList(currency))).execute();
-        final ErrorResponse errorDetails = ErrorResponse.from(currencyResponse);
-        assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.setCurrencyIncorrectValueFailure(currency)).isEqualTo(404);
-        assertThat(errorDetails.getSingleError().getDeveloperMessage())
-                .isEqualTo(ErrorMessageHelper.setCurrencyIncorrectValueFailure(currency));
+        try {
+            fineractClient.currency().updateCurrencies(request.currencies(Collections.singletonList(currency)));
+            throw new AssertionError("Expected FeignException but request succeeded");
+        } catch (FeignException e) {
+            final ErrorResponse errorDetails = ErrorResponse.fromFeignException(e);
+            assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.setCurrencyIncorrectValueFailure(currency)).isEqualTo(404);
+            assertThat(errorDetails.getSingleError().getDeveloperMessageWithoutPrefix())
+                    .isEqualTo(ErrorMessageHelper.setCurrencyIncorrectValueFailure(currency));
+        }
     }
 }

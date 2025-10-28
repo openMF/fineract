@@ -23,7 +23,8 @@ import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
@@ -51,7 +52,9 @@ public class JobService {
 
     public void execute(Job job) {
         Long jobId = jobResolver.resolve(job);
-        executeVoid(() -> fineractClient.schedulerJob().executeJob(jobId, new ExecuteJobRequest(), Collections.emptyMap()));
+        Map<String, Object> queryParams = new HashMap<>();
+        queryParams.put("command", "executeJob");
+        executeVoid(() -> fineractClient.schedulerJob().executeJob(jobId, new ExecuteJobRequest(), queryParams));
     }
 
     public void executeAndWait(Job job) {

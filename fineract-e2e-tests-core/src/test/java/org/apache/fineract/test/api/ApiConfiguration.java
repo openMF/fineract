@@ -60,7 +60,6 @@ import org.apache.fineract.client.services.SchedulerApi;
 import org.apache.fineract.client.services.SchedulerJobApi;
 import org.apache.fineract.client.services.UsersApi;
 import org.apache.fineract.client.util.FineractClient;
-import org.apache.fineract.test.stepdef.loan.LoanProductsCustomApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -103,11 +102,6 @@ public class ApiConfiguration {
     @Bean
     public LoanProductsApi loanProductsApi() {
         return fineractClient.createService(LoanProductsApi.class);
-    }
-
-    @Bean
-    public LoanProductsCustomApi loanProductsCustomApi() {
-        return fineractClient.createService(LoanProductsCustomApi.class);
     }
 
     @Bean

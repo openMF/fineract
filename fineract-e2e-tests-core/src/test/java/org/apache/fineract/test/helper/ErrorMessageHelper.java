@@ -766,13 +766,13 @@ public final class ErrorMessageHelper {
                 expectedStr);
     }
 
-    public static String listOfLockedLoansNotEmpty(Response<LoanAccountLockResponseDTO> response) {
-        String bodyStr = response.body().toString();
+    public static String listOfLockedLoansNotEmpty(LoanAccountLockResponseDTO response) {
+        String bodyStr = response.toString();
         return String.format("List of locked loan accounts is not empty. Actual response is: %n%s", bodyStr);
     }
 
-    public static String listOfLockedLoansContainsLoan(Long loanId, Response<LoanAccountLockResponseDTO> response) {
-        String bodyStr = response.body().toString();
+    public static String listOfLockedLoansContainsLoan(Long loanId, LoanAccountLockResponseDTO response) {
+        String bodyStr = response.toString();
         return String.format("List of locked loan accounts contains the loan with loanId %s. List of locked loans: %n%s", loanId, bodyStr);
     }
 
@@ -1071,5 +1071,12 @@ public final class ErrorMessageHelper {
         return String.format(
                 "Wrong value in LoanDetails/availableDisbursementAmountWithOverApplied. %nActual value is: %s %nExpected Value is: %s",
                 actual, expected);
+    }
+
+    public static String wrongAmountInDeferredCapitalizedIncome(BigDecimal actual, BigDecimal expected) {
+        String actualToStr = actual == null ? "null" : actual.toString();
+        String expectedToStr = expected == null ? "null" : expected.toString();
+        return String.format("Wrong amount in Deferred Capitalized Income. Actual amount is: %s - But expected amount is: %s", actualToStr,
+                expectedToStr);
     }
 }

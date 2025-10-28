@@ -18,9 +18,11 @@
  */
 package org.apache.fineract.test.stepdef.loan;
 
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.Gson;
+import feign.FeignException;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -29,22 +31,20 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.PostCreateRescheduleLoansRequest;
 import org.apache.fineract.client.models.PostCreateRescheduleLoansResponse;
 import org.apache.fineract.client.models.PostLoansResponse;
 import org.apache.fineract.client.models.PostUpdateRescheduleLoansRequest;
-import org.apache.fineract.client.models.PostUpdateRescheduleLoansResponse;
-import org.apache.fineract.client.services.RescheduleLoansApi;
 import org.apache.fineract.client.util.JSON;
 import org.apache.fineract.test.data.LoanRescheduleErrorMessage;
-import org.apache.fineract.test.helper.ErrorHelper;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.ErrorResponse;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
 import org.springframework.beans.factory.annotation.Autowired;
-import retrofit2.Response;
 
 @Slf4j
 public class LoanRescheduleStepDef extends AbstractStepDef {
@@ -56,12 +56,12 @@ public class LoanRescheduleStepDef extends AbstractStepDef {
     public static final DateTimeFormatter FORMATTER_EN = DateTimeFormatter.ofPattern(DATE_FORMAT_EN);
 
     @Autowired
-    private RescheduleLoansApi rescheduleLoansApi;
+    private FineractFeignClient fineractClient;
 
     @When("Admin creates and approves Loan reschedule with the following data:")
     public void createAndApproveLoanReschedule(DataTable table) throws IOException {
-        Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        long loanId = loanResponse.body().getLoanId();
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
 
         List<List<String>> data = table.asLists();
         List<String> rescheduleData = data.get(1);
@@ -91,24 +91,22 @@ public class LoanRescheduleStepDef extends AbstractStepDef {
                 .dateFormat("dd MMMM yyyy")//
                 .locale("en");//
 
-        Response<PostCreateRescheduleLoansResponse> createResponse = rescheduleLoansApi.createLoanRescheduleRequest(request).execute();
-        ErrorHelper.checkSuccessfulApiCall(createResponse);
+        PostCreateRescheduleLoansResponse createResponse = ok(() -> fineractClient.rescheduleLoans().createLoanRescheduleRequest(request));
 
-        Long scheduleId = createResponse.body().getResourceId();
+        Long scheduleId = createResponse.getResourceId();
         PostUpdateRescheduleLoansRequest approveRequest = new PostUpdateRescheduleLoansRequest()//
                 .approvedOnDate(submittedOnDate)//
                 .dateFormat("dd MMMM yyyy")//
                 .locale("en");//
 
-        Response<PostUpdateRescheduleLoansResponse> approveResponse = rescheduleLoansApi
-                .updateLoanRescheduleRequest(scheduleId, approveRequest, "approve").execute();
-        ErrorHelper.checkSuccessfulApiCall(approveResponse);
+        ok(() -> fineractClient.rescheduleLoans().updateLoanRescheduleRequest(scheduleId, approveRequest,
+                Map.<String, Object>of("command", "approve")));
     }
 
     @Then("Loan reschedule with the following data results a {int} error and {string} error message")
     public void createLoanRescheduleError(int errorCodeExpected, String errorMessageType, DataTable table) throws IOException {
-        Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        long loanId = loanResponse.body().getLoanId();
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
 
         List<List<String>> data = table.asLists();
         List<String> rescheduleData = data.get(1);
@@ -137,8 +135,6 @@ public class LoanRescheduleStepDef extends AbstractStepDef {
                 .dateFormat("dd MMMM yyyy")//
                 .locale("en");//
 
-        Response<PostCreateRescheduleLoansResponse> createResponse = rescheduleLoansApi.createLoanRescheduleRequest(request).execute();
-
         LoanRescheduleErrorMessage loanRescheduleErrorMessage = LoanRescheduleErrorMessage.valueOf(errorMessageType);
 
         LocalDate localDate = LocalDate.parse(rescheduleFromDate, FORMATTER_EN);
@@ -155,16 +151,21 @@ public class LoanRescheduleStepDef extends AbstractStepDef {
             throw new IllegalStateException("Parameter count in Error message does not met the criteria");
         }
 
-        String errorToString = createResponse.errorBody().string();
-        ErrorResponse errorResponse = GSON.fromJson(errorToString, ErrorResponse.class);
-        String errorMessageActual = errorResponse.getErrors().get(0).getDeveloperMessage();
-        int errorCodeActual = createResponse.code();
+        try {
+            fineractClient.rescheduleLoans().createLoanRescheduleRequest(request);
+            throw new AssertionError("Expected FeignException but request succeeded");
+        } catch (FeignException e) {
+            ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
+            String errorMessageActual = errorResponse.getSingleError().getDeveloperMessage();
+            int errorCodeActual = errorResponse.getHttpStatusCode();
 
-        assertThat(errorCodeActual).as(ErrorMessageHelper.wrongErrorCode(errorCodeActual, errorCodeExpected)).isEqualTo(errorCodeExpected);
-        assertThat(errorMessageActual).as(ErrorMessageHelper.wrongErrorMessage(errorMessageActual, errorMessageExpected))
-                .isEqualTo(errorMessageExpected);
+            assertThat(errorCodeActual).as(ErrorMessageHelper.wrongErrorCode(errorCodeActual, errorCodeExpected))
+                    .isEqualTo(errorCodeExpected);
+            assertThat(errorMessageActual).as(ErrorMessageHelper.wrongErrorMessage(errorMessageActual, errorMessageExpected))
+                    .isEqualTo(errorMessageExpected);
 
-        log.debug("ERROR CODE: {}", errorCodeActual);
-        log.debug("ERROR MESSAGE: {}", errorMessageActual);
+            log.debug("ERROR CODE: {}", errorCodeActual);
+            log.debug("ERROR MESSAGE: {}", errorMessageActual);
+        }
     }
 }

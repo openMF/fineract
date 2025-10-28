@@ -23,6 +23,7 @@ import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.PostColumnHeaderData;
 import org.apache.fineract.client.models.PostDataTablesRequest;
@@ -30,6 +31,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -99,7 +101,7 @@ public class DatatablesGlobalInitializerStep implements FineractGlobalInitialize
         postDataTablesRequest.multiRow(true);
         postDataTablesRequest.columns(columns);
 
-        executeVoid(() -> fineractClient.dataTables().createDatatable(postDataTablesRequest));
+        createDatatableIdempotent(postDataTablesRequest);
 
         // scheduled payments
         PostColumnHeaderData columnScheduled1 = new PostColumnHeaderData();
@@ -136,7 +138,7 @@ public class DatatablesGlobalInitializerStep implements FineractGlobalInitialize
         postDataTablesRequestScheduled.multiRow(true);
         postDataTablesRequestScheduled.columns(columnsScheduled);
 
-        executeVoid(() -> fineractClient.dataTables().createDatatable(postDataTablesRequestScheduled));
+        createDatatableIdempotent(postDataTablesRequestScheduled);
 
         // 3 tags
         PostColumnHeaderData column3Tags1 = new PostColumnHeaderData();
@@ -183,6 +185,16 @@ public class DatatablesGlobalInitializerStep implements FineractGlobalInitialize
         postDataTablesRequest3Tags.multiRow(false);
         postDataTablesRequest3Tags.columns(columns3Tags);
 
-        executeVoid(() -> fineractClient.dataTables().createDatatable(postDataTablesRequest3Tags));
+        createDatatableIdempotent(postDataTablesRequest3Tags);
+    }
+
+    private void createDatatableIdempotent(PostDataTablesRequest datatableRequest) {
+        String datatableName = datatableRequest.getDatatableName();
+        try {
+            fineractClient.dataTables().getDatatable(datatableName);
+        } catch (Exception e) {
+            log.debug("Datatable '{}' does not exist yet, will create it", datatableName);
+            executeVoid(() -> fineractClient.dataTables().createDatatable(datatableRequest));
+        }
     }
 }

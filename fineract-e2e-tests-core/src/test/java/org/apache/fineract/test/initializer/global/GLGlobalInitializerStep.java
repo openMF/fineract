@@ -20,8 +20,13 @@ package org.apache.fineract.test.initializer.global;
 
 import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.models.GetGLAccountsResponse;
 import org.apache.fineract.client.models.PostGLAccountsRequest;
 import org.apache.fineract.test.data.GLAType;
 import org.apache.fineract.test.data.GLAUsage;
@@ -30,6 +35,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -93,78 +99,48 @@ public class GLGlobalInitializerStep implements FineractGlobalInitializerStep {
 
     @Override
     public void initialize() {
+        List<GetGLAccountsResponse> existingAccounts = new ArrayList<>();
+        try {
+            existingAccounts = fineractClient.generalLedgerAccount().retrieveAllAccounts(new HashMap<>());
+        } catch (Exception e) {
+            log.debug("Could not retrieve existing GL accounts, will create them", e);
+        }
 
-        PostGLAccountsRequest postGLAccountsRequest1 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_1, GLA_GL_CODE_1,
-                GLA_TYPE_ASSET, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest1));
-        PostGLAccountsRequest postGLAccountsRequest2 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_2, GLA_GL_CODE_2,
-                GLA_TYPE_ASSET, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest2));
-        PostGLAccountsRequest postGLAccountsRequest3 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_3, GLA_GL_CODE_3,
-                GLA_TYPE_ASSET, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest3));
-        PostGLAccountsRequest postGLAccountsRequest4 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_4, GLA_GL_CODE_4,
-                GLA_TYPE_ASSET, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest4));
-        PostGLAccountsRequest postGLAccountsRequest5 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_5, GLA_GL_CODE_5,
-                GLA_TYPE_LIABILITY, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest5));
-        PostGLAccountsRequest postGLAccountsRequest6 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_6, GLA_GL_CODE_6,
-                GLA_TYPE_LIABILITY, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest6));
-        PostGLAccountsRequest postGLAccountsRequest7 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_7, GLA_GL_CODE_7,
-                GLA_TYPE_INCOME, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest7));
-        PostGLAccountsRequest postGLAccountsRequest8 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_8, GLA_GL_CODE_8,
-                GLA_TYPE_INCOME, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest8));
-        PostGLAccountsRequest postGLAccountsRequest9 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_9, GLA_GL_CODE_9,
-                GLA_TYPE_INCOME, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest9));
-        PostGLAccountsRequest postGLAccountsRequest10 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_10, GLA_GL_CODE_10,
-                GLA_TYPE_INCOME, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest10));
-        PostGLAccountsRequest postGLAccountsRequest11 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_11, GLA_GL_CODE_11,
-                GLA_TYPE_INCOME, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest11));
-        PostGLAccountsRequest postGLAccountsRequest12 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_12, GLA_GL_CODE_12,
-                GLA_TYPE_EXPENSE, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest12));
-        PostGLAccountsRequest postGLAccountsRequest13 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_13, GLA_GL_CODE_13,
-                GLA_TYPE_EXPENSE, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest13));
-        PostGLAccountsRequest postGLAccountsRequest14 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_14, GLA_GL_CODE_14,
-                GLA_TYPE_ASSET, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest14));
-        PostGLAccountsRequest postGLAccountsRequest15 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_15, GLA_GL_CODE_15,
-                GLA_TYPE_INCOME, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest15));
-        PostGLAccountsRequest postGLAccountsRequest16 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_16, GLA_GL_CODE_16,
-                GLA_TYPE_EXPENSE, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest16));
-        PostGLAccountsRequest postGLAccountsRequest17 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_17, GLA_GL_CODE_17,
-                GLA_TYPE_LIABILITY, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest17));
-        PostGLAccountsRequest postGLAccountsRequest18 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_18, GLA_GL_CODE_18,
-                GLA_TYPE_ASSET, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest18));
-        PostGLAccountsRequest postGLAccountsRequest19 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_19, GLA_GL_CODE_19,
-                GLA_TYPE_EXPENSE, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest19));
-        PostGLAccountsRequest postGLAccountsRequest20 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_20, GLA_GL_CODE_20,
-                GLA_TYPE_INCOME, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest20));
-        PostGLAccountsRequest postGLAccountsRequest21 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_21, GLA_GL_CODE_21,
-                GLA_TYPE_ASSET, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest21));
-        PostGLAccountsRequest postGLAccountsRequest22 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_22, GLA_GL_CODE_22,
-                GLA_TYPE_LIABILITY, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest22));
-        PostGLAccountsRequest postGLAccountsRequest23 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_23, GLA_GL_CODE_23,
-                GLA_TYPE_EXPENSE, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest23));
-        PostGLAccountsRequest postGLAccountsRequest24 = GLAccountRequestFactory.defaultGLAccountRequest(GLA_NAME_24, GLA_GL_CODE_24,
-                GLA_TYPE_INCOME, GLA_USAGE_DETAIL, true);
-        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(postGLAccountsRequest24));
+        final List<GetGLAccountsResponse> accounts = existingAccounts;
+
+        createGLAccountIfNotExists(accounts, GLA_NAME_1, GLA_GL_CODE_1, GLA_TYPE_ASSET);
+        createGLAccountIfNotExists(accounts, GLA_NAME_2, GLA_GL_CODE_2, GLA_TYPE_ASSET);
+        createGLAccountIfNotExists(accounts, GLA_NAME_3, GLA_GL_CODE_3, GLA_TYPE_ASSET);
+        createGLAccountIfNotExists(accounts, GLA_NAME_4, GLA_GL_CODE_4, GLA_TYPE_ASSET);
+        createGLAccountIfNotExists(accounts, GLA_NAME_5, GLA_GL_CODE_5, GLA_TYPE_LIABILITY);
+        createGLAccountIfNotExists(accounts, GLA_NAME_6, GLA_GL_CODE_6, GLA_TYPE_LIABILITY);
+        createGLAccountIfNotExists(accounts, GLA_NAME_7, GLA_GL_CODE_7, GLA_TYPE_INCOME);
+        createGLAccountIfNotExists(accounts, GLA_NAME_8, GLA_GL_CODE_8, GLA_TYPE_INCOME);
+        createGLAccountIfNotExists(accounts, GLA_NAME_9, GLA_GL_CODE_9, GLA_TYPE_INCOME);
+        createGLAccountIfNotExists(accounts, GLA_NAME_10, GLA_GL_CODE_10, GLA_TYPE_INCOME);
+        createGLAccountIfNotExists(accounts, GLA_NAME_11, GLA_GL_CODE_11, GLA_TYPE_INCOME);
+        createGLAccountIfNotExists(accounts, GLA_NAME_12, GLA_GL_CODE_12, GLA_TYPE_EXPENSE);
+        createGLAccountIfNotExists(accounts, GLA_NAME_13, GLA_GL_CODE_13, GLA_TYPE_EXPENSE);
+        createGLAccountIfNotExists(accounts, GLA_NAME_14, GLA_GL_CODE_14, GLA_TYPE_ASSET);
+        createGLAccountIfNotExists(accounts, GLA_NAME_15, GLA_GL_CODE_15, GLA_TYPE_INCOME);
+        createGLAccountIfNotExists(accounts, GLA_NAME_16, GLA_GL_CODE_16, GLA_TYPE_EXPENSE);
+        createGLAccountIfNotExists(accounts, GLA_NAME_17, GLA_GL_CODE_17, GLA_TYPE_LIABILITY);
+        createGLAccountIfNotExists(accounts, GLA_NAME_18, GLA_GL_CODE_18, GLA_TYPE_ASSET);
+        createGLAccountIfNotExists(accounts, GLA_NAME_19, GLA_GL_CODE_19, GLA_TYPE_EXPENSE);
+        createGLAccountIfNotExists(accounts, GLA_NAME_20, GLA_GL_CODE_20, GLA_TYPE_INCOME);
+        createGLAccountIfNotExists(accounts, GLA_NAME_21, GLA_GL_CODE_21, GLA_TYPE_ASSET);
+        createGLAccountIfNotExists(accounts, GLA_NAME_22, GLA_GL_CODE_22, GLA_TYPE_LIABILITY);
+        createGLAccountIfNotExists(accounts, GLA_NAME_23, GLA_GL_CODE_23, GLA_TYPE_EXPENSE);
+        createGLAccountIfNotExists(accounts, GLA_NAME_24, GLA_GL_CODE_24, GLA_TYPE_INCOME);
+    }
+
+    private void createGLAccountIfNotExists(List<GetGLAccountsResponse> existingAccounts, String name, String glCode, Integer type) {
+        boolean accountExists = existingAccounts.stream().anyMatch(a -> glCode.equals(a.getGlCode()));
+        if (accountExists) {
+            return;
+        }
+
+        PostGLAccountsRequest request = GLAccountRequestFactory.defaultGLAccountRequest(name, glCode, type, GLA_USAGE_DETAIL, true);
+        executeVoid(() -> fineractClient.generalLedgerAccount().createGLAccount1(request));
     }
 }

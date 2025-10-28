@@ -23,7 +23,9 @@ import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.models.GetCodeValuesDataResponse;
 import org.apache.fineract.client.models.PostCodeValuesDataRequest;
 import org.apache.fineract.client.models.PostCodesRequest;
 import org.apache.fineract.client.models.PutCodeValuesDataRequest;
@@ -31,6 +33,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -259,6 +262,17 @@ public class CodeGlobalInitializerStep implements FineractGlobalInitializerStep 
 
     public void createCodeValues(Long codeId, List<String> codeValueNames) {
         codeValueNames.forEach(name -> {
+            try {
+                List<GetCodeValuesDataResponse> existingCodeValues = fineractClient.codeValues().retrieveAllCodeValues(codeId);
+                boolean codeValueExists = existingCodeValues.stream().anyMatch(cv -> name.equals(cv.getName()));
+
+                if (codeValueExists) {
+                    return;
+                }
+            } catch (Exception e) {
+                log.debug("Code value '{}' does not exist yet, will create it", name);
+            }
+
             Integer position = codeValueNames.indexOf(name);
             PostCodeValuesDataRequest postCodeValuesDataRequest = new PostCodeValuesDataRequest();
             postCodeValuesDataRequest.isActive(true);
@@ -292,8 +306,14 @@ public class CodeGlobalInitializerStep implements FineractGlobalInitializerStep 
         codesNameList.add(CODE_NAME_ACTIVE_DUTY_TAG);
 
         codesNameList.forEach(codeName -> {
-            PostCodesRequest postCodesRequest = new PostCodesRequest();
-            executeVoid(() -> fineractClient.codes().createCode(postCodesRequest.name(codeName)));
+            try {
+                fineractClient.codes().retrieveCodeByName(codeName);
+                // Code already exists, skip creation
+            } catch (Exception e) {
+                // Code doesn't exist, create it
+                PostCodesRequest postCodesRequest = new PostCodesRequest();
+                executeVoid(() -> fineractClient.codes().createCode(postCodesRequest.name(codeName)));
+            }
         });
     }
 }

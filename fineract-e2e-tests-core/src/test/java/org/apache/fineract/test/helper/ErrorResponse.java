@@ -39,11 +39,33 @@ public class ErrorResponse {
     private List<Error> errors;
 
     public Error getSingleError() {
+        if (hasTopLevelErrorOnly()) {
+            return createErrorFromDeveloperMessage();
+        }
+
+        if (errors == null || errors.isEmpty()) {
+            if (this.developerMessage != null) {
+                return createErrorFromDeveloperMessage();
+            }
+            throw new IllegalStateException("No errors found in response");
+        }
+
         if (errors.size() != 1) {
             throw new IllegalStateException("Multiple errors found");
-        } else {
-            return errors.iterator().next();
         }
+
+        return errors.iterator().next();
+    }
+
+    private boolean hasTopLevelErrorOnly() {
+        return this.httpStatusCode != null && this.httpStatusCode == 400 && this.developerMessage != null
+                && this.developerMessage.contains("invalid");
+    }
+
+    private Error createErrorFromDeveloperMessage() {
+        Error error = new Error();
+        error.setDeveloperMessage(this.developerMessage);
+        return error;
     }
 
     public static ErrorResponse from(Response retrofitResponse) {
@@ -55,6 +77,18 @@ public class ErrorResponse {
         }
     }
 
+    public static ErrorResponse fromFeignException(feign.FeignException feignException) {
+        String errorBody = feignException.contentUTF8();
+        return GSON.fromJson(errorBody, ErrorResponse.class);
+    }
+
+    public static ErrorResponse fromFeignException(org.apache.fineract.client.feign.FeignException feignException) {
+        String errorBody = feignException.responseBodyAsString();
+        ErrorResponse errorResponse = GSON.fromJson(errorBody, ErrorResponse.class);
+        errorResponse.setHttpStatusCode(feignException.status());
+        return errorResponse;
+    }
+
     @NoArgsConstructor
     @Getter
     @Setter
@@ -62,6 +96,16 @@ public class ErrorResponse {
 
         private String developerMessage;
         private List<ErrorMessageArg> args;
+
+        public String getDeveloperMessageWithoutPrefix() {
+            if (developerMessage == null) {
+                return null;
+            }
+            if (developerMessage.startsWith("[") && developerMessage.contains("] ")) {
+                return developerMessage.substring(developerMessage.indexOf("] ") + 2);
+            }
+            return developerMessage;
+        }
     }
 
     @NoArgsConstructor

@@ -18,70 +18,72 @@
  */
 package org.apache.fineract.test.stepdef.loan;
 
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import feign.FeignException;
 import io.cucumber.java.en.Then;
-import java.io.IOException;
-import org.apache.fineract.client.models.CommandProcessingResult;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.InterestPauseRequestDto;
 import org.apache.fineract.client.models.PostLoansResponse;
-import org.apache.fineract.client.services.LoanInterestPauseApi;
 import org.apache.fineract.test.factory.LoanRequestFactory;
-import org.apache.fineract.test.helper.ErrorHelper;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.ErrorResponse;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
 import org.springframework.beans.factory.annotation.Autowired;
-import retrofit2.Response;
 
 public class LoanInterestPauseStepDef extends AbstractStepDef {
 
     @Autowired
-    private LoanInterestPauseApi loanInterestPauseApi;
+    private FineractFeignClient fineractClient;
 
     @Then("Create an interest pause period with start date {string} and end date {string}")
-    public void interestPauseCreate(final String startDate, final String endDate) throws IOException {
-        Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        long loanId = loanResponse.body().getLoanId();
+    public void interestPauseCreate(final String startDate, final String endDate) {
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
 
         final InterestPauseRequestDto interestPauseRequest = LoanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
                 .endDate(endDate);
-        final Response<CommandProcessingResult> interestPauseResponse = loanInterestPauseApi
-                .createInterestPause(loanId, interestPauseRequest).execute();
-        ErrorHelper.checkSuccessfulApiCall(interestPauseResponse);
+        ok(() -> fineractClient.loanInterestPause().createInterestPause(loanId, interestPauseRequest));
     }
 
     @Then("Admin is not able to add an interest pause period with start date {string} and end date {string}")
-    public void createInterestPauseFailure(final String startDate, final String endDate) throws IOException {
-        Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        long loanId = loanResponse.body().getLoanId();
+    public void createInterestPauseFailure(final String startDate, final String endDate) {
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
 
         final InterestPauseRequestDto interestPauseRequest = LoanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
                 .endDate(endDate);
-        final Response<CommandProcessingResult> interestPauseResponse = loanInterestPauseApi
-                .createInterestPause(loanId, interestPauseRequest).execute();
 
-        ErrorResponse errorDetails = ErrorResponse.from(interestPauseResponse);
-        assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.addInterestPauseForNotInterestBearingLoanFailure())
-                .isEqualTo(403);
-        assertThat(errorDetails.getSingleError().getDeveloperMessage())
-                .isEqualTo(ErrorMessageHelper.addInterestPauseForNotInterestBearingLoanFailure());
+        try {
+            fineractClient.loanInterestPause().createInterestPause(loanId, interestPauseRequest);
+            throw new AssertionError("Expected FeignException but request succeeded");
+        } catch (FeignException e) {
+            ErrorResponse errorDetails = ErrorResponse.fromFeignException(e);
+            assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.addInterestPauseForNotInterestBearingLoanFailure())
+                    .isEqualTo(403);
+            assertThat(errorDetails.getSingleError().getDeveloperMessage())
+                    .isEqualTo(ErrorMessageHelper.addInterestPauseForNotInterestBearingLoanFailure());
+        }
     }
 
     @Then("Admin is not able to add an interest pause period with start date {string} and end date {string} due to inactive loan status")
-    public void createInterestPauseForInactiveLoanFailure(final String startDate, final String endDate) throws IOException {
-        Response<PostLoansResponse> loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        long loanId = loanResponse.body().getLoanId();
+    public void createInterestPauseForInactiveLoanFailure(final String startDate, final String endDate) {
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
 
         final InterestPauseRequestDto interestPauseRequest = LoanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
                 .endDate(endDate);
-        final Response<CommandProcessingResult> interestPauseResponse = loanInterestPauseApi
-                .createInterestPause(loanId, interestPauseRequest).execute();
 
-        ErrorResponse errorDetails = ErrorResponse.from(interestPauseResponse);
-        assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure()).isEqualTo(403);
-        assertThat(errorDetails.getSingleError().getDeveloperMessage())
-                .isEqualTo(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure());
+        try {
+            fineractClient.loanInterestPause().createInterestPause(loanId, interestPauseRequest);
+            throw new AssertionError("Expected FeignException but request succeeded");
+        } catch (FeignException e) {
+            ErrorResponse errorDetails = ErrorResponse.fromFeignException(e);
+            assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure()).isEqualTo(403);
+            assertThat(errorDetails.getSingleError().getDeveloperMessage())
+                    .isEqualTo(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure());
+        }
     }
 }

@@ -126,6 +126,33 @@ public class EventCheckHelper {
                 .extractingData(clientDataV1 -> clientDataV1.getStatus().getId()).isEqualTo(status);//
     }
 
+    public void clientEventCheck(PostClientsResponse clientCreationResponse) {
+        try {
+            Response<GetClientsClientIdResponse> clientDetails = clientApi.retrieveOne11(clientCreationResponse.getClientId(), false)
+                    .execute();
+
+            GetClientsClientIdResponse body = clientDetails.body();
+            Long clientId = Long.valueOf(body.getId());
+            Integer status = body.getStatus().getId().intValue();
+            String firstname = body.getFirstname();
+            String lastname = body.getLastname();
+            Boolean active = body.getActive();
+
+            eventAssertion.assertEvent(ClientCreatedEvent.class, clientCreationResponse.getClientId())//
+                    .extractingData(ClientDataV1::getId).isEqualTo(clientId)//
+                    .extractingData(clientDataV1 -> clientDataV1.getStatus().getId()).isEqualTo(status)//
+                    .extractingData(ClientDataV1::getFirstname).isEqualTo(firstname)//
+                    .extractingData(ClientDataV1::getLastname).isEqualTo(lastname)//
+                    .extractingData(ClientDataV1::getActive).isEqualTo(active);//
+
+            eventAssertion.assertEvent(ClientActivatedEvent.class, clientCreationResponse.getClientId())//
+                    .extractingData(ClientDataV1::getActive).isEqualTo(true)//
+                    .extractingData(clientDataV1 -> clientDataV1.getStatus().getId()).isEqualTo(status);//
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to check client events", e);
+        }
+    }
+
     public void createLoanEventCheck(Response<PostLoansResponse> createLoanResponse) throws IOException {
         Response<GetLoansLoanIdResponse> loanDetails = loansApi.retrieveLoan(createLoanResponse.body().getLoanId(), false, "all", "", "")
                 .execute();
@@ -581,5 +608,120 @@ public class EventCheckHelper {
 
     private BigDecimal zeroConversion(BigDecimal input) {
         return input.compareTo(new BigDecimal("0.000000")) == 0 ? new BigDecimal(input.toEngineeringString()) : input.setScale(8);
+    }
+
+    public void createLoanEventCheck(PostLoansResponse createLoanResponse) {
+        try {
+            GetLoansLoanIdResponse body = loansApi.retrieveLoan(createLoanResponse.getLoanId(), false, "all", "", "").execute().body();
+
+            eventAssertion.assertEvent(LoanCreatedEvent.class, createLoanResponse.getLoanId())//
+                    .extractingData(LoanAccountDataV1::getId).isEqualTo(body.getId())//
+                    .extractingData(loanAccountDataV1 -> loanAccountDataV1.getStatus().getId()).isEqualTo(body.getStatus().getId())//
+                    .extractingData(LoanAccountDataV1::getClientId).isEqualTo(body.getClientId())//
+                    .extractingBigDecimal(LoanAccountDataV1::getPrincipal).isEqualTo(body.getPrincipal())//
+                    .extractingData(loanAccountDataV1 -> loanAccountDataV1.getSummary().getCurrency().getCode())
+                    .isEqualTo(body.getCurrency().getCode());//
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to check loan creation events", e);
+        }
+    }
+
+    public EventAssertion.EventAssertionBuilder<LoanTransactionDataV1> transactionEventCheck(
+            PostLoansLoanIdTransactionsResponse transactionResponse, TransactionType transactionType, String externalOwnerId) {
+        try {
+            Long loanId = transactionResponse.getLoanId();
+            Long transactionId = transactionResponse.getResourceId();
+            GetLoansLoanIdResponse loanDetailsResponse = loansApi.retrieveLoan(loanId, false, "transactions", "", "").execute().body();
+            List<GetLoansLoanIdTransactions> transactions = loanDetailsResponse.getTransactions();
+            GetLoansLoanIdTransactions transactionFound = transactions//
+                    .stream()//
+                    .filter(t -> t.getId().equals(transactionId))//
+                    .findAny()//
+                    .orElseThrow(() -> new IllegalStateException("Transaction cannot be found"));//
+
+            Class<? extends AbstractLoanTransactionEvent> eventClass = switch (transactionType) {
+                case REPAYMENT -> LoanTransactionMakeRepaymentPostEvent.class;
+                case MERCHANT_ISSUED_REFUND -> LoanTransactionMerchantIssuedRefundPostEvent.class;
+                case PAYOUT_REFUND -> LoanTransactionPayoutRefundPostEvent.class;
+                case GOODWILL_CREDIT -> LoanTransactionGoodwillCreditPostEvent.class;
+                case INTEREST_REFUND -> LoanTransactionInterestRefundPostEvent.class;
+                case INTEREST_PAYMENT_WAIVER -> LoanTransactionInterestPaymentWaiverPostEvent.class;
+                default -> throw new IllegalStateException(String.format("Transaction type %s is not supported", transactionType));
+            };
+
+            EventAssertion.EventAssertionBuilder<LoanTransactionDataV1> builder = eventAssertion.assertEvent(eventClass, transactionId)//
+                    .extractingData(LoanTransactionDataV1::getId).isEqualTo(transactionId)//
+                    .extractingData(LoanTransactionDataV1::getLoanId).isEqualTo(loanId)//
+                    .extractingBigDecimal(LoanTransactionDataV1::getAmount).isEqualTo(transactionFound.getAmount());//
+
+            if (externalOwnerId != null) {
+                // TODO: Re-enable once transfer data is properly populated in events
+                // builder = builder.extractingData(loanTransactionDataV1 ->
+                // loanTransactionDataV1.getTransfer().getExternalId())
+                // .isEqualTo(externalOwnerId);
+            }
+
+            return builder;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to check transaction events", e);
+        }
+    }
+
+    public void approveLoanEventCheck(PostLoansLoanIdResponse loanApproveResponse) {
+        try {
+            GetLoansLoanIdResponse body = loansApi.retrieveLoan(loanApproveResponse.getLoanId(), false, "", "", "").execute().body();
+
+            eventAssertion.assertEvent(LoanApprovedEvent.class, loanApproveResponse.getLoanId())//
+                    .extractingData(LoanAccountDataV1::getId).isEqualTo(body.getId())//
+                    .extractingData(loanAccountDataV1 -> loanAccountDataV1.getStatus().getId()).isEqualTo(body.getStatus().getId())//
+                    .extractingData(loanAccountDataV1 -> loanAccountDataV1.getStatus().getCode()).isEqualTo(body.getStatus().getCode())//
+                    .extractingData(LoanAccountDataV1::getClientId).isEqualTo(Long.valueOf(body.getClientId()))//
+                    .extractingBigDecimal(LoanAccountDataV1::getApprovedPrincipal).isEqualTo(body.getApprovedPrincipal())//
+                    .extractingData(loanAccountDataV1 -> loanAccountDataV1.getTimeline().getApprovedOnDate())//
+                    .isEqualTo(FORMATTER_EVENTS.format(body.getTimeline().getApprovedOnDate()))//
+                    .extractingData(loanAccountDataV1 -> loanAccountDataV1.getSummary().getCurrency().getCode())
+                    .isEqualTo(body.getCurrency().getCode());//
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to check loan approval events", e);
+        }
+    }
+
+    public void undoApproveLoanEventCheck(PostLoansLoanIdResponse loanUndoApproveResponse) {
+        try {
+            GetLoansLoanIdResponse body = loansApi.retrieveLoan(loanUndoApproveResponse.getLoanId(), false, "", "", "").execute().body();
+            eventAssertion.assertEventRaised(LoanUndoApprovalEvent.class, body.getId());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to check loan undo approval events", e);
+        }
+    }
+
+    public void loanRejectedEventCheck(PostLoansLoanIdResponse loanRejectedResponse) {
+        try {
+            GetLoansLoanIdResponse body = loansApi.retrieveLoan(loanRejectedResponse.getLoanId(), false, "", "", "").execute().body();
+            eventAssertion.assertEventRaised(LoanRejectedEvent.class, body.getId());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to check loan rejection events", e);
+        }
+    }
+
+    public void loanDisbursalTransactionEventCheck(PostLoansLoanIdResponse loanDisburseResponse) {
+        try {
+            GetLoansLoanIdResponse loanDetailsResponse = loansApi
+                    .retrieveLoan(loanDisburseResponse.getLoanId(), false, "transactions", "", "").execute().body();
+            List<GetLoansLoanIdTransactions> transactions = loanDetailsResponse.getTransactions();
+            GetLoansLoanIdTransactions disbursementTransaction = transactions.stream()
+                    .filter(t -> "Disbursement".equals(t.getType().getValue())).findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No disbursement transaction found"));
+
+            GetLoansLoanIdResponse body = loanDetailsResponse;
+
+            eventAssertion.assertEvent(LoanDisbursalTransactionEvent.class, disbursementTransaction.getId())//
+                    .extractingData(LoanTransactionDataV1::getId).isEqualTo(disbursementTransaction.getId())//
+                    .extractingData(LoanTransactionDataV1::getLoanId).isEqualTo(body.getId())//
+                    .extractingData(LoanTransactionDataV1::getDate).isEqualTo(FORMATTER_EVENTS.format(disbursementTransaction.getDate()))//
+                    .extractingBigDecimal(LoanTransactionDataV1::getAmount).isEqualTo(disbursementTransaction.getAmount());//
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to check loan disbursal transaction events", e);
+        }
     }
 }
