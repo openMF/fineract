@@ -2255,4 +2255,5 @@ public final class LoanApplicationTerms {
     public void updateVariationDays(final long daysToAdd) {
         this.variationDays += daysToAdd;
     }
+
 }
