@@ -543,7 +543,7 @@ public class BatchApiStepDef extends AbstractStepDef {
             batchApiApi().handleBatchRequests(requestList, queryParams);
             throw new IllegalStateException("Expected Feign exception but call succeeded");
         } catch (org.apache.fineract.client.feign.FeignException e) {
-            errorResponse = GSON.fromJson(e.getMessage(), ErrorResponse.class);
+            errorResponse = GSON.fromJson(e.responseBodyAsString(), ErrorResponse.class);
         }
 
         String errorMessageActual = errorResponse.getDeveloperMessage();
@@ -895,7 +895,7 @@ public class BatchApiStepDef extends AbstractStepDef {
             clientApi().retrieveOne12(clientExternalId, clientQueryParams);
             throw new IllegalStateException("Expected Feign exception but call succeeded");
         } catch (org.apache.fineract.client.feign.FeignException e) {
-            errorResponse = GSON.fromJson(e.getMessage(), ErrorResponse.class);
+            errorResponse = GSON.fromJson(e.responseBodyAsString(), ErrorResponse.class);
         }
         String developerMessageActual = errorResponse.getDeveloperMessage();
         Integer httpStatusCodeActual = errorResponse.getHttpStatusCode();
@@ -934,7 +934,7 @@ public class BatchApiStepDef extends AbstractStepDef {
             loansApi().retrieveLoan1(loanExternalId, loanQueryParams);
             throw new IllegalStateException("Expected Feign exception but call succeeded");
         } catch (org.apache.fineract.client.feign.FeignException e) {
-            errorResponse = GSON.fromJson(e.getMessage(), ErrorResponse.class);
+            errorResponse = GSON.fromJson(e.responseBodyAsString(), ErrorResponse.class);
         }
         String developerMessageActual = errorResponse.getDeveloperMessage();
         Integer httpStatusCodeActual = errorResponse.getHttpStatusCode();

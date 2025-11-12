@@ -76,8 +76,8 @@ public class ClientStepDef extends AbstractStepDef {
     @When("Admin creates a client with Firstname {string} and Lastname {string} with address")
     public void createClientWithAddress(String firstName, String lastName) {
         Long addressTypeId = 15L;
-        Long countryId = 16L;
-        Long stateId = 17L;
+        Long countryId = 17L;
+        Long stateId = 18L;
         String city = "Budapest";
         boolean addressIsActive = true;
         String postalCode = "1000";

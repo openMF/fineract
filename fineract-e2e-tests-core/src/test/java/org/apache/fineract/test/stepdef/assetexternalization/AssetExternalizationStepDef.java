@@ -36,6 +36,7 @@
  */
 package org.apache.fineract.test.stepdef.assetexternalization;
 
+import static org.apache.fineract.client.feign.util.FeignCalls.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.Gson;
@@ -50,12 +51,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.client.feign.FeignException;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.feign.services.ExternalAssetOwnerLoanProductAttributesApi;
 import org.apache.fineract.client.feign.services.ExternalAssetOwnersApi;
 import org.apache.fineract.client.feign.services.ExternalAssetOwnersApiExtension;
 import org.apache.fineract.client.feign.services.LoanProductsApi;
+import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.CommandProcessingResult;
 import org.apache.fineract.client.models.ExternalAssetOwnerRequest;
 import org.apache.fineract.client.models.ExternalOwnerJournalEntryData;
@@ -73,7 +74,6 @@ import org.apache.fineract.client.models.PutExternalAssetOwnerLoanProductAttribu
 import org.apache.fineract.client.util.JSON;
 import org.apache.fineract.test.data.AssetExternalizationErrorMessage;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
-import org.apache.fineract.test.helper.ErrorResponse;
 import org.apache.fineract.test.helper.Utils;
 import org.apache.fineract.test.messaging.EventAssertion;
 import org.apache.fineract.test.messaging.event.EventCheckHelper;
@@ -488,22 +488,18 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
                 .dateFormat(DATE_FORMAT_ASSET_EXT)//
                 .locale(DEFAULT_LOCALE);//
 
-        try {
-            externalAssetOwnersApi().transferRequestWithLoanId(loanId, request, Map.of("command", transferData.get(0)));
-            throw new AssertionError("Expected FeignException but request succeeded");
-        } catch (FeignException e) {
-            ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
-            int errorCodeActual = errorResponse.getHttpStatusCode();
-            String errorMessageActual = errorResponse.getSingleError().getDeveloperMessage();
+        CallFailedRuntimeException exception = fail(
+                () -> externalAssetOwnersApi().transferRequestWithLoanId(loanId, request, Map.of("command", transferData.get(0))));
 
-            assertThat(errorCodeActual).as(ErrorMessageHelper.wrongErrorCode(errorCodeActual, errorCodeExpected))
-                    .isEqualTo(errorCodeExpected);
-            assertThat(errorMessageActual).as(ErrorMessageHelper.wrongErrorMessage(errorMessageActual, errorMessageExpected))
-                    .isEqualTo(errorMessageExpected);
+        int errorCodeActual = exception.getStatus();
+        String errorMessageActual = exception.getDeveloperMessage();
 
-            log.debug("ERROR CODE: {}", errorCodeActual);
-            log.debug("ERROR MESSAGE: {}", errorMessageActual);
-        }
+        assertThat(errorCodeActual).as(ErrorMessageHelper.wrongErrorCode(errorCodeActual, errorCodeExpected)).isEqualTo(errorCodeExpected);
+        assertThat(errorMessageActual).as(ErrorMessageHelper.wrongErrorMessage(errorMessageActual, errorMessageExpected))
+                .contains(errorMessageExpected);
+
+        log.debug("ERROR CODE: {}", errorCodeActual);
+        log.debug("ERROR MESSAGE: {}", errorMessageActual);
     }
 
     @Then("Asset externalization transaction with the following data results a {int} error and {string} error message")
@@ -538,22 +534,23 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
         AssetExternalizationErrorMessage errorMsgType = AssetExternalizationErrorMessage.valueOf(errorMessageType);
         String errorMessageExpected = errorMsgType.getValue();
 
-        try {
-            externalAssetOwnersApi().transferRequestWithLoanId(loanId, request, Map.of("command", transferData.get(0)));
-            throw new AssertionError("Expected FeignException but request succeeded");
-        } catch (FeignException e) {
-            ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
-            int errorCodeActual = errorResponse.getHttpStatusCode();
-            String errorMessageActual = errorResponse.getSingleError().getDeveloperMessage();
+        CallFailedRuntimeException exception = fail(
+                () -> externalAssetOwnersApi().transferRequestWithLoanId(loanId, request, Map.of("command", transferData.get(0))));
 
-            assertThat(errorCodeActual).as(ErrorMessageHelper.wrongErrorCode(errorCodeActual, errorCodeExpected))
-                    .isEqualTo(errorCodeExpected);
+        int errorCodeActual = exception.getStatus();
+        String errorMessageActual = exception.getDeveloperMessage();
+
+        assertThat(errorCodeActual).as(ErrorMessageHelper.wrongErrorCode(errorCodeActual, errorCodeExpected)).isEqualTo(errorCodeExpected);
+        if (errorMessageType.equals("INVALID_REQUEST")) {
             assertThat(errorMessageActual).as(ErrorMessageHelper.wrongErrorMessage(errorMessageActual, errorMessageExpected))
-                    .isEqualTo(errorMessageExpected);
-
-            log.debug("ERROR CODE: {}", errorCodeActual);
-            log.debug("ERROR MESSAGE: {}", errorMessageActual);
+                    .containsAnyOf("Validation errors:", errorMessageExpected);
+        } else {
+            assertThat(errorMessageActual).as(ErrorMessageHelper.wrongErrorMessage(errorMessageActual, errorMessageExpected))
+                    .contains(errorMessageExpected);
         }
+
+        log.debug("ERROR CODE: {}", errorCodeActual);
+        log.debug("ERROR MESSAGE: {}", errorMessageActual);
     }
 
     @Then("Asset externalization SALES transaction with ownerExternalId = null and the following data results a {int} error and {string} error message")
@@ -575,22 +572,23 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
         AssetExternalizationErrorMessage errorMsgType = AssetExternalizationErrorMessage.valueOf(errorMessageType);
         String errorMessageExpected = errorMsgType.getValue();
 
-        try {
-            externalAssetOwnersApi().transferRequestWithLoanId(loanId, request, Map.of("command", TRANSACTION_TYPE_SALE));
-            throw new AssertionError("Expected FeignException but request succeeded");
-        } catch (FeignException e) {
-            ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
-            int errorCodeActual = errorResponse.getHttpStatusCode();
-            String errorMessageActual = errorResponse.getSingleError().getDeveloperMessage();
+        CallFailedRuntimeException exception = fail(
+                () -> externalAssetOwnersApi().transferRequestWithLoanId(loanId, request, Map.of("command", TRANSACTION_TYPE_SALE)));
 
-            assertThat(errorCodeActual).as(ErrorMessageHelper.wrongErrorCode(errorCodeActual, errorCodeExpected))
-                    .isEqualTo(errorCodeExpected);
+        int errorCodeActual = exception.getStatus();
+        String errorMessageActual = exception.getDeveloperMessage();
+
+        assertThat(errorCodeActual).as(ErrorMessageHelper.wrongErrorCode(errorCodeActual, errorCodeExpected)).isEqualTo(errorCodeExpected);
+        if (errorMessageType.equals("INVALID_REQUEST")) {
             assertThat(errorMessageActual).as(ErrorMessageHelper.wrongErrorMessage(errorMessageActual, errorMessageExpected))
-                    .isEqualTo(errorMessageExpected);
-
-            log.debug("ERROR CODE: {}", errorCodeActual);
-            log.debug("ERROR MESSAGE: {}", errorMessageActual);
+                    .containsAnyOf("Validation errors:", errorMessageExpected);
+        } else {
+            assertThat(errorMessageActual).as(ErrorMessageHelper.wrongErrorMessage(errorMessageActual, errorMessageExpected))
+                    .contains(errorMessageExpected);
         }
+
+        log.debug("ERROR CODE: {}", errorCodeActual);
+        log.debug("ERROR MESSAGE: {}", errorMessageActual);
     }
 
     @Then("The latest asset externalization transaction with {string} status has the following TRANSFER Journal entries:")
@@ -842,13 +840,10 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
 
         ExternalAssetOwnerRequest request = new ExternalAssetOwnerRequest().dateFormat(DATE_FORMAT_ASSET_EXT).locale(DEFAULT_LOCALE);
 
-        try {
-            externalAssetOwnersApiExtension().transferRequestWithId1WithBody(transferExternalId, request, Map.of("command", command));
-            throw new AssertionError("Expected FeignException but request succeeded");
-        } catch (FeignException e) {
-            ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
-            assertThat(errorResponse.getHttpStatusCode()).as("Expected status code: 403").isEqualTo(403);
-        }
+        CallFailedRuntimeException exception = fail(() -> externalAssetOwnersApiExtension()
+                .transferRequestWithId1WithBody(transferExternalId, request, Map.of("command", command)));
+
+        assertThat(exception.getStatus()).as("Expected status code: 403").isEqualTo(403);
     }
 
     @Then("Fetching Asset externalization details by loan id gives numberOfElements: {int} with correct ownerExternalId, ignore transactionExternalId and contain the following data:")
@@ -911,13 +906,10 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
 
         ExternalAssetOwnerRequest request = new ExternalAssetOwnerRequest().dateFormat(DATE_FORMAT_ASSET_EXT).locale(DEFAULT_LOCALE);
 
-        try {
-            externalAssetOwnersApiExtension().transferRequestWithId1WithBody(transferExternalId, request, Map.of("command", command));
-            throw new AssertionError("Expected FeignException but request succeeded");
-        } catch (FeignException e) {
-            ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
-            assertThat(errorResponse.getHttpStatusCode()).as("Expected status code: 403").isEqualTo(403);
-        }
+        CallFailedRuntimeException exception = fail(() -> externalAssetOwnersApiExtension()
+                .transferRequestWithId1WithBody(transferExternalId, request, Map.of("command", command)));
+
+        assertThat(exception.getStatus()).as("Expected status code: 403").isEqualTo(403);
     }
 
     @When("Admin send {string} command on {string} transaction")

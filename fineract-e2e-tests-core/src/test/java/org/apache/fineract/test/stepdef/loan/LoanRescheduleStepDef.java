@@ -18,11 +18,11 @@
  */
 package org.apache.fineract.test.stepdef.loan;
 
+import static org.apache.fineract.client.feign.util.FeignCalls.fail;
 import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.Gson;
-import feign.FeignException;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.PostCreateRescheduleLoansRequest;
 import org.apache.fineract.client.models.PostCreateRescheduleLoansResponse;
 import org.apache.fineract.client.models.PostLoansResponse;
@@ -41,7 +42,6 @@ import org.apache.fineract.client.models.PostUpdateRescheduleLoansRequest;
 import org.apache.fineract.client.util.JSON;
 import org.apache.fineract.test.data.LoanRescheduleErrorMessage;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
-import org.apache.fineract.test.helper.ErrorResponse;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -151,21 +151,15 @@ public class LoanRescheduleStepDef extends AbstractStepDef {
             throw new IllegalStateException("Parameter count in Error message does not met the criteria");
         }
 
-        try {
-            fineractClient.rescheduleLoans().createLoanRescheduleRequest(request);
-            throw new AssertionError("Expected FeignException but request succeeded");
-        } catch (FeignException e) {
-            ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
-            String errorMessageActual = errorResponse.getSingleError().getDeveloperMessage();
-            int errorCodeActual = errorResponse.getHttpStatusCode();
+        CallFailedRuntimeException exception = fail(() -> fineractClient.rescheduleLoans().createLoanRescheduleRequest(request));
 
-            assertThat(errorCodeActual).as(ErrorMessageHelper.wrongErrorCode(errorCodeActual, errorCodeExpected))
-                    .isEqualTo(errorCodeExpected);
-            assertThat(errorMessageActual).as(ErrorMessageHelper.wrongErrorMessage(errorMessageActual, errorMessageExpected))
-                    .isEqualTo(errorMessageExpected);
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.wrongErrorCode(exception.getStatus(), errorCodeExpected))
+                .isEqualTo(errorCodeExpected);
+        assertThat(exception.getDeveloperMessage())
+                .as(ErrorMessageHelper.wrongErrorMessage(exception.getDeveloperMessage(), errorMessageExpected))
+                .contains(errorMessageExpected);
 
-            log.debug("ERROR CODE: {}", errorCodeActual);
-            log.debug("ERROR MESSAGE: {}", errorMessageActual);
-        }
+        log.debug("ERROR CODE: {}", exception.getStatus());
+        log.debug("ERROR MESSAGE: {}", exception.getDeveloperMessage());
     }
 }

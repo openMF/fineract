@@ -22,7 +22,6 @@ import static java.util.function.Function.identity;
 import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import feign.FeignException;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -30,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.fineract.client.feign.FeignException;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.GetDataTablesResponse;
 import org.apache.fineract.client.models.PostColumnHeaderData;
@@ -185,7 +185,7 @@ public class DatatablesStepDef extends AbstractStepDef {
     @Then("The response body should contain the following message: {string}")
     public void thenColumnsMatch(String json) {
         FeignException exception = testContext().get(DATATABLE_QUERY_RESPONSE);
-        String jsonResponse = exception.contentUTF8();
+        String jsonResponse = exception.responseBodyAsString();
         assertThat(jsonResponse).contains(json);
     }
 }

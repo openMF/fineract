@@ -18,11 +18,11 @@
  */
 package org.apache.fineract.test.stepdef.loan;
 
+import static org.apache.fineract.client.feign.util.FeignCalls.fail;
 import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.Gson;
-import feign.FeignException;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.avro.loan.v1.LoanAccountDelinquencyRangeDataV1;
 import org.apache.fineract.avro.loan.v1.LoanInstallmentDelinquencyBucketDataV1;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.DelinquencyRangeData;
 import org.apache.fineract.client.models.GetDelinquencyActionsResponse;
 import org.apache.fineract.client.models.GetDelinquencyTagHistoryResponse;
@@ -55,7 +56,6 @@ import org.apache.fineract.client.util.JSON;
 import org.apache.fineract.test.data.DelinquencyRange;
 import org.apache.fineract.test.data.LoanStatus;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
-import org.apache.fineract.test.helper.ErrorResponse;
 import org.apache.fineract.test.helper.Utils;
 import org.apache.fineract.test.messaging.EventAssertion;
 import org.apache.fineract.test.messaging.event.EventCheckHelper;
@@ -234,22 +234,16 @@ public class LoanDelinquencyStepDef extends AbstractStepDef {
         Long createdUserId = createUserResponse.getResourceId();
         GetUsersUserIdResponse user = ok(() -> fineractClient.users().retrieveOne31(createdUserId));
 
-        try {
-            fineractClient.loans().createLoanDelinquencyAction(loanId, request);
-            throw new AssertionError("Expected FeignException but request succeeded");
-        } catch (FeignException e) {
-            ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
-            int errorCodeActual = errorResponse.getHttpStatusCode();
-            String errorMessageActual = errorResponse.getSingleError().getDeveloperMessage();
+        CallFailedRuntimeException exception = fail(() -> fineractClient.loans().createLoanDelinquencyAction(loanId, request));
 
-            assertThat(errorCodeActual).as(ErrorMessageHelper.wrongErrorCode(errorCodeActual, errorCodeExpected))
-                    .isEqualTo(errorCodeExpected);
-            assertThat(errorMessageActual).as(ErrorMessageHelper.wrongErrorMessage(errorMessageActual, errorMessageExpected))
-                    .isEqualTo(errorMessageExpected);
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.wrongErrorCode(exception.getStatus(), errorCodeExpected))
+                .isEqualTo(errorCodeExpected);
+        assertThat(exception.getDeveloperMessage())
+                .as(ErrorMessageHelper.wrongErrorMessage(exception.getDeveloperMessage(), errorMessageExpected))
+                .contains(errorMessageExpected);
 
-            log.debug("ERROR CODE: {}", errorCodeActual);
-            log.debug("ERROR MESSAGE: {}", errorMessageActual);
-        }
+        log.debug("ERROR CODE: {}", exception.getStatus());
+        log.debug("ERROR MESSAGE: {}", exception.getDeveloperMessage());
     }
 
     @When("Admin initiate a DELINQUENCY RESUME with startDate: {string}")
@@ -732,22 +726,16 @@ public class LoanDelinquencyStepDef extends AbstractStepDef {
 
     private void errorMessageAssertationFeign(long loanId, PostLoansDelinquencyActionRequest request, int errorCodeExpected,
             String errorMessageExpected) {
-        try {
-            fineractClient.loans().createLoanDelinquencyAction(loanId, request);
-            throw new AssertionError("Expected FeignException but request succeeded");
-        } catch (FeignException e) {
-            ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
-            int errorCodeActual = errorResponse.getHttpStatusCode();
-            String errorMessageActual = errorResponse.getSingleError().getDeveloperMessage();
+        CallFailedRuntimeException exception = fail(() -> fineractClient.loans().createLoanDelinquencyAction(loanId, request));
 
-            assertThat(errorCodeActual).as(ErrorMessageHelper.wrongErrorCode(errorCodeActual, errorCodeExpected))
-                    .isEqualTo(errorCodeExpected);
-            assertThat(errorMessageActual).as(ErrorMessageHelper.wrongErrorMessage(errorMessageActual, errorMessageExpected))
-                    .isEqualTo(errorMessageExpected);
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.wrongErrorCode(exception.getStatus(), errorCodeExpected))
+                .isEqualTo(errorCodeExpected);
+        assertThat(exception.getDeveloperMessage())
+                .as(ErrorMessageHelper.wrongErrorMessage(exception.getDeveloperMessage(), errorMessageExpected))
+                .contains(errorMessageExpected);
 
-            log.debug("ERROR CODE: {}", errorCodeActual);
-            log.debug("ERROR MESSAGE: {}", errorMessageActual);
-        }
+        log.debug("ERROR CODE: {}", exception.getStatus());
+        log.debug("ERROR MESSAGE: {}", exception.getDeveloperMessage());
     }
 
     @Then("LoanDelinquencyRangeChangeBusinessEvent is created")

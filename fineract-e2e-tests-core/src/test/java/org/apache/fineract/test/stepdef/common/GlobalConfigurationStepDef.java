@@ -75,8 +75,16 @@ public class GlobalConfigurationStepDef {
         } catch (FeignException e) {
             final ErrorResponse errorDetails = ErrorResponse.fromFeignException(e);
             assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.setCurrencyEmptyValueFailure()).isEqualTo(400);
-            assertThat(errorDetails.getSingleError().getDeveloperMessageWithoutPrefix())
-                    .isEqualTo(ErrorMessageHelper.setCurrencyEmptyValueFailure());
+
+            if (errorDetails.getErrors() != null && !errorDetails.getErrors().isEmpty()) {
+                boolean hasExpectedError = errorDetails.getErrors().stream().anyMatch(
+                        error -> ErrorMessageHelper.setCurrencyEmptyValueFailure().equals(error.getDeveloperMessageWithoutPrefix()));
+                assertThat(hasExpectedError).as("Expected error message: " + ErrorMessageHelper.setCurrencyEmptyValueFailure()
+                        + " in errors: " + errorDetails.getErrors()).isTrue();
+            } else {
+                assertThat(errorDetails.getSingleError().getDeveloperMessageWithoutPrefix())
+                        .isEqualTo(ErrorMessageHelper.setCurrencyEmptyValueFailure());
+            }
         }
     }
 

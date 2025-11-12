@@ -25,6 +25,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.ChargeData;
 import org.apache.fineract.client.models.ChargeRequest;
 import org.apache.fineract.client.models.PostChargesResponse;
@@ -188,16 +189,22 @@ public class ChargeGlobalInitializerStep implements FineractGlobalInitializerSte
     private PostChargesResponse createChargeIfNotExists(List<ChargeData> existingCharges, Enum<ChargeProductAppliesTo> appliesTo,
             String name, Integer chargeTimeType, Integer chargeCalculationType, Double amount, Boolean isActive, Boolean isPenalty)
             throws Exception {
-        boolean chargeExists = existingCharges.stream().anyMatch(c -> name.equals(c.getName()));
-        if (chargeExists) {
-            ChargeData existing = existingCharges.stream().filter(c -> name.equals(c.getName())).findFirst().orElse(null);
-            PostChargesResponse response = new PostChargesResponse();
-            response.setResourceId(existing.getId());
-            return response;
-        }
-
         ChargeRequest request = defaultChargesRequest(appliesTo, name, chargeTimeType, chargeCalculationType, amount, isActive, isPenalty);
-        return ok(() -> fineractClient.charges().createCharge(request));
+
+        try {
+            return ok(() -> fineractClient.charges().createCharge(request));
+        } catch (CallFailedRuntimeException e) {
+            if (e.getStatus() == 403 && e.getDeveloperMessage() != null && e.getDeveloperMessage().contains("already exists")) {
+                log.debug("Charge '{}' already exists, retrieving existing charge", name);
+                ChargeData existing = existingCharges.stream().filter(c -> name.equals(c.getName())).findFirst().orElse(null);
+                if (existing != null) {
+                    PostChargesResponse response = new PostChargesResponse();
+                    response.setResourceId(existing.getId());
+                    return response;
+                }
+            }
+            throw e;
+        }
     }
 
     public static ChargeRequest defaultChargesRequest(Enum<ChargeProductAppliesTo> appliesTo, String name, Integer chargeTimeType,

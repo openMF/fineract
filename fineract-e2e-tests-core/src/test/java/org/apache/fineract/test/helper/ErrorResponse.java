@@ -59,7 +59,7 @@ public class ErrorResponse {
 
     private boolean hasTopLevelErrorOnly() {
         return this.httpStatusCode != null && this.httpStatusCode == 400 && this.developerMessage != null
-                && this.developerMessage.contains("invalid");
+                && this.developerMessage.contains("invalid") && (this.errors == null || this.errors.isEmpty());
     }
 
     private Error createErrorFromDeveloperMessage() {

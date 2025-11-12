@@ -96,10 +96,13 @@ import org.apache.fineract.client.feign.services.LoanCobCatchUpApi;
 import org.apache.fineract.client.feign.services.LoanCollateralApi;
 import org.apache.fineract.client.feign.services.LoanCollateralManagementApi;
 import org.apache.fineract.client.feign.services.LoanDisbursementDetailsApi;
+import org.apache.fineract.client.feign.services.LoanDisbursementDetailsApiExtension;
 import org.apache.fineract.client.feign.services.LoanInterestPauseApi;
 import org.apache.fineract.client.feign.services.LoanProductsApi;
+import org.apache.fineract.client.feign.services.LoanProductsApiExtension;
 import org.apache.fineract.client.feign.services.LoanReschedulingApi;
 import org.apache.fineract.client.feign.services.LoanTransactionsApi;
+import org.apache.fineract.client.feign.services.LoanTransactionsApiExtension;
 import org.apache.fineract.client.feign.services.LoansApi;
 import org.apache.fineract.client.feign.services.LoansPointInTimeApi;
 import org.apache.fineract.client.feign.services.MakerCheckerOr4EyeFunctionalityApi;
@@ -533,6 +536,10 @@ public final class FineractFeignClient {
         return create(LoanDisbursementDetailsApi.class);
     }
 
+    public LoanDisbursementDetailsApiExtension loanDisbursementDetailsExtension() {
+        return create(LoanDisbursementDetailsApiExtension.class);
+    }
+
     public LoanInterestPauseApi loanInterestPause() {
         return create(LoanInterestPauseApi.class);
     }
@@ -541,12 +548,20 @@ public final class FineractFeignClient {
         return create(LoanProductsApi.class);
     }
 
+    public LoanProductsApiExtension loanProductsExtension() {
+        return create(LoanProductsApiExtension.class);
+    }
+
     public LoanReschedulingApi loanRescheduling() {
         return create(LoanReschedulingApi.class);
     }
 
     public LoanTransactionsApi loanTransactions() {
         return create(LoanTransactionsApi.class);
+    }
+
+    public LoanTransactionsApiExtension loanTransactionsExtension() {
+        return create(LoanTransactionsApiExtension.class);
     }
 
     public LoansApi loans() {

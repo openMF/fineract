@@ -46,6 +46,7 @@ public abstract class TestContextKey {
     public static final String LOAN_REPAYMENT_RESPONSE = "loanRepaymentResponse";
     public static final String LOAN_PAYMENT_TRANSACTION_RESPONSE = "loanPaymentTransactionResponse";
     public static final String LOAN_REFUND_RESPONSE = "loanRefundResponse";
+    public static final String ERROR_RESPONSE = "errorResponse";
     public static final String LOAN_REAGING_RESPONSE = "loanReAgingResponse";
     public static final String LOAN_REAGING_UNDO_RESPONSE = "loanReAgingUndoResponse";
     public static final String LOAN_REAMORTIZATION_RESPONSE = "loanReAmortizationResponse";

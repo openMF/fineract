@@ -18,17 +18,17 @@
  */
 package org.apache.fineract.test.stepdef.loan;
 
+import static org.apache.fineract.client.feign.util.FeignCalls.fail;
 import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import feign.FeignException;
 import io.cucumber.java.en.Then;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.InterestPauseRequestDto;
 import org.apache.fineract.client.models.PostLoansResponse;
 import org.apache.fineract.test.factory.LoanRequestFactory;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
-import org.apache.fineract.test.helper.ErrorResponse;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,16 +56,10 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
         final InterestPauseRequestDto interestPauseRequest = LoanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
                 .endDate(endDate);
 
-        try {
-            fineractClient.loanInterestPause().createInterestPause(loanId, interestPauseRequest);
-            throw new AssertionError("Expected FeignException but request succeeded");
-        } catch (FeignException e) {
-            ErrorResponse errorDetails = ErrorResponse.fromFeignException(e);
-            assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.addInterestPauseForNotInterestBearingLoanFailure())
-                    .isEqualTo(403);
-            assertThat(errorDetails.getSingleError().getDeveloperMessage())
-                    .isEqualTo(ErrorMessageHelper.addInterestPauseForNotInterestBearingLoanFailure());
-        }
+        CallFailedRuntimeException exception = fail(
+                () -> fineractClient.loanInterestPause().createInterestPause(loanId, interestPauseRequest));
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.addInterestPauseForNotInterestBearingLoanFailure()).isEqualTo(403);
+        assertThat(exception.getDeveloperMessage()).contains(ErrorMessageHelper.addInterestPauseForNotInterestBearingLoanFailure());
     }
 
     @Then("Admin is not able to add an interest pause period with start date {string} and end date {string} due to inactive loan status")
@@ -76,14 +70,9 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
         final InterestPauseRequestDto interestPauseRequest = LoanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
                 .endDate(endDate);
 
-        try {
-            fineractClient.loanInterestPause().createInterestPause(loanId, interestPauseRequest);
-            throw new AssertionError("Expected FeignException but request succeeded");
-        } catch (FeignException e) {
-            ErrorResponse errorDetails = ErrorResponse.fromFeignException(e);
-            assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure()).isEqualTo(403);
-            assertThat(errorDetails.getSingleError().getDeveloperMessage())
-                    .isEqualTo(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure());
-        }
+        CallFailedRuntimeException exception = fail(
+                () -> fineractClient.loanInterestPause().createInterestPause(loanId, interestPauseRequest));
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure()).isEqualTo(403);
+        assertThat(exception.getDeveloperMessage()).contains(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure());
     }
 }

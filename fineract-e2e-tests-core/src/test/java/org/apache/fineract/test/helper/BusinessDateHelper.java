@@ -45,12 +45,30 @@ public class BusinessDateHelper {
     private final FineractFeignClient fineractClient;
 
     public void setBusinessDate(String businessDate) {
-        log.debug("Setting business date to: {} (using Feign)", businessDate);
+        log.info("==========================================");
+        log.info("SETTING BUSINESS DATE TO: {}", businessDate);
+        log.info("==========================================");
+
         BusinessDateUpdateRequest businessDateRequest = defaultBusinessDateRequest().date(businessDate);
 
-        BusinessDateUpdateResponse response = ok(
-                () -> fineractClient.businessDateManagement().updateBusinessDate(businessDateRequest, Collections.emptyMap()));
-        TestContext.INSTANCE.set(TestContextKey.BUSINESS_DATE_RESPONSE, response);
+        try {
+            BusinessDateUpdateResponse response = ok(
+                    () -> fineractClient.businessDateManagement().updateBusinessDate(businessDateRequest, Collections.emptyMap()));
+            TestContext.INSTANCE.set(TestContextKey.BUSINESS_DATE_RESPONSE, response);
+
+            log.info("✓ Business date update response: {}", response);
+
+            BusinessDateResponse verify = ok(() -> fineractClient.businessDateManagement().getBusinessDate(BUSINESS_DATE));
+            log.info("✓ Verified business date is now: {}", verify.getDate());
+            log.info("==========================================");
+
+        } catch (Exception e) {
+            log.error("==========================================");
+            log.error("✗ BUSINESS DATE UPDATE FAILED!");
+            log.error("✗ Error: {}", e.getMessage());
+            log.error("==========================================", e);
+            throw e;
+        }
     }
 
     public void setBusinessDateToday() {

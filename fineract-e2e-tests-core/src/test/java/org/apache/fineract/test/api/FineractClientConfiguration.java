@@ -55,12 +55,15 @@ public class FineractClientConfiguration {
         String tenantId = apiProperties.getTenantId();
         long readTimeout = apiProperties.getReadTimeout();
         String apiBaseUrl = baseUrl + "/fineract-provider/api/";
-        log.info("Creating FineractFeignClient: url={}, tenant={}, user={}", apiBaseUrl, tenantId, username);
+
+        boolean debugEnabled = Boolean.parseBoolean(System.getProperty("fineract.feign.debug", "false"));
+        log.info("Creating FineractFeignClient: url={}, tenant={}, user={}, debug={}", apiBaseUrl, tenantId, username, debugEnabled);
 
         FineractFeignClient client = FineractFeignClient.builder().baseUrl(apiBaseUrl).credentials(username, password).tenantId(tenantId)
-                .disableSslVerification(true).connectTimeout(60, TimeUnit.SECONDS).readTimeout((int) readTimeout, TimeUnit.SECONDS).build();
+                .disableSslVerification(true).debug(debugEnabled).connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout((int) readTimeout, TimeUnit.SECONDS).build();
 
-        log.info("FineractFeignClient created successfully");
+        log.info("FineractFeignClient created successfully with debug={}", debugEnabled);
         return client;
     }
 }

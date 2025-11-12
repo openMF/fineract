@@ -20,12 +20,10 @@ package org.apache.fineract.test.initializer.global;
 
 import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
 
-import java.util.ArrayList;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
-import org.apache.fineract.client.models.GetFinancialActivityAccountsResponse;
+import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.PostFinancialActivityAccountsRequest;
 import org.springframework.stereotype.Component;
 
@@ -41,23 +39,18 @@ public class FinancialActivityMappingGlobalInitializerStep implements FineractGl
 
     @Override
     public void initialize() {
-        List<GetFinancialActivityAccountsResponse> existingMappings = new ArrayList<>();
-        try {
-            existingMappings = fineractClient.mappingFinancialActivitiesToAccounts().retrieveAll();
-        } catch (Exception e) {
-            log.debug("Could not retrieve existing financial activity mappings, will create them", e);
-        }
-
-        boolean mappingExists = existingMappings.stream()
-                .anyMatch(m -> FINANCIAL_ACTIVITY_ID_ASSET_TRANSFER.equals(m.getFinancialActivityData().getId())
-                        && GL_ACCOUNT_ID_ASSET_TRANSFER.equals(m.getGlAccountData().getId()));
-
-        if (mappingExists) {
-            return;
-        }
-
         PostFinancialActivityAccountsRequest request = new PostFinancialActivityAccountsRequest()
                 .financialActivityId(FINANCIAL_ACTIVITY_ID_ASSET_TRANSFER).glAccountId(GL_ACCOUNT_ID_ASSET_TRANSFER);
-        executeVoid(() -> fineractClient.mappingFinancialActivitiesToAccounts().createGLAccount(request));
+
+        try {
+            executeVoid(() -> fineractClient.mappingFinancialActivitiesToAccounts().createGLAccount(request));
+            log.info("Financial activity mapping created successfully");
+        } catch (CallFailedRuntimeException e) {
+            if (e.getStatus() == 403 && e.getDeveloperMessage() != null && e.getDeveloperMessage().contains("already exists")) {
+                log.debug("Financial activity mapping already exists, skipping creation");
+                return;
+            }
+            throw e;
+        }
     }
 }

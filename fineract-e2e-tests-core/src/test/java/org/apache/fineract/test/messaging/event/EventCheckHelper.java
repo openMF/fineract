@@ -646,6 +646,7 @@ public class EventCheckHelper {
                 case GOODWILL_CREDIT -> LoanTransactionGoodwillCreditPostEvent.class;
                 case INTEREST_REFUND -> LoanTransactionInterestRefundPostEvent.class;
                 case INTEREST_PAYMENT_WAIVER -> LoanTransactionInterestPaymentWaiverPostEvent.class;
+                case REFUND_BY_CASH -> LoanRefundPostBusinessEvent.class;
                 default -> throw new IllegalStateException(String.format("Transaction type %s is not supported", transactionType));
             };
 
