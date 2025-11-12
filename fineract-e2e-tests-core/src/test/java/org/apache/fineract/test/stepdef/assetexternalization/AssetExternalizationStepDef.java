@@ -54,6 +54,7 @@ import org.apache.fineract.client.feign.FeignException;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.feign.services.ExternalAssetOwnerLoanProductAttributesApi;
 import org.apache.fineract.client.feign.services.ExternalAssetOwnersApi;
+import org.apache.fineract.client.feign.services.ExternalAssetOwnersApiExtension;
 import org.apache.fineract.client.feign.services.LoanProductsApi;
 import org.apache.fineract.client.models.CommandProcessingResult;
 import org.apache.fineract.client.models.ExternalAssetOwnerRequest;
@@ -104,6 +105,10 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
 
     private ExternalAssetOwnersApi externalAssetOwnersApi() {
         return fineractFeignClient.externalAssetOwners();
+    }
+
+    private ExternalAssetOwnersApiExtension externalAssetOwnersApiExtension() {
+        return fineractFeignClient.externalAssetOwnersExtension();
     }
 
     private LoanProductsApi loanProductsApi() {
@@ -823,8 +828,10 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
         String transferExternalId = testContext()
                 .get(TestContextKey.ASSET_EXTERNALIZATION_TRANSFER_EXTERNAL_ID_USER_GENERATED + "_" + type);
 
-        PostInitiateTransferResponse response = externalAssetOwnersApi().transferRequestWithId1(transferExternalId,
-                Map.of("command", command));
+        ExternalAssetOwnerRequest request = new ExternalAssetOwnerRequest().dateFormat(DATE_FORMAT_ASSET_EXT).locale(DEFAULT_LOCALE);
+
+        PostInitiateTransferResponse response = externalAssetOwnersApiExtension().transferRequestWithId1WithBody(transferExternalId,
+                request, Map.of("command", command));
         // ErrorHelper.checkSuccessfulApiCall(response);
     }
 
@@ -833,8 +840,10 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
         String transferExternalId = testContext()
                 .get(TestContextKey.ASSET_EXTERNALIZATION_TRANSFER_EXTERNAL_ID_USER_GENERATED + "_" + type);
 
+        ExternalAssetOwnerRequest request = new ExternalAssetOwnerRequest().dateFormat(DATE_FORMAT_ASSET_EXT).locale(DEFAULT_LOCALE);
+
         try {
-            externalAssetOwnersApi().transferRequestWithId1(transferExternalId, Map.of("command", command));
+            externalAssetOwnersApiExtension().transferRequestWithId1WithBody(transferExternalId, request, Map.of("command", command));
             throw new AssertionError("Expected FeignException but request succeeded");
         } catch (FeignException e) {
             ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
@@ -900,8 +909,10 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
             transferExternalId = testContext().get(TestContextKey.ASSET_EXTERNALIZATION_SALES_TRANSFER_EXTERNAL_ID_FROM_RESPONSE);
         }
 
+        ExternalAssetOwnerRequest request = new ExternalAssetOwnerRequest().dateFormat(DATE_FORMAT_ASSET_EXT).locale(DEFAULT_LOCALE);
+
         try {
-            externalAssetOwnersApi().transferRequestWithId1(transferExternalId, Map.of("command", command));
+            externalAssetOwnersApiExtension().transferRequestWithId1WithBody(transferExternalId, request, Map.of("command", command));
             throw new AssertionError("Expected FeignException but request succeeded");
         } catch (FeignException e) {
             ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
@@ -918,8 +929,10 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
             transferExternalId = testContext().get(TestContextKey.ASSET_EXTERNALIZATION_SALES_TRANSFER_EXTERNAL_ID_FROM_RESPONSE);
         }
 
-        PostInitiateTransferResponse response = externalAssetOwnersApi().transferRequestWithId1(transferExternalId,
-                Map.of("command", command));
+        ExternalAssetOwnerRequest request = new ExternalAssetOwnerRequest().dateFormat(DATE_FORMAT_ASSET_EXT).locale(DEFAULT_LOCALE);
+
+        PostInitiateTransferResponse response = externalAssetOwnersApiExtension().transferRequestWithId1WithBody(transferExternalId,
+                request, Map.of("command", command));
         // ErrorHelper.checkSuccessfulApiCall(response);
     }
 

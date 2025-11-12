@@ -61,6 +61,7 @@ import org.apache.fineract.client.feign.services.EntityDataTableApi;
 import org.apache.fineract.client.feign.services.EntityFieldConfigurationApi;
 import org.apache.fineract.client.feign.services.ExternalAssetOwnerLoanProductAttributesApi;
 import org.apache.fineract.client.feign.services.ExternalAssetOwnersApi;
+import org.apache.fineract.client.feign.services.ExternalAssetOwnersApiExtension;
 import org.apache.fineract.client.feign.services.ExternalEventConfigurationApi;
 import org.apache.fineract.client.feign.services.ExternalServicesApi;
 import org.apache.fineract.client.feign.services.FetchAuthenticatedUserDetailsApi;
@@ -390,6 +391,10 @@ public final class FineractFeignClient {
 
     public ExternalAssetOwnersApi externalAssetOwners() {
         return create(ExternalAssetOwnersApi.class);
+    }
+
+    public ExternalAssetOwnersApiExtension externalAssetOwnersExtension() {
+        return create(ExternalAssetOwnersApiExtension.class);
     }
 
     public ExternalEventConfigurationApi externalEventConfiguration() {
