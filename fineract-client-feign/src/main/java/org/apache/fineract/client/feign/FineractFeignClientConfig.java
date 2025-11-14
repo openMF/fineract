@@ -41,6 +41,7 @@ import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
+import org.apache.fineract.client.feign.support.HeaderCapturingDecoder;
 
 /**
  * Configuration class for Feign client.
@@ -95,7 +96,8 @@ public final class FineractFeignClientConfig {
         Encoder multipartEncoder = new FineractMultipartEncoder(jacksonEncoder);
 
         return Feign.builder().client(getOrCreateHttpClient()).encoder(multipartEncoder)
-                .decoder(new JacksonDecoder(ObjectMapperFactory.getShared())).errorDecoder(new FineractErrorDecoder())
+                .decoder(new HeaderCapturingDecoder(new JacksonDecoder(ObjectMapperFactory.getShared())))
+                .errorDecoder(new FineractErrorDecoder())
                 .options(new Request.Options(connectTimeout, TimeUnit.MILLISECONDS, readTimeout, TimeUnit.MILLISECONDS, true))
                 .retryer(Retryer.NEVER_RETRY).requestInterceptor(new BasicAuthRequestInterceptor(username, password))
                 .requestInterceptor(new TenantIdRequestInterceptor(tenantId)).logger(new Slf4jLogger(apiType))

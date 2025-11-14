@@ -18,12 +18,14 @@
  */
 package org.apache.fineract.test.initializer;
 
+import java.util.Arrays;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.test.initializer.base.FineractInitializer;
 import org.apache.fineract.test.support.loader.FineractConfigLoader;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+@Slf4j
 public final class FineractInitializerFactory {
 
     private FineractInitializerFactory() {}
@@ -35,9 +37,30 @@ public final class FineractInitializerFactory {
         static final FineractInitializer INSTANCE;
 
         static {
+            log.info("=== FineractInitializerFactory: Loading configuration classes ===");
             Set<Class<?>> initializerConfigurationClasses = FineractConfigLoader.getInitializerConfigurationClasses();
-            ApplicationContext context = new AnnotationConfigApplicationContext(initializerConfigurationClasses.toArray(new Class<?>[0]));
+            log.info("Configuration classes to load: {}", initializerConfigurationClasses);
+
+            log.info("=== FineractInitializerFactory: Creating ApplicationContext ===");
+            AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
+                    initializerConfigurationClasses.toArray(new Class<?>[0]));
+
+            log.info("=== FineractInitializerFactory: ApplicationContext created ===");
+            String[] beanNames = context.getBeanDefinitionNames();
+            log.info("Total beans in context: {}", beanNames.length);
+
+            // Log suite initializer beans specifically
+            String[] suiteInitBeans = context
+                    .getBeanNamesForType(org.apache.fineract.test.initializer.suite.FineractSuiteInitializerStep.class);
+            log.info("Suite initializer beans found: {} - {}", suiteInitBeans.length, Arrays.toString(suiteInitBeans));
+
+            // Log if FineractFeignClient bean exists
+            String[] feignClientBeans = context.getBeanNamesForType(org.apache.fineract.client.feign.FineractFeignClient.class);
+            log.info("FineractFeignClient beans found: {} - {}", feignClientBeans.length, Arrays.toString(feignClientBeans));
+
+            log.info("=== FineractInitializerFactory: Getting FineractInitializer bean ===");
             INSTANCE = context.getBean(FineractInitializer.class);
+            log.info("=== FineractInitializerFactory: FineractInitializer bean retrieved successfully ===");
         }
     }
 

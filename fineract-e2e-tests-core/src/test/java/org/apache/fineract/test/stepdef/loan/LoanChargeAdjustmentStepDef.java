@@ -39,7 +39,6 @@ import org.apache.fineract.client.models.GetLoansLoanIdResponse;
 import org.apache.fineract.client.models.GetLoansLoanIdTransactions;
 import org.apache.fineract.client.models.PostLoansLoanIdChargesChargeIdRequest;
 import org.apache.fineract.client.models.PostLoansLoanIdChargesChargeIdResponse;
-import org.apache.fineract.client.models.PostLoansLoanIdTransactionsResponse;
 import org.apache.fineract.client.models.PostLoansLoanIdTransactionsTransactionIdRequest;
 import org.apache.fineract.client.models.PostLoansResponse;
 import org.apache.fineract.client.util.JSON;
@@ -135,8 +134,8 @@ public class LoanChargeAdjustmentStepDef extends AbstractStepDef {
         PostLoansLoanIdTransactionsTransactionIdRequest chargeAdjustmentUndoRequest = LoanRequestFactory
                 .defaultChargeAdjustmentTransactionUndoRequest().transactionDate(businessDateActual);
 
-        PostLoansLoanIdTransactionsResponse chargeAdjustmentUndoResponse = ok(() -> fineractClient.loanTransactions()
-                .adjustLoanTransaction(loanId, transactionId, chargeAdjustmentUndoRequest, Map.<String, Object>of()));
+        ok(() -> fineractClient.loanTransactions().adjustLoanTransaction(loanId, transactionId, chargeAdjustmentUndoRequest,
+                Map.<String, Object>of()));
     }
 
     @Then("Charge adjustment response has the subResourceExternalId")

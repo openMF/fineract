@@ -145,13 +145,13 @@ public class LoanReAgingValidator {
         // validate loan is not charged-off
         if (loan.isChargedOff()) {
             throw new GeneralPlatformDomainRuleException("error.msg.loan.reage.not.allowed.on.charged.off",
-                    "Loan re-aging is not allowed on charged-off loan.", loan.getId());
+                    "Loan re-aging is not allowed on charged-off loan.");
         }
 
         // validate loan is not contract terminated
         if (loan.isContractTermination()) {
             throw new GeneralPlatformDomainRuleException("error.msg.loan.reage.not.allowed.on.contract.terminated",
-                    "Loan re-aging is not allowed on contract terminated loan.", loan.getId());
+                    "Loan re-aging is not allowed on contract terminated loan.");
         }
     }
 

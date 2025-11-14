@@ -122,7 +122,8 @@ public class JournalEntriesStepDef extends AbstractStepDef {
                 }).collect(Collectors.toList());
                 possibleActualValuesList.add(actualValuesList);
 
-                boolean containsExpectedValues = actualValuesList.stream().anyMatch(actualValues -> actualValues.equals(expectedValues));
+                boolean containsExpectedValues = actualValuesList.stream()
+                        .anyMatch(actualValues -> matchesWithBigDecimalComparison(actualValues, expectedValues));
                 if (containsExpectedValues) {
                     containsAnyExpected = true;
                 }
@@ -130,6 +131,36 @@ public class JournalEntriesStepDef extends AbstractStepDef {
             assertThat(containsAnyExpected)
                     .as(ErrorMessageHelper.wrongValueInLineInJournalEntries(resourceId, i, possibleActualValuesList, expectedValues))
                     .isTrue();
+        }
+    }
+
+    private boolean matchesWithBigDecimalComparison(List<String> actualValues, List<String> expectedValues) {
+        if (actualValues.size() != expectedValues.size()) {
+            return false;
+        }
+        for (int i = 0; i < actualValues.size(); i++) {
+            String actual = actualValues.get(i);
+            String expected = expectedValues.get(i);
+            if (!valuesMatch(actual, expected)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean valuesMatch(String actual, String expected) {
+        if (Objects.equals(actual, expected)) {
+            return true;
+        }
+        if (actual == null || expected == null) {
+            return false;
+        }
+        try {
+            BigDecimal actualDecimal = new BigDecimal(actual);
+            BigDecimal expectedDecimal = new BigDecimal(expected);
+            return actualDecimal.compareTo(expectedDecimal) == 0;
+        } catch (NumberFormatException e) {
+            return actual.equals(expected);
         }
     }
 
@@ -186,7 +217,6 @@ public class JournalEntriesStepDef extends AbstractStepDef {
         final long loanId = loanResponse.getLoanId();
         final String resourceId = String.valueOf(loanId);
 
-        List<JournalEntryTransactionItem> journalLinesActualList;
         final String transactionId = "L" + capitalizedIncomeAmortizationId;
         GetJournalEntriesTransactionIdResponse journalEntryDataResponse = null;
         try {
@@ -198,7 +228,10 @@ public class JournalEntriesStepDef extends AbstractStepDef {
         } catch (Exception e) {
             log.error("Exception", e);
         }
-        journalLinesActualList = journalEntryDataResponse.getPageItems();
+        List<JournalEntryTransactionItem> journalLinesActualList = new ArrayList<>();
+        if (journalEntryDataResponse != null) {
+            journalLinesActualList = journalEntryDataResponse.getPageItems();
+        }
 
         final List<List<String>> data = table.asLists();
         for (int i = 1; i < data.size(); i++) {
@@ -224,7 +257,7 @@ public class JournalEntriesStepDef extends AbstractStepDef {
                 possibleActualValuesList.add(actualValues);
 
                 final boolean containsExpectedValues = possibleActualValuesList.stream()
-                        .anyMatch(actualValue -> actualValue.equals(expectedValues));
+                        .anyMatch(actualValue -> matchesWithBigDecimalComparison(actualValue, expectedValues));
                 if (containsExpectedValues) {
                     containsAnyExpected = true;
                 }
@@ -295,7 +328,8 @@ public class JournalEntriesStepDef extends AbstractStepDef {
                 }).collect(Collectors.toList());
                 possibleActualValuesList.add(actualValuesList);
 
-                boolean containsExpectedValues = actualValuesList.stream().anyMatch(actualValues -> actualValues.equals(expectedValues));
+                boolean containsExpectedValues = actualValuesList.stream()
+                        .anyMatch(actualValues -> matchesWithBigDecimalComparison(actualValues, expectedValues));
                 if (containsExpectedValues) {
                     containsAnyExpected = true;
                 }
@@ -440,7 +474,8 @@ public class JournalEntriesStepDef extends AbstractStepDef {
 
             possibleActualValuesList.add(actualValuesList);
 
-            boolean containsExpectedValues = actualValuesList.stream().anyMatch(actualValues -> actualValues.equals(expectedValues));
+            boolean containsExpectedValues = actualValuesList.stream()
+                    .anyMatch(actualValues -> matchesWithBigDecimalComparison(actualValues, expectedValues));
             if (containsExpectedValues) {
                 containsAnyExpected = true;
             }

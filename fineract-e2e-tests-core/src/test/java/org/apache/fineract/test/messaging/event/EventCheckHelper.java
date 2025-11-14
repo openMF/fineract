@@ -89,6 +89,7 @@ import org.springframework.stereotype.Component;
 public class EventCheckHelper {
 
     private static final DateTimeFormatter FORMATTER_EVENTS = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final long TRANSACTION_COMMIT_DELAY_MS = 500L;
 
     @Autowired
     private FineractFeignClient fineractClient;
@@ -96,8 +97,22 @@ public class EventCheckHelper {
     private EventAssertion eventAssertion;
     @Autowired
     private GlobalConfigurationHelper configurationHelper;
+    @Autowired
+    private org.apache.fineract.test.messaging.config.EventProperties eventProperties;
+
+    private void waitForTransactionCommit() {
+        if (eventProperties.isEventVerificationEnabled() && TRANSACTION_COMMIT_DELAY_MS > 0) {
+            try {
+                Thread.sleep(TRANSACTION_COMMIT_DELAY_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Interrupted while waiting for transaction commit", e);
+            }
+        }
+    }
 
     public void clientEventCheck(PostClientsResponse clientCreationResponse) {
+        waitForTransactionCommit();
         GetClientsClientIdResponse body = ok(() -> fineractClient.clients().retrieveOne11(clientCreationResponse.getClientId(),
                 Map.of("staffInSelectedOfficeOnly", false)));
 
@@ -120,6 +135,7 @@ public class EventCheckHelper {
     }
 
     public void undoApproveLoanEventCheck(PostLoansLoanIdResponse loanUndoApproveResponse) {
+        waitForTransactionCommit();
         GetLoansLoanIdResponse body = ok(() -> fineractClient.loans().retrieveLoan(loanUndoApproveResponse.getLoanId(),
                 Map.of("staffInSelectedOfficeOnly", false, "associations", "", "exclude", "", "fields", "")));
 
@@ -127,6 +143,7 @@ public class EventCheckHelper {
     }
 
     public void loanRejectedEventCheck(PostLoansLoanIdResponse loanRejectedResponse) {
+        waitForTransactionCommit();
         GetLoansLoanIdResponse body = ok(() -> fineractClient.loans().retrieveLoan(loanRejectedResponse.getLoanId(),
                 Map.of("staffInSelectedOfficeOnly", false, "associations", "", "exclude", "", "fields", "")));
 
@@ -134,14 +151,17 @@ public class EventCheckHelper {
     }
 
     public void disburseLoanEventCheck(Long loanId) {
+        waitForTransactionCommit();
         loanAccountDataV1Check(LoanDisbursalEvent.class, loanId);
     }
 
     public void loanBalanceChangedEventCheck(Long loanId) {
+        waitForTransactionCommit();
         loanAccountDataV1Check(LoanBalanceChangedEvent.class, loanId);
     }
 
     public void loanStatusChangedEventCheck(Long loanId) {
+        waitForTransactionCommit();
         loanAccountDataV1Check(LoanStatusChangedEvent.class, loanId);
     }
 
@@ -236,6 +256,7 @@ public class EventCheckHelper {
     }
 
     public void loanUndoContractTerminationEventCheck(final GetLoansLoanIdTransactions transaction) {
+        waitForTransactionCommit();
         eventAssertion.assertEventRaised(LoanUndoContractTerminationBusinessEvent.class, transaction.getId());
     }
 
@@ -247,6 +268,7 @@ public class EventCheckHelper {
     }
 
     public void loanDisbursalTransactionEventCheck(PostLoansLoanIdResponse loanDisburseResponse) {
+        waitForTransactionCommit();
         Long disbursementTransactionId = loanDisburseResponse.getSubResourceId();
 
         GetLoansLoanIdResponse body = ok(() -> fineractClient.loans().retrieveLoan(loanDisburseResponse.getLoanId(),
@@ -297,6 +319,7 @@ public class EventCheckHelper {
     }
 
     public void loanOwnershipTransferBusinessEventCheck(Long loanId, Long transferId) {
+        waitForTransactionCommit();
         PageExternalTransferData response = ok(() -> fineractClient.externalAssetOwners().getTransfers(Map.of("loanId", loanId)));
         List<ExternalTransferData> content = response.getContent();
 
@@ -414,6 +437,7 @@ public class EventCheckHelper {
     }
 
     public void loanAccountSnapshotBusinessEventCheck(Long loanId, Long transferId) {
+        waitForTransactionCommit();
         PageExternalTransferData response = ok(() -> fineractClient.externalAssetOwners().getTransfers(Map.of("loanId", loanId)));
         List<ExternalTransferData> content = response.getContent();
 
@@ -459,6 +483,7 @@ public class EventCheckHelper {
     }
 
     public void loanAccountDelinquencyPauseChangedBusinessEventCheck(Long loanId) {
+        waitForTransactionCommit();
         GetLoansLoanIdResponse loanDetails = ok(() -> fineractClient.loans().retrieveLoan(loanId,
                 Map.of("staffInSelectedOfficeOnly", false, "associations", "all", "exclude", "", "fields", "")));
         List<GetLoansLoanIdDelinquencyPausePeriod> delinquencyPausePeriodsActual = loanDetails.getDelinquent().getDelinquencyPausePeriods();
@@ -499,6 +524,7 @@ public class EventCheckHelper {
     }
 
     public void installmentLevelDelinquencyRangeChangeEventCheck(Long loanId) {
+        waitForTransactionCommit();
         eventAssertion.assertEvent(LoanDelinquencyRangeChangeEvent.class, loanId).extractingData(loanAccountDelinquencyRangeDataV1 -> {
             // check if sum of total amounts equal the sum of amount types in installmentDelinquencyBuckets
             BigDecimal totalAmountSum = loanAccountDelinquencyRangeDataV1.getInstallmentDelinquencyBuckets().stream()//
@@ -544,6 +570,7 @@ public class EventCheckHelper {
     }
 
     public void createLoanEventCheck(PostLoansResponse createLoanResponse) {
+        waitForTransactionCommit();
         GetLoansLoanIdResponse body = ok(() -> fineractClient.loans().retrieveLoan(createLoanResponse.getLoanId(),
                 Map.of("staffInSelectedOfficeOnly", false, "associations", "all", "exclude", "", "fields", "")));
 
@@ -557,6 +584,7 @@ public class EventCheckHelper {
     }
 
     public void approveLoanEventCheck(PostLoansLoanIdResponse loanApproveResponse) {
+        waitForTransactionCommit();
         GetLoansLoanIdResponse body = ok(() -> fineractClient.loans().retrieveLoan(loanApproveResponse.getLoanId(),
                 Map.of("staffInSelectedOfficeOnly", false, "associations", "", "exclude", "", "fields", "")));
 

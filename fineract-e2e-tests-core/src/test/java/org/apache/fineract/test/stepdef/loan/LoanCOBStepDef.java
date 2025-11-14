@@ -98,6 +98,6 @@ public class LoanCOBStepDef extends AbstractStepDef {
         PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         long loanId = loanResponse.getLoanId();
 
-        executeVoid(() -> fineractClient.defaultApi().placeLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING", null));
+        executeVoid(() -> fineractClient.defaultApi().placeLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING", ""));
     }
 }

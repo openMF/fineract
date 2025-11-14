@@ -47,12 +47,11 @@ import org.apache.fineract.client.models.GetLoansLoanIdDelinquencyPausePeriod;
 import org.apache.fineract.client.models.GetLoansLoanIdDelinquencySummary;
 import org.apache.fineract.client.models.GetLoansLoanIdLoanInstallmentLevelDelinquency;
 import org.apache.fineract.client.models.GetLoansLoanIdResponse;
-import org.apache.fineract.client.models.GetUsersUserIdResponse;
 import org.apache.fineract.client.models.PostLoansDelinquencyActionRequest;
 import org.apache.fineract.client.models.PostLoansDelinquencyActionResponse;
 import org.apache.fineract.client.models.PostLoansResponse;
-import org.apache.fineract.client.models.PostUsersResponse;
 import org.apache.fineract.client.util.JSON;
+import org.apache.fineract.test.api.ApiProperties;
 import org.apache.fineract.test.data.DelinquencyRange;
 import org.apache.fineract.test.data.LoanStatus;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
@@ -77,10 +76,24 @@ public class LoanDelinquencyStepDef extends AbstractStepDef {
     private FineractFeignClient fineractClient;
 
     @Autowired
+    private ApiProperties apiProperties;
+
+    @Autowired
     private EventAssertion eventAssertion;
 
     @Autowired
     private EventCheckHelper eventCheckHelper;
+
+    private FineractFeignClient createClientForUser(String username, String password) {
+        String baseUrl = apiProperties.getBaseUrl();
+        String tenantId = apiProperties.getTenantId();
+        long readTimeout = apiProperties.getReadTimeout();
+        String apiBaseUrl = baseUrl + "/fineract-provider/api/";
+
+        return FineractFeignClient.builder().baseUrl(apiBaseUrl).credentials(username, password).tenantId(tenantId)
+                .disableSslVerification(true).connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout((int) readTimeout, java.util.concurrent.TimeUnit.SECONDS).build();
+    }
 
     @Then("Admin checks that delinquency range is: {string} and has delinquentDate {string}")
     public void checkDelinquencyRange(String range, String delinquentDateExpected) throws IOException {
@@ -206,11 +219,11 @@ public class LoanDelinquencyStepDef extends AbstractStepDef {
                 .dateFormat(DATE_FORMAT)//
                 .locale(DEFAULT_LOCALE);//
 
-        PostUsersResponse createUserResponse = testContext().get(TestContextKey.CREATED_SIMPLE_USER_RESPONSE);
-        Long createdUserId = createUserResponse.getResourceId();
-        GetUsersUserIdResponse user = ok(() -> fineractClient.users().retrieveOne31(createdUserId));
+        String username = testContext().get(TestContextKey.CREATED_SIMPLE_USER_USERNAME);
+        String password = testContext().get(TestContextKey.CREATED_SIMPLE_USER_PASSWORD);
+        FineractFeignClient userClient = createClientForUser(username, password);
 
-        PostLoansDelinquencyActionResponse response = ok(() -> fineractClient.loans().createLoanDelinquencyAction(loanId, request));
+        PostLoansDelinquencyActionResponse response = ok(() -> userClient.loans().createLoanDelinquencyAction(loanId, request));
         testContext().set(TestContextKey.LOAN_DELINQUENCY_ACTION_RESPONSE, response);
         eventCheckHelper.loanAccountDelinquencyPauseChangedBusinessEventCheck(loanId);
     }
@@ -230,11 +243,11 @@ public class LoanDelinquencyStepDef extends AbstractStepDef {
                 .dateFormat(DATE_FORMAT)//
                 .locale(DEFAULT_LOCALE);//
 
-        PostUsersResponse createUserResponse = testContext().get(TestContextKey.CREATED_SIMPLE_USER_RESPONSE);
-        Long createdUserId = createUserResponse.getResourceId();
-        GetUsersUserIdResponse user = ok(() -> fineractClient.users().retrieveOne31(createdUserId));
+        String username = testContext().get(TestContextKey.CREATED_SIMPLE_USER_USERNAME);
+        String password = testContext().get(TestContextKey.CREATED_SIMPLE_USER_PASSWORD);
+        FineractFeignClient userClient = createClientForUser(username, password);
 
-        CallFailedRuntimeException exception = fail(() -> fineractClient.loans().createLoanDelinquencyAction(loanId, request));
+        CallFailedRuntimeException exception = fail(() -> userClient.loans().createLoanDelinquencyAction(loanId, request));
 
         assertThat(exception.getStatus()).as(ErrorMessageHelper.wrongErrorCode(exception.getStatus(), errorCodeExpected))
                 .isEqualTo(errorCodeExpected);

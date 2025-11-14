@@ -164,11 +164,9 @@ public class LoanChargeStepDef extends AbstractStepDef {
             throw new AssertionError("Expected FeignException but request succeeded");
         } catch (FeignException e) {
             final ErrorResponse errorDetails = ErrorResponse.fromFeignException(e);
-            assertThat(errorDetails.getHttpStatusCode()).isEqualTo(400);
+            assertThat(errorDetails.getHttpStatusCode()).isEqualTo(403);
             assertThat(errorDetails.getSingleError().getDeveloperMessage())
-                    .isEqualTo(chargeProductType.equals(ChargeProductType.LOAN_INSTALLMENT_FEE_PERCENTAGE_INTEREST)
-                            ? ErrorMessageHelper.addInstallmentFeeInterestPercentageChargeFailure()
-                            : ErrorMessageHelper.addInstallmentFeePrincipalPercentageChargeFailure());
+                    .contains("Percentage based installment fee charges are not allowed when interest recalculation is enabled");
         }
     }
 
@@ -190,7 +188,7 @@ public class LoanChargeStepDef extends AbstractStepDef {
             ErrorResponse errorDetails = ErrorResponse.fromFeignException(e);
             assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.addChargeForChargeOffLoanCodeMsg()).isEqualTo(403);
             assertThat(errorDetails.getSingleError().getDeveloperMessage())
-                    .isEqualTo(ErrorMessageHelper.addChargeForChargeOffLoanFailure(loanId));
+                    .contains(ErrorMessageHelper.addChargeForChargeOffLoanFailure(loanId));
         }
     }
 
@@ -285,7 +283,7 @@ public class LoanChargeStepDef extends AbstractStepDef {
         PostLoansLoanIdChargesResponse response = testContext().get(TestContextKey.ADD_PROCESSING_FEE_RESPONSE);
         GetLoansLoanIdChargesChargeIdResponse loanChargeAmount = ok(
                 () -> fineractClient.loanCharges().retrieveLoanCharge(response.getLoanId(), Long.valueOf(response.getResourceId())));
-        assertThat(loanChargeAmount.getAmount()).as("Charge amount is wrong").isEqualTo(chargeAmount);
+        assertThat(loanChargeAmount.getAmount()).as("Charge amount is wrong").isEqualByComparingTo(Double.valueOf(chargeAmount));
     }
 
     private void addChargeEventCheck(PostLoansLoanIdChargesResponse loanChargeResponse) throws IOException {
@@ -336,7 +334,7 @@ public class LoanChargeStepDef extends AbstractStepDef {
             assertThat(errorCodeActual).as(ErrorMessageHelper.wrongErrorCode(errorCodeActual, errorCodeExpected))
                     .isEqualTo(errorCodeExpected);
             assertThat(errorMessageActual).as(ErrorMessageHelper.wrongErrorMessage(errorMessageActual, errorMessageExpected))
-                    .isEqualTo(errorMessageExpected);
+                    .contains(errorMessageExpected);
 
             log.debug("ERROR CODE: {}", errorCodeActual);
             log.debug("ERROR MESSAGE: {}", errorMessageActual);

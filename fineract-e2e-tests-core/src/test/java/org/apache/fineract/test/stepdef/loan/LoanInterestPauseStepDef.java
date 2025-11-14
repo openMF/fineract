@@ -51,7 +51,7 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
     private static final int INTEREST_PAUSE_TERM_TYPE_ID = 11;
 
     private final EventAssertion eventAssertion;
-    private FineractFeignClient fineractClient;
+    private final FineractFeignClient fineractClient;
 
     @Then("Create an interest pause period with start date {string} and end date {string}")
     public void interestPauseCreate(final String startDate, final String endDate) throws IOException {
@@ -121,7 +121,7 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
         CallFailedRuntimeException exception = fail(
                 () -> fineractClient.loanInterestPause().createInterestPause(loanId, interestPauseRequest));
         assertThat(exception.getStatus()).as(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure()).isEqualTo(403);
-        assertThat(exception.getDeveloperMessage()).isEqualTo(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure());
+        assertThat(exception.getDeveloperMessage()).contains(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure());
     }
 
     @Then("LoanScheduleVariationsAddedBusinessEvent is created for interest pause from {string} to {string}")

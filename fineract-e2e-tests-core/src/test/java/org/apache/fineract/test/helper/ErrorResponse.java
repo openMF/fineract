@@ -36,9 +36,9 @@ public class ErrorResponse {
 
     private String developerMessage;
     private Integer httpStatusCode;
-    private List<Error> errors;
+    private List<ErrorDetail> errors;
 
-    public Error getSingleError() {
+    public ErrorDetail getSingleError() {
         if (hasTopLevelErrorOnly()) {
             return createErrorFromDeveloperMessage();
         }
@@ -62,8 +62,8 @@ public class ErrorResponse {
                 && this.developerMessage.contains("invalid") && (this.errors == null || this.errors.isEmpty());
     }
 
-    private Error createErrorFromDeveloperMessage() {
-        Error error = new Error();
+    private ErrorDetail createErrorFromDeveloperMessage() {
+        ErrorDetail error = new ErrorDetail();
         error.setDeveloperMessage(this.developerMessage);
         return error;
     }
@@ -92,7 +92,7 @@ public class ErrorResponse {
     @NoArgsConstructor
     @Getter
     @Setter
-    public static class Error {
+    public static class ErrorDetail {
 
         private String developerMessage;
         private List<ErrorMessageArg> args;

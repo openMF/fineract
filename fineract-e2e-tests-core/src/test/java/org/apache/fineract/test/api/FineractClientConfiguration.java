@@ -49,6 +49,7 @@ public class FineractClientConfiguration {
 
     @Bean
     public FineractFeignClient fineractFeignClient() {
+        log.info("=== FineractClientConfiguration.fineractFeignClient() @Bean method called ===");
         String baseUrl = apiProperties.getBaseUrl();
         String username = apiProperties.getUsername();
         String password = apiProperties.getPassword();
@@ -63,7 +64,7 @@ public class FineractClientConfiguration {
                 .disableSslVerification(true).debug(debugEnabled).connectTimeout(60, TimeUnit.SECONDS)
                 .readTimeout((int) readTimeout, TimeUnit.SECONDS).build();
 
-        log.info("FineractFeignClient created successfully with debug={}", debugEnabled);
+        log.info("=== FineractFeignClient created successfully and ready to be injected ===");
         return client;
     }
 }

@@ -57,7 +57,6 @@ import org.apache.fineract.client.feign.services.ExternalAssetOwnersApi;
 import org.apache.fineract.client.feign.services.ExternalAssetOwnersApiExtension;
 import org.apache.fineract.client.feign.services.LoanProductsApi;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
-import org.apache.fineract.client.models.CommandProcessingResult;
 import org.apache.fineract.client.models.ExternalAssetOwnerRequest;
 import org.apache.fineract.client.models.ExternalOwnerJournalEntryData;
 import org.apache.fineract.client.models.ExternalOwnerTransferJournalEntryData;
@@ -828,9 +827,7 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
 
         ExternalAssetOwnerRequest request = new ExternalAssetOwnerRequest().dateFormat(DATE_FORMAT_ASSET_EXT).locale(DEFAULT_LOCALE);
 
-        PostInitiateTransferResponse response = externalAssetOwnersApiExtension().transferRequestWithId1WithBody(transferExternalId,
-                request, Map.of("command", command));
-        // ErrorHelper.checkSuccessfulApiCall(response);
+        externalAssetOwnersApiExtension().transferRequestWithId1WithBody(transferExternalId, request, Map.of("command", command));
     }
 
     @When("Admin send {string} command to the transaction type {string} will throw error")
@@ -923,9 +920,7 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
 
         ExternalAssetOwnerRequest request = new ExternalAssetOwnerRequest().dateFormat(DATE_FORMAT_ASSET_EXT).locale(DEFAULT_LOCALE);
 
-        PostInitiateTransferResponse response = externalAssetOwnersApiExtension().transferRequestWithId1WithBody(transferExternalId,
-                request, Map.of("command", command));
-        // ErrorHelper.checkSuccessfulApiCall(response);
+        externalAssetOwnersApiExtension().transferRequestWithId1WithBody(transferExternalId, request, Map.of("command", command));
     }
 
     @When("Admin set external asset owner loan product attribute {string} value {string} for loan product {string}")
@@ -942,9 +937,8 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
         if (getExternalAssetOwnerLoanProductAttribute.getTotalFilteredRecords() == 0) {
             PostExternalAssetOwnerLoanProductAttributeRequest setLoanProductAttributeRequest = new PostExternalAssetOwnerLoanProductAttributeRequest()
                     .attributeKey(externalAssetOwnerLoanProductAttributeKey).attributeValue(externalAssetOwnerLoanProductAttributeValue);
-            CommandProcessingResult updateLoanProductAttributerEsponse = externalAssetOwnerLoanProductAttributesApi()
-                    .postExternalAssetOwnerLoanProductAttribute(loanProductId, setLoanProductAttributeRequest);
-            // ErrorHelper.checkSuccessfulApiCall(updateLoanProductAttributerEsponse);
+            externalAssetOwnerLoanProductAttributesApi().postExternalAssetOwnerLoanProductAttribute(loanProductId,
+                    setLoanProductAttributeRequest);
         } else {
             List<ExternalTransferLoanProductAttributesData> attributes = getExternalAssetOwnerLoanProductAttribute.getPageItems();
             assert attributes != null;
@@ -955,9 +949,8 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
                     .getAttributeId();
             PutExternalAssetOwnerLoanProductAttributeRequest setLoanProductAttributeRequest = new PutExternalAssetOwnerLoanProductAttributeRequest()
                     .attributeKey(externalAssetOwnerLoanProductAttributeKey).attributeValue(externalAssetOwnerLoanProductAttributeValue);
-            CommandProcessingResult updateLoanProductAttributerEsponse = externalAssetOwnerLoanProductAttributesApi()
-                    .updateLoanProductAttribute(loanProductId, attributeId, setLoanProductAttributeRequest);
-            // ErrorHelper.checkSuccessfulApiCall(updateLoanProductAttributerEsponse);
+            externalAssetOwnerLoanProductAttributesApi().updateLoanProductAttribute(loanProductId, attributeId,
+                    setLoanProductAttributeRequest);
         }
     }
 

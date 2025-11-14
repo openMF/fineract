@@ -72,6 +72,7 @@ import org.apache.fineract.portfolio.account.exception.AccountTransferNotFoundEx
 import org.apache.fineract.portfolio.account.service.AccountAssociationsReadPlatformService;
 import org.apache.fineract.portfolio.account.service.AccountTransfersWritePlatformService;
 import org.apache.fineract.portfolio.charge.domain.Charge;
+import org.apache.fineract.portfolio.charge.domain.ChargeCalculationType;
 import org.apache.fineract.portfolio.charge.domain.ChargeRepositoryWrapper;
 import org.apache.fineract.portfolio.charge.domain.ChargeTimeType;
 import org.apache.fineract.portfolio.charge.exception.ChargeCannotBeAppliedToException;
@@ -193,6 +194,15 @@ public class LoanChargeWritePlatformServiceImpl implements LoanChargeWritePlatfo
         List<LoanDisbursementDetails> loanDisburseDetails = loan.getDisbursementDetails();
         final Long chargeDefinitionId = command.longValueOfParameterNamed("chargeId");
         final Charge chargeDefinition = this.chargeRepository.findOneWithNotFoundDetection(chargeDefinitionId);
+
+        if (loan.isInterestBearingAndInterestRecalculationEnabled()
+                && ChargeTimeType.fromInt(chargeDefinition.getChargeTimeType()).isInstalmentFee()
+                && ChargeCalculationType.fromInt(chargeDefinition.getChargeCalculation()).isPercentageBased()) {
+            throw new GeneralPlatformDomainRuleException(
+                    "error.msg.loan.installment.fee.percentage.not.allowed.with.interest.recalculation",
+                    "Percentage based installment fee charges are not allowed when interest recalculation is enabled",
+                    chargeDefinition.getName());
+        }
 
         if (loan.isDisbursed() && chargeDefinition.isDisbursementCharge()) {
             // validates whether any pending disbursements are available to

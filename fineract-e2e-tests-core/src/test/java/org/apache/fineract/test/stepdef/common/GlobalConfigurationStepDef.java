@@ -100,7 +100,7 @@ public class GlobalConfigurationStepDef {
             ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
             Integer httpStatusCodeActual = errorResponse.getHttpStatusCode();
             List<String> developerMessagesActual = errorResponse.getErrors().stream()
-                    .map(ErrorResponse.Error::getDeveloperMessageWithoutPrefix).toList();
+                    .map(ErrorResponse.ErrorDetail::getDeveloperMessageWithoutPrefix).toList();
 
             List<String> developerMessagesExpected = asList(ErrorMessageHelper.setCurrencyEmptyValueFailure(),
                     ErrorMessageHelper.setCurrencyNullValueMandatoryFailure());

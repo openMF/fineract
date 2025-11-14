@@ -56,8 +56,9 @@ public class UserStepDef extends AbstractStepDef {
                 .permissions(permissionMap);
         ok(() -> fineractClient.roles().updateRolePermissions(roleId, putRolesRoleIdPermissionsRequest));
 
+        String generatedUsername = Utils.randomNameGenerator(username, 8);
         PostUsersRequest postUsersRequest = new PostUsersRequest() //
-                .username(Utils.randomNameGenerator(username, 8)) //
+                .username(generatedUsername) //
                 .email(EMAIL) //
                 .firstname(username) //
                 .lastname(username) //
@@ -69,5 +70,7 @@ public class UserStepDef extends AbstractStepDef {
 
         PostUsersResponse createUserResponse = ok(() -> fineractClient.users().create15(postUsersRequest));
         testContext().set(TestContextKey.CREATED_SIMPLE_USER_RESPONSE, createUserResponse);
+        testContext().set(TestContextKey.CREATED_SIMPLE_USER_USERNAME, generatedUsername);
+        testContext().set(TestContextKey.CREATED_SIMPLE_USER_PASSWORD, PWD_USER_WITH_ROLE);
     }
 }

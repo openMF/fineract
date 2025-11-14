@@ -96,7 +96,7 @@ public class BusinessDateStepDef extends AbstractStepDef {
         } catch (FeignException e) {
             ErrorResponse errorResponse = ErrorResponse.fromFeignException(e);
             Integer httpStatusCodeActual = errorResponse.getHttpStatusCode();
-            List<String> developerMessagesActual = errorResponse.getErrors().stream().map(ErrorResponse.Error::getDeveloperMessage)
+            List<String> developerMessagesActual = errorResponse.getErrors().stream().map(ErrorResponse.ErrorDetail::getDeveloperMessage)
                     .toList();
 
             List<String> developerMessagesExpected = asList(ErrorMessageHelper.setIncorrectBusinessDateMandatoryFailure(),

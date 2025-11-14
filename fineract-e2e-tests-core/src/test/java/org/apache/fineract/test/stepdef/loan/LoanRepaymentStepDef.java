@@ -505,13 +505,12 @@ public class LoanRepaymentStepDef extends AbstractStepDef {
         PostLoansLoanIdTransactionsTransactionIdRequest transactionUndoRequest = LoanRequestFactory.defaultTransactionUndoRequest()
                 .transactionDate(transactionDate);
 
-        try {
-            ok(() -> fineractClient.loanTransactions().adjustLoanTransaction(loanId, targetTransaction.getId(), transactionUndoRequest,
-                    Map.<String, Object>of()));
-            throw new IllegalStateException("Expected FeignException but call succeeded");
-        } catch (feign.FeignException e) {
-            checkMakeTransactionForbidden(e, 403, ErrorMessageHelper.addCapitalizedIncomeUndoFailureTransactionTypeNonReversal());
-        }
+        CallFailedRuntimeException exception = fail(() -> fineractClient.loanTransactions().adjustLoanTransaction(loanId,
+                targetTransaction.getId(), transactionUndoRequest, Map.<String, Object>of()));
+
+        assertThat(exception.getStatus()).isEqualTo(403);
+        assertThat(exception.getDeveloperMessage())
+                .contains(ErrorMessageHelper.addCapitalizedIncomeUndoFailureTransactionTypeNonReversal());
     }
 
     @Then("Customer is forbidden to undo {string}th {string} transaction made on {string} due to adjustment exists")

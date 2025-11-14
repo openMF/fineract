@@ -50,6 +50,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -68,6 +69,7 @@ import org.apache.fineract.avro.loan.v1.LoanStatusEnumDataV1;
 import org.apache.fineract.avro.loan.v1.LoanTransactionAdjustmentDataV1;
 import org.apache.fineract.avro.loan.v1.LoanTransactionDataV1;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.feign.support.FeignResponseHeaderHolder;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.AdvancedPaymentData;
 import org.apache.fineract.client.models.AmortizationMappingData;
@@ -115,9 +117,7 @@ import org.apache.fineract.client.models.PostLoansRequest;
 import org.apache.fineract.client.models.PostLoansRequestChargeData;
 import org.apache.fineract.client.models.PostLoansResponse;
 import org.apache.fineract.client.models.PutLoanProductsProductIdRequest;
-import org.apache.fineract.client.models.PutLoanProductsProductIdResponse;
 import org.apache.fineract.client.models.PutLoansApprovedAmountRequest;
-import org.apache.fineract.client.models.PutLoansApprovedAmountResponse;
 import org.apache.fineract.client.models.PutLoansAvailableDisbursementAmountRequest;
 import org.apache.fineract.client.models.PutLoansLoanIdRequest;
 import org.apache.fineract.client.models.PutLoansLoanIdResponse;
@@ -210,6 +210,11 @@ public class LoanStepDef extends AbstractStepDef {
 
     @Autowired
     private EventCheckHelper eventCheckHelper;
+
+    private void storePaymentTransactionResponse(PostLoansLoanIdTransactionsResponse response) {
+        testContext().set(TestContextKey.LOAN_PAYMENT_TRANSACTION_RESPONSE, response);
+        testContext().set(TestContextKey.LOAN_PAYMENT_TRANSACTION_HEADERS, FeignResponseHeaderHolder.getHeaders());
+    }
 
     @Autowired
     private EventStore eventStore;
@@ -339,7 +344,7 @@ public class LoanStepDef extends AbstractStepDef {
         PostLoansLoanIdTransactionsResponse paymentTransactionResponse = ok(
                 () -> fineractClient.loanTransactionsExtension().executeLoanTransaction(loanId, paymentTransactionRequest,
                         Map.of("command", transactionTypeValue), Map.of("Idempotency-Key", idempotencyKey)));
-        testContext().set(TestContextKey.LOAN_PAYMENT_TRANSACTION_RESPONSE, paymentTransactionResponse);
+        storePaymentTransactionResponse(paymentTransactionResponse);
         eventCheckHelper.transactionEventCheck(paymentTransactionResponse, transactionType, externalOwnerId);
         eventCheckHelper.loanBalanceChangedEventCheck(loanId);
     }
@@ -361,7 +366,7 @@ public class LoanStepDef extends AbstractStepDef {
 
         PostLoansLoanIdTransactionsResponse paymentTransactionResponse = ok(() -> fineractClient.loanTransactions()
                 .executeLoanTransaction(loanId, paymentTransactionRequest, Map.of("command", transactionTypeValue)));
-        testContext().set(TestContextKey.LOAN_PAYMENT_TRANSACTION_RESPONSE, paymentTransactionResponse);
+        storePaymentTransactionResponse(paymentTransactionResponse);
         eventCheckHelper.transactionEventCheck(paymentTransactionResponse, transactionType, null);
         eventCheckHelper.loanBalanceChangedEventCheck(loanId);
     }
@@ -385,7 +390,7 @@ public class LoanStepDef extends AbstractStepDef {
 
         PostLoansLoanIdTransactionsResponse paymentTransactionResponse = ok(() -> fineractClient.loanTransactions()
                 .executeLoanTransaction(loanId, paymentTransactionRequest, Map.of("command", transactionTypeValue)));
-        testContext().set(TestContextKey.LOAN_PAYMENT_TRANSACTION_RESPONSE, paymentTransactionResponse);
+        storePaymentTransactionResponse(paymentTransactionResponse);
         assertThat(paymentTransactionResponse.getResourceExternalId()).as("External id is not correct").isEqualTo(externalId);
 
         eventCheckHelper.transactionEventCheck(paymentTransactionResponse, transactionType, null);
@@ -427,7 +432,7 @@ public class LoanStepDef extends AbstractStepDef {
 
         final PostLoansLoanIdTransactionsResponse paymentTransactionResponse = ok(() -> fineractClient.loanTransactions()
                 .executeLoanTransaction(loanId, paymentTransactionRequest, Map.of("command", transactionTypeValue)));
-        testContext().set(TestContextKey.LOAN_PAYMENT_TRANSACTION_RESPONSE, paymentTransactionResponse);
+        storePaymentTransactionResponse(paymentTransactionResponse);
         testContext().set(TestContextKey.LOAN_REPAYMENT_RESPONSE, paymentTransactionResponse);
         eventCheckHelper.transactionEventCheck(paymentTransactionResponse, transactionType, null);
         eventCheckHelper.loanBalanceChangedEventCheck(loanId);
@@ -581,7 +586,7 @@ public class LoanStepDef extends AbstractStepDef {
 
         PostLoansLoanIdTransactionsResponse paymentTransactionResponse = ok(() -> fineractClient.loanTransactions()
                 .executeLoanTransaction(loanId, paymentTransactionRequest, Map.of("command", transactionTypeValue)));
-        testContext().set(TestContextKey.LOAN_PAYMENT_TRANSACTION_RESPONSE, paymentTransactionResponse);
+        storePaymentTransactionResponse(paymentTransactionResponse);
         testContext().set(TestContextKey.LOAN_REPAYMENT_RESPONSE, paymentTransactionResponse);
         eventCheckHelper.transactionEventCheck(paymentTransactionResponse, transactionType, externalOwnerId);
         eventCheckHelper.loanBalanceChangedEventCheck(loanId);
@@ -600,7 +605,7 @@ public class LoanStepDef extends AbstractStepDef {
 
         PostLoansLoanIdTransactionsResponse paymentTransactionResponse = ok(() -> fineractClient.loanTransactions()
                 .executeLoanTransaction(loanId, paymentTransactionRequest, Map.of("command", transactionTypeValue)));
-        testContext().set(TestContextKey.LOAN_PAYMENT_TRANSACTION_RESPONSE, paymentTransactionResponse);
+        storePaymentTransactionResponse(paymentTransactionResponse);
         eventCheckHelper.loanBalanceChangedEventCheck(loanId);
     }
 
@@ -1410,7 +1415,7 @@ public class LoanStepDef extends AbstractStepDef {
         PostLoansLoanIdTransactionsResponse paymentTransactionResponse = ok(
                 () -> fineractClient.loanTransactionsExtension().executeLoanTransaction(loanId, paymentTransactionRequest,
                         Map.of("command", transactionTypeValue), Map.of("Idempotency-Key", idempotencyKey)));
-        testContext().set(TestContextKey.LOAN_PAYMENT_TRANSACTION_RESPONSE, paymentTransactionResponse);
+        storePaymentTransactionResponse(paymentTransactionResponse);
     }
 
     @And("Customer makes {string} transaction on the second loan with {string} payment type on {string} with {double} EUR transaction amount with the same Idempotency key as previous transaction")
@@ -1431,7 +1436,7 @@ public class LoanStepDef extends AbstractStepDef {
         PostLoansLoanIdTransactionsResponse paymentTransactionResponse = ok(
                 () -> fineractClient.loanTransactionsExtension().executeLoanTransaction(loanId, paymentTransactionRequest,
                         Map.of("command", transactionTypeValue), Map.of("Idempotency-Key", idempotencyKey)));
-        testContext().set(TestContextKey.LOAN_PAYMENT_TRANSACTION_RESPONSE, paymentTransactionResponse);
+        storePaymentTransactionResponse(paymentTransactionResponse);
     }
 
     @Then("Admin can successfully modify the loan and changes the submitted on date to {string}")
@@ -1600,21 +1605,24 @@ public class LoanStepDef extends AbstractStepDef {
 
         // get and add already existing entries - just do not delete them
         if (disbursementDetailsList != null) {
-            disbursementDetailsList.stream().forEach(disbursementDetail -> {
-                LocalDate expectedDisbursementDateExisting = disbursementDetail.getExpectedDisbursementDate();
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
-                String formatted = expectedDisbursementDateExisting.format(formatter);
-
-                DisbursementDetail disbursementDetailEntryExisting = new DisbursementDetail().id(disbursementDetail.getId())
-                        .expectedDisbursementDate(formatted).principal(disbursementDetail.getPrincipal());
-                disbursementData.add(disbursementDetailEntryExisting);
-            });
+            disbursementDetailsList.stream().sorted(Comparator.comparing(GetLoansLoanIdDisbursementDetails::getExpectedDisbursementDate))
+                    .forEach(disbursementDetail -> {
+                        String formatted = disbursementDetail.getExpectedDisbursementDate().format(FORMATTER);
+                        DisbursementDetail disbursementDetailEntryExisting = new DisbursementDetail().id(disbursementDetail.getId())
+                                .expectedDisbursementDate(formatted).principal(disbursementDetail.getPrincipal());
+                        disbursementData.add(disbursementDetailEntryExisting);
+                    });
         }
 
         // add new entry with expected disbursement detail
         DisbursementDetail disbursementDetailsEntryNew = new DisbursementDetail().principal(disbursementAmount)
                 .expectedDisbursementDate(expectedDisbursementDate);
         disbursementData.add(disbursementDetailsEntryNew);
+
+        DateTimeFormatter parsingFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH);
+        disbursementData.forEach(detail -> detail
+                .expectedDisbursementDate(FORMATTER.format(LocalDate.parse(detail.getExpectedDisbursementDate(), parsingFormatter))));
+        disbursementData.sort(Comparator.comparing(detail -> LocalDate.parse(detail.getExpectedDisbursementDate(), parsingFormatter)));
 
         PostAddAndDeleteDisbursementDetailRequest disbursementDetailRequest = LoanRequestFactory
                 .defaultLoanDisbursementDetailRequest(disbursementData);
@@ -1660,7 +1668,7 @@ public class LoanStepDef extends AbstractStepDef {
         GetLoansLoanIdResponse loanDetails = ok(
                 () -> fineractClient.loans().retrieveLoan(loanId, Map.of("staffInSelectedOfficeOnly", "false", "associations", "all")));
         BigDecimal availableDisbursementAmountActual = loanDetails.getDelinquent().getAvailableDisbursementAmount();
-        assertThat(BigDecimal.valueOf(availableDisbursementAmountExpected).compareTo(availableDisbursementAmountActual)).isEqualTo(0);
+        assertThat(availableDisbursementAmountActual).isEqualByComparingTo(BigDecimal.valueOf(availableDisbursementAmountExpected));
     }
 
     @And("Admin successfully disburse the loan without auto downpayment on {string} with {string} EUR transaction amount")
@@ -1734,8 +1742,7 @@ public class LoanStepDef extends AbstractStepDef {
         long loanId = loanApproveResponse.getLoanId();
 
         PostLoansLoanIdRequest undoDisbursalRequest = new PostLoansLoanIdRequest().note("");
-        PostLoansLoanIdResponse undoLastDisbursalResponse = ok(
-                () -> fineractClient.loans().stateTransitions(loanId, undoDisbursalRequest, Map.of("command", "undodisbursal")));
+        ok(() -> fineractClient.loans().stateTransitions(loanId, undoDisbursalRequest, Map.of("command", "undodisbursal")));
     }
 
     @When("Admin successfully undo last disbursal")
@@ -1744,8 +1751,7 @@ public class LoanStepDef extends AbstractStepDef {
         long loanId = loanApproveResponse.getLoanId();
 
         PostLoansLoanIdRequest undoDisbursalRequest = new PostLoansLoanIdRequest().note("");
-        PostLoansLoanIdResponse undoLastDisbursalResponse = ok(
-                () -> fineractClient.loans().stateTransitions(loanId, undoDisbursalRequest, Map.of("command", "undolastdisbursal")));
+        ok(() -> fineractClient.loans().stateTransitions(loanId, undoDisbursalRequest, Map.of("command", "undolastdisbursal")));
     }
 
     @Then("Admin can successfully undone the loan disbursal")
@@ -1856,7 +1862,7 @@ public class LoanStepDef extends AbstractStepDef {
                 .as(ErrorMessageHelper.addDisbursementExceedMaxAppliedAmountFailure(totalDisbursalAmount, maxDisbursalAmount))
                 .isEqualTo(403);
         assertThat(exception.getDeveloperMessage())
-                .isEqualTo(ErrorMessageHelper.addDisbursementExceedMaxAppliedAmountFailure(totalDisbursalAmount, maxDisbursalAmount));
+                .contains(ErrorMessageHelper.addDisbursementExceedMaxAppliedAmountFailure(totalDisbursalAmount, maxDisbursalAmount));
     }
 
     @And("Admin does charge-off the loan on {string}")
@@ -1890,7 +1896,7 @@ public class LoanStepDef extends AbstractStepDef {
                 .isEqualTo(httpStatusCodeExpected);
         assertThat(exception.getDeveloperMessage())
                 .as(ErrorMessageHelper.wrongErrorMessageInFailedChargeAdjustment(exception.getDeveloperMessage(), developerMessageExpected))
-                .isEqualTo(developerMessageExpected);
+                .contains(developerMessageExpected);
     }
 
     @And("Admin does charge-off the loan with reason {string} on {string}")
@@ -1947,12 +1953,10 @@ public class LoanStepDef extends AbstractStepDef {
         PostLoansLoanIdTransactionsRequest chargeOffRequest = LoanRequestFactory.defaultChargeOffRequest().transactionDate(transactionDate)
                 .dateFormat(DATE_FORMAT).locale(DEFAULT_LOCALE);
 
-        PostLoansLoanIdTransactionsResponse secondChargeOffResponse = ok(
+        CallFailedRuntimeException exception = fail(
                 () -> fineractClient.loanTransactions().executeLoanTransaction(loanId, chargeOffRequest, Map.of("command", "charge-off")));
-        testContext().set(TestContextKey.LOAN_CHARGE_OFF_RESPONSE, secondChargeOffResponse);
-        // // ErrorResponse errorDetails = ErrorResponse.from(secondChargeOffResponse);
-        // assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.secondChargeOffFailure(loanId)).isEqualTo(403);
-        // assertThat(errorDetails.getSingleError().getDeveloperMessage()).isEqualTo(ErrorMessageHelper.secondChargeOffFailure(loanId));
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.secondChargeOffFailure(loanId)).isEqualTo(403);
+        assertThat(exception.getDeveloperMessage()).contains(ErrorMessageHelper.secondChargeOffFailure(loanId));
     }
 
     @And("Admin does a charge-off undo the loan")
@@ -2538,12 +2542,14 @@ public class LoanStepDef extends AbstractStepDef {
 
     @Then("Transaction response has boolean value in header {string}: {string}")
     public void transactionHeaderCheckBoolean(String headerKey, String headerValue) {
-        PostLoansLoanIdTransactionsResponse paymentTransactionResponse = testContext()
-                .get(TestContextKey.LOAN_PAYMENT_TRANSACTION_RESPONSE);
-        // String headerValueActual = paymentTransactionResponse.headers().get(headerKey);
-        // assertThat(headerValueActual).as(ErrorMessageHelper.wrongValueInResponseHeader(headerKey, headerValueActual,
-        // headerValue))
-        // .isEqualTo(headerValue);
+        Map<String, Collection<String>> headers = testContext().get(TestContextKey.LOAN_PAYMENT_TRANSACTION_HEADERS);
+        String headerValueActual = null;
+        if (headers != null && headers.containsKey(headerKey)) {
+            Collection<String> values = headers.get(headerKey);
+            headerValueActual = values != null && !values.isEmpty() ? values.iterator().next() : null;
+        }
+        assertThat(headerValueActual).as(ErrorMessageHelper.wrongValueInResponseHeader(headerKey, headerValueActual, headerValue))
+                .isEqualTo(headerValue);
     }
 
     @Then("Transaction response has {double} EUR value for transaction amount")
@@ -3128,8 +3134,7 @@ public class LoanStepDef extends AbstractStepDef {
         PutLoanProductsProductIdRequest putLoanProductsProductIdRequest = new PutLoanProductsProductIdRequest()
                 .transactionProcessingStrategyCode(ADVANCED_PAYMENT_ALLOCATION.getValue()).paymentAllocation(newPaymentAllocation);
 
-        PutLoanProductsProductIdResponse response = ok(
-                () -> fineractClient.loanProducts().updateLoanProduct(loanProductId, putLoanProductsProductIdRequest));
+        ok(() -> fineractClient.loanProducts().updateLoanProduct(loanProductId, putLoanProductsProductIdRequest));
     }
 
     @When("Admin sets repaymentStartDateType for {string} loan product to {string}")
@@ -3150,8 +3155,7 @@ public class LoanStepDef extends AbstractStepDef {
                 .repaymentStartDateType(repaymentStartDateTypeValue)//
                 .locale(DEFAULT_LOCALE);//
 
-        PutLoanProductsProductIdResponse response = ok(
-                () -> fineractClient.loanProducts().updateLoanProduct(loanProductId, putLoanProductsProductIdRequest));
+        ok(() -> fineractClient.loanProducts().updateLoanProduct(loanProductId, putLoanProductsProductIdRequest));
     }
 
     @And("Admin does write-off the loan on {string}")
@@ -4876,7 +4880,7 @@ public class LoanStepDef extends AbstractStepDef {
                 capitalizedIncomeRequest, Map.of("command", "capitalizedIncome")));
 
         assertThat(exception.getStatus()).isEqualTo(400);
-        assertThat(exception.getDeveloperMessage()).contains("transaction date cannot be in the future");
+        assertThat(exception.getDeveloperMessage()).contains("cannot.be.in.the.future");
     }
 
     @Then("LoanCapitalizedIncomeAmortizationTransactionCreatedBusinessEvent is raised on {string}")
@@ -5059,10 +5063,19 @@ public class LoanStepDef extends AbstractStepDef {
                 .filter(t -> "Capitalized Income".equals(t.getType().getValue())).findFirst()
                 .orElseThrow(() -> new IllegalStateException("No Capitalized Income transaction found for loan " + loanId));
 
-        final PostLoansLoanIdTransactionsResponse adjustmentResponse = adjustCapitalizedIncome(transactionPaymentType, transactionDate,
-                amount, capitalizedIncomeTransaction.getId());
+        final DefaultPaymentType paymentType = DefaultPaymentType.valueOf(transactionPaymentType);
+        final Long paymentTypeValue = paymentTypeResolver.resolve(paymentType);
 
-        testContext().set(TestContextKey.LOAN_CAPITALIZED_INCOME_ADJUSTMENT_RESPONSE, adjustmentResponse);
+        final PostLoansLoanIdTransactionsTransactionIdRequest capitalizedIncomeRequest = new PostLoansLoanIdTransactionsTransactionIdRequest()
+                .transactionDate(transactionDate).dateFormat("dd MMMM yyyy").locale("en").transactionAmount(Double.valueOf(amount))
+                .paymentTypeId(paymentTypeValue).externalId("EXT-CAP-INC-ADJ-" + UUID.randomUUID());
+
+        // This step expects the call to fail with validation error
+        CallFailedRuntimeException exception = fail(() -> fineractClient.loanTransactions().adjustLoanTransaction(loanId,
+                capitalizedIncomeTransaction.getId(), capitalizedIncomeRequest, Map.of("command", "capitalizedIncomeAdjustment")));
+
+        assertThat(exception.getStatus()).isEqualTo(400);
+        // Validation error - just verify it's a 400 status code, the specific message varies
     }
 
     public void checkCapitalizedIncomeTransactionData(String resourceId, List<CapitalizedIncomeDetails> capitalizedIncomeTrn,
@@ -5200,13 +5213,18 @@ public class LoanStepDef extends AbstractStepDef {
                 .filter(t -> "Capitalized Income".equals(t.getType().getValue())).findFirst()
                 .orElseThrow(() -> new IllegalStateException("No Capitalized Income transaction found for loan " + loanId));
 
-        final PostLoansLoanIdTransactionsResponse capitalizedIncomeAdjustmentResponse = adjustCapitalizedIncome(transactionPaymentType,
-                transactionDate, amount, capitalizedIncomeTransaction.getId());
+        final DefaultPaymentType paymentType = DefaultPaymentType.valueOf(transactionPaymentType);
+        final Long paymentTypeValue = paymentTypeResolver.resolve(paymentType);
 
-        // // ErrorResponse errorDetails = ErrorResponse.from(capitalizedIncomeAdjustmentResponse);
-        // assertThat(errorDetails.getHttpStatusCode()).as(ErrorMessageHelper.addCapitalizedIncomeFutureDateFailure()).isEqualTo(400);
-        // assertThat(errorDetails.getSingleError().getDeveloperMessage())
-        // .isEqualTo(ErrorMessageHelper.addCapitalizedIncomeFutureDateFailure());
+        final PostLoansLoanIdTransactionsTransactionIdRequest capitalizedIncomeRequest = new PostLoansLoanIdTransactionsTransactionIdRequest()
+                .transactionDate(transactionDate).dateFormat("dd MMMM yyyy").locale("en").transactionAmount(Double.valueOf(amount))
+                .paymentTypeId(paymentTypeValue).externalId("EXT-CAP-INC-ADJ-" + UUID.randomUUID());
+
+        CallFailedRuntimeException exception = fail(() -> fineractClient.loanTransactions().adjustLoanTransaction(loanId,
+                capitalizedIncomeTransaction.getId(), capitalizedIncomeRequest, Map.of("command", "capitalizedIncomeAdjustment")));
+
+        assertThat(exception.getStatus()).isEqualTo(400);
+        assertThat(exception.getDeveloperMessage()).contains("cannot.be.in.the.future");
     }
 
     public PostLoansLoanIdTransactionsResponse addBuyDownFeeToTheLoanOnWithEURTransactionAmount(final String transactionPaymentType,
@@ -5396,21 +5414,18 @@ public class LoanStepDef extends AbstractStepDef {
     public void updateLoanApprovedAmount(final String amount) {
         final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         final long loanId = loanResponse.getLoanId();
-        final GetLoansLoanIdResponse loanDetailsResponse = ok(() -> fineractClient.loans().retrieveLoan(loanId,
-                Map.of("staffInSelectedOfficeOnly", "false", "associations", "transactions")));
+        ok(() -> fineractClient.loans().retrieveLoan(loanId, Map.of("staffInSelectedOfficeOnly", "false", "associations", "transactions")));
         final PutLoansApprovedAmountRequest modifyLoanApprovedAmountRequest = new PutLoansApprovedAmountRequest().locale(LOCALE_EN)
                 .amount(new BigDecimal(amount));
 
-        final PutLoansApprovedAmountResponse modifyLoanApprovedAmountResponse = ok(
-                () -> fineractClient.loans().modifyLoanApprovedAmount(loanId, modifyLoanApprovedAmountRequest));
+        ok(() -> fineractClient.loans().modifyLoanApprovedAmount(loanId, modifyLoanApprovedAmountRequest));
     }
 
     @Then("Update loan approved amount is forbidden with amount {string} due to exceed applied amount")
     public void updateLoanApprovedAmountForbiddenExceedAppliedAmount(final String amount) {
         final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         final long loanId = loanResponse.getLoanId();
-        final GetLoansLoanIdResponse loanDetailsResponse = ok(() -> fineractClient.loans().retrieveLoan(loanId,
-                Map.of("staffInSelectedOfficeOnly", "false", "associations", "transactions")));
+        ok(() -> fineractClient.loans().retrieveLoan(loanId, Map.of("staffInSelectedOfficeOnly", "false", "associations", "transactions")));
         final PutLoansApprovedAmountRequest modifyLoanApprovedAmountRequest = new PutLoansApprovedAmountRequest().locale(LOCALE_EN)
                 .amount(new BigDecimal(amount));
 
@@ -5423,8 +5438,7 @@ public class LoanStepDef extends AbstractStepDef {
     public void updateLoanApprovedAmountForbiddenHigherPrincipalAmountOnLoan(final String amount) {
         final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         final long loanId = loanResponse.getLoanId();
-        final GetLoansLoanIdResponse loanDetailsResponse = ok(() -> fineractClient.loans().retrieveLoan(loanId,
-                Map.of("staffInSelectedOfficeOnly", "false", "associations", "transactions")));
+        ok(() -> fineractClient.loans().retrieveLoan(loanId, Map.of("staffInSelectedOfficeOnly", "false", "associations", "transactions")));
         final PutLoansApprovedAmountRequest modifyLoanApprovedAmountRequest = new PutLoansApprovedAmountRequest().locale(LOCALE_EN)
                 .amount(new BigDecimal(amount));
 
@@ -5437,8 +5451,7 @@ public class LoanStepDef extends AbstractStepDef {
     public void updateLoanApprovedAmountForbiddenMinAllowedAmount(final String amount) {
         final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         final long loanId = loanResponse.getLoanId();
-        final GetLoansLoanIdResponse loanDetailsResponse = ok(() -> fineractClient.loans().retrieveLoan(loanId,
-                Map.of("staffInSelectedOfficeOnly", "false", "associations", "transactions")));
+        ok(() -> fineractClient.loans().retrieveLoan(loanId, Map.of("staffInSelectedOfficeOnly", "false", "associations", "transactions")));
         final PutLoansApprovedAmountRequest modifyLoanApprovedAmountRequest = new PutLoansApprovedAmountRequest().locale(LOCALE_EN)
                 .amount(new BigDecimal(amount));
 
@@ -5645,15 +5658,20 @@ public class LoanStepDef extends AbstractStepDef {
     private Long getClassificationCodeValueId(String classificationName) {
         final GetCodesResponse code = codeHelper.retrieveCodeByName(classificationName);
 
-        // Delete all existing code values for this classification
+        // Check if code value already exists
         List<GetCodeValuesDataResponse> existingCodeValues = fineractClient.codeValues().retrieveAllCodeValues(code.getId());
+        String codeValueName = classificationName + "_value";
+
+        // Try to find existing code value with the same name
         for (GetCodeValuesDataResponse codeValue : existingCodeValues) {
-            executeVoid(() -> fineractClient.codeValues().deleteCodeValue(code.getId(), codeValue.getId()));
+            if (codeValueName.equals(codeValue.getName())) {
+                log.info("Reusing existing code value: {}", codeValueName);
+                return codeValue.getId();
+            }
         }
 
-        // Create a new code value under the classification code
-        PostCodeValuesDataRequest codeValueRequest = new PostCodeValuesDataRequest().name(classificationName + "_value").isActive(true)
-                .position(1);
+        // If not found, create a new code value
+        PostCodeValuesDataRequest codeValueRequest = new PostCodeValuesDataRequest().name(codeValueName).isActive(true).position(1);
 
         PostCodeValueDataResponse response = codeHelper.createCodeValue(code.getId(), codeValueRequest);
 

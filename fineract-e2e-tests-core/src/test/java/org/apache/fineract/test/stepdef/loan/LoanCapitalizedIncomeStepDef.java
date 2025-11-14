@@ -91,21 +91,27 @@ public class LoanCapitalizedIncomeStepDef extends AbstractStepDef {
         BigDecimal expectedAdjustedAmount = new BigDecimal(expectedData.get("Adjusted Amount"));
         BigDecimal expectedChargedOffAmount = new BigDecimal(expectedData.get("Charged Off Amount"));
 
-        assertThat(actualData.getAmount())
-                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualData.getAmount(), expectedAmount))
-                .isEqualTo(expectedAmount);
-        assertThat(actualData.getAmortizedAmount())
-                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualData.getAmortizedAmount(), expectedAmortizedAmount))
-                .isEqualTo(expectedAmortizedAmount);
-        assertThat(actualData.getUnrecognizedAmount()).as(
-                ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualData.getUnrecognizedAmount(), expectedUnrecognizedAmount))
-                .isEqualTo(expectedUnrecognizedAmount);
-        assertThat(actualData.getAmountAdjustment())
-                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualData.getAmountAdjustment(), expectedAdjustedAmount))
-                .isEqualTo(expectedAdjustedAmount);
-        assertThat(actualData.getChargedOffAmount())
-                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualData.getChargedOffAmount(), expectedChargedOffAmount))
-                .isEqualTo(expectedChargedOffAmount);
+        BigDecimal actualAmount = actualData.getAmount() != null ? actualData.getAmount() : BigDecimal.ZERO;
+        BigDecimal actualAmortizedAmount = actualData.getAmortizedAmount() != null ? actualData.getAmortizedAmount() : BigDecimal.ZERO;
+        BigDecimal actualUnrecognizedAmount = actualData.getUnrecognizedAmount() != null ? actualData.getUnrecognizedAmount()
+                : BigDecimal.ZERO;
+        BigDecimal actualAdjustedAmount = actualData.getAmountAdjustment() != null ? actualData.getAmountAdjustment() : BigDecimal.ZERO;
+        BigDecimal actualChargedOffAmount = actualData.getChargedOffAmount() != null ? actualData.getChargedOffAmount() : BigDecimal.ZERO;
+
+        assertThat(actualAmount).as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualAmount, expectedAmount))
+                .isEqualByComparingTo(expectedAmount);
+        assertThat(actualAmortizedAmount)
+                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualAmortizedAmount, expectedAmortizedAmount))
+                .isEqualByComparingTo(expectedAmortizedAmount);
+        assertThat(actualUnrecognizedAmount)
+                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualUnrecognizedAmount, expectedUnrecognizedAmount))
+                .isEqualByComparingTo(expectedUnrecognizedAmount);
+        assertThat(actualAdjustedAmount)
+                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualAdjustedAmount, expectedAdjustedAmount))
+                .isEqualByComparingTo(expectedAdjustedAmount);
+        assertThat(actualChargedOffAmount)
+                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualChargedOffAmount, expectedChargedOffAmount))
+                .isEqualByComparingTo(expectedChargedOffAmount);
     }
 
     @Then("Deferred Capitalized Income by external-id contains the following data:")
@@ -128,21 +134,27 @@ public class LoanCapitalizedIncomeStepDef extends AbstractStepDef {
         BigDecimal expectedAdjustedAmount = new BigDecimal(expectedData.get("Adjusted Amount"));
         BigDecimal expectedChargedOffAmount = new BigDecimal(expectedData.get("Charged Off Amount"));
 
-        assertThat(actualData.getAmount())
-                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualData.getAmount(), expectedAmount))
-                .isEqualTo(expectedAmount);
-        assertThat(actualData.getAmortizedAmount())
-                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualData.getAmortizedAmount(), expectedAmortizedAmount))
-                .isEqualTo(expectedAmortizedAmount);
-        assertThat(actualData.getUnrecognizedAmount()).as(
-                ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualData.getUnrecognizedAmount(), expectedUnrecognizedAmount))
-                .isEqualTo(expectedUnrecognizedAmount);
-        assertThat(actualData.getAmountAdjustment())
-                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualData.getAmountAdjustment(), expectedAdjustedAmount))
-                .isEqualTo(expectedAdjustedAmount);
-        assertThat(actualData.getChargedOffAmount())
-                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualData.getChargedOffAmount(), expectedChargedOffAmount))
-                .isEqualTo(expectedChargedOffAmount);
+        BigDecimal actualAmount = actualData.getAmount() != null ? actualData.getAmount() : BigDecimal.ZERO;
+        BigDecimal actualAmortizedAmount = actualData.getAmortizedAmount() != null ? actualData.getAmortizedAmount() : BigDecimal.ZERO;
+        BigDecimal actualUnrecognizedAmount = actualData.getUnrecognizedAmount() != null ? actualData.getUnrecognizedAmount()
+                : BigDecimal.ZERO;
+        BigDecimal actualAdjustedAmount = actualData.getAmountAdjustment() != null ? actualData.getAmountAdjustment() : BigDecimal.ZERO;
+        BigDecimal actualChargedOffAmount = actualData.getChargedOffAmount() != null ? actualData.getChargedOffAmount() : BigDecimal.ZERO;
+
+        assertThat(actualAmount).as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualAmount, expectedAmount))
+                .isEqualByComparingTo(expectedAmount);
+        assertThat(actualAmortizedAmount)
+                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualAmortizedAmount, expectedAmortizedAmount))
+                .isEqualByComparingTo(expectedAmortizedAmount);
+        assertThat(actualUnrecognizedAmount)
+                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualUnrecognizedAmount, expectedUnrecognizedAmount))
+                .isEqualByComparingTo(expectedUnrecognizedAmount);
+        assertThat(actualAdjustedAmount)
+                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualAdjustedAmount, expectedAdjustedAmount))
+                .isEqualByComparingTo(expectedAdjustedAmount);
+        assertThat(actualChargedOffAmount)
+                .as(ErrorMessageHelper.wrongAmountInDeferredCapitalizedIncome(actualChargedOffAmount, expectedChargedOffAmount))
+                .isEqualByComparingTo(expectedChargedOffAmount);
     }
 
 }

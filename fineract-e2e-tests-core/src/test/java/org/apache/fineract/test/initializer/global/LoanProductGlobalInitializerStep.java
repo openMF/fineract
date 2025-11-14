@@ -4249,7 +4249,7 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
                 return response;
             }
         } catch (Exception e) {
-            log.warn("Error checking if loan product '{}' exists: {}", productName, e.getMessage());
+            log.warn("Error checking if loan product '{}' exists", productName, e);
         }
 
         log.info("Creating new loan product: {}", productName);
@@ -4258,7 +4258,7 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
             log.info("Successfully created loan product '{}' with ID: {}", productName, response.getResourceId());
             return response;
         } catch (Exception e) {
-            log.error("FAILED to create loan product '{}': {}", productName, e.getMessage(), e);
+            log.error("FAILED to create loan product '{}'", productName, e);
             throw e;
         }
     }
