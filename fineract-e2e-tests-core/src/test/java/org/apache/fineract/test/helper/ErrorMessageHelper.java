@@ -545,7 +545,7 @@ public final class ErrorMessageHelper {
             List<String> expected) {
         String actual = actualList.stream().map(Object::toString).collect(Collectors.joining(System.lineSeparator()));
         return String.format("%nWrong value in Repayment schedule of resource %s tab line %s." //
-                + "%nActual values in line (with the same due date) are: %n%s - But expected values in line: %n%s", resourceId, line,
+                + "%nActual values in line (with the same due date) are: %n%s - %nBut expected values in line: %n%s", resourceId, line,
                 actual, expected);
     }
 
@@ -1078,5 +1078,13 @@ public final class ErrorMessageHelper {
         String expectedToStr = expected == null ? "null" : expected.toString();
         return String.format("Wrong amount in Deferred Capitalized Income. Actual amount is: %s - But expected amount is: %s", actualToStr,
                 expectedToStr);
+    }
+
+    public static String reAgeChargedOffLoanFailure() {
+        return "Loan re-aging is not allowed on charged-off loan.";
+    }
+
+    public static String reAgeContractTerminatedLoanFailure() {
+        return "Loan re-aging is not allowed on contract terminated loan.";
     }
 }

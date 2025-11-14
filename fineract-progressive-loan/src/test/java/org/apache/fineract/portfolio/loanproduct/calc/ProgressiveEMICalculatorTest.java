@@ -18,6 +18,8 @@
  */
 package org.apache.fineract.portfolio.loanproduct.calc;
 
+import static org.mockito.Mockito.mock;
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -39,14 +41,15 @@ import org.apache.fineract.portfolio.loanaccount.data.LoanTermVariationsData;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTermVariationType;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.domain.LoanScheduleModelRepaymentPeriod;
+import org.apache.fineract.portfolio.loanaccount.loanschedule.domain.ScheduledDateGenerator;
 import org.apache.fineract.portfolio.loanaccount.service.ProgressiveLoanInterestScheduleModelParserServiceGsonImpl;
 import org.apache.fineract.portfolio.loanproduct.calc.data.InterestPeriod;
 import org.apache.fineract.portfolio.loanproduct.calc.data.PeriodDueDetails;
 import org.apache.fineract.portfolio.loanproduct.calc.data.ProgressiveLoanInterestScheduleModel;
 import org.apache.fineract.portfolio.loanproduct.calc.data.RepaymentPeriod;
+import org.apache.fineract.portfolio.loanproduct.domain.ILoanConfigurationDetails;
 import org.apache.fineract.portfolio.loanproduct.domain.InterestCalculationPeriodMethod;
 import org.apache.fineract.portfolio.loanproduct.domain.InterestMethod;
-import org.apache.fineract.portfolio.loanproduct.domain.LoanProductMinimumRepaymentScheduleRelatedDetail;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -64,13 +67,12 @@ import org.springframework.lang.NonNull;
 @ExtendWith(MockitoExtension.class)
 class ProgressiveEMICalculatorTest {
 
-    private static ProgressiveEMICalculator emiCalculator = new ProgressiveEMICalculator();
+    private static ProgressiveEMICalculator emiCalculator = new ProgressiveEMICalculator(mock(ScheduledDateGenerator.class));
 
     private static MockedStatic<ThreadLocalContextUtil> threadLocalContextUtil = Mockito.mockStatic(ThreadLocalContextUtil.class);
     private static MockedStatic<MoneyHelper> moneyHelper = Mockito.mockStatic(MoneyHelper.class);
     private static MathContext mc = new MathContext(12, RoundingMode.HALF_EVEN);
-    private static LoanProductMinimumRepaymentScheduleRelatedDetail loanProductRelatedDetail = Mockito
-            .mock(LoanProductMinimumRepaymentScheduleRelatedDetail.class);
+    private static ILoanConfigurationDetails loanProductRelatedDetail = Mockito.mock(ILoanConfigurationDetails.class);
 
     private static final CurrencyData currency = new CurrencyData("USD", "USD", 2, 1, "$", "USD");
 

@@ -64,7 +64,7 @@ dependencyManagement {
             exclude 'javax.activation:activation'
         }
         dependency 'commons-io:commons-io:2.18.0'
-        dependency 'com.github.librepdf:openpdf:2.0.3'
+        dependency 'com.github.librepdf:openpdf:3.0.0'
         dependency ('org.mnode.ical4j:ical4j:3.2.19') {
             exclude 'com.sun.mail:javax.mail'
             exclude 'org.codehaus.groovy:groovy'
@@ -195,10 +195,10 @@ dependencyManagement {
         dependency 'jakarta.validation:jakarta.validation-api:3.1.1'
         dependency 'org.hibernate.validator:hibernate-validator:9.0.1.Final'
 
-        dependency ('org.liquibase:liquibase-core:4.31.1') {
+        dependency ('org.liquibase:liquibase-core:5.0.1') {
             exclude 'javax.xml.bind:jaxb-api'
         }
-        dependency 'org.liquibase.ext:liquibase-postgresql:4.31.1'
+        dependency 'org.liquibase.ext:liquibase-postgresql:5.0.1'
 
         dependency ('org.dom4j:dom4j:2.1.4') {
             exclude 'relaxngDatatype:relaxngDatatype' // already in com.sun.xml.bind:jaxb-osgi:2.3.0.1

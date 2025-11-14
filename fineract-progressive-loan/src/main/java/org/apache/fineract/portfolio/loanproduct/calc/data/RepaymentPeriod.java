@@ -35,7 +35,7 @@ import org.apache.fineract.infrastructure.core.serialization.gson.JsonExclude;
 import org.apache.fineract.infrastructure.core.service.MathUtil;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.Money;
-import org.apache.fineract.portfolio.loanproduct.domain.LoanProductMinimumRepaymentScheduleRelatedDetail;
+import org.apache.fineract.portfolio.loanproduct.domain.ILoanConfigurationDetails;
 import org.apache.fineract.portfolio.util.Memo;
 
 @ToString(exclude = { "previous" })
@@ -84,13 +84,17 @@ public class RepaymentPeriod {
     private Money totalCapitalizedIncomeAmount;
     @JsonExclude
     @Getter
-    private final LoanProductMinimumRepaymentScheduleRelatedDetail loanProductRelatedDetail;
+    private final ILoanConfigurationDetails loanProductRelatedDetail;
     @JsonExclude
     private MonetaryCurrency currency;
 
+    @Getter
+    @Setter
+    private boolean isOutstandingMovedDueToReAging = false;
+
     protected RepaymentPeriod(RepaymentPeriod previous, LocalDate fromDate, LocalDate dueDate, List<InterestPeriod> interestPeriods,
             Money emi, Money originalEmi, Money paidPrincipal, Money paidInterest, Money futureUnrecognizedInterest, MathContext mc,
-            LoanProductMinimumRepaymentScheduleRelatedDetail loanProductRelatedDetail) {
+            ILoanConfigurationDetails loanProductRelatedDetail) {
         this.previous = previous;
         this.fromDate = fromDate;
         this.dueDate = dueDate;
@@ -104,13 +108,12 @@ public class RepaymentPeriod {
         this.loanProductRelatedDetail = loanProductRelatedDetail;
     }
 
-    public static RepaymentPeriod empty(RepaymentPeriod previous, MathContext mc,
-            LoanProductMinimumRepaymentScheduleRelatedDetail loanProductRelatedDetail) {
+    public static RepaymentPeriod empty(RepaymentPeriod previous, MathContext mc, ILoanConfigurationDetails loanProductRelatedDetail) {
         return new RepaymentPeriod(previous, null, null, new ArrayList<>(), null, null, null, null, null, mc, loanProductRelatedDetail);
     }
 
     public static RepaymentPeriod create(RepaymentPeriod previous, LocalDate fromDate, LocalDate dueDate, Money emi, MathContext mc,
-            LoanProductMinimumRepaymentScheduleRelatedDetail loanProductRelatedDetail) {
+            ILoanConfigurationDetails loanProductRelatedDetail) {
         final Money zero = emi.zero();
         final RepaymentPeriod newRepaymentPeriod = new RepaymentPeriod(previous, fromDate, dueDate, new ArrayList<>(), emi, emi, zero, zero,
                 zero, mc, loanProductRelatedDetail);
@@ -124,6 +127,7 @@ public class RepaymentPeriod {
                 repaymentPeriod.getDueDate(), new ArrayList<>(), repaymentPeriod.getEmi(), repaymentPeriod.getOriginalEmi(),
                 repaymentPeriod.getPaidPrincipal(), repaymentPeriod.getPaidInterest(), repaymentPeriod.getFutureUnrecognizedInterest(), mc,
                 repaymentPeriod.getLoanProductRelatedDetail());
+        newRepaymentPeriod.setOutstandingMovedDueToReAging(repaymentPeriod.isOutstandingMovedDueToReAging());
         // There is always at least 1 interest period, by default with same from-due date as repayment period
         for (InterestPeriod interestPeriod : repaymentPeriod.getInterestPeriods()) {
             newRepaymentPeriod.getInterestPeriods().add(InterestPeriod.copy(newRepaymentPeriod, interestPeriod, mc));
@@ -136,6 +140,7 @@ public class RepaymentPeriod {
         final RepaymentPeriod newRepaymentPeriod = new RepaymentPeriod(previous, repaymentPeriod.getFromDate(),
                 repaymentPeriod.getDueDate(), new ArrayList<>(), repaymentPeriod.getEmi(), repaymentPeriod.getOriginalEmi(), zero, zero,
                 zero, mc, repaymentPeriod.getLoanProductRelatedDetail());
+        newRepaymentPeriod.setOutstandingMovedDueToReAging(repaymentPeriod.isOutstandingMovedDueToReAging());
         // There is always at least 1 interest period, by default with same from-due date as repayment period
         for (InterestPeriod interestPeriod : repaymentPeriod.getInterestPeriods()) {
             var interestPeriodCopy = InterestPeriod.copy(newRepaymentPeriod, interestPeriod);
@@ -283,7 +288,8 @@ public class RepaymentPeriod {
      * @return
      */
     public Money getTotalCreditedAmount() {
-        return getCreditedPrincipal().plus(getCreditedInterest(), getMc());
+        return isOutstandingMovedDueToReAging ? Money.zero(getCurrency(), getMc())
+                : getCreditedPrincipal().plus(getCreditedInterest(), getMc());
     }
 
     /**

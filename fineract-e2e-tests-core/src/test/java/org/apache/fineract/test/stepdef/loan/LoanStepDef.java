@@ -30,6 +30,7 @@ import static org.apache.fineract.test.factory.LoanProductsRequestFactory.CHARGE
 import static org.apache.fineract.test.factory.LoanProductsRequestFactory.LOCALE_EN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -365,6 +366,32 @@ public class LoanStepDef extends AbstractStepDef {
         eventCheckHelper.loanBalanceChangedEventCheck(loanId);
     }
 
+    @When("Admin makes {string} transaction with {string} payment type on {string} with {double} EUR transaction amount and self-generated external-id")
+    public void createTransactionWithExternalId(String transactionTypeInput, String transactionPaymentType, String transactionDate,
+            double transactionAmount) throws IOException, InterruptedException {
+        eventStore.reset();
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
+        String externalId = UUID.randomUUID().toString();
+
+        TransactionType transactionType = TransactionType.valueOf(transactionTypeInput);
+        String transactionTypeValue = transactionType.getValue();
+        DefaultPaymentType paymentType = DefaultPaymentType.valueOf(transactionPaymentType);
+        Long paymentTypeValue = paymentTypeResolver.resolve(paymentType);
+
+        PostLoansLoanIdTransactionsRequest paymentTransactionRequest = LoanRequestFactory.defaultPaymentTransactionRequest()
+                .transactionDate(transactionDate).transactionAmount(transactionAmount).paymentTypeId(paymentTypeValue)
+                .externalId(externalId);
+
+        PostLoansLoanIdTransactionsResponse paymentTransactionResponse = ok(() -> fineractClient.loanTransactions()
+                .executeLoanTransaction(loanId, paymentTransactionRequest, Map.of("command", transactionTypeValue)));
+        testContext().set(TestContextKey.LOAN_PAYMENT_TRANSACTION_RESPONSE, paymentTransactionResponse);
+        assertThat(paymentTransactionResponse.getResourceExternalId()).as("External id is not correct").isEqualTo(externalId);
+
+        eventCheckHelper.transactionEventCheck(paymentTransactionResponse, transactionType, null);
+        eventCheckHelper.loanBalanceChangedEventCheck(loanId);
+    }
+
     @When("Customer makes {string} transaction with {string} payment type on {string} with {double} EUR transaction amount and system-generated Idempotency key")
     public void createTransactionWithAutoIdempotencyKey(String transactionTypeInput, String transactionPaymentType, String transactionDate,
             double transactionAmount) throws IOException {
@@ -644,6 +671,12 @@ public class LoanStepDef extends AbstractStepDef {
     public void createFullyCustomizedLoanWithInterestRateFrequencyType(final DataTable table) {
         final List<List<String>> data = table.asLists();
         createFullyCustomizedLoanWithInterestRateFrequency(data.get(1));
+    }
+
+    @When("Admin creates a fully customized loan with graceOnArrearsAgeing and following data:")
+    public void createFullyCustomizedLoanWithGraceOnArrearsAgeing(final DataTable table) throws IOException {
+        final List<List<String>> data = table.asLists();
+        createFullyCustomizedLoanWithGraceOnArrearsAgeing(data.get(1));
     }
 
     @When("Admin creates a fully customized loan with charges and following data:")
@@ -2432,6 +2465,13 @@ public class LoanStepDef extends AbstractStepDef {
         assertThat(allInstallmentsObligationsMet).isTrue();
     }
 
+    @Then("Loan is closed with zero outstanding balance and it's all installments have obligations met")
+    public void loanClosedAndInstallmentsObligationsMet() throws IOException {
+        loanInstallmentsObligationsMet();
+        loanOutstanding(0);
+        loanStatus("CLOSED_OBLIGATIONS_MET");
+    }
+
     @Then("Loan closedon_date is {string}")
     public void loanClosedonDate(String date) {
         PostLoansResponse loanCreateResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
@@ -3565,6 +3605,79 @@ public class LoanStepDef extends AbstractStepDef {
                 .graceOnInterestPayment(graceOnInterestCharged)//
                 .transactionProcessingStrategyCode(transactionProcessingStrategyCodeValue)//
                 .interestRateFrequencyType(interestRateFrequencyTypeValue);//
+
+        final PostLoansResponse response = ok(
+                () -> fineractClient.loans().calculateLoanScheduleOrSubmitLoanApplication(loansRequest, Map.of()));
+        testContext().set(TestContextKey.LOAN_CREATE_RESPONSE, response);
+        eventCheckHelper.createLoanEventCheck(response);
+    }
+
+    public void createFullyCustomizedLoanWithGraceOnArrearsAgeing(final List<String> loanData) throws IOException {
+        final String loanProduct = loanData.get(0);
+        final String submitDate = loanData.get(1);
+        final String principal = loanData.get(2);
+        final BigDecimal interestRate = new BigDecimal(loanData.get(3));
+        final String interestTypeStr = loanData.get(4);
+        final String interestCalculationPeriodStr = loanData.get(5);
+        final String amortizationTypeStr = loanData.get(6);
+        final Integer loanTermFrequency = Integer.valueOf(loanData.get(7));
+        final String loanTermFrequencyType = loanData.get(8);
+        final Integer repaymentFrequency = Integer.valueOf(loanData.get(9));
+        final String repaymentFrequencyTypeStr = loanData.get(10);
+        final Integer numberOfRepayments = Integer.valueOf(loanData.get(11));
+        final Integer graceOnPrincipalPayment = Integer.valueOf(loanData.get(12));
+        final Integer graceOnInterestPayment = Integer.valueOf(loanData.get(13));
+        final Integer graceOnInterestCharged = Integer.valueOf(loanData.get(14));
+        final String transactionProcessingStrategyCode = loanData.get(15);
+        final String graceOnArrearsAgeingStr = loanData.get(16);
+
+        final PostClientsResponse clientResponse = testContext().get(TestContextKey.CLIENT_CREATE_RESPONSE);
+        final Long clientId = clientResponse.getClientId();
+
+        final DefaultLoanProduct product = DefaultLoanProduct.valueOf(loanProduct);
+        final Long loanProductId = loanProductResolver.resolve(product);
+
+        final LoanTermFrequencyType termFrequencyType = LoanTermFrequencyType.valueOf(loanTermFrequencyType);
+        final Integer loanTermFrequencyTypeValue = termFrequencyType.getValue();
+
+        final RepaymentFrequencyType repaymentFrequencyType = RepaymentFrequencyType.valueOf(repaymentFrequencyTypeStr);
+        final Integer repaymentFrequencyTypeValue = repaymentFrequencyType.getValue();
+
+        final InterestType interestType = InterestType.valueOf(interestTypeStr);
+        final Integer interestTypeValue = interestType.getValue();
+
+        final InterestCalculationPeriodTime interestCalculationPeriod = InterestCalculationPeriodTime.valueOf(interestCalculationPeriodStr);
+        final Integer interestCalculationPeriodValue = interestCalculationPeriod.getValue();
+
+        final AmortizationType amortizationType = AmortizationType.valueOf(amortizationTypeStr);
+        final Integer amortizationTypeValue = amortizationType.getValue();
+
+        final TransactionProcessingStrategyCode processingStrategyCode = TransactionProcessingStrategyCode
+                .valueOf(transactionProcessingStrategyCode);
+        final String transactionProcessingStrategyCodeValue = processingStrategyCode.getValue();
+
+        Integer graceOnArrearsAgeingValue = Integer.valueOf(graceOnArrearsAgeingStr);
+
+        final PostLoansRequest loansRequest = loanRequestFactory//
+                .defaultLoansRequest(clientId)//
+                .productId(loanProductId)//
+                .principal(new BigDecimal(principal))//
+                .interestRatePerPeriod(interestRate)//
+                .interestType(interestTypeValue)//
+                .interestCalculationPeriodType(interestCalculationPeriodValue)//
+                .amortizationType(amortizationTypeValue)//
+                .loanTermFrequency(loanTermFrequency)//
+                .loanTermFrequencyType(loanTermFrequencyTypeValue)//
+                .numberOfRepayments(numberOfRepayments)//
+                .repaymentEvery(repaymentFrequency)//
+                .repaymentFrequencyType(repaymentFrequencyTypeValue)//
+                .submittedOnDate(submitDate)//
+                .expectedDisbursementDate(submitDate)//
+                .graceOnPrincipalPayment(graceOnPrincipalPayment)//
+                .graceOnInterestPayment(graceOnInterestPayment)//
+                .graceOnInterestPayment(graceOnInterestCharged)//
+                .transactionProcessingStrategyCode(transactionProcessingStrategyCodeValue)//
+                .graceOnArrearsAgeing(graceOnArrearsAgeingValue);//
 
         final PostLoansResponse response = ok(
                 () -> fineractClient.loans().calculateLoanScheduleOrSubmitLoanApplication(loansRequest, Map.of()));
@@ -5015,6 +5128,19 @@ public class LoanStepDef extends AbstractStepDef {
                 .isEqualTo(transactionId);
     }
 
+    @And("Admin successfully terminates loan contract - no event check")
+    public void makeLoanContractTerminationNoEventCheck() throws IOException {
+        final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        assert loanResponse != null;
+        final long loanId = loanResponse.getLoanId();
+
+        final PostLoansLoanIdRequest contractTerminationRequest = LoanRequestFactory.defaultLoanContractTerminationRequest();
+
+        final PostLoansLoanIdResponse loanContractTerminationResponse = ok(() -> fineractClient.loans().stateTransitions(loanId,
+                contractTerminationRequest, Map.of("command", "contractTermination")));
+        testContext().set(TestContextKey.LOAN_CONTRACT_TERMINATION_RESPONSE, loanContractTerminationResponse);
+    }
+
     @And("Admin successfully undoes loan contract termination")
     public void undoLoanContractTermination() throws IOException {
         final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
@@ -5403,27 +5529,6 @@ public class LoanStepDef extends AbstractStepDef {
                 Map.of("command", "interest-refund")));
     }
 
-    private PostLoansLoanIdTransactionsResponse addInterestRefundTransaction(final double amount, final Long transactionId,
-            final String transactionDate) {
-        final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        assert loanResponse != null;
-        final long loanId = loanResponse.getLoanId();
-
-        final DefaultPaymentType paymentType = DefaultPaymentType.AUTOPAY;
-        final Long paymentTypeValue = paymentTypeResolver.resolve(paymentType);
-
-        final PostLoansLoanIdTransactionsTransactionIdRequest interestRefundRequest = new PostLoansLoanIdTransactionsTransactionIdRequest()
-                .dateFormat("dd MMMM yyyy").locale("en").transactionAmount(amount).paymentTypeId(paymentTypeValue)
-                .externalId("EXT-INT-REF-" + UUID.randomUUID()).note("");
-
-        if (transactionDate != null) {
-            interestRefundRequest.transactionDate(transactionDate);
-        }
-
-        return ok(() -> fineractClient.loanTransactions().adjustLoanTransaction(loanId, transactionId, interestRefundRequest,
-                Map.of("command", "interest-refund")));
-    }
-
     private CallFailedRuntimeException failAddInterestRefundTransaction(final double amount, final Long transactionId,
             final String transactionDate) {
         final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
@@ -5659,5 +5764,26 @@ public class LoanStepDef extends AbstractStepDef {
             }
         }
         return actualValues;
+    }
+
+    @Then("In Loan Transactions the {string}th Transaction of {string} on {string} has {string} relationship with type={string}")
+    public void inLoanTransactionsTheThTransactionOfOnHasRelationshipWithTypeREPLAYED(String nthTransactionFromStr, String transactionType,
+            String transactionDate, String numberOfRelations, String relationshipType) throws IOException {
+        final PostLoansResponse loanCreateResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        final long loanId = loanCreateResponse.getLoanId();
+
+        final GetLoansLoanIdResponse loanDetailsResponse = ok(() -> fineractClient.loans().retrieveLoan(loanId,
+                Map.of("staffInSelectedOfficeOnly", "false", "associations", "transactions")));
+        final List<GetLoansLoanIdTransactions> transactions = loanDetailsResponse.getTransactions();
+        final int nthTransactionFrom = nthTransactionFromStr == null ? transactions.size() - 1
+                : Integer.parseInt(nthTransactionFromStr) - 1;
+        final GetLoansLoanIdTransactions transactionFrom = transactions.stream()
+                .filter(t -> transactionType.equals(t.getType().getValue()) && transactionDate.equals(FORMATTER.format(t.getDate())))
+                .toList().get(nthTransactionFrom);
+
+        final List<GetLoansLoanIdLoanTransactionRelation> relationshipOptional = transactionFrom.getTransactionRelations().stream()
+                .filter(r -> r.getRelationType().equals(relationshipType)).toList();
+
+        assertEquals(Integer.valueOf(numberOfRelations), relationshipOptional.size(), "Missed relationship for transaction");
     }
 }

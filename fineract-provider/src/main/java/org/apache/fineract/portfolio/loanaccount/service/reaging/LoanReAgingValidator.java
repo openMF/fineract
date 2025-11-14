@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
@@ -33,16 +34,16 @@ import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
 import org.apache.fineract.infrastructure.core.exception.GeneralPlatformDomainRuleException;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
-import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.apache.fineract.infrastructure.core.serialization.JsonParserHelper;
 import org.apache.fineract.portfolio.loanaccount.api.LoanApiConstants;
 import org.apache.fineract.portfolio.loanaccount.api.LoanReAgingApiConstants;
+import org.apache.fineract.portfolio.loanaccount.api.request.ReAgePreviewRequest;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransaction;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionRepository;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.apache.fineract.portfolio.loanaccount.domain.reaging.LoanReAgeInterestHandlingType;
 import org.apache.fineract.portfolio.loanaccount.domain.transactionprocessor.impl.AdvancedPaymentScheduleTransactionProcessor;
-import org.apache.fineract.portfolio.loanaccount.domain.transactionprocessor.impl.ChangeOperation;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.domain.LoanScheduleType;
 import org.springframework.stereotype.Component;
 
@@ -56,6 +57,13 @@ public class LoanReAgingValidator {
     public void validateReAge(Loan loan, JsonCommand command) {
         validateReAgeRequest(loan, command);
         validateReAgeBusinessRules(loan);
+        validateReAgeOutstandingBalance(loan, command);
+    }
+
+    public void validateReAge(final Loan loan, final ReAgePreviewRequest reAgePreviewRequest) {
+        validateReAgeRequest(loan, reAgePreviewRequest);
+        validateReAgeBusinessRules(loan);
+        validateReAgeOutstandingBalance(loan, reAgePreviewRequest);
     }
 
     private void validateReAgeRequest(Loan loan, JsonCommand command) {
@@ -67,7 +75,8 @@ public class LoanReAgingValidator {
                 .notExceedingLengthOf(100);
 
         LocalDate startDate = command.localDateValueOfParameterNamed(LoanReAgingApiConstants.startDate);
-        if (loan.isProgressiveSchedule() && !loan.isInterestBearing()) {
+        if (loan.isProgressiveSchedule()) {
+            // validate re-age transaction occurs after or on the disbursement date
             baseDataValidator.reset().parameter(LoanReAgingApiConstants.startDate).value(startDate).notNull()
                     .validateDateAfterOrEqual(loan.getDisbursementDate());
         } else {
@@ -104,14 +113,6 @@ public class LoanReAgingValidator {
     }
 
     private void validateReAgeBusinessRules(Loan loan) {
-        // validate reaging shouldn't happen before maturity
-        // on progressive loans it can
-        if (!(loan.isProgressiveSchedule() && !loan.isInterestBearing())
-                && DateUtils.isBefore(getBusinessLocalDate(), loan.getMaturityDate())) {
-            throw new GeneralPlatformDomainRuleException("error.msg.loan.reage.cannot.be.submitted.before.maturity",
-                    "Loan cannot be re-aged before maturity", loan.getId());
-        }
-
         // validate reaging is only available for progressive schedule & advanced payment allocation
         LoanScheduleType loanScheduleType = LoanScheduleType.valueOf(loan.getLoanProductRelatedDetail().getLoanScheduleType().name());
         boolean isProgressiveSchedule = LoanScheduleType.PROGRESSIVE.equals(loanScheduleType);
@@ -124,12 +125,6 @@ public class LoanReAgingValidator {
             throw new GeneralPlatformDomainRuleException("error.msg.loan.reage.supported.only.for.progressive.loan.schedule.type",
                     "Loan reaging is only available for progressive repayment schedule and Advanced payment allocation strategy",
                     loan.getId());
-        }
-
-        // validate reaging is only available for non-interest bearing loans
-        if (loan.isInterestBearing()) {
-            throw new GeneralPlatformDomainRuleException("error.msg.loan.reage.supported.only.for.non.interest.loans",
-                    "Loan reaging is only available for non-interest bearing loans", loan.getId());
         }
 
         // validate reaging is only done on an active loan
@@ -146,9 +141,21 @@ public class LoanReAgingValidator {
             throw new GeneralPlatformDomainRuleException("error.msg.loan.reage.reage.transaction.already.present.for.today",
                     "Loan reaging can only be done once a day. There has already been a reaging done for today", loan.getId());
         }
+
+        // validate loan is not charged-off
+        if (loan.isChargedOff()) {
+            throw new GeneralPlatformDomainRuleException("error.msg.loan.reage.not.allowed.on.charged.off",
+                    "Loan re-aging is not allowed on charged-off loan.", loan.getId());
+        }
+
+        // validate loan is not contract terminated
+        if (loan.isContractTermination()) {
+            throw new GeneralPlatformDomainRuleException("error.msg.loan.reage.not.allowed.on.contract.terminated",
+                    "Loan re-aging is not allowed on contract terminated loan.", loan.getId());
+        }
     }
 
-    public void validateUndoReAge(Loan loan, JsonCommand command) {
+    public void validateUndoReAge(Loan loan) {
         validateUndoReAgeBusinessRules(loan);
     }
 
@@ -160,14 +167,6 @@ public class LoanReAgingValidator {
             throw new GeneralPlatformDomainRuleException("error.msg.loan.reage.reaging.transaction.missing",
                     "Undoing a reaging can only be done if there was a reaging already", loan.getId());
         }
-
-        // validate if there's no payment between the reaging and today
-        boolean repaymentExistsAfterReAging = loan.getLoanTransactions().stream()
-                .anyMatch(tx -> tx.getTypeOf().isRepaymentType() && transactionHappenedAfterOther(tx, optionalReAgingTx.get()));
-        if (repaymentExistsAfterReAging) {
-            throw new GeneralPlatformDomainRuleException("error.msg.loan.reage.repayment.exists.after.reaging",
-                    "Undoing a reaging can only be done if there hasn't been any repayment afterwards", loan.getId());
-        }
     }
 
     private void throwExceptionIfValidationErrorsExist(List<ApiParameterError> dataValidationErrors) {
@@ -177,7 +176,57 @@ public class LoanReAgingValidator {
         }
     }
 
-    private boolean transactionHappenedAfterOther(LoanTransaction transaction, LoanTransaction otherTransaction) {
-        return new ChangeOperation(transaction).compareTo(new ChangeOperation(otherTransaction)) > 0;
+    private void validateReAgeOutstandingBalance(final Loan loan, final JsonCommand command) {
+        final LocalDate businessDate = getBusinessLocalDate();
+        final LocalDate startDate = command.dateValueOfParameterNamed(LoanReAgingApiConstants.startDate);
+
+        final boolean isBackdated = businessDate.isAfter(startDate);
+        if (isBackdated) {
+            return;
+        }
+
+        if (loan.getSummary().getTotalPrincipalOutstanding().compareTo(java.math.BigDecimal.ZERO) == 0) {
+            throw new GeneralPlatformDomainRuleException("error.msg.loan.reage.no.outstanding.balance.to.reage",
+                    "Loan cannot be re-aged as there are no outstanding balances to be re-aged", loan.getId());
+        }
     }
+
+    private void validateReAgeRequest(final Loan loan, final ReAgePreviewRequest reAgePreviewRequest) {
+        final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("loan.reAge");
+
+        final Locale locale = reAgePreviewRequest.getLocale() != null ? Locale.forLanguageTag(reAgePreviewRequest.getLocale())
+                : Locale.getDefault();
+        final LocalDate startDate = JsonParserHelper.convertFrom(reAgePreviewRequest.getStartDate(), LoanReAgingApiConstants.startDate,
+                reAgePreviewRequest.getDateFormat(), locale);
+
+        if (loan.isProgressiveSchedule()) {
+            baseDataValidator.reset().parameter(LoanReAgingApiConstants.startDate).value(startDate)
+                    .validateDateAfterOrEqual(loan.getDisbursementDate());
+        } else {
+            baseDataValidator.reset().parameter(LoanReAgingApiConstants.startDate).value(startDate)
+                    .validateDateAfter(loan.getMaturityDate());
+        }
+
+        throwExceptionIfValidationErrorsExist(dataValidationErrors);
+    }
+
+    private void validateReAgeOutstandingBalance(final Loan loan, final ReAgePreviewRequest reAgePreviewRequest) {
+        final LocalDate businessDate = getBusinessLocalDate();
+        Locale locale = reAgePreviewRequest.getLocale() != null ? Locale.forLanguageTag(reAgePreviewRequest.getLocale())
+                : Locale.getDefault();
+        final LocalDate startDate = JsonParserHelper.convertFrom(reAgePreviewRequest.getStartDate(), LoanReAgingApiConstants.startDate,
+                reAgePreviewRequest.getDateFormat(), locale);
+
+        final boolean isBackdated = businessDate.isAfter(startDate);
+        if (isBackdated) {
+            return;
+        }
+
+        if (loan.getSummary().getTotalPrincipalOutstanding().compareTo(java.math.BigDecimal.ZERO) == 0) {
+            throw new GeneralPlatformDomainRuleException("error.msg.loan.reage.no.outstanding.balance.to.reage",
+                    "Loan cannot be re-aged as there are no outstanding balances to be re-aged", loan.getId());
+        }
+    }
+
 }
