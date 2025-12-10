@@ -825,7 +825,7 @@ public class LoanProductsRequestFactory {
                 .inMultiplesOf(0)//
                 .installmentAmountInMultiplesOf(1)//
                 .useBorrowerCycle(false)//
-                .minPrincipal(100.0)//
+                .minPrincipal(1.0)//
                 .principal(1000.0)//
                 .maxPrincipal(10000.0)//
                 .minNumberOfRepayments(1)//
@@ -1048,7 +1048,7 @@ public class LoanProductsRequestFactory {
                 .digitsAfterDecimal(2)//
                 .inMultiplesOf(0)//
                 .useBorrowerCycle(false)//
-                .minPrincipal(10.0)//
+                .minPrincipal(1.0)//
                 .principal(1000.0)//
                 .maxPrincipal(10000.0)//
                 .minNumberOfRepayments(1)//
@@ -1297,7 +1297,7 @@ public class LoanProductsRequestFactory {
                 .inMultiplesOf(0)//
                 .installmentAmountInMultiplesOf(1)//
                 .useBorrowerCycle(false)//
-                .minPrincipal(100.0)//
+                .minPrincipal(1.0)//
                 .principal(1000.0)//
                 .maxPrincipal(10000.0)//
                 .minNumberOfRepayments(1)//
@@ -1536,7 +1536,7 @@ public class LoanProductsRequestFactory {
                 .inMultiplesOf(0)//
                 .installmentAmountInMultiplesOf(1)//
                 .useBorrowerCycle(false)//
-                .minPrincipal(100.0)//
+                .minPrincipal(1.0)//
                 .principal(1000.0)//
                 .maxPrincipal(10000.0)//
                 .minNumberOfRepayments(1)//
