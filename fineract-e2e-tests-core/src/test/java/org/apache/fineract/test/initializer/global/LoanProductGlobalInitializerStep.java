@@ -2600,7 +2600,8 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
                 .defaultLoanProductsRequestLP2InterestDailyRecalculation()//
                 .name(name105)//
                 .paymentAllocation(List.of(//
-                        createPaymentAllocation("DEFAULT", "NEXT_INSTALLMENT")))
+                        createPaymentAllocation("DEFAULT", "NEXT_INSTALLMENT"),
+                        createPaymentAllocation("MERCHANT_ISSUED_REFUND", "LAST_INSTALLMENT")))
                 .enableAccrualActivityPosting(true)//
                 .chargeOffBehaviour("ZERO_INTEREST");//
         PostLoanProductsResponse responseLoanProductsRequestAdvInterestRecalculationZeroInterestChargeOffBehaviourAccrualActivity = createLoanProductIdempotent(
@@ -4228,6 +4229,40 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
         TestContext.INSTANCE.set(
                 TestContextKey.DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALC_DAILY_MULTIDISBURSE_CHARGEBACK,
                 responseLoanProductsRequestLP2AdvancedpaymentInterestEmi36030InterestRecalcDailyMultiDisburseChargeback);
+
+        // LP2_ADV_CUSTOM_PMT_ALLOC_PROGRESSIVE_LOAN_SCHEDULE_HORIZONTAL_360_30_USD
+        // Similar to LP2_ADV_CUSTOM_PMT_ALLOC_PROGRESSIVE_LOAN_SCHEDULE_HORIZONTAL but with 360/30 days and USD
+        // currency
+        String name169 = DefaultLoanProduct.LP2_ADV_CUSTOM_PMT_ALLOC_PROGRESSIVE_LOAN_SCHEDULE_HORIZONTAL_360_30_USD.getName();
+
+        PostLoanProductsRequest loanProductsRequestAdvCustomPaymentAllocationProgressiveLoanScheduleHorizontalUSD = loanProductsRequestFactory
+                .defaultLoanProductsRequestLP2EmiUSD()//
+                .name(name169)//
+                .paymentAllocation(List.of(//
+                        createPaymentAllocation("DEFAULT", "NEXT_INSTALLMENT", //
+                                LoanProductPaymentAllocationRule.AllocationTypesEnum.PAST_DUE_PENALTY, //
+                                LoanProductPaymentAllocationRule.AllocationTypesEnum.PAST_DUE_FEE, //
+                                LoanProductPaymentAllocationRule.AllocationTypesEnum.PAST_DUE_PRINCIPAL, //
+                                LoanProductPaymentAllocationRule.AllocationTypesEnum.PAST_DUE_INTEREST, //
+                                LoanProductPaymentAllocationRule.AllocationTypesEnum.DUE_PENALTY, //
+                                LoanProductPaymentAllocationRule.AllocationTypesEnum.DUE_FEE, //
+                                LoanProductPaymentAllocationRule.AllocationTypesEnum.DUE_PRINCIPAL, //
+                                LoanProductPaymentAllocationRule.AllocationTypesEnum.DUE_INTEREST, //
+                                LoanProductPaymentAllocationRule.AllocationTypesEnum.IN_ADVANCE_PENALTY, //
+                                LoanProductPaymentAllocationRule.AllocationTypesEnum.IN_ADVANCE_FEE, //
+                                LoanProductPaymentAllocationRule.AllocationTypesEnum.IN_ADVANCE_PRINCIPAL, //
+                                LoanProductPaymentAllocationRule.AllocationTypesEnum.IN_ADVANCE_INTEREST), //
+                        createPaymentAllocation("GOODWILL_CREDIT", "NEXT_INSTALLMENT"), //
+                        createPaymentAllocation("MERCHANT_ISSUED_REFUND", "LAST_INSTALLMENT"), //
+                        createPaymentAllocation("PAYOUT_REFUND", "NEXT_INSTALLMENT")))
+                .creditAllocation(List.of(//
+                        createCreditAllocation("CHARGEBACK", List.of("PENALTY", "FEE", "PRINCIPAL", "INTEREST"))//
+                ));//
+        PostLoanProductsResponse responseLoanProductsResponseAdvCustomPaymentAllocationProgressiveLoanScheduleHorizontalUSD = createLoanProductIdempotent(
+                loanProductsRequestAdvCustomPaymentAllocationProgressiveLoanScheduleHorizontalUSD);
+        TestContext.INSTANCE.set(
+                TestContextKey.DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_CUSTOM_PMT_ALLOC_PROGRESSIVE_LOAN_SCHEDULE_HORIZONTAL_360_30_USD,
+                responseLoanProductsResponseAdvCustomPaymentAllocationProgressiveLoanScheduleHorizontalUSD);
     }
 
     public static AdvancedPaymentData createPaymentAllocation(String transactionType, String futureInstallmentAllocationRule,
