@@ -208,4 +208,6 @@ public interface LoanApiConstants {
             LoanTransactionType.REPAYMENT //
     );
 
+    String ORIGINATORS_PARAM = "originators";
+
 }
