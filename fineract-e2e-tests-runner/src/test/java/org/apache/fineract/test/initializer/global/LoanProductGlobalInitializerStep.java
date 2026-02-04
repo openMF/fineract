@@ -4237,6 +4237,27 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
                 TestContextKey.DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALC_DAILY_MULTIDISBURSE_CHARGEBACK,
                 responseLoanProductsRequestLP2AdvancedpaymentInterestEmi36030InterestRecalcDailyMultiDisburseChargeback);
 
+        // LP2 + interest recalculation + advanced custom payment allocation + progressive loan schedule + horizontal
+        // (LP2_ADV_CUSTOM_PMT_ALLOC_PROGRESSIVE_LOAN_SCHEDULE_HORIZONTAL)
+        String name152 = DefaultLoanProduct.LP2_ADV_PMT_ALLOC_ACTUAL_ACTUAL_PROGRESSIVE_LOAN_SCHEDULE_HORIZONTAL.getName();
+
+        PostLoanProductsRequest loanProductsRequestAdvPaymentAllocationActualActualProgressiveLoanSchedule = loanProductsRequestFactory
+                .defaultLoanProductsRequestLP2InterestDailyRecalculation()//
+                .name(name152)//
+                .supportedInterestRefundTypes(Arrays.asList("MERCHANT_ISSUED_REFUND", "PAYOUT_REFUND"))//
+                .enableAccrualActivityPosting(true) //
+                .daysInYearType(DaysInYearType.ACTUAL.value)//
+                .daysInMonthType(DaysInMonthType.ACTUAL.value)//
+                .paymentAllocation(List.of(//
+                        createPaymentAllocation("DEFAULT", "NEXT_INSTALLMENT"), //
+                        createPaymentAllocation("PAYOUT_REFUND", "LAST_INSTALLMENT"), //
+                        createPaymentAllocation("MERCHANT_ISSUED_REFUND", "LAST_INSTALLMENT")));//
+        PostLoanProductsResponse responseLoanProductsRequestAdvPaymentAllocationActualActualProgressiveLoanSchedule = createLoanProductIdempotent(
+                loanProductsRequestAdvPaymentAllocationActualActualProgressiveLoanSchedule);
+        TestContext.INSTANCE.set(
+                TestContextKey.DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADVANCED_PAYMENT_ALLOCATION_ACTUAL_ACTUAL_PROGRESSIVE_LOAN_SCHEDULE,
+                responseLoanProductsRequestAdvPaymentAllocationActualActualProgressiveLoanSchedule);
+
         // LP2_ADV_CUSTOM_PMT_ALLOC_PROGRESSIVE_LOAN_SCHEDULE_HORIZONTAL_360_30_USD
         // Similar to LP2_ADV_CUSTOM_PMT_ALLOC_PROGRESSIVE_LOAN_SCHEDULE_HORIZONTAL but with 360/30 days and USD
         // currency
@@ -4270,6 +4291,28 @@ public class LoanProductGlobalInitializerStep implements FineractGlobalInitializ
         TestContext.INSTANCE.set(
                 TestContextKey.DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_CUSTOM_PMT_ALLOC_PROGRESSIVE_LOAN_SCHEDULE_HORIZONTAL_360_30_USD,
                 responseLoanProductsResponseAdvCustomPaymentAllocationProgressiveLoanScheduleHorizontalUSD);
+
+        // LP2 + zero-interest chargeOff behaviour + progressive loan schedule + horizontal + interest recalculation +
+        // accrual activity posting
+        // (LP2_ADV_PYMNT_INT_DAILY_EMI_ACTUAL_ACTUAL_INT_REFUND_FULL_ZERO_INT_CHARGE_OFF_ACCRUAL_ACTIVITY)
+        final String name173 = DefaultLoanProduct.LP2_ADV_PYMNT_INT_DAILY_EMI_ACTUAL_ACTUAL_INT_REFUND_FULL_ZERO_INT_CHARGE_OFF_ACCRUAL_ACTIVITY
+                .getName();
+        final PostLoanProductsRequest loanProductsRequestLP2AdvPaymentIntEmiActualActualIntRefundFullZeroIntChargeOffAccrualActivity = loanProductsRequestLP2AdvancedpaymentInterestEmiActualActualInterestRefundFull
+                .name(name173)//
+                .shortName(loanProductsRequestFactory.generateShortNameSafely())//
+                .enableAccrualActivityPosting(true)//
+                .allowApprovedDisbursedAmountsOverApplied(true)//
+                .overAppliedCalculationType(OverAppliedCalculationType.FIXED_SIZE.value)//
+                .overAppliedNumber(1000)//
+                .enableInstallmentLevelDelinquency(true)//
+                .interestRecognitionOnDisbursementDate(true)//
+                .maxTrancheCount(500)//
+                .chargeOffBehaviour("ZERO_INTEREST");//
+        PostLoanProductsResponse responseLoanProductsRequestLP2AdvPaymentIntEmiActualActualIntRefundFullZeroIntChargeOffAccrualActivity = createLoanProductIdempotent(
+                loanProductsRequestLP2AdvPaymentIntEmiActualActualIntRefundFullZeroIntChargeOffAccrualActivity);
+        TestContext.INSTANCE.set(
+                TestContextKey.DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_INT_DAILY_EMI_ACTUAL_ACTUAL_INT_REFUND_FULL_ZERO_INT_CHARGE_OFF_ACCRUAL_ACTIVITY,
+                responseLoanProductsRequestLP2AdvPaymentIntEmiActualActualIntRefundFullZeroIntChargeOffAccrualActivity);
     }
 
     public static AdvancedPaymentData createPaymentAllocation(String transactionType, String futureInstallmentAllocationRule,
