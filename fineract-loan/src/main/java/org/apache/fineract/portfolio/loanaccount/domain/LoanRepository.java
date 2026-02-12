@@ -275,4 +275,9 @@ public interface LoanRepository extends JpaRepository<Loan, Long>, JpaSpecificat
     @Query("select loan.loanRepaymentScheduleDetail.enableBuyDownFee from Loan loan where loan.id = :loanId")
     Boolean isEnabledBuyDownFee(@Param("loanId") Long loanId);
 
+    @Query("SELECT CASE WHEN COUNT(l) > 0 THEN TRUE ELSE FALSE END FROM Loan l WHERE l.id = :loanId and l.loanRepaymentScheduleDetail.loanScheduleType = org.apache.fineract.portfolio.loanaccount.loanschedule.domain.LoanScheduleType.PROGRESSIVE")
+    Boolean isProgressiveLoan(@Param("loanId") Long loanId);
+
+    @Query("SELECT CASE WHEN COUNT(l) > 0 THEN TRUE ELSE FALSE END FROM Loan l WHERE l.id = :loanId and l.loanStatus in :allowedLoanStatuses")
+    Boolean isLoanInAllowedStatus(@Param("loanId") Long loanId, @Param("allowedLoanStatuses") List<LoanStatus> allowedLoanStatuses);
 }

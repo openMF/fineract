@@ -58,6 +58,7 @@ import org.apache.fineract.portfolio.loanproduct.domain.ILoanConfigurationDetail
 @AllArgsConstructor
 public class ProgressiveLoanInterestScheduleModel {
 
+    private static final String modelVersion = "2";
     private final List<RepaymentPeriod> repaymentPeriods;
     private final TreeSet<InterestRate> interestRates;
     @JsonExclude
@@ -447,4 +448,9 @@ public class ProgressiveLoanInterestScheduleModel {
     public boolean isInterestRecalculationIsAllowed() {
         return modifiers.get(INTEREST_RECALCULATION_ENABLED);
     }
+
+    public static String getModelVersion() {
+        return modelVersion;
+    }
+
 }
