@@ -22,11 +22,14 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.command.persistence.domain.CommandRepository;
 import org.apache.fineract.command.persistence.mapping.CommandMapper;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.junit.jupiter.Container;
@@ -60,5 +63,10 @@ abstract class CommandBaseTest {
         registry.add("spring.datasource.url", () -> "jdbc:postgresql://" + POSTGRES_CONTAINER.getHost() + ":"
                 + POSTGRES_CONTAINER.getMappedPort(5432) + "/fineract-test");
         registry.add("spring.datasource.platform", () -> "postgresql");
+    }
+
+    @BeforeAll
+    static void requireDocker() {
+        Assumptions.assumeTrue(DockerClientFactory.instance().isDockerAvailable(), "Docker not available, skipping Testcontainers tests");
     }
 }
