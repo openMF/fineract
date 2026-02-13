@@ -417,6 +417,7 @@ public class FineractProperties {
 
         private int stuckRetryThreshold;
         private boolean loanCobEnabled;
+        private boolean savingsCobEnabled;
         private FineractJournalEntryAggregationProperties journalEntryAggregation;
     }
 

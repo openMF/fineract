@@ -111,6 +111,9 @@
         <class>org.apache.fineract.portfolio.savings.domain.SavingsOfficerAssignmentHistory</class>
         <class>org.apache.fineract.portfolio.savings.domain.SavingsProduct</class>
 
+        <!-- Savings COB Entities -->
+        <class>org.apache.fineract.cob.savings.SavingsAccountLock</class>
+
         <!-- Charge Module Entities -->
         <class>org.apache.fineract.portfolio.charge.domain.Charge</class>
 
