@@ -7,16 +7,23 @@ on:
   # Allows manual workflow run (must in default branch to work)
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write # needed to push the rebased develop branch back to the repository
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        # zizmor: ignore[artipacked] the checkout credentials are required by the "git push -f" below
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v5
         with:
           repository: openMF/fineract
           fetch-depth: 0
+          persist-credentials: true
       - name: Sync
         run:  |
           set -ex;
