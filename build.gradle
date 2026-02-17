@@ -949,7 +949,7 @@ configure(project.fineractPublishProjects) {
 
             maven {
                 name 'mifos'
-                url = hasProperty('fineract.release.version') ? releaseUrl : stagingUrl
+                url = project.hasProperty('fineract.release.version') ? releaseUrl : stagingUrl
                 credentials {
                     username = "${findProperty('fineract.config.username')}"
                     password = "${findProperty('fineract.config.password')}"
