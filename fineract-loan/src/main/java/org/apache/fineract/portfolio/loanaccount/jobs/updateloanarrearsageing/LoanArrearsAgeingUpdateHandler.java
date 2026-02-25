@@ -160,7 +160,7 @@ public class LoanArrearsAgeingUpdateHandler {
             Map<Long, List<LoanSchedulePeriodData>> scheduleDate = getScheduleDate(loanIds);
             List<Map<String, Object>> loanSummary = getLoanSummary(loanIds);
             loanArrearsAgingService.updateScheduleWithPaidDetail(scheduleDate, loanSummary);
-            loanArrearsAgingService.createInsertStatements(insertStatement, scheduleDate, true);
+            loanArrearsAgingService.executeOriginalScheduleArrears(scheduleDate, true);
         }
 
         return insertStatement;
@@ -174,7 +174,7 @@ public class LoanArrearsAgeingUpdateHandler {
             Map<Long, List<LoanSchedulePeriodData>> scheduleDate = getScheduleDate(loanIds);
             List<Map<String, Object>> loanSummary = getLoanSummary(loanIds);
             loanArrearsAgingService.updateScheduleWithPaidDetail(scheduleDate, loanSummary);
-            loanArrearsAgingService.createInsertStatements(insertStatement, scheduleDate, true);
+            loanArrearsAgingService.executeOriginalScheduleArrears(scheduleDate, true);
         }
 
         return insertStatement;

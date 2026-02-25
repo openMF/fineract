@@ -32,10 +32,9 @@ public interface LoanArrearsAgingService {
 
     void updateLoanArrearsAgeingDetails(Loan loan);
 
-    void createInsertStatements(List<String> insertStatement, Map<Long, List<LoanSchedulePeriodData>> scheduleDate,
-            boolean isInsertStatement);
-
     void updateScheduleWithPaidDetail(Map<Long, List<LoanSchedulePeriodData>> scheduleDate, List<Map<String, Object>> loanSummary);
+
+    boolean executeOriginalScheduleArrears(Map<Long, List<LoanSchedulePeriodData>> scheduleDate, boolean isInsertStatement);
 
     LoanArrearsData calculateArrearsForLoan(Loan loan);
 }
