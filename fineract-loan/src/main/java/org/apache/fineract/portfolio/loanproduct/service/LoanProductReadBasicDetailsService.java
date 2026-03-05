@@ -16,15 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.test.data.workingcapitalproduct;
+package org.apache.fineract.portfolio.loanproduct.service;
 
-public enum DefaultWorkingCapitalLoanProduct implements WorkingCapitalLoanProduct {
+import java.util.Collection;
+import org.apache.fineract.portfolio.loanproduct.data.LoanProductBasicDetailsData;
 
-    WCLP, //
-    WCLP_FOR_UPDATE; //
+public interface LoanProductReadBasicDetailsService {
 
-    @Override
-    public String getName() {
-        return name();
-    }
+    Collection<LoanProductBasicDetailsData> retrieveProducts();
+
 }

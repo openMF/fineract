@@ -16,15 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.test.data.workingcapitalproduct;
+package org.apache.fineract.portfolio.loanproduct.data;
 
-public enum DefaultWorkingCapitalLoanProduct implements WorkingCapitalLoanProduct {
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.apache.fineract.organisation.monetary.data.CurrencyData;
 
-    WCLP, //
-    WCLP_FOR_UPDATE; //
+@Data
+@RequiredArgsConstructor
+public class LoanProductBasicDetailsData {
 
-    @Override
-    public String getName() {
-        return name();
-    }
+    private final String productType;
+    private final Long id;
+    private final String name;
+    private final String shortName;
+    private final String description;
+    private final CurrencyData currency;
+
 }
