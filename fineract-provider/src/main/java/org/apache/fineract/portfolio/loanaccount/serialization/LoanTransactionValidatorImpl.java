@@ -162,8 +162,9 @@ public class LoanTransactionValidatorImpl implements LoanTransactionValidator {
             validateLoanClientIsActive(loan);
             validateLoanGroupIsActive(loan);
 
-            final BigDecimal disbursedAmount = loan.getSummary().getTotalPrincipalDisbursed();
-            loanDisbursementValidator.compareDisbursedToApprovedOrProposedPrincipal(loan, principal, disbursedAmount);
+            final BigDecimal alreadyDisbursed = loan.getSummary().getTotalPrincipalDisbursed();
+            final BigDecimal totalDisbursedIncludingCurrent = alreadyDisbursed.add(principal != null ? principal : BigDecimal.ZERO);
+            loanDisbursementValidator.compareDisbursedToApprovedOrProposedPrincipal(loan, principal, totalDisbursedIncludingCurrent);
 
             if (loan.isChargedOff()) {
                 throw new GeneralPlatformDomainRuleException("error.msg.loan.disbursal.not.allowed.on.charged.off",
