@@ -21,6 +21,7 @@ package org.apache.fineract.integrationtests;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
@@ -33,6 +34,7 @@ import org.apache.fineract.client.models.PostLoanProductsResponse;
 import org.apache.fineract.client.models.PostLoansDisbursementData;
 import org.apache.fineract.client.models.PutLoanProductsProductIdRequest;
 import org.apache.fineract.client.models.PutLoanProductsProductIdResponse;
+import org.apache.fineract.client.util.CallFailedRuntimeException;
 import org.apache.fineract.integrationtests.common.ClientHelper;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
 import org.junit.jupiter.api.Test;
@@ -147,6 +149,136 @@ public class LoanProductOverAppliedAmountTest extends BaseLoanIntegrationTest {
                     "availableDisbursementAmount should not be negative. Expected >= 0, but was: " + availableDisbursementAmount);
             assertEquals(BigDecimal.ZERO, availableDisbursementAmount,
                     "availableDisbursementAmount should be 0 when disbursed amount exceeds approved amount");
+        });
+    }
+
+    @Test
+    public void testSingleDisbursementExceedingPercentageOverAppliedMaxShouldFail() {
+        runAt("01 January 2024", () -> {
+            final PostLoanProductsRequest loanProductRequest = create4IProgressive().multiDisburseLoan(true).maxTrancheCount(5)
+                    .outstandingLoanBalance(10000.0).disallowExpectedDisbursements(false).allowApprovedDisbursedAmountsOverApplied(true)
+                    .overAppliedCalculationType("percentage").overAppliedNumber(30); // max = 1000 * 1.30 = 1300
+
+            final PostLoanProductsResponse loanProductResponse = loanProductHelper.createLoanProduct(loanProductRequest);
+            final Long loanProductId = loanProductResponse.getResourceId();
+
+            final Long clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
+            assertNotNull(clientId);
+
+            final Long loanId = applyAndApproveProgressiveLoan(clientId, loanProductId, "1 January 2024", 1000.0, 7.0, 6,
+                    request -> request.disbursementData(List.of(new PostLoansDisbursementData().expectedDisbursementDate("1 January 2024")
+                            .principal(BigDecimal.valueOf(1000.0)))));
+
+            // Disburse 1500 in one shot → exceeds max 1300 → must fail
+            CallFailedRuntimeException exception = assertThrows(CallFailedRuntimeException.class,
+                    () -> disburseLoan(loanId, BigDecimal.valueOf(1500.0), "01 January 2024"));
+
+            assertTrue(
+                    exception.getMessage().contains("Loan disbursal amount can't be greater than maximum applied loan amount calculation"));
+        });
+    }
+
+    @Test
+    public void testCumulativeDisbursementsExceedingPercentageOverAppliedMaxShouldFail() {
+        runAt("01 January 2024", () -> {
+            final PostLoanProductsRequest loanProductRequest = create4IProgressive().multiDisburseLoan(true).maxTrancheCount(5)
+                    .outstandingLoanBalance(10000.0).disallowExpectedDisbursements(false).allowApprovedDisbursedAmountsOverApplied(true)
+                    .overAppliedCalculationType("percentage").overAppliedNumber(50); // max = 1000 * 1.50 = 1500
+
+            final PostLoanProductsResponse loanProductResponse = loanProductHelper.createLoanProduct(loanProductRequest);
+            final Long loanProductId = loanProductResponse.getResourceId();
+
+            final Long clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
+            assertNotNull(clientId);
+
+            final Long loanId = applyAndApproveProgressiveLoan(clientId, loanProductId, "1 January 2024", 1000.0, 7.0, 6,
+                    request -> request.disbursementData(List.of(
+                            new PostLoansDisbursementData().expectedDisbursementDate("1 January 2024").principal(BigDecimal.valueOf(500.0)),
+                            new PostLoansDisbursementData().expectedDisbursementDate("15 January 2024")
+                                    .principal(BigDecimal.valueOf(500.0)))));
+
+            // 1st disbursement: 800 (cumulative = 800, within max 1500) → OK
+            disburseLoan(loanId, BigDecimal.valueOf(800.0), "01 January 2024");
+            verifyLoanStatus(loanId, LoanStatus.ACTIVE);
+
+            // 2nd disbursement: 800 (cumulative = 1600, exceeds max 1500) → must FAIL
+            CallFailedRuntimeException exception = assertThrows(CallFailedRuntimeException.class,
+                    () -> disburseLoan(loanId, BigDecimal.valueOf(800.0), "15 January 2024"));
+
+            assertTrue(
+                    exception.getMessage().contains("Loan disbursal amount can't be greater than maximum applied loan amount calculation"));
+        });
+    }
+
+    @Test
+    public void testCumulativeDisbursementsWithinPercentageOverAppliedMaxShouldSucceed() {
+        runAt("01 January 2024", () -> {
+            final PostLoanProductsRequest loanProductRequest = create4IProgressive().multiDisburseLoan(true).maxTrancheCount(5)
+                    .outstandingLoanBalance(10000.0).disallowExpectedDisbursements(false).allowApprovedDisbursedAmountsOverApplied(true)
+                    .overAppliedCalculationType("percentage").overAppliedNumber(50); // max = 1000 * 1.50 = 1500
+
+            final PostLoanProductsResponse loanProductResponse = loanProductHelper.createLoanProduct(loanProductRequest);
+            final Long loanProductId = loanProductResponse.getResourceId();
+
+            final Long clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
+            assertNotNull(clientId);
+
+            final Long loanId = applyAndApproveProgressiveLoan(clientId, loanProductId, "1 January 2024", 1000.0, 7.0, 6,
+                    request -> request.disbursementData(List.of(
+                            new PostLoansDisbursementData().expectedDisbursementDate("1 January 2024").principal(BigDecimal.valueOf(500.0)),
+                            new PostLoansDisbursementData().expectedDisbursementDate("15 January 2024")
+                                    .principal(BigDecimal.valueOf(500.0)))));
+
+            // 1st disbursement: 800 → OK
+            disburseLoan(loanId, BigDecimal.valueOf(800.0), "01 January 2024");
+            verifyLoanStatus(loanId, LoanStatus.ACTIVE);
+
+            // 2nd disbursement: 600 (cumulative = 1400 < max 1500) → OK
+            assertDoesNotThrow(() -> disburseLoan(loanId, BigDecimal.valueOf(600.0), "15 January 2024"));
+            verifyLoanStatus(loanId, LoanStatus.ACTIVE);
+
+            // Verify total disbursed = 1400
+            final GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
+            assertNotNull(loanDetails);
+            assertNotNull(loanDetails.getDisbursementDetails());
+
+            double totalDisbursed = loanDetails.getDisbursementDetails().stream().mapToDouble(detail -> {
+                assertNotNull(detail.getPrincipal());
+                return detail.getPrincipal();
+            }).sum();
+            assertEquals(1400.0, totalDisbursed, 0.01, "Total disbursed should be 1400 (800 + 600)");
+        });
+    }
+
+    @Test
+    public void testCumulativeDisbursementsExceedingFlatOverAppliedMaxShouldFail() {
+        runAt("01 January 2024", () -> {
+            final PostLoanProductsRequest loanProductRequest = create4IProgressive().multiDisburseLoan(true).maxTrancheCount(5)
+                    .outstandingLoanBalance(10000.0).disallowExpectedDisbursements(false).allowApprovedDisbursedAmountsOverApplied(true)
+                    .overAppliedCalculationType("flat").overAppliedNumber(200); // max = 1000 + 200 = 1200
+
+            final PostLoanProductsResponse loanProductResponse = loanProductHelper.createLoanProduct(loanProductRequest);
+            final Long loanProductId = loanProductResponse.getResourceId();
+
+            final Long clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
+            assertNotNull(clientId);
+
+            final Long loanId = applyAndApproveProgressiveLoan(clientId, loanProductId, "1 January 2024", 1000.0, 7.0, 6,
+                    request -> request.disbursementData(List.of(
+                            new PostLoansDisbursementData().expectedDisbursementDate("1 January 2024").principal(BigDecimal.valueOf(500.0)),
+                            new PostLoansDisbursementData().expectedDisbursementDate("15 January 2024")
+                                    .principal(BigDecimal.valueOf(500.0)))));
+
+            // 1st disbursement: 700 (cumulative = 700, within max 1200) → OK
+            disburseLoan(loanId, BigDecimal.valueOf(700.0), "01 January 2024");
+            verifyLoanStatus(loanId, LoanStatus.ACTIVE);
+
+            // 2nd disbursement: 600 (cumulative = 1300, exceeds max 1200) → must FAIL
+            CallFailedRuntimeException exception = assertThrows(CallFailedRuntimeException.class,
+                    () -> disburseLoan(loanId, BigDecimal.valueOf(600.0), "15 January 2024"));
+
+            assertTrue(
+                    exception.getMessage().contains("Loan disbursal amount can't be greater than maximum applied loan amount calculation"));
         });
     }
 }

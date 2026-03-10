@@ -34,8 +34,7 @@ public final class LoanDisbursementValidator {
 
     private final LoanApplicationValidator loanApplicationValidator;
 
-    public void compareDisbursedToApprovedOrProposedPrincipal(final Loan loan, final BigDecimal disbursedAmount,
-            final BigDecimal totalDisbursed) {
+    public void compareDisbursedToApprovedOrProposedPrincipal(final Loan loan, final BigDecimal disbursedAmount,final BigDecimal totalDisbursed) {
         final BigDecimal totalCapitalizedIncome = loan.getSummary().getTotalCapitalizedIncome();
         final BigDecimal totalCapitalizedIncomeAdjustment = MathUtil.nullToZero(loan.getSummary().getTotalCapitalizedIncomeAdjustment());
         final BigDecimal netCapitalizedIncome = totalCapitalizedIncome.subtract(totalCapitalizedIncomeAdjustment);
@@ -44,7 +43,7 @@ public final class LoanDisbursementValidator {
             validateOverMaximumAmount(loan, totalDisbursed, netCapitalizedIncome);
         } else {
             if (loan.loanProduct().isAllowApprovedDisbursedAmountsOverApplied()) {
-                validateOverMaximumAmount(loan, disbursedAmount, netCapitalizedIncome);
+                validateOverMaximumAmount(loan, totalDisbursed, netCapitalizedIncome);
             } else {
                 if ((totalDisbursed.compareTo(loan.getApprovedPrincipal()) > 0)
                         || (totalDisbursed.add(netCapitalizedIncome).compareTo(loan.getApprovedPrincipal()) > 0)) {
@@ -55,6 +54,7 @@ public final class LoanDisbursementValidator {
             }
         }
     }
+
 
     public void validateOverMaximumAmount(final Loan loan, final BigDecimal totalDisbursed, final BigDecimal capitalizedIncome) {
         final BigDecimal maxDisbursedAmount = loanApplicationValidator.getOverAppliedMax(loan);
