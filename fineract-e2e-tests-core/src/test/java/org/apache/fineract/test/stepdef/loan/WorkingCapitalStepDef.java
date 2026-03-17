@@ -210,8 +210,8 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
                 .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST);
         String externalId = workingCapitalLoanProductsRequest.getExternalId();
 
-        PutWorkingCapitalLoanProductsProductIdResponse responseWorkingCapitalLoanProductUpdate = ok(
-                () -> workingCapitalApi().updateWorkingCapitalLoanProduct1(externalId, workingCapitalLoanProductUpdateRequest, Map.of()));
+        PutWorkingCapitalLoanProductsProductIdResponse responseWorkingCapitalLoanProductUpdate = ok(() -> workingCapitalApi()
+                .updateWorkingCapitalLoanProductByExternalId(externalId, workingCapitalLoanProductUpdateRequest, Map.of()));
 
         testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_RESPONSE, responseWorkingCapitalLoanProductUpdate);
         testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_REQUEST, workingCapitalLoanProductUpdateRequest);
@@ -314,7 +314,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         String externalId = workingCapitalLoanProductsUpdateRequest.getExternalId();
 
         DeleteWorkingCapitalLoanProductsProductIdResponse deleteWorkingCapitalLoanProductResponse = ok(
-                () -> workingCapitalApi().deleteWorkingCapitalLoanProduct1(externalId, Map.of()));
+                () -> workingCapitalApi().deleteWorkingCapitalLoanProductByExternalId(externalId, Map.of()));
         assertThat(deleteWorkingCapitalLoanProductResponse.getResourceId()).isEqualTo(resourceId);
     }
 
@@ -338,7 +338,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         String externalId = workingCapitalLoanProductsUpdateRequest.getExternalId();
 
         CallFailedRuntimeException exception = fail(
-                () -> workingCapitalApi().retrieveWorkingCapitalLoanProductDetails1(externalId, Map.of()));
+                () -> workingCapitalApi().retrieveWorkingCapitalLoanProductDetailsByExternalId(externalId, Map.of()));
         assertThat(exception.getStatus()).as(ErrorMessageHelper.dateFailureErrorCodeMsg()).isEqualTo(404);
         assertThat(exception.getDeveloperMessage())
                 .contains(ErrorMessageHelper.workingCapitalLoanProductIdentifiedDoesNotExistFailure(String.valueOf(externalId)));
@@ -377,7 +377,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         String externalId = workingCapitalLoanProductCreateRequest.getExternalId();
 
         GetWorkingCapitalLoanProductsProductIdResponse getWorkingCapitalProductResponse = workingCapitalApi()
-                .retrieveWorkingCapitalLoanProductDetails1(externalId, Map.of());
+                .retrieveWorkingCapitalLoanProductDetailsByExternalId(externalId, Map.of());
         checkWorkingCapitalLoanProductCreate(workingCapitalLoanProductCreateRequest, getWorkingCapitalProductResponse);
     }
 
@@ -459,8 +459,6 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
             assert allowAttributeOverridesGetResponse != null;
             assertions.assertThat(allowAttributeOverridesCreateResponse.getDiscountDefault())
                     .isEqualTo(allowAttributeOverridesGetResponse.getDiscountDefault());
-            assertions.assertThat(allowAttributeOverridesCreateResponse.getFlatPercentageAmount())
-                    .isEqualTo(allowAttributeOverridesGetResponse.getFlatPercentageAmount());
             assertions.assertThat(allowAttributeOverridesCreateResponse.getDelinquencyBucketClassification())
                     .isEqualTo(allowAttributeOverridesGetResponse.getDelinquencyBucketClassification());
             assertions.assertThat(allowAttributeOverridesCreateResponse.getPeriodPaymentFrequency())
@@ -490,7 +488,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         String externalId = workingCapitalLoanProductsUpdateRequest.getExternalId();
 
         GetWorkingCapitalLoanProductsProductIdResponse getWorkingCapitalProductResponse = workingCapitalApi()
-                .retrieveWorkingCapitalLoanProductDetails1(externalId, Map.of());
+                .retrieveWorkingCapitalLoanProductDetailsByExternalId(externalId, Map.of());
         checkWorkingCapitalLoanProductUpdate(workingCapitalLoanProductsUpdateRequest, getWorkingCapitalProductResponse);
     }
 
@@ -572,8 +570,6 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
             assert allowAttributeOverridesGetResponse != null;
             assertions.assertThat(allowAttributeOverridesCreateResponse.getDiscountDefault())
                     .isEqualTo(allowAttributeOverridesGetResponse.getDiscountDefault());
-            assertions.assertThat(allowAttributeOverridesCreateResponse.getFlatPercentageAmount())
-                    .isEqualTo(allowAttributeOverridesGetResponse.getFlatPercentageAmount());
             assertions.assertThat(allowAttributeOverridesCreateResponse.getDelinquencyBucketClassification())
                     .isEqualTo(allowAttributeOverridesGetResponse.getDelinquencyBucketClassification());
             assertions.assertThat(allowAttributeOverridesCreateResponse.getPeriodPaymentFrequency())
