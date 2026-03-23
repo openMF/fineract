@@ -42,4 +42,17 @@ public final class WorkingCapitalLoanConstants {
     public static final String submittedOnNoteParameterName = "submittedOnNote";
     public static final String totalPaymentParamName = "totalPayment";
     public static final String principalAmountParamName = "principalAmount";
+
+    // Loan commands
+    public static final String APPROVE_LOAN_COMMAND = "approve";
+    public static final String DISBURSE_LOAN_COMMAND = "disburse";
+
+    // Approval / Rejection / Undo-approval parameters
+    public static final String RESOURCE_NAME = WCL_RESOURCE_NAME;
+    public static final String approvedOnDateParamName = "approvedOnDate";
+    public static final String approvedLoanAmountParamName = "approvedLoanAmount";
+    public static final String expectedDisbursementDateParamName = "expectedDisbursementDate";
+    public static final String discountAmountParamName = "discountAmount";
+    public static final String noteParamName = "note";
+    public static final String rejectedOnDateParamName = "rejectedOnDate";
 }

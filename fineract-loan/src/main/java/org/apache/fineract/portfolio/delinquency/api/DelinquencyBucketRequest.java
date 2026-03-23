@@ -20,6 +20,7 @@ package org.apache.fineract.portfolio.delinquency.api;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,4 +36,20 @@ public class DelinquencyBucketRequest implements Serializable {
 
     private String name;
     private List<Long> ranges;
+    private String bucketType;
+    private MinimumPaymentPeriodAndRule minimumPaymentPeriodAndRule;
+
+    @Setter
+    @Getter
+    @NoArgsConstructor
+    public static class MinimumPaymentPeriodAndRule implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private Integer frequency;
+        private String frequencyType;
+        private BigDecimal minimumPayment;
+        private String minimumPaymentType;
+    }
 }

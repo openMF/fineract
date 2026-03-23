@@ -46,6 +46,7 @@ import org.apache.fineract.portfolio.delinquency.domain.LoanDelinquencyActionRep
 import org.apache.fineract.portfolio.delinquency.domain.LoanDelinquencyTagHistory;
 import org.apache.fineract.portfolio.delinquency.domain.LoanDelinquencyTagHistoryRepository;
 import org.apache.fineract.portfolio.delinquency.domain.LoanInstallmentDelinquencyTagRepository;
+import org.apache.fineract.portfolio.delinquency.exception.DelinquencyBucketNotFoundException;
 import org.apache.fineract.portfolio.delinquency.helper.DelinquencyEffectivePauseHelper;
 import org.apache.fineract.portfolio.delinquency.helper.InstallmentDelinquencyAggregator;
 import org.apache.fineract.portfolio.delinquency.mapper.DelinquencyBucketMapper;
@@ -106,6 +107,9 @@ public class DelinquencyReadPlatformServiceImpl implements DelinquencyReadPlatfo
 
     @Override
     public DelinquencyBucketData retrieveDelinquencyBucket(Long delinquencyBucketId) {
+        if (!repositoryBucket.existsById(delinquencyBucketId)) {
+            throw DelinquencyBucketNotFoundException.notFound(delinquencyBucketId);
+        }
         final DelinquencyBucket delinquencyBucket = repositoryBucket.getReferenceById(delinquencyBucketId);
         final DelinquencyBucketData delinquencyBucketData = mapperBucket.map(delinquencyBucket);
         delinquencyBucketData.setRanges(mapperRange.map(delinquencyBucket.getRanges()));
@@ -117,10 +121,8 @@ public class DelinquencyReadPlatformServiceImpl implements DelinquencyReadPlatfo
         final Loan loan = this.loanRepository.getReferenceById(loanId);
         Optional<LoanDelinquencyTagHistory> optLoanDelinquencyTag = this.repositoryLoanDelinquencyTagHistory.findByLoanAndLiftedOnDate(loan,
                 null);
-        if (optLoanDelinquencyTag.isPresent()) {
-            return mapperRange.map(optLoanDelinquencyTag.get().getDelinquencyRange());
-        }
-        return null;
+        return optLoanDelinquencyTag.map(loanDelinquencyTagHistory -> mapperRange.map(loanDelinquencyTagHistory.getDelinquencyRange()))
+                .orElse(null);
     }
 
     @Override

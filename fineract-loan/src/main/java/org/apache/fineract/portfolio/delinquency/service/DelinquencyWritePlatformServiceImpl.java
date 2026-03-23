@@ -42,6 +42,9 @@ import org.apache.fineract.portfolio.delinquency.domain.DelinquencyBucket;
 import org.apache.fineract.portfolio.delinquency.domain.DelinquencyBucketMappings;
 import org.apache.fineract.portfolio.delinquency.domain.DelinquencyBucketMappingsRepository;
 import org.apache.fineract.portfolio.delinquency.domain.DelinquencyBucketRepository;
+import org.apache.fineract.portfolio.delinquency.domain.DelinquencyBucketType;
+import org.apache.fineract.portfolio.delinquency.domain.DelinquencyMinimumPaymentPeriodAndRule;
+import org.apache.fineract.portfolio.delinquency.domain.DelinquencyMinimumPaymentPeriodAndRuleRepository;
 import org.apache.fineract.portfolio.delinquency.domain.DelinquencyRange;
 import org.apache.fineract.portfolio.delinquency.domain.DelinquencyRangeRepository;
 import org.apache.fineract.portfolio.delinquency.domain.LoanDelinquencyAction;
@@ -50,6 +53,7 @@ import org.apache.fineract.portfolio.delinquency.domain.LoanDelinquencyTagHistor
 import org.apache.fineract.portfolio.delinquency.domain.LoanDelinquencyTagHistoryRepository;
 import org.apache.fineract.portfolio.delinquency.domain.LoanInstallmentDelinquencyTagRepository;
 import org.apache.fineract.portfolio.delinquency.exception.DelinquencyBucketAgesOverlapedException;
+import org.apache.fineract.portfolio.delinquency.exception.DelinquencyBucketNotFoundException;
 import org.apache.fineract.portfolio.delinquency.exception.DelinquencyRangeInvalidAgesException;
 import org.apache.fineract.portfolio.delinquency.helper.DelinquencyEffectivePauseHelper;
 import org.apache.fineract.portfolio.delinquency.validator.DelinquencyActionParseAndValidator;
@@ -84,6 +88,7 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
     private final DelinquencyEffectivePauseHelper delinquencyEffectivePauseHelper;
     private final BusinessEventNotifierService businessEventNotifierService;
     private final DelinquencyWritePlatformServiceHelper delinquencyHelper;
+    private final DelinquencyMinimumPaymentPeriodAndRuleRepository delinquencyMinimumPaymentPeriodAndRuleRepository;
 
     @Override
     public CommandProcessingResult createDelinquencyRange(JsonCommand command) {
@@ -141,14 +146,24 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
 
     @Override
     public CommandProcessingResult deleteDelinquencyBucket(Long delinquencyBucketId, JsonCommand command) {
-        final DelinquencyBucket delinquencyBucket = repositoryBucket.getReferenceById(delinquencyBucketId);
-        if (delinquencyBucket != null) {
+        if (repositoryBucket.existsById(delinquencyBucketId)) {
+            final DelinquencyBucket delinquencyBucket = repositoryBucket.getReferenceById(delinquencyBucketId);
             Long delinquencyBucketLinked = this.loanProductRepository.countByDelinquencyBucket(delinquencyBucket);
             if (delinquencyBucketLinked > 0) {
                 throw new PlatformDataIntegrityException("error.msg.data.integrity.issue.entity.linked",
                         "Data integrity issue with resource: " + delinquencyBucket.getId());
             }
+
+            // Explicitly handle the minimum payment period and rule relationship
+            if (delinquencyBucket.getMinimumPaymentPeriodAndRule() != null) {
+                DelinquencyMinimumPaymentPeriodAndRule minimumPaymentPeriodAndRule = delinquencyBucket.getMinimumPaymentPeriodAndRule();
+                delinquencyMinimumPaymentPeriodAndRuleRepository.delete(minimumPaymentPeriodAndRule);
+            }
+
             repositoryBucket.delete(delinquencyBucket);
+        } else {
+            throw new DelinquencyBucketNotFoundException("error.msg.delinquency.bucket.id.not.exist",
+                    "Delinquency bucket with id `" + delinquencyBucketId + "` does not exist.", delinquencyBucketId);
         }
         return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(delinquencyBucketId).build();
     }
@@ -338,7 +353,20 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
 
         if (delinquencyBucket.isEmpty()) {
             DelinquencyBucket newDelinquencyBucket = new DelinquencyBucket(data.getName());
+            newDelinquencyBucket.setBucketType(data.getBucketType() != null ? data.getBucketType() : DelinquencyBucketType.REGULAR);
+            if (DelinquencyBucketType.WORKING_CAPITAL.equals(newDelinquencyBucket.getBucketType())) {
+                newDelinquencyBucket.setMinimumPaymentPeriodAndRule(new DelinquencyMinimumPaymentPeriodAndRule());
+                newDelinquencyBucket.getMinimumPaymentPeriodAndRule().setBucket(newDelinquencyBucket);
+                newDelinquencyBucket.getMinimumPaymentPeriodAndRule().setFrequency(data.getMinimumPaymentPeriodAndRule().getFrequency());
+                newDelinquencyBucket.getMinimumPaymentPeriodAndRule()
+                        .setMinimumPaymentType(data.getMinimumPaymentPeriodAndRule().getMinimumPaymentType());
+                newDelinquencyBucket.getMinimumPaymentPeriodAndRule()
+                        .setFrequencyType(data.getMinimumPaymentPeriodAndRule().getFrequencyType());
+                newDelinquencyBucket.getMinimumPaymentPeriodAndRule()
+                        .setMinimumPayment(data.getMinimumPaymentPeriodAndRule().getMinimumPayment());
+            }
             repositoryBucket.save(newDelinquencyBucket);
+
             setDelinquencyBucketMappings(newDelinquencyBucket, data);
             return newDelinquencyBucket;
         } else {
@@ -350,8 +378,59 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
     private DelinquencyBucket updateDelinquencyBucket(DelinquencyBucket delinquencyBucket, DelinquencyBucketData data,
             Map<String, Object> changes) {
         if (!data.getName().equalsIgnoreCase(delinquencyBucket.getName())) {
+            Optional<DelinquencyBucket> existingEntityByName = repositoryBucket.findByName(data.getName());
+            if (existingEntityByName.isPresent()) {
+                throw new PlatformDataIntegrityException("error.msg.data.integrity.issue.entity.duplicated",
+                        "Data integrity issue with resource: " + existingEntityByName.get().getId());
+            }
             delinquencyBucket.setName(data.getName());
             changes.put(DelinquencyApiConstants.NAME_PARAM_NAME, data.getName());
+        }
+        if (!data.getBucketType().equals(delinquencyBucket.getBucketType())) {
+            changes.put(DelinquencyApiConstants.BUCKET_TYPE_PARAM_NAME, data.getBucketType());
+            delinquencyBucket.setBucketType(data.getBucketType());
+        }
+        if (delinquencyBucket.getBucketType().equals(DelinquencyBucketType.WORKING_CAPITAL)) {
+            if (delinquencyBucket.getMinimumPaymentPeriodAndRule() == null) {
+                delinquencyBucket.setMinimumPaymentPeriodAndRule(new DelinquencyMinimumPaymentPeriodAndRule());
+                delinquencyBucket.getMinimumPaymentPeriodAndRule().setBucket(delinquencyBucket);
+            }
+            if (!data.getMinimumPaymentPeriodAndRule().getFrequency()
+                    .equals(delinquencyBucket.getMinimumPaymentPeriodAndRule().getFrequency())) {
+                delinquencyBucket.getMinimumPaymentPeriodAndRule().setFrequency(data.getMinimumPaymentPeriodAndRule().getFrequency());
+                changes.put(DelinquencyApiConstants.FREQUENCY_PARAM_NAME,
+                        delinquencyBucket.getMinimumPaymentPeriodAndRule().getFrequency());
+            }
+            if (!data.getMinimumPaymentPeriodAndRule().getFrequencyType()
+                    .equals(delinquencyBucket.getMinimumPaymentPeriodAndRule().getFrequencyType())) {
+                delinquencyBucket.getMinimumPaymentPeriodAndRule()
+                        .setFrequencyType(data.getMinimumPaymentPeriodAndRule().getFrequencyType());
+                changes.put(DelinquencyApiConstants.FREQUENCY_TYPE_PARAM_NAME,
+                        delinquencyBucket.getMinimumPaymentPeriodAndRule().getFrequencyType());
+            }
+            if (!data.getMinimumPaymentPeriodAndRule().getMinimumPaymentType()
+                    .equals(delinquencyBucket.getMinimumPaymentPeriodAndRule().getMinimumPaymentType())) {
+                changes.put(DelinquencyApiConstants.MINIMUM_PAYMENT_TYPE_PARAM_NAME,
+                        delinquencyBucket.getMinimumPaymentPeriodAndRule().getMinimumPaymentType());
+                delinquencyBucket.getMinimumPaymentPeriodAndRule()
+                        .setMinimumPaymentType(data.getMinimumPaymentPeriodAndRule().getMinimumPaymentType());
+            }
+            if (data.getMinimumPaymentPeriodAndRule().getMinimumPayment()
+                    .compareTo(delinquencyBucket.getMinimumPaymentPeriodAndRule().getMinimumPayment()) != 0) {
+                changes.put(DelinquencyApiConstants.MINIMUM_PAYMENT_PARAM_NAME,
+                        delinquencyBucket.getMinimumPaymentPeriodAndRule().getMinimumPayment());
+                delinquencyBucket.getMinimumPaymentPeriodAndRule()
+                        .setMinimumPayment(data.getMinimumPaymentPeriodAndRule().getMinimumPayment());
+            }
+        } else {
+            if (delinquencyBucket.getMinimumPaymentPeriodAndRule() != null) {
+                changes.put(DelinquencyApiConstants.MINIMUM_PAYMENT_PERIOD_AND_RULE_PARAM_NAME, null);
+                DelinquencyMinimumPaymentPeriodAndRule minimumPaymentPeriodAndRule = delinquencyBucket.getMinimumPaymentPeriodAndRule();
+                minimumPaymentPeriodAndRule.setBucket(null);
+                delinquencyBucket.setMinimumPaymentPeriodAndRule(null);
+                delinquencyMinimumPaymentPeriodAndRuleRepository.save(minimumPaymentPeriodAndRule);
+                delinquencyMinimumPaymentPeriodAndRuleRepository.delete(minimumPaymentPeriodAndRule);
+            }
         }
         if (!changes.isEmpty()) {
             delinquencyBucket = repositoryBucket.save(delinquencyBucket);
@@ -363,7 +442,7 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
     private void setDelinquencyBucketMappings(DelinquencyBucket delinquencyBucket, DelinquencyBucketData data) {
         List<Long> rangeIds = new ArrayList<>();
         data.getRanges().forEach(dataRange -> rangeIds.add(dataRange.getId()));
-
+        delinquencyBucket.setBucketType(data.getBucketType());
         List<DelinquencyRange> ranges = repositoryRange.findAllById(rangeIds);
         validateDelinquencyRanges(ranges);
         List<DelinquencyBucketMappings> bucketMappings = repositoryBucketMappings.findByDelinquencyBucket(delinquencyBucket);
