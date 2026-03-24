@@ -29,6 +29,7 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,8 @@ import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.DeleteWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostClientsResponse;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansResponse;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRequest;
@@ -45,6 +48,7 @@ import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.test.data.workingcapitalproduct.DefaultWorkingCapitalLoanProduct;
 import org.apache.fineract.test.data.workingcapitalproduct.WorkingCapitalLoanProductResolver;
 import org.apache.fineract.test.factory.WorkingCapitalLoanRequestFactory;
+import org.apache.fineract.test.helper.Utils;
 import org.apache.fineract.test.messaging.event.EventCheckHelper;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
@@ -68,18 +72,6 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
         createWorkingCapitalLoanAccount(data.get(1));
     }
 
-    private void createWorkingCapitalLoanAccount(final List<String> loanData) {
-        final String loanProduct = loanData.get(0);
-        final Long clientId = extractClientId();
-        final Long loanProductId = resolveLoanProductId(loanProduct);
-        final PostWorkingCapitalLoansRequest loansRequest = buildCreateLoanRequest(clientId, loanProductId, loanData);
-
-        final PostWorkingCapitalLoansResponse response = ok(
-                () -> fineractClient.workingCapitalLoans().submitWorkingCapitalLoanApplication(loansRequest));
-        testContext().set(TestContextKey.LOAN_CREATE_RESPONSE, response);
-        log.info("Working Capital Loan created with ID: {}", response.getLoanId());
-    }
-
     @Then("Working capital loan creation was successful")
     public void verifyWorkingCapitalLoanCreationSuccess() {
         final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
@@ -94,48 +86,16 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
 
     @Then("Working capital loan account has the correct data:")
     public void verifyWorkingCapitalLoanAccountData(final DataTable table) {
-        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        final Long loanId = loanResponse.getLoanId();
-
-        final GetWorkingCapitalLoansLoanIdResponse response = ok(
-                () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
+        final Long loanId = getCreatedLoanId();
+        final GetWorkingCapitalLoansLoanIdResponse response = retrieveLoanDetails(loanId);
 
         final List<List<String>> data = table.asLists();
-        final List<String> expectedData = data.get(1);
+        final List<String> header = table.row(0);
+        final List<String> expectedValues = data.get(1);
 
-        final String expectedProductName = expectedData.get(0);
-        final String expectedSubmittedOnDate = expectedData.get(1);
-        final String expectedDisbursementDate = expectedData.get(2);
-        final String expectedStatus = expectedData.get(3);
-        final String expectedPrincipal = expectedData.get(4);
-        final String expectedTotalPayment = expectedData.get(5);
-        final String expectedPeriodPaymentRate = expectedData.get(6);
-        final String expectedDiscount = expectedData.get(7);
+        final List<String> actualValues = fetchValuesOfWorkingCapitalLoan(header, response);
 
-        assertNotNull(response, "Loan response should not be null");
-        assertNotNull(response.getProduct(), "Product should not be null");
-        assertThat(response.getProduct().getName()).as("Product name should match").isEqualTo(expectedProductName);
-        assert response.getSubmittedOnDate() != null;
-        assertThat(response.getSubmittedOnDate().toString()).as("Submitted on date should match").isEqualTo(expectedSubmittedOnDate);
-        assertNotNull(response.getDisbursementDetails(), "Disbursement details should be present");
-        assertThat(response.getDisbursementDetails()).as("Disbursement details should not be empty").isNotEmpty();
-        assertThat(response.getDisbursementDetails().getFirst().getExpectedDisbursementDate().toString())
-                .as("Expected disbursement date should match").isEqualTo(expectedDisbursementDate);
-        assert response.getStatus() != null;
-        assertThat(response.getStatus().getValue()).as("Status should match").isEqualTo(expectedStatus);
-        assertNotNull(response.getBalance(), "Balance should be present");
-        assertThat(response.getBalance().getPrincipalOutstanding()).as("Principal should match")
-                .isEqualByComparingTo(new BigDecimal(expectedPrincipal));
-        assertThat(response.getBalance().getTotalPayment()).as("Total payment should match")
-                .isEqualByComparingTo(new BigDecimal(expectedTotalPayment));
-        assertThat(response.getPeriodPaymentRate()).as("Period payment rate should match")
-                .isEqualByComparingTo(new BigDecimal(expectedPeriodPaymentRate));
-
-        if ("null".equals(expectedDiscount)) {
-            assertThat(response.getDiscount()).as("Discount should be null").isNull();
-        } else {
-            assertThat(response.getDiscount()).as("Discount should match").isEqualByComparingTo(new BigDecimal(expectedDiscount));
-        }
+        assertThat(actualValues).as("Working capital loan data should match expected values").isEqualTo(expectedValues);
 
         log.info("Verified working capital loan account data for loan ID: {}", loanId);
     }
@@ -290,33 +250,10 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
         modifyWorkingCapitalLoanAccount(data.get(1));
     }
 
-    private void modifyWorkingCapitalLoanAccount(final List<String> loanData) {
-        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        final Long loanId = loanResponse.getLoanId();
-        final PutWorkingCapitalLoansLoanIdRequest modifyRequest = buildModifyLoanRequest(loanData);
-
-        final PutWorkingCapitalLoansLoanIdResponse response = ok(
-                () -> fineractClient.workingCapitalLoans().modifyWorkingCapitalLoanApplicationById(loanId, modifyRequest, ""));
-        testContext().set(TestContextKey.LOAN_MODIFY_RESPONSE, response);
-        log.info("Working Capital Loan modified with ID: {}", response.getResourceId());
-    }
-
     @When("Admin modifies the working capital loan by externalId with the following data:")
     public void modifyWorkingCapitalLoanByExternalId(final DataTable table) {
         final List<List<String>> data = table.asLists();
         modifyWorkingCapitalLoanAccountByExternalId(data.get(1));
-    }
-
-    private void modifyWorkingCapitalLoanAccountByExternalId(final List<String> loanData) {
-        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        final Long loanId = loanResponse.getLoanId();
-        final String externalId = retrieveLoanExternalId(loanId);
-        final PutWorkingCapitalLoansLoanIdRequest modifyRequest = buildModifyLoanRequest(loanData);
-
-        final PutWorkingCapitalLoansLoanIdResponse response = ok(
-                () -> fineractClient.workingCapitalLoans().modifyWorkingCapitalLoanApplicationByExternalId(externalId, modifyRequest, ""));
-        testContext().set(TestContextKey.LOAN_MODIFY_RESPONSE, response);
-        log.info("Working Capital Loan modified by externalId: {} with resource ID: {}", externalId, response.getResourceId());
     }
 
     @Then("Changing submittedOnDate after expectedDisbursementDate results an error:")
@@ -324,24 +261,15 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
         final List<List<String>> data = table.asLists();
         final String submittedOnDate = data.get(1).get(0);
 
-        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        final Long loanId = loanResponse.getLoanId();
-
         final PutWorkingCapitalLoansLoanIdRequest modifyRequest = workingCapitalLoanRequestFactory.defaultModifyWorkingCapitalLoansRequest()
                 .submittedOnDate(submittedOnDate);
 
         final CallFailedRuntimeException exception = fail(
-                () -> fineractClient.workingCapitalLoans().modifyWorkingCapitalLoanApplicationById(loanId, modifyRequest, ""));
+                () -> fineractClient.workingCapitalLoans().modifyWorkingCapitalLoanApplicationById(getCreatedLoanId(), modifyRequest, ""));
         testContext().set(TestContextKey.LOAN_MODIFY_RESPONSE, exception);
 
-        log.info("HTTP status code: {}", exception.getStatus());
-
-        assertThat(exception.getStatus()).as("HTTP status code should be 403").isEqualTo(403);
-
-        log.info(
-                "Checking for submittedOnDate after expectedDisbursementDate error: submittedOnDate cannot be after expectedDisbursementDate.");
-        assertThat(exception.getMessage()).as("Should contain submittedOnDate after expectedDisbursementDate error")
-                .contains("The date on which a loan is submitted cannot be after its expected disbursement date");
+        assertHttpStatus(exception, 403);
+        assertValidationError(exception, "The date on which a loan is submitted cannot be after its expected disbursement date");
 
         log.info("Verified working capital loan modification failed with submittedOnDate after expectedDisbursementDate");
     }
@@ -352,9 +280,6 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
         final String submittedOnDate = data.get(1).get(0);
         final String expectedDisbursementDate = data.get(1).get(1);
 
-        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        final Long loanId = loanResponse.getLoanId();
-
         final PutWorkingCapitalLoansLoanIdRequest modifyRequest = workingCapitalLoanRequestFactory.defaultModifyWorkingCapitalLoansRequest()
                 .submittedOnDate(submittedOnDate);
         if (expectedDisbursementDate != null && !expectedDisbursementDate.isBlank()) {
@@ -362,35 +287,21 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
         }
 
         final CallFailedRuntimeException exception = fail(
-                () -> fineractClient.workingCapitalLoans().modifyWorkingCapitalLoanApplicationById(loanId, modifyRequest, ""));
+                () -> fineractClient.workingCapitalLoans().modifyWorkingCapitalLoanApplicationById(getCreatedLoanId(), modifyRequest, ""));
         testContext().set(TestContextKey.LOAN_MODIFY_RESPONSE, exception);
 
-        assertThat(exception.getStatus()).as("HTTP status code should be 403").isEqualTo(403);
-        assertThat(exception.getMessage()).as("Should contain submittedOnDate cannot be in the future error")
-                .contains("The date on which a loan is submitted cannot be in the future.");
+        assertHttpStatus(exception, 403);
+        assertValidationError(exception, "The date on which a loan is submitted cannot be in the future.");
     }
 
     @When("Admin deletes the working capital loan account")
     public void deleteWorkingCapitalLoanAccount() {
-        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        final Long loanId = loanResponse.getLoanId();
-
-        final DeleteWorkingCapitalLoansLoanIdResponse response = ok(
-                () -> fineractClient.workingCapitalLoans().deleteWorkingCapitalLoanApplication(loanId));
-        testContext().set(TestContextKey.LOAN_DELETE_RESPONSE, response);
-        log.info("Working Capital Loan deleted with ID: {}", response.getResourceId());
+        deleteLoan(false);
     }
 
     @When("Admin deletes the working capital loan account by externalId")
     public void deleteWorkingCapitalLoanAccountByExternalId() {
-        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        final Long loanId = loanResponse.getLoanId();
-        final String externalId = retrieveLoanExternalId(loanId);
-
-        final DeleteWorkingCapitalLoansLoanIdResponse response = ok(
-                () -> fineractClient.workingCapitalLoans().deleteWorkingCapitalLoanApplicationByExternalId(externalId));
-        testContext().set(TestContextKey.LOAN_DELETE_RESPONSE, response);
-        log.info("Working Capital Loan deleted by externalId: {} with resource ID: {}", externalId, response.getResourceId());
+        deleteLoan(true);
     }
 
     @Then("Working capital loan account deletion was successful")
@@ -475,20 +386,160 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
         log.info("Verified modification failed: non-existent loan ID");
     }
 
+    @Then("Working capital loan modification response contains changes for {string}")
+    public void verifyModificationResponseContainsChanges(final String expectedField) {
+        final PutWorkingCapitalLoansLoanIdResponse modifyResponse = testContext().get(TestContextKey.LOAN_MODIFY_RESPONSE);
+        assertThat(modifyResponse).as("Modification response").isNotNull();
+        assertThat(modifyResponse.getResourceId()).as("Resource ID").isNotNull();
+
+        final Object changes = modifyResponse.getChanges();
+        assertThat(changes).as("Changes map").isNotNull().isInstanceOf(Map.class);
+
+        @SuppressWarnings("unchecked")
+        final Map<String, Object> changesMap = (Map<String, Object>) changes;
+        assertThat(changesMap).as("Changes map should contain key '%s'", expectedField).containsKey(expectedField);
+        log.info("Verified modification response contains changes for '{}': {}", expectedField, changesMap.get(expectedField));
+    }
+
+    @When("Admin successfully approves the working capital loan on {string} with {string} amount and expected disbursement date on {string}")
+    public void approveWorkingCapitalLoan(final String approveDate, final String approvedAmount, final String expectedDisbursementDate) {
+        final PostWorkingCapitalLoansLoanIdRequest approveRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanApproveRequest().approvedOnDate(approveDate).approvedLoanAmount(new BigDecimal(approvedAmount))
+                .expectedDisbursementDate(expectedDisbursementDate);
+
+        executeStateTransition("approve", approveRequest, TestContextKey.LOAN_APPROVAL_RESPONSE, false);
+    }
+
+    @When("Admin successfully approves the working capital loan by externalId on {string} with {string} amount and expected disbursement date on {string}")
+    public void approveWorkingCapitalLoanByExternalId(final String approveDate, final String approvedAmount,
+            final String expectedDisbursementDate) {
+        final PostWorkingCapitalLoansLoanIdRequest approveRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanApproveRequest().approvedOnDate(approveDate).approvedLoanAmount(new BigDecimal(approvedAmount))
+                .expectedDisbursementDate(expectedDisbursementDate);
+
+        executeStateTransition("approve", approveRequest, TestContextKey.LOAN_APPROVAL_RESPONSE, true);
+    }
+
+    @Then("Working capital loan approval was successful")
+    public void verifyWorkingCapitalLoanApprovalSuccess() {
+        verifyStateTransitionSuccess(TestContextKey.LOAN_APPROVAL_RESPONSE, "approval");
+    }
+
+    @Then("Approval of working capital loan on {string} with {string} amount and expected disbursement date on {string} results an error with the following data:")
+    public void approvalOfWorkingCapitalLoanResultsAnError(final String approveDate, final String approvedAmount,
+            final String expectedDisbursementDate, final DataTable table) {
+        final PostWorkingCapitalLoansLoanIdRequest approveRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanApproveRequest().approvedOnDate(approveDate).approvedLoanAmount(new BigDecimal(approvedAmount))
+                .expectedDisbursementDate(expectedDisbursementDate);
+
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoans()
+                .stateTransitionWorkingCapitalLoanById(getCreatedLoanId(), "approve", approveRequest));
+
+        verifyErrorResponse(exception, table);
+        log.info("Verified working capital loan approval failed with expected error");
+    }
+
+    @When("Admin rejects the working capital loan on {string}")
+    public void rejectWorkingCapitalLoan(final String rejectDate) {
+        final PostWorkingCapitalLoansLoanIdRequest rejectRequest = workingCapitalLoanRequestFactory.defaultWorkingCapitalLoanRejectRequest()
+                .rejectedOnDate(rejectDate);
+
+        executeStateTransition("reject", rejectRequest, TestContextKey.LOAN_REJECT_RESPONSE, false);
+    }
+
+    @Then("Working capital loan rejection was successful")
+    public void verifyWorkingCapitalLoanRejectionSuccess() {
+        verifyStateTransitionSuccess(TestContextKey.LOAN_REJECT_RESPONSE, "rejection");
+    }
+
+    @When("Admin makes undo approval on the working capital loan")
+    public void undoApprovalWorkingCapitalLoan() {
+        final PostWorkingCapitalLoansLoanIdRequest undoApprovalRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanUndoApprovalRequest();
+
+        executeStateTransition("undoApproval", undoApprovalRequest, TestContextKey.LOAN_UNDO_APPROVAL_RESPONSE, false);
+    }
+
+    @Then("Working capital loan undo approval was successful")
+    public void verifyWorkingCapitalLoanUndoApprovalSuccess() {
+        verifyStateTransitionSuccess(TestContextKey.LOAN_UNDO_APPROVAL_RESPONSE, "undo approval");
+    }
+
+    // ====================================
+    // Private Helper Methods
+    // ====================================
+
+    // Loan Lifecycle Helpers
+    private void createWorkingCapitalLoanAccount(final List<String> loanData) {
+        final String loanProduct = loanData.get(0);
+        final Long clientId = extractClientId();
+        final Long loanProductId = resolveLoanProductId(loanProduct);
+        final PostWorkingCapitalLoansRequest loansRequest = buildCreateLoanRequest(clientId, loanProductId, loanData);
+
+        final PostWorkingCapitalLoansResponse response = ok(
+                () -> fineractClient.workingCapitalLoans().submitWorkingCapitalLoanApplication(loansRequest));
+        testContext().set(TestContextKey.LOAN_CREATE_RESPONSE, response);
+        log.info("Working Capital Loan created with ID: {}", response.getLoanId());
+    }
+
+    private void modifyWorkingCapitalLoanAccount(final List<String> loanData) {
+        final PutWorkingCapitalLoansLoanIdRequest modifyRequest = buildModifyLoanRequest(loanData);
+
+        final PutWorkingCapitalLoansLoanIdResponse response = ok(
+                () -> fineractClient.workingCapitalLoans().modifyWorkingCapitalLoanApplicationById(getCreatedLoanId(), modifyRequest, ""));
+        testContext().set(TestContextKey.LOAN_MODIFY_RESPONSE, response);
+        log.info("Working Capital Loan modified with ID: {}", response.getResourceId());
+    }
+
+    private void modifyWorkingCapitalLoanAccountByExternalId(final List<String> loanData) {
+        final Long loanId = getCreatedLoanId();
+        final String externalId = retrieveLoanExternalId(loanId);
+        final PutWorkingCapitalLoansLoanIdRequest modifyRequest = buildModifyLoanRequest(loanData);
+
+        final PutWorkingCapitalLoansLoanIdResponse response = ok(
+                () -> fineractClient.workingCapitalLoans().modifyWorkingCapitalLoanApplicationByExternalId(externalId, modifyRequest, ""));
+        testContext().set(TestContextKey.LOAN_MODIFY_RESPONSE, response);
+        log.info("Working Capital Loan modified by externalId: {} with resource ID: {}", externalId, response.getResourceId());
+    }
+
+    private void deleteLoan(final boolean useExternalId) {
+        final Long loanId = getCreatedLoanId();
+
+        final DeleteWorkingCapitalLoansLoanIdResponse response;
+        if (useExternalId) {
+            final String externalId = retrieveLoanExternalId(loanId);
+            response = ok(() -> fineractClient.workingCapitalLoans().deleteWorkingCapitalLoanApplicationByExternalId(externalId));
+            log.info("Working Capital Loan deleted by externalId: {} with resource ID: {}", externalId, response.getResourceId());
+        } else {
+            response = ok(() -> fineractClient.workingCapitalLoans().deleteWorkingCapitalLoanApplication(loanId));
+            log.info("Working Capital Loan deleted with ID: {}", response.getResourceId());
+        }
+
+        testContext().set(TestContextKey.LOAN_DELETE_RESPONSE, response);
+    }
+
+    private void executeStateTransition(final String command, final PostWorkingCapitalLoansLoanIdRequest request, final String responseKey,
+            final boolean useExternalId) {
+        final long loanId = getCreatedLoanId();
+
+        final PostWorkingCapitalLoansLoanIdResponse response;
+        if (useExternalId) {
+            final String loanExternalId = retrieveLoanExternalId(loanId);
+            response = ok(() -> fineractClient.workingCapitalLoans().stateTransitionWorkingCapitalLoanByExternalId(loanExternalId, command,
+                    request));
+            log.info("Working Capital Loan with externalId {} {} successful", loanExternalId, command);
+        } else {
+            response = ok(() -> fineractClient.workingCapitalLoans().stateTransitionWorkingCapitalLoanById(loanId, command, request));
+            log.info("Working Capital Loan {} {} successful", loanId, command);
+        }
+
+        testContext().set(responseKey, response);
+    }
+
+    // Data Extraction Helpers
     private Long getCreatedLoanId() {
         final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         return loanResponse.getLoanId();
-    }
-
-    private BigDecimal extractPrincipalFromModifyTable(final DataTable table) {
-        final Map<String, String> data = table.asMaps().get(0);
-        return new BigDecimal(data.get("principalAmount"));
-    }
-
-    private CallFailedRuntimeException failModifyWithPrincipal(final Long loanId, final BigDecimal principal) {
-        final PutWorkingCapitalLoansLoanIdRequest modifyRequest = workingCapitalLoanRequestFactory.defaultModifyWorkingCapitalLoansRequest()
-                .principalAmount(principal);
-        return fail(() -> fineractClient.workingCapitalLoans().modifyWorkingCapitalLoanApplicationById(loanId, modifyRequest, ""));
     }
 
     private Long extractClientId() {
@@ -501,6 +552,41 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
         return workingCapitalLoanProductResolver.resolve(product);
     }
 
+    private BigDecimal extractPrincipalFromModifyTable(final DataTable table) {
+        final Map<String, String> data = table.asMaps().get(0);
+        return new BigDecimal(data.get("principalAmount"));
+    }
+
+    private List<String> fetchValuesOfWorkingCapitalLoan(final List<String> header, final GetWorkingCapitalLoansLoanIdResponse response) {
+        final List<String> actualValues = new ArrayList<>();
+        for (final String headerName : header) {
+            switch (headerName) {
+                case "product.name" -> actualValues.add(response.getProduct() == null ? null : response.getProduct().getName());
+                case "submittedOnDate" ->
+                    actualValues.add(response.getSubmittedOnDate() == null ? null : response.getSubmittedOnDate().toString());
+                case "expectedDisbursementDate" ->
+                    actualValues.add(response.getDisbursementDetails() == null || response.getDisbursementDetails().isEmpty() ? null
+                            : response.getDisbursementDetails().getFirst().getExpectedDisbursementDate().toString());
+                case "status" -> actualValues.add(response.getStatus() == null ? null : response.getStatus().getValue());
+                case "principal" ->
+                    actualValues.add(response.getBalance() == null || response.getBalance().getPrincipalOutstanding() == null ? null
+                            : new Utils.DoubleFormatter(response.getBalance().getPrincipalOutstanding().doubleValue()).format());
+                case "approvedPrincipal" -> actualValues.add(response.getApprovedPrincipal() == null ? "0"
+                        : new Utils.DoubleFormatter(response.getApprovedPrincipal().doubleValue()).format());
+                case "totalPayment" ->
+                    actualValues.add(response.getBalance() == null || response.getBalance().getTotalPayment() == null ? null
+                            : new Utils.DoubleFormatter(response.getBalance().getTotalPayment().doubleValue()).format());
+                case "periodPaymentRate" -> actualValues.add(response.getPeriodPaymentRate() == null ? null
+                        : new Utils.DoubleFormatter(response.getPeriodPaymentRate().doubleValue()).format());
+                case "discount" -> actualValues.add(
+                        response.getDiscount() == null ? "null" : new Utils.DoubleFormatter(response.getDiscount().doubleValue()).format());
+                default -> throw new IllegalStateException(String.format("Header name %s cannot be found", headerName));
+            }
+        }
+        return actualValues;
+    }
+
+    // Request Builders
     private PostWorkingCapitalLoansRequest buildCreateLoanRequest(final Long clientId, final Long productId, final List<String> loanData) {
         final String submittedOnDate = loanData.get(1);
         final String expectedDisbursementDate = loanData.get(2);
@@ -534,12 +620,24 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
                 .discount(discount != null && !discount.isEmpty() ? new BigDecimal(discount) : null);
     }
 
+    // API Call Helpers
+    private GetWorkingCapitalLoansLoanIdResponse retrieveLoanDetails(final Long loanId) {
+        return ok(() -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
+    }
+
     private String retrieveLoanExternalId(final Long loanId) {
         final GetWorkingCapitalLoansLoanIdResponse loanDetails = ok(
                 () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
         return loanDetails.getExternalId();
     }
 
+    private CallFailedRuntimeException failModifyWithPrincipal(final Long loanId, final BigDecimal principal) {
+        final PutWorkingCapitalLoansLoanIdRequest modifyRequest = workingCapitalLoanRequestFactory.defaultModifyWorkingCapitalLoansRequest()
+                .principalAmount(principal);
+        return fail(() -> fineractClient.workingCapitalLoans().modifyWorkingCapitalLoanApplicationById(loanId, modifyRequest, ""));
+    }
+
+    // Assertion Helpers
     private void assertHttpStatus(final CallFailedRuntimeException exception, final int expectedStatus) {
         log.info("HTTP status code: {}", exception.getStatus());
         assertThat(exception.getStatus()).as("HTTP status code should be " + expectedStatus).isEqualTo(expectedStatus);
@@ -550,18 +648,24 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
         assertThat(exception.getMessage()).as("Should contain validation error").contains(expectedMessage);
     }
 
-    @Then("Working capital loan modification response contains changes for {string}")
-    public void verifyModificationResponseContainsChanges(final String expectedField) {
-        final PutWorkingCapitalLoansLoanIdResponse modifyResponse = testContext().get(TestContextKey.LOAN_MODIFY_RESPONSE);
-        assertThat(modifyResponse).as("Modification response").isNotNull();
-        assertThat(modifyResponse.getResourceId()).as("Resource ID").isNotNull();
+    private void verifyStateTransitionSuccess(final String responseKey, final String operationName) {
+        final PostWorkingCapitalLoansLoanIdResponse response = testContext().get(responseKey);
 
-        final Object changes = modifyResponse.getChanges();
-        assertThat(changes).as("Changes map").isNotNull().isInstanceOf(Map.class);
+        assertNotNull(response, "Loan " + operationName + " response should not be null");
+        assertNotNull(response.getLoanId(), "Loan ID should not be null");
+        assertNotNull(response.getResourceId(), "Resource ID should not be null");
+        assertTrue(response.getLoanId() > 0, "Loan ID should be greater than 0");
 
-        @SuppressWarnings("unchecked")
-        final Map<String, Object> changesMap = (Map<String, Object>) changes;
-        assertThat(changesMap).as("Changes map should contain key '%s'", expectedField).containsKey(expectedField);
-        log.info("Verified modification response contains changes for '{}': {}", expectedField, changesMap.get(expectedField));
+        log.info("Verified working capital loan {} was successful. Loan ID: {}", operationName, response.getLoanId());
+    }
+
+    private void verifyErrorResponse(final CallFailedRuntimeException exception, final DataTable table) {
+        final List<List<String>> data = table.asLists();
+        final String expectedHttpCode = data.get(1).get(0);
+        final String expectedErrorMessage = data.get(1).get(1);
+
+        assertThat(exception.getStatus()).as("HTTP status code should be " + expectedHttpCode)
+                .isEqualTo(Integer.parseInt(expectedHttpCode));
+        assertThat(exception.getMessage()).as("Should contain error message").contains(expectedErrorMessage);
     }
 }

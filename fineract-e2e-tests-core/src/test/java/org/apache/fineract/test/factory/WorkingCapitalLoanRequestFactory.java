@@ -21,6 +21,7 @@ package org.apache.fineract.test.factory;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.test.data.workingcapitalproduct.DefaultWorkingCapitalLoanProduct;
@@ -63,5 +64,27 @@ public class WorkingCapitalLoanRequestFactory {
         return new PutWorkingCapitalLoansLoanIdRequest()//
                 .locale(DEFAULT_LOCALE)//
                 .dateFormat(DATE_FORMAT);//
+    }
+
+    public PostWorkingCapitalLoansLoanIdRequest defaultWorkingCapitalLoanApproveRequest() {
+        return new PostWorkingCapitalLoansLoanIdRequest()//
+                .approvedOnDate(DATE_SUBMIT_STRING)//
+                .expectedDisbursementDate(DATE_SUBMIT_STRING)//
+                .approvedLoanAmount(DEFAULT_PRINCIPAL)//
+                .dateFormat(DATE_FORMAT)//
+                .locale(DEFAULT_LOCALE);//
+    }
+
+    public PostWorkingCapitalLoansLoanIdRequest defaultWorkingCapitalLoanRejectRequest() {
+        return new PostWorkingCapitalLoansLoanIdRequest()//
+                .rejectedOnDate(DATE_SUBMIT_STRING)//
+                .dateFormat(DATE_FORMAT)//
+                .locale(DEFAULT_LOCALE);//
+    }
+
+    public PostWorkingCapitalLoansLoanIdRequest defaultWorkingCapitalLoanUndoApprovalRequest() {
+        return new PostWorkingCapitalLoansLoanIdRequest()//
+                .dateFormat(DATE_FORMAT)//
+                .locale(DEFAULT_LOCALE);//
     }
 }

@@ -268,6 +268,17 @@ If your PR is failing to pass our CI build due to a test failure, then:
 [Pull Request Size Limit](https://cwiki.apache.org/confluence/display/FINERACT/Pull+Request+Size+Limit)
 documents that we cannot accept huge "code dump" Pull Requests, with some related suggestions.
 
+In your PR branch, include as few or as many commits as you feel will be helpful to most clearly communicate your intent, progress, and lessons learned.
+Each commit should be reviewable and logically coherent.
+Add detail and context as necessary in commit log messages to communicate not only *what* you changed, but *why*, including summaries of discussions leading to the changes, ideas/plans for future changes, etc.
+Keep the *what* simple: Use the summary (first line) and let the diff otherwise speak for itself.
+
+Contributors: squash, rebase, and force-push your PR branches as you see fit.
+You might, for example, rebase on top of `develop`.
+You might also squash several commits with code formatting / whitespace fixes, but keep separate commits for code changes affecting functionality.
+Besides simple clean-ups, PR branch commits should be left as-is/un-squashed.
+Follow this same rule when adding new commits to in-progress PR branches; it's helpful for posterity / intent forensics to see progress along the way, changes reversed, etc.
+
 Guideline for new Feature commits involving Refactoring: If you are submitting a PR for a new feature,
 and it involves refactoring, try to differentiate "new feature code" from "refactored" by placing
 them in different commits. This helps to review your code faster.
@@ -277,20 +288,31 @@ We have an automated bot which marks pull requests as "stale" after a while, and
 
 ### Merge Strategy
 
-This project's committers typically prefer to bring your pull requests in through _Rebase and Merge_ instead of _Create a Merge Commit_. (If you are unfamiliar with GitHub's UI regarding this, note the somewhat hidden little triangle drop-down at the bottom of the PR, visible only to committers, not contributors.)  This avoids the "merge commits" which we consider to be somewhat "polluting" the project's commit log history view.  We understand this doesn't give an easy automatic reference to the original PR (which GitHub automatically adds to the merge commit message it generates), but we consider this an only very minor inconvenience; it's typically relatively easy to find the original PR even just from the commit message, and JIRA.
+After PR review and passing CI build, a committer will merge your PR branch into our primary integration branch, `develop`, either locally or on GitHub using "Merge pull request - Create a merge commit" (not "Squash and merge" and not "Rebase and merge").
 
-We expect most proposed PRs to typically consist of a single commit. Committers may use _Squash and merge_ to combine your commits at merge time, and if they do so, will rewrite your commit message as they see fit.
-
-Neither of these two are hard absolute rules, but mere conventions. Multiple commits in single PRs make sense in certain cases (e.g. branch backports).
 
 ### Signing Your Commits
 
-We encourage contributors to sign commits with GPG keys. Signed commits show a "Verified" badge on GitHub.
+All commits must be signed with GPG keys.
 
 For GPG setup instructions, see the [Fineract GPG Guide](https://fineract.apache.org/docs/current/#_gpg_2).
+
+Commit signatures may be checked locally with `git log --show-signature`, and a "Verified" badge should appear on GitHub for [every commit](https://github.com/apache/fineract/commits/).
 
 To verify your commits locally before pushing:
 
 ```bash
 ./scripts/verify-signed-commits.sh
+```
+
+
+### Examining history
+
+Hints for simplifying commit history with git:
+
+```bash
+git switch develop
+git log --first-parent develop
+git log --no-merges
+git log --max-parents=1
 ```
