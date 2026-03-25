@@ -281,7 +281,7 @@ Feature: Asset Externalization - Part1
       | sale             | 2023-05-21     | 1                  |
 
   @TestRailId:C2735
-  Scenario: Verify that SALES request on a loan with ACTIVE ownership results an error
+  Scenario: Verify that SALES request on a loan with ACTIVE ownership succeeds (owner-to-owner transfer)
     When Admin sets the business date to "1 May 2023"
     When Admin creates a client with random data
     When Admin creates a new default Loan with date: "1 May 2023"
@@ -304,9 +304,10 @@ Feature: Asset Externalization - Part1
       | 2023-05-21     | 1                  | PENDING | 2023-05-01    | 2023-05-21  | SALE             |
       | 2023-05-21     | 1                  | ACTIVE  | 2023-05-22    | 9999-12-31  | SALE             |
     When Admin sets the business date to "25 May 2023"
-    Then Asset externalization transaction with the following data results a 403 error and "ASSET_OWNED_CANNOT_BE_SOLD" error message
+    When Admin makes asset externalization request by Loan ID with unique ownerExternalId, system-generated transferExternalId and the following data:
       | Transaction type | settlementDate | purchasePriceRatio |
       | sale             | 2023-05-30     | 1                  |
+    Then Asset externalization response has the correct Loan ID, transferExternalId
 
   @TestRailId:C2736
   Scenario: Verify that BUYBACK request on a fully paid loan can be done successfully
@@ -1810,4 +1811,3 @@ Feature: Asset Externalization - Part1
 
     When Loan Pay-off is made on "26 June 2025"
     Then Loan's all installments have obligations met
-

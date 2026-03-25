@@ -43,7 +43,6 @@ import org.apache.fineract.test.support.TestContextKey;
 public class ReportingStepDef extends AbstractStepDef {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.ENGLISH);
-
     private final FineractFeignClient fineractClient;
 
     @Then("Transaction Summary Report for date {string} has the following data:")
@@ -56,14 +55,18 @@ public class ReportingStepDef extends AbstractStepDef {
         verifyReportData("Transaction Summary Report with Asset Owner", dateStr, dataTable);
     }
 
-    private void verifyReportData(final String reportName, final String dateStr, final DataTable dataTable) {
-        final PostOfficesResponse officeResponse = testContext().get(TestContextKey.OFFICE_CREATE_RESPONSE);
-        assertThat(officeResponse).as("No office was created. Use 'Admin creates a new office' step first.").isNotNull();
+    @Then("Transaction Summary Report with Asset Owner for date {string} column {string} has non-empty value for all rows")
+    public void transactionSummaryReportWithAssetOwnerColumnNonEmpty(final String dateStr, final String columnName) {
+        verifyColumnNullability("Transaction Summary Report with Asset Owner", dateStr, columnName, false);
+    }
 
-        final String date = LocalDate.parse(dateStr, FORMATTER).toString();
-        final RunReportsResponse response = fineractClient.runReports().runReportGetData(reportName, Map.of("R_endDate", date, "R_officeId",
-                String.valueOf(officeResponse.getOfficeId()), "locale", "en", "dateFormat", "yyyy-MM-dd"));
-        assertThat(response.getData()).as("Report '%s' returned no data", reportName).isNotNull();
+    @Then("Transaction Summary Report with Asset Owner for date {string} column {string} has empty value for all rows")
+    public void transactionSummaryReportWithAssetOwnerColumnEmpty(final String dateStr, final String columnName) {
+        verifyColumnNullability("Transaction Summary Report with Asset Owner", dateStr, columnName, true);
+    }
+
+    private void verifyReportData(final String reportName, final String dateStr, final DataTable dataTable) {
+        final RunReportsResponse response = executeReport(reportName, dateStr);
 
         final List<List<String>> expected = dataTable.asLists();
         final List<String> headers = expected.getFirst();
@@ -96,6 +99,40 @@ public class ReportingStepDef extends AbstractStepDef {
                 }
             }
         }
+    }
+
+    private void verifyColumnNullability(final String reportName, final String dateStr, final String columnName,
+            final boolean expectEmpty) {
+        final RunReportsResponse response = executeReport(reportName, dateStr);
+
+        assertThat(response.getColumnHeaders()).isNotNull();
+        final int colIdx = findColumnIndex(response.getColumnHeaders(), columnName);
+
+        for (int i = 0; i < response.getData().size(); i++) {
+            final List<Object> row = response.getData().get(i).getRow();
+            assertThat(row).as("Report '%s', row %d: null cell list", reportName, i + 1).isNotNull();
+            assertThat(colIdx).as("Report '%s', row %d: column index out of bounds", reportName, i + 1).isLessThan(row.size());
+            final String value = stringify(row.get(colIdx));
+            final boolean isEmpty = value.isEmpty() || "null".equals(value);
+            if (expectEmpty) {
+                assertThat(isEmpty)
+                        .as("Report '%s', row %d, column '%s': expected empty but was '%s'", reportName, i + 1, columnName, value).isTrue();
+            } else {
+                assertThat(isEmpty).as("Report '%s', row %d, column '%s': expected non-empty but was empty", reportName, i + 1, columnName)
+                        .isFalse();
+            }
+        }
+    }
+
+    private RunReportsResponse executeReport(final String reportName, final String dateStr) {
+        final PostOfficesResponse officeResponse = testContext().get(TestContextKey.OFFICE_CREATE_RESPONSE);
+        assertThat(officeResponse).as("No office was created. Use 'Admin creates a new office' step first.").isNotNull();
+
+        final String date = LocalDate.parse(dateStr, FORMATTER).toString();
+        final RunReportsResponse response = fineractClient.runReports().runReportGetData(reportName, Map.of("R_endDate", date, "R_officeId",
+                String.valueOf(officeResponse.getOfficeId()), "locale", "en", "dateFormat", "yyyy-MM-dd"));
+        assertThat(response.getData()).as("Report '%s' returned no data", reportName).isNotNull();
+        return response;
     }
 
     private boolean valuesMatch(final String expected, final String actual) {

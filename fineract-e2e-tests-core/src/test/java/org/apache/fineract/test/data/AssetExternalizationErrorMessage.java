@@ -31,6 +31,7 @@ public enum AssetExternalizationErrorMessage {
     LOAN_CLOSED_OBLIGATIONS_MET_INVALID("Loan status CLOSED_OBLIGATIONS_MET is not valid for transfer."), //
     LOAN_SUBMITTED_AND_PENDING_APPROVAL_INVALID("Loan status SUBMITTED_AND_PENDING_APPROVAL is not valid for transfer."), //
     LOAN_APPROVED_INVALID("Loan status APPROVED is not valid for transfer."), //
+    ALREADY_IN_PROGRESS("This loan cannot be sold, there is already an in progress transfer"), //
     INVALID_REQUEST("The request was invalid. This typically will happen due to validation errors which are provided."); //
 
     public final String value;

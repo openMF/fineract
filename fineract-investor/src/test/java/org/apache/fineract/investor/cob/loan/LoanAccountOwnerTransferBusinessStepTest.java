@@ -494,6 +494,8 @@ public class LoanAccountOwnerTransferBusinessStepTest {
 
         ArgumentCaptor<ExternalAssetOwnerTransfer> externalAssetOwnerTransferArgumentCaptor = ArgumentCaptor
                 .forClass(ExternalAssetOwnerTransfer.class);
+        // 3 saves: activeIntermediateTransfer (expire), pendingTransfer (expire), activeTransfer (new, with previous
+        // owner set)
         verify(externalAssetOwnerTransferRepository, times(3)).save(externalAssetOwnerTransferArgumentCaptor.capture());
         ExternalAssetOwnerTransfer capturedActiveIntermediateTransfer = externalAssetOwnerTransferArgumentCaptor.getAllValues().get(0);
         ExternalAssetOwnerTransfer capturedPendingTransfer = externalAssetOwnerTransferArgumentCaptor.getAllValues().get(1);

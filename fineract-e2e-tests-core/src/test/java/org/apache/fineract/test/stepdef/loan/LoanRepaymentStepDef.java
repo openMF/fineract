@@ -104,6 +104,13 @@ public class LoanRepaymentStepDef extends AbstractStepDef {
         makeRepayment(repaymentType, transactionDate, transactionAmount, transferExternalOwnerId);
     }
 
+    @And("Customer makes {string} repayment on {string} with {double} EUR transaction amount and check previous external owner")
+    public void makeLoanRepaymentAndCheckPreviousOwner(String repaymentType, String transactionDate, double transactionAmount)
+            throws IOException {
+        String previousOwnerId = testContext().get(TestContextKey.ASSET_EXTERNALIZATION_PREVIOUS_OWNER_EXTERNAL_ID);
+        makeRepayment(repaymentType, transactionDate, transactionAmount, previousOwnerId);
+    }
+
     private void makeRepayment(String repaymentType, String transactionDate, double transactionAmount, String transferExternalOwnerId)
             throws IOException {
         eventStore.reset();

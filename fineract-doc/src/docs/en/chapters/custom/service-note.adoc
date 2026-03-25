@@ -18,12 +18,6 @@ include::{rootdir}/fineract-core/src/main/java/org/apache/fineract/portfolio/not
 include::{rootdir}/fineract-core/src/main/java/org/apache/fineract/portfolio/note/service/NoteReadPlatformService.java[lines=19..]
 ----
 
-== Auto Start Configuration
+== Configuration
 
 The rules to replace the Note services are very simple. If you provide an alternative implementation of the services then the default implementations will *not* be loaded.
-
-.Note Auto Starter Configuration
-[source,java]
-----
-include::{rootdir}/fineract-provider/src/main/java/org/apache/fineract/portfolio/note/starter/NoteAutoConfiguration.java[lines=19..]
-----

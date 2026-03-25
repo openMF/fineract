@@ -933,13 +933,13 @@ public class InitiateExternalAssetOwnerTransferTest extends BaseLoanIntegrationT
                 createSaleTransfer(loanID, "2020-03-05");
             });
             assertTrue(exception5.getMessage().contains("This loan cannot be sold, there is already an in progress transfer"));
-            CallFailedRuntimeException exception6 = assertThrows(CallFailedRuntimeException.class, () -> {
-                Integer loanID2 = createLoanForClient(clientID);
-                createSaleTransfer(loanID2, "2020-03-03");
-                updateBusinessDateAndExecuteCOBJob("2020-03-04");
-                createSaleTransfer(loanID2, "2020-03-05");
-            });
-            assertTrue(exception6.getMessage().contains("This loan cannot be sold, because it is owned by an external asset owner"));
+            // Owner-to-owner transfer: selling a loan that is already owned by an external asset owner should
+            // succeed at API time (a new PENDING is created; the actual ownership switch happens in COB)
+            Integer loanIDForOwnerTransfer = createLoanForClient(clientID);
+            createSaleTransfer(loanIDForOwnerTransfer, "2020-03-03");
+            updateBusinessDateAndExecuteCOBJob("2020-03-04");
+            PostInitiateTransferResponse ownerToOwnerSaleResponse = createSaleTransfer(loanIDForOwnerTransfer, "2020-03-05");
+            assertNotNull(ownerToOwnerSaleResponse.getResourceId());
             String externalId = UUID.randomUUID().toString();
             String transferExternalGroupId = UUID.randomUUID().toString();
             CallFailedRuntimeException exception7 = assertThrows(CallFailedRuntimeException.class, () -> {

@@ -32,46 +32,46 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @ComponentScan("com.acme.fineract")
-public class TestOverrideConfiguration {
+class TestOverrideConfiguration {
     // NOTE: unfortunately an abastract base class that contains all these mock functions won't work
 
     @Bean
-    public RoutingDataSourceServiceFactory routingDataSourceServiceFactory() {
+    RoutingDataSourceServiceFactory routingDataSourceServiceFactory() {
         return mock(RoutingDataSourceServiceFactory.class);
     }
 
     @Bean
-    public RoutingDataSource routingDataSource() {
+    RoutingDataSource routingDataSource() {
         return mock(RoutingDataSource.class);
     }
 
     @Bean
-    public JdbcTemplate jdbcTemplate() {
+    JdbcTemplate jdbcTemplate() {
         return mock(JdbcTemplate.class);
     }
 
     @Bean
-    public NoteRepository noteRepository() {
+    NoteRepository noteRepository() {
         return mock(NoteRepository.class);
     }
 
     @Bean
-    public ClientRepositoryWrapper clientRepository() {
+    ClientRepositoryWrapper clientRepository() {
         return mock(ClientRepositoryWrapper.class);
     }
 
     @Bean
-    public GroupRepository groupRepository() {
+    GroupRepository groupRepository() {
         return mock(GroupRepository.class);
     }
 
     @Bean
-    public LoanRepositoryWrapper loanRepository() {
+    LoanRepositoryWrapper loanRepository() {
         return mock(LoanRepositoryWrapper.class);
     }
 
     @Bean
-    public LoanTransactionRepository loanTransactionRepository() {
+    LoanTransactionRepository loanTransactionRepository() {
         return mock(LoanTransactionRepository.class);
     }
 }

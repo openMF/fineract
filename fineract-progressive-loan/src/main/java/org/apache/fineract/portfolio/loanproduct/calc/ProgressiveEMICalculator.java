@@ -1088,29 +1088,28 @@ public final class ProgressiveEMICalculator implements EMICalculator {
         });
     }
 
+    boolean isPeriodCollapsableStubPeriod(RepaymentPeriod rp) {
+        return rp.isReAgedEarlyRepaymentHolder() && rp.getEmi().isZero() && rp.getDuePrincipal().isZero() && rp.getDueInterest().isZero();
+    }
+
     private void collapseIntermediateStubPeriods(final ProgressiveLoanInterestScheduleModel scheduleModel) {
         final List<RepaymentPeriod> periods = scheduleModel.repaymentPeriods();
         if (periods.size() <= 1) {
             return;
         }
-        // Only collapse if ALL periods are zero-EMI stubs (no principal due, no interest due, no paid amounts).
-        // This handles the repeated re-aging case where each re-age leaves behind a 1-day stub period,
-        // without affecting legitimate paid installments in multi-disbursement scenarios.
-        final boolean allPeriodsAreStubs = periods.stream()
-                .allMatch(rp -> rp.getEmi().isZero() && rp.getDuePrincipal().isZero() && rp.getDueInterest().isZero());
-        if (!allPeriodsAreStubs) {
-            return;
+        for (int i = 0; i < periods.size(); i++) {
+            RepaymentPeriod currentPeriod = periods.get(i);
+            if (isPeriodCollapsableStubPeriod(currentPeriod)) {
+                // look Ahead
+                int lookAheadIndex = i + 1;
+                while (lookAheadIndex < periods.size() && isPeriodCollapsableStubPeriod(periods.get(lookAheadIndex))) {
+                    RepaymentPeriod removedPeriod = periods.remove(lookAheadIndex);
+                    currentPeriod.setDueDate(removedPeriod.getDueDate());
+                    currentPeriod.getInterestPeriods().getLast().setDueDate(removedPeriod.getDueDate());
+                    calculateRateFactorForRepaymentPeriod(currentPeriod, scheduleModel);
+                }
+            }
         }
-        final RepaymentPeriod firstPeriod = periods.getFirst();
-        final RepaymentPeriod lastPeriod = periods.getLast();
-        final LocalDate lastDueDate = lastPeriod.getDueDate();
-
-        firstPeriod.setDueDate(lastDueDate);
-        firstPeriod.getInterestPeriods().getLast().setDueDate(lastDueDate);
-
-        periods.subList(1, periods.size()).clear();
-
-        calculateRateFactorForRepaymentPeriod(firstPeriod, scheduleModel);
     }
 
     private void calculateLastUnpaidRepaymentPeriodEMI(ProgressiveLoanInterestScheduleModel scheduleModel, LocalDate tillDate) {
@@ -2015,6 +2014,7 @@ public final class ProgressiveEMICalculator implements EMICalculator {
     private void accelerateMaturityDateTo(ProgressiveLoanInterestScheduleModel interestSchedule, LocalDate transactionDate) {
         Optional<RepaymentPeriod> repaymentPeriod = interestSchedule.findRepaymentPeriod(transactionDate);
         if (repaymentPeriod.isPresent()) {
+            repaymentPeriod.get().setReAgedEarlyRepaymentHolder(true);
             if (!repaymentPeriod.get().getDueDate().isEqual(transactionDate)) {
                 accelerateRepaymentDueDateTo(interestSchedule, repaymentPeriod.get(), transactionDate);
             }
@@ -2081,13 +2081,13 @@ public final class ProgressiveEMICalculator implements EMICalculator {
             rp.setInterestMovedDownward(true);
         });
 
-        collapseIntermediateStubPeriods(interestSchedule);
-
         if (!originalMaturityDate.isBefore(transactionDate)) {
             createRepaymentPeriodForEarlyRepaidAmountsDuringReAgeing(interestSchedule,
                     paidBalancesFromTransactionDate.getOutstandingPrincipal(), paidBalancesFromTransactionDate.getOutstandingInterest(),
                     true);
         }
+
+        collapseIntermediateStubPeriods(interestSchedule);
 
         updateModelForReageEqualAmortization(interestSchedule, reageParameter, reAgedRepaymentPeriods);
 

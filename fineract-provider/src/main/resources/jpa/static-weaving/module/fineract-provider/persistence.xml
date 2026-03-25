@@ -235,7 +235,7 @@
         <class>org.apache.fineract.portfolio.loanaccount.guarantor.domain.GuarantorFundingDetails</class>
         <class>org.apache.fineract.portfolio.loanaccount.guarantor.domain.GuarantorFundingTransaction</class>
         <class>org.apache.fineract.portfolio.loanproduct.productmix.domain.ProductMix</class>
-        <class>org.apache.fineract.portfolio.meeting.attendance.domain.ClientAttendance</class>
+        <class>org.apache.fineract.portfolio.meeting.domain.MeetingAttendance</class>
         <class>org.apache.fineract.portfolio.meeting.domain.Meeting</class>
         <class>org.apache.fineract.portfolio.note.domain.Note</class>
         <class>org.apache.fineract.portfolio.savings.domain.DepositAccountRecurringDetail</class>

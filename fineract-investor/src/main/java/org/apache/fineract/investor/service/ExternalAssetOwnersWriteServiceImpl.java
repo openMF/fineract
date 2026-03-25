@@ -178,16 +178,15 @@ public class ExternalAssetOwnersWriteServiceImpl implements ExternalAssetOwnersW
         if (effectiveTransfers.size() == 2) {
             throw new ExternalAssetOwnerInitiateTransferException("This loan cannot be sold, there is already an in progress transfer");
         } else if (effectiveTransfers.size() == 1) {
-            if (PENDING.equals(effectiveTransfers.getFirst().getStatus())) {
+            ExternalAssetOwnerTransfer transfer = effectiveTransfers.getFirst();
+            ExternalTransferStatus transferStatus = transfer.getStatus();
+            if (PENDING.equals(transferStatus)) {
                 throw new ExternalAssetOwnerInitiateTransferException(
                         "External asset owner transfer is already in PENDING state for this loan");
-            } else if (ExternalTransferStatus.ACTIVE.equals(effectiveTransfers.getFirst().getStatus())) {
+            }
+            if (!ExternalTransferStatus.ACTIVE.equals(transferStatus)) {
                 throw new ExternalAssetOwnerInitiateTransferException(
-                        "This loan cannot be sold, because it is owned by an external asset owner");
-            } else {
-                throw new ExternalAssetOwnerInitiateTransferException(
-                        String.format("This loan cannot be sold, because it is incorrect state! (transferId = %s)",
-                                effectiveTransfers.getFirst().getId()));
+                        String.format("This loan cannot be sold, because it is incorrect state! (transferId = %s)", transfer.getId()));
             }
         }
     }
@@ -212,17 +211,18 @@ public class ExternalAssetOwnersWriteServiceImpl implements ExternalAssetOwnersW
         if (effectiveTransfers.size() > 1) {
             throw new ExternalAssetOwnerInitiateTransferException("This loan cannot be sold, there is already an in progress transfer");
         } else if (effectiveTransfers.size() == 1) {
-            if (PENDING_INTERMEDIATE.equals(effectiveTransfers.getFirst().getStatus())) {
+            ExternalAssetOwnerTransfer transfer = effectiveTransfers.getFirst();
+            ExternalTransferStatus transferStatus = transfer.getStatus();
+            if (PENDING_INTERMEDIATE.equals(transferStatus)) {
                 throw new ExternalAssetOwnerInitiateTransferException(
                         "External asset owner transfer is already in PENDING_INTERMEDIATE state for this loan");
-            } else if (ExternalTransferStatus.ACTIVE.equals(effectiveTransfers.getFirst().getStatus())) {
-                throw new ExternalAssetOwnerInitiateTransferException(
-                        "This loan cannot be sold, because it is owned by an external asset owner");
-            } else {
-                throw new ExternalAssetOwnerInitiateTransferException(
-                        String.format("This loan cannot be sold, because it is incorrect state! (transferId = %s)",
-                                effectiveTransfers.getFirst().getId()));
             }
+            if (!ExternalTransferStatus.ACTIVE.equals(transferStatus)) {
+                throw new ExternalAssetOwnerInitiateTransferException(
+                        String.format("This loan cannot be sold, because it is incorrect state! (transferId = %s)", transfer.getId()));
+            }
+            // Owner-to-owner transfer with delayed settlement: allow intermediarySale when loan is currently
+            // owned. The actual ownership switch happens atomically in the COB step.
         }
     }
 

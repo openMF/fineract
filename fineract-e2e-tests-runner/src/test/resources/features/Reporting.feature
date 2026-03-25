@@ -276,4 +276,15 @@ Feature: Reporting
       | 2026-02-03      | LP2_PROGRESSIVE_ADVANCED_PAYMENT_ALLOCATION_BUYDOWN_FEES | Buy Down Fee Amortization |                  |            | 0        | Principal                |                      | 0.0                |
       | 2026-02-03      | LP2_PROGRESSIVE_ADVANCED_PAYMENT_ALLOCATION_BUYDOWN_FEES | Buy Down Fee Amortization |                  |            | 0        | Unallocated Credit (UNC) |                      | 0.0                |
 
-
+  Scenario: Verify Transaction Summary Report with Asset Owner contain correct originator_external_ids column
+    When Admin sets the business date to "01 January 2025"
+    And Admin creates a new office
+    And Admin creates a client with random data in the last created office
+    And Admin creates a new loan originator with external ID and name "Report Test Originator"
+    And Admin creates a new default Loan with date: "01 January 2025"
+    And Admin attaches the originator to the loan
+    And Admin successfully approves the loan on "01 January 2025" with "1000" amount and expected disbursement date on "01 January 2025"
+    And Admin successfully disburse the loan on "01 January 2025" with "1000" EUR transaction amount
+    Then Transaction Summary Report with Asset Owner for date "01 January 2025" column "Originator_External_Ids" has non-empty value for all rows
+    And Transaction Summary Report with Asset Owner for date "01 January 2025" column "From_asset_owner_id" has empty value for all rows
+    And Transaction Summary Report with Asset Owner for date "01 January 2025" column "Asset_owner_id" has empty value for all rows

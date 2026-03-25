@@ -392,9 +392,7 @@ public class ExternalAssetOwnersWriteServiceTest {
                 Arguments.of("Already In Progress", List.of(activeIntermediate, active),
                         "This loan cannot be sold, there is already an in progress transfer"),
                 Arguments.of("Already Pending Intermediary", List.of(pendingIntermediate),
-                        "External asset owner transfer is already in PENDING_INTERMEDIATE state for this loan"),
-                Arguments.of("Already Owned by External Asset Owner", List.of(active),
-                        "This loan cannot be sold, because it is owned by an external asset owner"));
+                        "External asset owner transfer is already in PENDING_INTERMEDIATE state for this loan"));
     }
 
     private static Stream<Arguments> loanStatusValidationDataProviderValidActive() {
@@ -744,8 +742,6 @@ public class ExternalAssetOwnersWriteServiceTest {
         return Stream.of(
                 Arguments.of(ExternalTransferStatus.PENDING, false,
                         "External asset owner transfer is already in PENDING state for this loan"),
-                Arguments.of(ExternalTransferStatus.ACTIVE, false,
-                        "This loan cannot be sold, because it is owned by an external asset owner"),
                 Arguments.of(ExternalTransferStatus.PENDING_INTERMEDIATE, true,
                         "This loan cannot be sold, because it is not in ACTIVE-INTERMEDIATE state."),
                 Arguments.of(ExternalTransferStatus.ACTIVE, true,

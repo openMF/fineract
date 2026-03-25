@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -3761,6 +3762,9 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
             i.setInstallmentNumber(model.repaymentPeriods().size());
         });
 
+        Set<LoanRepaymentScheduleInstallment> normalInstallmentsMarkedForRemoval = new HashSet<>(
+                installments.stream().filter(i -> !i.isAdditional() && !i.isDownPayment()).toList());
+
         int reAgedInstallmentIndex = 0;
         for (int index = 0; index < model.repaymentPeriods().size(); index++) {
             RepaymentPeriod rp = model.repaymentPeriods().get(index);
@@ -3775,6 +3779,7 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
                 installment.setCreditedPrincipal(rp.getCreditedPrincipal().getAmount());
 
                 installment.updateObligationsMet(currency, transactionDate);
+                normalInstallmentsMarkedForRemoval.remove(installment);
             } else {
                 LoanRepaymentScheduleInstallment created = LoanRepaymentScheduleInstallment.newReAgedInstallment(loanTransaction.getLoan(),
                         index + 1, rp.getFromDate(), rp.getDueDate(), rp.getDuePrincipal().getAmount(), rp.getDueInterest().getAmount(),
@@ -3808,6 +3813,7 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
                 installments.add(created);
             }
         }
+        normalInstallmentsMarkedForRemoval.forEach(installments::remove);
         reprocessInstallments(installments);
 
     }
@@ -3888,6 +3894,19 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
                 }).reduce(new BalancesWithPaidInAdvance(currency), BalancesWithPaidInAdvance::summarizerAccumulator);
 
         if (!transactionDate.isAfter(originalMaturityDate)) {
+
+            final int stubToMergeInstallmentNumber = firstReAgeInstallmentProps.reAgedInstallmentNumber() - 1;
+            Optional<LoanRepaymentScheduleInstallment> stubToMergeOpt = installments.stream()
+                    .filter(i -> stubToMergeInstallmentNumber == i.getInstallmentNumber()).findFirst();
+            if (stubToMergeOpt.isPresent()) {
+                LoanRepaymentScheduleInstallment stubToMerge = stubToMergeOpt.get();
+                if (stubToMerge.isReAged() && stubToMerge.getTotalOutstanding(currency).isZero()
+                        && stubToMerge.getTotalPaid(currency).isZero()) {
+                    firstReAgeInstallmentProps = new FirstReAgeInstallmentProps(stubToMerge.getInstallmentNumber(),
+                            stubToMerge.getFromDate());
+                    installments.remove(stubToMerge);
+                }
+            }
 
             final LoanRepaymentScheduleInstallment earlyRepaidInstallment = LoanRepaymentScheduleInstallment.newReAgedInstallment(loan,
                     firstReAgeInstallmentProps.reAgedInstallmentNumber(), firstReAgeInstallmentProps.fromDate(), transactionDate,

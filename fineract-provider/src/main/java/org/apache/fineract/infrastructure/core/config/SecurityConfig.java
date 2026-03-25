@@ -354,6 +354,15 @@ public class SecurityConfig {
                     .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "CREATE_STAFF")
                     .requestMatchers(API_MATCHER.matcher(HttpMethod.PUT, "/api/*/staff/*"))
                     .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "UPDATE_STAFF")
+                    // meeting
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.GET, "/api/*/*/*/meeting/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_READ, "READ_MEETING")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.POST, "/api/*/*/*/meeting/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "CREATE_MEETING")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.PUT, "/api/*/*/*/meeting/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "UPDATE_MEETING")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.DELETE, "/api/*/*/*/meeting/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "DELETE_MEETING")
 
                     .requestMatchers(API_MATCHER.matcher(HttpMethod.POST, "/api/*/twofactor/validate")).fullyAuthenticated()
                     .requestMatchers(API_MATCHER.matcher("/api/*/twofactor")).fullyAuthenticated()

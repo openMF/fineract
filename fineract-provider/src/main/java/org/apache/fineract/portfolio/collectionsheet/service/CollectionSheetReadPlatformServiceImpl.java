@@ -23,6 +23,7 @@ import static org.apache.fineract.portfolio.collectionsheet.CollectionSheetConst
 import static org.apache.fineract.portfolio.collectionsheet.CollectionSheetConstants.staffIdParamName;
 import static org.apache.fineract.portfolio.collectionsheet.CollectionSheetConstants.transactionDateParamName;
 
+import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,7 +33,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.fineract.infrastructure.codes.service.CodeValueReadPlatformService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.api.JsonQuery;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
@@ -43,7 +45,6 @@ import org.apache.fineract.infrastructure.security.service.PlatformSecurityConte
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.portfolio.calendar.domain.Calendar;
 import org.apache.fineract.portfolio.calendar.domain.CalendarEntityType;
-import org.apache.fineract.portfolio.calendar.domain.CalendarInstanceRepository;
 import org.apache.fineract.portfolio.calendar.domain.CalendarRepositoryWrapper;
 import org.apache.fineract.portfolio.calendar.exception.NotValidRecurringDateException;
 import org.apache.fineract.portfolio.calendar.service.CalendarReadPlatformService;
@@ -62,19 +63,26 @@ import org.apache.fineract.portfolio.group.data.GroupGeneralData;
 import org.apache.fineract.portfolio.group.service.CenterReadPlatformService;
 import org.apache.fineract.portfolio.group.service.GroupReadPlatformService;
 import org.apache.fineract.portfolio.loanproduct.data.LoanProductData;
-import org.apache.fineract.portfolio.meeting.attendance.service.AttendanceDropdownReadPlatformService;
-import org.apache.fineract.portfolio.meeting.attendance.service.AttendanceEnumerations;
+import org.apache.fineract.portfolio.meeting.data.MeetingAttendanceEnumerations;
+import org.apache.fineract.portfolio.meeting.data.MeetingAttendanceType;
+import org.apache.fineract.portfolio.meeting.service.MeetingAttendanceDropdownReadService;
 import org.apache.fineract.portfolio.paymenttype.data.PaymentTypeData;
 import org.apache.fineract.portfolio.paymenttype.service.PaymentTypeReadService;
 import org.apache.fineract.portfolio.savings.data.SavingsProductData;
 import org.apache.fineract.useradministration.domain.AppUser;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.stereotype.Service;
 
+@Slf4j
+@RequiredArgsConstructor
+@Service
+@ConditionalOnMissingBean(value = CollectionSheetReadPlatformService.class, ignored = CollectionSheetReadPlatformService.class)
 public class CollectionSheetReadPlatformServiceImpl implements CollectionSheetReadPlatformService {
 
     private final PlatformSecurityContext context;
@@ -83,38 +91,17 @@ public class CollectionSheetReadPlatformServiceImpl implements CollectionSheetRe
     private final GroupReadPlatformService groupReadPlatformService;
     private final CollectionSheetGenerateCommandFromApiJsonDeserializer collectionSheetGenerateCommandFromApiJsonDeserializer;
     private final CalendarRepositoryWrapper calendarRepositoryWrapper;
-    private final AttendanceDropdownReadPlatformService attendanceDropdownReadPlatformService;
-    private final MandatorySavingsCollectionsheetExtractor mandatorySavingsExtractor;
-    private final CodeValueReadPlatformService codeValueReadPlatformService;
+    private final MeetingAttendanceDropdownReadService attendanceDropdownReadPlatformService;
     private final PaymentTypeReadService paymentTypeReadPlatformService;
     private final CalendarReadPlatformService calendarReadPlatformService;
     private final ConfigurationDomainService configurationDomainService;
-    private final CalendarInstanceRepository calendarInstanceRepository;
     private final DatabaseSpecificSQLGenerator sqlGenerator;
 
-    public CollectionSheetReadPlatformServiceImpl(final PlatformSecurityContext context,
-            final NamedParameterJdbcTemplate namedParameterJdbcTemplate, final CenterReadPlatformService centerReadPlatformService,
-            final GroupReadPlatformService groupReadPlatformService,
-            final CollectionSheetGenerateCommandFromApiJsonDeserializer collectionSheetGenerateCommandFromApiJsonDeserializer,
-            final CalendarRepositoryWrapper calendarRepositoryWrapper,
-            final AttendanceDropdownReadPlatformService attendanceDropdownReadPlatformService,
-            final CodeValueReadPlatformService codeValueReadPlatformService, final PaymentTypeReadService paymentTypeReadPlatformService,
-            final CalendarReadPlatformService calendarReadPlatformService, final ConfigurationDomainService configurationDomainService,
-            final CalendarInstanceRepository calendarInstanceRepository, DatabaseSpecificSQLGenerator sqlGenerator) {
-        this.context = context;
-        this.centerReadPlatformService = centerReadPlatformService;
-        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-        this.collectionSheetGenerateCommandFromApiJsonDeserializer = collectionSheetGenerateCommandFromApiJsonDeserializer;
-        this.groupReadPlatformService = groupReadPlatformService;
-        this.calendarRepositoryWrapper = calendarRepositoryWrapper;
-        this.attendanceDropdownReadPlatformService = attendanceDropdownReadPlatformService;
-        this.codeValueReadPlatformService = codeValueReadPlatformService;
-        this.paymentTypeReadPlatformService = paymentTypeReadPlatformService;
-        this.calendarReadPlatformService = calendarReadPlatformService;
-        this.configurationDomainService = configurationDomainService;
-        this.calendarInstanceRepository = calendarInstanceRepository;
-        this.sqlGenerator = sqlGenerator;
-        mandatorySavingsExtractor = new MandatorySavingsCollectionsheetExtractor(sqlGenerator);
+    private MandatorySavingsCollectionsheetExtractor mandatorySavingsExtractor;
+
+    @PostConstruct
+    public void init() {
+        this.mandatorySavingsExtractor = new MandatorySavingsCollectionsheetExtractor(sqlGenerator);
     }
 
     /*
@@ -304,8 +291,8 @@ public class CollectionSheetReadPlatformServiceImpl implements CollectionSheetRe
             final BigDecimal feeDue = rs.getBigDecimal("feeDue");
             final BigDecimal feePaid = rs.getBigDecimal("feePaid");
 
-            final Integer attendanceTypeId = rs.getInt("attendanceTypeId");
-            final EnumOptionData attendanceType = AttendanceEnumerations.attendanceType(attendanceTypeId);
+            var attendanceTypeId = rs.getInt("attendanceTypeId");
+            var attendanceType = MeetingAttendanceEnumerations.attendanceType(MeetingAttendanceType.fromInt(attendanceTypeId));
 
             return new JLGCollectionSheetFlatData(groupName, groupId, staffId, staffName, levelId, levelName, clientName, clientId, loanId,
                     accountId, accountStatusId, productShortName, productId, currencyData, disbursementAmount, principalDue, principalPaid,
@@ -631,7 +618,7 @@ public class CollectionSheetReadPlatformServiceImpl implements CollectionSheetRe
             final Long clientId = JdbcSupport.getLong(rs, "clientId");
             // final Integer attendanceTypeId = rs.getInt("attendanceTypeId");
             // final EnumOptionData attendanceType =
-            // AttendanceEnumerations.attendanceType(attendanceTypeId);
+            // MeetingAttendanceEnumerations.attendanceType(attendanceTypeId);
             final EnumOptionData attendanceType = null;
 
             return JLGClientData.instance(clientId, clientName, attendanceType);
