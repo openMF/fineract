@@ -54,7 +54,7 @@ public class CallerIpTrackingFilter extends OncePerRequestFilter {
     public String getClientIpAddress(HttpServletRequest request) {
         for (String header : IP_HEADER_CANDIDATES) {
             String ip = request.getHeader(header);
-            if (ip != null && ip.length() != 0 && !ip.isEmpty()) {
+            if (ip != null && !ip.isEmpty()) {
                 log.trace("CALLER IP : {}", ip);
                 return ip;
             }
