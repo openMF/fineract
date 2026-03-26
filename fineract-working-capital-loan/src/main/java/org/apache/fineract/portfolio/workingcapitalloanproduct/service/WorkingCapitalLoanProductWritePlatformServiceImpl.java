@@ -92,6 +92,7 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
         return new CommandProcessingResultBuilder() //
                 .withCommandId(command.commandId()) //
                 .withEntityId(product.getId()) //
+                .withEntityExternalId(product.getExternalId()) //
                 .build();
     }
 
@@ -138,6 +139,7 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
         return new CommandProcessingResultBuilder() //
                 .withCommandId(command.commandId()) //
                 .withEntityId(productId) //
+                .withEntityExternalId(product.getExternalId()) //
                 .with(changes) //
                 .build();
     }
@@ -156,6 +158,7 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
 
         return new CommandProcessingResultBuilder() //
                 .withEntityId(productId) //
+                .withEntityExternalId(product.getExternalId()) //
                 .build();
     }
 

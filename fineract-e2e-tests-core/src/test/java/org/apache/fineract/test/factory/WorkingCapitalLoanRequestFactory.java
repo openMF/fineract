@@ -87,4 +87,19 @@ public class WorkingCapitalLoanRequestFactory {
                 .dateFormat(DATE_FORMAT)//
                 .locale(DEFAULT_LOCALE);//
     }
+
+    public PostWorkingCapitalLoansLoanIdRequest defaultWorkingCapitalLoanDisburseRequest() {
+        return new PostWorkingCapitalLoansLoanIdRequest()//
+                .actualDisbursementDate(DATE_SUBMIT_STRING)//
+                .transactionAmount(DEFAULT_PRINCIPAL)//
+                .dateFormat(DATE_FORMAT)//
+                .locale(DEFAULT_LOCALE);//
+    }
+
+    public PostWorkingCapitalLoansLoanIdRequest defaultWorkingCapitalLoanUndoDisburseRequest() {
+        return new PostWorkingCapitalLoansLoanIdRequest()//
+                .note("")//
+                .dateFormat(DATE_FORMAT)//
+                .locale(DEFAULT_LOCALE);//
+    }
 }

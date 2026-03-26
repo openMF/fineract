@@ -35,6 +35,10 @@ public class WorkingCapitalLoanLifecycleStateMachine {
         }
     }
 
+    public boolean canTransition(final WorkingCapitalLoanEvent event, final WorkingCapitalLoan loan) {
+        return getNextStatus(event, loan) != null;
+    }
+
     private LoanStatus getNextStatus(final WorkingCapitalLoanEvent event, final WorkingCapitalLoan loan) {
         LoanStatus from = loan.getLoanStatus();
         if (from == null) {
@@ -45,6 +49,8 @@ public class WorkingCapitalLoanLifecycleStateMachine {
             case LOAN_APPROVED -> from.isSubmittedAndPendingApproval() ? LoanStatus.APPROVED : null;
             case LOAN_APPROVAL_UNDO -> from.isApproved() ? LoanStatus.SUBMITTED_AND_PENDING_APPROVAL : null;
             case LOAN_REJECTED -> from.isSubmittedAndPendingApproval() ? LoanStatus.REJECTED : null;
+            case LOAN_DISBURSED -> from.isApproved() ? LoanStatus.ACTIVE : null;
+            case LOAN_DISBURSAL_UNDO -> from.isActive() ? LoanStatus.APPROVED : null;
         };
     }
 }

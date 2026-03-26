@@ -1056,4 +1056,16 @@ public final class ErrorMessageHelper {
     public static String workingCapitalDelinquencyBucketDoesntExistFailure(Long id) {
         return String.format("Delinquency bucket with id `%d` does not exist.", id);
     }
+
+    public static String disburseNotApprovedFailure(String status) {
+        return String.format("Disbursement is not allowed from current status %s", status);
+    }
+
+    public static String disburseDateFailure(String errorMessageDescription) {
+        return String.format("Failed data validation due to: %s", errorMessageDescription);
+    }
+
+    public static String undoDisbursalDisallowedFailure(String status) {
+        return String.format("Transition LOAN_DISBURSAL_UNDO is not allowed from status %s", status);
+    }
 }

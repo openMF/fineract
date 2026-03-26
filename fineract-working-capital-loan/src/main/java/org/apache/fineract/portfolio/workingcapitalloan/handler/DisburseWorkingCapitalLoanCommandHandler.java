@@ -16,20 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.workingcapitalloan.service;
+package org.apache.fineract.portfolio.workingcapitalloan.handler;
 
+import lombok.RequiredArgsConstructor;
+import org.apache.fineract.commands.annotation.CommandType;
+import org.apache.fineract.commands.handler.NewCommandSourceHandler;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.portfolio.workingcapitalloan.service.WorkingCapitalLoanWritePlatformService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-public interface WorkingCapitalLoanWritePlatformService {
+@Service
+@RequiredArgsConstructor
+@CommandType(entity = "WORKINGCAPITALLOAN", action = "DISBURSE")
+public class DisburseWorkingCapitalLoanCommandHandler implements NewCommandSourceHandler {
 
-    CommandProcessingResult approveApplication(Long loanId, JsonCommand command);
+    private final WorkingCapitalLoanWritePlatformService writePlatformService;
 
-    CommandProcessingResult undoApplicationApproval(Long loanId, JsonCommand command);
-
-    CommandProcessingResult rejectApplication(Long loanId, JsonCommand command);
-
-    CommandProcessingResult disburseLoan(Long loanId, JsonCommand command);
-
-    CommandProcessingResult undoDisbursal(Long loanId, JsonCommand command);
+    @Transactional
+    @Override
+    public CommandProcessingResult processCommand(final JsonCommand command) {
+        return this.writePlatformService.disburseLoan(command.entityId(), command);
+    }
 }

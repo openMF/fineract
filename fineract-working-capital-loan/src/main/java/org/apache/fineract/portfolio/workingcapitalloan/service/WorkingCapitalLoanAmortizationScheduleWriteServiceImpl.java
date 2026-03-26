@@ -18,13 +18,17 @@
  */
 package org.apache.fineract.portfolio.workingcapitalloan.service;
 
+import java.math.BigDecimal;
 import java.math.MathContext;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.Validate;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
 import org.apache.fineract.portfolio.workingcapitalloan.calc.ProjectedAmortizationScheduleModel;
 import org.apache.fineract.portfolio.workingcapitalloan.data.ProjectedAmortizationScheduleGenerateRequest;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDisbursementDetails;
 import org.apache.fineract.portfolio.workingcapitalloan.exception.WorkingCapitalLoanNotFoundException;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanRepository;
 import org.springframework.stereotype.Service;
@@ -39,7 +43,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class WorkingCapitalLoanAmortizationScheduleWriteServiceImpl implements WorkingCapitalLoanAmortizationScheduleWriteService {
 
-    // TODO: currency should come from loan product once WCL lifecycle is implemented
     private static final MonetaryCurrency DEFAULT_CURRENCY = new MonetaryCurrency("USD", 2, null);
 
     private final WorkingCapitalLoanRepository loanRepository;
@@ -61,5 +64,78 @@ public class WorkingCapitalLoanAmortizationScheduleWriteServiceImpl implements W
                 mc, DEFAULT_CURRENCY);
 
         scheduleRepositoryWrapper.writeModel(loan, model);
+    }
+
+    @Override
+    public void generateAndSaveAmortizationScheduleOnDisbursement(final WorkingCapitalLoan loan, final BigDecimal disbursedAmount,
+            final LocalDate disbursementDate) {
+        Validate.notNull(loan, "loan must not be null");
+        Validate.notNull(disbursedAmount, "disbursedAmount must not be null");
+        Validate.notNull(disbursementDate, "disbursementDate must not be null");
+
+        final MathContext mc = MoneyHelper.getMathContext();
+        final BigDecimal discount = loan.getLoanProductRelatedDetails() != null && loan.getLoanProductRelatedDetails().getDiscount() != null
+                ? loan.getLoanProductRelatedDetails().getDiscount()
+                : BigDecimal.ZERO;
+        final BigDecimal totalPayment = loan.getBalance() != null && loan.getBalance().getTotalPayment() != null
+                ? loan.getBalance().getTotalPayment()
+                : BigDecimal.ZERO;
+        final BigDecimal periodPaymentRate = loan.getLoanProductRelatedDetails() != null
+                ? loan.getLoanProductRelatedDetails().getPeriodPaymentRate()
+                : null;
+        final Integer npvDayCount = loan.getLoanProductRelatedDetails() != null ? loan.getLoanProductRelatedDetails().getNpvDayCount()
+                : null;
+
+        Validate.isTrue(totalPayment.signum() > 0, "totalPayment must be positive");
+        Validate.notNull(periodPaymentRate, "periodPaymentRate must not be null");
+        Validate.notNull(npvDayCount, "npvDayCount must not be null");
+
+        final ProjectedAmortizationScheduleModel model = ProjectedAmortizationScheduleModel.generate(discount, disbursedAmount,
+                totalPayment, periodPaymentRate, npvDayCount, disbursementDate, mc, resolveCurrency(loan));
+        scheduleRepositoryWrapper.writeModel(loan, model);
+    }
+
+    @Override
+    public void regenerateAmortizationScheduleOnUndoDisbursal(final WorkingCapitalLoan loan) {
+        Validate.notNull(loan, "loan must not be null");
+
+        final MathContext mc = MoneyHelper.getMathContext();
+        final BigDecimal discount = loan.getLoanProductRelatedDetails() != null && loan.getLoanProductRelatedDetails().getDiscount() != null
+                ? loan.getLoanProductRelatedDetails().getDiscount()
+                : BigDecimal.ZERO;
+        final BigDecimal totalPayment = loan.getBalance() != null && loan.getBalance().getTotalPayment() != null
+                ? loan.getBalance().getTotalPayment()
+                : BigDecimal.ZERO;
+        final BigDecimal periodPaymentRate = loan.getLoanProductRelatedDetails() != null
+                ? loan.getLoanProductRelatedDetails().getPeriodPaymentRate()
+                : null;
+        final Integer npvDayCount = loan.getLoanProductRelatedDetails() != null ? loan.getLoanProductRelatedDetails().getNpvDayCount()
+                : null;
+
+        final WorkingCapitalLoanDisbursementDetails detail = loan.getDisbursementDetails() != null
+                && !loan.getDisbursementDetails().isEmpty() ? loan.getDisbursementDetails().getFirst() : null;
+        final LocalDate expectedDisbursementDate = detail != null ? detail.getExpectedDisbursementDate() : null;
+        final BigDecimal expectedAmount = detail != null && detail.getExpectedAmount() != null ? detail.getExpectedAmount()
+                : loan.getApprovedPrincipal();
+
+        Validate.isTrue(totalPayment.signum() > 0, "totalPayment must be positive");
+        Validate.notNull(periodPaymentRate, "periodPaymentRate must not be null");
+        Validate.notNull(npvDayCount, "npvDayCount must not be null");
+        Validate.notNull(expectedDisbursementDate, "expectedDisbursementDate must not be null");
+        Validate.notNull(expectedAmount, "expectedAmount must not be null");
+
+        final ProjectedAmortizationScheduleModel model = ProjectedAmortizationScheduleModel.generate(discount, expectedAmount, totalPayment,
+                periodPaymentRate, npvDayCount, expectedDisbursementDate, mc, resolveCurrency(loan));
+        scheduleRepositoryWrapper.writeModel(loan, model);
+    }
+
+    private MonetaryCurrency resolveCurrency(final WorkingCapitalLoan loan) {
+        if (loan.getLoanProductRelatedDetails() != null && loan.getLoanProductRelatedDetails().getCurrency() != null) {
+            return loan.getLoanProductRelatedDetails().getCurrency();
+        }
+        if (loan.getLoanProduct() != null && loan.getLoanProduct().getCurrency() != null) {
+            return loan.getLoanProduct().getCurrency();
+        }
+        return DEFAULT_CURRENCY;
     }
 }

@@ -18,10 +18,43 @@
  */
 package org.apache.fineract.portfolio.workingcapitalloan.service;
 
+import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanCommandTemplateData;
+import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanTransactionData;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface WorkingCapitalLoanTransactionReadPlatformService {
 
     WorkingCapitalLoanCommandTemplateData retrieveLoanTransactionTemplate(Long loanId, String command);
 
+    /**
+     * Retrieves paginated transactions of a Working Capital Loan by loan id.
+     */
+    Page<WorkingCapitalLoanTransactionData> retrieveTransactions(Long loanId, Pageable pageable);
+
+    /**
+     * Retrieves paginated transactions of a Working Capital Loan by loan external id.
+     */
+    Page<WorkingCapitalLoanTransactionData> retrieveTransactions(ExternalId loanExternalId, Pageable pageable);
+
+    /**
+     * Retrieves a single Working Capital Loan transaction by loan id and transaction id.
+     */
+    WorkingCapitalLoanTransactionData retrieveTransaction(Long loanId, Long transactionId);
+
+    /**
+     * Retrieves a single Working Capital Loan transaction by loan external id and transaction id.
+     */
+    WorkingCapitalLoanTransactionData retrieveTransaction(ExternalId loanExternalId, Long transactionId);
+
+    /**
+     * Retrieves a single Working Capital Loan transaction by loan id and transaction external id.
+     */
+    WorkingCapitalLoanTransactionData retrieveTransaction(Long loanId, ExternalId transactionExternalId);
+
+    /**
+     * Retrieves a single Working Capital Loan transaction by loan external id and transaction external id.
+     */
+    WorkingCapitalLoanTransactionData retrieveTransaction(ExternalId loanExternalId, ExternalId transactionExternalId);
 }

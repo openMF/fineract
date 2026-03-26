@@ -611,8 +611,8 @@ Feature: WorkingCapitalProduct
       | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
       | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | 0.0      |
 
-# TODO implement with disbursal testcases
-  @TestRailId:tempDisburse1
+
+  @TestRailId:C72367
   Scenario: Approve Working Capital Loan account - UC8: Undo approval on already-disbursed loan
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
@@ -625,14 +625,13 @@ Feature: WorkingCapitalProduct
       | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0      |
     When Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Working capital loan approval was successful
-#    When Admin disburses the working capital loan on "01 January 2026"
-#    Then Working capital loan disbursement was successful
-#    And Undo approval on the working capital loan results an error with the following data:
-#      | httpErrorCode | errorMessage                              |
-#      | 400           | msg   |
+    Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
+    Then Verify Working Capital loan disbursement was successful on "01 January 2026" with "100" EUR transaction amount
+    Then Undo approval on the working capital loan results an error with the following data:
+      | httpErrorCode | errorMessage                                                    |
+      | 400           | Transition LOAN_APPROVAL_UNDO is not allowed from status ACTIVE |
 
-    # TODO implement with disbursal testcases
-  @Skip @TestRailId:tempDisburse2
+  @Skip @TestRailId:C72368
   Scenario: Create Working Capital Loan account - UC13: Attempt to modify loan in DISBURSED state (Negative)
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
@@ -643,3 +642,138 @@ Feature: WorkingCapitalProduct
     And Working capital loan account has the correct data:
       | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
       | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0      |
+    When Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
+    Then Working capital loan approval was successful
+    Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
+    Then Verify Working Capital loan disbursement was successful on "01 January 2026" with "100" EUR transaction amount
+    Then Modifying the working capital loan that is Disbursed in Active state results in an error
+
+  @TestRailId:C72371
+  Scenario: Disburse Working Capital Loan account - UC1: Disburse loan that is not approved failure
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a working capital loan with the following data:
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+    Then Working capital loan creation was successful
+    And Working capital loan account has the correct data:
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal| totalPayment | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0              | 100.0        | 1.0               | 0.0      |
+    Then Admin fails to disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount because of not approved
+
+  @TestRailId:C72372
+  Scenario: Disburse Working Capital Loan account - UC2: Disburse loan successful use case
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a working capital loan with the following data:
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+    Then Working capital loan creation was successful
+    And Working capital loan account has the correct data:
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0      |
+    Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
+    Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
+    Then Working Capital loan status will be "ACTIVE"
+    Then Verify Working Capital loan disbursement was successful on "01 January 2026" with "100" EUR transaction amount
+    And Working capital loan account has the correct data:
+      | product.name | submittedOnDate | expectedDisbursementDate | status | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Active | 100.0     | 100.0             | 100.0        | 1.0               | 0.0      |
+
+  @TestRailId:C72373
+  Scenario Outline: Disburse Working Capital Loan account - UC3: Disburse loan with invalid data outcomes with an error
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a working capital loan with the following data:
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 10 January 2026          | 100             | 100          | 1                 | 0        |
+    Then Working capital loan creation was successful
+    And Working capital loan account has the correct data:
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-10               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0      |
+    When Admin sets the business date to "05 January 2026"
+    Then Admin successfully approves the working capital loan on "05 January 2026" with "100" amount and expected disbursement date on "10 January 2026"
+    Then Admin fails to disburse the Working Capital loan on "<wcp_disburse_date>" with "<wcp_disburse_amount>" EUR transaction amount with invalid data outcomes with error message <wcp_error_message>
+
+    Examples:
+      | wcp_disburse_date        | wcp_disburse_amount  | wcp_error_message                                |
+      | 05 January 2027          | 100                  | "cannot.be.a.future.date."                       |
+      | 05 January 2025          | 100                  | "cannot.be.before.submitted.date."               |
+      | 02 January 2026          | 100                  | "cannot.be.before.approval.date."                |
+      | 10 January 2026          | 1000                 | "amount.cannot.exceed.approved.principal."       |
+
+  @TestRailId:C72374
+  Scenario Outline: Disburse Working Capital Loan account - UC4: Disburse loan without mandatory data outcomes with an error
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a working capital loan with the following data:
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 10 January 2026          | 100             | 100          | 1                 | 0        |
+    Then Working capital loan creation was successful
+    And Working capital loan account has the correct data:
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-10               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0      |
+    When Admin sets the business date to "05 January 2026"
+    Then Admin successfully approves the working capital loan on "05 January 2026" with "100" amount and expected disbursement date on "10 January 2026"
+    Then Admin fails to disburse the Working Capital loan on <wcp_disburse_date> with "<wcp_disburse_amount>" EUR transaction amount without mandatory data outcomes with error message <wcp_error_message>
+
+    Examples:
+      | wcp_disburse_date        | wcp_disburse_amount  | wcp_error_message                                            |
+      | ""                       | 100                  | "The parameter `actualDisbursementDate` is mandatory."       |
+      | "05 January 2025"        | 0                    | "The parameter `transactionAmount` must be greater than 0."  |
+
+  @TestRailId:C72375
+  Scenario: Undo Disbursal of Working Capital Loan account - UC5: Undo Disbursal loan of successful use case
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a working capital loan with the following data:
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+    Then Working capital loan creation was successful
+    And Working capital loan account has the correct data:
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0      |
+    Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
+    Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
+    Then Admin successfully undo Working Capital disbursal
+    And Working capital loan account has the correct data:
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | 0.0      |
+
+  @TestRailId:C72376
+  Scenario: Undo Disbursal of Working Capital Loan account - UC6: Undo disbursal of loan that is submitted or approved is failed
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a working capital loan with the following data:
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+    Then Working capital loan creation was successful
+    And Working capital loan account has the correct data:
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0      |
+    Then Admin fails to undo disbursal the Working Capital loan due to loan status "SUBMITTED_AND_PENDING_APPROVAL"
+    Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
+    Then Admin fails to undo disbursal the Working Capital loan due to loan status "APPROVED"
+
+  @TestRailId:C72377
+  Scenario: Disburse Working Capital Loan account - UC7: Disburse loan and undo disbursal via externalId successful use case
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a working capital loan with the following data:
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+    Then Working capital loan creation was successful
+    And Working capital loan account has the correct data:
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0      |
+    Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
+    Then Admin successfully disburse the Working Capital loan by externalId on "01 January 2026" with "100" EUR transaction amount
+    Then Working Capital loan status will be "ACTIVE"
+    Then Verify Working Capital loan disbursement was successful on "01 January 2026" with "100" EUR transaction amount
+    And Working capital loan account has the correct data:
+      | product.name | submittedOnDate | expectedDisbursementDate | status | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Active | 100.0     | 100.0             | 100.0        | 1.0               | 0.0      |
+    Then Admin successfully undo Working Capital disbursal by externalId
+    And Working capital loan account has the correct data:
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | 0.0      |

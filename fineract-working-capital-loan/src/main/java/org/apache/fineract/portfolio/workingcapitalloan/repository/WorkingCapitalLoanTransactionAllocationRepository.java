@@ -16,20 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.workingcapitalloan.service;
+package org.apache.fineract.portfolio.workingcapitalloan.repository;
 
-import org.apache.fineract.infrastructure.core.api.JsonCommand;
-import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransactionAllocation;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface WorkingCapitalLoanWritePlatformService {
-
-    CommandProcessingResult approveApplication(Long loanId, JsonCommand command);
-
-    CommandProcessingResult undoApplicationApproval(Long loanId, JsonCommand command);
-
-    CommandProcessingResult rejectApplication(Long loanId, JsonCommand command);
-
-    CommandProcessingResult disburseLoan(Long loanId, JsonCommand command);
-
-    CommandProcessingResult undoDisbursal(Long loanId, JsonCommand command);
-}
+public interface WorkingCapitalLoanTransactionAllocationRepository extends JpaRepository<WorkingCapitalLoanTransactionAllocation, Long> {}

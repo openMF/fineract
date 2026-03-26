@@ -46,7 +46,8 @@ import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(config = MapstructMapperConfig.class, uses = { DelinquencyBucketMapper.class, WorkingCapitalLoanProductMapper.class,
-        WorkingCapitalLoanBalanceMapper.class, WorkingCapitalLoanDisbursementDetailMapper.class })
+        WorkingCapitalLoanBalanceMapper.class, WorkingCapitalLoanDisbursementDetailMapper.class,
+        WorkingCapitalLoanTransactionMapper.class })
 public interface WorkingCapitalLoanMapper {
 
     @Mapping(target = "accountNo", source = "accountNumber")
@@ -66,6 +67,7 @@ public interface WorkingCapitalLoanMapper {
     @Mapping(target = "paymentAllocation", source = "paymentAllocationRules", qualifiedByName = "paymentAllocationRulesToData")
     @Mapping(target = "timeline", source = "loan", qualifiedByName = "timelineData")
     @Mapping(target = "disbursementDetails", source = "disbursementDetails")
+    @Mapping(target = "transactions", source = "transactions")
     WorkingCapitalLoanData toData(WorkingCapitalLoan loan);
 
     List<WorkingCapitalLoanData> toDataList(List<WorkingCapitalLoan> loans);
@@ -120,6 +122,8 @@ public interface WorkingCapitalLoanMapper {
                 : loan.getDisbursementDetails().getFirst().getExpectedDisbursementDate();
         timelineData.setExpectedDisbursementDate(expectedDisbursementDate);
         timelineData.setSubmittedOnDate(loan.getSubmittedOnDate());
+        timelineData.setExpectedMaturityDate(loan.getExpectedMaturityDate());
+        timelineData.setActualMaturityDate(loan.getMaturedOnDate());
         if (loan.getApprovedBy() != null) {
             timelineData.setApprovedByUsername(loan.getApprovedBy().getUsername());
             timelineData.setApprovedByFirstname(loan.getApprovedBy().getFirstname());

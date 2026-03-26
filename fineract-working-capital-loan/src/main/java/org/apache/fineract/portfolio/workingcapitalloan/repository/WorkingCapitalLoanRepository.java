@@ -48,6 +48,8 @@ public interface WorkingCapitalLoanRepository extends JpaRepository<WorkingCapit
             LEFT JOIN FETCH wcl.fund
             LEFT JOIN FETCH wcl.loanProduct
             LEFT JOIN FETCH wcl.paymentAllocationRules
+            LEFT JOIN FETCH wcl.transactions txn
+            LEFT JOIN FETCH txn.allocation
             LEFT JOIN FETCH wcl.disbursementDetails detail
             LEFT JOIN FETCH detail.disbursedBy
             WHERE wcl.id = :id
@@ -59,6 +61,8 @@ public interface WorkingCapitalLoanRepository extends JpaRepository<WorkingCapit
             LEFT JOIN FETCH wcl.client
             LEFT JOIN FETCH wcl.fund
             LEFT JOIN FETCH wcl.loanProduct
+            LEFT JOIN FETCH wcl.transactions txn
+            LEFT JOIN FETCH txn.allocation
             WHERE wcl.externalId = :externalId
             """)
     Optional<WorkingCapitalLoan> findByExternalIdWithDetails(@Param("externalId") ExternalId externalId);
@@ -70,6 +74,8 @@ public interface WorkingCapitalLoanRepository extends JpaRepository<WorkingCapit
             LEFT JOIN FETCH wcl.fund
             LEFT JOIN FETCH wcl.loanProduct
             LEFT JOIN FETCH wcl.paymentAllocationRules
+            LEFT JOIN FETCH wcl.transactions txn
+            LEFT JOIN FETCH txn.allocation
             WHERE wcl.id IN :ids
             """)
     List<WorkingCapitalLoan> findByIdInWithFullDetails(@Param("ids") List<Long> ids);

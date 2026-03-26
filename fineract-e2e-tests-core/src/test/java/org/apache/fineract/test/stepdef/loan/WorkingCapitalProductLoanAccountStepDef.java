@@ -20,11 +20,15 @@ package org.apache.fineract.test.stepdef.loan;
 
 import static org.apache.fineract.client.feign.util.FeignCalls.fail;
 import static org.apache.fineract.client.feign.util.FeignCalls.ok;
+import static org.apache.fineract.test.data.LoanStatus.ACTIVE;
+import static org.apache.fineract.test.data.LoanStatus.APPROVED;
+import static org.apache.fineract.test.data.LoanStatus.SUBMITTED_AND_PENDING_APPROVAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.math.BigDecimal;
@@ -37,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.DeleteWorkingCapitalLoansLoanIdResponse;
+import org.apache.fineract.client.models.GetDisbursementDetail;
 import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostClientsResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
@@ -45,9 +50,11 @@ import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansResponse;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdResponse;
+import org.apache.fineract.test.data.LoanStatus;
 import org.apache.fineract.test.data.workingcapitalproduct.DefaultWorkingCapitalLoanProduct;
 import org.apache.fineract.test.data.workingcapitalproduct.WorkingCapitalLoanProductResolver;
 import org.apache.fineract.test.factory.WorkingCapitalLoanRequestFactory;
+import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.Utils;
 import org.apache.fineract.test.messaging.event.EventCheckHelper;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
@@ -378,6 +385,23 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
         log.info("Attempted to modify non-existent working capital loan ID {}", NON_EXISTENT_LOAN_ID);
     }
 
+    @Then("Modifying the working capital loan that is Disbursed in Active state results in an error")
+    public void modifyingDisbursedWithActiveStateLoanResultsInAnError() {
+        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
+
+        final PutWorkingCapitalLoansLoanIdRequest modifyRequest = workingCapitalLoanRequestFactory
+                .defaultModifyWorkingCapitalLoansRequest();
+
+        final CallFailedRuntimeException exception = fail(
+                () -> fineractClient.workingCapitalLoans().modifyWorkingCapitalLoanApplicationById(getCreatedLoanId(), modifyRequest, ""));
+
+        assertThat(exception.getStatus()).as("HTTP status code should be 403").isEqualTo(403);
+        assertThat(exception.getMessage()).as("Should contain no parameters error")
+                .contains(String.format("Working Capital Loan with identifier %d cannot be modified in its current state.", loanId));
+        log.info("Verified modification failed with disbursed Active status empty request");
+    }
+
     @Then("Working capital loan modification fails with a 404 not found error")
     public void workingCapitalLoanModificationFailsWith404() {
         final CallFailedRuntimeException exception = testContext().get(TestContextKey.LOAN_MODIFY_RESPONSE);
@@ -463,6 +487,137 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
     @Then("Working capital loan undo approval was successful")
     public void verifyWorkingCapitalLoanUndoApprovalSuccess() {
         verifyStateTransitionSuccess(TestContextKey.LOAN_UNDO_APPROVAL_RESPONSE, "undo approval");
+    }
+
+    @When("Undo approval on the working capital loan results an error with the following data:")
+    public void undoApprovalWorkingCapitalLoan(final DataTable table) {
+        final PostWorkingCapitalLoansLoanIdRequest undoApprovalRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanUndoApprovalRequest();
+
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoans()
+                .stateTransitionWorkingCapitalLoanById(getCreatedLoanId(), "undoApproval", undoApprovalRequest));
+
+        verifyErrorResponse(exception, table);
+        log.info("Verified working capital loan undo approval failed with expected error");
+    }
+
+    @Then("Working Capital loan status will be {string}")
+    public void loanWCStatus(String statusExpected) {
+        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
+        String resourceId = String.valueOf(loanId);
+
+        GetWorkingCapitalLoansLoanIdResponse loanDetailsResponse = ok(
+                () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
+
+        testContext().set(TestContextKey.LOAN_RESPONSE, loanDetailsResponse);
+        Long loanStatusActualValue = loanDetailsResponse.getStatus().getId();
+
+        LoanStatus loanStatusExpected = LoanStatus.valueOf(statusExpected);
+        Long loanStatusExpectedValue = loanStatusExpected.getValue().longValue();
+
+        assertThat(loanStatusActualValue)
+                .as(ErrorMessageHelper.wrongLoanStatus(resourceId, loanStatusActualValue.intValue(), loanStatusExpectedValue.intValue()))
+                .isEqualTo(loanStatusExpectedValue);
+    }
+
+    @And("Admin successfully disburse the Working Capital loan on {string} with {string} EUR transaction amount")
+    public void disburseWCLoan(String actualDisbursementDate, String transactionAmount) {
+        PostWorkingCapitalLoansLoanIdRequest disburseRequest = workingCapitalLoanRequestFactory.defaultWorkingCapitalLoanDisburseRequest()
+                .actualDisbursementDate(actualDisbursementDate)//
+                .transactionAmount(new BigDecimal(transactionAmount));
+
+        executeStateTransition("disburse", disburseRequest, TestContextKey.LOAN_DISBURSE_RESPONSE, false);
+        verifyStateTransitionSuccess(TestContextKey.LOAN_DISBURSE_RESPONSE, "disbursement");
+        checkChangesExpectedStatus(TestContextKey.LOAN_DISBURSE_RESPONSE, ACTIVE);
+    }
+
+    @And("Admin successfully disburse the Working Capital loan by externalId on {string} with {string} EUR transaction amount")
+    public void disburseWCLoanByExternalId(String actualDisbursementDate, String transactionAmount) {
+        PostWorkingCapitalLoansLoanIdRequest disburseRequest = workingCapitalLoanRequestFactory.defaultWorkingCapitalLoanDisburseRequest()
+                .actualDisbursementDate(actualDisbursementDate)//
+                .transactionAmount(new BigDecimal(transactionAmount));
+
+        executeStateTransition("disburse", disburseRequest, TestContextKey.LOAN_DISBURSE_RESPONSE, true);
+        verifyStateTransitionSuccess(TestContextKey.LOAN_DISBURSE_RESPONSE, "disbursement");
+        checkChangesExpectedStatus(TestContextKey.LOAN_DISBURSE_RESPONSE, ACTIVE);
+    }
+
+    @Then("Verify Working Capital loan disbursement was successful on {string} with {string} EUR transaction amount")
+    public void checkDisbursementData(String actualDisbursementDate, String transactionAmount) {
+        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
+
+        GetWorkingCapitalLoansLoanIdResponse loanDetailsResponse = ok(
+                () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
+        String getLoanStatus = loanDetailsResponse.getStatus().getValue();
+        assertThat(getLoanStatus.toUpperCase()).isEqualTo(ACTIVE.name());
+
+        GetDisbursementDetail disbursementDetails = loanDetailsResponse.getDisbursementDetails().stream().findFirst()
+                .orElseThrow(() -> new RuntimeException(""));
+        String formattedDate = disbursementDetails.getActualDisbursementDate().format(FORMATTER);
+        assertThat(formattedDate).isEqualTo(actualDisbursementDate);
+        assertThat(disbursementDetails.getActualAmount().compareTo(new BigDecimal(transactionAmount))).isEqualTo(0);
+    }
+
+    @Then("Admin successfully undo Working Capital disbursal")
+    public void undoDisbursalWCLoan() {
+        PostWorkingCapitalLoansLoanIdRequest undoDisbursalRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanUndoDisburseRequest();
+
+        executeStateTransition("undodisbursal", undoDisbursalRequest, TestContextKey.LOAN_UNDO_DISBURSE_RESPONSE, false);
+        verifyStateTransitionSuccess(TestContextKey.LOAN_UNDO_DISBURSE_RESPONSE, "undoDisbursement");
+        checkChangesExpectedStatus(TestContextKey.LOAN_UNDO_DISBURSE_RESPONSE, APPROVED);
+    }
+
+    @Then("Admin successfully undo Working Capital disbursal by externalId")
+    public void undoDisbursalWCLoanByexternalId() {
+        PostWorkingCapitalLoansLoanIdRequest undoDisbursalRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanUndoDisburseRequest();
+
+        executeStateTransition("undodisbursal", undoDisbursalRequest, TestContextKey.LOAN_UNDO_DISBURSE_RESPONSE, true);
+        verifyStateTransitionSuccess(TestContextKey.LOAN_UNDO_DISBURSE_RESPONSE, "undoDisbursement");
+        checkChangesExpectedStatus(TestContextKey.LOAN_UNDO_DISBURSE_RESPONSE, APPROVED);
+    }
+
+    @Then("Admin fails to disburse the Working Capital loan on {string} with {string} EUR transaction amount because of not approved")
+    public void disburseWCLoanFailureWithNotApproved(String actualDisbursementDate, String transactionAmount) {
+        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
+        PostWorkingCapitalLoansLoanIdRequest disburseRequest = workingCapitalLoanRequestFactory.defaultWorkingCapitalLoanDisburseRequest()
+                .actualDisbursementDate(actualDisbursementDate).transactionAmount(new BigDecimal(transactionAmount));
+
+        CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoans().stateTransitionWorkingCapitalLoanById(loanId,
+                disburseRequest, Map.of("command", "disburse")));
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.dateFailureErrorCodeMsg()).isEqualTo(400);
+        assertThat(exception.getDeveloperMessage())
+                .contains(ErrorMessageHelper.disburseNotApprovedFailure(SUBMITTED_AND_PENDING_APPROVAL.name()));
+    }
+
+    @Then("Admin fails to disburse the Working Capital loan on {string} with {string} EUR transaction amount with invalid data outcomes with error message {string}")
+    public void disburseWCLoanFailureWithInvalidData(String actualDisbursementDate, String transactionAmount,
+            String errorMessageDescription) {
+        String errorMessage = ErrorMessageHelper.disburseDateFailure(errorMessageDescription);
+        disburseWCLoanFailure(actualDisbursementDate, transactionAmount, 400, errorMessage);
+    }
+
+    @Then("Admin fails to disburse the Working Capital loan on {string} with {string} EUR transaction amount without mandatory data outcomes with error message {string}")
+    public void disburseWCLoanFailureWithoutMandatoryData(String actualDisbursementDate, String transactionAmount, String errorMessage) {
+        disburseWCLoanFailure(actualDisbursementDate, transactionAmount, 400, errorMessage);
+    }
+
+    @Then("Admin fails to undo disbursal the Working Capital loan due to loan status {string}")
+    public void undoDisbursalWCLoanFailure(String actualLoanStatus) {
+        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
+
+        PostWorkingCapitalLoansLoanIdRequest undoDisbursalRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanUndoDisburseRequest();
+
+        CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoans().stateTransitionWorkingCapitalLoanById(loanId,
+                undoDisbursalRequest, Map.of("command", "undodisbursal")));
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.undoDisbursalDisallowedFailure(actualLoanStatus)).isEqualTo(400);
+        assertThat(exception.getDeveloperMessage()).contains(ErrorMessageHelper.undoDisbursalDisallowedFailure(actualLoanStatus));
     }
 
     // ====================================
@@ -668,4 +823,27 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
                 .isEqualTo(Integer.parseInt(expectedHttpCode));
         assertThat(exception.getMessage()).as("Should contain error message").contains(expectedErrorMessage);
     }
+
+    public void checkChangesExpectedStatus(String responseKey, LoanStatus expectedStatus) {
+        final PostWorkingCapitalLoansLoanIdResponse response = testContext().get(responseKey);
+        final Object changes = response.getChanges();
+        assertThat(changes).as("Changes map").isNotNull().isInstanceOf(Map.class);
+
+        @SuppressWarnings("unchecked")
+        final Map<String, Object> changesMap = (Map<String, Object>) changes;
+        assertThat(changesMap).as("Changes map should contain value '%s'", expectedStatus).containsValue(expectedStatus.name());
+    }
+
+    public void disburseWCLoanFailure(String actualDisbursementDate, String transactionAmount, int errorCode, String errorMessage) {
+        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
+        PostWorkingCapitalLoansLoanIdRequest disburseRequest = workingCapitalLoanRequestFactory.defaultWorkingCapitalLoanDisburseRequest()
+                .actualDisbursementDate(actualDisbursementDate).transactionAmount(new BigDecimal(transactionAmount));
+
+        CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoans().stateTransitionWorkingCapitalLoanById(loanId,
+                disburseRequest, Map.of("command", "disburse")));
+        assertThat(exception.getStatus()).as(errorMessage).isEqualTo(errorCode);
+        assertThat(exception.getDeveloperMessage()).contains(errorMessage);
+    }
+
 }

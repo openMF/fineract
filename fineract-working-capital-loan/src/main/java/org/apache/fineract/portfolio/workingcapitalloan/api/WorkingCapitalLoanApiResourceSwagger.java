@@ -197,6 +197,8 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public List<GetDisbursementDetail> disbursementDetails;
         /** Running balances (principal outstanding, total payment, etc.). */
         public GetBalance balance;
+        @Schema(description = "Transaction history (e.g. disbursement).")
+        public List<WorkingCapitalLoanTransactionsApiResourceSwagger.GetWorkingCapitalLoanTransactionIdResponse> transactions;
     }
 
     @Schema(description = "Working capital loan running balances")
@@ -244,6 +246,19 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public List<GetPaymentAllocationOrder> paymentAllocationOrder;
     }
 
+    @Schema(description = "Loan transaction type enum data (same as basic loan)")
+    public static final class LoanTransactionEnumData {
+
+        private LoanTransactionEnumData() {}
+
+        @Schema(example = "1")
+        public Long id;
+        @Schema(example = "loanTransactionType.disbursement")
+        public String code;
+        @Schema(example = "Disbursement")
+        public String value;
+    }
+
     @Schema(description = "GetPaymentAllocationOrder")
     public static final class GetPaymentAllocationOrder {
 
@@ -260,9 +275,9 @@ public final class WorkingCapitalLoanApiResourceSwagger {
 
         private PostWorkingCapitalLoansRequest() {}
 
-        @Schema(example = "1", required = true)
+        @Schema(example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
         public Long clientId;
-        @Schema(example = "1", required = true)
+        @Schema(example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
         public Long productId;
         @Schema(example = "1")
         public Long fundId;
@@ -270,7 +285,7 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public String accountNo;
         @Schema(example = "ext-id-001")
         public String externalId;
-        @Schema(example = "10000.00", required = true, description = "Principal (disbursement) amount")
+        @Schema(example = "10000.00", requiredMode = Schema.RequiredMode.REQUIRED, description = "Principal (disbursement) amount")
         public BigDecimal principalAmount;
         @Schema(example = "10500.00")
         public BigDecimal totalPayment;
@@ -333,6 +348,25 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public Long clientId;
         @Schema(example = "1")
         public Long loanId;
+    }
+
+    @Schema(description = "Payment details for disbursement (Account No, Cheque No, Routing Code, Receipt No, Bank code)")
+    public static final class PostWorkingCapitalLoansLoanIdDisbursementPaymentDetails {
+
+        private PostWorkingCapitalLoansLoanIdDisbursementPaymentDetails() {}
+
+        @Schema(example = "1", description = "Payment type id")
+        public Integer paymentTypeId;
+        @Schema(example = "acc123", description = "Account No")
+        public String accountNumber;
+        @Schema(example = "che123", description = "Cheque No")
+        public String checkNumber;
+        @Schema(example = "rou123", description = "Routing Code")
+        public String routingCode;
+        @Schema(example = "rec123", description = "Receipt No")
+        public String receiptNumber;
+        @Schema(example = "ban123", description = "Bank code")
+        public String bankNumber;
     }
 
     @Schema(description = "PutWorkingCapitalLoansLoanIdRequest")
@@ -416,7 +450,7 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public Object changes;
     }
 
-    @Schema(description = "PostWorkingCapitalLoansLoanIdRequest")
+    @Schema(description = "Request for state transition: approve, reject, undoapproval, disburse, undodisbursal")
     public static final class PostWorkingCapitalLoansLoanIdRequest {
 
         private PostWorkingCapitalLoansLoanIdRequest() {}
@@ -431,11 +465,19 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public BigDecimal discountAmount;
         @Schema(example = "15 January 2024", description = "Date of rejection")
         public String rejectedOnDate;
-        @Schema(example = "Approval/Rejection note")
+        @Schema(example = "Approval/Rejection/Disbursal Note")
         public String note;
         @Schema(example = "en_GB")
         public String locale;
         @Schema(example = "dd MMMM yyyy")
         public String dateFormat;
+        @Schema(example = "28 June 2024", description = "Required for disburse - Actual Disbursement date")
+        public String actualDisbursementDate;
+        @Schema(example = "1000", description = "Disbursement amount; required for disburse. Cannot exceed approved principal.")
+        public BigDecimal transactionAmount;
+        @Schema(example = "ext-disburse-001", description = "External ID; optional for disburse")
+        public String externalId;
+        @Schema(description = "Payment details (Account No, Cheque No, Routing Code, Receipt No, Bank code)")
+        public PostWorkingCapitalLoansLoanIdDisbursementPaymentDetails paymentDetails;
     }
 }

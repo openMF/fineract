@@ -55,4 +55,15 @@ public final class WorkingCapitalLoanConstants {
     public static final String discountAmountParamName = "discountAmount";
     public static final String noteParamName = "note";
     public static final String rejectedOnDateParamName = "rejectedOnDate";
+
+    // Disbursal / Undo disbursal parameters
+    public static final String actualDisbursementDateParamName = "actualDisbursementDate";
+    public static final String transactionAmountParamName = "transactionAmount";
+    public static final String paymentDetailsParamName = "paymentDetails";
+    public static final String paymentTypeIdParamName = "paymentTypeId";
+    public static final String accountNumberParamName = "accountNumber";
+    public static final String checkNumberParamName = "checkNumber";
+    public static final String routingCodeParamName = "routingCode";
+    public static final String receiptNumberParamName = "receiptNumber";
+    public static final String bankNumberParamName = "bankNumber";
 }

@@ -22,5 +22,7 @@ public enum WorkingCapitalLoanEvent {
 
     LOAN_APPROVED, //
     LOAN_APPROVAL_UNDO, //
-    LOAN_REJECTED //
+    LOAN_REJECTED, //
+    LOAN_DISBURSED, //
+    LOAN_DISBURSAL_UNDO //
 }

@@ -32,4 +32,6 @@
   <include relativeToChangelogFile="true" file="parts/0008_delinquency_for_working_capital_loans.xml"/>
   <include relativeToChangelogFile="true" file="parts/0009_wc_loan_amortization_model.xml"/>
   <include relativeToChangelogFile="true" file="parts/0010_loan_account_permissions.xml"/>
+  <include relativeToChangelogFile="true" file="parts/0011_wc_loan_transaction.xml"/>
+  <include relativeToChangelogFile="true" file="parts/0012_wc_loan_disbursement_permissions.xml"/>
 </databaseChangeLog>

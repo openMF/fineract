@@ -116,6 +116,7 @@
         <class>org.apache.fineract.portfolio.loanaccount.domain.LoanRescheduleRequestToTermVariationMapping</class>
         <class>org.apache.fineract.portfolio.loanaccount.domain.LoanStatusChangeHistory</class>
         <class>org.apache.fineract.portfolio.loanaccount.domain.LoanStatusConverter</class>
+        <class>org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionTypeConverter</class>
         <class>org.apache.fineract.portfolio.loanaccount.domain.LoanSubStatusConverter</class>
         <class>org.apache.fineract.portfolio.loanaccount.domain.LoanTermVariations</class>
         <class>org.apache.fineract.portfolio.loanaccount.domain.LoanTopupDetails</class>
@@ -160,6 +161,10 @@
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDisbursementDetails</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanNote</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPaymentAllocationRule</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.ProjectedAmortizationLoanModel</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransaction</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransactionAllocation</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransactionPaymentDetail</class>
         <class>org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct</class>
         <class>org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductConfigurableAttributes</class>
         <class>org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductPaymentAllocationRule</class>

@@ -196,7 +196,7 @@ public class WorkingCapitalLoanApiResource {
     @Path("{loanId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(operationId = "stateTransitionWorkingCapitalLoanById", summary = "Approve/Reject/Undo-approve a Working Capital Loan", description = "Mandatory command query parameter: approve, reject, or undoapproval.")
+    @Operation(operationId = "stateTransitionWorkingCapitalLoanById", summary = "Approve/Reject/Undo-approve/Disburse/Undo-disburse a Working Capital Loan", description = "Mandatory command query parameter: approve, reject, undoapproval, disburse, or undodisbursal.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PostWorkingCapitalLoansLoanIdRequest.class)))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PostWorkingCapitalLoansLoanIdResponse.class))) })
@@ -211,7 +211,7 @@ public class WorkingCapitalLoanApiResource {
     @Path("external-id/{loanExternalId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(operationId = "stateTransitionWorkingCapitalLoanByExternalId", summary = "Approve/Reject/Undo-approve a Working Capital Loan by external id", description = "Mandatory command query parameter: approve, reject, or undoapproval.")
+    @Operation(operationId = "stateTransitionWorkingCapitalLoanByExternalId", summary = "Approve/Reject/Undo-approve/Disburse/Undo-disburse a Working Capital Loan by external id", description = "Mandatory command query parameter: approve, reject, undoapproval, disburse, or undodisbursal.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PostWorkingCapitalLoansLoanIdRequest.class)))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PostWorkingCapitalLoansLoanIdResponse.class))) })
@@ -261,6 +261,10 @@ public class WorkingCapitalLoanApiResource {
             commandRequest = builder.rejectWorkingCapitalLoanApplication(resolvedLoanId).build();
         } else if (CommandParameterUtil.is(commandParam, "undoapproval")) {
             commandRequest = builder.undoWorkingCapitalLoanApplicationApproval(resolvedLoanId).build();
+        } else if (CommandParameterUtil.is(commandParam, "disburse")) {
+            commandRequest = builder.disburseWorkingCapitalLoanApplication(resolvedLoanId).build();
+        } else if (CommandParameterUtil.is(commandParam, "undodisbursal")) {
+            commandRequest = builder.undoWorkingCapitalLoanApplicationDisbursal(resolvedLoanId).build();
         }
 
         if (commandRequest == null) {
