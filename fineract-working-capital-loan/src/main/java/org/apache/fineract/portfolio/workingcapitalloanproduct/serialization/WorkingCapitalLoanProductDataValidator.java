@@ -47,6 +47,7 @@ import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoa
 import org.apache.fineract.portfolio.workingcapitalloanproduct.WorkingCapitalLoanProductConstants;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAdvancedPaymentAllocationsJsonParser;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAmortizationType;
+import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.exception.WorkingCapitalLoanProductDuplicateExternalIdException;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.exception.WorkingCapitalLoanProductDuplicateNameException;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.exception.WorkingCapitalLoanProductDuplicateShortNameException;
@@ -81,7 +82,10 @@ public class WorkingCapitalLoanProductDataValidator {
             WorkingCapitalLoanProductConstants.periodPaymentRateParamName, WorkingCapitalLoanProductConstants.maxPeriodPaymentRateParamName,
             WorkingCapitalLoanProductConstants.discountParamName, WorkingCapitalLoanProductConstants.repaymentEveryParamName,
             WorkingCapitalLoanProductConstants.repaymentFrequencyTypeParamName,
-            WorkingCapitalLoanProductConstants.allowAttributeOverridesParamName));
+            WorkingCapitalLoanProductConstants.allowAttributeOverridesParamName,
+            WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName,
+            WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName //
+    ));
 
     public void validateForCreate(final String json) {
         if (StringUtils.isBlank(json)) {
@@ -320,6 +324,29 @@ public class WorkingCapitalLoanProductDataValidator {
                     .value(delinquencyBucketClassificationId).ignoreIfNull().integerGreaterThanZero();
         }
 
+        final Locale locale = fromApiJsonHelper.extractLocaleParameter(element.getAsJsonObject());
+        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element)) {
+            final Integer delinquencyGraceDays = this.fromApiJsonHelper
+                    .extractIntegerNamed(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element, locale);
+            baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName)
+                    .value(delinquencyGraceDays).ignoreIfNull().integerZeroOrGreater();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element)) {
+            final String delinquencyStartTypeValue = this.fromApiJsonHelper
+                    .extractStringNamed(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element);
+            baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName)
+                    .value(delinquencyStartTypeValue).ignoreIfNull();
+
+            if (delinquencyStartTypeValue != null && !delinquencyStartTypeValue.isBlank()) {
+                final WorkingCapitalLoanDelinquencyStartType delinquencyStartType = WorkingCapitalLoanDelinquencyStartType
+                        .fromString(delinquencyStartTypeValue);
+                if (delinquencyStartType == null) {
+                    baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName)
+                            .failWithCode("invalid.delinquency.start.type");
+                }
+            }
+        }
     }
 
     private BigDecimal validateTermFields(final JsonElement element, final DataValidatorBuilder baseDataValidator, final boolean required) {

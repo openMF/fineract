@@ -289,7 +289,8 @@ public class LoanChargeWritePlatformServiceImpl implements LoanChargeWritePlatfo
         businessEventNotifierService.notifyPostBusinessEvent(new LoanAddChargeBusinessEvent(loanCharge));
         businessEventNotifierService.notifyPostBusinessEvent(new LoanBalanceChangedBusinessEvent(loan));
 
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()) //
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
                 .withEntityId(loanCharge.getId()) //
                 .withEntityExternalId(loanCharge.getExternalId()) //
                 .withOfficeId(loan.getOfficeId()) //
@@ -415,7 +416,8 @@ public class LoanChargeWritePlatformServiceImpl implements LoanChargeWritePlatfo
                 .withSubEntityId(loanTransaction.getId()) //
                 .withSubEntityExternalId(loanTransaction.getExternalId()) //
                 .withLoanId(loanId) //
-                .with(changes).build();
+                .with(changes) //
+                .build();
     }
 
     @Transactional
@@ -693,7 +695,8 @@ public class LoanChargeWritePlatformServiceImpl implements LoanChargeWritePlatfo
                 .withClientId(loan.getClientId()) //
                 .withGroupId(loan.getGroupId()) //
                 .withLoanId(loanId) //
-                .withSavingsId(portfolioAccountData.getId()).build();
+                .withSavingsId(portfolioAccountData.getId()) //
+                .build();
     }
 
     @Transactional

@@ -80,8 +80,11 @@ public class GLClosureWritePlatformServiceJpaRepositoryImpl implements GLClosure
 
             this.glClosureRepository.saveAndFlush(glClosure);
 
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withOfficeId(officeId)
-                    .withEntityId(glClosure.getId()).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withOfficeId(officeId) //
+                    .withEntityId(glClosure.getId()) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             final Throwable throwable = dve.getMostSpecificCause();
             handleGLClosureIntegrityIssues(command, throwable, dve);
@@ -105,8 +108,12 @@ public class GLClosureWritePlatformServiceJpaRepositoryImpl implements GLClosure
             this.glClosureRepository.saveAndFlush(glClosure);
         }
 
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withOfficeId(glClosure.getOffice().getId())
-                .withEntityId(glClosure.getId()).with(changesOnly).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withOfficeId(glClosure.getOffice().getId()) //
+                .withEntityId(glClosure.getId()) //
+                .with(changesOnly) //
+                .build();
     }
 
     @Transactional
@@ -127,7 +134,10 @@ public class GLClosureWritePlatformServiceJpaRepositoryImpl implements GLClosure
 
         this.glClosureRepository.delete(glClosure);
 
-        return new CommandProcessingResultBuilder().withOfficeId(glClosure.getOffice().getId()).withEntityId(glClosure.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withOfficeId(glClosure.getOffice().getId()) //
+                .withEntityId(glClosure.getId()) //
+                .build();
     }
 
     /**

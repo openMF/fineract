@@ -50,6 +50,39 @@ INSTRUCTIONS
 
 The following how-to's assume you have Java installed, you cloned the repository (or downloaded and extracted a [specific version](https://github.com/apache/fineract/releases)) and you have a [database server](#database-and-tables) (MariaDB or PostgreSQL) running.
 
+Quick Start
+---
+
+This section provides a simplified overview of the setup process. More detailed instructions are available below.
+
+Follow these steps to quickly set up and run Apache Fineract locally:
+
+### Prerequisites
+- Java 21 or higher
+- PostgreSQL or MariaDB running locally
+
+### Clone the repository
+```bash
+git clone https://github.com/apache/fineract.git
+cd fineract
+```
+
+### Create databases
+```bash
+./gradlew createDB -PdbName=fineract_tenants
+./gradlew createDB -PdbName=fineract_default
+```
+
+### Run the application
+```bash
+./gradlew devRun
+```
+
+### Verify the application is running
+```bash
+curl --insecure https://localhost:8443/fineract-provider/actuator/health
+```
+
 How to run for local development
 ---
 

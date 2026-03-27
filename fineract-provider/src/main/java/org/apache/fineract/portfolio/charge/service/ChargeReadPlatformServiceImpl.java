@@ -339,7 +339,7 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
             final Integer feeOnMonth = JdbcSupport.getInteger(rs, "feeOnMonth");
             final Integer feeOnDay = JdbcSupport.getInteger(rs, "feeOnDay");
             if (feeOnDay != null && feeOnMonth != null) {
-                feeOnMonthDay = MonthDay.now(DateUtils.getDateTimeZoneOfTenant()).withDayOfMonth(feeOnDay).withMonth(feeOnMonth);
+                feeOnMonthDay = DateUtils.safeMonthDay(feeOnMonth, feeOnDay);
             }
             final BigDecimal minCap = rs.getBigDecimal("minCap");
             final BigDecimal maxCap = rs.getBigDecimal("maxCap");

@@ -401,7 +401,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
                 .withClientId(account.clientId()) //
                 .withGroupId(account.groupId()) //
                 .withSavingsId(savingsId) //
-                .with(changes)//
+                .with(changes) //
                 .build();
     }
 
@@ -464,7 +464,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
                 .withClientId(account.clientId()) //
                 .withGroupId(account.groupId()) //
                 .withSavingsId(savingsId) //
-                .with(changes)//
+                .with(changes) //
                 .build();
     }
 
@@ -916,7 +916,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
                 .withClientId(account.clientId()) //
                 .withGroupId(account.groupId()) //
                 .withSavingsId(savingsId) //
-                .with(changes)//
+                .with(changes) //
                 .build();
     }
 
@@ -1783,8 +1783,14 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
 
             this.savingAccountRepositoryWrapper.save(account);
         }
-        return new CommandProcessingResultBuilder().withEntityId(savingsId).withOfficeId(account.officeId())
-                .withClientId(account.clientId()).withGroupId(account.groupId()).withSavingsId(savingsId).with(changes).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(savingsId) //
+                .withOfficeId(account.officeId()) //
+                .withClientId(account.clientId()) //
+                .withGroupId(account.groupId()) //
+                .withSavingsId(savingsId) //
+                .with(changes) //
+                .build();
     }
 
     @Override
@@ -1802,8 +1808,14 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
 
             this.savingAccountRepositoryWrapper.save(account);
         }
-        return new CommandProcessingResultBuilder().withEntityId(savingsId).withOfficeId(account.officeId())
-                .withClientId(account.clientId()).withGroupId(account.groupId()).withSavingsId(savingsId).with(changes).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(savingsId) //
+                .withOfficeId(account.officeId()) //
+                .withClientId(account.clientId()) //
+                .withGroupId(account.groupId()) //
+                .withSavingsId(savingsId) //
+                .with(changes) //
+                .build();
     }
 
     @Transactional
@@ -1848,8 +1860,13 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
 
         this.savingAccountRepositoryWrapper.saveAndFlush(account);
 
-        return new CommandProcessingResultBuilder().withEntityId(transaction.getId()).withOfficeId(account.officeId())
-                .withClientId(account.clientId()).withGroupId(account.groupId()).withSavingsId(savingsId).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(transaction.getId()) //
+                .withOfficeId(account.officeId()) //
+                .withClientId(account.clientId()) //
+                .withGroupId(account.groupId()) //
+                .withSavingsId(savingsId) //
+                .build();
     }
 
     @Transactional
@@ -1891,8 +1908,13 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
 
         this.savingAccountRepositoryWrapper.save(account);
 
-        return new CommandProcessingResultBuilder().withEntityId(transaction.getId()).withOfficeId(account.officeId())
-                .withClientId(account.clientId()).withGroupId(account.groupId()).withSavingsId(account.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(transaction.getId()) //
+                .withOfficeId(account.officeId()) //
+                .withClientId(account.clientId()) //
+                .withGroupId(account.groupId()) //
+                .withSavingsId(account.getId()) //
+                .build();
     }
 
     @Transactional
@@ -1912,8 +1934,14 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
 
             this.savingAccountRepositoryWrapper.save(account);
         }
-        return new CommandProcessingResultBuilder().withEntityId(savingsId).withOfficeId(account.officeId())
-                .withClientId(account.clientId()).withGroupId(account.groupId()).withSavingsId(savingsId).with(changes).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(savingsId) //
+                .withOfficeId(account.officeId()) //
+                .withClientId(account.clientId()) //
+                .withGroupId(account.groupId()) //
+                .withSavingsId(savingsId) //
+                .with(changes) //
+                .build();
     }
 
     @Transactional
@@ -1929,8 +1957,14 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
 
             this.savingAccountRepositoryWrapper.save(account);
         }
-        return new CommandProcessingResultBuilder().withEntityId(savingsId).withOfficeId(account.officeId())
-                .withClientId(account.clientId()).withGroupId(account.groupId()).withSavingsId(savingsId).with(changes).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(savingsId) //
+                .withOfficeId(account.officeId()) //
+                .withClientId(account.clientId()) //
+                .withGroupId(account.groupId()) //
+                .withSavingsId(savingsId) //
+                .with(changes) //
+                .build();
     }
 
     @Transactional
@@ -1950,8 +1984,14 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
 
             this.savingAccountRepositoryWrapper.save(account);
         }
-        return new CommandProcessingResultBuilder().withEntityId(savingsId).withOfficeId(account.officeId())
-                .withClientId(account.clientId()).withGroupId(account.groupId()).withSavingsId(savingsId).with(changes).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(savingsId) //
+                .withOfficeId(account.officeId()) //
+                .withClientId(account.clientId()) //
+                .withGroupId(account.groupId()) //
+                .withSavingsId(savingsId) //
+                .with(changes) //
+                .build();
     }
 
     @Transactional
@@ -1969,8 +2009,14 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
 
             this.savingAccountRepositoryWrapper.save(account);
         }
-        return new CommandProcessingResultBuilder().withEntityId(savingsId).withOfficeId(account.officeId())
-                .withClientId(account.clientId()).withGroupId(account.groupId()).withSavingsId(savingsId).with(changes).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(savingsId) //
+                .withOfficeId(account.officeId()) //
+                .withClientId(account.clientId()) //
+                .withGroupId(account.groupId()) //
+                .withSavingsId(savingsId) //
+                .with(changes) //
+                .build();
     }
 
     private void validateTransactionsForTransfer(final SavingsAccount savingsAccount, final LocalDate transferDate) {

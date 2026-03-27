@@ -54,6 +54,7 @@ import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoa
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanRepository;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.WorkingCapitalLoanProductConstants;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAdvancedPaymentAllocationsJsonParser;
+import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductPaymentAllocationRule;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductRelatedDetail;
@@ -170,6 +171,17 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
                 ? fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanProductConstants.discountParamName, element,
                         new java.util.HashSet<>())
                 : productDetail.getDiscount());
+
+        detail.setDelinquencyGraceDays(
+                fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element)
+                        ? fromApiJsonHelper.extractIntegerNamed(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element,
+                                new java.util.HashSet<>())
+                        : productDetail.getDelinquencyGraceDays());
+        detail.setDelinquencyStartType(
+                fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element)
+                        ? WorkingCapitalLoanDelinquencyStartType.valueOf(fromApiJsonHelper
+                                .extractStringNamed(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element))
+                        : productDetail.getDelinquencyStartType());
 
         if (fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName, element)) {
             final Long bucketId = fromApiJsonHelper.extractLongNamed(WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName,
@@ -327,6 +339,25 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
                 if (!java.util.Objects.equals(bucketId, existingBucketId)) {
                     detail.setDelinquencyBucket(bucket);
                     changes.put(WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName, bucketId);
+                }
+            }
+            if (fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element)) {
+                final Integer delinquencyGraceDays = fromApiJsonHelper
+                        .extractIntegerWithLocaleNamed(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element);
+                if (command.isChangeInIntegerParameterNamed(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName,
+                        detail.getDelinquencyGraceDays())) {
+                    detail.setDelinquencyGraceDays(delinquencyGraceDays);
+                    changes.put(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, delinquencyGraceDays);
+                }
+            }
+            if (fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element)) {
+                final String existingValue = detail.getDelinquencyStartType() != null ? detail.getDelinquencyStartType().name() : null;
+                if (command.isChangeInStringParameterNamed(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName,
+                        existingValue)) {
+                    final WorkingCapitalLoanDelinquencyStartType type = WorkingCapitalLoanDelinquencyStartType.valueOf(fromApiJsonHelper
+                            .extractStringNamed(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element));
+                    detail.setDelinquencyStartType(type);
+                    changes.put(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, type.name());
                 }
             }
         }

@@ -71,6 +71,8 @@ public class WorkingCapitalLoanProductTestBuilder {
     private String repaymentFrequencyType = DEFAULT_PERIOD_PAYMENT_FREQUENCY_TYPE;
     private List<String> paymentAllocationTypes = DEFAULT_PAYMENT_ALLOCATION_TYPES;
     private Map<String, Boolean> allowAttributeOverrides;
+    private Integer delinquencyGraceDays;
+    private String delinquencyStartType;
 
     public WorkingCapitalLoanProductTestBuilder withName(final String name) {
         this.name = name;
@@ -182,6 +184,16 @@ public class WorkingCapitalLoanProductTestBuilder {
         return this;
     }
 
+    public WorkingCapitalLoanProductTestBuilder withDelinquencyGraceDays(final Integer delinquencyGraceDays) {
+        this.delinquencyGraceDays = delinquencyGraceDays;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withDelinquencyStartType(final String delinquencyStartType) {
+        this.delinquencyStartType = delinquencyStartType;
+        return this;
+    }
+
     public PostWorkingCapitalLoanProductsRequest build() {
         final PostWorkingCapitalLoanProductsRequest request = new PostWorkingCapitalLoanProductsRequest();
         populateCommonFields(request);
@@ -224,6 +236,8 @@ public class WorkingCapitalLoanProductTestBuilder {
             request.setRepaymentFrequencyType(
                     PostWorkingCapitalLoanProductsRequest.RepaymentFrequencyTypeEnum.valueOf(this.repaymentFrequencyType));
         }
+        request.setDelinquencyGraceDays(this.delinquencyGraceDays);
+        request.setDelinquencyStartType(this.delinquencyStartType);
         request.setLocale("en_US");
         request.setDateFormat("yyyy-MM-dd");
     }
@@ -253,6 +267,8 @@ public class WorkingCapitalLoanProductTestBuilder {
             request.setRepaymentFrequencyType(
                     PutWorkingCapitalLoanProductsProductIdRequest.RepaymentFrequencyTypeEnum.valueOf(this.repaymentFrequencyType));
         }
+        request.setDelinquencyGraceDays(this.delinquencyGraceDays);
+        request.setDelinquencyStartType(this.delinquencyStartType);
         request.setLocale("en_US");
         request.setDateFormat("yyyy-MM-dd");
     }

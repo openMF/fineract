@@ -138,7 +138,9 @@ public class DatatableUtil {
                 .withGroupId(groupId) //
                 .withClientId(clientId) //
                 .withSavingsId(savingsId) //
-                .withLoanId(loanId).withTransactionId(transactionId == null ? null : String.valueOf(transactionId)).withEntityId(entityId)//
+                .withLoanId(loanId) //
+                .withTransactionId(transactionId == null ? null : String.valueOf(transactionId)) //
+                .withEntityId(entityId) //
                 .build();
     }
 

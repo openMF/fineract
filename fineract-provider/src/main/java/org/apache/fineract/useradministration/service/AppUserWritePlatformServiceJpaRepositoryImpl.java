@@ -294,7 +294,10 @@ public class AppUserWritePlatformServiceJpaRepositoryImpl implements AppUserWrit
         user.delete();
         this.appUserRepository.save(user);
 
-        return new CommandProcessingResultBuilder().withEntityId(userId).withOfficeId(user.getOffice().getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(userId) //
+                .withOfficeId(user.getOffice().getId()) //
+                .build();
     }
 
     /*

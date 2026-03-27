@@ -42,6 +42,7 @@ import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdR
 import org.apache.fineract.client.models.StringEnumOptionData;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductTestBuilder;
+import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -301,6 +302,8 @@ public class WorkingCapitalLoanProductCRUDTest {
                 .withRepaymentEvery(60) //
                 .withRepaymentFrequencyType("DAYS") //
                 .withAllowAttributeOverrides(allowAttributeOverrides) //
+                .withDelinquencyGraceDays(0) //
+                .withDelinquencyStartType(WorkingCapitalLoanDelinquencyStartType.DISBURSEMENT.getCode()) //
                 .build();
 
         // When
@@ -314,6 +317,7 @@ public class WorkingCapitalLoanProductCRUDTest {
         assertNotNull(retrieved.getName());
         assertTrue(retrieved.getName().startsWith("Full wcl Product"));
         assertEquals(externalId, retrieved.getExternalId());
+        assertEquals(0, retrieved.getDelinquencyGraceDays());
         wclProductHelper.deleteWorkingCapitalLoanProductById(productId);
     }
 
@@ -364,6 +368,8 @@ public class WorkingCapitalLoanProductCRUDTest {
                 .withDelinquencyBucketId(delinquencyBucketId) //
                 .withNpvDayCount(365) //
                 .withPaymentAllocationTypes(paymentAllocationTypes) //
+                .withDelinquencyGraceDays(1) //
+                .withDelinquencyStartType(WorkingCapitalLoanDelinquencyStartType.DISBURSEMENT.getCode()) //
                 // Term category
                 .withPrincipalAmountMin(BigDecimal.valueOf(1000)) //
                 .withPrincipalAmountDefault(BigDecimal.valueOf(5000)) //
@@ -428,6 +434,8 @@ public class WorkingCapitalLoanProductCRUDTest {
         assertNotNull(retrieved.getAmortizationType());
         assertEquals("EIR", retrieved.getAmortizationType().getCode());
         assertEquals(365, retrieved.getNpvDayCount());
+        assertEquals(1, retrieved.getDelinquencyGraceDays());
+        assertEquals("DISBURSEMENT", retrieved.getDelinquencyStartType().getCode());
 
         // Verify Payment Allocation (if present)
         if (retrieved.getPaymentAllocation() != null && !retrieved.getPaymentAllocation().isEmpty()) {

@@ -102,13 +102,16 @@ public class BulkImportApiResource {
     @Path("downloadOutputTemplate")
     @Produces("application/vnd.ms-excel")
     public Response getOutputTemplate(@QueryParam("importDocumentId") final Long importDocumentId) {
-        // TODO: can we avoid 2 calls by introducing a new function? clean code more important now
-        final var docs = documentReadPlatformService.retrieveAllDocuments("IMPORT", importDocumentId);
-
-        final var docData = docs.stream().findFirst();
-
-        final var d = docData.orElseThrow(() -> new DocumentNotFoundException("IMPORT", importDocumentId, -1L));
-        final var content = documentReadPlatformService.retrieveDocumentContent(d.getParentEntityType(), d.getParentEntityId(), d.getId());
+        final var importData = bulkImportWorkbookService.getImport(importDocumentId);
+        if (importData == null) {
+            throw new DocumentNotFoundException("IMPORT", importDocumentId, -1L);
+        }
+        final var doc = documentReadPlatformService.retrieveDocument(importData.getDocumentId());
+        if (doc == null) {
+            throw new DocumentNotFoundException("IMPORT", importDocumentId, importData.getDocumentId());
+        }
+        final var content = documentReadPlatformService.retrieveDocumentContent(doc.getParentEntityType(), doc.getParentEntityId(),
+                doc.getId());
         final var streamResponseData = StreamResponseUtil.StreamResponseData.builder().type(content.getContentType())
                 .fileName(content.getFileName()).stream(content.getStream()).dispositionType(DISPOSITION_TYPE_ATTACHMENT).build();
 

@@ -138,7 +138,8 @@ public class RecurringDepositProductWritePlatformServiceJpaRepositoryImpl implem
 
             return new CommandProcessingResultBuilder() //
                     .withEntityId(product.getId()) //
-                    .with(changes).build();
+                    .with(changes) //
+                    .build();
         } catch (final DataAccessException e) {
             handleDataIntegrityIssues(command, e.getMostSpecificCause(), e);
             return CommandProcessingResult.empty();

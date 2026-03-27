@@ -119,7 +119,9 @@ public class InterestPauseWritePlatformServiceImpl implements InterestPauseWrite
         businessEventNotifierService.notifyPostBusinessEvent(new LoanScheduleVariationsDeletedBusinessEvent(loan));
         businessEventNotifierService.notifyPostBusinessEvent(new LoanBalanceChangedBusinessEvent(loan));
 
-        return new CommandProcessingResultBuilder().withEntityId(variationId).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(variationId) //
+                .build();
     }
 
     private CommandProcessingResult processUpdateInterestPause(Loan loan, Long variationId, String startDateString, String endDateString,
@@ -146,8 +148,10 @@ public class InterestPauseWritePlatformServiceImpl implements InterestPauseWrite
         businessEventNotifierService.notifyPostBusinessEvent(new LoanScheduleVariationsAddedBusinessEvent(loan));
         businessEventNotifierService.notifyPostBusinessEvent(new LoanBalanceChangedBusinessEvent(loan));
 
-        return new CommandProcessingResultBuilder().withEntityId(updatedVariation.getId())
-                .with(Map.of("startDate", startDate.toString(), "endDate", endDate.toString())).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(updatedVariation.getId()) //
+                .with(Map.of("startDate", startDate.toString(), "endDate", endDate.toString())) //
+                .build();
     }
 
     private CommandProcessingResult processInterestPause(final Loan loan, final LocalDate startDate, final LocalDate endDate,
@@ -166,7 +170,9 @@ public class InterestPauseWritePlatformServiceImpl implements InterestPauseWrite
         businessEventNotifierService.notifyPostBusinessEvent(new LoanScheduleVariationsAddedBusinessEvent(loan));
         businessEventNotifierService.notifyPostBusinessEvent(new LoanBalanceChangedBusinessEvent(loan));
 
-        return new CommandProcessingResultBuilder().withEntityId(savedVariation.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(savedVariation.getId()) //
+                .build();
     }
 
     private void validateInterestPauseDates(Loan loan, LocalDate startDate, LocalDate endDate, String dateFormat, String locale,

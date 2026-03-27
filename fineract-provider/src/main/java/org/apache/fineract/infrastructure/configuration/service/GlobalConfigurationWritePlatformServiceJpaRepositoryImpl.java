@@ -64,7 +64,11 @@ public class GlobalConfigurationWritePlatformServiceJpaRepositoryImpl implements
                 this.repository.save(configItemForUpdate);
             }
 
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(configId).with(changes).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withEntityId(configId) //
+                    .with(changes) //
+                    .build();
 
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             final Throwable throwable = dve.getMostSpecificCause();

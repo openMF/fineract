@@ -73,7 +73,9 @@ public class InvalidateTFAccessTokenCommandHandler implements NewCommandSourceHa
 
         final TFAccessToken accessToken = twoFactorService.invalidateAccessToken(user, command);
 
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withResourceIdAsString(accessToken.getToken())
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withResourceIdAsString(accessToken.getToken()) //
                 .build();
     }
 

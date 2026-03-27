@@ -59,6 +59,7 @@ import org.apache.fineract.portfolio.workingcapitalloan.exception.WorkingCapital
 import org.apache.fineract.portfolio.workingcapitalloan.exception.WorkingCapitalLoanApplicationNotInSubmittedStateCannotBeModifiedException;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanRepository;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.WorkingCapitalLoanProductConstants;
+import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductConfigurableAttributes;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.exception.WorkingCapitalLoanProductNotFoundException;
@@ -87,7 +88,8 @@ public class WorkingCapitalLoanApplicationDataValidator {
             WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName, WorkingCapitalLoanProductConstants.repaymentEveryParamName,
             WorkingCapitalLoanProductConstants.repaymentFrequencyTypeParamName, WorkingCapitalLoanConstants.submittedOnNoteParameterName,
             WorkingCapitalLoanProductConstants.allowAttributeOverridesParamName,
-            WorkingCapitalLoanProductConstants.paymentAllocationParamName));
+            WorkingCapitalLoanProductConstants.paymentAllocationParamName, WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName,
+            WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName));
 
     private final FromJsonHelper fromApiJsonHelper;
     private final WorkingCapitalPaymentAllocationDataValidator paymentAllocationDataValidator;
@@ -199,6 +201,28 @@ public class WorkingCapitalLoanApplicationDataValidator {
         // Payment allocation (optional override at loan level; validate structure when present)
         if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.paymentAllocationParamName, element)) {
             this.paymentAllocationDataValidator.validate(element, baseDataValidator);
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element)) {
+            final Integer delinquencyGraceDays = this.fromApiJsonHelper
+                    .extractIntegerWithLocaleNamed(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element);
+            baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName)
+                    .value(delinquencyGraceDays).ignoreIfNull().integerZeroOrGreater();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element)) {
+            final String delinquencyStartTypeValue = this.fromApiJsonHelper
+                    .extractStringNamed(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element);
+            baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName)
+                    .value(delinquencyStartTypeValue).ignoreIfNull().notBlank();
+            if (delinquencyStartTypeValue != null && !delinquencyStartTypeValue.isBlank()) {
+                final WorkingCapitalLoanDelinquencyStartType delinquencyStartType = WorkingCapitalLoanDelinquencyStartType
+                        .fromString(delinquencyStartTypeValue);
+                if (delinquencyStartType == null) {
+                    baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName)
+                            .failWithCode("invalid.delinquency.start.type");
+                }
+            }
         }
 
         // Submitted-on date rules (product range, client activation, not future, not after expected disbursement)
@@ -423,6 +447,30 @@ public class WorkingCapitalLoanApplicationDataValidator {
                 && this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.allowAttributeOverridesParamName, element)) {
             atLeastOneParameterPassedForUpdate = true;
             validateOverridables(element, baseDataValidator, product.getConfigurableAttributes());
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element)) {
+            atLeastOneParameterPassedForUpdate = true;
+            final Integer delinquencyGraceDays = this.fromApiJsonHelper
+                    .extractIntegerWithLocaleNamed(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element);
+            baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName)
+                    .value(delinquencyGraceDays).ignoreIfNull().integerZeroOrGreater();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element)) {
+            final String delinquencyStartTypeValue = this.fromApiJsonHelper
+                    .extractStringNamed(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element);
+            baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName)
+                    .value(delinquencyStartTypeValue).ignoreIfNull().notBlank();
+            if (delinquencyStartTypeValue != null && !delinquencyStartTypeValue.isBlank()) {
+                atLeastOneParameterPassedForUpdate = true;
+                final WorkingCapitalLoanDelinquencyStartType delinquencyStartType = WorkingCapitalLoanDelinquencyStartType
+                        .fromString(delinquencyStartTypeValue);
+                if (delinquencyStartType == null) {
+                    baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName)
+                            .failWithCode("invalid.delinquency.start.type");
+                }
+            }
         }
 
         if (!atLeastOneParameterPassedForUpdate) {

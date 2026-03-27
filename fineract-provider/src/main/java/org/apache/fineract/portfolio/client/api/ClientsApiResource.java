@@ -462,7 +462,7 @@ public class ClientsApiResource {
             clientExternalId.throwExceptionIfEmpty();
             resolvedClientId = clientReadPlatformService.retrieveClientIdByExternalId(clientExternalId);
             if (resolvedClientId == null) {
-                throw new ClientNotFoundException(resolvedClientId);
+                throw new ClientNotFoundException(clientExternalId);
             }
         }
         return resolvedClientId;

@@ -133,7 +133,8 @@ public class LoanReAgingService {
                 .withClientId(loan.getClientId()) //
                 .withGroupId(loan.getGroupId()) //
                 .withLoanId(command.getLoanId()) //
-                .with(changes).build();
+                .with(changes) //
+                .build();
     }
 
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
@@ -198,7 +199,8 @@ public class LoanReAgingService {
                 .withClientId(loan.getClientId()) //
                 .withGroupId(loan.getGroupId()) //
                 .withLoanId(command.getLoanId()) //
-                .with(changes).build();
+                .with(changes) //
+                .build();
     }
 
     private void processReAgeTransaction(final Loan loan, final LoanTransaction reAgeTransaction, final boolean withPostTransactionChecks) {

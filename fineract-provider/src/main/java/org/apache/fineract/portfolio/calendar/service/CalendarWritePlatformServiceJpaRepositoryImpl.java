@@ -286,7 +286,10 @@ public class CalendarWritePlatformServiceJpaRepositoryImpl implements CalendarWr
             }
         }
 
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(calendarForUpdate.getId()).with(changes)
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(calendarForUpdate.getId()) //
+                .with(changes) //
                 .build();
     }
 
@@ -296,7 +299,10 @@ public class CalendarWritePlatformServiceJpaRepositoryImpl implements CalendarWr
                 .orElseThrow(() -> new CalendarNotFoundException(calendarId));
 
         this.calendarRepository.delete(calendarForDelete);
-        return new CommandProcessingResultBuilder().withCommandId(null).withEntityId(calendarId).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(null) //
+                .withEntityId(calendarId) //
+                .build();
     }
 
     @Override
@@ -307,7 +313,10 @@ public class CalendarWritePlatformServiceJpaRepositoryImpl implements CalendarWr
         final CalendarInstance newCalendarInstance = new CalendarInstance(calendarForUpdate, entityId, entityTypeId);
         this.calendarInstanceRepository.save(newCalendarInstance);
 
-        return new CommandProcessingResultBuilder().withCommandId(null).withEntityId(calendarForUpdate.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(null) //
+                .withEntityId(calendarForUpdate.getId()) //
+                .build();
     }
 
     @Override
@@ -318,6 +327,9 @@ public class CalendarWritePlatformServiceJpaRepositoryImpl implements CalendarWr
         final CalendarInstance calendarInstanceForUpdate = this.calendarInstanceRepository
                 .findByCalendarIdAndEntityIdAndEntityTypeId(calendarId, entityId, entityTypeId);
         this.calendarInstanceRepository.saveAndFlush(calendarInstanceForUpdate);
-        return new CommandProcessingResultBuilder().withCommandId(null).withEntityId(calendarForUpdate.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(null) //
+                .withEntityId(calendarForUpdate.getId()) //
+                .build();
     }
 }

@@ -101,7 +101,9 @@ public abstract class InlineCommonLockableCOBExecutorService<T extends AccountLo
         List<Long> loanIds = dataParser.parseExecution(command);
         validateLoanIdsListSize(loanIds);
         execute(loanIds, jobName);
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .build();
     }
 
     @Override

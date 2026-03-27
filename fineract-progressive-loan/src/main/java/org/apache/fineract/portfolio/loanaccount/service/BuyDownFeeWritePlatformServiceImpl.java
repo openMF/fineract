@@ -190,9 +190,13 @@ public class BuyDownFeeWritePlatformServiceImpl implements BuyDownFeePlatformSer
         businessEventNotifierService
                 .notifyPostBusinessEvent(new LoanBuyDownFeeAdjustmentTransactionCreatedBusinessEvent(savedBuyDownFeeAdjustment));
 
-        return new CommandProcessingResultBuilder().withEntityId(savedBuyDownFeeAdjustment.getId())
-                .withEntityExternalId(savedBuyDownFeeAdjustment.getExternalId()).withOfficeId(loan.getOfficeId())
-                .withClientId(loan.getClientId()).withLoanId(loan.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(savedBuyDownFeeAdjustment.getId()) //
+                .withEntityExternalId(savedBuyDownFeeAdjustment.getExternalId()) //
+                .withOfficeId(loan.getOfficeId()) //
+                .withClientId(loan.getClientId()) //
+                .withLoanId(loan.getId()) //
+                .build();
     }
 
     private void checkClientOrGroupActive(final Loan loan) {

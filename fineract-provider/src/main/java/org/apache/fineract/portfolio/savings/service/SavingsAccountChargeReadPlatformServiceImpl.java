@@ -119,7 +119,7 @@ public class SavingsAccountChargeReadPlatformServiceImpl implements SavingsAccou
             final Integer feeOnMonth = JdbcSupport.getInteger(rs, "feeOnMonth");
             final Integer feeOnDay = JdbcSupport.getInteger(rs, "feeOnDay");
             if (feeOnDay != null && feeOnMonth != null) {
-                feeOnMonthDay = MonthDay.now(DateUtils.getDateTimeZoneOfTenant()).withMonth(feeOnMonth).withDayOfMonth(feeOnDay);
+                feeOnMonthDay = DateUtils.safeMonthDay(feeOnMonth, feeOnDay);
             }
 
             final int chargeCalculation = rs.getInt("chargeCalculation");

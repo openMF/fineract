@@ -43,6 +43,7 @@ import org.apache.fineract.portfolio.workingcapitalloan.mapper.WorkingCapitalLoa
 import org.apache.fineract.portfolio.workingcapitalloan.mapper.WorkingCapitalLoanSummaryMapper;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanRepository;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.data.WorkingCapitalLoanProductData;
+import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.service.WorkingCapitalLoanProductReadPlatformService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -71,7 +72,8 @@ public class WorkingCapitalLoanApplicationReadPlatformServiceImpl implements Wor
                 .retrieveAllDelinquencyBuckets();
         final List<StringEnumOptionData> periodFrequencyTypeOptions = ApiFacingEnum
                 .getValuesAsStringEnumOptionDataList(WorkingCapitalLoanPeriodFrequencyType.class);
-
+        final List<StringEnumOptionData> delinquencyStartTypeOptions = ApiFacingEnum
+                .getValuesAsStringEnumOptionDataList(WorkingCapitalLoanDelinquencyStartType.class);
         final WorkingCapitalLoanData.WorkingCapitalLoanDataBuilder builder = WorkingCapitalLoanData.builder();
         if (productId != null) {
             final WorkingCapitalLoanProductData product = this.productReadPlatformService.retrieveWorkingCapitalLoanProduct(productId);
@@ -98,7 +100,7 @@ public class WorkingCapitalLoanApplicationReadPlatformServiceImpl implements Wor
                 .fundOptions(productTemplate.getFundOptions())//
                 .delinquencyBucketOptions(delinquencyBucketOptions)//
                 .periodFrequencyTypeOptions(periodFrequencyTypeOptions)//
-                .build();
+                .delinquencyStartTypeOptions(delinquencyStartTypeOptions).build();
     }
 
     @Override

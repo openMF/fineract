@@ -93,6 +93,10 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public Integer repaymentEvery;
         @Schema(example = "DAYS", allowableValues = { "DAYS", "MONTHS", "YEARS" })
         public String repaymentFrequencyType;
+        @Schema(example = "1")
+        public Integer delinquencyGraceDays;
+        @Schema(example = "LOAN_CREATION", description = "Delinquency start type: LOAN_CREATION or DISBURSEMENT")
+        public String delinquencyStartType;
 
         // Configurable attributes
         public PostAllowAttributeOverrides allowAttributeOverrides;
@@ -204,6 +208,9 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         @Schema(example = "30")
         public Integer repaymentEvery;
         public StringEnumOptionData repaymentFrequencyType;
+        @Schema(example = "1")
+        public Integer delinquencyGraceDays;
+        public StringEnumOptionData delinquencyStartType;
 
         // Configurable attributes
         public GetConfigurableAttributes allowAttributeOverrides;
@@ -282,6 +289,7 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public List<StringEnumOptionData> amortizationTypeOptions;
         public List<StringEnumOptionData> periodFrequencyTypeOptions;
         public List<StringEnumOptionData> advancedPaymentAllocationTypes;
+        public List<StringEnumOptionData> delinquencyStartTypeOptions;
         public List<EnumOptionData> advancedPaymentAllocationTransactionTypes;
         public List<GetWorkingCapitalLoanProductsResponse.GetDelinquencyBucket> delinquencyBucketOptions;
     }
@@ -340,6 +348,9 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         @Schema(example = "30")
         public Integer repaymentEvery;
         public StringEnumOptionData repaymentFrequencyType;
+        @Schema(example = "1")
+        public Integer delinquencyGraceDays;
+        public StringEnumOptionData delinquencyStartType;
 
         // Configurable attributes
         public GetWorkingCapitalLoanProductsResponse.GetConfigurableAttributes allowAttributeOverrides;
@@ -404,6 +415,10 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public Integer repaymentEvery;
         @Schema(example = "DAYS", allowableValues = { "DAYS", "MONTHS", "YEARS" })
         public String repaymentFrequencyType;
+        @Schema(example = "1")
+        public Integer delinquencyGraceDays;
+        @Schema(example = "LOAN_CREATION", description = "Delinquency start type: LOAN_CREATION or DISBURSEMENT")
+        public String delinquencyStartType;
 
         // Configurable attributes
         public PostWorkingCapitalLoanProductsRequest.PostAllowAttributeOverrides allowAttributeOverrides;

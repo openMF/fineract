@@ -218,7 +218,7 @@ public class GroupingTypesWritePlatformServiceJpaRepositoryImpl implements Group
                     .withOfficeId(groupOffice.getId()) //
                     .withGroupId(newGroup.getId()) //
                     .withEntityId(newGroup.getId()) //
-                    .setRollbackTransaction(rollbackTransaction)//
+                    .setRollbackTransaction(rollbackTransaction) //
                     .build();
 
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {

@@ -350,11 +350,12 @@ public class ExternalAssetOwnersWriteServiceImpl implements ExternalAssetOwnersW
     }
 
     private CommandProcessingResult buildResponseData(ExternalAssetOwnerTransfer savedExternalAssetOwnerTransfer) {
-        return new CommandProcessingResultBuilder().withEntityId(savedExternalAssetOwnerTransfer.getId())
-                .withEntityExternalId(savedExternalAssetOwnerTransfer.getExternalId())
-                .withSubEntityId(savedExternalAssetOwnerTransfer.getLoanId())
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(savedExternalAssetOwnerTransfer.getId()) //
+                .withEntityExternalId(savedExternalAssetOwnerTransfer.getExternalId()) //
+                .withSubEntityId(savedExternalAssetOwnerTransfer.getLoanId()) //
                 .withSubEntityExternalId(Objects.isNull(savedExternalAssetOwnerTransfer.getExternalLoanId()) ? null
-                        : savedExternalAssetOwnerTransfer.getExternalLoanId())
+                        : savedExternalAssetOwnerTransfer.getExternalLoanId()) //
                 .build();
     }
 
@@ -645,6 +646,8 @@ public class ExternalAssetOwnersWriteServiceImpl implements ExternalAssetOwnersW
         }
 
         final ExternalAssetOwner externalAssetOwner = createAndGetAssetOwner(ownerExternalId);
-        return new CommandProcessingResultBuilder().withEntityId(externalAssetOwner.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(externalAssetOwner.getId()) //
+                .build();
     }
 }

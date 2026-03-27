@@ -88,7 +88,9 @@ public class CollectionSheetWritePlatformServiceJpaRepositoryImpl implements Col
                 .withCommandId(command.commandId()) //
                 .withEntityId(command.entityId()) //
                 .withGroupId(command.entityId()) //
-                .with(changes).with(changes).build();
+                .with(changes) //
+                .with(changes) //
+                .build();
     }
 
     @Override
@@ -117,7 +119,9 @@ public class CollectionSheetWritePlatformServiceJpaRepositoryImpl implements Col
                 .withCommandId(command.commandId()) //
                 .withEntityId(command.entityId()) //
                 .withGroupId(command.entityId()) //
-                .with(changes).with(changes).build();
+                .with(changes) //
+                .with(changes) //
+                .build();
     }
 
     private Map<String, Object> updateBulkRepayments(final JsonCommand command, final PaymentDetail paymentDetail) {

@@ -108,7 +108,10 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
             fineractEntityAccessUtil.checkConfigurationAndAddProductResrictionsForUserOffice(
                     FineractEntityAccessType.OFFICE_ACCESS_TO_CHARGES, charge.getId());
 
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(charge.getId()).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withEntityId(charge.getId()) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
@@ -196,7 +199,11 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
                 this.chargeRepository.save(chargeForUpdate);
             }
 
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(chargeId).with(changes).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withEntityId(chargeId) //
+                    .with(changes) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
@@ -231,7 +238,9 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
 
         this.chargeRepository.save(chargeForDelete);
 
-        return new CommandProcessingResultBuilder().withEntityId(chargeForDelete.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(chargeForDelete.getId()) //
+                .build();
     }
 
     /*

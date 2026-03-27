@@ -32,7 +32,7 @@ public class ClientNotFoundException extends AbstractPlatformResourceNotFoundExc
     }
 
     public ClientNotFoundException(final ExternalId externalId) {
-        super("error.msg.client.id.invalid", "Client with identifier " + externalId + " does not exist", externalId);
+        super("error.msg.client.id.invalid", "Client with identifier " + externalId.getValue() + " does not exist", externalId.getValue());
     }
 
     public ClientNotFoundException() {

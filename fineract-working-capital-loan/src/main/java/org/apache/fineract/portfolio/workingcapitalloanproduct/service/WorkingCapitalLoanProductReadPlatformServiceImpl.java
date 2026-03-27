@@ -35,6 +35,7 @@ import org.apache.fineract.portfolio.loanproduct.domain.PaymentAllocationTransac
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPeriodFrequencyType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.data.WorkingCapitalLoanProductData;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAmortizationType;
+import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalPaymentAllocationType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.exception.WorkingCapitalLoanProductNotFoundException;
@@ -83,6 +84,8 @@ public class WorkingCapitalLoanProductReadPlatformServiceImpl implements Working
                 .getValuesAsStringEnumOptionDataList(WorkingCapitalLoanPeriodFrequencyType.class);
         final List<StringEnumOptionData> advancedPaymentAllocationTypes = ApiFacingEnum
                 .getValuesAsStringEnumOptionDataList(WorkingCapitalPaymentAllocationType.class);
+        final List<StringEnumOptionData> delinquencyStartTypeOptions = ApiFacingEnum
+                .getValuesAsStringEnumOptionDataList(WorkingCapitalLoanDelinquencyStartType.class);
         final List<EnumOptionData> advancedPaymentAllocationTransactionTypes = PaymentAllocationTransactionType
                 .getValuesAsEnumOptionDataList();
         final Collection<DelinquencyBucketData> delinquencyBucketOptions = this.delinquencyReadPlatformService
@@ -95,6 +98,7 @@ public class WorkingCapitalLoanProductReadPlatformServiceImpl implements Working
                 .periodFrequencyTypeOptions(periodFrequencyTypeOptions) //
                 .advancedPaymentAllocationTypes(advancedPaymentAllocationTypes) //
                 .advancedPaymentAllocationTransactionTypes(advancedPaymentAllocationTransactionTypes) //
+                .delinquencyStartTypeOptions(delinquencyStartTypeOptions) //
                 .delinquencyBucketOptions(
                         delinquencyBucketOptions != null && !delinquencyBucketOptions.isEmpty() ? delinquencyBucketOptions : null) //
                 .build();

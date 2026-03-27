@@ -311,7 +311,10 @@ public class DatatableWriteServiceImpl implements DatatableWriteService {
             baseDataValidator.throwValidationErrors();
         }
 
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withResourceIdAsString(datatableName).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withResourceIdAsString(datatableName) //
+                .build();
     }
 
     @Transactional
@@ -1274,7 +1277,8 @@ public class DatatableWriteServiceImpl implements DatatableWriteService {
                 dataObjectParams);
         businessEventNotifierService.notifyPostBusinessEvent(new DatatableEntryUpdatedBusinessEvent(datatableEntryDetails));
 
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()) //
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
                 .withEntityId(primaryKey) //
                 .withOfficeId(commandProcessingResult.getOfficeId()) //
                 .withGroupId(commandProcessingResult.getGroupId()) //
@@ -1282,7 +1286,8 @@ public class DatatableWriteServiceImpl implements DatatableWriteService {
                 .withSavingsId(commandProcessingResult.getSavingsId()) //
                 .withLoanId(commandProcessingResult.getLoanId()) //
                 .withTransactionId(commandProcessingResult.getTransactionId()) //
-                .with(changes).build();
+                .with(changes) //
+                .build();
     }
 
     private static boolean isUserUpdatable(@NonNull EntityTables entityTable, @NonNull ResultsetColumnHeaderData columnHeader) {

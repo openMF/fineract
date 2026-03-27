@@ -98,8 +98,11 @@ public class AccountingRuleWritePlatformServiceJpaRepositoryImpl implements Acco
 
             final AccountingRule accountingRule = assembleAccountingRuleAndTags(office, command);
             this.accountingRuleRepository.saveAndFlush(accountingRule);
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withOfficeId(officeId)
-                    .withEntityId(accountingRule.getId()).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withOfficeId(officeId) //
+                    .withEntityId(accountingRule.getId()) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             final Throwable throwable = dve.getMostSpecificCause();
             handleAccountingRuleIntegrityIssues(command, throwable, dve);
@@ -265,8 +268,11 @@ public class AccountingRuleWritePlatformServiceJpaRepositoryImpl implements Acco
                 this.accountingRuleRepository.saveAndFlush(accountingRule);
             }
 
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(accountingRule.getId())
-                    .with(changesOnly).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withEntityId(accountingRule.getId()) //
+                    .with(changesOnly) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             final Throwable throwable = dve.getMostSpecificCause();
             handleAccountingRuleIntegrityIssues(command, throwable, dve);
@@ -319,7 +325,9 @@ public class AccountingRuleWritePlatformServiceJpaRepositoryImpl implements Acco
     public CommandProcessingResult deleteAccountingRule(final Long accountingRuleId) {
         final AccountingRule accountingRule = this.accountingRuleRepositoryWrapper.findOneWithNotFoundDetection(accountingRuleId);
         this.accountingRuleRepository.delete(accountingRule);
-        return new CommandProcessingResultBuilder().withEntityId(accountingRule.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(accountingRule.getId()) //
+                .build();
     }
 
     private List<AccountingTagRule> saveDebitOrCreditTags(final Set<String> creditOrDebitTagArray, final JournalEntryType transactionType,

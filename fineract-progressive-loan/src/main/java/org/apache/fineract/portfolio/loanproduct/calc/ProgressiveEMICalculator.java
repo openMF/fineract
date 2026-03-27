@@ -1576,7 +1576,7 @@ public final class ProgressiveEMICalculator implements EMICalculator {
         // already repaid principals should be subtracted from total disbursed amount to calculate correct EMI.
         Money alreadyRepaidPrincipals = firstRepaymentPeriod.getPrevious()
                 .map(rp -> rp.calculateTotalDisbursedAndCapitalizedIncomeAmountTillGivenPeriod(null).minus(rp.getOutstandingLoanBalance()))
-                .orElse(null);
+                .orElse(Money.zero(currency));
         Money total = firstRepaymentPeriod
                 .calculateTotalDisbursedAndCapitalizedIncomeAmountTillGivenPeriod(firstRepaymentPeriod.getLastInterestPeriod())
                 .plus(sumOfInterest).minus(alreadyRepaidPrincipals);

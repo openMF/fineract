@@ -344,9 +344,9 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
                     .withClientId(newClient.getId()) //
                     .withGroupId(groupId) //
                     .withEntityId(newClient.getId()) //
-                    .withSavingsId(result.getSavingsId())//
-                    .setRollbackTransaction(rollbackTransaction)//
-                    .setRollbackTransaction(result.isRollbackTransaction())//
+                    .withSavingsId(result.getSavingsId()) //
+                    .setRollbackTransaction(rollbackTransaction) //
+                    .setRollbackTransaction(result.isRollbackTransaction()) //
                     .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
@@ -729,8 +729,8 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
                     .withEntityExternalId(client.getExternalId()) //
                     .withClientId(clientId) //
                     .withEntityId(clientId) //
-                    .withSavingsId(result.getSavingsId())//
-                    .setRollbackTransaction(result.isRollbackTransaction())//
+                    .withSavingsId(result.getSavingsId()) //
+                    .setRollbackTransaction(result.isRollbackTransaction()) //
                     .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);

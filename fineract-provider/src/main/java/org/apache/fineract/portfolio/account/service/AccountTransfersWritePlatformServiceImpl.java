@@ -196,7 +196,8 @@ public class AccountTransfersWritePlatformServiceImpl implements AccountTransfer
 
         }
 
-        final CommandProcessingResultBuilder builder = new CommandProcessingResultBuilder().withEntityId(transferDetailId);
+        final CommandProcessingResultBuilder builder = new CommandProcessingResultBuilder() //
+                .withEntityId(transferDetailId);
 
         if (PortfolioAccountType.SAVINGS.equals(fromAccountType)) {
             builder.withSavingsId(fromSavingsAccountId);
@@ -549,7 +550,8 @@ public class AccountTransfersWritePlatformServiceImpl implements AccountTransfer
         this.accountTransferDetailRepository.saveAndFlush(accountTransferDetails);
         transferTransactionId = accountTransferDetails.getId();
 
-        final CommandProcessingResultBuilder builder = new CommandProcessingResultBuilder().withEntityId(transferTransactionId);
+        final CommandProcessingResultBuilder builder = new CommandProcessingResultBuilder() //
+                .withEntityId(transferTransactionId);
 
         // if (PortfolioAccountType.SAVINGS.equals(fromAccountType)) {
 

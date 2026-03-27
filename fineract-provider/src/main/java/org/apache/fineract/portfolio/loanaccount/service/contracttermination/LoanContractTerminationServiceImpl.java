@@ -119,7 +119,8 @@ public class LoanContractTerminationServiceImpl {
                 .withClientId(loan.getClientId()) //
                 .withGroupId(loan.getGroupId()) //
                 .withLoanId(command.getLoanId()) //
-                .with(changes).build();
+                .with(changes) //
+                .build();
     }
 
     public CommandProcessingResult undoContractTermination(final JsonCommand command) {

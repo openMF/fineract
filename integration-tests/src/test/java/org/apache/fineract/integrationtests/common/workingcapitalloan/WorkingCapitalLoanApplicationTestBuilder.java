@@ -50,6 +50,8 @@ public class WorkingCapitalLoanApplicationTestBuilder {
     private String repaymentFrequencyType;
     private Long delinquencyBucketId;
     private List<String> paymentAllocationTypes;
+    private Integer delinquencyGraceDays;
+    private String delinquencyStartType;
 
     public WorkingCapitalLoanApplicationTestBuilder withClientId(final Long clientId) {
         this.clientId = clientId;
@@ -126,6 +128,16 @@ public class WorkingCapitalLoanApplicationTestBuilder {
         return this;
     }
 
+    public WorkingCapitalLoanApplicationTestBuilder withDelinquencyGraceDays(final Integer delinquencyGraceDays) {
+        this.delinquencyGraceDays = delinquencyGraceDays;
+        return this;
+    }
+
+    public WorkingCapitalLoanApplicationTestBuilder withDelinquencyStartType(final String delinquencyStartType) {
+        this.delinquencyStartType = delinquencyStartType;
+        return this;
+    }
+
     public WorkingCapitalLoanApplicationTestBuilder withPaymentAllocationTypes(final List<String> paymentAllocationTypes) {
         this.paymentAllocationTypes = paymentAllocationTypes;
         return this;
@@ -191,6 +203,12 @@ public class WorkingCapitalLoanApplicationTestBuilder {
         if (delinquencyBucketId != null) {
             json.addProperty("delinquencyBucketId", delinquencyBucketId);
         }
+        if (delinquencyGraceDays != null) {
+            json.addProperty("delinquencyGraceDays", delinquencyGraceDays);
+        }
+        if (delinquencyStartType != null) {
+            json.addProperty("delinquencyStartType", delinquencyStartType);
+        }
         if (paymentAllocationTypes != null && !paymentAllocationTypes.isEmpty()) {
             json.add("paymentAllocation", buildPaymentAllocationJson());
         }
@@ -235,6 +253,12 @@ public class WorkingCapitalLoanApplicationTestBuilder {
         }
         if (delinquencyBucketId != null) {
             json.addProperty("delinquencyBucketId", delinquencyBucketId);
+        }
+        if (delinquencyGraceDays != null) {
+            json.addProperty("delinquencyGraceDays", delinquencyGraceDays);
+        }
+        if (delinquencyStartType != null) {
+            json.addProperty("delinquencyStartType", delinquencyStartType);
         }
         if (paymentAllocationTypes != null && !paymentAllocationTypes.isEmpty()) {
             json.add("paymentAllocation", buildPaymentAllocationJson());

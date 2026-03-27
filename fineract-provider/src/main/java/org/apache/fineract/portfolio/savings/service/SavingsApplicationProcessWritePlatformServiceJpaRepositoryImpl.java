@@ -248,7 +248,8 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                     .withClientId(account.clientId()) //
                     .withGroupId(account.groupId()) //
                     .withSavingsId(savingsId) //
-                    .withGsimId(gsimAccount == null ? 0 : gsimAccount.getId()).build();
+                    .withGsimId(gsimAccount == null ? 0 : gsimAccount.getId()) //
+                    .build();
         } catch (final DataAccessException dve) {
             handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
@@ -680,7 +681,7 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
 
         return new CommandProcessingResultBuilder() //
                 .withSavingsId(account.getId()) //
-                .setRollbackTransaction(rollbackTransaction)//
+                .setRollbackTransaction(rollbackTransaction) //
                 .build();
     }
 

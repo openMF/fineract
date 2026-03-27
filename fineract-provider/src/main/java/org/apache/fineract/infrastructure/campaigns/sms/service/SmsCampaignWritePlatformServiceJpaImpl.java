@@ -125,7 +125,10 @@ public class SmsCampaignWritePlatformServiceJpaImpl implements SmsCampaignWriteP
             }
             this.smsCampaignRepository.saveAndFlush(smsCampaign);
 
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(smsCampaign.getId()).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withEntityId(smsCampaign.getId()) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             final Throwable throwable = dve.getMostSpecificCause();
             handleDataIntegrityIssues(command, throwable);
@@ -194,7 +197,9 @@ public class SmsCampaignWritePlatformServiceJpaImpl implements SmsCampaignWriteP
         smsCampaign.delete();
         this.smsCampaignRepository.saveAndFlush(smsCampaign);
 
-        return new CommandProcessingResultBuilder().withEntityId(smsCampaign.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(smsCampaign.getId()) //
+                .build();
 
     }
 
@@ -416,7 +421,10 @@ public class SmsCampaignWritePlatformServiceJpaImpl implements SmsCampaignWriteP
          * if campaign is direct insert campaign message into sms outbound table else if its a schedule create a job
          * process for it
          */
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(smsCampaign.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(smsCampaign.getId()) //
+                .build();
     }
 
     @Transactional
@@ -554,7 +562,9 @@ public class SmsCampaignWritePlatformServiceJpaImpl implements SmsCampaignWriteP
         }
         this.smsCampaignRepository.saveAndFlush(smsCampaign);
 
-        return new CommandProcessingResultBuilder().withEntityId(smsCampaign.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(smsCampaign.getId()) //
+                .build();
     }
 
     private void handleDataIntegrityIssues(final JsonCommand command, final Throwable realCause) {

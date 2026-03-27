@@ -34,6 +34,7 @@ import org.apache.fineract.portfolio.workingcapitalloanproduct.data.WorkingCapit
 import org.apache.fineract.portfolio.workingcapitalloanproduct.data.WorkingCapitalLoanProductData;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.data.WorkingCapitalPaymentAllocationData;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAmortizationType;
+import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductConfigurableAttributes;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductPaymentAllocationRule;
@@ -63,6 +64,8 @@ public interface WorkingCapitalLoanProductMapper {
     @Mapping(target = "repaymentEvery", source = "relatedDetail.repaymentEvery")
     @Mapping(target = "repaymentFrequencyType", source = "relatedDetail.repaymentFrequencyType", qualifiedByName = "periodFrequencyTypeToStringEnumOptionData")
     @Mapping(target = "allowAttributeOverrides", source = "configurableAttributes", qualifiedByName = "configurableAttributesToData")
+    @Mapping(target = "delinquencyGraceDays", source = "relatedDetail.delinquencyGraceDays")
+    @Mapping(target = "delinquencyStartType", source = "relatedDetail.delinquencyStartType", qualifiedByName = "delinquencyStartTypeToStringEnumOptionData")
     @Mapping(target = "fundOptions", ignore = true)
     @Mapping(target = "currencyOptions", ignore = true)
     @Mapping(target = "amortizationTypeOptions", ignore = true)
@@ -71,6 +74,7 @@ public interface WorkingCapitalLoanProductMapper {
     @Mapping(target = "advancedPaymentAllocationTransactionTypes", ignore = true)
     @Mapping(target = "applyTemplate", ignore = true)
     @Mapping(target = "delinquencyBucketOptions", ignore = true)
+    @Mapping(target = "delinquencyStartTypeOptions", ignore = true)
     WorkingCapitalLoanProductData toData(WorkingCapitalLoanProduct entity);
 
     List<WorkingCapitalLoanProductData> toDataList(List<WorkingCapitalLoanProduct> entities);
@@ -102,6 +106,12 @@ public interface WorkingCapitalLoanProductMapper {
     default StringEnumOptionData periodFrequencyTypeToStringEnumOptionData(
             final WorkingCapitalLoanPeriodFrequencyType periodFrequencyType) {
         return periodFrequencyType != null ? periodFrequencyType.getValueAsStringEnumOptionData() : null;
+    }
+
+    @Named("delinquencyStartTypeToStringEnumOptionData")
+    default StringEnumOptionData delinquencyStartTypeToStringEnumOptionData(
+            final WorkingCapitalLoanDelinquencyStartType delinquencyStartType) {
+        return delinquencyStartType != null ? delinquencyStartType.getValueAsStringEnumOptionData() : null;
     }
 
     @Named("paymentAllocationRulesToData")

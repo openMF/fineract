@@ -74,4 +74,6 @@ public class WorkingCapitalLoanData implements Serializable {
     private List<WorkingCapitalLoanDisbursementDetailData> disbursementDetails;
     private WorkingCapitalLoanBalanceData balance;
     private List<WorkingCapitalLoanTransactionData> transactions;
+    private Integer delinquencyGraceDays;
+    private StringEnumOptionData delinquencyStartType;
 }

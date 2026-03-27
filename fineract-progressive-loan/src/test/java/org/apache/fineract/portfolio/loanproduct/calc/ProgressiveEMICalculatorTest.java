@@ -3368,6 +3368,25 @@ class ProgressiveEMICalculatorTest {
         }
 
         @Test
+        public void testFlatDaily_firstRepaymentPeriodWithoutPrevious_doesNotThrowOnDisbursement() {
+            final BigDecimal interestRate = BigDecimal.valueOf(12.0);
+            final LocalDate disbursementDate = LocalDate.of(2024, 1, 1);
+
+            Mockito.when(loanProductRelatedDetail.getAnnualNominalInterestRate()).thenReturn(interestRate);
+            Mockito.when(loanProductRelatedDetail.getRepaymentPeriodFrequencyType()).thenReturn(PeriodFrequencyType.MONTHS);
+            Mockito.when(loanProductRelatedDetail.getNumberOfRepayments()).thenReturn(4);
+            Mockito.when(loanProductRelatedDetail.getRepayEvery()).thenReturn(1);
+            Mockito.when(loanProductRelatedDetail.getDaysInYearType()).thenReturn(DaysInYearType.ACTUAL.getValue());
+            Mockito.when(loanProductRelatedDetail.getDaysInMonthType()).thenReturn(DaysInMonthType.ACTUAL.getValue());
+
+            final List<LoanScheduleModelRepaymentPeriod> expectedRepaymentPeriods = generateExpectedRepaymentPeriods(disbursementDate);
+            final ProgressiveLoanInterestScheduleModel interestSchedule = emiCalculator
+                    .generatePeriodInterestScheduleModel(expectedRepaymentPeriods, loanProductRelatedDetail, null, mc);
+
+            Assertions.assertDoesNotThrow(() -> emiCalculator.addDisbursement(interestSchedule, disbursementDate, toMoney(700.0)));
+        }
+
+        @Test
         public void testFlatDaily_1_Month_Actual_Actual() {
 
             final BigDecimal interestRate = BigDecimal.valueOf(12.0);

@@ -366,8 +366,14 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         final SavingsAccountTransaction deposit = this.depositAccountDomainService.handleFDDeposit(account, fmt, transactionDate,
                 transactionAmount, paymentDetail);
 
-        return new CommandProcessingResultBuilder().withEntityId(deposit.getId()).withOfficeId(account.officeId())
-                .withClientId(account.clientId()).withGroupId(account.groupId()).withSavingsId(savingsId).with(changes).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(deposit.getId()) //
+                .withOfficeId(account.officeId()) //
+                .withClientId(account.clientId()) //
+                .withGroupId(account.groupId()) //
+                .withSavingsId(savingsId) //
+                .with(changes) //
+                .build();
 
     }
 
@@ -469,7 +475,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 .withClientId(account.clientId()) //
                 .withGroupId(account.groupId()) //
                 .withSavingsId(savingsId) //
-                .with(changes)//
+                .with(changes) //
                 .build();
     }
 
@@ -730,7 +736,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 .withClientId(account.clientId()) //
                 .withGroupId(account.groupId()) //
                 .withSavingsId(savingsId) //
-                .with(changes)//
+                .with(changes) //
                 .build();
     }
 
@@ -784,7 +790,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 .withClientId(account.clientId()) //
                 .withGroupId(account.groupId()) //
                 .withSavingsId(savingsId) //
-                .with(changes)//
+                .with(changes) //
                 .build();
 
     }
@@ -817,7 +823,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 .withClientId(account.clientId()) //
                 .withGroupId(account.groupId()) //
                 .withSavingsId(savingsId) //
-                .with(changes)//
+                .with(changes) //
                 .build();
 
     }
@@ -850,7 +856,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 .withClientId(account.clientId()) //
                 .withGroupId(account.groupId()) //
                 .withSavingsId(savingsId) //
-                .with(changes)//
+                .with(changes) //
                 .build();
 
     }
@@ -892,7 +898,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 .withClientId(account.clientId()) //
                 .withGroupId(account.groupId()) //
                 .withSavingsId(savingsId) //
-                .with(changes)//
+                .with(changes) //
                 .build();
 
     }

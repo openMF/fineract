@@ -72,4 +72,11 @@ public class WorkingCapitalLoanProductRelatedDetails {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "delinquency_bucket_classification_id")
     private DelinquencyBucket delinquencyBucket;
+
+    @Column(name = "delinquency_grace_days", nullable = false)
+    private Integer delinquencyGraceDays = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "delinquency_start_type", nullable = false)
+    private WorkingCapitalLoanDelinquencyStartType delinquencyStartType;
 }

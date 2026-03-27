@@ -86,7 +86,9 @@ public class ConfigJobParameterServiceImpl implements ConfigJobParameterService,
         } else {
             throw new BusinessStepException(notValidBusinessStepNames + " Business steps are not configurable for this job.");
         }
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .build();
     }
 
     @Override

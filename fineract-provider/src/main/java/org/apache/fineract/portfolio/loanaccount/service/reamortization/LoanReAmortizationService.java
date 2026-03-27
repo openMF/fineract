@@ -110,7 +110,8 @@ public class LoanReAmortizationService {
                 .withClientId(loan.getClientId()) //
                 .withGroupId(loan.getGroupId()) //
                 .withLoanId(command.getLoanId()) //
-                .with(changes).build();
+                .with(changes) //
+                .build();
     }
 
     public CommandProcessingResult undoReAmortize(Long loanId, JsonCommand command) {
@@ -138,7 +139,8 @@ public class LoanReAmortizationService {
                 .withClientId(loan.getClientId()) //
                 .withGroupId(loan.getGroupId()) //
                 .withLoanId(command.getLoanId()) //
-                .with(changes).build();
+                .with(changes) //
+                .build();
     }
 
     @Transactional(readOnly = true)

@@ -40,7 +40,10 @@ public class UpdateDatatableCommandHandler implements NewCommandSourceHandler {
 
         datatableWriteService.updateDatatable(datatableName, command);
 
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withResourceIdAsString(datatableName).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withResourceIdAsString(datatableName) //
+                .build();
     }
 
 }

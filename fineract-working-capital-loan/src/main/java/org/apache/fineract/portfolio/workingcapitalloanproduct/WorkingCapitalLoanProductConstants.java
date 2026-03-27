@@ -62,6 +62,10 @@ public final class WorkingCapitalLoanProductConstants {
     public static final String periodPaymentFrequencyOverridableParamName = "periodPaymentFrequency";
     public static final String periodPaymentFrequencyTypeOverridableParamName = "periodPaymentFrequencyType";
 
+    // Delinquency grace
+    public static final String delinquencyGraceDaysParamName = "delinquencyGraceDays";
+    public static final String delinquencyStartTypeParamName = "delinquencyStartType";
+
     // Resource name for permissions
     public static final String WCLP_RESOURCE_NAME = "WORKINGCAPITALLOANPRODUCT";
 }

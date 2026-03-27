@@ -68,6 +68,8 @@ public interface WorkingCapitalLoanMapper {
     @Mapping(target = "timeline", source = "loan", qualifiedByName = "timelineData")
     @Mapping(target = "disbursementDetails", source = "disbursementDetails")
     @Mapping(target = "transactions", source = "transactions")
+    @Mapping(target = "delinquencyGraceDays", source = "loanProductRelatedDetails.delinquencyGraceDays")
+    @Mapping(target = "delinquencyStartType", source = "loanProductRelatedDetails", qualifiedByName = "delinquencyStartTypeData")
     WorkingCapitalLoanData toData(WorkingCapitalLoan loan);
 
     List<WorkingCapitalLoanData> toDataList(List<WorkingCapitalLoan> loans);
@@ -92,6 +94,12 @@ public interface WorkingCapitalLoanMapper {
     @Named("repaymentFrequencyTypeData")
     default StringEnumOptionData repaymentFrequencyTypeData(final WorkingCapitalLoanProductRelatedDetails detail) {
         return (detail != null && detail.getRepaymentFrequencyType() != null) ? detail.getRepaymentFrequencyType().toStringEnumOptionData()
+                : null;
+    }
+
+    @Named("delinquencyStartTypeData")
+    default StringEnumOptionData delinquencyStartTypeData(final WorkingCapitalLoanProductRelatedDetails detail) {
+        return (detail != null && detail.getDelinquencyStartType() != null) ? detail.getDelinquencyStartType().toStringEnumOptionData()
                 : null;
     }
 

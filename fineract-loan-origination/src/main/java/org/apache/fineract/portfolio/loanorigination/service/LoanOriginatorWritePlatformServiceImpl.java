@@ -89,8 +89,11 @@ public class LoanOriginatorWritePlatformServiceImpl implements LoanOriginatorWri
         final LoanOriginator originator = LoanOriginator.create(externalId, name, status, originatorType, channelType);
         this.loanOriginatorRepository.saveAndFlush(originator);
 
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(originator.getId())
-                .withEntityExternalId(externalId).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(originator.getId()) //
+                .withEntityExternalId(externalId) //
+                .build();
     }
 
     @Override
@@ -133,8 +136,12 @@ public class LoanOriginatorWritePlatformServiceImpl implements LoanOriginatorWri
             this.loanOriginatorRepository.saveAndFlush(originator);
         }
 
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(originator.getId())
-                .withEntityExternalId(originator.getExternalId()).with(changes).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(originator.getId()) //
+                .withEntityExternalId(originator.getExternalId()) //
+                .with(changes) //
+                .build();
     }
 
     @Override
@@ -149,7 +156,10 @@ public class LoanOriginatorWritePlatformServiceImpl implements LoanOriginatorWri
         final ExternalId externalId = originator.getExternalId();
         this.loanOriginatorRepository.delete(originator);
 
-        return new CommandProcessingResultBuilder().withEntityId(id).withEntityExternalId(externalId).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(id) //
+                .withEntityExternalId(externalId) //
+                .build();
     }
 
     @Override
@@ -174,8 +184,12 @@ public class LoanOriginatorWritePlatformServiceImpl implements LoanOriginatorWri
         final LoanOriginatorMapping mapping = LoanOriginatorMapping.create(loanId, originator);
         this.loanOriginatorMappingRepository.saveAndFlush(mapping);
 
-        return new CommandProcessingResultBuilder().withEntityId(loanId).withEntityExternalId(loan.getExternalId())
-                .withSubEntityId(originatorId).withSubEntityExternalId(originator.getExternalId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(loanId) //
+                .withEntityExternalId(loan.getExternalId()) //
+                .withSubEntityId(originatorId) //
+                .withSubEntityExternalId(originator.getExternalId()) //
+                .build();
     }
 
     @Override
@@ -194,8 +208,12 @@ public class LoanOriginatorWritePlatformServiceImpl implements LoanOriginatorWri
 
         this.loanOriginatorMappingRepository.delete(mapping);
 
-        return new CommandProcessingResultBuilder().withEntityId(loanId).withEntityExternalId(loan.getExternalId())
-                .withSubEntityId(originatorId).withSubEntityExternalId(originator.getExternalId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(loanId) //
+                .withEntityExternalId(loan.getExternalId()) //
+                .withSubEntityId(originatorId) //
+                .withSubEntityExternalId(originator.getExternalId()) //
+                .build();
     }
 
     private CodeValue resolveCodeValue(final JsonCommand command, final String paramName, final String codeName) {

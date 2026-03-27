@@ -88,7 +88,9 @@ public class CreditReportWritePlatformServiceImpl implements CreditReportWritePl
                         reportobj.getAddress(), "creditScore", reportobj.getCreditScore(), "borrowerInfo", reportobj.getBorrowerInfo(),
                         "openAccounts", reportobj.getOpenAccounts(), "closedAccounts", reportobj.getClosedAccounts());
 
-                return new CommandProcessingResultBuilder().withCreditReport(reportMap).build();
+                return new CommandProcessingResultBuilder() //
+                        .withCreditReport(reportMap) //
+                        .build();
             }
 
             baseDataValidator.reset().failWithCode(CREDIT_BUREAU_HAS_NOT_BEEN_INTEGRATED);
@@ -174,7 +176,9 @@ public class CreditReportWritePlatformServiceImpl implements CreditReportWritePl
 
             }
 
-            return new CommandProcessingResultBuilder().withEntityId(creditReport.getId()).build();
+            return new CommandProcessingResultBuilder() //
+                    .withEntityId(creditReport.getId()) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleTokenDataIntegrityIssues(dve.getMostSpecificCause());
             return CommandProcessingResult.empty();
@@ -206,7 +210,9 @@ public class CreditReportWritePlatformServiceImpl implements CreditReportWritePl
                         "Unknown data integrity issue with resource: " + dve.getMostSpecificCause().getMessage());
             }
         }
-        return new CommandProcessingResultBuilder().withEntityId(creditReport.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(creditReport.getId()) //
+                .build();
     }
 
     private void handleTokenDataIntegrityIssues(final Throwable realCause) {

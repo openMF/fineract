@@ -71,7 +71,10 @@ public class CodeWritePlatformServiceJpaRepositoryImpl implements CodeWritePlatf
             final Code code = Code.fromJson(command);
             this.codeRepository.saveAndFlush(code);
 
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(code.getId()).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withEntityId(code.getId()) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleCodeDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
@@ -133,7 +136,9 @@ public class CodeWritePlatformServiceJpaRepositoryImpl implements CodeWritePlatf
             throw ErrorHandler.getMappable(dve, "error.msg.cund.unknown.data.integrity.issue",
                     "Unknown data integrity issue with resource: " + dve.getMostSpecificCause().getMessage());
         }
-        return new CommandProcessingResultBuilder().withEntityId(codeId).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(codeId) //
+                .build();
     }
 
     private Code retrieveCodeBy(final Long codeId) {

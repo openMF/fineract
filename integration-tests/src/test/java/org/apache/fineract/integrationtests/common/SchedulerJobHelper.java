@@ -43,6 +43,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.apache.fineract.client.models.GetJobsResponse;
 import org.apache.fineract.client.models.PutJobsJobIDRequest;
 import org.apache.fineract.client.util.Calls;
 import org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType;
@@ -162,8 +163,7 @@ public class SchedulerJobHelper {
     }
 
     public void runSchedulerJob(int jobId) {
-        final ResponseSpecification responseSpec = new ResponseSpecBuilder().expectStatusCode(202).build();
-        runSchedulerJob(jobId, responseSpec);
+        Calls.ok(FineractClientHelper.getFineractClient().jobs.executeJob((long) jobId, "executeJob"));
     }
 
     // TODO: Rewrite to use fineract-client instead!
@@ -218,18 +218,11 @@ public class SchedulerJobHelper {
                 "No such named Job (see org.apache.fineract.infrastructure.jobs.service.JobName enum):" + jobName);
     }
 
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public int getSchedulerJobIdByShortName(String shortName) {
-        Map<String, Object> jobMap = getSchedulerJobByShortName(shortName);
-        final String GET_SCHEDULER_JOB_URL = "/fineract-provider/api/v1/jobs/" + SHORT_NAME_PARAM + "/" + shortName + "?"
-                + Utils.TENANT_IDENTIFIER;
+    public Long getSchedulerJobIdByShortName(String shortName) {
         LOG.info("------------------------ RETRIEVING SCHEDULER JOB ID BY SHORT NAME -------------------------");
-        Integer response = (Integer) jobMap.get("jobId");
-        assertNotNull(response);
-        return response;
+        GetJobsResponse job = Calls.ok(FineractClientHelper.getFineractClient().jobs.retrieveByShortName(shortName));
+        assertNotNull(job);
+        return job.getJobId();
     }
 
     /**

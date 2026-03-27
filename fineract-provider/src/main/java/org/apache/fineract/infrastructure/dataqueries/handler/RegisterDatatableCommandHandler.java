@@ -40,6 +40,8 @@ public class RegisterDatatableCommandHandler implements NewCommandSourceHandler 
     public CommandProcessingResult processCommand(final JsonCommand command) {
         datatableWriteService.registerDatatable(command);
 
-        return new CommandProcessingResultBuilder().withResourceIdAsString(datatableReadService.getDataTableName(command.getUrl())).build();
+        return new CommandProcessingResultBuilder() //
+                .withResourceIdAsString(datatableReadService.getDataTableName(command.getUrl())) //
+                .build();
     }
 }

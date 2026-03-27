@@ -115,7 +115,7 @@ public class BatchApiStepDef extends AbstractStepDef {
     private static final Long CHARGE_ID_NFS_FEE = ChargeProductType.LOAN_NSF_FEE.value;
     private static final String ERROR_DEVELOPER_MESSAGE = "The requested resource is not available.";
     private static final Integer ERROR_HTTP_404 = 404;
-    private static final String ERROR_DEVELOPER_MESSAGE_CLIENT = "Client with identifier null does not exist";
+    private static final String ERROR_DEVELOPER_MESSAGE_CLIENT = "Client with identifier {externalId} does not exist";
     private static final String ERROR_DEVELOPER_MESSAGE_LOAN_EXTERNAL = "Loan with external identifier {externalId} does not exist";
     private static final String PWD_USER_WITH_ROLE = "1234567890Aa!";
 
@@ -921,7 +921,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
         String developerMessageExpected = ERROR_DEVELOPER_MESSAGE;
         Integer httpStatusCodeExpected = ERROR_HTTP_404;
-        String errorsDeveloperMessageExpected = ERROR_DEVELOPER_MESSAGE_CLIENT;
+        String errorsDeveloperMessageExpected = ERROR_DEVELOPER_MESSAGE_CLIENT.replace("{externalId}", clientExternalId);
 
         assertThat(developerMessageActual).as(ErrorMessageHelper.wrongErrorMessage(developerMessageActual, developerMessageExpected))
                 .isEqualTo(developerMessageExpected);

@@ -84,7 +84,10 @@ public class ProvisioningEntriesWritePlatformServiceJpaRepositoryImpl implements
         ProvisioningEntryData exisProvisioningEntryData = this.provisioningEntriesReadPlatformService
                 .retrieveExistingProvisioningIdDateWithJournals();
         revertAndAddJournalEntries(exisProvisioningEntryData, requestedEntry);
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(requestedEntry.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(requestedEntry.getId()) //
+                .build();
     }
 
     private void revertAndAddJournalEntries(ProvisioningEntryData existingEntryData, ProvisioningEntry requestedEntry) {
@@ -136,7 +139,10 @@ public class ProvisioningEntriesWritePlatformServiceJpaRepositoryImpl implements
                 throw new NoProvisioningCriteriaDefinitionFound();
             }
             ProvisioningEntry requestedEntry = createProvisioningEntry(createdDate, addJournalEntries);
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(requestedEntry.getId()).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withEntityId(requestedEntry.getId()) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException e) {
             return CommandProcessingResult.empty();
         }
@@ -171,7 +177,10 @@ public class ProvisioningEntriesWritePlatformServiceJpaRepositoryImpl implements
         Collection<LoanProductProvisioningEntry> entries = generateLoanProvisioningEntry(requestedEntry, requestedEntry.getCreatedDate());
         requestedEntry.setProvisioningEntries(entries);
         this.provisioningEntryRepository.saveAndFlush(requestedEntry);
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(requestedEntry.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(requestedEntry.getId()) //
+                .build();
     }
 
     private Collection<LoanProductProvisioningEntry> generateLoanProvisioningEntry(ProvisioningEntry parent, LocalDate date) {

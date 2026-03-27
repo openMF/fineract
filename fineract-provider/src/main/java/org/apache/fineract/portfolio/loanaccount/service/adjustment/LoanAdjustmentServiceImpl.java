@@ -292,7 +292,8 @@ public class LoanAdjustmentServiceImpl implements LoanAdjustmentService {
                 .withClientId(loan.getClientId()) //
                 .withGroupId(loan.getGroupId()) //
                 .withLoanId(loan.getId()) //
-                .with(changes).build();
+                .with(changes) //
+                .build();
     }
 
     public void adjustExistingTransaction(final Loan loan, final LoanTransaction newTransactionDetail,

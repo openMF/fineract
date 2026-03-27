@@ -28,6 +28,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType;
+import org.apache.fineract.validation.constraints.DateFormat;
 import org.apache.fineract.validation.constraints.EnumValue;
 import org.apache.fineract.validation.constraints.LocalDate;
 import org.apache.fineract.validation.constraints.Locale;
@@ -43,6 +44,7 @@ public class BusinessDateUpdateRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotBlank(message = "{org.apache.fineract.businessdate.date-format.not-blank}")
+    @DateFormat
     private String dateFormat;
     @Schema(description = "Type of business date", example = "BUSINESS_DATE", allowableValues = { "BUSINESS_DATE", "COB_DATE" })
     @EnumValue(enumClass = BusinessDateType.class, message = "{org.apache.fineract.businessdate.type.invalid}")

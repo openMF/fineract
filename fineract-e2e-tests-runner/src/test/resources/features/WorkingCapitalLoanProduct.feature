@@ -138,3 +138,54 @@ Feature: WorkingCapitalLoanProduct
       | wcp_field_name_incorrect_value |
       | 565465                         |
       | 0                              |
+
+  @TestRailId:C72378
+  Scenario: Verify WC Loan Product create with delinquencyGraceDays and delinquencyStartType LOAN_CREATION
+    When Admin creates a new Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION"
+    Then Working Capital Loan Product has delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION"
+
+  @TestRailId:C72379
+  Scenario: Verify WC Loan Product create with delinquencyGraceDays 0 and delinquencyStartType DISBURSEMENT
+    When Admin creates a new Working Capital Loan Product with delinquencyGraceDays 0 and delinquencyStartType "DISBURSEMENT"
+    Then Working Capital Loan Product has delinquencyGraceDays 0 and delinquencyStartType "DISBURSEMENT"
+
+  @TestRailId:C72380
+  Scenario: Verify WC Loan Product create without delinquencyGraceDays uses defaults
+    When Admin creates a new Working Capital Loan Product
+    Then Working Capital Loan Product has null delinquencyGraceDays and null delinquencyStartType
+
+  @TestRailId:C72381
+  Scenario: Verify WC Loan Product update to set delinquencyGraceDays
+    When Admin creates a new Working Capital Loan Product
+    When Admin updates Working Capital Loan Product with delinquencyGraceDays 5 and delinquencyStartType "DISBURSEMENT"
+    Then Working Capital Loan Product has delinquencyGraceDays 5 and delinquencyStartType "DISBURSEMENT"
+
+  @TestRailId:C72382
+  Scenario: Verify WC Loan Product update to change delinquencyGraceDays
+    When Admin creates a new Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION"
+    When Admin updates Working Capital Loan Product with delinquencyGraceDays 10 and delinquencyStartType "DISBURSEMENT"
+    Then Working Capital Loan Product has delinquencyGraceDays 10 and delinquencyStartType "DISBURSEMENT"
+
+  @TestRailId:C72383
+  Scenario: Verify WC Loan Product template includes delinquencyStartTypeOptions
+    When Admin retrieves the Working Capital Loan Product template
+    Then Working Capital Loan Product template has delinquencyStartTypeOptions containing:
+      | LOAN_CREATION |
+      | DISBURSEMENT  |
+
+  @TestRailId:C72384
+  Scenario Outline: Verify WC Loan Product create with invalid delinquency grace data
+    Then Admin failed to create a new Working Capital Loan Product field "<wcp_field_name>" with invalid data <wcp_invalid_field_value> and got an error <wcp_error_message>
+    Examples:
+      | wcp_field_name         | wcp_invalid_field_value | wcp_error_message                                                   |
+      | delinquencyGraceDays   | "-1"                   | "The parameter `delinquencyGraceDays` must be zero or greater."     |
+      | delinquencyStartType   | "INVALID_TYPE"         | "invalid.delinquency.start.type"                                    |
+
+  @TestRailId:C72385
+  Scenario Outline: Verify WC Loan Product update with invalid delinquency grace data
+    When Admin creates a new Working Capital Loan Product
+    Then Admin failed to update a new Working Capital Loan Product field "<wcp_field_name>" with invalid data <wcp_invalid_field_value> and got an error <wcp_error_message>
+    Examples:
+      | wcp_field_name         | wcp_invalid_field_value | wcp_error_message                                                   |
+      | delinquencyGraceDays   | "-5"                   | "The parameter `delinquencyGraceDays` must be zero or greater."     |
+      | delinquencyStartType   | "BOGUS"                | "invalid.delinquency.start.type"                                    |

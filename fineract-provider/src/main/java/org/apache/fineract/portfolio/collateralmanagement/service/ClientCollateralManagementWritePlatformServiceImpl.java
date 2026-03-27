@@ -65,8 +65,11 @@ public class ClientCollateralManagementWritePlatformServiceImpl implements Clien
         final ClientCollateralManagement clientCollateralManagement = ClientCollateralManagement.createNew(quantity, client,
                 collateralManagementData);
         this.clientCollateralManagementRepositoryWrapper.saveAndFlush(clientCollateralManagement);
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withClientId(command.getClientId())
-                .withEntityId(clientCollateralManagement.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withClientId(command.getClientId()) //
+                .withEntityId(clientCollateralManagement.getId()) //
+                .build();
     }
 
     private void validateForCreation(final JsonCommand command) {
@@ -100,8 +103,12 @@ public class ClientCollateralManagementWritePlatformServiceImpl implements Clien
         final ClientCollateralManagement collateral = this.clientCollateralManagementRepositoryWrapper.getCollateral(command.entityId());
         final Map<String, Object> changes = collateral.update(command);
         this.clientCollateralManagementRepositoryWrapper.updateClientCollateralProduct(collateral);
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(command.entityId())
-                .withClientId(command.getClientId()).with(changes).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(command.entityId()) //
+                .withClientId(command.getClientId()) //
+                .with(changes) //
+                .build();
     }
 
     private void validateForUpdate(final JsonCommand command) {
@@ -150,7 +157,9 @@ public class ClientCollateralManagementWritePlatformServiceImpl implements Clien
                 .getCollateral(collateralId);
         validateForDeletion(clientCollateralManagement, collateralId);
         this.clientCollateralManagementRepositoryWrapper.deleteClientCollateralProduct(collateralId);
-        return new CommandProcessingResultBuilder().withEntityId(collateralId).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(collateralId) //
+                .build();
     }
 
     private void validateForDeletion(final ClientCollateralManagement clientCollateralManagement, final Long clientCollateralId) {

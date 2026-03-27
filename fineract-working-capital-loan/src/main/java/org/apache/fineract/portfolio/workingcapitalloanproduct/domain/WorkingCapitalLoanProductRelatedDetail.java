@@ -64,4 +64,11 @@ public class WorkingCapitalLoanProductRelatedDetail {
 
     @Column(name = "discount", scale = 6, precision = 19)
     private BigDecimal discount;
+
+    @Column(name = "delinquency_grace_days", nullable = false)
+    private Integer delinquencyGraceDays = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "delinquency_start_type", nullable = false)
+    private WorkingCapitalLoanDelinquencyStartType delinquencyStartType;
 }

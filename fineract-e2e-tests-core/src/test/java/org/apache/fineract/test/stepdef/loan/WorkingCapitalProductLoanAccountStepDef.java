@@ -36,6 +36,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
@@ -44,6 +45,8 @@ import org.apache.fineract.client.models.DeleteWorkingCapitalLoansLoanIdResponse
 import org.apache.fineract.client.models.GetDisbursementDetail;
 import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostClientsResponse;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
@@ -54,6 +57,7 @@ import org.apache.fineract.test.data.LoanStatus;
 import org.apache.fineract.test.data.workingcapitalproduct.DefaultWorkingCapitalLoanProduct;
 import org.apache.fineract.test.data.workingcapitalproduct.WorkingCapitalLoanProductResolver;
 import org.apache.fineract.test.factory.WorkingCapitalLoanRequestFactory;
+import org.apache.fineract.test.factory.WorkingCapitalRequestFactory;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.Utils;
 import org.apache.fineract.test.messaging.event.EventCheckHelper;
@@ -71,6 +75,7 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
     private final FineractFeignClient fineractClient;
     private final WorkingCapitalLoanProductResolver workingCapitalLoanProductResolver;
     private final WorkingCapitalLoanRequestFactory workingCapitalLoanRequestFactory;
+    private final WorkingCapitalRequestFactory workingCapitalProductRequestFactory;
     private final EventCheckHelper eventCheckHelper;
 
     @When("Admin creates a working capital loan with the following data:")
@@ -846,4 +851,125 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
         assertThat(exception.getDeveloperMessage()).contains(errorMessage);
     }
 
+    @When("Admin creates a Working Capital Loan Product with delinquencyGraceDays {int} and delinquencyStartType {string} for loan test")
+    public void createProductWithGraceDaysForLoanTest(int graceDays, String startType) {
+        final String name = "WCLP-GD-" + Utils.randomStringGenerator("", 8);
+        final PostWorkingCapitalLoanProductsRequest request = workingCapitalProductRequestFactory.defaultWorkingCapitalLoanProductRequest() //
+                .name(name) //
+                .delinquencyGraceDays(graceDays) //
+                .delinquencyStartType(startType);
+        final PostWorkingCapitalLoanProductsResponse response = ok(
+                () -> fineractClient.workingCapitalLoanProducts().createWorkingCapitalLoanProduct(request, Map.of()));
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_FOR_LOAN_TEST, response.getResourceId());
+        log.info("Created WC Loan Product with grace days for loan test, ID: {}", response.getResourceId());
+    }
+
+    @When("Admin creates a working capital loan with the grace days product and the following data:")
+    public void createLoanWithGraceDaysProduct(final DataTable table) {
+        final Map<String, String> row = table.asMaps().get(0);
+        submitLoanAndStore(buildGraceDaysLoanRequest(row));
+    }
+
+    @When("Admin creates a working capital loan with grace days override and the following data:")
+    public void createLoanWithGraceDaysOverride(final DataTable table) {
+        final Map<String, String> row = table.asMaps().get(0);
+        final PostWorkingCapitalLoansRequest request = buildGraceDaysLoanRequest(row) //
+                .delinquencyGraceDays(
+                        Optional.ofNullable(row.get("delinquencyGraceDays")).filter(s -> !s.isEmpty()).map(Integer::valueOf).orElse(null)) //
+                .delinquencyStartType(row.get("delinquencyStartType"));
+        submitLoanAndStore(request);
+    }
+
+    private PostWorkingCapitalLoansRequest buildGraceDaysLoanRequest(final Map<String, String> row) {
+        final Long clientId = extractClientId();
+        final Long productId = testContext().get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_FOR_LOAN_TEST);
+        return workingCapitalLoanRequestFactory.defaultWorkingCapitalLoansRequest(clientId) //
+                .productId(productId) //
+                .submittedOnDate(row.get("submittedOnDate")) //
+                .expectedDisbursementDate(row.get("expectedDisbursementDate")) //
+                .principalAmount(new BigDecimal(row.get("principalAmount"))) //
+                .totalPayment(new BigDecimal(row.get("totalPayment"))) //
+                .periodPaymentRate(new BigDecimal(row.get("periodPaymentRate"))) //
+                .discount(Optional.ofNullable(row.get("discount")).filter(s -> !s.isEmpty()).map(BigDecimal::new).orElse(null));
+    }
+
+    private void submitLoanAndStore(final PostWorkingCapitalLoansRequest request) {
+        final PostWorkingCapitalLoansResponse response = ok(
+                () -> fineractClient.workingCapitalLoans().submitWorkingCapitalLoanApplication(request));
+        testContext().set(TestContextKey.LOAN_CREATE_RESPONSE, response);
+        log.info("Working Capital Loan created, loan ID: {}", response.getLoanId());
+    }
+
+    @Then("Working capital loan account has delinquencyGraceDays {int} and delinquencyStartType {string}")
+    public void verifyLoanGraceDays(int expectedGraceDays, String expectedStartType) {
+        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        final Long loanId = loanResponse.getLoanId();
+
+        final GetWorkingCapitalLoansLoanIdResponse response = ok(
+                () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
+
+        assertThat(response.getDelinquencyGraceDays()).as("delinquencyGraceDays").isEqualTo(expectedGraceDays);
+        assertThat(response.getDelinquencyStartType()).as("delinquencyStartType").isNotNull();
+        assertThat(response.getDelinquencyStartType().getCode()).as("delinquencyStartType code").isEqualTo(expectedStartType);
+    }
+
+    @When("Admin modifies the working capital loan with grace days:")
+    public void modifyLoanWithGraceDays(final DataTable table) {
+        final Map<String, String> row = table.asMaps().get(0);
+        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        final Long loanId = loanResponse.getLoanId();
+
+        final PutWorkingCapitalLoansLoanIdRequest modifyRequest = workingCapitalLoanRequestFactory.defaultModifyWorkingCapitalLoansRequest() //
+                .delinquencyGraceDays(
+                        Optional.ofNullable(row.get("delinquencyGraceDays")).filter(s -> !s.isEmpty()).map(Integer::valueOf).orElse(null)) //
+                .delinquencyStartType(row.get("delinquencyStartType"));
+
+        final PutWorkingCapitalLoansLoanIdResponse response = ok(
+                () -> fineractClient.workingCapitalLoans().modifyWorkingCapitalLoanApplicationById(loanId, modifyRequest, ""));
+        testContext().set(TestContextKey.LOAN_MODIFY_RESPONSE, response);
+    }
+
+    @When("Admin approves the working capital loan on {string}")
+    public void approveWorkingCapitalLoan(final String approvedOnDate) {
+        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        final Long loanId = loanResponse.getLoanId();
+
+        final PostWorkingCapitalLoansLoanIdRequest approveRequest = new PostWorkingCapitalLoansLoanIdRequest() //
+                .approvedOnDate(approvedOnDate) //
+                .expectedDisbursementDate(approvedOnDate) //
+                .dateFormat(DATE_FORMAT) //
+                .locale(WorkingCapitalLoanRequestFactory.DEFAULT_LOCALE);
+
+        ok(() -> fineractClient.workingCapitalLoans().stateTransitionWorkingCapitalLoanById(loanId, "approve", approveRequest));
+        log.info("Approved working capital loan {}", loanId);
+    }
+
+    @Then("Creating a working capital loan with invalid delinquencyGraceDays {int} will result with status code {int}")
+    public void createLoanWithInvalidGraceDays(int graceDays, int expectedStatus) {
+        final Long clientId = extractClientId();
+        final Long productId = testContext().get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_FOR_LOAN_TEST);
+
+        final PostWorkingCapitalLoansRequest request = workingCapitalLoanRequestFactory.defaultWorkingCapitalLoansRequest(clientId)
+                .productId(productId) //
+                .delinquencyGraceDays(graceDays);
+
+        final CallFailedRuntimeException exception = fail(
+                () -> fineractClient.workingCapitalLoans().submitWorkingCapitalLoanApplication(request));
+        assertThat(exception.getStatus()).as("HTTP status").isEqualTo(expectedStatus);
+    }
+
+    @Then("Creating a working capital loan with invalid delinquencyStartType {string} will result with status code {int}")
+    public void createLoanWithInvalidStartType(String startType, int expectedStatus) {
+        final Long clientId = extractClientId();
+        final Long productId = testContext().get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_FOR_LOAN_TEST);
+
+        final PostWorkingCapitalLoansRequest request = workingCapitalLoanRequestFactory.defaultWorkingCapitalLoansRequest(clientId)
+                .productId(productId) //
+                .delinquencyStartType(startType);
+
+        final CallFailedRuntimeException exception = fail(
+                () -> fineractClient.workingCapitalLoans().submitWorkingCapitalLoanApplication(request));
+        assertThat(exception.getStatus()).as("HTTP status").isEqualTo(expectedStatus);
+    }
 }

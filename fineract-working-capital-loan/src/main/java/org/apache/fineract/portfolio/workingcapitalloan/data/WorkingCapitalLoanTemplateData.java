@@ -46,4 +46,5 @@ public class WorkingCapitalLoanTemplateData {
     private Collection<FundData> fundOptions;
     private Collection<DelinquencyBucketData> delinquencyBucketOptions;
     private List<StringEnumOptionData> periodFrequencyTypeOptions;
+    private List<StringEnumOptionData> delinquencyStartTypeOptions;
 }

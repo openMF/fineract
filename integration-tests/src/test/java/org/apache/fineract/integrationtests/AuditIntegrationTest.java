@@ -164,7 +164,7 @@ public class AuditIntegrationTest {
     @Test
     public void executeSchedulerJobShouldCreateAuditEntry() {
         // given
-        int jobId = schedulerJobHelper.getSchedulerJobIdByShortName("SA_AANF");
+        int jobId = schedulerJobHelper.getSchedulerJobIdByShortName("SA_AANF").intValue();
         List<HashMap<String, Object>> auditsRecievedInitial = auditHelper.getAuditDetails(jobId, "EXECUTEJOB", "SCHEDULER");
 
         // when

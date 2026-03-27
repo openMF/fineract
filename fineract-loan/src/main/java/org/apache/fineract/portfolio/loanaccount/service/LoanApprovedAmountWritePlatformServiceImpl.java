@@ -65,7 +65,8 @@ public class LoanApprovedAmountWritePlatformServiceImpl implements LoanApprovedA
         loanApprovedAmountHistoryRepository.saveAndFlush(loanApprovedAmountHistory);
 
         businessEventNotifierService.notifyPostBusinessEvent(new LoanApprovedAmountChangedBusinessEvent(loan));
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()) //
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
                 .withEntityId(loan.getId()) //
                 .withEntityExternalId(loan.getExternalId()) //
                 .withOfficeId(loan.getOfficeId()) //
@@ -106,7 +107,8 @@ public class LoanApprovedAmountWritePlatformServiceImpl implements LoanApprovedA
         loanApprovedAmountHistoryRepository.saveAndFlush(loanApprovedAmountHistory);
 
         businessEventNotifierService.notifyPostBusinessEvent(new LoanApprovedAmountChangedBusinessEvent(loan));
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()) //
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
                 .withEntityId(loan.getId()) //
                 .withEntityExternalId(loan.getExternalId()) //
                 .withOfficeId(loan.getOfficeId()) //

@@ -84,7 +84,7 @@ public class JournalEntryRunningBalanceUpdateServiceImpl implements JournalEntry
         this.dataValidator.validateForUpdateRunningBalance(command);
         final Long officeId = this.fromApiJsonHelper.extractLongNamed(JournalEntryJsonInputParams.OFFICE_ID.getValue(),
                 command.parsedJson());
-        CommandProcessingResultBuilder commandProcessingResultBuilder = new CommandProcessingResultBuilder()
+        CommandProcessingResultBuilder commandProcessingResultBuilder = new CommandProcessingResultBuilder() //
                 .withCommandId(command.commandId());
         if (officeId == null) {
             updateRunningBalance();

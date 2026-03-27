@@ -95,7 +95,10 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
         DelinquencyRangeData data = dataValidatorRange.validateAndParseUpdate(command);
         Map<String, Object> changes = new HashMap<>();
         DelinquencyRange delinquencyRange = createDelinquencyRange(data, changes);
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(delinquencyRange.getId()).with(changes)
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(delinquencyRange.getId()) //
+                .with(changes) //
                 .build();
     }
 
@@ -105,7 +108,10 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
         DelinquencyRange delinquencyRange = this.repositoryRange.getReferenceById(delinquencyRangeId);
         Map<String, Object> changes = new HashMap<>();
         delinquencyRange = updateDelinquencyRange(delinquencyRange, data, changes);
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(delinquencyRange.getId()).with(changes)
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(delinquencyRange.getId()) //
+                .with(changes) //
                 .build();
     }
 
@@ -119,9 +125,15 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
                         "Data integrity issue with resource: " + delinquencyRange.getId());
             }
             repositoryRange.delete(delinquencyRange);
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(delinquencyRange.getId()).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withEntityId(delinquencyRange.getId()) //
+                    .build();
         }
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(delinquencyRangeId).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(delinquencyRangeId) //
+                .build();
     }
 
     @Override
@@ -129,7 +141,10 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
         DelinquencyBucketData data = dataValidatorBucket.validateAndParseUpdate(command);
         Map<String, Object> changes = new HashMap<>();
         DelinquencyBucket delinquencyBucket = createDelinquencyBucket(data, changes);
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(delinquencyBucket.getId()).with(changes)
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(delinquencyBucket.getId()) //
+                .with(changes) //
                 .build();
     }
 
@@ -140,7 +155,10 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
 
         Map<String, Object> changes = new HashMap<>();
         delinquencyBucket = updateDelinquencyBucket(delinquencyBucket, data, changes);
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(delinquencyBucket.getId()).with(changes)
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(delinquencyBucket.getId()) //
+                .with(changes) //
                 .build();
     }
 
@@ -165,7 +183,10 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
             throw new DelinquencyBucketNotFoundException("error.msg.delinquency.bucket.id.not.exist",
                     "Delinquency bucket with id `" + delinquencyBucketId + "` does not exist.", delinquencyBucketId);
         }
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(delinquencyBucketId).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(delinquencyBucketId) //
+                .build();
     }
 
     @Override
@@ -215,7 +236,7 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
                 .withEntityId(loan.getId()) //
                 .withEntityExternalId(loan.getExternalId()) //
                 .with(changes) //
-                .build(); //
+                .build();
     }
 
     @Override

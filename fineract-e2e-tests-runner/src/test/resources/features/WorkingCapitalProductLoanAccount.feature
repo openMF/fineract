@@ -631,6 +631,80 @@ Feature: WorkingCapitalProduct
       | httpErrorCode | errorMessage                                                    |
       | 400           | Transition LOAN_APPROVAL_UNDO is not allowed from status ACTIVE |
 
+  @TestRailId:C72386
+  Scenario: Verify WC Loan inherits product delinquencyGraceDays defaults
+    When Admin sets the business date to "01 January 2027"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION" for loan test
+    And Admin creates a working capital loan with the grace days product and the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 | 0        |
+    Then Working capital loan creation was successful
+    And Working capital loan account has delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION"
+
+  @TestRailId:C72387
+  Scenario: Verify WC Loan overrides product delinquencyGraceDays
+    When Admin sets the business date to "01 January 2027"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION" for loan test
+    And Admin creates a working capital loan with grace days override and the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount | delinquencyGraceDays | delinquencyStartType |
+      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 | 0        | 7                    | DISBURSEMENT         |
+    Then Working capital loan creation was successful
+    And Working capital loan account has delinquencyGraceDays 7 and delinquencyStartType "DISBURSEMENT"
+
+  @TestRailId:C72388
+  Scenario: Verify WC Loan creation with delinquencyGraceDays 0
+    When Admin sets the business date to "01 January 2027"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "DISBURSEMENT" for loan test
+    And Admin creates a working capital loan with grace days override and the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount | delinquencyGraceDays | delinquencyStartType |
+      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 | 0        | 0                    | LOAN_CREATION        |
+    Then Working capital loan creation was successful
+    And Working capital loan account has delinquencyGraceDays 0 and delinquencyStartType "LOAN_CREATION"
+
+  @TestRailId:C72389
+  Scenario: Verify WC Loan update delinquencyGraceDays in pending state
+    When Admin sets the business date to "01 January 2027"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION" for loan test
+    And Admin creates a working capital loan with the grace days product and the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 | 0        |
+    Then Working capital loan creation was successful
+    When Admin modifies the working capital loan with grace days:
+      | delinquencyGraceDays | delinquencyStartType |
+      | 10                   | DISBURSEMENT         |
+    Then Working capital loan account has delinquencyGraceDays 10 and delinquencyStartType "DISBURSEMENT"
+
+  @TestRailId:C72390
+  Scenario: Verify WC Loan grace days persisted after approval
+    When Admin sets the business date to "01 January 2027"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with delinquencyGraceDays 5 and delinquencyStartType "DISBURSEMENT" for loan test
+    And Admin creates a working capital loan with the grace days product and the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 | 0        |
+    Then Working capital loan creation was successful
+    When Admin approves the working capital loan on "01 January 2027"
+    Then Working capital loan account has delinquencyGraceDays 5 and delinquencyStartType "DISBURSEMENT"
+
+  @TestRailId:C72391
+  Scenario: Verify WC Loan creation with negative delinquencyGraceDays results in error
+    When Admin sets the business date to "01 January 2027"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION" for loan test
+    Then Creating a working capital loan with invalid delinquencyGraceDays -1 will result with status code 400
+
+  @TestRailId:C72392
+  Scenario: Verify WC Loan creation with invalid delinquencyStartType results in error
+    When Admin sets the business date to "01 January 2027"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION" for loan test
+    Then Creating a working capital loan with invalid delinquencyStartType "INVALID" will result with status code 400
+
+    # TODO implement with disbursal testcases
   @Skip @TestRailId:C72368
   Scenario: Create Working Capital Loan account - UC13: Attempt to modify loan in DISBURSED state (Negative)
     When Admin sets the business date to "01 January 2026"

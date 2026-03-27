@@ -183,6 +183,8 @@ public class ExternalAssetOwnerLoanProductAttributesWriteServiceImpl implements 
     }
 
     private CommandProcessingResult buildResponseData(ExternalAssetOwnerLoanProductAttributes savedAttribute) {
-        return new CommandProcessingResultBuilder().withEntityId(savedAttribute.getLoanProductId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(savedAttribute.getLoanProductId()) //
+                .build();
     }
 }

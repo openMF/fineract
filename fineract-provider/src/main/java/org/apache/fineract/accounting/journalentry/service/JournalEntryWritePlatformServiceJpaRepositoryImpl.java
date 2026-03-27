@@ -232,8 +232,11 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
             }
 
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withOfficeId(officeId)
-                    .withTransactionId(transactionId).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withOfficeId(officeId) //
+                    .withTransactionId(transactionId) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             final Throwable throwable = dve.getMostSpecificCause();
             throw handleJournalEntryDataIntegrityIssues(throwable, dve);
@@ -343,7 +346,9 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             throw new JournalEntriesNotFoundException(command.getTransactionId());
         }
         final String reversalTransactionId = revertJournalEntry(journalEntries, reversalComment);
-        return new CommandProcessingResultBuilder().withTransactionId(reversalTransactionId).build();
+        return new CommandProcessingResultBuilder() //
+                .withTransactionId(reversalTransactionId) //
+                .build();
     }
 
     @Override
@@ -735,8 +740,11 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             saveAllDebitOrCreditOpeningBalanceEntries(journalEntryCommand, office, currencyCode, transactionDate,
                     journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, contraId);
 
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withOfficeId(officeId)
-                    .withTransactionId(transactionId).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withOfficeId(officeId) //
+                    .withTransactionId(transactionId) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             final Throwable throwable = dve.getMostSpecificCause();
             throw handleJournalEntryDataIntegrityIssues(throwable, dve);

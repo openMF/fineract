@@ -42,6 +42,7 @@ import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapita
 import org.apache.fineract.portfolio.workingcapitalloanproduct.WorkingCapitalLoanProductConstants;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAdvancedPaymentAllocationsJsonParser;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAmortizationType;
+import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductConfigurableAttributes;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductMinMaxConstraints;
@@ -306,8 +307,15 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
         final BigDecimal discount = command.parameterExists(WorkingCapitalLoanProductConstants.discountParamName)
                 ? command.bigDecimalValueOfParameterNamed(WorkingCapitalLoanProductConstants.discountParamName)
                 : null;
+        final Integer delinquencyGraceDays = command
+                .integerValueOfParameterNamed(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName);
+        final String delinquencyStartTypeValue = command
+                .stringValueOfParameterNamed(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName);
+        final WorkingCapitalLoanDelinquencyStartType delinquencyStartType = WorkingCapitalLoanDelinquencyStartType
+                .fromString(delinquencyStartTypeValue);
         final WorkingCapitalLoanProductRelatedDetail relatedDetail = new WorkingCapitalLoanProductRelatedDetail(amortizationType,
-                npvDayCount, principal, periodPaymentRate, repaymentEvery, repaymentFrequencyType, discount);
+                npvDayCount, principal, periodPaymentRate, repaymentEvery, repaymentFrequencyType, discount, delinquencyGraceDays,
+                delinquencyStartType);
 
         // Min/max constraints
         final BigDecimal minPrincipal = command.parameterExists(WorkingCapitalLoanProductConstants.minPrincipalParamName)

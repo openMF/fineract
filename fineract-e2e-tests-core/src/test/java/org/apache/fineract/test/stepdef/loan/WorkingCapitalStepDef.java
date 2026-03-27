@@ -22,9 +22,11 @@ import static org.apache.fineract.client.feign.util.FeignCalls.fail;
 import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -36,12 +38,15 @@ import org.apache.fineract.client.models.DeleteWorkingCapitalLoanProductsProduct
 import org.apache.fineract.client.models.GetConfigurableAttributes;
 import org.apache.fineract.client.models.GetPaymentAllocation;
 import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsProductIdResponse;
+import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsTemplateResponse;
 import org.apache.fineract.client.models.PostAllowAttributeOverrides;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsResponse;
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdResponse;
+import org.apache.fineract.client.models.StringEnumOptionData;
 import org.apache.fineract.test.data.workingcapitalproduct.DefaultWorkingCapitalLoanProduct;
+import org.apache.fineract.test.factory.LoanProductsRequestFactory;
 import org.apache.fineract.test.factory.WorkingCapitalRequestFactory;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.Utils;
@@ -77,6 +82,8 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
     public static final String REPAYMENT_EVERY_FIELD_NAME = "repaymentEvery";
     public static final String EXTERNAL_ID_FIELD_NAME = "externalId";
     public static final String DELINQUENCY_BUCKET_ID_FIELD_NAME = "delinquencyBucketId";
+    public static final String DELINQUENCY_GRACE_DAYS_FIELD_NAME = "delinquencyGraceDays";
+    public static final String DELINQUENCY_START_TYPE_FIELD_NAME = "delinquencyStartType";
     public static final String LOCALE_FIELD_NAME = "locale";
 
     private WorkingCapitalLoanProductsApi workingCapitalApi() {
@@ -607,7 +614,8 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         Integer valueInteger = null;
         BigDecimal valueBigDecimal = null;
         if (fieldName.equalsIgnoreCase(DIGITS_AFTER_DECIMAL_FIELD_NAME) || fieldName.equalsIgnoreCase(IN_MULTIPLES_OF_FIELD_NAME)
-                || fieldName.equalsIgnoreCase(NPV_DAY_COUNT_FIELD_NAME) || fieldName.equalsIgnoreCase(REPAYMENT_EVERY_FIELD_NAME)) {
+                || fieldName.equalsIgnoreCase(NPV_DAY_COUNT_FIELD_NAME) || fieldName.equalsIgnoreCase(REPAYMENT_EVERY_FIELD_NAME)
+                || fieldName.equalsIgnoreCase(DELINQUENCY_GRACE_DAYS_FIELD_NAME)) {
             valueInteger = fieldValue != null ? Integer.valueOf(fieldValue) : null;
         }
         if (fieldName.equalsIgnoreCase(PRINCIPAL_FIELD_NAME) || fieldName.equalsIgnoreCase(MIN_PRINCIPAL_FIELD_NAME)
@@ -675,6 +683,12 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
                 defaultWorkingCapitalLoanProductCreateRequest
                         .setDelinquencyBucketId(fieldValue != null ? Long.parseLong(fieldValue) : null);
             break;
+            case DELINQUENCY_GRACE_DAYS_FIELD_NAME:
+                defaultWorkingCapitalLoanProductCreateRequest.setDelinquencyGraceDays(valueInteger);
+            break;
+            case DELINQUENCY_START_TYPE_FIELD_NAME:
+                defaultWorkingCapitalLoanProductCreateRequest.setDelinquencyStartType(fieldValue);
+            break;
             case LOCALE_FIELD_NAME:
                 defaultWorkingCapitalLoanProductCreateRequest.setLocale(fieldValue);
             break;
@@ -716,7 +730,8 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         Integer valueInteger = null;
         BigDecimal valueBigDecimal = null;
         if (fieldName.equalsIgnoreCase(DIGITS_AFTER_DECIMAL_FIELD_NAME) || fieldName.equalsIgnoreCase(IN_MULTIPLES_OF_FIELD_NAME)
-                || fieldName.equalsIgnoreCase(NPV_DAY_COUNT_FIELD_NAME) || fieldName.equalsIgnoreCase(REPAYMENT_EVERY_FIELD_NAME)) {
+                || fieldName.equalsIgnoreCase(NPV_DAY_COUNT_FIELD_NAME) || fieldName.equalsIgnoreCase(REPAYMENT_EVERY_FIELD_NAME)
+                || fieldName.equalsIgnoreCase(DELINQUENCY_GRACE_DAYS_FIELD_NAME)) {
             valueInteger = fieldValue != null ? Integer.valueOf(fieldValue) : null;
         }
         if (fieldName.equalsIgnoreCase(PRINCIPAL_FIELD_NAME) || fieldName.equalsIgnoreCase(MIN_PRINCIPAL_FIELD_NAME)
@@ -784,6 +799,12 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
                 defaultWorkingCapitalLoanProductUpdateRequest
                         .setDelinquencyBucketId(fieldValue != null ? Long.parseLong(fieldValue) : null);
             break;
+            case DELINQUENCY_GRACE_DAYS_FIELD_NAME:
+                defaultWorkingCapitalLoanProductUpdateRequest.setDelinquencyGraceDays(valueInteger);
+            break;
+            case DELINQUENCY_START_TYPE_FIELD_NAME:
+                defaultWorkingCapitalLoanProductUpdateRequest.setDelinquencyStartType(fieldValue);
+            break;
             case LOCALE_FIELD_NAME:
                 defaultWorkingCapitalLoanProductUpdateRequest.setLocale(fieldValue);
             break;
@@ -798,6 +819,72 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         assertThat(exception.getStatus()).as(ErrorMessageHelper.dateFailureErrorCodeMsg()).isEqualTo(404);
         assertThat(exception.getDeveloperMessage())
                 .contains(ErrorMessageHelper.workingCapitalLoanProductIdentifiedDoesNotExistFailure(String.valueOf(productId)));
+    }
+
+    @When("Admin creates a new Working Capital Loan Product with delinquencyGraceDays {int} and delinquencyStartType {string}")
+    public void createWorkingCapitalLoanProductWithGraceDays(int graceDays, String startType) {
+        final String name = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
+        final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory.defaultWorkingCapitalLoanProductRequest() //
+                .name(name) //
+                .delinquencyGraceDays(graceDays) //
+                .delinquencyStartType(startType);
+        final PostWorkingCapitalLoanProductsResponse response = createWorkingCapitalLoanProduct(request);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST, request);
+    }
+
+    @Then("Working Capital Loan Product has delinquencyGraceDays {int} and delinquencyStartType {string}")
+    public void verifyProductGraceDays(int expectedGraceDays, String expectedStartType) {
+        final GetWorkingCapitalLoanProductsProductIdResponse product = retrieveCreatedProduct();
+        assertThat(product.getDelinquencyGraceDays()).isEqualTo(expectedGraceDays);
+        assertThat(product.getDelinquencyStartType()).isNotNull();
+        assertThat(product.getDelinquencyStartType().getCode()).isEqualTo(expectedStartType);
+    }
+
+    @Then("Working Capital Loan Product has null delinquencyGraceDays and null delinquencyStartType")
+    public void verifyProductNullGraceDays() {
+        final GetWorkingCapitalLoanProductsProductIdResponse product = retrieveCreatedProduct();
+        assertThat(product.getDelinquencyGraceDays()).isNull();
+        assertThat(product.getDelinquencyStartType()).isNull();
+    }
+
+    private GetWorkingCapitalLoanProductsProductIdResponse retrieveCreatedProduct() {
+        final PostWorkingCapitalLoanProductsResponse productResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        return workingCapitalApi().retrieveOneWorkingCapitalLoanProduct(productResponse.getResourceId(), Map.of());
+    }
+
+    @When("Admin updates Working Capital Loan Product with delinquencyGraceDays {int} and delinquencyStartType {string}")
+    public void updateProductGraceDays(int graceDays, String startType) {
+        final Long resourceId = retrieveCreatedProductId();
+        final PutWorkingCapitalLoanProductsProductIdRequest updateRequest = new PutWorkingCapitalLoanProductsProductIdRequest() //
+                .delinquencyGraceDays(graceDays) //
+                .delinquencyStartType(startType) //
+                .locale(LoanProductsRequestFactory.LOCALE_EN);
+        ok(() -> workingCapitalApi().updateWorkingCapitalLoanProduct(resourceId, updateRequest, Map.of()));
+    }
+
+    private Long retrieveCreatedProductId() {
+        final PostWorkingCapitalLoanProductsResponse productResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        return productResponse.getResourceId();
+    }
+
+    @When("Admin retrieves the Working Capital Loan Product template")
+    public void retrieveProductTemplate() {
+        final GetWorkingCapitalLoanProductsTemplateResponse template = ok(
+                () -> workingCapitalApi().retrieveTemplateWorkingCapitalLoanProduct(Map.of()));
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_TEMPLATE_RESPONSE, template);
+    }
+
+    @Then("Working Capital Loan Product template has delinquencyStartTypeOptions containing:")
+    public void verifyTemplateDelinquencyStartTypeOptions(final DataTable table) {
+        final List<String> expectedOptions = table.asList();
+        final GetWorkingCapitalLoanProductsTemplateResponse template = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_TEMPLATE_RESPONSE);
+        assertThat(template.getDelinquencyStartTypeOptions()).isNotNull().isNotEmpty();
+        final List<String> actualCodes = template.getDelinquencyStartTypeOptions().stream().map(StringEnumOptionData::getCode).toList();
+        assertThat(actualCodes).containsAll(expectedOptions);
     }
 
 }

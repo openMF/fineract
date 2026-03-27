@@ -79,7 +79,10 @@ public class HolidayWritePlatformServiceJpaRepositoryImpl implements HolidayWrit
 
             this.holidayRepository.saveAndFlush(holiday);
 
-            return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(holiday.getId()).build();
+            return new CommandProcessingResultBuilder() //
+                    .withCommandId(command.commandId()) //
+                    .withEntityId(holiday.getId()) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
@@ -113,7 +116,10 @@ public class HolidayWritePlatformServiceJpaRepositoryImpl implements HolidayWrit
 
             this.holidayRepository.saveAndFlush(holiday);
 
-            return new CommandProcessingResultBuilder().withEntityId(holiday.getId()).with(changes).build();
+            return new CommandProcessingResultBuilder() //
+                    .withEntityId(holiday.getId()) //
+                    .with(changes) //
+                    .build();
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
@@ -132,7 +138,9 @@ public class HolidayWritePlatformServiceJpaRepositoryImpl implements HolidayWrit
 
         holiday.activate();
         this.holidayRepository.saveAndFlush(holiday);
-        return new CommandProcessingResultBuilder().withEntityId(holiday.getId()).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(holiday.getId()) //
+                .build();
     }
 
     @Transactional
@@ -142,7 +150,9 @@ public class HolidayWritePlatformServiceJpaRepositoryImpl implements HolidayWrit
         final Holiday holiday = this.holidayRepository.findOneWithNotFoundDetection(holidayId);
         holiday.delete();
         this.holidayRepository.saveAndFlush(holiday);
-        return new CommandProcessingResultBuilder().withEntityId(holidayId).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(holidayId) //
+                .build();
     }
 
     private Set<Office> getSelectedOffices(final JsonCommand command) {

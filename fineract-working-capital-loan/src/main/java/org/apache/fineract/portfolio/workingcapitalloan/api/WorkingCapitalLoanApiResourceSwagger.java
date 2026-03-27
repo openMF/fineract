@@ -46,6 +46,7 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public Collection<FundData> fundOptions;
         public Collection<WorkingCapitalLoanProductApiResourceSwagger.GetWorkingCapitalLoanProductsResponse.GetDelinquencyBucket> delinquencyBucketOptions;
         public List<StringEnumOptionData> periodFrequencyTypeOptions;
+        public List<StringEnumOptionData> delinquencyStartTypeOptions;
     }
 
     @Schema(description = "GetWorkingCapitalLoansClient")
@@ -190,6 +191,10 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         @Schema(example = "0.0")
         public BigDecimal discount;
         public WorkingCapitalLoanProductApiResourceSwagger.GetWorkingCapitalLoanProductsResponse.GetDelinquencyBucket delinquencyBucket;
+        @Schema(example = "3", description = "Number of grace days before delinquency tracking starts")
+        public Integer delinquencyGraceDays;
+        @Schema(description = "Delinquency start type: LOAN_CREATION or DISBURSEMENT")
+        public StringEnumOptionData delinquencyStartType;
         @Schema(example = "[2024, 1, 14]", description = "Last closed business date (COB)")
         public LocalDate lastClosedBusinessDate;
         public List<GetPaymentAllocation> paymentAllocation;
@@ -306,6 +311,10 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public BigDecimal discount;
         @Schema(example = "1")
         public Long delinquencyBucketId;
+        @Schema(example = "3")
+        public Integer delinquencyGraceDays;
+        @Schema(example = "LOAN_CREATION", description = "Delinquency start type: LOAN_CREATION or DISBURSEMENT")
+        public String delinquencyStartType;
         public List<PostPaymentAllocationRule> paymentAllocationRules;
 
         @Schema(example = "en_GB")
@@ -405,6 +414,10 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public BigDecimal discount;
         @Schema(example = "1")
         public Long delinquencyBucketId;
+        @Schema(example = "3")
+        public Integer delinquencyGraceDays;
+        @Schema(example = "LOAN_CREATION", description = "Delinquency start type: LOAN_CREATION or DISBURSEMENT")
+        public String delinquencyStartType;
         public List<PostWorkingCapitalLoansRequest.PostPaymentAllocationRule> paymentAllocationRules;
 
         @Schema(example = "en_GB")

@@ -93,7 +93,8 @@ public class StandingInstructionWritePlatformServiceImpl implements StandingInst
             handleDataIntegrityIssues(command, throwable, dve);
             return CommandProcessingResult.empty();
         }
-        final CommandProcessingResultBuilder builder = new CommandProcessingResultBuilder().withEntityId(standingInstructionId)
+        final CommandProcessingResultBuilder builder = new CommandProcessingResultBuilder() //
+                .withEntityId(standingInstructionId) //
                 .withClientId(fromClientId);
         return builder.build();
     }
@@ -128,7 +129,11 @@ public class StandingInstructionWritePlatformServiceImpl implements StandingInst
         AccountTransferStandingInstruction standingInstructionsForUpdate = this.standingInstructionRepository.findById(id)
                 .orElseThrow(() -> new StandingInstructionNotFoundException(id));
         final Map<String, Object> actualChanges = standingInstructionsForUpdate.update(command);
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(id).with(actualChanges).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(id) //
+                .with(actualChanges) //
+                .build();
     }
 
     @Override
@@ -140,6 +145,9 @@ public class StandingInstructionWritePlatformServiceImpl implements StandingInst
 
         final Map<String, Object> actualChanges = new HashMap<>();
         actualChanges.put(statusParamName, StandingInstructionStatus.DELETED.getValue());
-        return new CommandProcessingResultBuilder().withEntityId(id).with(actualChanges).build();
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(id) //
+                .with(actualChanges) //
+                .build();
     }
 }
