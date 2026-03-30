@@ -151,6 +151,7 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
         assertValidationError(exception, "validation.msg.WORKINGCAPITALLOAN.delinquencyBucketId.override.not.allowed.by.product");
         assertValidationError(exception, "validation.msg.WORKINGCAPITALLOAN.repaymentEvery.override.not.allowed.by.product");
         assertValidationError(exception, "validation.msg.WORKINGCAPITALLOAN.repaymentFrequencyType.override.not.allowed.by.product");
+        assertValidationError(exception, "validation.msg.WORKINGCAPITALLOAN.discount.override.not.allowed.by.product");
 
         log.info("Verified working capital loan creation failed with expected validation errors for LP overridables disabled");
     }

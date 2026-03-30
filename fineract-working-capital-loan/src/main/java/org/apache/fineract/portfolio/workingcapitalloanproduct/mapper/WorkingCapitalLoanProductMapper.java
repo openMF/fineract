@@ -139,10 +139,10 @@ public interface WorkingCapitalLoanProductMapper {
             return null;
         }
         return WorkingCapitalLoanProductConfigurableAttributesData.builder() //
-                .delinquencyBucketClassification(configurableAttributes.getDelinquencyBucketClassification()) //
-                .discountDefault(configurableAttributes.getDiscountDefault()) //
-                .periodPaymentFrequency(configurableAttributes.getPeriodPaymentFrequency()) //
-                .periodPaymentFrequencyType(configurableAttributes.getPeriodPaymentFrequencyType()) //
+                .delinquencyBucketClassification(configurableAttributes.isDelinquencyBucketClassification()) //
+                .discountDefault(configurableAttributes.isDiscountDefault()) //
+                .periodPaymentFrequency(configurableAttributes.isPeriodPaymentFrequency()) //
+                .periodPaymentFrequencyType(configurableAttributes.isPeriodPaymentFrequencyType()) //
                 .build();
     }
 }

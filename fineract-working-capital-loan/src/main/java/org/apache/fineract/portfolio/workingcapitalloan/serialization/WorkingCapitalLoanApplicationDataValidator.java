@@ -540,9 +540,8 @@ public class WorkingCapitalLoanApplicationDataValidator {
 
     private void validateOverridables(final JsonElement element, final DataValidatorBuilder baseDataValidator,
             final WorkingCapitalLoanProductConfigurableAttributes config) {
-        // When overridable is false/null, reject override attempt
         if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName, element)) {
-            if (Boolean.TRUE.equals(config.getDelinquencyBucketClassification())) {
+            if (config.isDelinquencyBucketClassification()) {
                 final Long bucketId = this.fromApiJsonHelper
                         .extractLongNamed(WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName, element);
                 baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName).value(bucketId)
@@ -553,7 +552,7 @@ public class WorkingCapitalLoanApplicationDataValidator {
             }
         }
         if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.repaymentEveryParamName, element)) {
-            if (Boolean.TRUE.equals(config.getPeriodPaymentFrequency())) {
+            if (config.isPeriodPaymentFrequency()) {
                 final Integer repaymentEvery = this.fromApiJsonHelper
                         .extractIntegerWithLocaleNamed(WorkingCapitalLoanProductConstants.repaymentEveryParamName, element);
                 baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.repaymentEveryParamName).value(repaymentEvery)
@@ -564,7 +563,7 @@ public class WorkingCapitalLoanApplicationDataValidator {
             }
         }
         if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.repaymentFrequencyTypeParamName, element)) {
-            if (Boolean.TRUE.equals(config.getPeriodPaymentFrequencyType())) {
+            if (config.isPeriodPaymentFrequencyType()) {
                 final String repaymentFrequencyTypeValue = this.fromApiJsonHelper
                         .extractStringNamed(WorkingCapitalLoanProductConstants.repaymentFrequencyTypeParamName, element);
                 baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.repaymentFrequencyTypeParamName)
@@ -583,7 +582,12 @@ public class WorkingCapitalLoanApplicationDataValidator {
             }
         }
         if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.discountParamName, element)) {
-            if (Boolean.FALSE.equals(config.getDiscountDefault())) {
+            if (config.isDiscountDefault()) {
+                final BigDecimal discount = this.fromApiJsonHelper
+                        .extractBigDecimalNamed(WorkingCapitalLoanProductConstants.discountParamName, element, new java.util.HashSet<>());
+                baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.discountParamName).value(discount).ignoreIfNull()
+                        .zeroOrPositiveAmount();
+            } else {
                 baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.discountParamName)
                         .failWithCode("override.not.allowed.by.product");
             }

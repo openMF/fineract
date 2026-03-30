@@ -407,6 +407,32 @@ public class WorkingCapitalLoanApplicationValidationTest {
         productHelper.deleteWorkingCapitalLoanProductById(productId);
     }
 
+    /**
+     * Product created without allowAttributeOverrides (all default to false). Discount override should be rejected.
+     */
+    @Test
+    public void testSubmitWithDiscountOverrideWhenProductHasNoOverridesConfigured() {
+        final Long productId = createProductWithoutOverrides();
+        final Long clientId = createClient();
+        final String json = new WorkingCapitalLoanApplicationTestBuilder() //
+                .withClientId(clientId) //
+                .withProductId(productId) //
+                .withPrincipal(BigDecimal.valueOf(5000)) //
+                .withPeriodPaymentRate(BigDecimal.ONE) //
+                .withTotalPayment(BigDecimal.valueOf(5500)) //
+                .withDiscount(BigDecimal.ONE) //
+                .buildSubmitJson();
+
+        final CallFailedRuntimeException ex = applicationHelper.runSubmitExpectingFailure(json);
+        assertEquals(400, ex.getStatus());
+        assertNotNull(ex.getDeveloperMessage());
+        assertTrue(ex.getDeveloperMessage().contains("override.not.allowed.by.product"),
+                "Expected override.not.allowed.by.product in: " + ex.getDeveloperMessage());
+        assertTrue(ex.getDeveloperMessage().contains("discount"), "Expected discount in: " + ex.getDeveloperMessage());
+
+        productHelper.deleteWorkingCapitalLoanProductById(productId);
+    }
+
     @Test
     public void testSubmitWithDuplicateAccountNo() {
         final Long productId = createProduct();
@@ -973,6 +999,16 @@ public class WorkingCapitalLoanApplicationValidationTest {
                 .withName(uniqueName) //
                 .withShortName(uniqueShortName) //
                 .withAllowAttributeOverrides(Map.of("discountDefault", false)) //
+                .build()) //
+                .getResourceId();
+    }
+
+    private Long createProductWithoutOverrides() {
+        final String uniqueName = "WCL Product " + UUID.randomUUID().toString().substring(0, 8);
+        final String uniqueShortName = UUID.randomUUID().toString().replace("-", "").substring(0, 4);
+        return productHelper.createWorkingCapitalLoanProduct(new WorkingCapitalLoanProductTestBuilder() //
+                .withName(uniqueName) //
+                .withShortName(uniqueShortName) //
                 .build()) //
                 .getResourceId();
     }

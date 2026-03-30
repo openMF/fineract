@@ -341,10 +341,10 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
     }
 
     private WorkingCapitalLoanProductConfigurableAttributes createConfigurableAttributesFromCommand(final JsonCommand command) {
-        Boolean delinquencyBucketClassification = null;
-        Boolean discountDefault = null;
-        Boolean periodPaymentFrequency = null;
-        Boolean periodPaymentFrequencyType = null;
+        boolean delinquencyBucketClassification = false;
+        boolean discountDefault = false;
+        boolean periodPaymentFrequency = false;
+        boolean periodPaymentFrequencyType = false;
 
         if (command.parameterExists(WorkingCapitalLoanProductConstants.allowAttributeOverridesParamName)) {
             final JsonObject allowOverrides = command.parsedJson().getAsJsonObject()
