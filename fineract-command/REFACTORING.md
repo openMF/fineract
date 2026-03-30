@@ -46,7 +46,7 @@ If you need to transform between two POJOs then use MapStruct wherever possible.
 Please make sure to always follow this package structure pattern:
 
 - `api`: contains all REST JAX-RS resource classes (later Spring Web MVC controllers)
-- `command`: primarily used for command specific child class implementations of `org.apache.fineract.command.core.Command` (see section "Command Pipeline preserving Type Information")
+- `command`: primarily used for command specific child class implementations of `org.apache.fineract.command.core.Command` (see section "Command Dispatcher preserving Type Information")
 - `data`: contains all DTOs (request and response types)
 - `domain`: contains all entity/table mapping classes
 - `handler`: contains all command handlers
@@ -177,7 +177,7 @@ The **write requests** (HTTP **PUT** and **POST**) are the ones that affect the 
 
 Usually you'll have 2 classes to take care of: **requests** (incoming input parameters) and **responses** (outgoing results). These classes are technically **DTO**s (data transfer objects) or **VO**s (value objects) and to make them more recognizable as such I would start standardizing the naming. E.g. if I have a use case aka REST endpoint that creates client data we would name that DTO class `CreateClientRequest`; and if any data needs to be sent back to the client then that class should be called `CreateClientResponse`. This is a very simple mechanic that helps identifying immediately what is what and doesn't require the developers to come up with any naming stunts. Do not try to re-use these DTOs on multiple endpoints, it's not worth it. Create a separate DTO for each endpoint. Nice side effect: all this becomes then nicer to read (both in Java code and in the OpenAPI descriptor and the resulting Asciidoc documentation) and this will make it less likely that names are clashing in the OpenAPI descriptor (and during code generation for the Fineract Java Client).
 
-Only new thing that needs to be injected in those REST API resource classes (JAX-RS) or controllers (Spring Web MVC) is the `CommandPipeline` component that allows you to send requests to the **command pipeline** which in turn will be processed by **handlers** that eventually call one or more **business logic services**. Results are sent back to the pipeline and are received in the REST API aka returned by `CommandPipeline` as so called **supplier objects**. (Java) Supplier is a functional interface, i.e. there is only one function to be implemented (`get()`). This small abstraction helps us to standardize how the results are delivered (**synchronous**, **asynchronous**, **non-blocking**) and maintain the same internal API.
+Only new thing that needs to be injected in those REST API resource classes (JAX-RS) or controllers (Spring Web MVC) is the `CommandDispatcher` component that allows you to send requests to the **command dispatcher** which in turn will be processed by **handlers** that eventually call one or more **business logic services**. Results are sent back to the dispatcher and are received in the REST API aka returned by `CommandDispatcher` as so called **supplier objects**. (Java) Supplier is a functional interface, i.e. there is only one function to be implemented (`get()`). This small abstraction helps us to standardize how the results are delivered (**synchronous**, **asynchronous**, **non-blocking**) and maintain the same internal API.
 
 3. Jakarta Validation
 
@@ -227,10 +227,10 @@ Another relatively low hanging fruit that can be tackled here is the way we enfo
 
 Because all JSON parsing was done up until now manually some developers got tired and decided to pass the JSON data structures (`CommandWrapper`, `JsonCommand`) directly to the business logic services. This is **WRONG**. The only parameter those business logic functions should receive is exactly ONE Java Pojo that contains all necessary input parameter for that function to execute. **DO NOT** define functions with primitive/base types. It is impossible to understand the order of those parameters once you have e.g. 17 (example to make a point) string variables. Ideally, you'd just pass the request POJOs to those functions. If you need to transform something then use **MapStruct** instead of manual code. The refactoring should not be too bad. Once proper Java POJOs are defined for the functions we just need to replace the manual JSON parsing boilerplate in the service classes and just call the getters/setters of the request POJOs (instead the manual JSON parsing). The results should also be sent back in proper POJOs (responses). I would go as far that even if you have a single string value (example) that you **should** wrap it in a response class (same for the incoming input parameters aka requests). This will make the service interfaces more stable if we add/remove parameters over time; in other words: this will avoid all those refactoring fests we have upstream when we have functions with 12 base type (example) parameters and need to add/remove something. Obviously you need to check where else in Fineract's code base those service functions are called and adapt accordingly, but usually those functions are called in just one place (handlers).
 
-Command Pipeline preserving Type Information
+Command Dispatcher preserving Type Information
 --------------------------------------------
 
-`CommandPipeline` needs to be injected where needed (usually only REST API controllers). By default everything is configured for `sync`(-hronous) processing. Other modes (`async`, `disruptor`) can be easily configured via application.properties, but need more testing and are out of scope for now. As you can see the command object just contains some of metadata (`createdAt`, `username` etc.) and the payload aka request object. Obviously we have different use cases so that **payload** attribute is defined as a generic **type**. Please check the unit test code how to create a command object with payload/request properly.
+`CommandDispatcher` needs to be injected where needed (usually only REST API controllers). By default everything is configured for `sync`(-hronous) processing. Other modes (`async`, `disruptor`) can be easily configured via application.properties, but need more testing and are out of scope for now. As you can see the command object just contains some of metadata (`createdAt`, `username` etc.) and the payload aka request object. Obviously we have different use cases so that **payload** attribute is defined as a generic **type**. Please check the unit test code how to create a command object with payload/request properly.
 
 ```
 public class DummyApiResource {
@@ -268,7 +268,7 @@ When we use **Spring Web MVC unit testing** (actually integration testing) gets 
 Command Handlers
 ----------------
 
-In the current CQRS implementation we have already a concept that is called **handlers**. Those handlers are responsible to receive the command objects with their (request) payloads and transform the requests as needed an pass them to one or more business logic services. The refactoring of those handlers should not be too complicated, they just need to implement the Java interface `CommandHandler`. Look at my test samples to see how the implementation details look like.
+In the current CQRS implementation we have already a concept called **command handlers**. Those handlers are responsible to receive the command objects with their (request) payloads and transform the requests as needed an pass them to one or more business logic services. The refactoring of those handlers should not be too complicated, they just need to implement the Java interface `CommandHandler`. Look at my test samples to see how the implementation details look like.
 
 The old handlers look somewhat like this:
 

@@ -43,7 +43,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.infrastructure.bulkimport.data.GlobalEntityType;
 import org.apache.fineract.infrastructure.bulkimport.service.BulkImportWorkbookPopulatorService;
 import org.apache.fineract.organisation.office.data.OfficeData;
@@ -74,7 +74,7 @@ public class StaffApiResource {
     private final StaffReadService readPlatformService;
     private final OfficeReadPlatformService officeReadPlatformService;
     private final BulkImportWorkbookPopulatorService bulkImportWorkbookPopulatorService;
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
 
     @GET
     @Operation(summary = "Retrieve Staff", operationId = "retrieveAllStaff", description = """
@@ -152,7 +152,7 @@ public class StaffApiResource {
 
         command.setPayload(request);
 
-        final Supplier<StaffCreateResponse> response = commandPipeline.send(command);
+        final Supplier<StaffCreateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }
@@ -168,7 +168,7 @@ public class StaffApiResource {
 
         command.setPayload(request);
 
-        final Supplier<StaffUpdateResponse> response = commandPipeline.send(command);
+        final Supplier<StaffUpdateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }
@@ -187,7 +187,7 @@ public class StaffApiResource {
         command.setPayload(StaffUploadRequest.builder().uploadedInputStream(uploadedInputStream).fileDetail(fileDetail).locale(locale)
                 .dateFormat(dateFormat).build());
 
-        final Supplier<StaffUpdateResponse> response = commandPipeline.send(command);
+        final Supplier<StaffUpdateResponse> response = dispatcher.dispatch(command);
 
         // TODO: return the whole body, a number is not a valid JSON element!
         return response.get().getResourceId();

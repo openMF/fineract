@@ -21,7 +21,7 @@ package org.apache.fineract.infrastructure.bulkimport.service;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.infrastructure.bulkimport.data.BulkImportEvent;
 import org.apache.fineract.infrastructure.bulkimport.data.GlobalEntityType;
 import org.apache.fineract.infrastructure.bulkimport.domain.ImportDocumentRepository;
@@ -45,7 +45,7 @@ public class BulkImportEventListener implements ApplicationListener<BulkImportEv
     private final ApplicationContext applicationContext;
     private final ImportDocumentRepository importRepository;
     private final ContentPipe pipe;
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
 
     @Override
     public void onApplicationEvent(final BulkImportEvent event) {
@@ -93,7 +93,7 @@ public class BulkImportEventListener implements ApplicationListener<BulkImportEv
             command.setPayload(DocumentUpdateRequest.builder().id(event.getImportDocument().getDocumentId()).entityId(event.getEntityId())
                     .entityType("IMPORT").stream(pipedInputStream).build());
 
-            final Supplier<DocumentCreateResponse> response = commandPipeline.send(command);
+            final Supplier<DocumentCreateResponse> response = dispatcher.dispatch(command);
 
             response.get();
 

@@ -61,7 +61,7 @@ import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.infrastructure.contentstore.processor.Base64DecoderContentProcessor;
 import org.apache.fineract.infrastructure.contentstore.processor.Base64EncoderContentProcessor;
 import org.apache.fineract.infrastructure.contentstore.processor.ContentProcessorContext;
@@ -90,7 +90,7 @@ import org.springframework.stereotype.Component;
 public class ImagesApiResource {
 
     private final ImageReadPlatformService imageReadPlatformService;
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
     private final ImageResizeContentProcessor imageResizeContentProcessor;
     private final Base64EncoderContentProcessor base64EncoderContentProcessor;
     private final DataUrlEncoderContentProcessor dataUrlEncoderContentProcessor;
@@ -172,7 +172,7 @@ public class ImagesApiResource {
                 ImageCreateRequest.builder().entityId(entityId).entityType(entityType).fileName(fileDetails.getFileName()).size(fileSize)
                         .type(Optional.ofNullable(filePart.getMediaType()).map(MediaType::toString).orElse(null)).stream(is).build());
 
-        final Supplier<ImageCreateResponse> response = commandPipeline.send(command);
+        final Supplier<ImageCreateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }
@@ -190,7 +190,7 @@ public class ImagesApiResource {
 
         command.setPayload(ImageCreateRequest.builder().entityId(entityId).entityType(entityType).stream(ctx.getInputStream()).build());
 
-        final Supplier<ImageCreateResponse> response = commandPipeline.send(command);
+        final Supplier<ImageCreateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }
@@ -222,7 +222,7 @@ public class ImagesApiResource {
 
         command.setPayload(ImageDeleteRequest.builder().entityId(entityId).entityType(entityType).build());
 
-        final Supplier<ImageDeleteResponse> response = commandPipeline.send(command);
+        final Supplier<ImageDeleteResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }

@@ -21,6 +21,7 @@ package org.apache.fineract.command;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.command.core.CommandProperties;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -30,8 +31,10 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @Slf4j
 @Configuration
 @EnableConfigurationProperties({ CommandProperties.class })
-@EnableAutoConfiguration
+@EnableAutoConfiguration(exclude = { DataSourceAutoConfiguration.class })
 @EnableAsync
 @PropertySource("classpath:application-test.properties")
-@ComponentScan("org.apache.fineract.command.sample")
+@ComponentScan("org.apache.fineract.command.implementation")
+@ComponentScan("org.apache.fineract.command.hook")
+@ComponentScan("org.apache.fineract.command.test.sample")
 public class TestConfiguration {}

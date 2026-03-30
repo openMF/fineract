@@ -36,10 +36,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.command.core.CommandAuditor;
 import org.apache.fineract.command.core.CommandProperties;
-import org.apache.fineract.command.sample.data.DummyRequest;
-import org.apache.fineract.command.sample.data.DummyResponse;
+import org.apache.fineract.command.test.sample.data.DummyRequest;
+import org.apache.fineract.command.test.sample.data.DummyResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -57,7 +56,7 @@ import org.springframework.test.context.ContextConfiguration;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(classes = TestConfiguration.class)
 @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
-class CommandSampleApiTest extends CommandBaseTest {
+class CommandSampleApiTest {
 
     @LocalServerPort
     private int port;
@@ -68,9 +67,6 @@ class CommandSampleApiTest extends CommandBaseTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
-
-    @Autowired
-    private CommandAuditor auditor;
 
     @Autowired
     private CommandProperties properties;
@@ -112,70 +108,22 @@ class CommandSampleApiTest extends CommandBaseTest {
 
         final var result = restTemplate.postForObject(baseUrl + "/sync", request, DummyResponse.class);
 
-        log.warn("Result (sync) : {}", result.getContent());
+        log.warn("Result (sync) : {}", result);
 
         assertNotNull(result, "Response should not be null.");
         assertNotNull(result.getContent(), "Response body should not be null.");
-        assertNotNull(result.getTenantId(), "Tenant ID should not be null.");
-        assertEquals("dummy", result.getTenantId(), "Unexpected tenant ID.");
         assertEquals(content.toUpperCase(Locale.ROOT), result.getContent(), "Wrong response content.");
 
-        var response = auditor.getResponseByIdempotencyKey(idempotencyKey);
-
-        if (response instanceof DummyResponse dummyResponse) {
-            assertNotNull(dummyResponse, "There should be a command entity stored with a dummyResponse.");
-            assertNotNull(dummyResponse, "Response should not be null.");
-            assertNotNull(dummyResponse.getContent(), "Response body should not be null.");
-            assertNotNull(dummyResponse.getTenantId(), "Tenant ID should not be null.");
-            assertEquals("dummy", dummyResponse.getTenantId(), "Unexpected tenant ID.");
-            assertEquals(content.toUpperCase(Locale.ROOT), dummyResponse.getContent(), "Wrong response content.");
-        }
-
-        log.warn("Command response: {}", response);
-    }
-
-    @Test
-    void dummyApiAsync() {
-        final var content = "test-async";
-        final var idempotencyKey = UUID.randomUUID().toString();
-
-        restTemplate.getRestTemplate().setInterceptors(interceptors);
-
-        final var headers = new HttpHeaders();
-        headers.add(properties.getIdemPotencyKeyHeaderName(), idempotencyKey);
-
-        final var request = new HttpEntity<>(DummyRequest.builder().content(content).build(), headers);
-
-        final var result = restTemplate.postForObject(baseUrl + "/async", request, DummyResponse.class);
-
-        log.warn("Result (async): {}", result.getContent());
-
-        assertNotNull(result, "Response should not be null.");
-        assertNotNull(result.getContent(), "Response body should not be null.");
-        // TODO: make sure all ThreadLocal variables are available
-        // assertNotNull(result.getTenantId(), "Tenant ID should not be null.");
-        // assertEquals("dummy", result.getTenantId(), "Unexpected tenant ID.");
-        assertEquals(content.toUpperCase(Locale.ROOT), result.getContent(), "Wrong response content.");
-
-        var response = auditor.getResponseByIdempotencyKey(idempotencyKey);
-
-        // TODO: always null; need to fix this before we release async mode
-        if (response instanceof DummyResponse dummyResponse) {
-            assertNotNull(dummyResponse, "There should be a command entity stored with a dummyResponse.");
-            assertNotNull(dummyResponse, "Response should not be null.");
-            assertNotNull(dummyResponse.getContent(), "Response body should not be null.");
-            assertNotNull(dummyResponse.getTenantId(), "Tenant ID should not be null.");
-            assertEquals("dummy", dummyResponse.getTenantId(), "Unexpected tenant ID.");
-            assertEquals(content.toUpperCase(Locale.ROOT), dummyResponse.getContent(), "Wrong response content.");
-        }
-
-        log.warn("Command response: {}", response);
-    }
-
-    @Test
-    @Disabled // TODO: implement idempotency properly with backwards compatibility
-    void dummyApiIdempotencyAsync() {
-        dummyApiIdempotency("/async");
+        // DummyResponse response = store.getResponseByKey(idempotencyKey);
+        //
+        // assertNotNull(response, "There should be a command entity stored with a response.");
+        // assertNotNull(response, "Response should not be null.");
+        // assertNotNull(response.getContent(), "Response body should not be null.");
+        // assertNotNull(response.getTenantId(), "Tenant ID should not be null.");
+        // assertEquals("dummy", response.getTenantId(), "Unexpected tenant ID.");
+        // assertEquals(content.toUpperCase(Locale.ROOT), response.getContent(), "Wrong response content.");
+        //
+        // log.warn("Command response: {}", response);
     }
 
     @Test

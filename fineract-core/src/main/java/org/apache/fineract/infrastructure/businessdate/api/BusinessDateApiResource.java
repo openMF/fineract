@@ -32,7 +32,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.infrastructure.businessdate.command.BusinessDateUpdateCommand;
 import org.apache.fineract.infrastructure.businessdate.data.api.BusinessDateResponse;
 import org.apache.fineract.infrastructure.businessdate.data.api.BusinessDateUpdateRequest;
@@ -48,7 +48,7 @@ import org.springframework.stereotype.Component;
 public class BusinessDateApiResource {
 
     private final BusinessDateReadPlatformService readPlatformService;
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
     private final BusinessDateMapper businessDateMapper;
 
     @GET
@@ -78,7 +78,7 @@ public class BusinessDateApiResource {
 
         command.setPayload(request);
 
-        final Supplier<BusinessDateUpdateResponse> response = commandPipeline.send(command);
+        final Supplier<BusinessDateUpdateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }

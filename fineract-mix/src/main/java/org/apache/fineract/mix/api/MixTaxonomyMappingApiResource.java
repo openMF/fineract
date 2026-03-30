@@ -27,7 +27,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.mix.command.MixTaxonomyMappingUpdateCommand;
 import org.apache.fineract.mix.data.MixTaxonomyMappingData;
 import org.apache.fineract.mix.data.MixTaxonomyMappingUpdateRequest;
@@ -42,7 +42,7 @@ import org.springframework.stereotype.Component;
 public class MixTaxonomyMappingApiResource {
 
     private final MixTaxonomyMappingReadService readTaxonomyMappingService;
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
 
     @GET
     @Consumes({ MediaType.APPLICATION_JSON })
@@ -64,7 +64,7 @@ public class MixTaxonomyMappingApiResource {
 
         command.setPayload(request);
 
-        final Supplier<MixTaxonomyMappingUpdateResponse> response = commandPipeline.send(command);
+        final Supplier<MixTaxonomyMappingUpdateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }

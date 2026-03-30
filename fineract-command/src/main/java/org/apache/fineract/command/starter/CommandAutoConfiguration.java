@@ -22,5 +22,5 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Import;
 
 @AutoConfiguration
-@Import({ CommandConfiguration.class, CommandPersistenceConfiguration.class })
+@Import({ CommandConfiguration.class })
 public class CommandAutoConfiguration {}

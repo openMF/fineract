@@ -33,7 +33,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.infrastructure.core.serialization.DefaultToApiJsonSerializer;
 import org.apache.fineract.portfolio.paymenttype.command.PaymentTypeCreateCommand;
 import org.apache.fineract.portfolio.paymenttype.command.PaymentTypeDeleteCommand;
@@ -55,7 +55,7 @@ import org.springframework.stereotype.Component;
 public class PaymentTypeApiResource {
 
     private final PaymentTypeReadService readPlatformService;
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
     private final DefaultToApiJsonSerializer<PaymentTypeData> jsonSerializer;
 
     @GET
@@ -84,7 +84,7 @@ public class PaymentTypeApiResource {
 
         command.setPayload(request);
 
-        final Supplier<PaymentTypeCreateResponse> response = commandPipeline.send(command);
+        final Supplier<PaymentTypeCreateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }
@@ -103,7 +103,7 @@ public class PaymentTypeApiResource {
 
         command.setPayload(request);
 
-        final Supplier<PaymentTypeUpdateResponse> response = commandPipeline.send(command);
+        final Supplier<PaymentTypeUpdateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }
@@ -119,7 +119,7 @@ public class PaymentTypeApiResource {
 
         command.setPayload(PaymentTypeDeleteRequest.builder().id(paymentTypeId).build());
 
-        final Supplier<PaymentTypeDeleteResponse> response = commandPipeline.send(command);
+        final Supplier<PaymentTypeDeleteResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }

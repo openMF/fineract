@@ -29,7 +29,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.infrastructure.event.external.command.ExternalConfigurationsUpdateCommand;
 import org.apache.fineract.infrastructure.event.external.data.ExternalEventConfigurationResponse;
 import org.apache.fineract.infrastructure.event.external.data.ExternalEventConfigurationUpdateRequest;
@@ -44,7 +44,7 @@ import org.springframework.stereotype.Component;
 public class ExternalEventConfigurationApiResource {
 
     private final ExternalEventConfigurationReadPlatformService readPlatformService;
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
 
     @GET
     @Consumes({ MediaType.APPLICATION_JSON })
@@ -64,7 +64,7 @@ public class ExternalEventConfigurationApiResource {
 
         command.setPayload(request);
 
-        final Supplier<ExternalEventConfigurationUpdateResponse> response = commandPipeline.send(command);
+        final Supplier<ExternalEventConfigurationUpdateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }

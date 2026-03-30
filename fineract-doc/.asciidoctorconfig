@@ -16,7 +16,7 @@
 // under the License.
 //
 :years: 2015-2026
-:revnumber: 1.14.0
+:revnumber: 1.15.0-SNAPSHOT
 :draft: true
 :rootdir: {asciidoctorconfigdir}/..
 :generated: {asciidoctorconfigdir}/build/generated/asciidoc

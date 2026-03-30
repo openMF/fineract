@@ -20,7 +20,6 @@ description = 'Fineract Command'
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
-apply plugin: 'me.champeau.jmh'
 
 configurations {
     asciidoctorExtensions
@@ -70,13 +69,4 @@ if (!(project.hasProperty('env') && project.getProperty('env') == 'dev')) {
             }
         }
     }
-}
-
-jmh {
-    // include = ['.*'] // Include all benchmarks (regex-based filter)
-    warmupIterations = 2 // Number of warm-up iterations
-    iterations = 3 // Number of measurement iterations
-    fork = 1 // Number of forks
-    timeOnIteration = '2s' // Time per iteration
-    benchmarkMode = ['thrpt'] // Default benchmark mode
 }

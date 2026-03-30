@@ -29,7 +29,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.apache.fineract.infrastructure.contentstore.service.ContentStoreService;
-import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.apache.fineract.infrastructure.core.exception.ErrorHandler;
 import org.apache.fineract.infrastructure.documentmanagement.data.DocumentCreateRequest;
 import org.apache.fineract.infrastructure.documentmanagement.data.DocumentCreateResponse;
@@ -58,7 +57,6 @@ public class DocumentWritePlatformServiceImpl implements DocumentWritePlatformSe
     private final DocumentMapper documentMapper;
     private final ContentStoreService storeService;
     private final BusinessEventNotifierService businessEventNotifierService;
-    private final FineractProperties properties;
 
     @Transactional
     @Override

@@ -27,8 +27,7 @@ public interface CommandHandler<REQ, RES> {
 
     @SneakyThrows
     default RES fallback(Command<REQ> command, Throwable t) {
-        // NOTE: I think this should be enough for now; the errors bubble up and will eventually be handled the global
-        // error handler. Any command handler can override this default to implement more specialized fallbacks.
+        // NOTE: any command handler can override this default to implement more specialized fallbacks.
         throw t;
     }
 

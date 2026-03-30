@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.infrastructure.bulkimport.constants.StaffConstants;
 import org.apache.fineract.infrastructure.bulkimport.constants.TemplatePopulateImportConstants;
 import org.apache.fineract.infrastructure.bulkimport.data.Count;
@@ -50,7 +50,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class StaffImportHandler implements ImportHandler {
 
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
     private final StaffDataMapper staffDataMapper;
     private final StaffDateMapper staffDateMapper;
 
@@ -109,7 +109,7 @@ public class StaffImportHandler implements ImportHandler {
 
                 command.setPayload(request);
 
-                final Supplier<StaffCreateResponse> response = commandPipeline.send(command);
+                final Supplier<StaffCreateResponse> response = dispatcher.dispatch(command);
 
                 response.get();
 

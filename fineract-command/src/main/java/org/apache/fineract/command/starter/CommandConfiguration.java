@@ -18,49 +18,14 @@
  */
 package org.apache.fineract.command.starter;
 
-import com.lmax.disruptor.IgnoreExceptionHandler;
-import com.lmax.disruptor.WaitStrategy;
-import com.lmax.disruptor.YieldingWaitStrategy;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.util.DaemonThreadFactory;
 import org.apache.fineract.command.core.CommandProperties;
-import org.apache.fineract.command.core.CommandRouter;
-import org.apache.fineract.command.implementation.DisruptorCommandExecutor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(CommandProperties.class)
 @ComponentScan("org.apache.fineract.command.core")
+@ComponentScan("org.apache.fineract.command.hook")
 @ComponentScan("org.apache.fineract.command.implementation")
-class CommandConfiguration {
-
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(value = "fineract.command.executor", havingValue = "disruptor")
-    WaitStrategy waitStrategy() {
-        return new YieldingWaitStrategy();
-    }
-
-    @Bean
-    @ConditionalOnProperty(value = "fineract.command.executor", havingValue = "disruptor")
-    Disruptor<?> disruptor(CommandProperties properties, WaitStrategy waitStrategy, CommandRouter router) {
-        // TODO: make this more configurable
-
-        // Create the disruptor
-        Disruptor<DisruptorCommandExecutor.CommandEvent> disruptor = new Disruptor<>(DisruptorCommandExecutor.CommandEvent::new,
-                properties.getRingBufferSize(), DaemonThreadFactory.INSTANCE, properties.getProducerType(), waitStrategy);
-
-        disruptor.handleEventsWith(new DisruptorCommandExecutor.CompleteableCommandEventHandler(router));
-        disruptor.setDefaultExceptionHandler(new IgnoreExceptionHandler());
-
-        // Start the disruptor
-        disruptor.start();
-
-        return disruptor;
-    }
-}
+class CommandConfiguration {}

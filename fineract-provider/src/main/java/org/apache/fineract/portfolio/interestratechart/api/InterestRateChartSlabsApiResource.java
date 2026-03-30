@@ -35,7 +35,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.portfolio.interestratechart.command.InterestRateChartSlabsCreateCommand;
 import org.apache.fineract.portfolio.interestratechart.command.InterestRateChartSlabsDeleteCommand;
 import org.apache.fineract.portfolio.interestratechart.command.InterestRateChartSlabsUpdateCommand;
@@ -53,12 +53,15 @@ import org.springframework.stereotype.Component;
 @Component
 @Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
-@Tag(name = "Interest Rate Slab (A.K.A interest bands)", description = "The slabs a.k.a interest bands are associated with Interest Rate Chart. These bands allow to define different interest rates for different deposit term periods.")
+@Tag(name = "Interest Rate Slab (A.K.A interest bands)", description = """
+        The slabs a.k.a interest bands are associated with Interest Rate Chart. These bands allow to define different interest
+        rates for different deposit term periods.
+        """)
 @RequiredArgsConstructor
 public class InterestRateChartSlabsApiResource {
 
     private final InterestRateChartSlabsReadService interestRateChartSlabsReadService;
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
 
     @GET
     @Path("template")
@@ -75,24 +78,44 @@ public class InterestRateChartSlabsApiResource {
 
     @GET
     @Path("{chartSlabId}")
-    @Operation(summary = "Retrieve a Slab", description = "Retrieve a slab associated with an Interest rate chart\n" + "\n"
-            + "Example Requests:\n" + "\n" + "interestratecharts/1/chartslabs/1\n")
+    @Operation(summary = "Retrieve a Slab", description = """
+            Retrieve a slab associated with an Interest rate chart
+
+            Example Requests:
+
+            - interestratecharts/1/chartslabs/1
+            """)
     public InterestRateChartSlabData retrieveOne(@PathParam("chartId") final Long chartId,
             @PathParam("chartSlabId") final Long chartSlabId) {
         return interestRateChartSlabsReadService.retrieveOne(chartId, chartSlabId);
     }
 
     @POST
-    @Operation(summary = "Create a Slab", description = "Creates a new interest rate slab for an interest rate chart.\n"
-            + "Mandatory Fields\n" + "periodType, fromPeriod, annualInterestRate\n" + "Optional Fields\n" + "toPeriod and description\n"
-            + "Example Requests:\n" + "\n" + "interestratecharts/1/chartslabs")
+    @Operation(summary = "Create a Slab", description = """
+            Creates a new interest rate slab for an interest rate chart.
+
+            Mandatory Fields:
+
+            - periodType
+            - fromPeriod
+            - annualInterestRate
+
+            Optional Fields
+
+            - toPeriod
+            - description
+
+            Example Requests:
+
+            - interestratecharts/1/chartslabs
+            """)
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = InterestRateChartSlabsCreateResponse.class)))
     public InterestRateChartSlabsCreateResponse create(@PathParam("chartId") final Long chartId,
             final InterestRateChartSlabsCreateRequest request) {
         request.setChartId(chartId);
         final var command = new InterestRateChartSlabsCreateCommand();
         command.setPayload(request);
-        final Supplier<InterestRateChartSlabsCreateResponse> responseSupplier = commandPipeline.send(command);
+        final Supplier<InterestRateChartSlabsCreateResponse> responseSupplier = dispatcher.dispatch(command);
         return responseSupplier.get();
     }
 
@@ -108,7 +131,7 @@ public class InterestRateChartSlabsApiResource {
         final var command = new InterestRateChartSlabsUpdateCommand();
         command.setPayload(request);
 
-        final Supplier<InterestRateChartSlabsUpdateResponse> responseSupplier = commandPipeline.send(command);
+        final Supplier<InterestRateChartSlabsUpdateResponse> responseSupplier = dispatcher.dispatch(command);
 
         return responseSupplier.get();
     }
@@ -121,7 +144,7 @@ public class InterestRateChartSlabsApiResource {
             @PathParam("chartSlabId") final Long chartSlabId) {
         final var command = new InterestRateChartSlabsDeleteCommand();
         command.setPayload(InterestRateChartSlabsDeleteRequest.builder().chartId(chartId).chartSlabId(chartSlabId).build());
-        final Supplier<InterestRateChartSlabsDeleteResponse> responseSupplier = commandPipeline.send(command);
+        final Supplier<InterestRateChartSlabsDeleteResponse> responseSupplier = dispatcher.dispatch(command);
         return responseSupplier.get();
     }
 }

@@ -30,7 +30,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.time.Instant;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.organisation.workingdays.command.WorkingDaysUpdateCommand;
 import org.apache.fineract.organisation.workingdays.data.WorkingDaysData;
 import org.apache.fineract.organisation.workingdays.data.WorkingDaysUpdateRequest;
@@ -50,7 +50,7 @@ public class WorkingDaysApiResource {
 
     private final WorkingDaysReadPlatformService workingDaysReadPlatformService;
     private final WorkingDaysUpdateRequestValidator workingDaysUpdateRequestValidator;
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
 
     @GET
     @Consumes({ MediaType.APPLICATION_JSON })
@@ -73,7 +73,7 @@ public class WorkingDaysApiResource {
         command.setCreatedAt(Instant.now());
         command.setPayload(request);
 
-        final Supplier<WorkingDaysUpdateResponse> response = commandPipeline.send(command);
+        final Supplier<WorkingDaysUpdateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }

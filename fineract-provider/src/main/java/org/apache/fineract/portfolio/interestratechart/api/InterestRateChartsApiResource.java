@@ -38,7 +38,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.Collection;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.portfolio.interestratechart.InterestRateChartApiConstants;
 import org.apache.fineract.portfolio.interestratechart.command.InterestRateChartCreateCommand;
 import org.apache.fineract.portfolio.interestratechart.command.InterestRateChartDeleteCommand;
@@ -63,7 +63,7 @@ public class InterestRateChartsApiResource {
 
     private final InterestRateChartReadService chartReadPlatformService;
 
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
 
     @GET
     @Path("template")
@@ -110,7 +110,7 @@ public class InterestRateChartsApiResource {
 
         final var command = new InterestRateChartCreateCommand();
         command.setPayload(request);
-        final Supplier<InterestRateChartCreateResponse> responseSupplier = commandPipeline.send(command);
+        final Supplier<InterestRateChartCreateResponse> responseSupplier = dispatcher.dispatch(command);
         return responseSupplier.get();
     }
 
@@ -122,7 +122,7 @@ public class InterestRateChartsApiResource {
         request.setId(chartId);
         final var command = new InterestRateChartUpdateCommand();
         command.setPayload(request);
-        final Supplier<InterestRateChartUpdateResponse> responseSupplier = commandPipeline.send(command);
+        final Supplier<InterestRateChartUpdateResponse> responseSupplier = dispatcher.dispatch(command);
         return responseSupplier.get();
     }
 
@@ -133,7 +133,7 @@ public class InterestRateChartsApiResource {
     public InterestRateChartDeleteResponse delete(@PathParam("chartId") final Long chartId) {
         final var command = new InterestRateChartDeleteCommand();
         command.setPayload(InterestRateChartDeleteRequest.builder().chartId(chartId).build());
-        final Supplier<InterestRateChartDeleteResponse> responseSupplier = commandPipeline.send(command);
+        final Supplier<InterestRateChartDeleteResponse> responseSupplier = dispatcher.dispatch(command);
         return responseSupplier.get();
     }
 }

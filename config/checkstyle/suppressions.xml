@@ -33,4 +33,11 @@
     <suppress files="[/\\]fineract-command[/\\]src[/\\]main[/\\]java[/\\]" checks="MethodTypeParameterName"/>
     <suppress files="[/\\]fineract-command[/\\]src[/\\]main[/\\]java[/\\]" checks="ClassTypeParameterName"/>
     <suppress files="[/\\]fineract-command[/\\]src[/\\]main[/\\]java[/\\]" checks="HideUtilityClassConstructor"/>
+    <suppress files="[/\\]fineract-command-async[/\\]src[/\\]main[/\\]java[/\\]" checks="MethodTypeParameterName"/>
+    <suppress files="[/\\]fineract-command-async[/\\]src[/\\]main[/\\]java[/\\]" checks="ClassTypeParameterName"/>
+    <suppress files="[/\\]fineract-command-async[/\\]src[/\\]main[/\\]java[/\\]" checks="HideUtilityClassConstructor"/>
+    <suppress files="[/\\]fineract-command-disruptor[/\\]src[/\\]main[/\\]java[/\\]" checks="MethodTypeParameterName"/>
+    <suppress files="[/\\]fineract-command-disruptor[/\\]src[/\\]main[/\\]java[/\\]" checks="ClassTypeParameterName"/>
+    <suppress files="[/\\]fineract-command-disruptor[/\\]src[/\\]main[/\\]java[/\\]" checks="HideUtilityClassConstructor"/>
+    <suppress files="[/\\]fineract-command-disruptor[/\\]build[/\\]generated[/\\]" checks=".*"/>
 </suppressions>

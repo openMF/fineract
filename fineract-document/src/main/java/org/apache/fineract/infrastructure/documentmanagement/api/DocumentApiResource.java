@@ -48,7 +48,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.infrastructure.contentstore.detector.ContentDetectorContext;
 import org.apache.fineract.infrastructure.contentstore.detector.ContentDetectorManager;
 import org.apache.fineract.infrastructure.documentmanagement.command.DocumentCreateCommand;
@@ -89,7 +89,7 @@ public class DocumentApiResource {
     private final DocumentReadPlatformService documentReadPlatformService;
     private final FileUploadValidator fileUploadValidator;
     private final ContentDetectorManager contentDetectorManager;
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
 
     @GET
     @Consumes({ MediaType.APPLICATION_JSON })
@@ -187,7 +187,7 @@ public class DocumentApiResource {
         command.setPayload(DocumentCreateRequest.builder().entityId(entityId).entityType(entityType).name(name).description(description)
                 .fileName(fileDetails.getFileName()).size(fileSize).type(type).stream(is).build());
 
-        final Supplier<DocumentCreateResponse> response = commandPipeline.send(command);
+        final Supplier<DocumentCreateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }
@@ -227,7 +227,7 @@ public class DocumentApiResource {
         command.setPayload(DocumentUpdateRequest.builder().id(documentId).entityId(entityId).entityType(entityType).name(name)
                 .description(description).stream(is).build());
 
-        final Supplier<DocumentUpdateResponse> response = commandPipeline.send(command);
+        final Supplier<DocumentUpdateResponse> response = dispatcher.dispatch(command);
 
         // TODO: does not return list of changes, should be done for consistency with rest of API
         return response.get();
@@ -246,7 +246,7 @@ public class DocumentApiResource {
 
         command.setPayload(DocumentDeleteRequest.builder().id(documentId).entityId(entityId).entityType(entityType).build());
 
-        final Supplier<DocumentDeleteResponse> response = commandPipeline.send(command);
+        final Supplier<DocumentDeleteResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }

@@ -32,7 +32,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.Collection;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.command.core.CommandPipeline;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.portfolio.calendar.data.CalendarData;
 import org.apache.fineract.portfolio.calendar.domain.CalendarEntityType;
@@ -71,7 +71,7 @@ public class MeetingsApiResource {
     private final MeetingAttendanceDropdownReadService meetingAttendanceDropdownReadService;
     private final ClientReadPlatformService clientReadPlatformService;
     private final CalendarReadPlatformService calendarReadPlatformService;
-    private final CommandPipeline commandPipeline;
+    private final CommandDispatcher dispatcher;
 
     @GET
     @Path("template")
@@ -146,7 +146,7 @@ public class MeetingsApiResource {
 
         command.setPayload(request);
 
-        final Supplier<MeetingCreateResponse> response = commandPipeline.send(command);
+        final Supplier<MeetingCreateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }
@@ -172,7 +172,7 @@ public class MeetingsApiResource {
 
         command.setPayload(request);
 
-        final Supplier<MeetingUpdateResponse> response = commandPipeline.send(command);
+        final Supplier<MeetingUpdateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }
@@ -188,7 +188,7 @@ public class MeetingsApiResource {
 
         command.setPayload(request);
 
-        final Supplier<MeetingDeleteResponse> response = commandPipeline.send(command);
+        final Supplier<MeetingDeleteResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }
@@ -213,7 +213,7 @@ public class MeetingsApiResource {
 
         command.setPayload(request);
 
-        final Supplier<MeetingAttendanceUpdateResponse> response = commandPipeline.send(command);
+        final Supplier<MeetingAttendanceUpdateResponse> response = dispatcher.dispatch(command);
 
         return response.get();
     }
