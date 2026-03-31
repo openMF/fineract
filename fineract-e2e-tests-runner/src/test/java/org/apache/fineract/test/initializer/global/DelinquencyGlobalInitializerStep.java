@@ -56,11 +56,13 @@ public class DelinquencyGlobalInitializerStep implements FineractGlobalInitializ
     private final FineractFeignClient fineractClient;
 
     private final List<Long> createdRangeIds = new ArrayList<>();
+    private final List<Long> createdWCRangeIds = new ArrayList<>();
 
     @Override
     public void initialize() {
         setDefaultDelinquencyRanges();
         setDefaultDelinquencyBucket();
+        setDefaultWCDelinquencyRanges();
         setDefaultWCDelinquencyBucket();
     }
 
@@ -120,6 +122,58 @@ public class DelinquencyGlobalInitializerStep implements FineractGlobalInitializ
         createdRangeIds.add(lastResponse.getResourceId());
     }
 
+    public void setDefaultWCDelinquencyRanges() {
+        List<DelinquencyRangeResponse> existingRanges;
+        try {
+            existingRanges = fineractClient.delinquencyRangeAndBucketsManagement().getRanges(Map.of());
+        } catch (Exception e) {
+            log.debug("Could not retrieve existing delinquency ranges for WCLP, will create them", e);
+            existingRanges = new ArrayList<>();
+        }
+
+        List<RangeDefinition> wclpRanges = Arrays.asList(new RangeDefinition("D00", 1, 30), new RangeDefinition("D30", 31, 60),
+                new RangeDefinition("D60", 61, 90), new RangeDefinition("D90", 91, 120), new RangeDefinition("D120", 121, 150),
+                new RangeDefinition("D150", 151, 180), new RangeDefinition("D180", 181, 210), new RangeDefinition("D210", 211, 240),
+                new RangeDefinition("D240", 241, 270), new RangeDefinition("D270", 271, null));
+
+        for (RangeDefinition rangeDef : wclpRanges) {
+            String classification = rangeDef.name;
+
+            DelinquencyRangeResponse existingRange = existingRanges.stream().filter(r -> classification.equals(r.getClassification()))
+                    .findFirst().orElse(null);
+
+            if (existingRange != null) {
+                createdWCRangeIds.add(existingRange.getId());
+                continue;
+            }
+
+            DelinquencyRangeRequest rangeRequest = new DelinquencyRangeRequest();
+            rangeRequest.classification(classification);
+            rangeRequest.locale(DEFAULT_LOCALE);
+            rangeRequest.minimumAgeDays(rangeDef.minDays);
+            rangeRequest.maximumAgeDays(rangeDef.maxDays);
+
+            PostDelinquencyRangeResponse response = ok(
+                    () -> fineractClient.delinquencyRangeAndBucketsManagement().createRange(rangeRequest, Map.of()));
+            createdWCRangeIds.add(response.getResourceId());
+        }
+
+        log.debug("Created WCLP delinquency ranges with IDs: {}", createdWCRangeIds);
+    }
+
+    private static class RangeDefinition {
+
+        String name;
+        Integer minDays;
+        Integer maxDays;
+
+        RangeDefinition(String name, Integer minDays, Integer maxDays) {
+            this.name = name;
+            this.minDays = minDays;
+            this.maxDays = maxDays;
+        }
+    }
+
     public void setDefaultDelinquencyBucket() {
         try {
             List<DelinquencyBucketResponse> existingBuckets = fineractClient.delinquencyRangeAndBucketsManagement().getBuckets(Map.of());
@@ -153,12 +207,12 @@ public class DelinquencyGlobalInitializerStep implements FineractGlobalInitializ
 
         DelinquencyBucketRequest postDelinquencyBucketWCRequest = new DelinquencyBucketRequest().name(DEFAULT_WC_DELINQUENCY_BUCKET_NAME)
                 .bucketType(DelinquencyBucketType.WORKING_CAPITAL.name())//
-                .ranges(List.of(1L)) //
+                .ranges(createdWCRangeIds) //
                 .minimumPaymentPeriodAndRule(new MinimumPaymentPeriodAndRule() //
-                        .frequency(1) //
+                        .frequency(30) //
+                        .frequencyType(DelinquencyFrequencyType.DAYS.name()) //
                         .minimumPaymentType(DelinquencyMinimumPayment.PERCENTAGE.name()) //
-                        .frequencyType(DelinquencyFrequencyType.MONTHS.name()) //
-                        .minimumPayment(BigDecimal.valueOf(1.23))); //
+                        .minimumPayment(BigDecimal.valueOf(3.0))); //
 
         executeVoid(() -> fineractClient.delinquencyRangeAndBucketsManagement().createBucket(postDelinquencyBucketWCRequest, Map.of()));
     }

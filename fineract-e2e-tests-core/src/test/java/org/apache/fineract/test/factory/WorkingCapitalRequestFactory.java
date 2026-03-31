@@ -24,15 +24,17 @@ import static org.apache.fineract.test.factory.LoanProductsRequestFactory.CURREN
 import static org.apache.fineract.test.factory.LoanProductsRequestFactory.DATE_FORMAT;
 import static org.apache.fineract.test.factory.LoanProductsRequestFactory.DAYS_IN_MONTH_TYPE_30;
 import static org.apache.fineract.test.factory.LoanProductsRequestFactory.DAYS_IN_YEAR_TYPE_360;
-import static org.apache.fineract.test.factory.LoanProductsRequestFactory.DELINQUENCY_BUCKET_ID;
 import static org.apache.fineract.test.factory.LoanProductsRequestFactory.FUND_ID;
 import static org.apache.fineract.test.factory.LoanProductsRequestFactory.LOCALE_EN;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.DelinquencyBucketRequest;
+import org.apache.fineract.client.models.DelinquencyBucketResponse;
 import org.apache.fineract.client.models.MinimumPaymentPeriodAndRule;
 import org.apache.fineract.client.models.PaymentAllocationOrder;
 import org.apache.fineract.client.models.PostAllowAttributeOverrides;
@@ -50,9 +52,11 @@ import org.springframework.stereotype.Component;
 public class WorkingCapitalRequestFactory {
 
     private final LoanProductsRequestFactory loanProductsRequestFactory;
+    private final FineractFeignClient fineractClient;
 
     public static final String WCLP_NAME_PREFIX = "WCLP-";
     public static final String WCLP_DESCRIPTION = "Working Capital Loan Product";
+    public static final String DEFAULT_WC_DELINQUENCY_BUCKET_NAME = "Default Working Capital delinquency bucket";
     public static final String PENALTY = "PENALTY";
     public static final String FEE = "FEE";
     public static final String PRINCIPAL = "PRINCIPAL";
@@ -79,7 +83,7 @@ public class WorkingCapitalRequestFactory {
                 .maxPrincipal(new BigDecimal(100000))//
                 .amortizationType(PostWorkingCapitalLoanProductsRequest.AmortizationTypeEnum.EIR)//
                 .npvDayCount(DAYS_IN_YEAR_TYPE_360)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(getWCDelinquencyBucketIdByName(DEFAULT_WC_DELINQUENCY_BUCKET_NAME))//
                 .dateFormat(DATE_FORMAT)//
                 .locale(LOCALE_EN)//
                 .paymentAllocation(List.of(//
@@ -171,6 +175,16 @@ public class WorkingCapitalRequestFactory {
                         .minimumPaymentType(DelinquencyMinimumPayment.PERCENTAGE.name()) //
                         .frequencyType(DelinquencyFrequencyType.WEEKS.name()) //
                         .minimumPayment(new BigDecimal("1.23")));
+    }
+
+    private Long getWCDelinquencyBucketIdByName(String bucketName) {
+        try {
+            List<DelinquencyBucketResponse> buckets = fineractClient.delinquencyRangeAndBucketsManagement().getBuckets(Map.of());
+            return buckets.stream().filter(b -> bucketName.equals(b.getName())).findFirst().map(DelinquencyBucketResponse::getId)
+                    .orElseThrow(() -> new RuntimeException("Working Capital delinquency bucket not found with name: " + bucketName));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch Working Capital delinquency bucket by name: " + bucketName, e);
+        }
     }
 
 }

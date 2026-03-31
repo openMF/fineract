@@ -755,11 +755,14 @@ public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
         final String periodPaymentRate = loanData.get(5);
         final String discount = loanData.get(6);
 
-        return workingCapitalLoanRequestFactory.defaultWorkingCapitalLoansRequest(clientId).productId(productId)
-                .submittedOnDate(submittedOnDate).expectedDisbursementDate(expectedDisbursementDate)
-                .principalAmount(new BigDecimal(principal)).totalPayment(new BigDecimal(totalPayment))
-                .periodPaymentRate(new BigDecimal(periodPaymentRate))
-                .discount(discount != null && !discount.isEmpty() ? new BigDecimal(discount) : null);
+        return workingCapitalLoanRequestFactory.defaultWorkingCapitalLoansRequest(clientId)//
+                .productId(productId)//
+                .submittedOnDate(submittedOnDate)//
+                .expectedDisbursementDate(expectedDisbursementDate)//
+                .principalAmount(new BigDecimal(principal))//
+                .totalPayment(new BigDecimal(totalPayment))//
+                .periodPaymentRate(new BigDecimal(periodPaymentRate))//
+                .discount(discount != null && !discount.isEmpty() ? new BigDecimal(discount) : null);//
     }
 
     private PutWorkingCapitalLoansLoanIdRequest buildModifyLoanRequest(final List<String> loanData) {

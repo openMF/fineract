@@ -44,12 +44,14 @@ import org.apache.fineract.client.models.IsCatchUpRunningDTO;
 import org.apache.fineract.client.models.OldestCOBProcessedLoanDTO;
 import org.apache.fineract.client.models.PostClientsResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsResponse;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansResponse;
 import org.apache.fineract.test.data.LoanStatus;
 import org.apache.fineract.test.helper.BusinessDateHelper;
 import org.apache.fineract.test.helper.WorkingCapitalLoanTestHelper;
 import org.apache.fineract.test.messaging.config.JobPollingProperties;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
+import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
@@ -90,6 +92,17 @@ public class WorkingCapitalLoanCobStepDef extends AbstractStepDef {
     @When("Admin runs inline COB job for Working Capital Loan")
     public void runWorkingCapitalInlineCOB() throws IOException {
         InlineJobRequest inlineJobRequest = new InlineJobRequest().addLoanIdsItem(getTrackedLoanIds().getLast());
+        ok(() -> fineractClient.inlineJob().executeInlineJob("WC_LOAN_COB", inlineJobRequest));
+    }
+
+    @When("Admin runs inline COB job for Working Capital Loan by loanId")
+    public void runWorkingCapitalInlineCOBByLoanId() throws IOException {
+        PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        Assertions.assertNotNull(loanResponse);
+        long loanId = loanResponse.getLoanId();
+
+        InlineJobRequest inlineJobRequest = new InlineJobRequest().addLoanIdsItem(loanId);
+
         ok(() -> fineractClient.inlineJob().executeInlineJob("WC_LOAN_COB", inlineJobRequest));
     }
 
