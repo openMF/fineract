@@ -47,6 +47,7 @@ import org.apache.fineract.integrationtests.common.funds.FundsResourceHandler;
 import org.apache.fineract.integrationtests.common.products.DelinquencyBucketsHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanApplicationHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanApplicationTestBuilder;
+import org.apache.fineract.integrationtests.common.workingcapitalloanbreach.WorkingCapitalBreachHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductTestBuilder;
 import org.junit.jupiter.api.BeforeAll;
@@ -61,6 +62,7 @@ public class WorkingCapitalLoanApplicationCRUDTest {
 
     private final WorkingCapitalLoanApplicationHelper applicationHelper = new WorkingCapitalLoanApplicationHelper();
     private final WorkingCapitalLoanProductHelper productHelper = new WorkingCapitalLoanProductHelper();
+    private final WorkingCapitalBreachHelper breachHelper = new WorkingCapitalBreachHelper();
 
     @BeforeAll
     static void initDelinquency() {
@@ -138,6 +140,38 @@ public class WorkingCapitalLoanApplicationCRUDTest {
 
         applicationHelper.deleteById(loanId);
         productHelper.deleteWorkingCapitalLoanProductById(productId);
+    }
+
+    @Test
+    public void testSubmitWithoutBreachParamsUsesProductBreachDefaults() {
+        final Integer breachFrequency = 30;
+        final String breachFrequencyType = "DAYS";
+        final String breachAmountCalculationType = "PERCENTAGE";
+        final BigDecimal breachAmount = BigDecimal.valueOf(10);
+        final Long breachId = createBreach(breachFrequency, breachFrequencyType, breachAmountCalculationType, breachAmount);
+        final Long productId = createProductWithBreach(breachId);
+        final Long clientId = createClient();
+
+        final String json = new WorkingCapitalLoanApplicationTestBuilder() //
+                .withClientId(clientId) //
+                .withProductId(productId) //
+                .withPrincipal(BigDecimal.valueOf(5000)) //
+                .withPeriodPaymentRate(BigDecimal.ONE) //
+                .withTotalPayment(BigDecimal.valueOf(5500)) //
+                .buildSubmitJson();
+
+        final Long loanId = applicationHelper.submit(json);
+        final JsonObject data = new Gson().fromJson(applicationHelper.retrieveById(loanId), JsonObject.class);
+
+        final JsonObject breach = data.getAsJsonObject("breach");
+        assertEquals(breachFrequency.intValue(), breach.get("breachFrequency").getAsInt());
+        assertRepaymentFrequencyTypeEquals(breachFrequencyType, breach.get("breachFrequencyType"));
+        assertRepaymentFrequencyTypeEquals(breachAmountCalculationType, breach.get("breachAmountCalculationType"));
+        assertEqualBigDecimal(breachAmount, breach.get("breachAmount"));
+
+        applicationHelper.deleteById(loanId);
+        productHelper.deleteWorkingCapitalLoanProductById(productId);
+        breachHelper.delete(breachId);
     }
 
     @Test
@@ -927,6 +961,31 @@ public class WorkingCapitalLoanApplicationCRUDTest {
                         "discountDefault", Boolean.TRUE)) //
                 .build()) //
                 .getResourceId();
+    }
+
+    private Long createProductWithBreach(final Long breachId) {
+        final String uniqueName = "WCL Product " + UUID.randomUUID().toString().substring(0, 8);
+        final String uniqueShortName = UUID.randomUUID().toString().replace("-", "").substring(0, 4);
+        return productHelper.createWorkingCapitalLoanProduct(new WorkingCapitalLoanProductTestBuilder() //
+                .withName(uniqueName) //
+                .withShortName(uniqueShortName) //
+                .withPrincipalAmountDefault(BigDecimal.valueOf(10000)) //
+                .withPeriodPaymentRate(BigDecimal.ONE) //
+                .withRepaymentEvery(1) //
+                .withRepaymentFrequencyType("MONTHS") //
+                .withBreachId(breachId) //
+                .build()) //
+                .getResourceId();
+    }
+
+    private Long createBreach(final Integer breachFrequency, final String breachFrequencyType, final String breachAmountCalculationType,
+            final BigDecimal breachAmount) {
+        final JsonObject payload = new JsonObject();
+        payload.addProperty("breachFrequency", breachFrequency);
+        payload.addProperty("breachFrequencyType", breachFrequencyType);
+        payload.addProperty("breachAmountCalculationType", breachAmountCalculationType);
+        payload.addProperty("breachAmount", breachAmount);
+        return breachHelper.create(payload);
     }
 
     private Long createClient() {

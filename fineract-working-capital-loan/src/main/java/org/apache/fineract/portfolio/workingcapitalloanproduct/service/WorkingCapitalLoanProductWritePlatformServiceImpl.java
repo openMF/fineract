@@ -29,6 +29,7 @@ import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
+import org.apache.fineract.infrastructure.core.exception.GeneralPlatformDomainRuleException;
 import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.portfolio.delinquency.domain.DelinquencyBucket;
@@ -39,6 +40,8 @@ import org.apache.fineract.portfolio.fund.domain.FundRepository;
 import org.apache.fineract.portfolio.fund.exception.FundNotFoundException;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPeriodFrequencyType;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanRepository;
+import org.apache.fineract.portfolio.workingcapitalloanbreach.domain.WorkingCapitalBreach;
+import org.apache.fineract.portfolio.workingcapitalloanbreach.repository.WorkingCapitalBreachRepository;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.WorkingCapitalLoanProductConstants;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAdvancedPaymentAllocationsJsonParser;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAmortizationType;
@@ -71,6 +74,7 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
     private final FundRepository fundRepository;
     private final DelinquencyBucketRepository delinquencyBucketRepository;
     private final WorkingCapitalAdvancedPaymentAllocationsJsonParser advancedPaymentAllocationsJsonParser;
+    private final WorkingCapitalBreachRepository breachRepository;
 
     @Transactional
     @Override
@@ -84,9 +88,14 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
                 command.parameterExists(WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName)
                         ? command.longValueOfParameterNamed(WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName)
                         : null);
+        final WorkingCapitalBreach breach = findBreachByIdIfProvided(
+                command.parameterExists(WorkingCapitalLoanProductConstants.breachIdParamName)
+                        ? command.longValueOfParameterNamed(WorkingCapitalLoanProductConstants.breachIdParamName)
+                        : null);
         final List<WorkingCapitalLoanProductPaymentAllocationRule> paymentAllocationRules = this.advancedPaymentAllocationsJsonParser
                 .assembleWCPaymentAllocationRules(command);
-        final WorkingCapitalLoanProduct product = createProductFromCommand(fund, delinquencyBucket, command, paymentAllocationRules);
+        final WorkingCapitalLoanProduct product = createProductFromCommand(fund, delinquencyBucket, breach, command,
+                paymentAllocationRules);
 
         this.repository.saveAndFlush(product);
 
@@ -235,6 +244,14 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
             changes.put(WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName, delinquencyBucketId);
         }
 
+        final Long existingBreachId = product.getBreach() != null ? product.getBreach().getId() : null;
+        if (command.isChangeInLongParameterNamed(WorkingCapitalLoanProductConstants.breachIdParamName, existingBreachId)) {
+            final Long breachId = command.longValueOfParameterNamed(WorkingCapitalLoanProductConstants.breachIdParamName);
+            final WorkingCapitalBreach breach = findBreachByIdIfProvided(breachId);
+            product.setBreach(breach);
+            changes.put(WorkingCapitalLoanProductConstants.breachIdParamName, breachId);
+        }
+
         // Update payment allocation rules if changed
         if (command.parameterExists(WorkingCapitalLoanProductConstants.paymentAllocationParamName)) {
             final List<WorkingCapitalLoanProductPaymentAllocationRule> newRules = this.advancedPaymentAllocationsJsonParser
@@ -273,7 +290,8 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
     }
 
     private WorkingCapitalLoanProduct createProductFromCommand(final Fund fund, final DelinquencyBucket delinquencyBucket,
-            final JsonCommand command, final List<WorkingCapitalLoanProductPaymentAllocationRule> paymentAllocationRules) {
+            final WorkingCapitalBreach breach, final JsonCommand command,
+            final List<WorkingCapitalLoanProductPaymentAllocationRule> paymentAllocationRules) {
         // Details category
         final String name = command.stringValueOfParameterNamed(WorkingCapitalLoanProductConstants.nameParamName);
         final String shortName = command.stringValueOfParameterNamed(WorkingCapitalLoanProductConstants.shortNameParamName);
@@ -336,15 +354,25 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
         // Configurable attributes
         final WorkingCapitalLoanProductConfigurableAttributes configurableAttributes = createConfigurableAttributesFromCommand(command);
 
-        return new WorkingCapitalLoanProduct(name, shortName, externalId, fund, delinquencyBucket, startDate, closeDate, description,
-                currency, relatedDetail, minMaxConstraints, paymentAllocationRules, configurableAttributes);
+        return new WorkingCapitalLoanProduct(name, shortName, externalId, fund, delinquencyBucket, breach, startDate, closeDate,
+                description, currency, relatedDetail, minMaxConstraints, paymentAllocationRules, configurableAttributes);
+    }
+
+    private WorkingCapitalBreach findBreachByIdIfProvided(final Long breachId) {
+        if (breachId == null) {
+            return null;
+        }
+        return this.breachRepository.findById(breachId)
+                .orElseThrow(() -> new GeneralPlatformDomainRuleException("error.msg.wclp.breach.not.found",
+                        "Working Capital Breach with id " + breachId + " was not found.", breachId));
     }
 
     private WorkingCapitalLoanProductConfigurableAttributes createConfigurableAttributesFromCommand(final JsonCommand command) {
-        Boolean delinquencyBucketClassification = null;
-        Boolean discountDefault = null;
-        Boolean periodPaymentFrequency = null;
-        Boolean periodPaymentFrequencyType = null;
+        boolean delinquencyBucketClassification = false;
+        boolean breach = false;
+        boolean discountDefault = false;
+        boolean periodPaymentFrequency = false;
+        boolean periodPaymentFrequencyType = false;
 
         if (command.parameterExists(WorkingCapitalLoanProductConstants.allowAttributeOverridesParamName)) {
             final JsonObject allowOverrides = command.parsedJson().getAsJsonObject()
@@ -355,6 +383,10 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
                                 .isJsonNull()) {
                     delinquencyBucketClassification = allowOverrides
                             .get(WorkingCapitalLoanProductConstants.delinquencyBucketClassificationOverridableParamName).getAsBoolean();
+                }
+                if (allowOverrides.has(WorkingCapitalLoanProductConstants.breachOverridableParamName)
+                        && !allowOverrides.get(WorkingCapitalLoanProductConstants.breachOverridableParamName).isJsonNull()) {
+                    breach = allowOverrides.get(WorkingCapitalLoanProductConstants.breachOverridableParamName).getAsBoolean();
                 }
                 if (allowOverrides.has(WorkingCapitalLoanProductConstants.discountDefaultOverridableParamName)
                         && !allowOverrides.get(WorkingCapitalLoanProductConstants.discountDefaultOverridableParamName).isJsonNull()) {
@@ -376,6 +408,7 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
 
         final WorkingCapitalLoanProductConfigurableAttributes configurableAttributes = new WorkingCapitalLoanProductConfigurableAttributes();
         configurableAttributes.setDelinquencyBucketClassification(delinquencyBucketClassification);
+        configurableAttributes.setBreach(breach);
         configurableAttributes.setDiscountDefault(discountDefault);
         configurableAttributes.setPeriodPaymentFrequency(periodPaymentFrequency);
         configurableAttributes.setPeriodPaymentFrequencyType(periodPaymentFrequencyType);

@@ -40,6 +40,7 @@ import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsResponse;
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdResponse;
 import org.apache.fineract.client.models.StringEnumOptionData;
+import org.apache.fineract.client.models.WorkingCapitalBreachData;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductTestBuilder;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
@@ -159,6 +160,7 @@ public class WorkingCapitalLoanProductCRUDTest {
         assertFalse(response.getAmortizationTypeOptions().isEmpty(), "Amortization type options should not be empty");
         assertNotNull(response.getPeriodFrequencyTypeOptions());
         assertFalse(response.getPeriodFrequencyTypeOptions().isEmpty(), "Period frequency type options should not be empty");
+        assertNotNull(response.getBreachOptions());
         assertNotNull(response.getAdvancedPaymentAllocationTypes());
         assertFalse(response.getAdvancedPaymentAllocationTypes().isEmpty(), "Payment allocation type options should not be empty");
         assertNotNull(response.getAdvancedPaymentAllocationTransactionTypes());
@@ -345,6 +347,14 @@ public class WorkingCapitalLoanProductCRUDTest {
             delinquencyBucketId = expectedBucket.getId();
         }
 
+        Long breachId = null;
+        final WorkingCapitalBreachData expectedBreach = template.getBreachOptions() != null && !template.getBreachOptions().isEmpty()
+                ? template.getBreachOptions().getFirst()
+                : null;
+        if (expectedBreach != null) {
+            breachId = expectedBreach.getId();
+        }
+
         // All configurable attributes
         final HashMap<String, Boolean> allowAttributeOverrides = new HashMap<>();
         allowAttributeOverrides.put("delinquencyBucketClassification", false);
@@ -366,6 +376,7 @@ public class WorkingCapitalLoanProductCRUDTest {
                 // Settings category
                 .withAmortizationType("EIR") //
                 .withDelinquencyBucketId(delinquencyBucketId) //
+                .withBreachId(breachId) //
                 .withNpvDayCount(365) //
                 .withPaymentAllocationTypes(paymentAllocationTypes) //
                 .withDelinquencyGraceDays(1) //
@@ -472,6 +483,16 @@ public class WorkingCapitalLoanProductCRUDTest {
         assertEquals(30, retrieved.getRepaymentEvery());
         assertNotNull(retrieved.getRepaymentFrequencyType());
         assertEquals("DAYS", retrieved.getRepaymentFrequencyType().getCode());
+
+        if (expectedBreach != null) {
+            assertNotNull(retrieved.getBreach(), "breach");
+            assertEquals(expectedBreach.getId(), retrieved.getBreach().getId(), "breach.id");
+            assertEquals(expectedBreach.getBreachAmount(), retrieved.getBreach().getBreachAmount(), "breach.amount");
+            assertEquals(expectedBreach.getBreachFrequency(), retrieved.getBreach().getBreachFrequency(), "breach.frequency");
+            assertEquals(expectedBreach.getBreachAmountCalculationType(), retrieved.getBreach().getBreachAmountCalculationType(),
+                    "breach.amount.calculation.type");
+            assertEquals(expectedBreach.getBreachFrequencyType(), retrieved.getBreach().getBreachFrequencyType(), "breach.frequency.type");
+        }
 
         // Verify Configurable Attributes (allowAttributeOverrides)
         if (retrieved.getAllowAttributeOverrides() != null) {

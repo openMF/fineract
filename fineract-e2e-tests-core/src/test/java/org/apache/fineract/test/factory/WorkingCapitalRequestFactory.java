@@ -41,6 +41,7 @@ import org.apache.fineract.client.models.PostAllowAttributeOverrides;
 import org.apache.fineract.client.models.PostPaymentAllocation;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdRequest;
+import org.apache.fineract.client.models.WorkingCapitalBreachRequest;
 import org.apache.fineract.test.data.delinquency.DelinquencyBucketType;
 import org.apache.fineract.test.data.delinquency.DelinquencyFrequencyType;
 import org.apache.fineract.test.data.delinquency.DelinquencyMinimumPayment;
@@ -60,6 +61,10 @@ public class WorkingCapitalRequestFactory {
     public static final String PENALTY = "PENALTY";
     public static final String FEE = "FEE";
     public static final String PRINCIPAL = "PRINCIPAL";
+    public static final Integer DEFAULT_WC_BREACH_FREQUENCY = 2;
+    public static final String DEFAULT_WC_BREACH_FREQUENCY_TYPE = "MONTHS";
+    public static final String DEFAULT_WC_BREACH_AMOUNT_CALCULATION_TYPE = "PERCENTAGE";
+    public static final BigDecimal DEFAULT_WC_BREACH_AMOUNT = new BigDecimal("1.23");
 
     public PostWorkingCapitalLoanProductsRequest defaultWorkingCapitalLoanProductRequest() {
         String name = Utils.randomStringGenerator(WCLP_NAME_PREFIX, 10);
@@ -89,6 +94,18 @@ public class WorkingCapitalRequestFactory {
                 .paymentAllocation(List.of(//
                         createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(),
                                 List.of(PENALTY, FEE, PRINCIPAL))));//
+    }
+
+    public PostWorkingCapitalLoanProductsRequest defaultWorkingCapitalLoanProductAllowAttributesOverrideRequest() {
+        String name = Utils.randomStringGenerator(WCLP_NAME_PREFIX, 10);
+        String shortName = loanProductsRequestFactory.generateShortNameSafely();
+
+        PostAllowAttributeOverrides allowAttributeOverrides = new PostAllowAttributeOverrides().delinquencyBucketClassification(true)
+                .breach(true).discountDefault(true).periodPaymentFrequencyType(true).periodPaymentFrequency(true);
+
+        return defaultWorkingCapitalLoanProductRequest().name(name)//
+                .shortName(shortName)//
+                .allowAttributeOverrides(allowAttributeOverrides);
     }
 
     public PutWorkingCapitalLoanProductsProductIdRequest defaultWorkingCapitalLoanProductRequestUpdate() {
@@ -175,6 +192,14 @@ public class WorkingCapitalRequestFactory {
                         .minimumPaymentType(DelinquencyMinimumPayment.PERCENTAGE.name()) //
                         .frequencyType(DelinquencyFrequencyType.WEEKS.name()) //
                         .minimumPayment(new BigDecimal("1.23")));
+    }
+
+    public WorkingCapitalBreachRequest defaultWorkingCapitalBreachRequest() {
+        return new WorkingCapitalBreachRequest() //
+                .breachFrequency(DEFAULT_WC_BREACH_FREQUENCY) //
+                .breachFrequencyType(DEFAULT_WC_BREACH_FREQUENCY_TYPE) //
+                .breachAmountCalculationType(DEFAULT_WC_BREACH_AMOUNT_CALCULATION_TYPE) //
+                .breachAmount(DEFAULT_WC_BREACH_AMOUNT);
     }
 
     private Long getWCDelinquencyBucketIdByName(String bucketName) {

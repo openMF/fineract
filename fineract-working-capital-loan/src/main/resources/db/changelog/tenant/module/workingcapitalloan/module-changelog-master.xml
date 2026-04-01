@@ -37,4 +37,6 @@
   <include relativeToChangelogFile="true" file="parts/0013_add_delinquency_grace_days_to_wc_loan.xml"/>
   <include relativeToChangelogFile="true" file="parts/0014_delinquency_range_schedule.xml"/>
   <include relativeToChangelogFile="true" file="parts/0015_wc_loan_delinquency_action.xml"/>
+  <include relativeToChangelogFile="true" file="parts/0016_configurable_attributes_not_null.xml"/>
+  <include relativeToChangelogFile="true" file="parts/0017_wc_loan_breach_management.xml"/>
 </databaseChangeLog>

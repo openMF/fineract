@@ -84,8 +84,7 @@ public class WorkingCapitalLoanProductDataValidator {
             WorkingCapitalLoanProductConstants.repaymentFrequencyTypeParamName,
             WorkingCapitalLoanProductConstants.allowAttributeOverridesParamName,
             WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName,
-            WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName //
-    ));
+            WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, WorkingCapitalLoanProductConstants.breachIdParamName));
 
     public void validateForCreate(final String json) {
         if (StringUtils.isBlank(json)) {
@@ -227,6 +226,7 @@ public class WorkingCapitalLoanProductDataValidator {
     private Set<String> getSupportedConfigurableAttributes() {
         final Set<String> supportedAttributes = new HashSet<>();
         supportedAttributes.add(WorkingCapitalLoanProductConstants.delinquencyBucketClassificationOverridableParamName);
+        supportedAttributes.add(WorkingCapitalLoanProductConstants.breachOverridableParamName);
         supportedAttributes.add(WorkingCapitalLoanProductConstants.discountDefaultOverridableParamName);
         supportedAttributes.add(WorkingCapitalLoanProductConstants.periodPaymentFrequencyOverridableParamName);
         supportedAttributes.add(WorkingCapitalLoanProductConstants.periodPaymentFrequencyTypeOverridableParamName);
@@ -324,6 +324,8 @@ public class WorkingCapitalLoanProductDataValidator {
                     .value(delinquencyBucketClassificationId).ignoreIfNull().integerGreaterThanZero();
         }
 
+        validateBreachField(element, baseDataValidator);
+
         final Locale locale = fromApiJsonHelper.extractLocaleParameter(element.getAsJsonObject());
         if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element)) {
             final Integer delinquencyGraceDays = this.fromApiJsonHelper
@@ -398,6 +400,14 @@ public class WorkingCapitalLoanProductDataValidator {
         }
 
         return principal;
+    }
+
+    private void validateBreachField(final JsonElement element, final DataValidatorBuilder baseDataValidator) {
+        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.breachIdParamName, element)) {
+            final Long breachId = this.fromApiJsonHelper.extractLongNamed(WorkingCapitalLoanProductConstants.breachIdParamName, element);
+            baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.breachIdParamName).value(breachId).ignoreIfNull()
+                    .longGreaterThanZero();
+        }
     }
 
     private void validateMinMaxRanges(final JsonElement element, final DataValidatorBuilder baseDataValidator, final BigDecimal principal) {

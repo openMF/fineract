@@ -154,6 +154,7 @@ import org.apache.fineract.client.feign.services.TellerCashManagementApi;
 import org.apache.fineract.client.feign.services.TwoFactorApi;
 import org.apache.fineract.client.feign.services.UserGeneratedDocumentsApi;
 import org.apache.fineract.client.feign.services.UsersApi;
+import org.apache.fineract.client.feign.services.WorkingCapitalBreachApi;
 import org.apache.fineract.client.feign.services.WorkingCapitalLoanCobCatchUpApi;
 import org.apache.fineract.client.feign.services.WorkingCapitalLoanDelinquencyActionsApi;
 import org.apache.fineract.client.feign.services.WorkingCapitalLoanDelinquencyRangeScheduleApi;
@@ -775,6 +776,10 @@ public final class FineractFeignClient {
 
     public WorkingCapitalLoanTransactionsApi workingCapitalLoanTransactions() {
         return create(WorkingCapitalLoanTransactionsApi.class);
+    }
+
+    public WorkingCapitalBreachApi workingCapitalBreaches() {
+        return create(WorkingCapitalBreachApi.class);
     }
 
     public WorkingDaysApi workingDays() {

@@ -41,6 +41,7 @@ import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.portfolio.delinquency.domain.DelinquencyBucket;
 import org.apache.fineract.portfolio.fund.domain.Fund;
+import org.apache.fineract.portfolio.workingcapitalloanbreach.domain.WorkingCapitalBreach;
 
 /**
  * Working Capital Loan Product entity. This is a separate entity from the standard LoanProduct to provide flexibility
@@ -73,6 +74,10 @@ public class WorkingCapitalLoanProduct extends AbstractPersistableCustom<Long> {
     @JoinColumn(name = "delinquency_bucket_classification_id")
     private DelinquencyBucket delinquencyBucket;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "breach_id")
+    private WorkingCapitalBreach breach;
+
     @Column(name = "start_date")
     private LocalDate startDate;
 
@@ -103,7 +108,7 @@ public class WorkingCapitalLoanProduct extends AbstractPersistableCustom<Long> {
     private WorkingCapitalLoanProductConfigurableAttributes configurableAttributes;
 
     public WorkingCapitalLoanProduct(String name, String shortName, ExternalId externalId, Fund fund, DelinquencyBucket delinquencyBucket,
-            LocalDate startDate, LocalDate closeDate, String description, MonetaryCurrency currency,
+            WorkingCapitalBreach breach, LocalDate startDate, LocalDate closeDate, String description, MonetaryCurrency currency,
             WorkingCapitalLoanProductRelatedDetail relatedDetail, WorkingCapitalLoanProductMinMaxConstraints minMaxConstraints,
             List<WorkingCapitalLoanProductPaymentAllocationRule> paymentAllocationRules,
             WorkingCapitalLoanProductConfigurableAttributes configurableAttributes) {
@@ -112,6 +117,7 @@ public class WorkingCapitalLoanProduct extends AbstractPersistableCustom<Long> {
         this.externalId = externalId;
         this.fund = fund;
         this.delinquencyBucket = delinquencyBucket;
+        this.breach = breach;
         this.startDate = startDate;
         this.closeDate = closeDate;
         this.description = description;

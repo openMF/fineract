@@ -42,8 +42,8 @@ Feature: WorkingCapitalProduct
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     Then Creating a working capital loan with LP overridables disabled and with the following data will result an error:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount | delinquencyBucketId | repaymentEvery | repaymentFrequencyType |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      | 1                   | 30             | DAYS                   |
+      | LoanProduct                       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount | delinquencyBucketId | repaymentEvery | repaymentFrequencyType |
+      | WCLP_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      | 1                   | 30             | DAYS                   |
 
   @TestRailId:C70254
   Scenario: Create Working Capital Loan account - UC5: Create with principal amount greater than WCLP max (Negative)
@@ -638,7 +638,7 @@ Feature: WorkingCapitalProduct
     And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION" for loan test
     And Admin creates a working capital loan with the grace days product and the following data:
       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 | 0        |
+      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
     Then Working capital loan creation was successful
     And Working capital loan account has delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION"
 
@@ -649,7 +649,7 @@ Feature: WorkingCapitalProduct
     And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION" for loan test
     And Admin creates a working capital loan with grace days override and the following data:
       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount | delinquencyGraceDays | delinquencyStartType |
-      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 | 0        | 7                    | DISBURSEMENT         |
+      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          | 7                    | DISBURSEMENT         |
     Then Working capital loan creation was successful
     And Working capital loan account has delinquencyGraceDays 7 and delinquencyStartType "DISBURSEMENT"
 
@@ -660,7 +660,7 @@ Feature: WorkingCapitalProduct
     And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "DISBURSEMENT" for loan test
     And Admin creates a working capital loan with grace days override and the following data:
       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount | delinquencyGraceDays | delinquencyStartType |
-      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 | 0        | 0                    | LOAN_CREATION        |
+      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          | 0                    | LOAN_CREATION        |
     Then Working capital loan creation was successful
     And Working capital loan account has delinquencyGraceDays 0 and delinquencyStartType "LOAN_CREATION"
 
@@ -671,7 +671,7 @@ Feature: WorkingCapitalProduct
     And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION" for loan test
     And Admin creates a working capital loan with the grace days product and the following data:
       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 | 0        |
+      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
     Then Working capital loan creation was successful
     When Admin modifies the working capital loan with grace days:
       | delinquencyGraceDays | delinquencyStartType |
@@ -685,7 +685,7 @@ Feature: WorkingCapitalProduct
     And Admin creates a Working Capital Loan Product with delinquencyGraceDays 5 and delinquencyStartType "DISBURSEMENT" for loan test
     And Admin creates a working capital loan with the grace days product and the following data:
       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 | 0        |
+      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
     Then Working capital loan creation was successful
     When Admin approves the working capital loan on "01 January 2027"
     Then Working capital loan account has delinquencyGraceDays 5 and delinquencyStartType "DISBURSEMENT"
@@ -851,3 +851,23 @@ Feature: WorkingCapitalProduct
     And Working capital loan account has the correct data:
       | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
       | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | 0.0      |
+
+  @TestRailId:C74471
+  Scenario Outline: Verify WC Loan creation with invalid breachId results in error
+    When Admin sets the business date to "01 January 2027"
+    And Admin creates a client with random data
+    Then Creating a working capital loan with breachId <breach_id> on "01 January 2027" will result with status code <expected_status_code>
+    Examples:
+      | breach_id           | expected_status_code |
+      | 0                   | 400                  |
+      | 9223372036854775807 | 403                  |
+
+  @TestRailId:C74472
+  Scenario Outline: Verify WC Loan breach override on application depends on product config
+    When Admin sets the business date to "01 January 2027"
+    And Admin creates a client with random data
+    Then Creating a working capital loan with breach override allowed "<breach_override_allowed>" on "01 January 2027" will result with status code <expected_status_code>
+    Examples:
+      | breach_override_allowed | expected_status_code |
+      | true                    | 200                  |
+      | false                   | 400                  |

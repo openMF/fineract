@@ -33,6 +33,7 @@ import org.apache.fineract.infrastructure.core.data.StringEnumOptionData;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.portfolio.delinquency.data.DelinquencyBucketData;
 import org.apache.fineract.portfolio.fund.data.FundData;
+import org.apache.fineract.portfolio.workingcapitalloanbreach.data.WorkingCapitalBreachData;
 
 /**
  * Data Transfer Object for Working Capital Loan Product.
@@ -61,6 +62,7 @@ public class WorkingCapitalLoanProductData implements Serializable {
     // Settings details
     private StringEnumOptionData amortizationType;
     private DelinquencyBucketData delinquencyBucket;
+    private WorkingCapitalBreachData breach;
     private Integer npvDayCount;
     private List<WorkingCapitalPaymentAllocationData> paymentAllocation;
 
@@ -89,6 +91,7 @@ public class WorkingCapitalLoanProductData implements Serializable {
     private List<StringEnumOptionData> delinquencyStartTypeOptions;
     private List<EnumOptionData> advancedPaymentAllocationTransactionTypes;
     private Collection<DelinquencyBucketData> delinquencyBucketOptions;
+    private List<WorkingCapitalBreachData> breachOptions;
 
     public WorkingCapitalLoanProductData applyTemplate(final WorkingCapitalLoanProductData productTemplate) {
         setFundOptions(productTemplate.getFundOptions());
@@ -98,6 +101,7 @@ public class WorkingCapitalLoanProductData implements Serializable {
         setAdvancedPaymentAllocationTransactionTypes(productTemplate.getAdvancedPaymentAllocationTransactionTypes());
         setAdvancedPaymentAllocationTypes(productTemplate.getAdvancedPaymentAllocationTypes());
         setDelinquencyBucketOptions(productTemplate.getDelinquencyBucketOptions());
+        setBreachOptions(productTemplate.getBreachOptions());
         setDelinquencyStartTypeOptions(productTemplate.getDelinquencyStartTypeOptions());
         return this;
     }

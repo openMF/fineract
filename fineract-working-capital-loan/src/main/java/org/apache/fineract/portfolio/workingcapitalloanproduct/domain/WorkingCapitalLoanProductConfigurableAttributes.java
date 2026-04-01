@@ -45,14 +45,17 @@ public class WorkingCapitalLoanProductConfigurableAttributes extends AbstractPer
     private WorkingCapitalLoanProduct wcProduct;
 
     @Column(name = "delinquency_bucket_classification_overridable")
-    private Boolean delinquencyBucketClassification;
+    private boolean delinquencyBucketClassification;
+
+    @Column(name = "breach_overridable")
+    private boolean breach;
 
     @Column(name = "discount_default_overridable")
-    private Boolean discountDefault;
+    private boolean discountDefault;
 
     @Column(name = "period_payment_frequency_overridable")
-    private Boolean periodPaymentFrequency;
+    private boolean periodPaymentFrequency;
 
     @Column(name = "period_payment_frequency_type_overridable")
-    private Boolean periodPaymentFrequencyType;
+    private boolean periodPaymentFrequencyType;
 }

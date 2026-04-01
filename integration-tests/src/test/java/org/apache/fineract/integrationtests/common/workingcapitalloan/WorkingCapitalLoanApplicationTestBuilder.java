@@ -48,6 +48,7 @@ public class WorkingCapitalLoanApplicationTestBuilder {
     private String submittedOnNote;
     private Integer repaymentEvery;
     private String repaymentFrequencyType;
+    private Long breachId;
     private Long delinquencyBucketId;
     private List<String> paymentAllocationTypes;
     private Integer delinquencyGraceDays;
@@ -120,6 +121,11 @@ public class WorkingCapitalLoanApplicationTestBuilder {
 
     public WorkingCapitalLoanApplicationTestBuilder withRepaymentFrequencyType(final String repaymentFrequencyType) {
         this.repaymentFrequencyType = repaymentFrequencyType;
+        return this;
+    }
+
+    public WorkingCapitalLoanApplicationTestBuilder withBreachId(final Long breachId) {
+        this.breachId = breachId;
         return this;
     }
 
@@ -209,6 +215,9 @@ public class WorkingCapitalLoanApplicationTestBuilder {
         if (delinquencyStartType != null) {
             json.addProperty("delinquencyStartType", delinquencyStartType);
         }
+        if (breachId != null) {
+            json.addProperty("breachId", breachId);
+        }
         if (paymentAllocationTypes != null && !paymentAllocationTypes.isEmpty()) {
             json.add("paymentAllocation", buildPaymentAllocationJson());
         }
@@ -259,6 +268,9 @@ public class WorkingCapitalLoanApplicationTestBuilder {
         }
         if (delinquencyStartType != null) {
             json.addProperty("delinquencyStartType", delinquencyStartType);
+        }
+        if (breachId != null) {
+            json.addProperty("breachId", breachId);
         }
         if (paymentAllocationTypes != null && !paymentAllocationTypes.isEmpty()) {
             json.add("paymentAllocation", buildPaymentAllocationJson());

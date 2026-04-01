@@ -189,3 +189,16 @@ Feature: WorkingCapitalLoanProduct
       | wcp_field_name         | wcp_invalid_field_value | wcp_error_message                                                   |
       | delinquencyGraceDays   | "-5"                   | "The parameter `delinquencyGraceDays` must be zero or greater."     |
       | delinquencyStartType   | "BOGUS"                | "invalid.delinquency.start.type"                                    |
+
+  @TestRailId:C74469
+  Scenario: Verify WC Loan Product create with breachId
+    When Admin creates a new Working Capital Loan Product with breachId
+
+  @TestRailId:C74470
+  Scenario Outline: Verify WC Loan Product create/update with invalid breachId
+    Then Admin failed to create a new Working Capital Loan Product field "<wcp_field_name>" with invalid data <wcp_invalid_field_value> and got an error <wcp_error_message>
+    When Admin creates a new Working Capital Loan Product
+    Then Admin failed to update a new Working Capital Loan Product field "<wcp_field_name>" with invalid data <wcp_invalid_field_value> and got an error <wcp_error_message>
+    Examples:
+      | wcp_field_name | wcp_invalid_field_value | wcp_error_message                                  |
+      | breachId       | "0"                     | "The parameter `breachId` must be greater than 0." |

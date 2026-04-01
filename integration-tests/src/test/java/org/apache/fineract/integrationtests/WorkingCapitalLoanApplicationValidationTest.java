@@ -41,6 +41,7 @@ import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.common.products.DelinquencyBucketsHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanApplicationHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanApplicationTestBuilder;
+import org.apache.fineract.integrationtests.common.workingcapitalloanbreach.WorkingCapitalBreachHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductTestBuilder;
 import org.junit.jupiter.api.BeforeAll;
@@ -54,6 +55,7 @@ public class WorkingCapitalLoanApplicationValidationTest {
 
     private final WorkingCapitalLoanApplicationHelper applicationHelper = new WorkingCapitalLoanApplicationHelper();
     private final WorkingCapitalLoanProductHelper productHelper = new WorkingCapitalLoanProductHelper();
+    private final WorkingCapitalBreachHelper breachHelper = new WorkingCapitalBreachHelper();
 
     @BeforeAll
     static void initDelinquency() {
@@ -279,6 +281,47 @@ public class WorkingCapitalLoanApplicationValidationTest {
     }
 
     @Test
+    public void testSubmitWithInvalidBreachId() {
+        final Long productId = createProductWithBreachOverride();
+        final Long clientId = createClient();
+        final String json = new WorkingCapitalLoanApplicationTestBuilder() //
+                .withClientId(clientId) //
+                .withProductId(productId) //
+                .withPrincipal(BigDecimal.valueOf(5000)) //
+                .withPeriodPaymentRate(BigDecimal.ONE) //
+                .withTotalPayment(BigDecimal.valueOf(5500)) //
+                .withBreachId(0L) //
+                .buildSubmitJson();
+
+        final CallFailedRuntimeException ex = applicationHelper.runSubmitExpectingFailure(json);
+        assertEquals(400, ex.getStatus());
+        assertNotNull(ex.getDeveloperMessage());
+        assertEquals("Validation errors: [breachId] The parameter `breachId` must be greater than 0.", ex.getDeveloperMessage());
+        productHelper.deleteWorkingCapitalLoanProductById(productId);
+    }
+
+    @Test
+    public void testSubmitWithNonExistingBreachId() {
+        final Long productId = createProductWithBreachOverride();
+        final Long clientId = createClient();
+        final String json = new WorkingCapitalLoanApplicationTestBuilder() //
+                .withClientId(clientId) //
+                .withProductId(productId) //
+                .withPrincipal(BigDecimal.valueOf(5000)) //
+                .withPeriodPaymentRate(BigDecimal.ONE) //
+                .withTotalPayment(BigDecimal.valueOf(5500)) //
+                .withBreachId(Long.MAX_VALUE) //
+                .buildSubmitJson();
+
+        final CallFailedRuntimeException ex = applicationHelper.runSubmitExpectingFailure(json);
+        assertEquals(403, ex.getStatus());
+        assertNotNull(ex.getDeveloperMessage());
+        assertTrue(ex.getDeveloperMessage().contains("Working Capital Breach with id"));
+        assertTrue(ex.getDeveloperMessage().contains("was not found"));
+        productHelper.deleteWorkingCapitalLoanProductById(productId);
+    }
+
+    @Test
     public void testSubmitWithSubmittedOnNoteExceedingLength() {
         final Long productId = createProduct();
         final Long clientId = createClient();
@@ -405,6 +448,33 @@ public class WorkingCapitalLoanApplicationValidationTest {
         assertTrue(ex.getDeveloperMessage().contains("discount"), "Expected discount in: " + ex.getDeveloperMessage());
 
         productHelper.deleteWorkingCapitalLoanProductById(productId);
+    }
+
+    @Test
+    public void testSubmitWithOverrideNotAllowedByProductForBreach() {
+        final Long productId = createProduct();
+        final Long clientId = createClient();
+
+        final Long breachId = createBreach(30, "DAYS", "PERCENTAGE", BigDecimal.valueOf(10));
+
+        final String json = new WorkingCapitalLoanApplicationTestBuilder() //
+                .withClientId(clientId) //
+                .withProductId(productId) //
+                .withPrincipal(BigDecimal.valueOf(5000)) //
+                .withPeriodPaymentRate(BigDecimal.ONE) //
+                .withTotalPayment(BigDecimal.valueOf(5500)) //
+                .withBreachId(breachId) //
+                .buildSubmitJson();
+
+        final CallFailedRuntimeException ex = applicationHelper.runSubmitExpectingFailure(json);
+        assertEquals(400, ex.getStatus());
+        assertNotNull(ex.getDeveloperMessage());
+        assertTrue(ex.getDeveloperMessage().contains("override.not.allowed.by.product"),
+                "Expected override.not.allowed.by.product in: " + ex.getDeveloperMessage());
+        assertTrue(ex.getDeveloperMessage().contains("breachId"), "Expected breachId in: " + ex.getDeveloperMessage());
+
+        productHelper.deleteWorkingCapitalLoanProductById(productId);
+        breachHelper.delete(breachId);
     }
 
     @Test
@@ -917,6 +987,16 @@ public class WorkingCapitalLoanApplicationValidationTest {
         return json.toString();
     }
 
+    private Long createBreach(final Integer breachFrequency, final String breachFrequencyType, final String breachAmountCalculationType,
+            final BigDecimal breachAmount) {
+        final JsonObject payload = new JsonObject();
+        payload.addProperty("breachFrequency", breachFrequency);
+        payload.addProperty("breachFrequencyType", breachFrequencyType);
+        payload.addProperty("breachAmountCalculationType", breachAmountCalculationType);
+        payload.addProperty("breachAmount", breachAmount);
+        return breachHelper.create(payload);
+    }
+
     private Long createProduct() {
         final String uniqueName = "WCL Product " + UUID.randomUUID().toString().substring(0, 8);
         final String uniqueShortName = UUID.randomUUID().toString().replace("-", "").substring(0, 4);
@@ -973,6 +1053,17 @@ public class WorkingCapitalLoanApplicationValidationTest {
                 .withName(uniqueName) //
                 .withShortName(uniqueShortName) //
                 .withAllowAttributeOverrides(Map.of("discountDefault", false)) //
+                .build()) //
+                .getResourceId();
+    }
+
+    private Long createProductWithBreachOverride() {
+        final String uniqueName = "WCL Product " + UUID.randomUUID().toString().substring(0, 8);
+        final String uniqueShortName = UUID.randomUUID().toString().replace("-", "").substring(0, 4);
+        return productHelper.createWorkingCapitalLoanProduct(new WorkingCapitalLoanProductTestBuilder() //
+                .withName(uniqueName) //
+                .withShortName(uniqueShortName) //
+                .withAllowAttributeOverrides(Map.of("breach", true)) //
                 .build()) //
                 .getResourceId();
     }

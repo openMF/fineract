@@ -31,6 +31,7 @@ import io.restassured.specification.ResponseSpecification;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Map;
 import java.util.UUID;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.integrationtests.common.ClientHelper;
@@ -87,7 +88,7 @@ public class WorkingCapitalLoanApprovalRejectionTest {
 
     @Test
     public void testApproveWithPrincipalAndDiscountOverride() {
-        final Long productId = createProduct();
+        final Long productId = createProductWithDiscountOverride();
         final Long clientId = createClient();
 
         // Submit with discount = 100
@@ -148,7 +149,7 @@ public class WorkingCapitalLoanApprovalRejectionTest {
 
     @Test
     public void testUndoApprovalResetsToCreatedState() {
-        final Long productId = createProduct();
+        final Long productId = createProductWithDiscountOverride();
         final Long clientId = createClient();
 
         // Submit with discount = 100
@@ -337,7 +338,7 @@ public class WorkingCapitalLoanApprovalRejectionTest {
 
     @Test
     public void testApproveWithDiscountExceedingCreatedValueFails() {
-        final Long productId = createProduct();
+        final Long productId = createProductWithDiscountOverride();
         final Long clientId = createClient();
 
         // Submit with discount = 100
@@ -453,6 +454,16 @@ public class WorkingCapitalLoanApprovalRejectionTest {
                 .createWorkingCapitalLoanProduct(
                         new WorkingCapitalLoanProductTestBuilder().withName(uniqueName).withShortName(uniqueShortName).build())
                 .getResourceId();
+    }
+
+    private Long createProductWithDiscountOverride() {
+        final String uniqueName = "WCL Product " + UUID.randomUUID().toString().substring(0, 8);
+        final String uniqueShortName = UUID.randomUUID().toString().replace("-", "").substring(0, 4);
+        return productHelper.createWorkingCapitalLoanProduct(new WorkingCapitalLoanProductTestBuilder() //
+                .withName(uniqueName) //
+                .withShortName(uniqueShortName) //
+                .withAllowAttributeOverrides(Map.of("discountDefault", true)) //
+                .build()).getResourceId();
     }
 
     private Long createClient() {

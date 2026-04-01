@@ -33,6 +33,8 @@ import org.apache.fineract.portfolio.fund.data.FundData;
 import org.apache.fineract.portfolio.fund.service.FundReadPlatformService;
 import org.apache.fineract.portfolio.loanproduct.domain.PaymentAllocationTransactionType;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPeriodFrequencyType;
+import org.apache.fineract.portfolio.workingcapitalloanbreach.data.WorkingCapitalBreachData;
+import org.apache.fineract.portfolio.workingcapitalloanbreach.service.WorkingCapitalBreachReadPlatformService;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.data.WorkingCapitalLoanProductData;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAmortizationType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
@@ -54,6 +56,7 @@ public class WorkingCapitalLoanProductReadPlatformServiceImpl implements Working
     private final FundReadPlatformService fundReadPlatformService;
     private final CurrencyReadPlatformService currencyReadPlatformService;
     private final DelinquencyReadPlatformService delinquencyReadPlatformService;
+    private final WorkingCapitalBreachReadPlatformService breachReadPlatformService;
 
     @Override
     public List<WorkingCapitalLoanProductData> retrieveAllWorkingCapitalLoanProducts() {
@@ -82,6 +85,7 @@ public class WorkingCapitalLoanProductReadPlatformServiceImpl implements Working
                 .getValuesAsStringEnumOptionDataList(WorkingCapitalAmortizationType.class);
         final List<StringEnumOptionData> periodFrequencyTypeOptions = ApiFacingEnum
                 .getValuesAsStringEnumOptionDataList(WorkingCapitalLoanPeriodFrequencyType.class);
+        final List<WorkingCapitalBreachData> breachOptions = breachReadPlatformService.retrieveAll();
         final List<StringEnumOptionData> advancedPaymentAllocationTypes = ApiFacingEnum
                 .getValuesAsStringEnumOptionDataList(WorkingCapitalPaymentAllocationType.class);
         final List<StringEnumOptionData> delinquencyStartTypeOptions = ApiFacingEnum
@@ -96,6 +100,7 @@ public class WorkingCapitalLoanProductReadPlatformServiceImpl implements Working
                 .currencyOptions(currencyOptions) //
                 .amortizationTypeOptions(amortizationTypeOptions) //
                 .periodFrequencyTypeOptions(periodFrequencyTypeOptions) //
+                .breachOptions(breachOptions) //
                 .advancedPaymentAllocationTypes(advancedPaymentAllocationTypes) //
                 .advancedPaymentAllocationTransactionTypes(advancedPaymentAllocationTransactionTypes) //
                 .delinquencyStartTypeOptions(delinquencyStartTypeOptions) //

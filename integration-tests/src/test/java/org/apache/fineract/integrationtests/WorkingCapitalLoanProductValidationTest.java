@@ -299,6 +299,17 @@ public class WorkingCapitalLoanProductValidationTest {
     }
 
     @Test
+    public void testCreateWorkingCapitalLoanProductWithInvalidBreachId() {
+        final PostWorkingCapitalLoanProductsRequest request = new WorkingCapitalLoanProductTestBuilder().withBreachId(0L).build();
+
+        final CallFailedRuntimeException exception = assertThrows(CallFailedRuntimeException.class,
+                () -> wclProductHelper.createWorkingCapitalLoanProduct(request));
+        assertEquals(400, exception.getStatus());
+        assertNotNull(exception.getDeveloperMessage());
+        assertEquals("Validation errors: [breachId] The parameter `breachId` must be greater than 0.", exception.getDeveloperMessage());
+    }
+
+    @Test
     public void testCreateWorkingCapitalLoanProductWithNegativeDiscountDefault() {
         // Given - discount must be >= 0 if provided
         final PostWorkingCapitalLoanProductsRequest request = new WorkingCapitalLoanProductTestBuilder()

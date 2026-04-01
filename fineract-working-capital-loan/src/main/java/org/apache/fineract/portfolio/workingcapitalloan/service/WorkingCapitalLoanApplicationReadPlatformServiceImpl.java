@@ -42,6 +42,8 @@ import org.apache.fineract.portfolio.workingcapitalloan.exception.WorkingCapital
 import org.apache.fineract.portfolio.workingcapitalloan.mapper.WorkingCapitalLoanMapper;
 import org.apache.fineract.portfolio.workingcapitalloan.mapper.WorkingCapitalLoanSummaryMapper;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanRepository;
+import org.apache.fineract.portfolio.workingcapitalloanbreach.data.WorkingCapitalBreachData;
+import org.apache.fineract.portfolio.workingcapitalloanbreach.service.WorkingCapitalBreachReadPlatformService;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.data.WorkingCapitalLoanProductData;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.service.WorkingCapitalLoanProductReadPlatformService;
@@ -63,6 +65,7 @@ public class WorkingCapitalLoanApplicationReadPlatformServiceImpl implements Wor
     private final ClientReadPlatformService clientReadPlatformService;
     private final DelinquencyReadPlatformService delinquencyReadPlatformService;
     private final WorkingCapitalLoanSummaryMapper workingCapitalLoanSummaryMapper;
+    private final WorkingCapitalBreachReadPlatformService breachReadPlatformService;
 
     @Override
     public WorkingCapitalLoanTemplateData retrieveTemplate(final Long productId, final Long clientId) {
@@ -72,6 +75,7 @@ public class WorkingCapitalLoanApplicationReadPlatformServiceImpl implements Wor
                 .retrieveAllDelinquencyBuckets();
         final List<StringEnumOptionData> periodFrequencyTypeOptions = ApiFacingEnum
                 .getValuesAsStringEnumOptionDataList(WorkingCapitalLoanPeriodFrequencyType.class);
+        final List<WorkingCapitalBreachData> breachOptions = breachReadPlatformService.retrieveAll();
         final List<StringEnumOptionData> delinquencyStartTypeOptions = ApiFacingEnum
                 .getValuesAsStringEnumOptionDataList(WorkingCapitalLoanDelinquencyStartType.class);
         final WorkingCapitalLoanData.WorkingCapitalLoanDataBuilder builder = WorkingCapitalLoanData.builder();
@@ -86,7 +90,8 @@ public class WorkingCapitalLoanApplicationReadPlatformServiceImpl implements Wor
                         .repaymentEvery(product.getRepaymentEvery()) //
                         .repaymentFrequencyType(product.getRepaymentFrequencyType()) //
                         .discount(product.getDiscount()) //
-                        .paymentAllocation(product.getPaymentAllocation());
+                        .paymentAllocation(product.getPaymentAllocation()) //
+                        .breach(product.getBreach());
             }
         }
         if (clientId != null) {
@@ -100,6 +105,7 @@ public class WorkingCapitalLoanApplicationReadPlatformServiceImpl implements Wor
                 .fundOptions(productTemplate.getFundOptions())//
                 .delinquencyBucketOptions(delinquencyBucketOptions)//
                 .periodFrequencyTypeOptions(periodFrequencyTypeOptions)//
+                .breachOptions(breachOptions)//
                 .delinquencyStartTypeOptions(delinquencyStartTypeOptions).build();
     }
 

@@ -26,6 +26,7 @@ import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.data.StringEnumOptionData;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.portfolio.fund.data.FundData;
+import org.apache.fineract.portfolio.workingcapitalloanbreach.data.WorkingCapitalBreachData;
 
 /**
  * Swagger documentation classes for Working Capital Loan Products API.
@@ -94,6 +95,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         @Schema(example = "DAYS", allowableValues = { "DAYS", "MONTHS", "YEARS" })
         public String repaymentFrequencyType;
         @Schema(example = "1")
+        public Long breachId;
+        @Schema(example = "1")
         public Integer delinquencyGraceDays;
         @Schema(example = "LOAN_CREATION", description = "Delinquency start type: LOAN_CREATION or DISBURSEMENT")
         public String delinquencyStartType;
@@ -136,6 +139,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
 
             @Schema(example = "true")
             public Boolean delinquencyBucketClassification;
+            @Schema(example = "true")
+            public Boolean breach;
             @Schema(example = "true")
             public Boolean discountDefault;
             @Schema(example = "true")
@@ -208,6 +213,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         @Schema(example = "30")
         public Integer repaymentEvery;
         public StringEnumOptionData repaymentFrequencyType;
+        @Schema(description = "Working capital breach (1:1 parity with delinquencyBucket)")
+        public GetWorkingCapitalLoanBreach breach;
         @Schema(example = "1")
         public Integer delinquencyGraceDays;
         public StringEnumOptionData delinquencyStartType;
@@ -242,6 +249,21 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
             }
         }
 
+        @Schema(description = "GetWorkingCapitalLoanBreach")
+        public static final class GetWorkingCapitalLoanBreach {
+
+            private GetWorkingCapitalLoanBreach() {}
+
+            @Schema(example = "1")
+            public Long id;
+            @Schema(example = "30")
+            public Integer breachFrequency;
+            public StringEnumOptionData breachFrequencyType;
+            public StringEnumOptionData breachAmountCalculationType;
+            @Schema(example = "10.0")
+            public BigDecimal breachAmount;
+        }
+
         @Schema(description = "GetPaymentAllocation")
         public static final class GetPaymentAllocation {
 
@@ -271,6 +293,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
             @Schema(example = "true")
             public Boolean delinquencyBucketClassification;
             @Schema(example = "true")
+            public Boolean breach;
+            @Schema(example = "true")
             public Boolean discountDefault;
             @Schema(example = "true")
             public Boolean periodPaymentFrequency;
@@ -288,6 +312,7 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public List<CurrencyData> currencyOptions;
         public List<StringEnumOptionData> amortizationTypeOptions;
         public List<StringEnumOptionData> periodFrequencyTypeOptions;
+        public List<WorkingCapitalBreachData> breachOptions;
         public List<StringEnumOptionData> advancedPaymentAllocationTypes;
         public List<StringEnumOptionData> delinquencyStartTypeOptions;
         public List<EnumOptionData> advancedPaymentAllocationTransactionTypes;
@@ -348,6 +373,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         @Schema(example = "30")
         public Integer repaymentEvery;
         public StringEnumOptionData repaymentFrequencyType;
+        @Schema(description = "Working capital breach (1:1 parity with delinquencyBucket)")
+        public GetWorkingCapitalLoanProductsResponse.GetWorkingCapitalLoanBreach breach;
         @Schema(example = "1")
         public Integer delinquencyGraceDays;
         public StringEnumOptionData delinquencyStartType;
@@ -415,6 +442,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public Integer repaymentEvery;
         @Schema(example = "DAYS", allowableValues = { "DAYS", "MONTHS", "YEARS" })
         public String repaymentFrequencyType;
+        @Schema(example = "1")
+        public Long breachId;
         @Schema(example = "1")
         public Integer delinquencyGraceDays;
         @Schema(example = "LOAN_CREATION", description = "Delinquency start type: LOAN_CREATION or DISBURSEMENT")

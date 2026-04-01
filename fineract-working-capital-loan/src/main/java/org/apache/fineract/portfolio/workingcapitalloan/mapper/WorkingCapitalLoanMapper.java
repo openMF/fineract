@@ -36,6 +36,7 @@ import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanD
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDisbursementDetails;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPaymentAllocationRule;
+import org.apache.fineract.portfolio.workingcapitalloanbreach.mapper.WorkingCapitalBreachMapper;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.data.WorkingCapitalPaymentAllocationData;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductRelatedDetails;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalPaymentAllocationType;
@@ -46,8 +47,8 @@ import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(config = MapstructMapperConfig.class, uses = { DelinquencyBucketMapper.class, WorkingCapitalLoanProductMapper.class,
-        WorkingCapitalLoanBalanceMapper.class, WorkingCapitalLoanDisbursementDetailMapper.class,
-        WorkingCapitalLoanTransactionMapper.class })
+        WorkingCapitalLoanBalanceMapper.class, WorkingCapitalLoanDisbursementDetailMapper.class, WorkingCapitalLoanTransactionMapper.class,
+        WorkingCapitalBreachMapper.class })
 public interface WorkingCapitalLoanMapper {
 
     @Mapping(target = "accountNo", source = "accountNumber")
@@ -62,6 +63,7 @@ public interface WorkingCapitalLoanMapper {
     @Mapping(target = "repaymentEvery", source = "loanProductRelatedDetails.repaymentEvery")
     @Mapping(target = "repaymentFrequencyType", source = "loanProductRelatedDetails", qualifiedByName = "repaymentFrequencyTypeData")
     @Mapping(target = "discount", source = "loanProductRelatedDetails.discount")
+    @Mapping(target = "breach", source = "loanProductRelatedDetails.breach")
     @Mapping(target = "delinquencyBucket", source = "loanProductRelatedDetails.delinquencyBucket")
     @Mapping(target = "balance", source = "balance")
     @Mapping(target = "paymentAllocation", source = "paymentAllocationRules", qualifiedByName = "paymentAllocationRulesToData")

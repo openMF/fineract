@@ -1057,6 +1057,10 @@ public final class ErrorMessageHelper {
         return String.format("Delinquency bucket with id `%d` does not exist.", id);
     }
 
+    public static String workingCapitalBreachNotFoundFailure(final Long id) {
+        return String.format("Working Capital Breach with id %d was not found.", id);
+    }
+
     public static String disburseNotApprovedFailure(String status) {
         return String.format("Disbursement is not allowed from current status %s", status);
     }

@@ -41,9 +41,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
+import org.apache.fineract.client.models.CommandProcessingResult;
 import org.apache.fineract.client.models.DeleteWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.GetDisbursementDetail;
 import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
+import org.apache.fineract.client.models.PostAllowAttributeOverrides;
 import org.apache.fineract.client.models.PostClientsResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsResponse;
@@ -974,5 +976,79 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         final CallFailedRuntimeException exception = fail(
                 () -> fineractClient.workingCapitalLoans().submitWorkingCapitalLoanApplication(request));
         assertThat(exception.getStatus()).as("HTTP status").isEqualTo(expectedStatus);
+    }
+
+    @Then("Creating a working capital loan with breachId {long} on {string} will result with status code {int}")
+    public void createLoanWithInvalidBreachId(final long breachId, final String submittedOnDate, final int expectedStatus) {
+        final Long clientId = extractClientId();
+        final Long loanProductId = resolveLoanProductId(DefaultWorkingCapitalLoanProduct.WCLP.name());
+
+        final PostWorkingCapitalLoansRequest request = workingCapitalLoanRequestFactory.defaultWorkingCapitalLoansRequest(clientId)
+                .productId(loanProductId) //
+                .submittedOnDate(submittedOnDate) //
+                .expectedDisbursementDate(submittedOnDate) //
+                .principalAmount(new BigDecimal("100")) //
+                .totalPayment(new BigDecimal("100")) //
+                .periodPaymentRate(new BigDecimal("1")) //
+                .discount(BigDecimal.ZERO) //
+                .breachId(breachId);
+
+        final CallFailedRuntimeException exception = fail(
+                () -> fineractClient.workingCapitalLoans().submitWorkingCapitalLoanApplication(request));
+        assertThat(exception.getStatus()).as("HTTP status").isEqualTo(expectedStatus);
+    }
+
+    @Then("Creating a working capital loan with breach override allowed {string} on {string} will result with status code {int}")
+    public void createLoanWithBreachOverrideAllowed(final String breachOverrideAllowed, final String submittedOnDate,
+            final int expectedStatus) {
+        final Long clientId = extractClientId();
+        final boolean overrideAllowed = Boolean.parseBoolean(breachOverrideAllowed);
+
+        final Long productBreachId = createBreachAndGetId();
+        final Long overrideBreachId = createBreachAndGetId();
+        final Long productId = createWorkingCapitalProductForBreachOverride(overrideAllowed, productBreachId);
+
+        final PostWorkingCapitalLoansRequest request = workingCapitalLoanRequestFactory.defaultWorkingCapitalLoansRequest(clientId)
+                .productId(productId) //
+                .submittedOnDate(submittedOnDate) //
+                .expectedDisbursementDate(submittedOnDate) //
+                .principalAmount(new BigDecimal("100")) //
+                .totalPayment(new BigDecimal("100")) //
+                .periodPaymentRate(new BigDecimal("1")) //
+                .discount(null) //
+                .breachId(overrideBreachId);
+
+        if (expectedStatus == 200) {
+            final PostWorkingCapitalLoansResponse response = ok(
+                    () -> fineractClient.workingCapitalLoans().submitWorkingCapitalLoanApplication(request));
+            assertThat(response).isNotNull();
+            assertThat(response.getLoanId()).isNotNull();
+            return;
+        }
+
+        final CallFailedRuntimeException exception = fail(
+                () -> fineractClient.workingCapitalLoans().submitWorkingCapitalLoanApplication(request));
+        assertThat(exception.getStatus()).as("HTTP status").isEqualTo(expectedStatus);
+    }
+
+    private Long createBreachAndGetId() {
+        final CommandProcessingResult breachResponse = ok(() -> fineractClient.workingCapitalBreaches()
+                .createWorkingCapitalBreach(workingCapitalProductRequestFactory.defaultWorkingCapitalBreachRequest()));
+        return breachResponse.getResourceId();
+    }
+
+    private Long createWorkingCapitalProductForBreachOverride(final boolean breachOverrideAllowed, final Long breachId) {
+        final String name = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
+        final PostAllowAttributeOverrides allowOverrides = new PostAllowAttributeOverrides().breach(breachOverrideAllowed);
+
+        final PostWorkingCapitalLoanProductsRequest productRequest = workingCapitalProductRequestFactory
+                .defaultWorkingCapitalLoanProductAllowAttributesOverrideRequest() //
+                .name(name) //
+                .breachId(breachId) //
+                .allowAttributeOverrides(allowOverrides);
+
+        final PostWorkingCapitalLoanProductsResponse productResponse = ok(
+                () -> fineractClient.workingCapitalLoanProducts().createWorkingCapitalLoanProduct(productRequest, Map.of()));
+        return productResponse.getResourceId();
     }
 }

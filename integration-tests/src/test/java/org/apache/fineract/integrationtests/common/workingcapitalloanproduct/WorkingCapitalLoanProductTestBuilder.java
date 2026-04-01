@@ -69,6 +69,7 @@ public class WorkingCapitalLoanProductTestBuilder {
     private BigDecimal discount;
     private Integer repaymentEvery = DEFAULT_PERIOD_PAYMENT_FREQUENCY;
     private String repaymentFrequencyType = DEFAULT_PERIOD_PAYMENT_FREQUENCY_TYPE;
+    private Long breachId;
     private List<String> paymentAllocationTypes = DEFAULT_PAYMENT_ALLOCATION_TYPES;
     private Map<String, Boolean> allowAttributeOverrides;
     private Integer delinquencyGraceDays;
@@ -179,6 +180,11 @@ public class WorkingCapitalLoanProductTestBuilder {
         return this;
     }
 
+    public WorkingCapitalLoanProductTestBuilder withBreachId(final Long breachId) {
+        this.breachId = breachId;
+        return this;
+    }
+
     public WorkingCapitalLoanProductTestBuilder withAllowAttributeOverrides(final Map<String, Boolean> allowAttributeOverrides) {
         this.allowAttributeOverrides = allowAttributeOverrides;
         return this;
@@ -238,6 +244,7 @@ public class WorkingCapitalLoanProductTestBuilder {
         }
         request.setDelinquencyGraceDays(this.delinquencyGraceDays);
         request.setDelinquencyStartType(this.delinquencyStartType);
+        request.setBreachId(this.breachId);
         request.setLocale("en_US");
         request.setDateFormat("yyyy-MM-dd");
     }
@@ -269,6 +276,7 @@ public class WorkingCapitalLoanProductTestBuilder {
         }
         request.setDelinquencyGraceDays(this.delinquencyGraceDays);
         request.setDelinquencyStartType(this.delinquencyStartType);
+        request.setBreachId(this.breachId);
         request.setLocale("en_US");
         request.setDateFormat("yyyy-MM-dd");
     }

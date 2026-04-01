@@ -54,10 +54,12 @@ public final class WorkingCapitalLoanProductConstants {
     public static final String discountParamName = "discount";
     public static final String repaymentEveryParamName = "repaymentEvery";
     public static final String repaymentFrequencyTypeParamName = "repaymentFrequencyType";
+    public static final String breachIdParamName = "breachId";
 
     // Configurable attributes (same as LoanProduct)
     public static final String allowAttributeOverridesParamName = "allowAttributeOverrides";
     public static final String delinquencyBucketClassificationOverridableParamName = "delinquencyBucketClassification";
+    public static final String breachOverridableParamName = "breach";
     public static final String discountDefaultOverridableParamName = "discountDefault";
     public static final String periodPaymentFrequencyOverridableParamName = "periodPaymentFrequency";
     public static final String periodPaymentFrequencyTypeOverridableParamName = "periodPaymentFrequencyType";

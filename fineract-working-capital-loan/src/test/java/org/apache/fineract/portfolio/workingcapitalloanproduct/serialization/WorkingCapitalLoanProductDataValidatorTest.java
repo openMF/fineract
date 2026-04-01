@@ -233,6 +233,13 @@ class WorkingCapitalLoanProductDataValidatorTest {
         assertThrows(PlatformApiDataValidationException.class, () -> validator.validateForCreate(json));
     }
 
+    @Test
+    void testValidateForCreate_WithInvalidBreachId_ShouldThrowException() {
+        final JsonObject jsonObject = createBaseJsonObject();
+        jsonObject.addProperty(WorkingCapitalLoanProductConstants.breachIdParamName, 0);
+        assertThrows(PlatformApiDataValidationException.class, () -> validator.validateForCreate(jsonObject.toString()));
+    }
+
     // Helper methods
 
     private JsonObject createBaseJsonObject() {

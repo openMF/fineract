@@ -33,6 +33,7 @@ import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.portfolio.delinquency.domain.DelinquencyBucket;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPeriodFrequencyType;
+import org.apache.fineract.portfolio.workingcapitalloanbreach.domain.WorkingCapitalBreach;
 
 /**
  * WCLoanProductRelatedDetail encapsulates all the details of a {@link WorkingCapitalLoanProduct} that are also used and
@@ -72,6 +73,10 @@ public class WorkingCapitalLoanProductRelatedDetails {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "delinquency_bucket_classification_id")
     private DelinquencyBucket delinquencyBucket;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "breach_id")
+    private WorkingCapitalBreach breach;
 
     @Column(name = "delinquency_grace_days", nullable = false)
     private Integer delinquencyGraceDays = 0;

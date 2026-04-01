@@ -318,6 +318,7 @@ public abstract class TestContextKey {
     public static final String OFFICE_CREATE_RESPONSE = "officeCreateResponse";
     public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_DOWNPAYMENT_ADVANCED_PAYMENT_ALLOCATION_PROGRESSIVE_LOAN_SCHEDULE_VERTICAL_INTEREST_RECALC = "loanProductCreateResponseLP2DownPaymentAdvancedPaymentAllocationProgressiveLoanScheduleVerticalInterestRecalc";
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP = "workingCapitalLoanProductCreateResponseWCLP";
+    public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_DISALLOW_OVERRIDES = "workingCapitalLoanProductCreateResponseWCLPDisallowOverrides";
     public static final String WC_LOAN_IDS = "wcLoanIds";
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST_FOR_UPDATE_WCLP = "workingCapitalLoanProductCreateRequestForUpdateWCLP";
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_FOR_UPDATE_WCLP = "workingCapitalLoanProductCreateResponseForUpdateWCLP";
@@ -334,6 +335,11 @@ public abstract class TestContextKey {
     public static final String DELINQUENCY_BUCKET_ID_FOR_UPDATE = "delinquencyBucketIdForUpdate";
     public static final String DELINQUENCY_BUCKET_CREATE_REQUEST_FOR_UPDATE = "delinquencyBucketCreateRequestForUpdate";
     public static final String DELINQUENCY_BUCKET_CREATE_RESPONSE_FOR_UPDATE_DUPLICATE = "delinquencyBucketUpdateRequestForUpdateDuplicate";
+    public static final String WORKING_CAPITAL_BREACH_ID = "workingCapitalBreachId";
+    public static final String WORKING_CAPITAL_BREACH_CREATE_REQUEST = "workingCapitalBreachCreateRequest";
+    public static final String WORKING_CAPITAL_BREACH_UPDATE_REQUEST = "workingCapitalBreachUpdateRequest";
+    public static final String WORKING_CAPITAL_BREACH_ID_FOR_UPDATE = "workingCapitalBreachIdForUpdate";
+    public static final String WORKING_CAPITAL_BREACH_CREATE_REQUEST_FOR_UPDATE = "workingCapitalBreachCreateRequestForUpdate";
 
     public static final String WC_LOAN_ACTION_TEMPLATE_RESPONSE = "wcLoanActionTemplateResponse";
 }

@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.feign.services.WorkingCapitalLoanProductsApi;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
+import org.apache.fineract.client.models.CommandProcessingResult;
 import org.apache.fineract.client.models.DeleteWorkingCapitalLoanProductsProductIdResponse;
 import org.apache.fineract.client.models.GetConfigurableAttributes;
 import org.apache.fineract.client.models.GetPaymentAllocation;
@@ -84,6 +85,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
     public static final String DELINQUENCY_BUCKET_ID_FIELD_NAME = "delinquencyBucketId";
     public static final String DELINQUENCY_GRACE_DAYS_FIELD_NAME = "delinquencyGraceDays";
     public static final String DELINQUENCY_START_TYPE_FIELD_NAME = "delinquencyStartType";
+    public static final String BREACH_ID_FIELD_NAME = "breachId";
     public static final String LOCALE_FIELD_NAME = "locale";
 
     private WorkingCapitalLoanProductsApi workingCapitalApi() {
@@ -101,6 +103,24 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
                 defaultWorkingCapitalLoanProductCreateRequest);
         testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, responseDefaultWorkingCapitalLoanProductCreate);
         testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST, defaultWorkingCapitalLoanProductCreateRequest);
+        checkWorkingCapitalLoanProductCreate();
+    }
+
+    @When("Admin creates a new Working Capital Loan Product with breachId")
+    public void createWorkingCapitalLoanProductWithBreachId() {
+        final CommandProcessingResult breachCreateResponse = ok(() -> fineractFeignClient.workingCapitalBreaches()
+                .createWorkingCapitalBreach(workingCapitalRequestFactory.defaultWorkingCapitalBreachRequest()));
+        final Long breachId = breachCreateResponse.getResourceId();
+        testContext().set(TestContextKey.WORKING_CAPITAL_BREACH_ID, breachId);
+
+        final String name = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
+        final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory.defaultWorkingCapitalLoanProductRequest() //
+                .name(name) //
+                .breachId(breachId);
+
+        final PostWorkingCapitalLoanProductsResponse response = createWorkingCapitalLoanProduct(request);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST, request);
         checkWorkingCapitalLoanProductCreate();
     }
 
@@ -689,6 +709,9 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
             case DELINQUENCY_START_TYPE_FIELD_NAME:
                 defaultWorkingCapitalLoanProductCreateRequest.setDelinquencyStartType(fieldValue);
             break;
+            case BREACH_ID_FIELD_NAME:
+                defaultWorkingCapitalLoanProductCreateRequest.setBreachId(fieldValue != null ? Long.valueOf(fieldValue) : null);
+            break;
             case LOCALE_FIELD_NAME:
                 defaultWorkingCapitalLoanProductCreateRequest.setLocale(fieldValue);
             break;
@@ -804,6 +827,9 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
             break;
             case DELINQUENCY_START_TYPE_FIELD_NAME:
                 defaultWorkingCapitalLoanProductUpdateRequest.setDelinquencyStartType(fieldValue);
+            break;
+            case BREACH_ID_FIELD_NAME:
+                defaultWorkingCapitalLoanProductUpdateRequest.setBreachId(fieldValue != null ? Long.valueOf(fieldValue) : null);
             break;
             case LOCALE_FIELD_NAME:
                 defaultWorkingCapitalLoanProductUpdateRequest.setLocale(fieldValue);

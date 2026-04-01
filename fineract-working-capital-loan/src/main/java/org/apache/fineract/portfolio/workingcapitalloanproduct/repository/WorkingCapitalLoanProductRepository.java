@@ -41,6 +41,7 @@ public interface WorkingCapitalLoanProductRepository
             SELECT DISTINCT wclp FROM WorkingCapitalLoanProduct wclp
             LEFT JOIN FETCH wclp.fund
             LEFT JOIN FETCH wclp.delinquencyBucket
+            LEFT JOIN FETCH wclp.breach
             LEFT JOIN FETCH wclp.paymentAllocationRules
             LEFT JOIN FETCH wclp.configurableAttributes
             ORDER BY wclp.name
@@ -51,6 +52,7 @@ public interface WorkingCapitalLoanProductRepository
             SELECT wclp FROM WorkingCapitalLoanProduct wclp
             LEFT JOIN FETCH wclp.fund
             LEFT JOIN FETCH wclp.delinquencyBucket
+            LEFT JOIN FETCH wclp.breach
             LEFT JOIN FETCH wclp.paymentAllocationRules
             LEFT JOIN FETCH wclp.configurableAttributes
             WHERE wclp.id = :id
@@ -61,6 +63,7 @@ public interface WorkingCapitalLoanProductRepository
             SELECT wclp FROM WorkingCapitalLoanProduct wclp
             LEFT JOIN FETCH wclp.fund
             LEFT JOIN FETCH wclp.delinquencyBucket
+            LEFT JOIN FETCH wclp.breach
             LEFT JOIN FETCH wclp.paymentAllocationRules
             LEFT JOIN FETCH wclp.configurableAttributes
             WHERE wclp.externalId = :externalId
