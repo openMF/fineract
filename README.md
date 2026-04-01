@@ -1,7 +1,7 @@
 # Apache Fineract
 
 <!-- TODO Reactivate when there is a working CI-CD instance: [![Swagger Validation](https://validator.swagger.io/validator?url=https://sandbox.mifos.community/fineract-provider/swagger-ui/fineract.yaml)](https://validator.swagger.io/validator/debug?url=https://sandbox.mifos.community/fineract-provider/swagger-ui/fineract.yaml) -->
-[![Build](https://github.com/apache/fineract/actions/workflows/build-mariadb.yml/badge.svg?branch=develop)](https://github.com/apache/fineract/actions/workflows/build-mariadb.yml)
+[![Build](https://github.com/apache/fineract/actions/workflows/build-postgresql.yml/badge.svg?branch=develop)](https://github.com/apache/fineract/actions/workflows/build-postgresql.yml)
 [![Docker Hub](https://img.shields.io/docker/pulls/apache/fineract.svg?logo=Docker)](https://hub.docker.com/r/apache/fineract)
 [![Docker Build](https://github.com/apache/fineract/actions/workflows/publish-dockerhub.yml/badge.svg)](https://github.com/apache/fineract/actions/workflows/publish-dockerhub.yml)
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=apache_fineract&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=apache_fineract)
@@ -29,11 +29,11 @@ In the moment you get started writing code, please consult our [CONTRIBUTING](CO
 
 REQUIREMENTS
 ============
-* min. 16GB RAM and 8 core CPU
-* `MariaDB >= 12.2` or `PostgreSQL >= 18.0`
-* `Java >= 21` (Azul Zulu JVM is tested by our CI on GitHub Actions)
+* 16GB RAM and 8 core CPU (minimum hardware for running Fineract -- development and testing may require more)
+* PostgreSQL >= 18.0 ([support for other backend databases is deprecated](https://cwiki.apache.org/confluence/display/FINERACT/FSIP-9%3A+Standardize+on+PostgreSQL))
+* Java >= 21 (Azul Zulu JVM is tested by our CI on GitHub Actions)
 
-Tomcat (min. v10) is only required, if you wish to deploy the Fineract WAR to a separate external servlet container.  You do not need to install Tomcat to run Fineract. We recommend the use of the self-contained JAR, which transparently embeds a servlet container using Spring Boot.
+Tomcat (min. v10) is only needed if you wish to deploy the Fineract WAR to a separate external servlet container. You do not need to install Tomcat to run Fineract. We recommend the use of the self-contained JAR, which transparently embeds a servlet container using Spring Boot.
 
 
 SECURITY
@@ -48,52 +48,40 @@ For details about security during development and deployment, see the documentat
 INSTRUCTIONS
 ============
 
-The following how-to's assume you have Java installed, you cloned the repository (or downloaded and extracted a [specific version](https://github.com/apache/fineract/releases)) and you have a [database server](#database-and-tables) (MariaDB or PostgreSQL) running.
-
 Quick Start
 ---
 
-This section provides a simplified overview of the setup process. More detailed instructions are available below.
-
-Follow these steps to quickly set up and run Apache Fineract locally:
+Follow these steps to quickly set up and run Apache Fineract locally.
 
 ### Prerequisites
-- Java 21 or higher
-- PostgreSQL or MariaDB running locally
 
-### Clone the repository
+- Java 21 or higher (Azul Zulu is recommended)
+- PostgreSQL running locally, listening on port 5432 with proper permissions (see [below](#database-and-tables) for how to run PostgreSQL in Docker)
+
 ```bash
+# get code
 git clone https://github.com/apache/fineract.git
 cd fineract
-```
 
-### Create databases
-```bash
-./gradlew createDB -PdbName=fineract_tenants
-./gradlew createDB -PdbName=fineract_default
-```
+# create dbs
+./gradlew createPGDB -PdbName=fineract_tenants
+./gradlew createPGDB -PdbName=fineract_default
 
-### Run the application
-```bash
+# local dev/test env settings
+export FINERACT_DEFAULT_TENANTDB_PORT=5432
+export FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME=org.postgresql.Driver
+export FINERACT_HIKARI_JDBC_URL=jdbc:postgresql://localhost:$FINERACT_DEFAULT_TENANTDB_PORT/fineract_tenants
+export POSTGRES_PASSWORD=postgres
+export FINERACT_HIKARI_PASSWORD=$POSTGRES_PASSWORD
+export FINERACT_DEFAULT_TENANTDB_PWD=$POSTGRES_PASSWORD
+
+# start backend
 ./gradlew devRun
 ```
+
+After a minute or two, Fineract will be listening for API requests on port 8443 (by default).
 
 ### Verify the application is running
-```bash
-curl --insecure https://localhost:8443/fineract-provider/actuator/health
-```
-
-How to run for local development
----
-
-Run the following commands in this order:
-```bash
-./gradlew createDB -PdbName=fineract_tenants
-./gradlew createDB -PdbName=fineract_default
-./gradlew devRun
-```
-
-This creates two databases and builds and runs Fineract, which will be listening for API requests on port 8443 (by default) now.
 
 Confirm Fineract is ready with, for example:
 
@@ -101,19 +89,32 @@ Confirm Fineract is ready with, for example:
 curl --insecure https://localhost:8443/fineract-provider/actuator/health
 ```
 
+Expected response for fresh instance:
+
+```json
+{"status":"UP","groups":["liveness","readiness"]}
+```
+
 To test authenticated endpoints, include credentials in your request:
 
 ```bash
-curl --location \
+# basic auth header uses colon-delimited and base64-encoded default "mifos:password" login
+curl --location --insecure \
   https://localhost:8443/fineract-provider/api/v1/clients \
   --header 'Content-Type: application/json' \
   --header 'Fineract-Platform-TenantId: default' \
   --header 'Authorization: Basic bWlmb3M6cGFzc3dvcmQ='
 ```
 
+Expected response for fresh instance:
+
+```json
+{"totalFilteredRecords":0,"pageItems":[]}
+```
+
 How to run for production
 ---
-Running Fineract to try it out is relatively easy. If you intend to use it in a production environment, be aware that a proper deployment can be complex, costly, and time-consuming. Considerations include: Security, privacy, compliance, performance, service availability, backups, and more. The Fineract project does not provide a comprehensive guide for deploying Fineract in production. You might need skills in enterprise Java applications and more. Alternatively, you could pay a vendor for Fineract deployment and maintenance. You will find tips and tricks for deploying and securing Fineract in our official documentation and in the community-maintained wiki.
+Running Fineract _just to try it out_ is relatively easy. If you intend to use it _in a production environment_, be aware that a proper deployment can be complex, costly, and time-consuming. Considerations include: Security, privacy, compliance, performance, service availability, backups, and more. **The Fineract project does not provide a comprehensive guide for deploying Fineract in production.** You might need skills in enterprise Java applications and more. Alternatively, you could pay a vendor for Fineract deployment and maintenance. You will find tips and tricks for [deploying](https://fineract.apache.org/docs/current/#_deployment) and [securing](https://fineract.apache.org/docs/current/#_securing_fineract) Fineract in our official documentation.
 
 
 How to build the JAR file
@@ -123,7 +124,7 @@ Build a modern, cloud native, fully self contained JAR file:
 ./gradlew clean bootJar
 ```
 The JAR will be created in the `fineract-provider/build/libs` directory.
-As we are not allowed to include a JDBC driver in the built JAR, download a JDBC driver of your choice. For example:
+If you use a MariaDB or MySQL (note: both are deprecated), you must download the appropriate JDBC driver since drivers for those databases use incompatible licenses. For example:
 ```bash
 wget https://dlm.mariadb.com/4174416/Connectors/java/connector-java-3.5.2/mariadb-java-client-3.5.2.jar
 ```
@@ -303,10 +304,10 @@ In case of a large deployment with millions of accounts, the Close of Business D
 JMS based messaging is disabled by default. In `docker-compose-postgresql-activemq.yml` an example is shown, where ActiveMQ is enabled. In that configuration one Spring Batch Manager instance and two Spring Batch Worker instances are created.
 Spring based events should be disabled and jms based event handling should be enabled. Furthermore, proper broker JMS URL should be configured.
 
-```
-      FINERACT_REMOTE_JOB_MESSAGE_HANDLER_JMS_ENABLED=true
-      FINERACT_REMOTE_JOB_MESSAGE_HANDLER_SPRING_EVENTS_ENABLED=false
-      FINERACT_REMOTE_JOB_MESSAGE_HANDLER_JMS_BROKER_URL=tcp://activemq:61616
+```bash
+FINERACT_REMOTE_JOB_MESSAGE_HANDLER_JMS_ENABLED=true
+FINERACT_REMOTE_JOB_MESSAGE_HANDLER_SPRING_EVENTS_ENABLED=false
+FINERACT_REMOTE_JOB_MESSAGE_HANDLER_JMS_BROKER_URL=tcp://activemq:61616
 ```
 
 For additional ActiveMQ related configuration please take a look to the `application.properties` where the supported configuration parameters are listed with their default values.
@@ -326,11 +327,21 @@ DATABASE AND TABLES
 
 You can run the required version of the database server in a container, instead of having to install it, like this:
 
-    docker run --name mariadb-12.2 -p 3306:3306 -e MARIADB_ROOT_PASSWORD=mysql -d mariadb:12.2.2 --innodb-snapshot-isolation=OFF
+```bash
+# start postgresql in background
+docker run --name postgres -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=postgres -u nobody:nogroup -d postgres:18.3
+# stop and destroy container
+docker rm -f postgres
+```
 
-and stop and destroy it like this:
+Similarly, for one of the [deprecated](https://cwiki.apache.org/confluence/display/FINERACT/FSIP-9%3A+Standardize+on+PostgreSQL) database backends:
 
-    docker rm -f mariadb-12.2
+```bash
+# start mariadb in background
+docker run --name mariadb-12.2 -p 3306:3306 -e MARIADB_ROOT_PASSWORD=mysql -d mariadb:12.2.2 --innodb-snapshot-isolation=OFF
+# stop and destroy container
+docker rm -f mariadb-12.2
+```
 
 Beware that this container database keeps its state inside the container and not on the host filesystem.  It is lost when you destroy (rm) this container.  This is typically fine for development.  See [Caveats: Where to Store Data on the database container documentation](https://hub.docker.com/_/mariadb) regarding how to make it persistent instead of ephemeral.
 
