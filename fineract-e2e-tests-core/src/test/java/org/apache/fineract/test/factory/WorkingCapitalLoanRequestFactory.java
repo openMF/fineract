@@ -21,6 +21,7 @@ package org.apache.fineract.test.factory;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansDelinquencyActionRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRequest;
@@ -99,6 +100,15 @@ public class WorkingCapitalLoanRequestFactory {
     public PostWorkingCapitalLoansLoanIdRequest defaultWorkingCapitalLoanUndoDisburseRequest() {
         return new PostWorkingCapitalLoansLoanIdRequest()//
                 .note("")//
+                .dateFormat(DATE_FORMAT)//
+                .locale(DEFAULT_LOCALE);//
+    }
+
+    public PostWorkingCapitalLoansDelinquencyActionRequest defaultWorkingCapitalLoansDelinquencyActionRequest(String action) {
+        return new PostWorkingCapitalLoansDelinquencyActionRequest()//
+                .action(action)//
+                .startDate(DATE_SUBMIT_STRING)//
+                .endDate(DATE_SUBMIT_STRING)//
                 .dateFormat(DATE_FORMAT)//
                 .locale(DEFAULT_LOCALE);//
     }

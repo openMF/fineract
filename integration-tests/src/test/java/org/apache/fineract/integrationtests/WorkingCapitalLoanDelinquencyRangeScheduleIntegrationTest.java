@@ -64,7 +64,7 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleIntegrationTest {
         // when - Create a WC delinquency bucket with minimumPayment percentage
         final BigDecimal initialMinPayment = new BigDecimal("3");
         final PostDelinquencyBucketResponse createResponse = WorkingCapitalLoanDelinquencyRangeScheduleHelper
-                .createWcDelinquencyBucket(rangeIds, 30, 0, initialMinPayment, 1);
+                .createWorkingCapitalLoanDelinquencyBucket(rangeIds, 30, 0, initialMinPayment, 1);
 
         // then - Verify creation was successful
         assertNotNull(createResponse);
@@ -87,7 +87,7 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleIntegrationTest {
         // when - Update the bucket with a different minimumPayment
         final BigDecimal updatedMinPayment = new BigDecimal("5");
         final PutDelinquencyBucketResponse updateResponse = WorkingCapitalLoanDelinquencyRangeScheduleHelper
-                .updateWcDelinquencyBucket(createResponse.getResourceId(), rangeIds, 30, 0, updatedMinPayment, 1);
+                .updateWorkingCapitalLoanDelinquencyBucket(createResponse.getResourceId(), rangeIds, 30, 0, updatedMinPayment, 1);
 
         // then - Verify update was successful
         assertNotNull(updateResponse);
@@ -111,7 +111,7 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleIntegrationTest {
         final List<Long> rangeIds = createDelinquencyRanges();
         final BigDecimal minPayment = new BigDecimal("3");
         final PostDelinquencyBucketResponse bucketResponse = WorkingCapitalLoanDelinquencyRangeScheduleHelper
-                .createWcDelinquencyBucket(rangeIds, 30, 0, minPayment, 1);
+                .createWorkingCapitalLoanDelinquencyBucket(rangeIds, 30, 0, minPayment, 1);
         assertNotNull(bucketResponse);
 
         // Create a WC product linked to this delinquency bucket
@@ -157,7 +157,7 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleIntegrationTest {
             // given - Create delinquency bucket with 30-day frequency, 3% minimum payment
             final List<Long> rangeIds = createDelinquencyRanges();
             final PostDelinquencyBucketResponse bucketResponse = WorkingCapitalLoanDelinquencyRangeScheduleHelper
-                    .createWcDelinquencyBucket(rangeIds, 30, 0, minPaymentPercent, 1);
+                    .createWorkingCapitalLoanDelinquencyBucket(rangeIds, 30, 0, minPaymentPercent, 1);
 
             // Create product with discount allowed and linked to delinquency bucket
             final WorkingCapitalLoanProductHelper productHelper = new WorkingCapitalLoanProductHelper();

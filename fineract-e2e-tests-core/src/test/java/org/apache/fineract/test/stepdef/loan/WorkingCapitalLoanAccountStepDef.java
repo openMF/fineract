@@ -66,7 +66,7 @@ import org.apache.fineract.test.support.TestContextKey;
 
 @Slf4j
 @RequiredArgsConstructor
-public class WorkingCapitalProductLoanAccountStepDef extends AbstractStepDef {
+public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
 
     private static final String DATE_FORMAT = "dd MMMM yyyy";
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);

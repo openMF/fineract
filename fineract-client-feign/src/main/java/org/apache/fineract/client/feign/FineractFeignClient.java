@@ -83,6 +83,7 @@ import org.apache.fineract.client.feign.services.InterOperationApi;
 import org.apache.fineract.client.feign.services.InterestRateChartApi;
 import org.apache.fineract.client.feign.services.InterestRateSlabAKAInterestBandsApi;
 import org.apache.fineract.client.feign.services.InternalCobApi;
+import org.apache.fineract.client.feign.services.InternalWorkingCapitalLoansApi;
 import org.apache.fineract.client.feign.services.JournalEntriesApi;
 import org.apache.fineract.client.feign.services.LikelihoodApi;
 import org.apache.fineract.client.feign.services.ListReportMailingJobHistoryApi;
@@ -154,6 +155,7 @@ import org.apache.fineract.client.feign.services.TwoFactorApi;
 import org.apache.fineract.client.feign.services.UserGeneratedDocumentsApi;
 import org.apache.fineract.client.feign.services.UsersApi;
 import org.apache.fineract.client.feign.services.WorkingCapitalLoanCobCatchUpApi;
+import org.apache.fineract.client.feign.services.WorkingCapitalLoanDelinquencyActionsApi;
 import org.apache.fineract.client.feign.services.WorkingCapitalLoanDelinquencyRangeScheduleApi;
 import org.apache.fineract.client.feign.services.WorkingCapitalLoanProductsApi;
 import org.apache.fineract.client.feign.services.WorkingCapitalLoanTransactionsApi;
@@ -755,8 +757,16 @@ public final class FineractFeignClient {
         return create(WorkingCapitalLoanCobCatchUpApi.class);
     }
 
+    public WorkingCapitalLoanDelinquencyActionsApi workingCapitalLoanDelinquencyActions() {
+        return create(WorkingCapitalLoanDelinquencyActionsApi.class);
+    }
+
     public WorkingCapitalLoanDelinquencyRangeScheduleApi workingCapitalLoanDelinquencyRangeSchedule() {
         return create(WorkingCapitalLoanDelinquencyRangeScheduleApi.class);
+    }
+
+    public InternalWorkingCapitalLoansApi internalWorkingCapitalLoans() {
+        return create(InternalWorkingCapitalLoansApi.class);
     }
 
     public WorkingCapitalLoansApi workingCapitalLoans() {

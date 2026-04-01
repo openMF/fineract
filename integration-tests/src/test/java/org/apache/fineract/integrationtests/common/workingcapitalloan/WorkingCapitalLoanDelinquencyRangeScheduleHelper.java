@@ -45,16 +45,16 @@ public final class WorkingCapitalLoanDelinquencyRangeScheduleHelper {
                 .retrieveDelinquencyRangeSchedule(loanId));
     }
 
-    public static PostDelinquencyBucketResponse createWcDelinquencyBucket(final List<Long> rangeIds, final int frequency,
+    public static PostDelinquencyBucketResponse createWorkingCapitalLoanDelinquencyBucket(final List<Long> rangeIds, final int frequency,
             final int frequencyType, final BigDecimal minimumPayment, final int minimumPaymentType) {
-        final DelinquencyBucketRequest request = buildWcBucketRequest(rangeIds, frequency, frequencyType, minimumPayment,
+        final DelinquencyBucketRequest request = buildWorkingCapitalLoanBucketRequest(rangeIds, frequency, frequencyType, minimumPayment,
                 minimumPaymentType);
         return ok(() -> FineractFeignClientHelper.getFineractFeignClient().delinquencyRangeAndBucketsManagement().createBucket(request));
     }
 
-    public static PutDelinquencyBucketResponse updateWcDelinquencyBucket(final Long resourceId, final List<Long> rangeIds,
+    public static PutDelinquencyBucketResponse updateWorkingCapitalLoanDelinquencyBucket(final Long resourceId, final List<Long> rangeIds,
             final int frequency, final int frequencyType, final BigDecimal minimumPayment, final int minimumPaymentType) {
-        final DelinquencyBucketRequest request = buildWcBucketRequest(rangeIds, frequency, frequencyType, minimumPayment,
+        final DelinquencyBucketRequest request = buildWorkingCapitalLoanBucketRequest(rangeIds, frequency, frequencyType, minimumPayment,
                 minimumPaymentType);
         return ok(() -> FineractFeignClientHelper.getFineractFeignClient().delinquencyRangeAndBucketsManagement().updateBucket(resourceId,
                 request));
@@ -68,8 +68,8 @@ public final class WorkingCapitalLoanDelinquencyRangeScheduleHelper {
         return ok(() -> FineractFeignClientHelper.getFineractFeignClient().delinquencyRangeAndBucketsManagement().deleteBucket(resourceId));
     }
 
-    private static DelinquencyBucketRequest buildWcBucketRequest(final List<Long> rangeIds, final int frequency, final int frequencyType,
-            final BigDecimal minimumPayment, final int minimumPaymentType) {
+    private static DelinquencyBucketRequest buildWorkingCapitalLoanBucketRequest(final List<Long> rangeIds, final int frequency,
+            final int frequencyType, final BigDecimal minimumPayment, final int minimumPaymentType) {
         final MinimumPaymentPeriodAndRule rule = new MinimumPaymentPeriodAndRule().frequency(frequency)
                 .frequencyType(FREQUENCY_TYPE_NAMES[frequencyType]).minimumPayment(minimumPayment)
                 .minimumPaymentType(MINIMUM_PAYMENT_TYPE_NAMES[minimumPaymentType]);

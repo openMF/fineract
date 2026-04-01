@@ -605,6 +605,15 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder createWorkingCapitalLoanDelinquencyAction(final Long workingCapitalLoanId) {
+        this.actionName = "CREATE";
+        this.entityName = "WC_DELINQUENCY_ACTION";
+        this.entityId = workingCapitalLoanId;
+        this.loanId = workingCapitalLoanId;
+        this.href = "/working-capital-loans/" + workingCapitalLoanId + "/delinquency-actions";
+        return this;
+    }
+
     public CommandWrapperBuilder createClientIdentifier(final Long clientId) {
         this.actionName = "CREATE";
         this.entityName = "CLIENTIDENTIFIER";
