@@ -45,7 +45,6 @@ public class MixTaxonomyMappingApiResource {
     private final CommandDispatcher dispatcher;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public MixTaxonomyMappingData retrieveTaxonomyMapping() {
         return this.readTaxonomyMappingService.retrieveTaxonomyMapping();

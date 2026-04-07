@@ -57,16 +57,16 @@ public class CreditReportWritePlatformServiceImpl implements CreditReportWritePl
 
     private final CreditBureauRepository creditBureauRepository;
     private final CreditReportRepository creditReportRepository;
-    private final ThitsaWorksCreditBureauIntegrationWritePlatformService thitsaWorksCreditBureauIntegrationWritePlatformService;
+    private final ExternalCreditBureauIntegrationWritePlatformService externalCreditBureauIntegrationWritePlatformService;
 
     @Autowired
     public CreditReportWritePlatformServiceImpl(final PlatformSecurityContext context, final CreditBureauRepository creditBureauRepository,
             final CreditReportRepository creditReportRepository,
-            final ThitsaWorksCreditBureauIntegrationWritePlatformService thitsaWorksCreditBureauIntegrationWritePlatformService) {
+            final ExternalCreditBureauIntegrationWritePlatformService externalCreditBureauIntegrationWritePlatformService) {
         this.context = context;
         this.creditBureauRepository = creditBureauRepository;
         this.creditReportRepository = creditReportRepository;
-        this.thitsaWorksCreditBureauIntegrationWritePlatformService = thitsaWorksCreditBureauIntegrationWritePlatformService;
+        this.externalCreditBureauIntegrationWritePlatformService = externalCreditBureauIntegrationWritePlatformService;
     }
 
     @Override
@@ -81,8 +81,8 @@ public class CreditReportWritePlatformServiceImpl implements CreditReportWritePl
 
             if (Objects.equals(creditBureauName, CreditBureauConfigurations.THITSAWORKS.toString())) {
 
-                CreditBureauReportData reportobj = this.thitsaWorksCreditBureauIntegrationWritePlatformService
-                        .getCreditReportFromThitsaWorks(command);
+                CreditBureauReportData reportobj = this.externalCreditBureauIntegrationWritePlatformService
+                        .getCreditReportFromExternalCredit(command);
 
                 Map<String, Object> reportMap = Map.of("name", reportobj.getName(), "gender", reportobj.getGender(), "address",
                         reportobj.getAddress(), "creditScore", reportobj.getCreditScore(), "borrowerInfo", reportobj.getBorrowerInfo(),
@@ -117,8 +117,7 @@ public class CreditReportWritePlatformServiceImpl implements CreditReportWritePl
         String responseMessage = null;
 
         if (Objects.equals(creditBureauName, CreditBureauConfigurations.THITSAWORKS.toString())) {
-            responseMessage = this.thitsaWorksCreditBureauIntegrationWritePlatformService.addCreditReport(bureauId, creditReport,
-                    fileDetail);
+            responseMessage = this.externalCreditBureauIntegrationWritePlatformService.addCreditReport(bureauId, creditReport, fileDetail);
         } else {
 
             baseDataValidator.reset().failWithCode(CREDIT_BUREAU_HAS_NOT_BEEN_INTEGRATED);

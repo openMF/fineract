@@ -53,7 +53,7 @@ public final class PlatformRequestLog {
         parameters.remove("password");
         parameters.remove("_");
 
-        return new PlatformRequestLog().setStartTime(task.getStartTime()).setTotalTime(task.getTime()).setMethod(request.getMethod())
-                .setUrl(requestUrl).setParameters(parameters);
+        return new PlatformRequestLog().setStartTime(task.getStartInstant().toEpochMilli()).setTotalTime(task.getTime())
+                .setMethod(request.getMethod()).setUrl(requestUrl).setParameters(parameters);
     }
 }

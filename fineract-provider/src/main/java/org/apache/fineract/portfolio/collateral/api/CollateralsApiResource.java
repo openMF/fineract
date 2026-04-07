@@ -78,7 +78,6 @@ public class CollateralsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Collateral Details Template", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed Value Lists\n" + "Example Request:\n" + "\n" + "loans/1/collaterals/template")
@@ -91,7 +90,6 @@ public class CollateralsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Loan Collaterals", description = "Example Requests:\n" + "\n" + "loans/1/collaterals\n" + "\n" + "\n"
             + "loans/1/collaterals?fields=value,description")
@@ -103,7 +101,6 @@ public class CollateralsApiResource {
 
     @GET
     @Path("{collateralId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Collateral", description = "Example Requests:\n" + "\n" + "/loans/1/collaterals/1\n" + "\n" + "\n"
             + "/loans/1/collaterals/1?fields=description,description")
@@ -158,7 +155,6 @@ public class CollateralsApiResource {
 
     @DELETE
     @Path("{collateralId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Remove a Collateral", description = "Note: A collateral can only be removed from Loans that are not yet approved.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CollateralsApiResourceSwagger.DeleteLoansLoanIdCollateralsCollateralIdResponse.class)))

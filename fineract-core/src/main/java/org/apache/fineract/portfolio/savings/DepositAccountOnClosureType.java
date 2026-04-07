@@ -55,38 +55,7 @@ public enum DepositAccountOnClosureType {
         };
     }
 
-    // TODO: why not just use the enum values... just more boilerplate code here!!
-    public boolean isWithdarwDeposit() {
-        return this.equals(WITHDRAW_DEPOSIT);
-    }
-
-    // TODO: why not just use the enum values... just more boilerplate code here!!
-    public boolean isTransferToSavings() {
-        return this.equals(TRANSFER_TO_SAVINGS);
-    }
-
-    // TODO: why not just use the enum values... just more boilerplate code here!!
-    public boolean isReinvest() {
-        return this.equals(REINVEST_PRINCIPAL_AND_INTEREST) || this.equals(REINVEST_PRINCIPAL_ONLY);
-    }
-
-    // TODO: why not just use the enum values... just more boilerplate code here!!
-    public boolean isReinvestPrincipal() {
-        return this.equals(REINVEST_PRINCIPAL_ONLY);
-    }
-
-    // TODO: why not just use the enum values... just more boilerplate code here!!
-    public boolean isReinvestPrincipalAndInterest() {
-        return this.equals(REINVEST_PRINCIPAL_AND_INTEREST);
-    }
-
-    // TODO: why not just use the enum values... just more boilerplate code here!!
-    public boolean isInvalid() {
-        return this.equals(INVALID);
-    }
-
-    // TODO: do we really need this?!?
-    public static Object[] integerValues() {
-        return Arrays.stream(values()).filter(value -> !INVALID.equals(value)).map(value -> value.value).toList().toArray();
+    public static Integer[] integerValues() {
+        return Arrays.stream(values()).filter(v -> v != INVALID).map(v -> v.value).toArray(Integer[]::new);
     }
 }

@@ -36,9 +36,9 @@ public class LoanChargeCannotBeWaivedException extends AbstractPlatformDomainRul
             } else if (name().equalsIgnoreCase("ALREADY_WAIVED")) {
                 return "This loan charge has already been waived";
             } else if (name().equalsIgnoreCase("LOAN_INACTIVE")) {
-                return "This loan charge can be waived as the loan associated with it is currently inactive";
+                return "This loan charge cannot be waived as the loan associated with it is currently inactive";
             } else if (name().equalsIgnoreCase("WAIVE_NOT_ALLOWED_FOR_CHARGE")) {
-                return "This loan charge can be waived";
+                return "This loan charge cannot be waived";
             }
 
             return name();

@@ -26,6 +26,7 @@ public abstract class TestContextKey {
 
     public static final String CLIENT_CREATE_RESPONSE = "clientCreateResponse";
     public static final String CLIENT_CREATE_SECOND_CLIENT_RESPONSE = "clientCreateSecondClientResponse";
+    public static final String LOAN_CREATE_REQUEST = "loanCreateRequest";
     public static final String LOAN_CREATE_RESPONSE = "loanCreateResponse";
     public static final String LOAN_CREATE_SECOND_LOAN_RESPONSE = "loanCreateSecondLoanResponse";
     public static final String LOAN_MODIFY_RESPONSE = "loanModifyResponse";
@@ -36,11 +37,13 @@ public abstract class TestContextKey {
     public static final String ADD_NSF_FEE_RESPONSE = "addNsfFeeResponse";
     public static final String WAIVE_CHARGE_RESPONSE = "waiveChargeResponse";
     public static final String UNDO_WAIVE_RESPONSE = "waiveNsfFeeResponse";
+    public static final String LOAN_APPROVAL_REQUEST = "loanApprovalRequest";
     public static final String LOAN_APPROVAL_RESPONSE = "loanApprovalResponse";
     public static final String LOAN_REJECT_RESPONSE = "loanRejectResponse";
     public static final String LOAN_WITHDRAWN_RESPONSE = "loanWithdrawnResponse";
     public static final String LOAN_APPROVAL_SECOND_LOAN_RESPONSE = "loanApprovalSecondLoanResponse";
     public static final String LOAN_UNDO_APPROVAL_RESPONSE = "loanUndoApprovalResponse";
+    public static final String LOAN_DISBURSE_REQUEST = "loanDisburseRequest";
     public static final String LOAN_DISBURSE_RESPONSE = "loanDisburseResponse";
     public static final String LOAN_DISBURSE_SECOND_LOAN_RESPONSE = "loanDisburseSecondLoanResponse";
     public static final String LOAN_UNDO_DISBURSE_RESPONSE = "loanUndoDisburseResponse";
@@ -309,6 +312,7 @@ public abstract class TestContextKey {
     public static final String ORIGINATOR_SECOND_CREATE_RESPONSE = "originatorSecondCreateResponse";
     public static final String ORIGINATOR_SECOND_EXTERNAL_ID = "originatorSecondExternalId";
     public static final String VERIFIED_LOAN_ACCRUALS = "VERIFIED_LOAN_ACCRUALS";
+    public static final String VERIFIED_LOAN_BUY_DOWN_FEE_AMORTIZATION = "VERIFIED_LOAN_BUY_DOWN_FEE_AMORTIZATION";
     public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_INT_DAILY_EMI_360_30_INT_RECALC_DAILY_MULTIDISB_FULL_TERM_TRANCHE_DOWNPAYMENT = "loanProductCreateResponseLP2AdvancedPaymentInterestDailyEmi36030InterestRecalculationDailyMultidisburseFullTermTrancheDownPayment";
     public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_INT_DAILY_EMI_360_30_INT_RECALC_DAILY_MULTIDISB_FULL_TERM_TRANCHE_DOWNPAYMENT_AUTO = "loanProductCreateResponseLP2AdvancedPaymentInterestDailyEmi36030InterestRecalculationDailyMultidisburseFullTermTrancheDownPaymentAuto";
     public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_INT_DAILY_EMI_360_30_INT_RECALC_DAILY_MULTIDISB_FULL_TERM_TRANCHE_DEFERRED_INCOME = "loanProductCreateResponseLP2AdvancedPaymentInterestDailyEmi36030InterestRecalculationDailyMultidisburseFullTermTrancheDeferredIncome";
@@ -318,7 +322,9 @@ public abstract class TestContextKey {
     public static final String OFFICE_CREATE_RESPONSE = "officeCreateResponse";
     public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_DOWNPAYMENT_ADVANCED_PAYMENT_ALLOCATION_PROGRESSIVE_LOAN_SCHEDULE_VERTICAL_INTEREST_RECALC = "loanProductCreateResponseLP2DownPaymentAdvancedPaymentAllocationProgressiveLoanScheduleVerticalInterestRecalc";
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP = "workingCapitalLoanProductCreateResponseWCLP";
+    public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_DISCOUNT = "workingCapitalLoanProductCreateResponseWCLPDiscount";
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_DISALLOW_OVERRIDES = "workingCapitalLoanProductCreateResponseWCLPDisallowOverrides";
+    public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_DISCOUNT_DISALLOW_OVERRIDES = "workingCapitalLoanProductCreateResponseWCLPDiscountDisallowOverrides";
     public static final String WC_LOAN_IDS = "wcLoanIds";
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST_FOR_UPDATE_WCLP = "workingCapitalLoanProductCreateRequestForUpdateWCLP";
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_FOR_UPDATE_WCLP = "workingCapitalLoanProductCreateResponseForUpdateWCLP";

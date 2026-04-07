@@ -65,7 +65,6 @@ public class ProvisioningCriteriaApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public ProvisioningCriteriaData retrieveTemplate() {
         platformSecurityContext.authenticatedUser();
@@ -74,7 +73,6 @@ public class ProvisioningCriteriaApiResource {
 
     @GET
     @Path("{criteriaId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieves a Provisioning Criteria", description = "Retrieves a Provisioning Criteria")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ProvisioningCriteriaApiResourceSwagger.GetProvisioningCriteriaCriteriaIdResponse.class)))
@@ -90,7 +88,6 @@ public class ProvisioningCriteriaApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieves all created Provisioning Criterias", description = "Retrieves all created Provisioning Criterias")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProvisioningCriteriaApiResourceSwagger.GetProvisioningCriteriaResponse.class))))
@@ -131,7 +128,6 @@ public class ProvisioningCriteriaApiResource {
 
     @DELETE
     @Path("{criteriaId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Deletes Provisioning Criteria", description = "Deletes Provisioning Criteria")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ProvisioningCriteriaApiResourceSwagger.DeleteProvisioningCriteriaResponse.class)))

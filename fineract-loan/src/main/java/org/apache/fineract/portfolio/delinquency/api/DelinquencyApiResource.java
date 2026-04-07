@@ -70,7 +70,6 @@ public class DelinquencyApiResource {
 
     @GET
     @Path("ranges")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "List all Delinquency Ranges", description = "", operationId = "getRanges")
     public List<DelinquencyRangeResponse> getDelinquencyRanges() {
@@ -80,7 +79,6 @@ public class DelinquencyApiResource {
 
     @GET
     @Path("ranges/{delinquencyRangeId}")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a specific Delinquency Range based on the Id", description = "", operationId = "getRange")
     public DelinquencyRangeResponse getDelinquencyRange(
@@ -123,7 +121,6 @@ public class DelinquencyApiResource {
 
     @DELETE
     @Path("ranges/{delinquencyRangeId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Update Delinquency Range based on the Id", description = "", operationId = "deleteRange")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = DelinquencyApiResourceSwagger.DeleteDelinquencyRangeResponse.class)))
@@ -137,7 +134,6 @@ public class DelinquencyApiResource {
 
     @GET
     @Path("buckets/template")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Template for Delinquency Buckets", description = "", operationId = "getBucketTemplate")
     public DelinquencyBucketTemplateResponse getTemplate() {
@@ -147,7 +143,6 @@ public class DelinquencyApiResource {
 
     @GET
     @Path("buckets")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "List all Delinquency Buckets", description = "", operationId = "getBuckets")
     public List<DelinquencyBucketResponse> getDelinquencyBuckets() {
@@ -157,7 +152,6 @@ public class DelinquencyApiResource {
 
     @GET
     @Path("buckets/{delinquencyBucketId}")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a specific Delinquency Bucket based on the Id", description = "", operationId = "getBucket")
     public DelinquencyBucketResponse getDelinquencyBucket(
@@ -214,7 +208,6 @@ public class DelinquencyApiResource {
 
     @DELETE
     @Path("buckets/{delinquencyBucketId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete Delinquency Bucket based on the Id", description = "", operationId = "deleteBucket")
 

@@ -24,7 +24,7 @@ import org.apache.fineract.infrastructure.creditbureau.data.CreditBureauReportDa
 import org.apache.fineract.infrastructure.creditbureau.domain.CreditBureauToken;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 
-public interface ThitsaWorksCreditBureauIntegrationWritePlatformService {
+public interface ExternalCreditBureauIntegrationWritePlatformService {
 
     CreditBureauToken createToken(Long creditBureauID);
 
@@ -33,7 +33,7 @@ public interface ThitsaWorksCreditBureauIntegrationWritePlatformService {
     String okHttpConnectionMethod(String userName, String password, String subscriptionKey, String subscriptionId, String url, String token,
             File report, FormDataContentDisposition fileDetail, Long uniqueId, String nrcId, String process);
 
-    CreditBureauReportData getCreditReportFromThitsaWorks(JsonCommand command);
+    CreditBureauReportData getCreditReportFromExternalCredit(JsonCommand command);
 
     String addCreditReport(Long bureauId, File creditReport, FormDataContentDisposition fileDetail);
 

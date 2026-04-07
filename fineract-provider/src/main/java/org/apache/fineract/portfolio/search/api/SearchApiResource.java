@@ -49,7 +49,6 @@ import org.springframework.stereotype.Component;
 @Component
 @Tag(name = "Search API", description = "Search API allows to search scoped resources clients, loans and groups on specified fields.")
 @RequiredArgsConstructor
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 public class SearchApiResource {
 
@@ -92,6 +91,7 @@ public class SearchApiResource {
 
     @POST
     @Path("/advance")
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Adhoc query search", description = """
             AdHocQuery search has more search options, it is a POST request, \
             it uses request body to send search parameters

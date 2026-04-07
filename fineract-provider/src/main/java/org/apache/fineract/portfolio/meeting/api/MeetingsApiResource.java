@@ -59,7 +59,6 @@ import org.apache.fineract.portfolio.meeting.service.MeetingReadService;
 import org.springframework.stereotype.Component;
 
 @Path("/v1/{entityType}/{entityId}/meetings")
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 @Tag(name = "Meetings")
@@ -130,6 +129,7 @@ public class MeetingsApiResource {
     }
 
     @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
     public MeetingCreateResponse createMeeting(@PathParam("entityType") final String entityType, @PathParam("entityId") final Long entityId,
             final MeetingCreateRequest request) {
 
@@ -195,6 +195,7 @@ public class MeetingsApiResource {
 
     @POST
     @Path("{meetingId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     public MeetingAttendanceUpdateResponse updateMeetingAttendance(@PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId, @PathParam("meetingId") final Long meetingId,
             @QueryParam("command") final String commandParam, final MeetingAttendanceUpdateRequest request) {

@@ -39,6 +39,7 @@ import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.portfolio.client.exception.ClientNotActiveException;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 import org.apache.fineract.portfolio.paymentdetail.service.PaymentDetailWritePlatformService;
@@ -352,6 +353,41 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
                 .build();
     }
 
+    @Override
+    public CommandProcessingResult updateDiscount(final Long loanId, final JsonCommand command) {
+        final WorkingCapitalLoan loan = this.loanRepository.findById(loanId)
+                .orElseThrow(() -> new WorkingCapitalLoanNotFoundException(loanId));
+        this.validator.validateUpdateDiscount(command.json(), loan);
+
+        if (loan.getLoanStatus() != LoanStatus.ACTIVE) {
+            throw new PlatformApiDataValidationException("validation.msg.wc.loan.transition.not.allowed",
+                    "Add discount is allowed only for disbursed (active) loans", "loanStatus");
+        }
+
+        ensureDiscountNotAlreadySetBeforeDisbursement(loan);
+
+        final BigDecimal discount = this.fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanConstants.discountAmountParamName,
+                command.parsedJson(), new HashSet<>());
+        if (discount != null) {
+            loan.getLoanProductRelatedDetails().setDiscount(discount);
+        }
+        updateBalanceForDiscountChange(loan);
+
+        final String noteText = command.stringValueOfParameterNamed(WorkingCapitalLoanConstants.noteParamName);
+        createNote(noteText, loan);
+        this.loanRepository.saveAndFlush(loan);
+
+        final Map<String, Object> changes = new LinkedHashMap<>();
+        changes.put(WorkingCapitalLoanConstants.discountAmountParamName, discount);
+        if (StringUtils.isNotBlank(noteText)) {
+            changes.put(WorkingCapitalLoanConstants.noteParamName, noteText);
+        }
+
+        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(loanId)
+                .withEntityExternalId(loan.getExternalId()).withOfficeId(loan.getOfficeId()).withClientId(loan.getClientId())
+                .withLoanId(loanId).with(changes).build();
+    }
+
     private PaymentDetail createAndPersistPaymentDetailFromCommand(final JsonCommand command, final Map<String, Object> changes) {
         final JsonElement paymentDetailsElement = command.jsonElement(WorkingCapitalLoanConstants.paymentDetailsParamName);
         if (paymentDetailsElement != null && paymentDetailsElement.isJsonObject()) {
@@ -366,7 +402,24 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         if (balance == null) {
             balance = WorkingCapitalLoanBalance.createFor(loan);
         }
-        balance.setPrincipalOutstanding(disbursedAmount);
+        final BigDecimal discount = loan.getLoanProductRelatedDetails() != null && loan.getLoanProductRelatedDetails().getDiscount() != null
+                ? loan.getLoanProductRelatedDetails().getDiscount()
+                : BigDecimal.ZERO;
+        balance.setPrincipalOutstanding(disbursedAmount.add(discount));
+        this.balanceRepository.saveAndFlush(balance);
+    }
+
+    private void updateBalanceForDiscountChange(final WorkingCapitalLoan loan) {
+        final WorkingCapitalLoanBalance balance = this.balanceRepository.findByWcLoan_Id(loan.getId())
+                .orElseGet(() -> WorkingCapitalLoanBalance.createFor(loan));
+        final BigDecimal discount = loan.getLoanProductRelatedDetails() != null && loan.getLoanProductRelatedDetails().getDiscount() != null
+                ? loan.getLoanProductRelatedDetails().getDiscount()
+                : BigDecimal.ZERO;
+        final BigDecimal disbursedAmount = loan.getDisbursementDetails() != null && !loan.getDisbursementDetails().isEmpty()
+                && loan.getDisbursementDetails().getFirst().getActualAmount() != null
+                        ? loan.getDisbursementDetails().getFirst().getActualAmount()
+                        : BigDecimal.ZERO;
+        balance.setPrincipalOutstanding(disbursedAmount.add(discount));
         this.balanceRepository.saveAndFlush(balance);
     }
 
@@ -394,6 +447,21 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         if (StringUtils.isNotBlank(noteText)) {
             final WorkingCapitalLoanNote note = WorkingCapitalLoanNote.create(loan, noteText);
             this.noteRepository.save(note);
+        }
+    }
+
+    private void ensureDiscountNotAlreadySetBeforeDisbursement(final WorkingCapitalLoan loan) {
+        final BigDecimal productDefaultDiscount = loan.getLoanProduct() != null && loan.getLoanProduct().getRelatedDetail() != null
+                ? loan.getLoanProduct().getRelatedDetail().getDiscount()
+                : null;
+        final BigDecimal loanDiscount = loan.getLoanProductRelatedDetails() != null ? loan.getLoanProductRelatedDetails().getDiscount()
+                : null;
+        final boolean equalByValue = productDefaultDiscount == null ? loanDiscount == null
+                : loanDiscount != null && productDefaultDiscount.compareTo(loanDiscount) == 0;
+        if (!equalByValue) {
+            throw new PlatformApiDataValidationException("validation.msg.wc.loan.discount.already.set.before.disbursement",
+                    "Discount was already set before disbursement and cannot be added again",
+                    WorkingCapitalLoanConstants.discountAmountParamName);
         }
     }
 }

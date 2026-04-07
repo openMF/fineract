@@ -52,7 +52,6 @@ import org.apache.fineract.infrastructure.security.service.SqlValidator;
 import org.springframework.stereotype.Component;
 
 @Path("/v1/email")
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 @RequiredArgsConstructor
@@ -148,6 +147,7 @@ public class EmailApiResource {
     }
 
     @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
     public String create(final String apiRequestBodyAsJson) {
 
         final CommandWrapper commandRequest = new CommandWrapperBuilder().createEmail().withJson(apiRequestBodyAsJson).build();
@@ -169,6 +169,7 @@ public class EmailApiResource {
 
     @PUT
     @Path("{resourceId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     public String update(@PathParam("resourceId") final Long resourceId, final String apiRequestBodyAsJson) {
 
         final CommandWrapper commandRequest = new CommandWrapperBuilder().updateEmail(resourceId).withJson(apiRequestBodyAsJson).build();

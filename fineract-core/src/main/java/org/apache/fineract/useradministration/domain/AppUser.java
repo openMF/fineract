@@ -552,8 +552,9 @@ public class AppUser extends AbstractPersistableCustom<Long> implements Platform
     }
 
     private void validateHasPermission(final String prefix, final String resourceType) {
-        final String authorizationMessage = "User has no authority to " + prefix + " " + resourceType.toLowerCase() + "s";
-        final String matchPermission = prefix + "_" + resourceType.toUpperCase();
+        final String authorizationMessage = "User has no authority to " + prefix + " " + resourceType.toLowerCase(java.util.Locale.ROOT)
+                + "s";
+        final String matchPermission = prefix + "_" + resourceType.toUpperCase(java.util.Locale.ROOT);
 
         if (!hasNotPermissionForAnyOf("ALL_FUNCTIONS", "ALL_FUNCTIONS_READ", matchPermission)) {
             return;
@@ -636,7 +637,7 @@ public class AppUser extends AbstractPersistableCustom<Long> implements Platform
     }
 
     public void validateHasCheckerPermissionTo(final String function) {
-        final String checkerPermissionName = function.toUpperCase() + "_CHECKER";
+        final String checkerPermissionName = function.toUpperCase(java.util.Locale.ROOT) + "_CHECKER";
         if (hasNotPermissionTo("CHECKER_SUPER_USER") && hasNotPermissionTo(checkerPermissionName)) {
             final String authorizationMessage = "User has no authority to be a checker for: " + function;
             throw new NoAuthorizationException(authorizationMessage);

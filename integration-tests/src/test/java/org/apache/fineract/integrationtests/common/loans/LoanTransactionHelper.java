@@ -2972,6 +2972,10 @@ public class LoanTransactionHelper {
         return Calls.ok(FineractClientHelper.getFineractClient().loans.stateTransitions(loanId, request, "reject"));
     }
 
+    public PostLoansLoanIdResponse withdrawnByApplicantLoan(Long loanId, PostLoansLoanIdRequest request) {
+        return Calls.ok(FineractClientHelper.getFineractClient().loans.stateTransitions(loanId, request, "withdrawnByApplicant"));
+    }
+
     public PostLoansLoanIdResponse withdrawnByApplicantLoan(String loanExternalId, PostLoansLoanIdRequest request) {
         return Calls.ok(FineractClientHelper.getFineractClient().loans.stateTransitionsByExternalId(loanExternalId, request,
                 "withdrawnByApplicant"));

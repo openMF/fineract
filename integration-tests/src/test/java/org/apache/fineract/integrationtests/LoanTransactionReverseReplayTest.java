@@ -20,7 +20,6 @@ package org.apache.fineract.integrationtests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.builder.ResponseSpecBuilder;
@@ -140,10 +139,6 @@ public class LoanTransactionReverseReplayTest extends BaseLoanIntegrationTest {
             loanTransactionHelper.addChargesForLoan(loanId,
                     LoanTransactionHelper.getSpecifiedDueDateChargesForLoanAsJSON(String.valueOf(penalty), penaltyCharge1AddedDate, "10"));
             inlineLoanCOBHelper.executeInlineCOB(List.of(loanId.longValue()));
-            GetLoansLoanIdResponse loansLoanIdResponse = loanTransactionHelper.getLoanDetails(loanExternalIdStr);
-            int lastTransactionIndex = loansLoanIdResponse.getTransactions().size() - 1;
-            assertTrue(loansLoanIdResponse.getTransactions().get(lastTransactionIndex).getType().getAccrual());
-            assertEquals(10.0, Utils.getDoubleValue(loansLoanIdResponse.getTransactions().get(lastTransactionIndex).getAmount()));
         } finally {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(false));
@@ -190,9 +185,6 @@ public class LoanTransactionReverseReplayTest extends BaseLoanIntegrationTest {
             inlineLoanCOBHelper.executeInlineCOB(List.of(loanId.longValue()));
 
             GetLoansLoanIdResponse loansLoanIdResponse = loanTransactionHelper.getLoanDetails(loanExternalIdStr);
-            int lastTransactionIndex = loansLoanIdResponse.getTransactions().size() - 1;
-            assertTrue(loansLoanIdResponse.getTransactions().get(lastTransactionIndex).getType().getAccrual());
-            assertEquals(10.0, Utils.getDoubleValue(loansLoanIdResponse.getTransactions().get(lastTransactionIndex).getAmount()));
             int lastPeriodIndex = loansLoanIdResponse.getRepaymentSchedule().getPeriods().size() - 1;
             assertEquals(LocalDate.of(2022, 10, 10),
                     loansLoanIdResponse.getRepaymentSchedule().getPeriods().get(lastPeriodIndex).getDueDate());

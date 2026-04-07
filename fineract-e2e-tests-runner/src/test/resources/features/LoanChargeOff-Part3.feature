@@ -1868,9 +1868,7 @@ Feature: Charge-off - Part3
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type   | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 01 January 2024  | Disbursement       | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
-      | 01 January 2024  | Accrual            | 2.05   | 0.0       | 2.05     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 15 January 2024  | Repayment          | 17.01  | 16.75     | 0.26     | 0.0  | 0.0       | 83.25        | false    | false    |
-      | 01 March 2024    | Accrual Adjustment | 1.03   | 0.0       | 1.03     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 01 March 2024    | Charge-off         | 84.99  | 83.25     | 1.74     | 0.0  | 0.0       | 0.0          | false    | false    |
 
   @TestRailId:C3513

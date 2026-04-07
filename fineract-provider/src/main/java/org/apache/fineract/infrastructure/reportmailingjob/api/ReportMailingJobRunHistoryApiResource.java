@@ -24,7 +24,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -58,7 +57,6 @@ public class ReportMailingJobRunHistoryApiResource {
     private final SqlValidator sqlValidator;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Report Mailing Job History", description = "The list capability of report mailing job history can support pagination and sorting.\n"
             + "\n" + "Example Requests:\n" + "\n" + "reportmailingjobrunhistory/1")

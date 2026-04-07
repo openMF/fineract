@@ -49,6 +49,7 @@ Feature: WorkingCapitalLoanProduct
   Scenario Outline: Verify Working capital Loan Product update with invalid data shall outcome with error - validation check with max allowed length - UC5
     When Admin creates a new Working Capital Loan Product
     Then Admin failed to update a new Working Capital Loan Product field "<wcp_field_name_max_length>" with max length data <wcp_invalid_field_value_max_length> while max allowed is <wcp_invalid_field_value_max_allowed_length>
+    Then Admin deletes a Working Capital Loan Product
 
     Examples:
       | wcp_field_name_max_length | wcp_invalid_field_value_max_length | wcp_invalid_field_value_max_allowed_length |
@@ -73,6 +74,7 @@ Feature: WorkingCapitalLoanProduct
   Scenario Outline: Verify Working capital Loan Product update with invalid data shall outcome with error - validation check with zero values - UC7
     When Admin creates a new Working Capital Loan Product
     Then Admin failed to update a new Working Capital Loan Product field "<wcp_field_name_zero_value>" with zero incorrect value
+    Then Admin deletes a Working Capital Loan Product
 
     Examples:
       | wcp_field_name_zero_value |
@@ -90,6 +92,9 @@ Feature: WorkingCapitalLoanProduct
       | wcp_field_name           | wcp_invalid_field_value  | wcp_error_message                                                                          |
       | digitsAfterDecimal       |  "25"                    | "The parameter `digitsAfterDecimal` must be between 0 and 6."                              |
       | inMultiplesOf            |  "-1"                    | "The parameter `inMultiplesOf` must be zero or greater."                                   |
+      | discount                 |  "-1"                    | "The parameter `discount` must be greater than or equal to 0."                             |
+      | principal                |  "1"                     | "Failed data validation due to: must.be.greater.than.or.equal.to.min."                     |
+      | principal                |  "1000000"               | "Failed data validation due to: must.be.less.than.or.equal.to.max."                        |
       | periodPaymentRate        |  "-1"                    | "The parameter `periodPaymentRate` must be greater than or equal to 0."                    |
       | locale                   |  "null"                  | "The parameter `digitsAfterDecimal` requires a `locale` parameter to be passed with it."   |
       | locale                   |  ""                      | "The parameter `locale` is invalid. It cannot be blank."                                   |
@@ -98,11 +103,15 @@ Feature: WorkingCapitalLoanProduct
   Scenario Outline: Verify Working capital Loan Product update with invalid data shall outcome with error - validation check with diff values - UC9
     When Admin creates a new Working Capital Loan Product
     Then Admin failed to update a new Working Capital Loan Product field "<wcp_field_name>" with invalid data <wcp_invalid_field_value> and got an error <wcp_error_message>
+    Then Admin deletes a Working Capital Loan Product
 
     Examples:
       | wcp_field_name           | wcp_invalid_field_value  | wcp_error_message                                                                          |
       | digitsAfterDecimal       |  "25"                    | "The parameter `digitsAfterDecimal` must be between 0 and 6."                              |
       | inMultiplesOf            |  "-1"                    | "The parameter `inMultiplesOf` must be zero or greater."                                   |
+      | discount                 |  "-1"                    | "The parameter `discount` must be greater than or equal to 0."                             |
+      | principal                |  "1"                     | "Failed data validation due to: must.be.greater.than.or.equal.to.min."                     |
+      | principal                |  "1000000"               | "Failed data validation due to: must.be.less.than.or.equal.to.max."                        |
       | periodPaymentRate        |  "-1"                    | "The parameter `periodPaymentRate` must be greater than or equal to 0."                    |
 
   @TestRailId:C70217
@@ -117,11 +126,13 @@ Feature: WorkingCapitalLoanProduct
   Scenario: Verify Working capital Loan Product update with invalid data shall outcome with error - validation check with number of payment allocation rules - UC12
     When Admin creates a new Working Capital Loan Product
     Then Admin failed to update a new Working Capital Loan Product with invalid number of payment allocation rules
+    Then Admin deletes a Working Capital Loan Product
 
   @TestRailId:C70220
   Scenario: Verify Working capital Loan Product update with invalid data shall outcome with error - validation check with payment allocation rules - UC13
     When Admin creates a new Working Capital Loan Product
     Then Admin failed to update a new Working Capital Loan Product with invalid value of payment allocation rules
+    Then Admin deletes a Working Capital Loan Product
 
   @TestRailId:C70221
   Scenario Outline: Verify Working capital Loan Product delete with invalid data shall outcome with error - validation check with id - UC14
@@ -143,28 +154,33 @@ Feature: WorkingCapitalLoanProduct
   Scenario: Verify WC Loan Product create with delinquencyGraceDays and delinquencyStartType LOAN_CREATION
     When Admin creates a new Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION"
     Then Working Capital Loan Product has delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION"
+    Then Admin deletes a Working Capital Loan Product
 
   @TestRailId:C72379
   Scenario: Verify WC Loan Product create with delinquencyGraceDays 0 and delinquencyStartType DISBURSEMENT
     When Admin creates a new Working Capital Loan Product with delinquencyGraceDays 0 and delinquencyStartType "DISBURSEMENT"
     Then Working Capital Loan Product has delinquencyGraceDays 0 and delinquencyStartType "DISBURSEMENT"
+    Then Admin deletes a Working Capital Loan Product
 
   @TestRailId:C72380
   Scenario: Verify WC Loan Product create without delinquencyGraceDays uses defaults
     When Admin creates a new Working Capital Loan Product
     Then Working Capital Loan Product has null delinquencyGraceDays and null delinquencyStartType
+    Then Admin deletes a Working Capital Loan Product
 
   @TestRailId:C72381
   Scenario: Verify WC Loan Product update to set delinquencyGraceDays
     When Admin creates a new Working Capital Loan Product
     When Admin updates Working Capital Loan Product with delinquencyGraceDays 5 and delinquencyStartType "DISBURSEMENT"
     Then Working Capital Loan Product has delinquencyGraceDays 5 and delinquencyStartType "DISBURSEMENT"
+    Then Admin deletes a Working Capital Loan Product
 
   @TestRailId:C72382
   Scenario: Verify WC Loan Product update to change delinquencyGraceDays
     When Admin creates a new Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION"
     When Admin updates Working Capital Loan Product with delinquencyGraceDays 10 and delinquencyStartType "DISBURSEMENT"
     Then Working Capital Loan Product has delinquencyGraceDays 10 and delinquencyStartType "DISBURSEMENT"
+    Then Admin deletes a Working Capital Loan Product
 
   @TestRailId:C72383
   Scenario: Verify WC Loan Product template includes delinquencyStartTypeOptions
@@ -178,13 +194,15 @@ Feature: WorkingCapitalLoanProduct
     Then Admin failed to create a new Working Capital Loan Product field "<wcp_field_name>" with invalid data <wcp_invalid_field_value> and got an error <wcp_error_message>
     Examples:
       | wcp_field_name         | wcp_invalid_field_value | wcp_error_message                                                   |
-      | delinquencyGraceDays   | "-1"                   | "The parameter `delinquencyGraceDays` must be zero or greater."     |
-      | delinquencyStartType   | "INVALID_TYPE"         | "invalid.delinquency.start.type"                                    |
+      | delinquencyGraceDays   | "-1"                    | "The parameter `delinquencyGraceDays` must be zero or greater."     |
+      | delinquencyStartType   | "INVALID_TYPE"          | "invalid.delinquency.start.type"                                    |
 
   @TestRailId:C72385
   Scenario Outline: Verify WC Loan Product update with invalid delinquency grace data
     When Admin creates a new Working Capital Loan Product
     Then Admin failed to update a new Working Capital Loan Product field "<wcp_field_name>" with invalid data <wcp_invalid_field_value> and got an error <wcp_error_message>
+    Then Admin deletes a Working Capital Loan Product
+
     Examples:
       | wcp_field_name         | wcp_invalid_field_value | wcp_error_message                                                   |
       | delinquencyGraceDays   | "-5"                   | "The parameter `delinquencyGraceDays` must be zero or greater."     |

@@ -81,10 +81,6 @@ public enum AccountType {
         return name().toLowerCase();
     }
 
-    public boolean isInvalid() {
-        return this.value.equals(AccountType.INVALID.getValue());
-    }
-
     public boolean isIndividualAccount() {
         return this.value.equals(AccountType.INDIVIDUAL.getValue());
     }

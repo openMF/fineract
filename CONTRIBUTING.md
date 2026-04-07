@@ -26,6 +26,48 @@ Here's how to run the set of relatively fast and independent Fineract tests:
 This runs nearly 1,000 tests and completes in a few minutes on decent hardware.
 They shouldn't need any special servers/services running.
 
+#### Cucumber E2E tests
+
+The Cucumber E2E tests run against a live Fineract instance instead of starting one for you.
+Before running them locally, create the required databases and start Fineract:
+
+```bash
+# Create required databases
+./gradlew createPGDB -PdbName=fineract_tenants
+./gradlew createPGDB -PdbName=fineract_default
+
+# Start Fineract in another terminal
+./gradlew bootRun -Dspring.profiles.active=test
+```
+
+The default E2E test connection settings live in `fineract-e2e-tests-core/src/test/resources/fineract-test-application.properties`.
+By default, the test suite connects to `https://localhost:8443`.
+
+Many E2E tests require seeded test data.
+That setup is controlled by the `INITIALIZATION_ENABLED` environment variable, which maps to `fineract-test.initialization.enabled`.
+For a fresh database, run the suite from `fineract-e2e-tests-runner` with initialization enabled first:
+
+```bash
+cd fineract-e2e-tests-runner
+INITIALIZATION_ENABLED=true ../gradlew cucumber
+```
+
+After the initialization data already exists, you can run all E2E tests without it:
+
+```bash
+cd fineract-e2e-tests-runner
+../gradlew cucumber
+```
+
+To run a single feature file:
+
+```bash
+cd fineract-e2e-tests-runner
+../gradlew cucumber -Pcucumber.features="src/test/resources/features/Loan.feature"
+```
+
+See [Cucumber E2E Tests](https://fineract.apache.org/docs/current/#testing-cucumber) for more details and additional options.
+
 #### Integration tests
 
 Running tests with external dependencies is a multi-step process with many moving parts.

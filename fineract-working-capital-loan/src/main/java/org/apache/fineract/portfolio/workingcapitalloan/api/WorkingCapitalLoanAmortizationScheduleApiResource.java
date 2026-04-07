@@ -25,7 +25,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -46,7 +45,6 @@ public class WorkingCapitalLoanAmortizationScheduleApiResource {
 
     @GET
     @Path("{loanId}/amortization-schedule")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Projected Amortization Schedule", description = """
             Returns the projected amortization schedule for a Working Capital Loan.

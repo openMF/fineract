@@ -73,7 +73,7 @@ dependencyManagement {
         dependency 'org.quartz-scheduler:quartz:2.5.0'
         dependency 'org.ehcache:ehcache:3.10.8'
         dependency 'com.github.spullara.mustache.java:compiler:0.9.14'
-        dependency 'com.jayway.jsonpath:json-path:2.9.0'
+        dependency 'com.jayway.jsonpath:json-path:3.0.0'
         dependency ('org.apache.tika:tika-core:3.2.3') {
             exclude 'commons-logging:commons-logging'
         }
@@ -288,7 +288,7 @@ dependencyManagement {
             exclude 'org.mockito:mockito-core'
         }
 
-        dependency 'com.ibm.icu:icu4j:76.1'
+        dependency 'com.ibm.icu:icu4j:78.3'
         dependency 'org.yakworks:spring-icu4j:0.4.2'
         dependency 'org.apache.commons:commons-lang3:3.18.0'
         dependency 'com.nimbusds:nimbus-jose-jwt:10.0.2'

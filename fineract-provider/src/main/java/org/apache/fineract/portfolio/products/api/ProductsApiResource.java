@@ -69,7 +69,6 @@ public class ProductsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String retrieveTemplate(@PathParam("type") @Parameter(description = "type") final String productType,
             @Context final UriInfo uriInfo) {
@@ -86,7 +85,6 @@ public class ProductsApiResource {
 
     @GET
     @Path("{productId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Share Product", description = "Retrieves a Share Product\n\n" + "Example Requests:\n" + "\n"
             + "products/share/1\n" + "\n" + "\n" + "products/share/1?template=true")
@@ -106,7 +104,6 @@ public class ProductsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Share Products", description = "Lists Share Products\n\n" + "Mandatory Fields: limit, offset\n\n"
             + "Example Requests:\n" + "\n" + "shareproducts")

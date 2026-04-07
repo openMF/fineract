@@ -201,7 +201,6 @@ public class LoanProductsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Loan Products", description = "Lists Loan Products\n\n" + "Example Requests:\n" + "\n" + "loanproducts\n"
             + "\n" + "\n" + "loanproducts?fields=name,description,interestRateFrequencyType,amortizationType")
@@ -226,7 +225,6 @@ public class LoanProductsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveTemplateLoanProduct", summary = "Retrieve Loan Product Details Template", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed description Lists\n" + "Example Request:\n" + "\n" + "loanproducts/template")
@@ -254,7 +252,6 @@ public class LoanProductsApiResource {
 
     @GET
     @Path("{productId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Loan Product", description = "Retrieves a Loan Product\n\n" + "Example Requests:\n" + "\n"
             + "loanproducts/1\n" + "\n" + "\n" + "loanproducts/1?template=true\n" + "\n" + "\n"
@@ -285,7 +282,6 @@ public class LoanProductsApiResource {
 
     @GET
     @Path("external-id/{externalProductId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveLoanProductDetailsByExternalId", summary = "Retrieve a Loan Product", description = "Retrieves a Loan Product\n\n"
             + "Example Requests:\n" + "\n" + "loanproducts/external-id/2075e308-d4a8-44d9-8203-f5a947b8c2f4\n" + "\n" + "\n"

@@ -564,7 +564,6 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
             }
 
             if (changes.containsKey(ClientApiConstants.genderIdParamName)) {
-
                 final Long newValue = command.longValueOfParameterNamed(ClientApiConstants.genderIdParamName);
                 CodeValue gender = null;
                 if (newValue != null) {
@@ -583,15 +582,6 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
                             .orElseThrow(() -> new SavingsProductNotFoundException(savingsProductId));
                 }
                 clientForUpdate.updateSavingsProduct(savingsProductId);
-            }
-
-            if (changes.containsKey(ClientApiConstants.genderIdParamName)) {
-                final Long newValue = command.longValueOfParameterNamed(ClientApiConstants.genderIdParamName);
-                CodeValue newCodeVal = null;
-                if (newValue != null) {
-                    newCodeVal = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.GENDER, newValue);
-                }
-                clientForUpdate.updateGender(newCodeVal);
             }
 
             if (changes.containsKey(ClientApiConstants.clientTypeIdParamName)) {

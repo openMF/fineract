@@ -99,7 +99,6 @@ public class ImagesApiResource {
     private final FileUploadValidator fileUploadValidator;
 
     @GET
-    @Consumes(MediaType.APPLICATION_JSON)
     // FINERACT-1265: Do NOT specify @Produces(TEXT_PLAIN) here - it may actually not (if it calls the next methods it's
     // octet-stream)
     public Response retrieveImage(@PathParam(DOCUMENT_API_PARAM_ENTITY_TYPE) final String entityName,

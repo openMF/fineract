@@ -92,7 +92,6 @@ public class DocumentApiResource {
     private final CommandDispatcher dispatcher;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List documents", description = """
             Example Requests:
@@ -109,7 +108,6 @@ public class DocumentApiResource {
 
     @GET
     @Path("{documentId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Document", description = """
             Example Requests:
@@ -127,7 +125,6 @@ public class DocumentApiResource {
 
     @GET
     @Path("{documentId}/attachment")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_OCTET_STREAM })
     @Operation(summary = "Retrieve Binary File associated with Document", description = """
             Request used to download the file associated with the document

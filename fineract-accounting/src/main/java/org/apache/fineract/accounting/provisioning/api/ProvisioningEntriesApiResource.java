@@ -108,7 +108,6 @@ public class ProvisioningEntriesApiResource {
 
     @GET
     @Path("{entryId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieves a Provisioning Entry", description = "Returns the details of a generated Provisioning Entry.")
     public ProvisioningEntryData retrieveProvisioningEntry(@PathParam("entryId") @Parameter(description = "entryId") final Long entryId) {
@@ -118,7 +117,6 @@ public class ProvisioningEntriesApiResource {
 
     @GET
     @Path("entries")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public Page<LoanProductProvisioningEntryData> retrieveProviioningEntries(@QueryParam("entryId") final Long entryId,
             @QueryParam("offset") final Integer offset, @QueryParam("limit") final Integer limit,
@@ -132,7 +130,6 @@ public class ProvisioningEntriesApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List all Provisioning Entries")
     public Page<ProvisioningEntryData> retrieveAllProvisioningEntries(

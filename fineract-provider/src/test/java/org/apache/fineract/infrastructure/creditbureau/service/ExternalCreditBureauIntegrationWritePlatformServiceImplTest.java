@@ -74,7 +74,7 @@ import org.mockito.Spy;
 import org.springframework.lang.NonNull;
 
 @SuppressFBWarnings(value = "RV_EXCEPTION_NOT_THROWN", justification = "False positive")
-public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
+public class ExternalCreditBureauIntegrationWritePlatformServiceImplTest {
 
     @Spy
     private FromJsonHelper fromJsonHelper = new FromJsonHelper();
@@ -97,25 +97,35 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @InjectMocks
-    private ThitsaWorksCreditBureauIntegrationWritePlatformServiceImpl underTest;
+    private ExternalCreditBureauIntegrationWritePlatformServiceImpl underTest;
+    private static final long CREDIT_BUREAU_ID = 1L;
+    private static final String TEST_USERNAME = "testUsername";
+    private static final String TEST_PASSWORD = "testPassword";
+    private static final String TEST_URL = "https://nrc.test.url.com";
+    private static final String TEST_REPORT_URL = "https://credit.report.url/api/";
+    private static final String TEST_SEARCH_URL = "https://search.report.url/api/";
+    private static final String TEST_TOKEN_URL = "https://token.url/api/";
+    private static final String TEST_ID = "testId";
+    private static final String TEST_KEY = "testKey";
 
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
-        when(configurationRepositoryWrapper.getCreditBureauConfigData(1, CreditBureauConfigurations.USERNAME.name()))
-                .thenReturn(new CreditBureauConfiguration().setValue("testUsername"));
-        when(configurationRepositoryWrapper.getCreditBureauConfigData(1, CreditBureauConfigurations.PASSWORD.name()))
-                .thenReturn(new CreditBureauConfiguration().setValue("testPassword"));
-        when(configurationRepositoryWrapper.getCreditBureauConfigData(1, CreditBureauConfigurations.CREDITREPORTURL.name()))
-                .thenReturn(new CreditBureauConfiguration().setValue("https://credit.report.url/api/"));
-        when(configurationRepositoryWrapper.getCreditBureauConfigData(1, CreditBureauConfigurations.SEARCHURL.name()))
-                .thenReturn(new CreditBureauConfiguration().setValue("https://search.report.url/api/"));
-        when(configurationRepositoryWrapper.getCreditBureauConfigData(1, CreditBureauConfigurations.TOKENURL.name()))
-                .thenReturn(new CreditBureauConfiguration().setValue("https://token.url/api/"));
-        when(configurationRepositoryWrapper.getCreditBureauConfigData(1, CreditBureauConfigurations.SUBSCRIPTIONID.name()))
-                .thenReturn(new CreditBureauConfiguration().setValue("subscriptionId"));
-        when(configurationRepositoryWrapper.getCreditBureauConfigData(1, CreditBureauConfigurations.SUBSCRIPTIONKEY.name()))
-                .thenReturn(new CreditBureauConfiguration().setValue("subscriptionKey"));
+        int cbId = (int) CREDIT_BUREAU_ID;
+        when(configurationRepositoryWrapper.getCreditBureauConfigData(cbId, CreditBureauConfigurations.USERNAME.name()))
+                .thenReturn(new CreditBureauConfiguration().setValue(TEST_USERNAME));
+        when(configurationRepositoryWrapper.getCreditBureauConfigData(cbId, CreditBureauConfigurations.PASSWORD.name()))
+                .thenReturn(new CreditBureauConfiguration().setValue(TEST_PASSWORD));
+        when(configurationRepositoryWrapper.getCreditBureauConfigData(cbId, CreditBureauConfigurations.CREDITREPORTURL.name()))
+                .thenReturn(new CreditBureauConfiguration().setValue(TEST_REPORT_URL));
+        when(configurationRepositoryWrapper.getCreditBureauConfigData(cbId, CreditBureauConfigurations.SEARCHURL.name()))
+                .thenReturn(new CreditBureauConfiguration().setValue(TEST_SEARCH_URL));
+        when(configurationRepositoryWrapper.getCreditBureauConfigData(cbId, CreditBureauConfigurations.TOKENURL.name()))
+                .thenReturn(new CreditBureauConfiguration().setValue(TEST_TOKEN_URL));
+        when(configurationRepositoryWrapper.getCreditBureauConfigData(cbId, CreditBureauConfigurations.SUBSCRIPTIONID.name()))
+                .thenReturn(new CreditBureauConfiguration().setValue(TEST_ID));
+        when(configurationRepositoryWrapper.getCreditBureauConfigData(cbId, CreditBureauConfigurations.SUBSCRIPTIONKEY.name()))
+                .thenReturn(new CreditBureauConfiguration().setValue(TEST_KEY));
 
     }
 
@@ -164,8 +174,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
         mockOkHttpCall(request -> createOkhttpResponse(request, 500, "Internal Server Error"));
 
         assertThrows(PlatformDataIntegrityException.class, () -> {
-            underTest.okHttpConnectionMethod("testUser", "testPassword", "subscriptionKey", "subscriptionId", "https://nrc.test.url.com",
-                    "AccessToken", null, null, 0L, "nrcId", "NRC");
+            underTest.okHttpConnectionMethod("testUser", TEST_PASSWORD, TEST_KEY, TEST_ID, TEST_URL, "AccessToken", null, null, 0L, "nrcId",
+                    "NRC");
 
         });
 
@@ -177,8 +187,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
         mockOkHttpCall(request -> createOkhttpResponse(request, 500, "Internal Server Error"));
 
         PlatformDataIntegrityException raisedException = assertThrows(PlatformDataIntegrityException.class, () -> {
-            underTest.okHttpConnectionMethod("testUser", "testPassword", "subscriptionKey", "subscriptionId", null, "AccessToken", null,
-                    null, 0L, "nrcId", "NRC");
+            underTest.okHttpConnectionMethod("testUser", TEST_PASSWORD, TEST_KEY, TEST_ID, null, "AccessToken", null, null, 0L, "nrcId",
+                    "NRC");
 
         });
         assertEquals("error.msg.url.is.null.or.empty", raisedException.getGlobalisationMessageCode());
@@ -190,8 +200,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
         mockOkHttpCall(request -> createOkhttpResponse(request, 500, "Internal Server Error"));
 
         PlatformDataIntegrityException raisedException = assertThrows(PlatformDataIntegrityException.class, () -> {
-            underTest.okHttpConnectionMethod("testUser", "testPassword", "subscriptionKey", "subscriptionId", "https://nrc.test.url.com",
-                    "AccessToken", null, null, 0L, "nrcId", "notValidProcess");
+            underTest.okHttpConnectionMethod("testUser", TEST_PASSWORD, TEST_KEY, TEST_ID, TEST_URL, "AccessToken", null, null, 0L, "nrcId",
+                    "notValidProcess");
 
         });
         assertEquals("Invalid Process", raisedException.getGlobalisationMessageCode());
@@ -204,8 +214,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
         });
 
         assertThrows(PlatformDataIntegrityException.class, () -> {
-            underTest.okHttpConnectionMethod("testUser", "testPassword", "subscriptionKey", "subscriptionId", "https://nrc.test.url.com",
-                    "AccessToken", null, null, 0L, "nrcId", "NRC");
+            underTest.okHttpConnectionMethod("testUser", TEST_PASSWORD, TEST_KEY, TEST_ID, TEST_URL, "AccessToken", null, null, 0L, "nrcId",
+                    "NRC");
 
         });
 
@@ -219,8 +229,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
 
         mockOkHttpCall(request -> {
             assertEquals(request.header("Authorization"), "Bearer AccessToken");
-            assertEquals(request.header("mcix-subscription-key"), "subscriptionKey");
-            assertEquals(request.header("mcix-subscription-id"), "subscriptionId");
+            assertEquals(request.header("mcix-subscription-key"), TEST_KEY);
+            assertEquals(request.header("mcix-subscription-id"), TEST_ID);
             assertEquals(request.header("Content-Type"), "application/x-www-form-urlencoded");
             BufferedSink sink = Okio.buffer(Okio.sink(new ByteArrayOutputStream()));
             request.body().writeTo(sink);
@@ -229,8 +239,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
             return createOkhttpResponse(request, jsonResponse);
         });
 
-        String result = underTest.okHttpConnectionMethod("testUser", "testPassword", "subscriptionKey", "subscriptionId",
-                "https://nrc.test.url.com", "AccessToken", null, null, 0L, "nrcId", "NRC");
+        String result = underTest.okHttpConnectionMethod("testUser", TEST_PASSWORD, TEST_KEY, TEST_ID, TEST_URL, "AccessToken", null, null,
+                0L, "nrcId", "NRC");
         assertEquals(jsonResponse, result);
     }
 
@@ -243,8 +253,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
         mockOkHttpCall(request -> {
             List<String> auhtorizationHeaders = request.headers("Authorization");
             assertTrue(auhtorizationHeaders.isEmpty());
-            assertEquals(request.header("mcix-subscription-key"), "subscriptionKey");
-            assertEquals(request.header("mcix-subscription-id"), "subscriptionId");
+            assertEquals(request.header("mcix-subscription-key"), TEST_KEY);
+            assertEquals(request.header("mcix-subscription-id"), TEST_ID);
             assertEquals(request.header("Content-Type"), "application/x-www-form-urlencoded");
             BufferedSink sink = Okio.buffer(Okio.sink(new ByteArrayOutputStream()));
             request.body().writeTo(sink);
@@ -253,8 +263,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
             return createOkhttpResponse(request, jsonResponse);
         });
 
-        String result = underTest.okHttpConnectionMethod("testUser", "testPassword", "subscriptionKey", "subscriptionId",
-                "https://nrc.test.url.com", null, null, null, 0L, "nrcId", "NRC");
+        String result = underTest.okHttpConnectionMethod("testUser", TEST_PASSWORD, TEST_KEY, TEST_ID, TEST_URL, null, null, null, 0L,
+                "nrcId", "NRC");
         assertEquals(jsonResponse, result);
     }
 
@@ -268,8 +278,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
 
         mockOkHttpCall(request -> {
             assertEquals(request.header("Authorization"), "Bearer AccessToken");
-            assertEquals(request.header("mcix-subscription-key"), "subscriptionKey");
-            assertEquals(request.header("mcix-subscription-id"), "subscriptionId");
+            assertEquals(request.header("mcix-subscription-key"), TEST_KEY);
+            assertEquals(request.header("mcix-subscription-id"), TEST_ID);
             assertEquals(request.header("Content-Type"), "multipart/form-data");
             return createOkhttpResponse(request, jsonResponse);
         });
@@ -277,8 +287,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
         when(fileDetail.getFileName()).thenReturn("test.pdf");
 
         PlatformDataIntegrityException resultException = assertThrows(PlatformDataIntegrityException.class, () -> {
-            underTest.okHttpConnectionMethod("testUser", "testPassword", "subscriptionKey", "subscriptionId", "https://upload.test.url.com",
-                    "AccessToken", temp.toFile(), fileDetail, 0L, "nrcId", "UploadCreditReport");
+            underTest.okHttpConnectionMethod("testUser", TEST_PASSWORD, TEST_KEY, TEST_ID, "https://upload.test.url.com", "AccessToken",
+                    temp.toFile(), fileDetail, 0L, "nrcId", "UploadCreditReport");
         });
         assertEquals("UPLOADED", resultException.getDefaultUserMessage());
     }
@@ -288,8 +298,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
         mockOkHttpCall(request -> {
             List<String> auhtorizationHeaders = request.headers("Authorization");
             assertTrue(auhtorizationHeaders.isEmpty());
-            assertEquals(request.header("mcix-subscription-key"), "subscriptionKey");
-            assertEquals(request.header("mcix-subscription-id"), "subscriptionId");
+            assertEquals(request.header("mcix-subscription-key"), TEST_KEY);
+            assertEquals(request.header("mcix-subscription-id"), TEST_ID);
             assertEquals(request.header("Content-Type"), "application/x-www-form-urlencoded");
             BufferedSink sink = Okio.buffer(Okio.sink(new ByteArrayOutputStream()));
             request.body().writeTo(sink);
@@ -300,8 +310,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
             return createOkhttpResponse(request, 401, "Unauthorized");
         });
         assertThrows(PlatformDataIntegrityException.class, () -> {
-            underTest.okHttpConnectionMethod("testUser", "testPassword", "subscriptionKey", "subscriptionId", "https://nrc.test.url.com",
-                    null, null, null, 0L, "nrcId", "token");
+            underTest.okHttpConnectionMethod("testUser", TEST_PASSWORD, TEST_KEY, TEST_ID, TEST_URL, null, null, null, 0L, "nrcId",
+                    "token");
         });
     }
 
@@ -313,14 +323,14 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
 
         mockOkHttpCall(request -> {
             assertEquals(request.header("Authorization"), "Bearer AccessToken");
-            assertEquals(request.header("mcix-subscription-key"), "subscriptionKey");
-            assertEquals(request.header("mcix-subscription-id"), "subscriptionId");
+            assertEquals(request.header("mcix-subscription-key"), TEST_KEY);
+            assertEquals(request.header("mcix-subscription-id"), TEST_ID);
             assertEquals(request.header("Content-Type"), "application/x-www-form-urlencoded");
             return createOkhttpResponse(request, jsonResponse);
         });
 
-        String result = underTest.okHttpConnectionMethod("testUser", "testPassword", "subscriptionKey", "subscriptionId",
-                "https://nrc.test.url.com", "AccessToken", null, null, 0L, "nrcId", "CreditReport");
+        String result = underTest.okHttpConnectionMethod("testUser", TEST_PASSWORD, TEST_KEY, TEST_ID, TEST_URL, "AccessToken", null, null,
+                0L, "nrcId", "CreditReport");
         assertEquals(jsonResponse, result);
     }
 
@@ -329,8 +339,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
         mockOkHttpCall(request -> createOkhttpResponse(request, 403, "Forbidden"));
 
         assertThrows(PlatformDataIntegrityException.class, () -> {
-            underTest.okHttpConnectionMethod("testUser", "testPassword", "subscriptionKey", "subscriptionId", "https://nrc.test.url.com",
-                    "AccessToken", null, null, 0L, "nrcId", "CreditReport");
+            underTest.okHttpConnectionMethod("testUser", TEST_PASSWORD, TEST_KEY, TEST_ID, TEST_URL, "AccessToken", null, null, 0L, "nrcId",
+                    "CreditReport");
         });
     }
 
@@ -339,8 +349,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
         mockOkHttpCall(request -> createOkhttpResponse(request, 200, "OK", null));
 
         assertThrows(NullPointerException.class, () -> {
-            underTest.okHttpConnectionMethod("testUser", "testPassword", "subscriptionKey", "subscriptionId", "https://nrc.test.url.com",
-                    "AccessToken", null, null, 0L, "nrcId", "CreditReport");
+            underTest.okHttpConnectionMethod("testUser", TEST_PASSWORD, TEST_KEY, TEST_ID, TEST_URL, "AccessToken", null, null, 0L, "nrcId",
+                    "CreditReport");
         });
     }
 
@@ -386,8 +396,8 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
         mockOkHttpCall(request -> {
             List<String> auhtorizationHeaders = request.headers("Authorization");
             assertTrue(auhtorizationHeaders.isEmpty());
-            assertEquals(request.header("mcix-subscription-key"), "subscriptionKey");
-            assertEquals(request.header("mcix-subscription-id"), "subscriptionId");
+            assertEquals(request.header("mcix-subscription-key"), TEST_KEY);
+            assertEquals(request.header("mcix-subscription-id"), TEST_ID);
             assertEquals(request.header("Content-Type"), "application/x-www-form-urlencoded");
             BufferedSink sink = Okio.buffer(Okio.sink(new ByteArrayOutputStream()));
             request.body().writeTo(sink);
@@ -436,10 +446,10 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
     }
 
     @Test
-    public void getCreditReportFromThitsaWorksSuccessTest() throws IOException {
+    public void getCreditReportFromExternalCreditSuccessTest() throws IOException {
         mockTokenGeneration();
         mockOkHttpCall(request -> {
-            // NRC Call
+            // External API Call
             if (request.url().host().equals("search.report.url")) {
                 return createOkhttpResponse(request, createResponseObjectArrayData(() -> "Success",
                         data -> data.add(mapper.createObjectNode().put("UniqueID", "123456"))));
@@ -464,7 +474,7 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
             return createOkhttpResponse(request, 404, "Not Found");
         });
 
-        CreditBureauReportData result = underTest.getCreditReportFromThitsaWorks(initialJsonCommand());
+        CreditBureauReportData result = underTest.getCreditReportFromExternalCredit(initialJsonCommand());
         assertNotNull(result);
     }
 
@@ -497,10 +507,10 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
     }
 
     @Test
-    public void getCreditReportFromThitsaWorksEmptyBorrowerTest() throws IOException {
+    public void getCreditReportFromExternalCreditEmptyBorrowerTest() throws IOException {
         mockTokenGeneration();
         mockOkHttpCall(request -> {
-            // NRC Call
+            // External API Call
             if (request.url().host().equals("search.report.url")) {
                 return createOkhttpResponse(request, createResponseObjectArrayData(() -> "Success",
                         data -> data.add(mapper.createObjectNode().put("UniqueID", "123456"))));
@@ -520,14 +530,14 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
             return createOkhttpResponse(request, 404, "Not Found");
         });
 
-        CreditBureauReportData result = underTest.getCreditReportFromThitsaWorks(initialJsonCommand());
+        CreditBureauReportData result = underTest.getCreditReportFromExternalCredit(initialJsonCommand());
         assertNotNull(result);
         assertNull(result.getGender());
         assertNotNull(result.getCreditScore());
     }
 
     @Test
-    public void getCreditReportFromThitsaWorksNoGenderTest() throws IOException {
+    public void getCreditReportFromExternalCreditNoGenderTest() throws IOException {
         mockTokenGeneration();
         mockOkHttpCall(request -> {
             // NRC Call
@@ -554,17 +564,17 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
             return createOkhttpResponse(request, 404, "Not Found");
         });
 
-        CreditBureauReportData result = underTest.getCreditReportFromThitsaWorks(initialJsonCommand());
+        CreditBureauReportData result = underTest.getCreditReportFromExternalCredit(initialJsonCommand());
         assertNotNull(result);
         assertNull(result.getGender());
         assertNotNull(result.getCreditScore());
     }
 
     @Test
-    public void getCreditReportFromThitsaWorksNoLoansTest() throws IOException {
+    public void getCreditReportFromExternalCreditNoLoansTest() throws IOException {
         mockTokenGeneration();
         mockOkHttpCall(request -> {
-            // NRC Call
+            // External API Call
             if (request.url().host().equals("search.report.url")) {
                 return createOkhttpResponse(request, createResponseObjectArrayData(() -> "Success",
                         data -> data.add(mapper.createObjectNode().put("UniqueID", "123456"))));
@@ -586,7 +596,7 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImplTest {
             return createOkhttpResponse(request, 404, "Not Found");
         });
 
-        CreditBureauReportData result = underTest.getCreditReportFromThitsaWorks(initialJsonCommand());
+        CreditBureauReportData result = underTest.getCreditReportFromExternalCredit(initialJsonCommand());
         assertNotNull(result);
         assertNotNull(result.getGender());
         assertNull(result.getCreditScore());

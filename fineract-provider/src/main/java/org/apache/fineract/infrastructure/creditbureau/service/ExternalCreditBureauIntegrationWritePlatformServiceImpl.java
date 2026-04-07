@@ -73,7 +73,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImpl implements ThitsaWorksCreditBureauIntegrationWritePlatformService {
+public class ExternalCreditBureauIntegrationWritePlatformServiceImpl implements ExternalCreditBureauIntegrationWritePlatformService {
 
     public static final String UPLOAD_CREDIT_REPORT = "UploadCreditReport";
     public static final String RESPONSE_MESSAGE = "ResponseMessage";
@@ -216,7 +216,7 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImpl implemen
 
     @Transactional
     @Override
-    public CreditBureauReportData getCreditReportFromThitsaWorks(final JsonCommand command) {
+    public CreditBureauReportData getCreditReportFromExternalCredit(final JsonCommand command) {
 
         this.context.authenticatedUser();
         String nrcId = command.stringValueOfParameterNamed("NRC");
@@ -452,8 +452,7 @@ public class ThitsaWorksCreditBureauIntegrationWritePlatformServiceImpl implemen
 
     public String getCreditBureauConfiguration(Integer creditBureauId, String configurationParameterName) {
         List<ApiParameterError> dataValidationErrors = new ArrayList<>();
-        DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
-                .resource("ThitsaWorksCreditBureauIntegration");
+        DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("ExternalCreditBureauIntegration");
 
         String creditBureauConfigurationValue;
         try {

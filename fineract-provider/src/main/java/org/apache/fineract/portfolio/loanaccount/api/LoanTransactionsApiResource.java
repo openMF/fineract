@@ -117,7 +117,6 @@ public class LoanTransactionsApiResource {
 
     @GET
     @Path("{loanId}/transactions/template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Loan Transaction Template", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed Value Lists\n\n" + "Example Requests:\n" + "\n"
@@ -148,7 +147,6 @@ public class LoanTransactionsApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}/transactions/template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Loan Transaction Template", operationId = "retrieveTransactionTemplateByLoanExternalId", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed Value Lists\n\n" + "Example Requests:\n" + "\n"
@@ -181,7 +179,6 @@ public class LoanTransactionsApiResource {
 
     @GET
     @Path("{loanId}/transactions/{transactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Transaction Details", description = "Retrieves a Transaction Details\n\n" + "Example Request:\n" + "\n"
             + "loans/5/transactions/3")
@@ -197,7 +194,6 @@ public class LoanTransactionsApiResource {
 
     @GET
     @Path("{loanId}/transactions/external-id/{externalTransactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Transaction Details", description = "Retrieves a Transaction Details\n\n" + "Example Request:\n" + "\n"
             + "loans/5/transactions/external-id/5dd80a7c-ccba-4446-b378-01eb6f53e871")
@@ -214,7 +210,6 @@ public class LoanTransactionsApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}/transactions/{transactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Transaction Details", description = "Retrieves a Transaction Details\n\n" + "Example Request:\n" + "\n"
             + "loans/5/transactions/3")
@@ -231,7 +226,6 @@ public class LoanTransactionsApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}/transactions/external-id/{externalTransactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Transaction Details", description = "Retrieves a Transaction Details\n\n" + "Example Request:\n" + "\n"
             + "loans/external-id/7dd80a7c-ycba-a446-t378-91eb6f53e854/transactions/external-id/5dd80a7c-ccba-4446-b378-01eb6f53e871")
@@ -248,7 +242,6 @@ public class LoanTransactionsApiResource {
 
     @GET
     @Path("{loanId}/transactions")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Transactions", description = "Retrieves transactions of a loan")
     @ApiResponses({
@@ -265,7 +258,6 @@ public class LoanTransactionsApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}/transactions")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Transactions", description = "Retrieves transactions of a loan")
     @ApiResponses({

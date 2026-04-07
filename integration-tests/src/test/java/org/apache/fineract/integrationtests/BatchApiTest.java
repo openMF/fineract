@@ -1637,7 +1637,7 @@ public class BatchApiTest extends BaseLoanIntegrationTest {
 
         final FromJsonHelper jsonHelper = new FromJsonHelper();
         final JsonObject repayment = jsonHelper.parse(responses.get(5).getBody()).getAsJsonObject().get("transactions").getAsJsonArray()
-                .get(2).getAsJsonObject();
+                .get(1).getAsJsonObject();
         final JsonArray dateArray = repayment.get("reversedOnDate").getAsJsonArray();
         final LocalDate reversedOnDate = LocalDate.of(dateArray.get(0).getAsInt(), dateArray.get(1).getAsInt(),
                 dateArray.get(2).getAsInt());
@@ -1739,7 +1739,7 @@ public class BatchApiTest extends BaseLoanIntegrationTest {
                 this.responseSpec, BatchHelper.toJsonString(reversalAndGetBatchRequest));
 
         final JsonObject repayment = jsonHelper.parse(reversalResponses.get(1).getBody()).getAsJsonObject().get("transactions")
-                .getAsJsonArray().get(2).getAsJsonObject();
+                .getAsJsonArray().get(1).getAsJsonObject();
 
         final JsonArray dateArray = repayment.get("reversedOnDate").getAsJsonArray();
         final LocalDate reversedOnDate = LocalDate.of(dateArray.get(0).getAsInt(), dateArray.get(1).getAsInt(),
@@ -1814,7 +1814,7 @@ public class BatchApiTest extends BaseLoanIntegrationTest {
 
         final FromJsonHelper jsonHelper = new FromJsonHelper();
         final JsonObject repayment = jsonHelper.parse(responses.get(5).getBody()).getAsJsonObject().get("transactions").getAsJsonArray()
-                .get(2).getAsJsonObject();
+                .get(1).getAsJsonObject();
 
         Assertions.assertEquals(HttpStatus.SC_OK, (long) responses.get(4).getStatusCode(),
                 "Verify Status Code 200 for repayment chargeback");
@@ -1886,7 +1886,7 @@ public class BatchApiTest extends BaseLoanIntegrationTest {
 
         final FromJsonHelper jsonHelper = new FromJsonHelper();
         final JsonObject goodWillCredit = jsonHelper.parse(responses.get(5).getBody()).getAsJsonObject().get("transactions")
-                .getAsJsonArray().get(2).getAsJsonObject();
+                .getAsJsonArray().get(1).getAsJsonObject();
         final JsonArray dateArray = goodWillCredit.get("reversedOnDate").getAsJsonArray();
         final LocalDate reversedOnDate = LocalDate.of(dateArray.get(0).getAsInt(), dateArray.get(1).getAsInt(),
                 dateArray.get(2).getAsInt());
@@ -1972,9 +1972,9 @@ public class BatchApiTest extends BaseLoanIntegrationTest {
 
         final FromJsonHelper jsonHelper = new FromJsonHelper();
         final JsonObject merchantIssuedRefund = jsonHelper.parse(responses.get(7).getBody()).getAsJsonObject().get("transactions")
-                .getAsJsonArray().get(2).getAsJsonObject();
+                .getAsJsonArray().get(1).getAsJsonObject();
         final JsonObject payoutRefund = jsonHelper.parse(responses.get(7).getBody()).getAsJsonObject().get("transactions").getAsJsonArray()
-                .get(3).getAsJsonObject();
+                .get(2).getAsJsonObject();
         final JsonArray merchantIssuedDateArray = merchantIssuedRefund.get("reversedOnDate").getAsJsonArray();
         final LocalDate merchantIssuedDate = LocalDate.of(merchantIssuedDateArray.get(0).getAsInt(),
                 merchantIssuedDateArray.get(1).getAsInt(), merchantIssuedDateArray.get(2).getAsInt());

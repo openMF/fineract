@@ -209,7 +209,8 @@ public class LoanAccrualsProcessingServiceImpl implements LoanAccrualsProcessing
         if (!accrualTransactions.isEmpty()) {
             if (loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()) {
                 reprocessPeriodicAccruals(loan, accrualTransactions, addEvent);
-            } else if (loan.isNoneOrCashOrUpfrontAccrualAccountingEnabledOnLoanProduct()) {
+            } else if (configurationDomainService.isAllowCashAndNonCashAccrual() ? !loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()
+                    : loan.isUpfrontAccrualAccountingEnabledOnLoanProduct()) {
                 reprocessNonPeriodicAccruals(loan, accrualTransactions, addEvent);
             }
         }
@@ -529,7 +530,7 @@ public class LoanAccrualsProcessingServiceImpl implements LoanAccrualsProcessing
         Predicate<LoanTransaction> transactionPredicate = t -> !t.isReversed() && t.isInterestWaiver()
                 && !DateUtils.isAfter(t.getTransactionDate(), tillDate);
         return installment.getLoanTransactionToRepaymentScheduleMappings().stream()
-                .filter(tm -> transactionPredicate.test(tm.getLoanTransaction()))
+                .filter(tm -> tm.getLoanTransaction() != null && transactionPredicate.test(tm.getLoanTransaction()))
                 .map(LoanTransactionToRepaymentScheduleMapping::getInterestPortion).reduce(BigDecimal.ZERO, MathUtil::add);
     }
 
@@ -639,7 +640,7 @@ public class LoanAccrualsProcessingServiceImpl implements LoanAccrualsProcessing
             @NonNull final LocalDate tillDate) {
         return loanChargePaidBy.stream().filter(pb -> {
             final LoanTransaction t = pb.getLoanTransaction();
-            return !t.isReversed() && t.isWaiveCharge() && !DateUtils.isAfter(t.getTransactionDate(), tillDate);
+            return t != null && !t.isReversed() && t.isWaiveCharge() && !DateUtils.isAfter(t.getTransactionDate(), tillDate);
         }).map(LoanChargePaidBy::getAmount).reduce(BigDecimal.ZERO, MathUtil::add);
     }
 

@@ -84,8 +84,8 @@ public class SearchResourcesTest {
         final List<String> resources = Arrays.asList("clients");
 
         // Client and Loan account creation
-        String jsonPayload = ClientHelper.getBasicClientAsJSON(ClientHelper.DEFAULT_OFFICE_ID, ClientHelper.LEGALFORM_ID_PERSON, null);
-        final PostClientsResponse clientResponse = ClientHelper.addClientAsPerson(requestSpec, responseSpec, jsonPayload);
+        final PostClientsResponse clientResponse = ClientHelper.addClientAsPerson(ClientHelper.DEFAULT_OFFICE_ID,
+                ClientHelper.LEGALFORM_ID_PERSON, null);
         final Long clientId = clientResponse.getClientId();
         final GetClientsClientIdResponse getClientResponse = ClientHelper.getClient(requestSpec, responseSpec, clientId.intValue());
         final String query = getClientResponse.getAccountNo();
@@ -112,8 +112,8 @@ public class SearchResourcesTest {
     public void searchOverSavingsResources() {
         final List<String> resources = Arrays.asList("savings");
 
-        String jsonPayload = ClientHelper.getBasicClientAsJSON(ClientHelper.DEFAULT_OFFICE_ID, ClientHelper.LEGALFORM_ID_PERSON, null);
-        final PostClientsResponse clientResponse = ClientHelper.addClientAsPerson(requestSpec, responseSpec, jsonPayload);
+        final PostClientsResponse clientResponse = ClientHelper.addClientAsPerson(ClientHelper.DEFAULT_OFFICE_ID,
+                ClientHelper.LEGALFORM_ID_PERSON, null);
         final Long clientId = clientResponse.getClientId();
 
         final Integer savingsId = SavingsAccountHelper.openSavingsAccount(requestSpec, responseSpec, clientId.intValue(), "1000");
@@ -139,8 +139,8 @@ public class SearchResourcesTest {
     public void searchOverSharesResources() {
         final List<String> resources = Arrays.asList("shares");
 
-        String jsonPayload = ClientHelper.getBasicClientAsJSON(ClientHelper.DEFAULT_OFFICE_ID, ClientHelper.LEGALFORM_ID_PERSON, null);
-        final PostClientsResponse clientsResponse = ClientHelper.addClientAsPerson(requestSpec, responseSpec, jsonPayload);
+        final PostClientsResponse clientsResponse = ClientHelper.addClientAsPerson(ClientHelper.DEFAULT_OFFICE_ID,
+                ClientHelper.LEGALFORM_ID_PERSON, null);
         final Long clientId = clientsResponse.getClientId();
 
         final ShareProductHelper shareProductHelper = new ShareProductHelper();

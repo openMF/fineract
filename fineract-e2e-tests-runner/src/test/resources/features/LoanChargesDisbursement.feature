@@ -354,7 +354,6 @@ Feature: LoanChargesDisbursementCharges
       | Transaction date | Transaction Type                    | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 01 January 2024  | Disbursement                        | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
       | 01 January 2024  | Repayment (at time of disbursement) | 0.02   | 0.0       | 0.0      | 0.02 | 0.0       | 100.0        | false    | false    |
-      | 01 January 2024  | Accrual                             | 2.05   | 0.0       | 2.05     | 0.0  | 0.0       | 0.0          | false    | false    |
     Then Loan Charges tab has the following data:
       | Name                | isPenalty | Payment due at | Due as of | Calculation type | Due  | Paid | Waived | Outstanding |
       | Disbursement Charge | false     | Disbursement   |           | % Interest       | 0.02 | 0.02 | 0.0    | 0.0         |
@@ -363,7 +362,6 @@ Feature: LoanChargesDisbursementCharges
       | Type      | Account code | Account name              | Debit | Credit |
       | INCOME    | 404007       | Fee Income                |       | 0.02   |
       | LIABILITY | 145023       | Suspense/Clearing account | 0.02  |        |
-    Then Loan Transactions tab has a "ACCRUAL" transaction with date "01 January 2024" has no the Journal entries
 #    --- 1st repayment - 1 February, 2024  ---
     When Admin sets the business date to "01 February 2024"
     And Customer makes "AUTOPAY" repayment on "01 February 2024" with 17.01 EUR transaction amount
@@ -383,7 +381,6 @@ Feature: LoanChargesDisbursementCharges
       | Transaction date | Transaction Type                    | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 01 January 2024  | Disbursement                        | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
       | 01 January 2024  | Repayment (at time of disbursement) | 0.02   | 0.0       | 0.0      | 0.02 | 0.0       | 100.0        | false    | false    |
-      | 01 January 2024  | Accrual                             | 2.05   | 0.0       | 2.05     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 01 February 2024 | Repayment                           | 17.01  | 16.43     | 0.58     | 0.0  | 0.0       | 83.57        | false    | false    |
 #    --- 2nd repayment - 1 March, 2024  ---
     When Admin sets the business date to "01 March 2024"
@@ -404,7 +401,6 @@ Feature: LoanChargesDisbursementCharges
       | Transaction date | Transaction Type                    | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 01 January 2024  | Disbursement                        | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
       | 01 January 2024  | Repayment (at time of disbursement) | 0.02   | 0.0       | 0.0      | 0.02 | 0.0       | 100.0        | false    | false    |
-      | 01 January 2024  | Accrual                             | 2.05   | 0.0       | 2.05     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 01 February 2024 | Repayment                           | 17.01  | 16.43     | 0.58     | 0.0  | 0.0       | 83.57        | false    | false    |
       | 01 March 2024    | Repayment                           | 17.01  | 16.52     | 0.49     | 0.0  | 0.0       | 67.05        | false    | false    |
     When Loan Pay-off is made on "01 March 2024"

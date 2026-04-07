@@ -299,10 +299,11 @@ public final class CalendarUtils {
                 NthDayNameEnum nthDayName = NthDayNameEnum.from(nthDayType.toString());
                 DayNameEnum weekdayType = DayNameEnum.from(weekDay.getDay().name());
                 if (recur.getInterval() == 1 || recur.getInterval() == -1) {
-                    humanReadable = "Monthly on " + nthDayName.getCode().toLowerCase() + " " + weekdayType.getCode().toLowerCase();
+                    humanReadable = "Monthly on " + nthDayName.getCode().toLowerCase(java.util.Locale.ROOT) + " "
+                            + weekdayType.getCode().toLowerCase(java.util.Locale.ROOT);
                 } else {
-                    humanReadable = "Every " + recur.getInterval() + " months on " + nthDayName.getCode().toLowerCase() + " "
-                            + weekdayType.getCode().toLowerCase();
+                    humanReadable = "Every " + recur.getInterval() + " months on " + nthDayName.getCode().toLowerCase(java.util.Locale.ROOT)
+                            + " " + weekdayType.getCode().toLowerCase(java.util.Locale.ROOT);
                 }
             } else if (monthDay != null) {
                 if (monthDay == -1) {
@@ -756,7 +757,8 @@ public final class CalendarUtils {
             if (nthDayType == NthDayType.ONE || nthDayType == NthDayType.TWO || nthDayType == NthDayType.THREE
                     || nthDayType == NthDayType.FOUR) {
                 baseDataValidator.reset().parameter(repeatsOnDayParamName).value(repeatsOnDay).cantBeBlankWhenParameterProvidedIs(
-                        repeatsOnNthDayOfMonthParamName, NthDayNameEnum.from(nthDayType.toString()).getCode().toLowerCase());
+                        repeatsOnNthDayOfMonthParamName,
+                        NthDayNameEnum.from(nthDayType.toString()).getCode().toLowerCase(java.util.Locale.ROOT));
             }
         }
     }

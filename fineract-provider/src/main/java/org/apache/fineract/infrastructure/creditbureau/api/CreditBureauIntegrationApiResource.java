@@ -133,7 +133,6 @@ public class CreditBureauIntegrationApiResource {
     // fetch saved creditReports(NRC) from DB by creditBureauId, to select for downloading and deleting the reports
     @GET
     @Path("creditReport/{creditBureauId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String getSavedCreditReport(@PathParam("creditBureauId") @Parameter(description = "creditBureauId") final Long creditBureauId,
             @Context final UriInfo uriInfo) {

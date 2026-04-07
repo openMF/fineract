@@ -89,7 +89,7 @@ public final class CalendarEnumerations {
 
     public static EnumOptionData calendarFrequencyType(final CalendarFrequencyType calendarFrequencyType) {
         EnumOptionData optionData = null;
-        if (!calendarFrequencyType.isInvalid()) {
+        if (calendarFrequencyType != CalendarFrequencyType.INVALID) {
             optionData = new EnumOptionData(calendarFrequencyType.getValue().longValue(), calendarFrequencyType.getCode(),
                     calendarFrequencyType.toString());
         }
@@ -99,7 +99,7 @@ public final class CalendarEnumerations {
     public static List<EnumOptionData> calendarFrequencyType(final CalendarFrequencyType[] calendarFrequencyTypes) {
         final List<EnumOptionData> optionDatas = new ArrayList<>();
         for (final CalendarFrequencyType calendarFrequencyType : calendarFrequencyTypes) {
-            if (!calendarFrequencyType.isInvalid()) {
+            if (calendarFrequencyType != CalendarFrequencyType.INVALID) {
                 optionDatas.add(calendarFrequencyType(calendarFrequencyType));
             }
         }
@@ -112,7 +112,7 @@ public final class CalendarEnumerations {
 
     public static EnumOptionData calendarWeekDaysType(final CalendarWeekDaysType calendarWeekDaysType) {
         EnumOptionData optionData = null;
-        if (!calendarWeekDaysType.isInvalid()) {
+        if (calendarWeekDaysType != CalendarWeekDaysType.INVALID) {
             optionData = new EnumOptionData(calendarWeekDaysType.getValue().longValue(), calendarWeekDaysType.getCode(),
                     calendarWeekDaysType.toString());
         }
@@ -122,7 +122,7 @@ public final class CalendarEnumerations {
     public static List<EnumOptionData> calendarWeekDaysType(final CalendarWeekDaysType[] calendarWeekDaysTypes) {
         final List<EnumOptionData> optionDatas = new ArrayList<>();
         for (final CalendarWeekDaysType calendarWeekDaysType : calendarWeekDaysTypes) {
-            if (!calendarWeekDaysType.isInvalid()) {
+            if (calendarWeekDaysType != CalendarWeekDaysType.INVALID) {
                 optionDatas.add(calendarWeekDaysType(calendarWeekDaysType));
             }
         }

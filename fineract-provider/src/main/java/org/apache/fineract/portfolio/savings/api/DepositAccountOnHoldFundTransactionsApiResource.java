@@ -20,7 +20,6 @@ package org.apache.fineract.portfolio.savings.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -55,7 +54,6 @@ public class DepositAccountOnHoldFundTransactionsApiResource {
     private final SqlValidator sqlValidator;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve deposit account on hold fund transactions", operationId = "retrieveAllDepositAccountOnHoldFundTransactions")
     public String retrieveAll(@PathParam("savingsId") final Long savingsId, @QueryParam("guarantorFundingId") final Long guarantorFundingId,

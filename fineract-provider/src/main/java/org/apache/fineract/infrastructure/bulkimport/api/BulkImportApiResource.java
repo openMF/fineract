@@ -21,7 +21,6 @@ package org.apache.fineract.infrastructure.bulkimport.api;
 import static org.apache.fineract.util.StreamResponseUtil.DISPOSITION_TYPE_ATTACHMENT;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -59,7 +58,6 @@ public class BulkImportApiResource {
     private final ApiRequestParameterHelper apiRequestParameterHelper;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String retrieveImportDocuments(@Context final UriInfo uriInfo, @QueryParam("entityType") final String entityType) {
         Collection<ImportData> importData = new ArrayList<>();

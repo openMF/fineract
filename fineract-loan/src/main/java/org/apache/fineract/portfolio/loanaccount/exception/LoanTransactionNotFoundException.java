@@ -18,7 +18,7 @@
  */
 package org.apache.fineract.portfolio.loanaccount.exception;
 
-import org.apache.commons.lang3.ObjectUtils;
+import java.util.Objects;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.infrastructure.core.exception.AbstractPlatformResourceNotFoundException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -47,13 +47,13 @@ public class LoanTransactionNotFoundException extends AbstractPlatformResourceNo
 
     public LoanTransactionNotFoundException(ExternalId transactionExternalId) {
         super("error.msg.loan.transaction.external.id.invalid", "Transaction with external identifier "
-                + ObjectUtils.defaultIfNull(transactionExternalId, ExternalId.empty()).getValue() + " does not exist",
+                + Objects.requireNonNullElse(transactionExternalId, ExternalId.empty()).getValue() + " does not exist",
                 transactionExternalId);
     }
 
     public LoanTransactionNotFoundException(ExternalId transactionExternalId, EmptyResultDataAccessException e) {
         super("error.msg.loan.transaction.external.id.invalid", "Transaction with external identifier "
-                + ObjectUtils.defaultIfNull(transactionExternalId, ExternalId.empty()).getValue() + " does not exist",
+                + Objects.requireNonNullElse(transactionExternalId, ExternalId.empty()).getValue() + " does not exist",
                 transactionExternalId, e);
     }
 }

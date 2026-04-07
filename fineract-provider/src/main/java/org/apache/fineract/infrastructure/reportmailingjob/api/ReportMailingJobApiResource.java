@@ -122,7 +122,6 @@ public class ReportMailingJobApiResource {
 
     @GET
     @Path("{entityId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Report Mailing Job", description = "Example Requests:\n" + "\n" + "reportmailingjobs/1\n" + "\n" + "\n"
             + "reportmailingjobs/1?template=true")
@@ -147,7 +146,6 @@ public class ReportMailingJobApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Report Mailing Job Details Template", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for report mailing job applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed description Lists\n" + "Example Request:\n" + "\n" + "reportmailingjobs/template")
@@ -165,7 +163,6 @@ public class ReportMailingJobApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Report Mailing Jobs", description = "Example Requests:\n" + "\n" + "reportmailingjobs")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReportMailingJobApiResourceSwagger.GetReportMailingJobsResponse.class))))

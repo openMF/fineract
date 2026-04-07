@@ -105,4 +105,17 @@ public final class WorkingCapitalLoanDisbursementTestBuilder {
         }
         return json.toString();
     }
+
+    public static String buildUpdateDiscountJson(final BigDecimal discountAmount, final String note) {
+        final JsonObject json = new JsonObject();
+        json.addProperty("locale", DEFAULT_LOCALE);
+        json.addProperty("dateFormat", DEFAULT_DATE_FORMAT);
+        if (discountAmount != null) {
+            json.addProperty("discountAmount", discountAmount);
+        }
+        if (note != null) {
+            json.addProperty("note", note);
+        }
+        return json.toString();
+    }
 }

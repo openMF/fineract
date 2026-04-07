@@ -62,7 +62,6 @@ public class LoanOriginatorsApiResource {
 
     @GET
     @Path("{loanId}/originators")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve originators for a loan by loan ID", description = "Retrieves all originators attached to a specific loan. Requires READ_LOAN permission.")
     @ApiResponse(responseCode = "200", description = "OK - Returns wrapped list of originators (may be empty)")
@@ -80,7 +79,6 @@ public class LoanOriginatorsApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}/originators")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve originators for a loan by loan external ID", description = "Retrieves all originators attached to a specific loan using loan external ID. Requires READ_LOAN permission.")
     @ApiResponse(responseCode = "200", description = "OK - Returns wrapped list of originators (may be empty)")
@@ -188,7 +186,6 @@ public class LoanOriginatorsApiResource {
 
     @DELETE
     @Path("{loanId}/originators/{originatorId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Detach originator from loan by IDs", description = "Detaches an originator from a loan. Loan must be in 'Submitted and Pending Approval' status. Requires DETACH_LOAN_ORIGINATOR permission.")
     @ApiResponse(responseCode = "200", description = "OK - Originator detached")
@@ -205,7 +202,6 @@ public class LoanOriginatorsApiResource {
 
     @DELETE
     @Path("{loanId}/originators/external-id/{originatorExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Detach originator from loan by loan ID and originator external ID")
     @ApiResponse(responseCode = "200", description = "OK")
@@ -225,7 +221,6 @@ public class LoanOriginatorsApiResource {
 
     @DELETE
     @Path("external-id/{loanExternalId}/originators/{originatorId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Detach originator from loan by loan external ID and originator ID")
     @ApiResponse(responseCode = "200", description = "OK")
@@ -249,7 +244,6 @@ public class LoanOriginatorsApiResource {
 
     @DELETE
     @Path("external-id/{loanExternalId}/originators/external-id/{originatorExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Detach originator from loan by external IDs")
     @ApiResponse(responseCode = "200", description = "OK")

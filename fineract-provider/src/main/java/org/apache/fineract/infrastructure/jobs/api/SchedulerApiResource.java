@@ -66,7 +66,6 @@ public class SchedulerApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Scheduler Status", description = "Returns the scheduler status.\n" + "\n" + "Example Requests:\n" + "\n"
             + "scheduler")

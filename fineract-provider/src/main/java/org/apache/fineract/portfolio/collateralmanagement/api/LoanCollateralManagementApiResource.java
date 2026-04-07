@@ -21,7 +21,6 @@ package org.apache.fineract.portfolio.collateralmanagement.api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -49,7 +48,6 @@ public class LoanCollateralManagementApiResource {
     @DELETE
     @Path("{id}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(description = "Delete Loan Collateral", summary = "Delete Loan Collateral")
     public CommandProcessingResult deleteLoanCollateral(@PathParam("loanId") @Parameter(description = "loanId") final Long loanId,
             @PathParam("id") @Parameter(description = "loan collateral id") final Long id) {
@@ -61,7 +59,6 @@ public class LoanCollateralManagementApiResource {
     @GET
     @Path("{collateralId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(description = "Get Loan Collateral Details", summary = "Get Loan Collateral Details")
     public LoanCollateralResponseData getLoanCollateral(
             @PathParam("collateralId") @Parameter(description = "collateralId") final Long collateralId) {

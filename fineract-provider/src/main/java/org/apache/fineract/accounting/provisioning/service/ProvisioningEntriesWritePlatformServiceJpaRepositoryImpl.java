@@ -23,10 +23,15 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.accounting.glaccount.domain.GLAccount;
 import org.apache.fineract.accounting.glaccount.domain.GLAccountRepository;
+import org.apache.fineract.accounting.glaccount.exception.GLAccountNotFoundException;
 import org.apache.fineract.accounting.journalentry.service.JournalEntryWritePlatformService;
 import org.apache.fineract.accounting.provisioning.data.LoanProductProvisioningEntryData;
 import org.apache.fineract.accounting.provisioning.data.ProvisioningEntryData;
@@ -48,7 +53,8 @@ import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
 import org.apache.fineract.organisation.office.domain.Office;
-import org.apache.fineract.organisation.office.domain.OfficeRepositoryWrapper;
+import org.apache.fineract.organisation.office.domain.OfficeRepository;
+import org.apache.fineract.organisation.office.exception.OfficeNotFoundException;
 import org.apache.fineract.organisation.provisioning.data.ProvisioningCriteriaData;
 import org.apache.fineract.organisation.provisioning.domain.ProvisioningCategory;
 import org.apache.fineract.organisation.provisioning.domain.ProvisioningCategoryRepository;
@@ -56,6 +62,7 @@ import org.apache.fineract.organisation.provisioning.service.ProvisioningCriteri
 import org.apache.fineract.portfolio.PortfolioProductType;
 import org.apache.fineract.portfolio.loanproduct.domain.LoanProduct;
 import org.apache.fineract.portfolio.loanproduct.domain.LoanProductRepository;
+import org.apache.fineract.portfolio.loanproduct.exception.LoanProductNotFoundException;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.jpa.JpaSystemException;
@@ -68,7 +75,7 @@ public class ProvisioningEntriesWritePlatformServiceJpaRepositoryImpl implements
     private final ProvisioningCriteriaReadPlatformService provisioningCriteriaReadPlatformService;
     private final LoanProductRepository loanProductRepository;
     private final GLAccountRepository glAccountRepository;
-    private final OfficeRepositoryWrapper officeRepositoryWrapper;
+    private final OfficeRepository officeRepository;
     private final ProvisioningCategoryRepository provisioningCategoryRepository;
     private final PlatformSecurityContext platformSecurityContext;
     private final ProvisioningEntryRepository provisioningEntryRepository;
@@ -186,13 +193,43 @@ public class ProvisioningEntriesWritePlatformServiceJpaRepositoryImpl implements
     private Collection<LoanProductProvisioningEntry> generateLoanProvisioningEntry(ProvisioningEntry parent, LocalDate date) {
         Collection<LoanProductProvisioningEntryData> entries = this.provisioningEntriesReadPlatformService
                 .retrieveLoanProductsProvisioningData(date);
+        // Collect all referenced IDs upfront and bulk-fetch via findAllById,
+        // replacing the previous pattern of N x 5 individual repository calls per
+        // loop iteration (consistent with the optimisation in FINERACT-2561).
+        Set<Long> productIds = entries.stream().map(LoanProductProvisioningEntryData::getProductId).collect(Collectors.toSet());
+        Set<Long> officeIds = entries.stream().map(LoanProductProvisioningEntryData::getOfficeId).collect(Collectors.toSet());
+        Set<Long> categoryIds = entries.stream().map(LoanProductProvisioningEntryData::getCategoryId).collect(Collectors.toSet());
+        Set<Long> glAccountIds = entries.stream().flatMap(d -> Stream.of(d.getLiablityAccount(), d.getExpenseAccount()))
+                .collect(Collectors.toSet());
+
+        Map<Long, LoanProduct> loanProductMap = loanProductRepository.findAllById(productIds).stream()
+                .collect(Collectors.toMap(LoanProduct::getId, Function.identity()));
+        Map<Long, Office> officeMap = officeRepository.findAllById(officeIds).stream()
+                .collect(Collectors.toMap(Office::getId, Function.identity()));
+        Map<Long, ProvisioningCategory> categoryMap = provisioningCategoryRepository.findAllById(categoryIds).stream()
+                .collect(Collectors.toMap(ProvisioningCategory::getId, Function.identity()));
+        Map<Long, GLAccount> glAccountMap = glAccountRepository.findAllById(glAccountIds).stream()
+                .collect(Collectors.toMap(GLAccount::getId, Function.identity()));
+
         Map<Integer, LoanProductProvisioningEntry> provisioningEntries = new HashMap<>();
         for (LoanProductProvisioningEntryData data : entries) {
-            LoanProduct loanProduct = this.loanProductRepository.findById(data.getProductId()).orElseThrow();
-            Office office = this.officeRepositoryWrapper.findOneWithNotFoundDetection(data.getOfficeId());
-            ProvisioningCategory provisioningCategory = provisioningCategoryRepository.findById(data.getCategoryId()).orElse(null);
-            GLAccount liabilityAccount = glAccountRepository.findById(data.getLiablityAccount()).orElseThrow();
-            GLAccount expenseAccount = glAccountRepository.findById(data.getExpenseAccount()).orElseThrow();
+            LoanProduct loanProduct = loanProductMap.get(data.getProductId());
+            if (loanProduct == null) {
+                throw new LoanProductNotFoundException(data.getProductId());
+            }
+            Office office = officeMap.get(data.getOfficeId());
+            if (office == null) {
+                throw new OfficeNotFoundException(data.getOfficeId());
+            }
+            GLAccount liabilityAccount = glAccountMap.get(data.getLiablityAccount());
+            if (liabilityAccount == null) {
+                throw new GLAccountNotFoundException(data.getLiablityAccount());
+            }
+            GLAccount expenseAccount = glAccountMap.get(data.getExpenseAccount());
+            if (expenseAccount == null) {
+                throw new GLAccountNotFoundException(data.getExpenseAccount());
+            }
+            ProvisioningCategory provisioningCategory = categoryMap.get(data.getCategoryId());
             MonetaryCurrency currency = loanProduct.getPrincipalAmount().getCurrency();
             Money money = Money.of(currency, data.getBalance());
             Money amountToReserve = money.percentageOf(data.getPercentage(), MoneyHelper.getMathContext());

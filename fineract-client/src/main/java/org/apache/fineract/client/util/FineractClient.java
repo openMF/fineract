@@ -73,6 +73,7 @@ import org.apache.fineract.client.services.ExternalEventConfigurationApi;
 import org.apache.fineract.client.services.ExternalServicesApi;
 import org.apache.fineract.client.services.FetchAuthenticatedUserDetailsApi;
 import org.apache.fineract.client.services.FixedDepositAccountApi;
+import org.apache.fineract.client.services.FixedDepositAccountTransactionsApi;
 import org.apache.fineract.client.services.FixedDepositProductApi;
 import org.apache.fineract.client.services.FloatingRatesApi;
 import org.apache.fineract.client.services.GeneralLedgerAccountApi;
@@ -113,6 +114,7 @@ import org.apache.fineract.client.services.PasswordPreferencesApi;
 import org.apache.fineract.client.services.PaymentTypeApi;
 import org.apache.fineract.client.services.PeriodicAccrualAccountingApi;
 import org.apache.fineract.client.services.PermissionsApi;
+import org.apache.fineract.client.services.ProductsApi;
 import org.apache.fineract.client.services.ProgressiveLoanApi;
 import org.apache.fineract.client.services.ProvisioningCategoryApi;
 import org.apache.fineract.client.services.ProvisioningCriteriaApi;
@@ -247,6 +249,7 @@ public final class FineractClient {
     public final ProvisioningCriteriaApi provisioningCriterias;
     public final ProvisioningEntriesApi provisioningEntries;
     public final RecurringDepositAccountApi recurringDepositAccounts;
+    public final FixedDepositAccountTransactionsApi fixedDepositAccountTransactions;
     public final RecurringDepositAccountTransactionsApi recurringDepositAccountTransactions;
     public final RecurringDepositProductApi recurringDepositProducts;
     public final ReportMailingJobsApi reportMailingJobs;
@@ -262,6 +265,7 @@ public final class FineractClient {
     public final SchedulerJobApi jobs;
     public final ScoreCardApi surveyScorecards;
     public final SearchApiApi search;
+    public final ProductsApi shareProducts;
     public final ShareAccountApi shareAccounts;
     public final SpmApiLookUpTableApi surveyLookupTables;
     public final SpmSurveysApi surveys;
@@ -367,6 +371,7 @@ public final class FineractClient {
         provisioningCriterias = retrofit.create(ProvisioningCriteriaApi.class);
         provisioningEntries = retrofit.create(ProvisioningEntriesApi.class);
         recurringDepositAccounts = retrofit.create(RecurringDepositAccountApi.class);
+        fixedDepositAccountTransactions = retrofit.create(FixedDepositAccountTransactionsApi.class);
         recurringDepositAccountTransactions = retrofit.create(RecurringDepositAccountTransactionsApi.class);
         recurringDepositProducts = retrofit.create(RecurringDepositProductApi.class);
         reportMailingJobs = retrofit.create(ReportMailingJobsApi.class);
@@ -381,6 +386,7 @@ public final class FineractClient {
         jobsScheduler = retrofit.create(SchedulerApi.class);
         surveyScorecards = retrofit.create(ScoreCardApi.class);
         search = retrofit.create(SearchApiApi.class);
+        shareProducts = retrofit.create(ProductsApi.class);
         shareAccounts = retrofit.create(ShareAccountApi.class);
         surveyLookupTables = retrofit.create(SpmApiLookUpTableApi.class);
         surveys = retrofit.create(SpmSurveysApi.class);

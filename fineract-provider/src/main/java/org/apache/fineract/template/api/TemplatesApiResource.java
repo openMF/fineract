@@ -64,7 +64,6 @@ import org.apache.fineract.template.service.TemplateMergeService;
 import org.springframework.stereotype.Component;
 
 @Path("/v1/templates")
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 @Tag(name = "User Generated Documents", description = "User Generated Documents(alternatively, Templates) are used for end-user features such as custom user defined document generation (AKA UGD). They are based on {{ moustache }} templates. Think of them as a sort of built-in \"mail merge\" functionality.\n"
@@ -134,6 +133,7 @@ public class TemplatesApiResource {
     }
 
     @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Add a UGD", description = "Adds a new UGD.\n" + "\n" + "Mandatory Fields\n" + "name\n\n\n\n"
             + "Example Requests:\n" + "\n" + "templates/1")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = TemplatesApiResourcesSwagger.PostTemplatesRequest.class)))
@@ -175,6 +175,7 @@ public class TemplatesApiResource {
 
     @PUT
     @Path("{templateId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Update a UGD", description = "")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = TemplatesApiResourcesSwagger.PutTemplatesTemplateIdRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TemplatesApiResourcesSwagger.PutTemplatesTemplateIdResponse.class)))
@@ -203,6 +204,7 @@ public class TemplatesApiResource {
 
     @POST
     @Path("{templateId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.TEXT_HTML })
     public String mergeTemplate(@PathParam("templateId") final Long templateId, @Context final UriInfo uriInfo,
             final String apiRequestBodyAsJson) throws IOException {

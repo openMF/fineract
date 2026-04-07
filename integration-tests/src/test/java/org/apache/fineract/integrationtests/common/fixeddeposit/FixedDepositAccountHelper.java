@@ -25,7 +25,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import org.apache.fineract.client.models.GetFixedDepositAccountsAccountIdTransactionsResponse;
+import org.apache.fineract.client.models.PostFixedDepositAccountsFixedDepositAccountIdTransactionsRequest;
+import org.apache.fineract.client.util.Calls;
 import org.apache.fineract.integrationtests.common.CommonConstants;
+import org.apache.fineract.integrationtests.common.FineractClientHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -636,4 +640,29 @@ public class FixedDepositAccountHelper {
         this.charges = charges;
         return this;
     }
+
+    public List<GetFixedDepositAccountsAccountIdTransactionsResponse> getFixedDepositTransactions(final Integer fixedDepositAccountId) {
+        LOG.info("-------------------- RETRIEVING FIXED DEPOSIT TRANSACTIONS ---------------------");
+        return Calls.ok(FineractClientHelper.getFineractClient().fixedDepositAccountTransactions
+                .retrieveAllFixedDepositAccountTransactions(fixedDepositAccountId.longValue()));
+    }
+
+    public Long undoFixedDepositTransaction(final Integer fixedDepositAccountId, final Integer transactionId) {
+        LOG.info("--------------------------------- UNDO FIXED DEPOSIT TRANSACTION --------------------------------");
+        return Calls.ok(FineractClientHelper.getFineractClient().fixedDepositAccountTransactions.adjustTransaction(
+                fixedDepositAccountId.longValue(), transactionId.longValue(),
+                new PostFixedDepositAccountsFixedDepositAccountIdTransactionsRequest(), "undo")).getResourceId();
+    }
+
+    public Long adjustFixedDepositTransaction(final Integer fixedDepositAccountId, final Integer transactionId,
+            final String transactionDate, final Double transactionAmount) {
+        LOG.info("--------------------------------- ADJUST FIXED DEPOSIT TRANSACTION --------------------------------");
+        final PostFixedDepositAccountsFixedDepositAccountIdTransactionsRequest request = new PostFixedDepositAccountsFixedDepositAccountIdTransactionsRequest()
+                .dateFormat("dd MMMM yyyy").locale("en").transactionDate(transactionDate).transactionAmount(transactionAmount);
+        return Calls
+                .ok(FineractClientHelper.getFineractClient().fixedDepositAccountTransactions
+                        .adjustTransaction(fixedDepositAccountId.longValue(), transactionId.longValue(), request, "modify"))
+                .getResourceId();
+    }
+
 }

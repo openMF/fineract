@@ -51,7 +51,6 @@ import org.springframework.stereotype.Component;
 
 @Path("/v1/interestratecharts/{chartId}/chartslabs")
 @Component
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Tag(name = "Interest Rate Slab (A.K.A interest bands)", description = """
         The slabs a.k.a interest bands are associated with Interest Rate Chart. These bands allow to define different interest
@@ -91,6 +90,7 @@ public class InterestRateChartSlabsApiResource {
     }
 
     @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Create a Slab", description = """
             Creates a new interest rate slab for an interest rate chart.
 
@@ -121,6 +121,7 @@ public class InterestRateChartSlabsApiResource {
 
     @PUT
     @Path("{chartSlabId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Update a Slab", description = "It updates the Slab from chart")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = InterestRateChartSlabsUpdateResponse.class)))
     public InterestRateChartSlabsUpdateResponse update(@PathParam("chartId") final Long chartId,

@@ -95,7 +95,6 @@ public class OfficesApiResource {
     private final Gson gson = GoogleGsonSerializerHelper.createSimpleGson();
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Offices", description = "Example Requests:\n" + "\n" + "offices\n" + "\n" + "\n"
             + "offices?fields=id,name,openingDate")
@@ -116,7 +115,6 @@ public class OfficesApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Office Details Template", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed description Lists\n" + "Example Request:\n" + "\n" + "offices/template")
@@ -147,7 +145,6 @@ public class OfficesApiResource {
 
     @GET
     @Path("{officeId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve an Office", description = "Example Requests:\n" + "\n" + "offices/1\n" + "\n" + "\n"
             + "offices/1?template=true\n" + "\n" + "\n" + "offices/1?fields=id,name,parentName")
@@ -166,7 +163,6 @@ public class OfficesApiResource {
 
     @GET
     @Path("/external-id/{externalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve an Office using external id", description = "Example Requests:\n" + "\n" + "offices/external-id/asd123\n"
             + "\n" + "\n" + "offices/external-id/asd123?template=true\n" + "\n" + "\n"

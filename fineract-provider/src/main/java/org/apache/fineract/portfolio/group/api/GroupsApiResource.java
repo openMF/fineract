@@ -134,7 +134,6 @@ public class GroupsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Group Template", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n\n"
             + "\n\n" + "Field Defaults\n\n" + "Allowed Value Lists\n\n" + "Example Requests:\n\n" + "\n\n" + "groups/template\n\n" + "\n\n"
@@ -176,7 +175,6 @@ public class GroupsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Groups", description = "The default implementation of listing Groups returns 200 entries with support for pagination and sorting. Using the parameter limit with description -1 returns all entries.\n\n"
             + "Example Requests:\n\n" + "\n\n" + "groups\n\n" + "\n\n" + "groups?fields=name,officeName,joinedDate\n\n" + "\n\n"
@@ -218,7 +216,6 @@ public class GroupsApiResource {
 
     @GET
     @Path("{groupId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Group", description = "Retrieve group information.\n\n" + "Example Requests:\n\n" + "\n\n"
             + "groups/1\n\n" + "\n\n" + "groups/1?associations=clientMembers")
@@ -374,7 +371,6 @@ public class GroupsApiResource {
 
     @DELETE
     @Path("{groupId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Group", description = "A group can be deleted if it is in pending state and has no associations - clients, loans or savings")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GroupsApiResourceSwagger.DeleteGroupsGroupIdResponse.class)))
@@ -494,7 +490,6 @@ public class GroupsApiResource {
 
     @GET
     @Path("{groupId}/accounts")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Group accounts overview", description = "Retrieves details of all Loan and Savings accounts associated with this group.\n\n"
             + "\n\n" + "Example Requests:\n\n" + "\n\n" + "groups/1/accounts\n\n" + "\n\n" + "\n\n"
@@ -537,7 +532,6 @@ public class GroupsApiResource {
 
     @GET
     @Path("{groupId}/glimaccounts")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String retrieveglimAccounts(@PathParam("groupId") final Long groupId,
             @QueryParam("parentLoanAccountNo") final String parentLoanAccountNo, @Context final UriInfo uriInfo) {
@@ -560,7 +554,6 @@ public class GroupsApiResource {
 
     @GET
     @Path("{groupId}/gsimaccounts")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String retrieveGsimAccounts(@PathParam("groupId") final Long groupId,
             @QueryParam("parentGSIMAccountNo") final String parentGSIMAccountNo, @QueryParam("parentGSIMId") final Long parentGSIMId,

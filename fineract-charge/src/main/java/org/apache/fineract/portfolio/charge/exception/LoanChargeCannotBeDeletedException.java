@@ -22,7 +22,7 @@ import org.apache.fineract.infrastructure.core.exception.AbstractPlatformDomainR
 
 public class LoanChargeCannotBeDeletedException extends AbstractPlatformDomainRuleException {
 
-    /*** enum of reasons of why Loan Charge cannot be waived **/
+    /*** enum of reasons of why Loan Charge cannot be deleted **/
     public enum LoanChargeCannotBeDeletedReason {
 
         ALREADY_PAID, //

@@ -58,7 +58,6 @@ public class NotificationApiResource {
     private final SqlValidator sqlValidator;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = NotificationApiResourceSwagger.GetNotificationsResponse.class)))

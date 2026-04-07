@@ -26,7 +26,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -64,7 +63,6 @@ public class RunreportsApiResource {
 
     @GET
     @Path("/availableExports/{reportName}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Return all available export types for the specific report", description = "Returns the list of all available export types for a given report.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReportExportType.class))))
@@ -89,7 +87,6 @@ public class RunreportsApiResource {
     @GET
     @Path("{reportName}")
     @Timed(value = "fineract.report.execution", description = "Time taken to execute reports", extraTags = { "component", "reporting" })
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON, "text/csv", "application/vnd.ms-excel", "application/pdf", "text/html" })
     @Operation(summary = "Run a predefined report", description = ReportParameters.FULL_DESCRIPTION)
     @ApiResponse(responseCode = "200", description = "OK - Report executed successfully", content = @Content(schema = @Schema(implementation = RunreportsApiResourceSwagger.RunReportsResponse.class)))

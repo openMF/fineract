@@ -47,7 +47,6 @@ public class CurrenciesApiResource {
     private final CommandDispatcher dispatcher;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Currency Configuration", description = """
             Returns the list of currencies permitted for use AND the list of currencies not selected (but available for selection).

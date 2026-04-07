@@ -56,31 +56,6 @@ public enum DepositAccountType {
         };
     }
 
-    // TODO: why not just use the enum values... just more boilerplate code here!!
-    public boolean isSavingsDeposit() {
-        return this.equals(SAVINGS_DEPOSIT);
-    }
-
-    // TODO: why not just use the enum values... just more boilerplate code here!!
-    public boolean isFixedDeposit() {
-        return this.equals(FIXED_DEPOSIT);
-    }
-
-    // TODO: why not just use the enum values... just more boilerplate code here!!
-    public boolean isRecurringDeposit() {
-        return this.equals(RECURRING_DEPOSIT);
-    }
-
-    // TODO: why not just use the enum values... just more boilerplate code here!!
-    public boolean isCurrentDeposit() {
-        return this.equals(CURRENT_DEPOSIT);
-    }
-
-    // TODO: why not just use the enum values... just more boilerplate code here!!
-    public boolean isInvalid() {
-        return this.equals(INVALID);
-    }
-
     @Override
     public String toString() {
         return Strings.CS.replace(code, "_", SPACE);

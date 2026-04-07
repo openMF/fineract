@@ -72,7 +72,6 @@ public class RescheduleLoansApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve all reschedule loan reasons", description = "Retrieve all reschedule loan reasons as a template")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = RescheduleLoansApiResourceSwagger.GetRescheduleReasonsTemplateResponse.class)))
@@ -89,7 +88,6 @@ public class RescheduleLoansApiResource {
 
     @GET
     @Path("{scheduleId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve loan reschedule request by schedule id", description = "Retrieve loan reschedule request by schedule id")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = RescheduleLoansApiResourceSwagger.GetLoanRescheduleRequestResponse.class)))
@@ -170,7 +168,6 @@ public class RescheduleLoansApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve all reschedule requests", description = "Retrieve all reschedule requests.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = RescheduleLoansApiResourceSwagger.GetLoanRescheduleRequestResponse.class))))

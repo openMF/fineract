@@ -76,7 +76,6 @@ public class FinancialActivityAccountsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public FinancialActivityAccountData retrieveTemplate() {
         context.authenticatedUser().validateHasReadPermission(FinancialActivityAccountsConstants.RESOURCE_NAME_FOR_PERMISSION);
@@ -84,7 +83,6 @@ public class FinancialActivityAccountsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Financial Activities to Accounts Mappings", description = """
             Example Requests:
@@ -97,7 +95,6 @@ public class FinancialActivityAccountsApiResource {
 
     @GET
     @Path("{mappingId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Financial Activity to Account Mapping\n", description = """
             Example Requests:
@@ -148,7 +145,6 @@ public class FinancialActivityAccountsApiResource {
 
     @DELETE
     @Path("{mappingId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Financial Activity to Account Mapping", operationId = "deleteGLAccountMappingFinancialActivityAccount")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = FinancialActivityAccountsApiResourceSwagger.DeleteFinancialActivityAccountsResponse.class)))

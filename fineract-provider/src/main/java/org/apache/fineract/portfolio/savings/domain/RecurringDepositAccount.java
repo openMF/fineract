@@ -217,9 +217,9 @@ public class RecurringDepositAccount extends SavingsAccount {
                 penalInterest = this.accountTermAndPreClosure.depositPreClosureDetail().preClosurePenalInterest();
                 final PreClosurePenalInterestOnType preClosurePenalInterestOnType = this.accountTermAndPreClosure.depositPreClosureDetail()
                         .preClosurePenalInterestOnType();
-                if (preClosurePenalInterestOnType.isWholeTerm()) {
+                if (preClosurePenalInterestOnType == PreClosurePenalInterestOnType.WHOLE_TERM) {
                     depositCloseDate = interestCalculatedUpto();
-                } else if (preClosurePenalInterestOnType.isTillPrematureWithdrawal()) {
+                } else if (preClosurePenalInterestOnType == PreClosurePenalInterestOnType.TILL_PREMATURE_WITHDRAWAL) {
                     depositCloseDate = interestPostingUpToDate;
                 }
             }

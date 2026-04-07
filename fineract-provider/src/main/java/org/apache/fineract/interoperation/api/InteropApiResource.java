@@ -85,7 +85,6 @@ public class InteropApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("health")
     @Operation(summary = "Query Interoperation Health Request", description = "")
@@ -95,7 +94,6 @@ public class InteropApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("accounts/{accountId}")
     @Operation(summary = "Query Interoperation Account details", description = "")
@@ -109,7 +107,6 @@ public class InteropApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("accounts/{accountId}/transactions")
     @Operation(summary = "Query transactions by Account Id", description = "")
@@ -132,7 +129,6 @@ public class InteropApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("accounts/{accountId}/identifiers")
     @Operation(summary = "Query Interoperation secondary identifiers by Account Id", description = "")
@@ -146,7 +142,6 @@ public class InteropApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("parties/{idType}/{idValue}")
     @Operation(summary = "Query Interoperation Account by secondary identifier", description = "")
@@ -160,7 +155,6 @@ public class InteropApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("parties/{idType}/{idValue}/{subIdOrType}")
     @Operation(summary = "Query Interoperation Account by secondary identifier", description = "")
@@ -216,7 +210,6 @@ public class InteropApiResource {
     }
 
     @DELETE
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("parties/{idType}/{idValue}")
     @Operation(summary = "Allow Interoperation Identifier registration", description = "")
@@ -234,7 +227,6 @@ public class InteropApiResource {
     }
 
     @DELETE
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("parties/{idType}/{idValue}/{subIdOrType}")
     @Operation(summary = "Allow Interoperation Identifier registration", description = "")
@@ -253,7 +245,6 @@ public class InteropApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("transactions/{transactionCode}/requests/{requestCode}")
     @Operation(summary = "Query Interoperation Transaction Request", description = "")
@@ -286,7 +277,6 @@ public class InteropApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("transactions/{transactionCode}/quotes/{quoteCode}")
     @Operation(summary = "Query Interoperation Quote", description = "")
@@ -318,7 +308,6 @@ public class InteropApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("transactions/{transactionCode}/transfers/{transferCode}")
     @Operation(summary = "Query Interoperation Transfer", description = "")
@@ -363,7 +352,6 @@ public class InteropApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("accounts/{accountId}/kyc")
     @Operation(summary = "Query KYC by Account Id", description = "")

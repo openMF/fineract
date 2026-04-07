@@ -32,7 +32,7 @@ public class GLAccountInvalidUpdateException extends AbstractPlatformDomainRuleE
 
         public String errorMessage() {
             if (name().equalsIgnoreCase("TRANSANCTIONS_LOGGED")) {
-                return "This Usage of this (detail) GL Account as it already has transactions logged against it";
+                return "This (detail) GL Account cannot be updated as it already has transactions logged against it";
             }
             return name();
         }

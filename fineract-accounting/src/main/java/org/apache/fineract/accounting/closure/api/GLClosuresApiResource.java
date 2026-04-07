@@ -80,7 +80,6 @@ public class GLClosuresApiResource {
     private final OfficeReadPlatformService officeReadPlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Accounting closures", description = """
             Example Requests:
@@ -95,7 +94,6 @@ public class GLClosuresApiResource {
 
     @GET
     @Path("{glClosureId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve an Accounting Closure", description = """
             Example Requests:
@@ -148,7 +146,6 @@ public class GLClosuresApiResource {
 
     @DELETE
     @Path("{glClosureId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete an accounting closure", description = "Note: Only the latest accounting closure associated with a branch may be deleted.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = GLClosuresApiResourceSwagger.DeleteGlClosuresResponse.class)))

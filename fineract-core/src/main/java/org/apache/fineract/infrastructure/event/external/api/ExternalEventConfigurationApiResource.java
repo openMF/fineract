@@ -47,7 +47,6 @@ public class ExternalEventConfigurationApiResource {
     private final CommandDispatcher dispatcher;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List all external event configurations", description = "")
     public ExternalEventConfigurationResponse getExternalEventConfigurations() {

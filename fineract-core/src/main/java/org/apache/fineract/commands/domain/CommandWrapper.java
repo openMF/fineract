@@ -18,6 +18,24 @@
  */
 package org.apache.fineract.commands.domain;
 
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_CHANGEPWD;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_CREATE;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_DELETE;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_REGISTER;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_UPDATE;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_CACHE;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_CLIENTNOTE;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_CURRENCY;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_DISBURSEMENTDETAIL;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_GROUPNOTE;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_INTEREST_PAUSE;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_LOANNOTE;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_LOANTRANSACTIONNOTE;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_PERMISSION;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_SAVINGNOTE;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_USER;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_WORKINGDAYS;
+
 import java.util.Set;
 import lombok.Getter;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
@@ -157,19 +175,19 @@ public class CommandWrapper {
     }
 
     public boolean isCreate() {
-        return this.actionName.equalsIgnoreCase("CREATE");
+        return ACTION_CREATE.equalsIgnoreCase(this.actionName);
     }
 
     public boolean isCreateDatatable() {
-        return this.actionName.equalsIgnoreCase("CREATE") && this.href.startsWith("/datatables/") && this.entityId == null;
+        return ACTION_CREATE.equalsIgnoreCase(this.actionName) && this.href.startsWith("/datatables/") && this.entityId == null;
     }
 
     public boolean isDeleteDatatable() {
-        return this.actionName.equalsIgnoreCase("DELETE") && this.href.startsWith("/datatables/") && this.entityId == null;
+        return ACTION_DELETE.equalsIgnoreCase(this.actionName) && this.href.startsWith("/datatables/") && this.entityId == null;
     }
 
     public boolean isUpdateDatatable() {
-        return this.actionName.equalsIgnoreCase("UPDATE") && this.href.startsWith("/datatables/") && this.entityId == null;
+        return ACTION_UPDATE.equalsIgnoreCase(this.actionName) && this.href.startsWith("/datatables/") && this.entityId == null;
     }
 
     public boolean isDatatableResource() {
@@ -194,14 +212,14 @@ public class CommandWrapper {
     }
 
     public boolean isRegisterDatatable() {
-        return this.actionName.equalsIgnoreCase("REGISTER") && this.href.startsWith("/datatables/") && this.entityId == null;
+        return ACTION_REGISTER.equalsIgnoreCase(this.actionName) && this.href.startsWith("/datatables/") && this.entityId == null;
     }
 
     public boolean isNoteResource() {
         boolean isnoteResource = false;
-        if (this.entityName.equalsIgnoreCase("CLIENTNOTE") || this.entityName.equalsIgnoreCase("LOANNOTE")
-                || this.entityName.equalsIgnoreCase("LOANTRANSACTIONNOTE") || this.entityName.equalsIgnoreCase("SAVINGNOTE")
-                || this.entityName.equalsIgnoreCase("GROUPNOTE")) {
+        if (ENTITY_CLIENTNOTE.equalsIgnoreCase(this.entityName) || ENTITY_LOANNOTE.equalsIgnoreCase(this.entityName)
+                || ENTITY_LOANTRANSACTIONNOTE.equalsIgnoreCase(this.entityName) || ENTITY_SAVINGNOTE.equalsIgnoreCase(this.entityName)
+                || ENTITY_GROUPNOTE.equalsIgnoreCase(this.entityName)) {
             isnoteResource = true;
         }
         return isnoteResource;
@@ -218,15 +236,15 @@ public class CommandWrapper {
     }
 
     public boolean isCacheResource() {
-        return this.entityName.equalsIgnoreCase("CACHE");
+        return ENTITY_CACHE.equalsIgnoreCase(this.entityName);
     }
 
     public boolean isChangePasswordOperation() {
-        return this.actionName.equalsIgnoreCase("CHANGEPWD");
+        return ACTION_CHANGEPWD.equalsIgnoreCase(this.actionName);
     }
 
     public boolean isUpdateOperation() {
-        return this.actionName.equalsIgnoreCase("UPDATE");
+        return ACTION_UPDATE.equalsIgnoreCase(this.actionName);
     }
 
     public boolean isDelete() {
@@ -234,7 +252,7 @@ public class CommandWrapper {
     }
 
     public boolean isDeleteOperation() {
-        return this.actionName.equalsIgnoreCase("DELETE");
+        return ACTION_DELETE.equalsIgnoreCase(this.actionName);
     }
 
     public boolean isSurveyResource() {
@@ -242,35 +260,35 @@ public class CommandWrapper {
     }
 
     public boolean isRegisterSurvey() {
-        return this.actionName.equalsIgnoreCase("REGISTER");
+        return ACTION_REGISTER.equalsIgnoreCase(this.actionName);
     }
 
     public boolean isFullFilSurvey() {
-        return this.actionName.equalsIgnoreCase("CREATE");
+        return ACTION_CREATE.equalsIgnoreCase(this.actionName);
     }
 
     public boolean isWorkingDaysResource() {
-        return this.entityName.equalsIgnoreCase("WORKINGDAYS");
+        return ENTITY_WORKINGDAYS.equalsIgnoreCase(this.entityName);
     }
 
     public boolean isPasswordPreferencesResource() {
-        return this.entityName.equalsIgnoreCase(PasswordPreferencesApiConstants.ENTITY_NAME);
+        return PasswordPreferencesApiConstants.ENTITY_NAME.equalsIgnoreCase(this.entityName);
     }
 
     public boolean isInterestPauseResource() {
-        return this.entityName.equalsIgnoreCase("INTEREST_PAUSE");
+        return ENTITY_INTEREST_PAUSE.equalsIgnoreCase(this.entityName);
     }
 
     public boolean isInterestPauseCreateResource() {
-        return this.entityName.equalsIgnoreCase("INTEREST_PAUSE") && "CREATE".equalsIgnoreCase(this.actionName);
+        return ENTITY_INTEREST_PAUSE.equalsIgnoreCase(this.entityName) && ACTION_CREATE.equalsIgnoreCase(this.actionName);
     }
 
     public boolean isInterestPauseUpdateResource() {
-        return this.entityName.equalsIgnoreCase("INTEREST_PAUSE") && "UPDATE".equalsIgnoreCase(this.actionName);
+        return ENTITY_INTEREST_PAUSE.equalsIgnoreCase(this.entityName) && ACTION_UPDATE.equalsIgnoreCase(this.actionName);
     }
 
     public boolean isInterestPauseDeleteResource() {
-        return this.entityName.equalsIgnoreCase("INTEREST_PAUSE") && "DELETE".equalsIgnoreCase(this.actionName);
+        return ENTITY_INTEREST_PAUSE.equalsIgnoreCase(this.entityName) && ACTION_DELETE.equalsIgnoreCase(this.actionName);
     }
 
     public Long commandId() {
@@ -298,15 +316,15 @@ public class CommandWrapper {
     }
 
     public boolean isPermissionResource() {
-        return this.entityName.equalsIgnoreCase("PERMISSION");
+        return ENTITY_PERMISSION.equalsIgnoreCase(this.entityName);
     }
 
     public boolean isUserResource() {
-        return this.entityName.equalsIgnoreCase("USER");
+        return ENTITY_USER.equalsIgnoreCase(this.entityName);
     }
 
     public boolean isCurrencyResource() {
-        return this.entityName.equalsIgnoreCase("CURRENCY");
+        return ENTITY_CURRENCY.equalsIgnoreCase(this.entityName);
     }
 
     public String commandName() {
@@ -314,16 +332,16 @@ public class CommandWrapper {
     }
 
     public boolean isLoanDisburseDetailResource() {
-        return this.entityName.equalsIgnoreCase("DISBURSEMENTDETAIL");
+        return ENTITY_DISBURSEMENTDETAIL.equalsIgnoreCase(this.entityName);
     }
 
     public boolean isUpdateDisbursementDate() {
-        return this.actionName.equalsIgnoreCase("UPDATE") && this.entityName.equalsIgnoreCase("DISBURSEMENTDETAIL")
+        return ACTION_UPDATE.equalsIgnoreCase(this.actionName) && ENTITY_DISBURSEMENTDETAIL.equalsIgnoreCase(this.entityName)
                 && this.entityId != null;
     }
 
     public boolean addAndDeleteDisbursementDetails() {
-        return this.actionName.equalsIgnoreCase("UPDATE") && this.entityName.equalsIgnoreCase("DISBURSEMENTDETAIL")
+        return ACTION_UPDATE.equalsIgnoreCase(this.actionName) && ENTITY_DISBURSEMENTDETAIL.equalsIgnoreCase(this.entityName)
                 && this.entityId == null;
     }
 }

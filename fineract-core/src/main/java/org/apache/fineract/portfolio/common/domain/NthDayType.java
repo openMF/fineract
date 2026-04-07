@@ -77,10 +77,6 @@ public enum NthDayType {
         return repaymentFrequencyNthDayType;
     }
 
-    public boolean isInvalid() {
-        return this.value.equals(NthDayType.INVALID.value);
-    }
-
     public boolean isLastDay() {
         return this.value.equals(NthDayType.LAST.value);
     }

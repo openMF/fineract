@@ -917,6 +917,7 @@ cyclonedxBom {
 
 tasks.withType(org.cyclonedx.gradle.CyclonedxDirectTask).configureEach {
     includeMetadataResolution.set(false)
+    skipConfigs.set(['.*eclipse.*', '.*swt.*'])
 }
 
 tasks.register('printSourceSetInformation') {

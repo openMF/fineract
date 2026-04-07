@@ -37,7 +37,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Path("/v1/twofactor/configure")
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 @ConditionalOnProperty("fineract.security.2fa.enabled")
@@ -59,6 +58,7 @@ public class TwoFactorConfigurationApiResource {
     }
 
     @PUT
+    @Consumes({ MediaType.APPLICATION_JSON })
     public String updateConfiguration(final String apiRequestBodyAsJson) {
         final CommandWrapper commandRequest = new CommandWrapperBuilder().updateTwoFactorConfiguration().withJson(apiRequestBodyAsJson)
                 .build();

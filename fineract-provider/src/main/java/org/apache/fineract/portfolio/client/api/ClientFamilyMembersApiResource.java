@@ -58,7 +58,6 @@ public class ClientFamilyMembersApiResource {
 
     @GET
     @Path("/{familyMemberId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a client family member", operationId = "retrieveOneClientFamilyMember")
     public ClientFamilyMembersData getFamilyMember(@PathParam("familyMemberId") final Long familyMemberId,
@@ -70,7 +69,6 @@ public class ClientFamilyMembersApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List all client family members", operationId = "retrieveAllClientFamilyMembers")
     public List<ClientFamilyMembersData> getFamilyMembers(@PathParam("clientId") final long clientId) {
@@ -80,7 +78,6 @@ public class ClientFamilyMembersApiResource {
 
     @GET
     @Path("/template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve client family member template", operationId = "retrieveTemplateClientFamilyMember")
     public ClientFamilyMembersData getTemplate(@PathParam("clientId") final long clientId) {
@@ -116,7 +113,6 @@ public class ClientFamilyMembersApiResource {
 
     @DELETE
     @Path("/{familyMemberId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a client family member", operationId = "deleteClientFamilyMember")
     public CommandProcessingResult deleteClientFamilyMembers(@PathParam("familyMemberId") final long familyMemberId,

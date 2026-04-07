@@ -30,12 +30,12 @@ public class EnumValueValidator implements ConstraintValidator<EnumValue, String
 
     @Override
     public void initialize(EnumValue annotation) {
-        acceptedValues = Arrays.stream(annotation.enumClass().getEnumConstants()).map(e -> e.name().toLowerCase())
+        acceptedValues = Arrays.stream(annotation.enumClass().getEnumConstants()).map(e -> e.name().toLowerCase(java.util.Locale.ROOT))
                 .collect(Collectors.toSet());
     }
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        return value != null && acceptedValues.contains(value.toLowerCase());
+        return value != null && acceptedValues.contains(value.toLowerCase(java.util.Locale.ROOT));
     }
 }

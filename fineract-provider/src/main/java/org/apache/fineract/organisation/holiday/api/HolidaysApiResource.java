@@ -127,7 +127,6 @@ public class HolidaysApiResource {
 
     @GET
     @Path("{holidayId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Holiday", description = "Example Requests:\n" + "\n" + "holidays/1")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = HolidaysApiResourceSwagger.GetHolidaysResponse.class)))
@@ -162,7 +161,6 @@ public class HolidaysApiResource {
 
     @DELETE
     @Path("{holidayId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Holiday", description = "This API allows to delete a holiday. This is a soft delete the deleted holiday status is marked as deleted.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = HolidaysApiResourceSwagger.DeleteHolidaysHolidayIdResponse.class)))
@@ -177,7 +175,6 @@ public class HolidaysApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Holidays", description = "Example Requests:\n" + "\n" + "holidays?officeId=1")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = HolidaysApiResourceSwagger.GetHolidaysResponse.class))))
@@ -210,7 +207,6 @@ public class HolidaysApiResource {
 
     @GET
     @Path("/template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String retrieveRepaymentScheduleUpdationTyeOptions(@Context final UriInfo uriInfo) {
         this.context.authenticatedUser().validateHasReadPermission(HOLIDAY_RESOURCE_NAME);

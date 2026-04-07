@@ -81,7 +81,6 @@ public class ClientIdentifiersApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List all Identifiers for a Client", operationId = "retrieveAllClientIdentifiers", description = "Example Requests:\n"
             + "clients/1/identifiers\n" + "\n" + "\n" + "clients/1/identifiers?fields=documentKey,documentType,description")
@@ -95,7 +94,6 @@ public class ClientIdentifiersApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Client Identifier Details Template", operationId = "retrieveTemplateClientIdentifier", description = "This is a convenience resource useful for building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + " Field Defaults\n" + " Allowed description Lists\n" + "\n\nExample Request:\n" + "clients/1/identifiers/template")
@@ -139,7 +137,6 @@ public class ClientIdentifiersApiResource {
 
     @GET
     @Path("{identifierId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Client Identifier", operationId = "retrieveOneClientIdentifier", description = "Example Requests:\n"
             + "clients/1/identifier/2\n" + "\n" + "\n" + "clients/1/identifier/2?template=true\n" + "\n"
@@ -194,7 +191,6 @@ public class ClientIdentifiersApiResource {
 
     @DELETE
     @Path("{identifierId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Client Identifier", operationId = "deleteClientIdentifier", description = "Deletes a Client Identifier")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ClientIdentifiersApiResourceSwagger.DeleteClientsClientIdIdentifiersIdentifierIdResponse.class)))

@@ -164,7 +164,7 @@ public class SavingsAccountTransactionsSearchServiceImpl implements SavingsAccou
             filter = filter == null ? tf : filter.and(tf);
         }
         if (filter != null) {
-            filter = filter.and(SavingsAccountTransactionType::isValid);
+            filter = filter.and(t -> t != SavingsAccountTransactionType.INVALID);
             List<SavingsAccountTransactionType> filteredTypes = SavingsAccountTransactionType.getFiltered(filter);
             if (filteredTypes.isEmpty()) {
                 return null;

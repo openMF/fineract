@@ -500,4 +500,22 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         @Schema(description = "Payment details (Account No, Cheque No, Routing Code, Receipt No, Bank code)")
         public PostWorkingCapitalLoansLoanIdDisbursementPaymentDetails paymentDetails;
     }
+
+    @Schema(description = "Request for updating discount on a disbursed Working Capital Loan")
+    public static final class PutWorkingCapitalLoansLoanIdDiscountRequest {
+
+        private PutWorkingCapitalLoansLoanIdDiscountRequest() {}
+
+        @Schema(example = "0.0", description = "Discount amount")
+        public BigDecimal discountAmount;
+
+        @Schema(example = "Discount update Note")
+        public String note;
+
+        @Schema(example = "en_GB")
+        public String locale;
+
+        @Schema(example = "dd MMMM yyyy")
+        public String dateFormat;
+    }
 }

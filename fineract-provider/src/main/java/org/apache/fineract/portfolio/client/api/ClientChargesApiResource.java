@@ -80,7 +80,6 @@ public class ClientChargesApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Client Charges", operationId = "retrieveAllClientCharges", description = "The list capability of client charges supports pagination."
             + "Example Requests:\n" + "clients/1/charges\n" + "\nclients/1/charges?offset=0&limit=5")
@@ -113,7 +112,6 @@ public class ClientChargesApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve client charge template", operationId = "retrieveTemplateClientCharge")
     public String retrieveTemplate(@Context final UriInfo uriInfo,
@@ -131,7 +129,6 @@ public class ClientChargesApiResource {
 
     @GET
     @Path("{chargeId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Client Charge", operationId = "retrieveOneClientCharge", description = "Example Requests:\n"
             + "clients/1/charges/1\n" + "\n" + "\n" + "clients/1/charges/1?fields=name,id")
@@ -225,7 +222,6 @@ public class ClientChargesApiResource {
 
     @DELETE
     @Path("{chargeId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Client Charge", operationId = "deleteClientCharge", description = "Deletes a Client Charge on which no transactions have taken place (either payments or waivers). ")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ClientChargesApiResourceSwagger.DeleteClientsClientIdChargesChargeIdResponse.class)))

@@ -86,7 +86,8 @@ public class InterestRateChartSlabFields {
             final Integer fromPeriod, final Integer toPeriod, final BigDecimal amountRangeFrom, final BigDecimal amountRangeTo,
             final BigDecimal annualInterestRate, final String currencyCode) {
         this.description = description;
-        this.periodType = (periodFrequencyType == null || periodFrequencyType.isInvalid()) ? null : periodFrequencyType.getValue();
+        this.periodType = (periodFrequencyType == null || periodFrequencyType == SavingsPeriodFrequencyType.INVALID) ? null
+                : periodFrequencyType.getValue();
         this.fromPeriod = fromPeriod;
         this.toPeriod = toPeriod;
         this.amountRangeFrom = amountRangeFrom;

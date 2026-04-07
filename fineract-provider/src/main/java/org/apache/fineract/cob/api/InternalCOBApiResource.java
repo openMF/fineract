@@ -84,7 +84,6 @@ public class InternalCOBApiResource implements InitializingBean {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("partitions/{partitionSize}")
     public String getCobPartitions(@Context final UriInfo uriInfo, @PathParam("partitionSize") int partitionSize) {

@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.configuration.service.TemporaryConfigurationServiceContainer;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
@@ -70,6 +71,7 @@ public class LoanDisbursementService {
     private final LoanBalanceService loanBalanceService;
     private final LoanJournalEntryPoster loanJournalEntryPoster;
     private final LoanTransactionRepository loanTransactionRepository;
+    private final ConfigurationDomainService configurationDomainService;
 
     public void updateDisbursementDetails(final Loan loan, final JsonCommand jsonCommand, final Map<String, Object> actualChanges) {
         final List<Long> disbursementList = loan.fetchDisbursementIds();
@@ -242,7 +244,8 @@ public class LoanDisbursementService {
                     && !charge.isWaived() && !charge.isFullyPaid();
 
             /*
-             * create a Charge applied transaction if Up front Accrual, None or Cash based accounting is enabled
+             * create a Charge applied transaction only when Up front Accrual accounting is enabled. No accrual
+             * transactions should be created for None or Cash based accounting.
              */
             if (isDisbursementCharge || isTrancheDisbursementCharge) {
                 if (totalFeeChargesDueAtDisbursement.isGreaterThanZero() && !charge.getChargePaymentMode().isPaymentModeAccountTransfer()) {
@@ -253,8 +256,9 @@ public class LoanDisbursementService {
                     chargesPayment.getLoanChargesPaid().add(loanChargePaidBy);
                     disbursentMoney = disbursentMoney.plus(charge.amount());
                 }
-            } else if (disbursedOn.equals(loan.getActualDisbursementDate())
-                    && loan.isNoneOrCashOrUpfrontAccrualAccountingEnabledOnLoanProduct()) {
+            } else if (disbursedOn.equals(loan.getActualDisbursementDate()) && (configurationDomainService.isAllowCashAndNonCashAccrual()
+                    ? loan.isNoneOrCashOrUpfrontAccrualAccountingEnabledOnLoanProduct()
+                    : loan.isUpfrontAccrualAccountingEnabledOnLoanProduct())) {
                 final LoanTransaction applyLoanChargeTransaction = loanChargeService.handleChargeAppliedTransaction(loan, charge,
                         disbursedOn);
                 if (applyLoanChargeTransaction != null) {

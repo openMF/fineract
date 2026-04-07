@@ -31,6 +31,7 @@ import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansResponse;
+import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdDiscountRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.integrationtests.common.FineractFeignClientHelper;
 
@@ -148,6 +149,26 @@ public class WorkingCapitalLoanApplicationHelper {
     public Long undoDisbursalById(final Long loanId, final String jsonBody) {
         PostWorkingCapitalLoansLoanIdRequest request = fromJson(jsonBody, PostWorkingCapitalLoansLoanIdRequest.class);
         return FeignCalls.ok(() -> api().stateTransitionWorkingCapitalLoanById(loanId, "undodisbursal", request)).getResourceId();
+    }
+
+    public Long updateDiscountById(final Long loanId, final String jsonBody) {
+        PutWorkingCapitalLoansLoanIdDiscountRequest request = fromJson(jsonBody, PutWorkingCapitalLoansLoanIdDiscountRequest.class);
+        return FeignCalls.ok(() -> api().updateWorkingCapitalLoanDiscountById(loanId, request)).getResourceId();
+    }
+
+    public Long updateDiscountByExternalId(final String loanExternalId, final String jsonBody) {
+        PutWorkingCapitalLoansLoanIdDiscountRequest request = fromJson(jsonBody, PutWorkingCapitalLoansLoanIdDiscountRequest.class);
+        return FeignCalls.ok(() -> api().updateWorkingCapitalLoanDiscountByExternalId(loanExternalId, request)).getResourceId();
+    }
+
+    public CallFailedRuntimeException runUpdateDiscountByIdExpectingFailure(final Long loanId, final String jsonBody) {
+        PutWorkingCapitalLoansLoanIdDiscountRequest request = fromJson(jsonBody, PutWorkingCapitalLoansLoanIdDiscountRequest.class);
+        return FeignCalls.fail(() -> api().updateWorkingCapitalLoanDiscountById(loanId, request));
+    }
+
+    public CallFailedRuntimeException runUpdateDiscountByExternalIdExpectingFailure(final String loanExternalId, final String jsonBody) {
+        PutWorkingCapitalLoansLoanIdDiscountRequest request = fromJson(jsonBody, PutWorkingCapitalLoansLoanIdDiscountRequest.class);
+        return FeignCalls.fail(() -> api().updateWorkingCapitalLoanDiscountByExternalId(loanExternalId, request));
     }
 
     public String retrieveTransactionsByLoanIdRaw(final Long loanId) {

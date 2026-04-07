@@ -18,7 +18,6 @@
  */
 package org.apache.fineract.infrastructure.event.external.api;
 
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -45,7 +44,6 @@ public class InternalExternalEventsApiResource {
     private final InternalExternalEventService internalExternalEventService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public List<ExternalEventResponse> getAllExternalEvents(@QueryParam("idempotencyKey") final String idempotencyKey,
             @QueryParam("type") final String type, @QueryParam("category") final String category,
@@ -55,7 +53,6 @@ public class InternalExternalEventsApiResource {
     }
 
     @DELETE
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public void deleteAllExternalEvents() {
         // TODO: authorization constraints?

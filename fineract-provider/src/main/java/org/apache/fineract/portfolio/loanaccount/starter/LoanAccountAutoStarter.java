@@ -19,6 +19,7 @@
 package org.apache.fineract.portfolio.loanaccount.starter;
 
 import java.util.List;
+import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleTransactionProcessorFactory;
 import org.apache.fineract.portfolio.loanaccount.domain.transactionprocessor.LoanRepaymentScheduleTransactionProcessor;
@@ -138,8 +139,10 @@ public class LoanAccountAutoStarter {
             final @Lazy ProgressiveLoanInterestRefundServiceImpl progressiveLoanInterestRefundService,
             final ExternalIdFactory externalIdFactory, final LoanScheduleComponent loanSchedule,
             final LoanChargeValidator loanChargeValidator, final LoanBalanceService loanBalanceService,
-            @Lazy final LoanChargeService loanChargeService, final ScheduledDateGenerator scheduledDateGenerator) {
+            @Lazy final LoanChargeService loanChargeService, final ScheduledDateGenerator scheduledDateGenerator,
+            final ConfigurationDomainService configurationDomainService) {
         return new AdvancedPaymentScheduleTransactionProcessor(emiCalculator, progressiveLoanInterestRefundService, externalIdFactory,
-                loanSchedule, loanChargeValidator, loanBalanceService, loanChargeService, scheduledDateGenerator);
+                loanSchedule, loanChargeValidator, loanBalanceService, loanChargeService, scheduledDateGenerator,
+                configurationDomainService);
     }
 }

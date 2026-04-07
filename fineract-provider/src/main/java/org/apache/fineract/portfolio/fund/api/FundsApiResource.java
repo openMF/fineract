@@ -69,7 +69,6 @@ public class FundsApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Funds", description = "Returns the list of funds.\n" + "\n" + "Example Requests:\n" + "\n" + "funds")
     public List<FundData> retrieveFunds() {
@@ -91,7 +90,6 @@ public class FundsApiResource {
 
     @GET
     @Path("{fundId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Fund", description = "Returns the details of a Fund.\n" + "\n" + "Example Requests:\n" + "\n"
             + "funds/1")

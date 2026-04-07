@@ -53,7 +53,6 @@ public class WorkingDaysApiResource {
     private final CommandDispatcher dispatcher;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Working days", description = "Example Requests:\n" + "\n" + "workingdays")
     public WorkingDaysData retrieveAll() {
@@ -80,7 +79,6 @@ public class WorkingDaysApiResource {
 
     @GET
     @Path("/template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Working Days Template", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for working days.\n"
             + "\n" + "Example Request:\n" + "\n" + "workingdays/template")

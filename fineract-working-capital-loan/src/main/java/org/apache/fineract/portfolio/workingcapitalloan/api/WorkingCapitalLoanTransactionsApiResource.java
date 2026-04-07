@@ -25,7 +25,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -63,7 +62,6 @@ public class WorkingCapitalLoanTransactionsApiResource {
 
     @GET
     @Path("{loanId}/transactions")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveWorkingCapitalLoanTransactionsById", summary = "Retrieve transactions", description = "Retrieves transactions of a Working Capital Loan.\n\nExample: working-capital-loans/1/transactions")
     @ApiResponses({
@@ -77,7 +75,6 @@ public class WorkingCapitalLoanTransactionsApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}/transactions")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveWorkingCapitalLoanTransactionsByExternalId", summary = "Retrieve transactions by loan external id", description = "Retrieves transactions of a Working Capital Loan by loan external id.")
     @ApiResponses({
@@ -91,7 +88,6 @@ public class WorkingCapitalLoanTransactionsApiResource {
 
     @GET
     @Path("{loanId}/transactions/{transactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveWorkingCapitalLoanTransactionById", summary = "Retrieve a transaction", description = "Retrieves a single Working Capital Loan transaction.\n\nExample: working-capital-loans/1/transactions/1")
     @ApiResponses({
@@ -105,7 +101,6 @@ public class WorkingCapitalLoanTransactionsApiResource {
 
     @GET
     @Path("{loanId}/transactions/external-id/{externalTransactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveWorkingCapitalLoanTransactionByExternalTransactionId", summary = "Retrieve a transaction by external id", description = "Retrieves a single Working Capital Loan transaction by loan id and transaction external id.\n\nExample: working-capital-loans/1/transactions/external-id/txn-ext-001")
     @ApiResponses({
@@ -119,7 +114,6 @@ public class WorkingCapitalLoanTransactionsApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}/transactions/{transactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveWorkingCapitalLoanTransactionByExternalLoanIdAndTransactionId", summary = "Retrieve a transaction by loan external id and transaction id", description = "Retrieves a single Working Capital Loan transaction by loan external id and transaction id.")
     @ApiResponses({
@@ -133,7 +127,6 @@ public class WorkingCapitalLoanTransactionsApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}/transactions/external-id/{externalTransactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveWorkingCapitalLoanTransactionByExternalLoanIdAndExternalTransactionId", summary = "Retrieve a transaction by loan and transaction external ids", description = "Retrieves a single Working Capital Loan transaction by loan external id and transaction external id.\n\nExample: working-capital-loans/external-id/loan-ext-001/transactions/external-id/txn-ext-001")
     @ApiResponses({
@@ -148,7 +141,6 @@ public class WorkingCapitalLoanTransactionsApiResource {
 
     @GET
     @Path("{loanId}/template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveWorkingCapitalLoanTemplate", summary = "Retrieve Working Capital Loan action template", description = "Returns loan data for applying the proper loan action")
     public WorkingCapitalLoanCommandTemplateData retrieveWorkingCapitalLoanTemplate(

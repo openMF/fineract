@@ -64,10 +64,6 @@ public enum CalendarWeekDaysType {
         return name();
     }
 
-    public boolean isInvalid() {
-        return this.value.equals(CalendarWeekDaysType.INVALID.value);
-    }
-
     public static CalendarWeekDaysType fromString(final String weekDayString) {
         CalendarWeekDaysType weekDay = CalendarWeekDaysType.INVALID;
 

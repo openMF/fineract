@@ -63,7 +63,6 @@ public class AdHocApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public List<AdHocData> retrieveAll() {
 
@@ -72,7 +71,6 @@ public class AdHocApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Path("template")
     public AdHocData template() {
@@ -93,7 +91,6 @@ public class AdHocApiResource {
 
     @GET
     @Path("{adHocId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public AdHocData retrieveAdHocQuery(@PathParam("adHocId") @Parameter(description = "adHocId") final Long adHocId) {
 
@@ -123,7 +120,6 @@ public class AdHocApiResource {
      */
     @DELETE
     @Path("{adHocId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public CommandProcessingResult deleteAdHocQuery(@PathParam("adHocId") @Parameter(description = "adHocId") final Long adHocId) {
 

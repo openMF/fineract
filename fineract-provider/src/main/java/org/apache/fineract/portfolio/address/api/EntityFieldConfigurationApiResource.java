@@ -21,7 +21,6 @@ package org.apache.fineract.portfolio.address.api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -47,7 +46,6 @@ public class EntityFieldConfigurationApiResource {
     private final FieldConfigurationReadPlatformService readPlatformServicefld;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieves the Entity Field Configuration", description = "It retrieves all the Entity Field Configuration")
     public List<FieldConfigurationData> getAddresses(@PathParam("entity") @Parameter(description = "entity") final String entityname) {

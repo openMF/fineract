@@ -53,7 +53,6 @@ import org.apache.fineract.infrastructure.sms.service.SmsReadPlatformService;
 import org.springframework.stereotype.Component;
 
 @Path("/v1/sms")
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 @Tag(name = "SMS", description = "")
@@ -74,6 +73,7 @@ public class SmsApiResource {
     }
 
     @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
     public CommandProcessingResult create(final SmsCreationRequest smsCreationRequest) {
         final CommandWrapper commandRequest = new CommandWrapperBuilder().createSms()
                 .withJson(apiJsonSerializer.serialize(smsCreationRequest)).build();
@@ -107,6 +107,7 @@ public class SmsApiResource {
 
     @PUT
     @Path("{resourceId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     public CommandProcessingResult update(@PathParam("resourceId") final Long resourceId, final SmsUpdateRequest smsUpdateRequest) {
         final CommandWrapper commandRequest = new CommandWrapperBuilder().updateSms(resourceId)
                 .withJson(apiJsonSerializer.serialize(smsUpdateRequest)).build();

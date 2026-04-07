@@ -1740,8 +1740,6 @@ Feature: LoanChargesProgressiveLoan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type   | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 01 January 2024  | Disbursement       | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
-      | 01 January 2024  | Accrual            | 2.05   | 0.0       | 2.05     | 0.0  | 0.0       | 0.0          | false    | false    |
-      | 01 March 2024    | Accrual Adjustment | 0.89   | 0.0       | 0.89     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 01 March 2024    | Charge-off         | 107.14 | 100.0     | 2.14     | 5.0  | 0.0       | 0.0          | false    | false    |
     When Admin makes a charge adjustment for the last "LOAN_SNOOZE_FEE" type charge which is due on "01 March 2024" with 5 EUR transaction amount and externalId ""
     Then Charge adjustment response has the subResourceExternalId
@@ -1749,8 +1747,6 @@ Feature: LoanChargesProgressiveLoan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type   | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 01 January 2024  | Disbursement       | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
-      | 01 January 2024  | Accrual            | 2.05   | 0.0       | 2.05     | 0.0  | 0.0       | 0.0          | false    | false    |
-      | 01 March 2024    | Accrual Adjustment | 0.89   | 0.0       | 0.89     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 01 March 2024    | Charge-off         | 107.14 | 100.0     | 2.14     | 5.0  | 0.0       | 0.0          | false    | false    |
       | 01 March 2024    | Charge Adjustment  | 5.0    | 5.0       | 0.0      | 0.0  | 0.0       | 95.0         | false    | false    |
     When Loan Pay-off is made on "01 March 2024"

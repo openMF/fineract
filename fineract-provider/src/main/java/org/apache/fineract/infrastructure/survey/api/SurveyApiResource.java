@@ -68,7 +68,6 @@ public class SurveyApiResource {
     private final GenericDataService genericDataService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve surveys", description = "Retrieve surveys. This allows to retrieve the list of survey tables registered .")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = SurveyApiResourceSwagger.GetSurveyResponse.class))))
@@ -82,7 +81,6 @@ public class SurveyApiResource {
 
     @GET
     @Path("{surveyName}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve survey", description = "Lists a registered survey table details and the Apache Fineract Core application table they are registered to.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = SurveyApiResourceSwagger.GetSurveyResponse.class)))
@@ -120,7 +118,6 @@ public class SurveyApiResource {
     /** FIXME Vishwas what does this API really do? ***/
     @GET
     @Path("{surveyName}/{clientId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String getClientSurveyOverview(@PathParam("surveyName") final String surveyName, @PathParam("clientId") final Long clientId) {
 
@@ -133,7 +130,6 @@ public class SurveyApiResource {
 
     @GET
     @Path("{surveyName}/{clientId}/{entryId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String getSurveyEntry(@PathParam("surveyName") final String surveyName, @PathParam("clientId") final Long clientId,
             @PathParam("entryId") final Long entryId) {
@@ -164,7 +160,6 @@ public class SurveyApiResource {
 
     @DELETE
     @Path("{surveyName}/{clientId}/{fulfilledId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String deleteDatatableEntries(@PathParam("surveyName") final String surveyName, @PathParam("clientId") final Long clientId,
             @PathParam("fulfilledId") final Long fulfilledId) {

@@ -22,7 +22,8 @@ import com.google.gson.JsonObject;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.portfolio.paymentdetail.PaymentDetailConstants;
 import org.apache.fineract.portfolio.paymenttype.domain.PaymentType;
-import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepositoryWrapper;
+import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepository;
+import org.apache.fineract.portfolio.paymenttype.exception.PaymentTypeNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,12 +31,12 @@ import org.springframework.stereotype.Service;
 public class PaymentDetailAssembler {
 
     private final FromJsonHelper fromApiJsonHelper;
-    private final PaymentTypeRepositoryWrapper repositoryWrapper;
+    private final PaymentTypeRepository paymentTypeRepository;
 
     @Autowired
-    public PaymentDetailAssembler(final FromJsonHelper fromApiJsonHelper, final PaymentTypeRepositoryWrapper repositoryWrapper) {
+    public PaymentDetailAssembler(final FromJsonHelper fromApiJsonHelper, final PaymentTypeRepository paymentTypeRepository) {
         this.fromApiJsonHelper = fromApiJsonHelper;
-        this.repositoryWrapper = repositoryWrapper;
+        this.paymentTypeRepository = paymentTypeRepository;
     }
 
     public PaymentDetail fetchPaymentDetail(final JsonObject json) {
@@ -44,7 +45,8 @@ public class PaymentDetailAssembler {
             return null;
         }
 
-        final PaymentType paymentType = this.repositoryWrapper.findOneWithNotFoundDetection(paymentTypeId);
+        final PaymentType paymentType = this.paymentTypeRepository.findById(paymentTypeId)
+                .orElseThrow(() -> new PaymentTypeNotFoundException(paymentTypeId));
 
         final String accountNumber = this.fromApiJsonHelper.extractStringNamed(PaymentDetailConstants.accountNumberParamName, json);
         final String checkNumber = this.fromApiJsonHelper.extractStringNamed(PaymentDetailConstants.checkNumberParamName, json);

@@ -73,7 +73,6 @@ public class ReportsApiResource {
     private final ReportingProcessServiceProvider reportingProcessServiceProvider;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Reports", description = "Lists all reports and their parameters.\n" + "\n" + "Example Request:\n" + "\n"
             + "reports")
@@ -90,7 +89,6 @@ public class ReportsApiResource {
 
     @GET
     @Path("{id}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Report\n", description = "Example Requests:\n" + "\n" + "reports/1\n" + "\n" + "\n"
             + "reports/1?template=true")
@@ -112,7 +110,6 @@ public class ReportsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Report Template", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed description Lists\n" + "\n" + "Example Request : \n" + "\n" + "reports/template")
@@ -163,7 +160,6 @@ public class ReportsApiResource {
 
     @DELETE
     @Path("{id}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Report", description = "Only non-core reports can be deleted.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ReportsApiResourceSwagger.DeleteReportsResponse.class)))

@@ -90,10 +90,6 @@ public enum CalendarFrequencyType {
         return this.value.equals(CalendarFrequencyType.MONTHLY.value);
     }
 
-    public boolean isInvalid() {
-        return this.value.equals(CalendarFrequencyType.INVALID.value);
-    }
-
     /**
      * To convert from period frequency type tp calendar frequency type. This method requires code refactoring.
      *

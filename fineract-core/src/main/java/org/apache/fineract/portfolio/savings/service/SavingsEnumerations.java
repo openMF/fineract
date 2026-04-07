@@ -550,7 +550,7 @@ public final class SavingsEnumerations {
     public static List<EnumOptionData> preClosurePenaltyInterestOnType(final PreClosurePenalInterestOnType[] types) {
         final List<EnumOptionData> optionDatas = new ArrayList<>();
         for (final PreClosurePenalInterestOnType type : types) {
-            if (!type.isInvalid()) {
+            if (type != PreClosurePenalInterestOnType.INVALID) {
                 optionDatas.add(preClosurePenaltyInterestOnType(type));
             }
         }
@@ -584,7 +584,7 @@ public final class SavingsEnumerations {
     public static List<EnumOptionData> recurringDepositType(final RecurringDepositType[] types) {
         final List<EnumOptionData> optionDatas = new ArrayList<>();
         for (final RecurringDepositType type : types) {
-            if (!type.isInvalid()) {
+            if (type != RecurringDepositType.INVALID) {
                 optionDatas.add(recurringDepositType(type));
             }
         }
@@ -625,7 +625,7 @@ public final class SavingsEnumerations {
     public static List<EnumOptionData> recurringDepositFrequencyType(final SavingsPeriodFrequencyType[] types) {
         final List<EnumOptionData> optionDatas = new ArrayList<>();
         for (final SavingsPeriodFrequencyType type : types) {
-            if (!type.isInvalid()) {
+            if (type != SavingsPeriodFrequencyType.INVALID) {
                 optionDatas.add(recurringDepositFrequencyType(type));
             }
         }
@@ -727,7 +727,7 @@ public final class SavingsEnumerations {
     public static List<EnumOptionData> depositType(final DepositAccountType[] types) {
         final List<EnumOptionData> optionDatas = new ArrayList<>();
         for (final DepositAccountType type : types) {
-            if (!type.isInvalid()) {
+            if (type != DepositAccountType.INVALID) {
                 optionDatas.add(depositType(type));
             }
         }
@@ -768,7 +768,7 @@ public final class SavingsEnumerations {
     public static List<EnumOptionData> depositPeriodFrequency(final SavingsPeriodFrequencyType[] types) {
         final List<EnumOptionData> optionDatas = new ArrayList<>();
         for (final SavingsPeriodFrequencyType type : types) {
-            if (!type.isInvalid()) {
+            if (type != SavingsPeriodFrequencyType.INVALID) {
                 optionDatas.add(recurringDepositFrequencyType(type));
             }
         }
@@ -808,7 +808,7 @@ public final class SavingsEnumerations {
     public static List<EnumOptionData> depositAccountOnClosureType(final DepositAccountOnClosureType[] types) {
         final List<EnumOptionData> optionDatas = new ArrayList<>();
         for (final DepositAccountOnClosureType type : types) {
-            if (!type.isInvalid()) {
+            if (type != DepositAccountOnClosureType.INVALID) {
                 optionDatas.add(depositAccountOnClosureType(type));
             }
         }

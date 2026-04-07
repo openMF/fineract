@@ -62,7 +62,6 @@ public class EntityDatatableChecksApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Entity-Datatable Checks", description = "The list capability of Entity-Datatable Checks can support pagination.\n"
             + "\n" + "OPTIONAL ARGUMENTS\n"
@@ -83,7 +82,6 @@ public class EntityDatatableChecksApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Entity-Datatable Checks Template", description = "This is a convenience resource useful for building maintenance user interface screens for Entity-Datatable Checks applications. The template data returned consists of:\n"
             + "\n" + "Allowed description Lists\n" + "Example Request:\n" + "\n" + "entityDatatableChecks/template")

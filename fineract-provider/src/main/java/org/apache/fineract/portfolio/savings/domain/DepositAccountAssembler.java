@@ -165,10 +165,10 @@ public class DepositAccountAssembler {
         final Long productId = this.fromApiJsonHelper.extractLongNamed(productIdParamName, element);
 
         SavingsProduct product = null;
-        if (depositAccountType.isFixedDeposit()) {
+        if (depositAccountType == DepositAccountType.FIXED_DEPOSIT) {
             product = this.fixedDepositProductRepository.findById(productId)
                     .orElseThrow(() -> new FixedDepositProductNotFoundException(productId));
-        } else if (depositAccountType.isRecurringDeposit()) {
+        } else if (depositAccountType == DepositAccountType.RECURRING_DEPOSIT) {
             product = this.recurringDepositProductRepository.findById(productId)
                     .orElseThrow(() -> new RecurringDepositProductNotFoundException(productId));
         }
@@ -324,7 +324,7 @@ public class DepositAccountAssembler {
         }
 
         SavingsAccount account = null;
-        if (depositAccountType.isFixedDeposit()) {
+        if (depositAccountType == DepositAccountType.FIXED_DEPOSIT) {
             final DepositProductTermAndPreClosure prodTermAndPreClosure = ((FixedDepositProduct) product).depositProductTermAndPreClosure();
             final DepositAccountTermAndPreClosure accountTermAndPreClosure = this.assembleAccountTermAndPreClosure(command,
                     prodTermAndPreClosure);
@@ -337,7 +337,7 @@ public class DepositAccountAssembler {
             accountTermAndPreClosure.updateAccountReference(fdAccount);
             fdAccount.validateDomainRules();
             account = fdAccount;
-        } else if (depositAccountType.isRecurringDeposit()) {
+        } else if (depositAccountType == DepositAccountType.RECURRING_DEPOSIT) {
             final DepositProductTermAndPreClosure prodTermAndPreClosure = ((RecurringDepositProduct) product)
                     .depositProductTermAndPreClosure();
             final DepositAccountTermAndPreClosure accountTermAndPreClosure = this.assembleAccountTermAndPreClosure(command,

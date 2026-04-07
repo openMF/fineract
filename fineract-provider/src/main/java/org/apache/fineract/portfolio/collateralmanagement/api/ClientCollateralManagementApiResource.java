@@ -66,7 +66,6 @@ public class ClientCollateralManagementApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Get Clients Collateral Products", operationId = "getClientCollateralProducts", description = "Get Collateral Product of a Client")
     public List<ClientCollateralManagementData> getClientCollateral(
             @PathParam("clientId") @Parameter(description = "clientId") final Long clientId, @Context final UriInfo uriInfo,
@@ -81,7 +80,6 @@ public class ClientCollateralManagementApiResource {
     @GET
     @Path("{clientCollateralId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Get Client Collateral Data", operationId = "getClientCollateralData", description = "Get Client Collateral Data")
     public ClientCollateralManagementData getClientCollateralData(
             @PathParam("clientId") @Parameter(description = "clientId") final Long clientId,
@@ -95,7 +93,6 @@ public class ClientCollateralManagementApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Get Client Collateral Template", operationId = "getClientCollateralTemplate", description = "Get Client Collateral Template")
     public List<LoanCollateralTemplateData> getClientCollateralTemplate(
@@ -137,7 +134,6 @@ public class ClientCollateralManagementApiResource {
     @DELETE
     @Path("{collateralId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete Client Collateral", operationId = "deleteClientCollateral", description = "Delete Client Collateral")
 
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ClientCollateralManagementApiResourceSwagger.DeleteClientCollateralResponse.class)))

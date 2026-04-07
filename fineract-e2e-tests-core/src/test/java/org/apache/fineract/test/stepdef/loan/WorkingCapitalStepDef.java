@@ -76,6 +76,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
     public static final String PRINCIPAL_FIELD_NAME = "principal";
     public static final String MIN_PRINCIPAL_FIELD_NAME = "minPrincipal";
     public static final String MAX_PRINCIPAL_FIELD_NAME = "maxPrincipal";
+    public static final String DISCOUNT_FIELD_NAME = "discount";
     public static final String PERIOD_PAYMENT_RATE_FIELD_NAME = "periodPaymentRate";
     public static final String MIN_PERIOD_PAYMENT_RATE_FIELD_NAME = "minPeriodPaymentRate";
     public static final String MAX_PERIOD_PAYMENT_RATE_FIELD_NAME = "maxPeriodPaymentRate";
@@ -453,6 +454,12 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
                 .isEqualTo(getWorkingCapitalProductResponse.getMinPeriodPaymentRate());
         assertions.assertThat(workingCapitalLoanProductCreateRequest.getMaxPeriodPaymentRate())
                 .isEqualTo(getWorkingCapitalProductResponse.getMaxPeriodPaymentRate());
+        if (workingCapitalLoanProductCreateRequest.getDiscount() != null) {
+            assertions
+                    .assertThat(
+                            workingCapitalLoanProductCreateRequest.getDiscount().compareTo(getWorkingCapitalProductResponse.getDiscount()))
+                    .isEqualTo(0);
+        }
 
         // check payment allocation rules
         assert workingCapitalLoanProductCreateRequest.getPaymentAllocation() != null;
@@ -564,6 +571,12 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
                 .isEqualTo(getWorkingCapitalProductResponse.getMinPeriodPaymentRate());
         assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getMaxPeriodPaymentRate())
                 .isEqualTo(getWorkingCapitalProductResponse.getMaxPeriodPaymentRate());
+        if (workingCapitalLoanProductsUpdateRequest.getDiscount() != null) {
+            assertions
+                    .assertThat(
+                            workingCapitalLoanProductsUpdateRequest.getDiscount().compareTo(getWorkingCapitalProductResponse.getDiscount()))
+                    .isEqualTo(0);
+        }
 
         // check payment allocation rules
         assert workingCapitalLoanProductsUpdateRequest.getPaymentAllocation() != null;
@@ -641,7 +654,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         if (fieldName.equalsIgnoreCase(PRINCIPAL_FIELD_NAME) || fieldName.equalsIgnoreCase(MIN_PRINCIPAL_FIELD_NAME)
                 || fieldName.equalsIgnoreCase(MAX_PRINCIPAL_FIELD_NAME) || fieldName.equalsIgnoreCase(PERIOD_PAYMENT_RATE_FIELD_NAME)
                 || fieldName.equalsIgnoreCase(MIN_PERIOD_PAYMENT_RATE_FIELD_NAME)
-                || fieldName.equalsIgnoreCase(MAX_PERIOD_PAYMENT_RATE_FIELD_NAME)) {
+                || fieldName.equalsIgnoreCase(MAX_PERIOD_PAYMENT_RATE_FIELD_NAME) || fieldName.equalsIgnoreCase(DISCOUNT_FIELD_NAME)) {
             valueBigDecimal = fieldValue != null ? new BigDecimal(fieldValue) : null;
         }
 
@@ -679,6 +692,9 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
             break;
             case MAX_PRINCIPAL_FIELD_NAME:
                 defaultWorkingCapitalLoanProductCreateRequest.setMaxPrincipal(valueBigDecimal);
+            break;
+            case DISCOUNT_FIELD_NAME:
+                defaultWorkingCapitalLoanProductCreateRequest.setDiscount(valueBigDecimal);
             break;
             case PERIOD_PAYMENT_RATE_FIELD_NAME:
                 defaultWorkingCapitalLoanProductCreateRequest.setPeriodPaymentRate(valueBigDecimal);
@@ -760,7 +776,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         if (fieldName.equalsIgnoreCase(PRINCIPAL_FIELD_NAME) || fieldName.equalsIgnoreCase(MIN_PRINCIPAL_FIELD_NAME)
                 || fieldName.equalsIgnoreCase(MAX_PRINCIPAL_FIELD_NAME) || fieldName.equalsIgnoreCase(PERIOD_PAYMENT_RATE_FIELD_NAME)
                 || fieldName.equalsIgnoreCase(MIN_PERIOD_PAYMENT_RATE_FIELD_NAME)
-                || fieldName.equalsIgnoreCase(MAX_PERIOD_PAYMENT_RATE_FIELD_NAME)) {
+                || fieldName.equalsIgnoreCase(MAX_PERIOD_PAYMENT_RATE_FIELD_NAME) || fieldName.equalsIgnoreCase(DISCOUNT_FIELD_NAME)) {
             valueBigDecimal = fieldValue != null ? new BigDecimal(fieldValue) : null;
         }
 
@@ -795,6 +811,9 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
             break;
             case MIN_PRINCIPAL_FIELD_NAME:
                 defaultWorkingCapitalLoanProductUpdateRequest.setMinPrincipal(valueBigDecimal);
+            break;
+            case DISCOUNT_FIELD_NAME:
+                defaultWorkingCapitalLoanProductUpdateRequest.setDiscount(valueBigDecimal);
             break;
             case MAX_PRINCIPAL_FIELD_NAME:
                 defaultWorkingCapitalLoanProductUpdateRequest.setMaxPrincipal(valueBigDecimal);

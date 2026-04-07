@@ -49,8 +49,7 @@ import org.apache.fineract.portfolio.note.exception.NoteResourceNotSupportedExce
 import org.apache.fineract.portfolio.note.service.NoteReadPlatformService;
 import org.springframework.stereotype.Component;
 
-@Path("/v1/{resourceType}/{resourceId}/notes")
-@Consumes({ MediaType.APPLICATION_JSON })
+@Path("/v1/{resourceType:.+}/{resourceId}/notes")
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 @Tag(name = "Notes", description = """
@@ -108,6 +107,7 @@ public class NotesApiResource {
     }
 
     @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Add a Resource Note", description = """
             Adds a new note to a supported resource.
 
@@ -138,6 +138,7 @@ public class NotesApiResource {
 
     @PUT
     @Path("{noteId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Update a Resource Note", description = """
             Updates a Resource Note
             """)

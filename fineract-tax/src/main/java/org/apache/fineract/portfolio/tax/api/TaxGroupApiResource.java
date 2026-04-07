@@ -66,7 +66,6 @@ public class TaxGroupApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Tax Group", description = "List Tax Group")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TaxGroupApiResourceSwagger.GetTaxesGroupResponse.class))))
@@ -77,7 +76,6 @@ public class TaxGroupApiResource {
 
     @GET
     @Path("{taxGroupId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Tax Group", description = "Retrieve Tax Group")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TaxGroupApiResourceSwagger.GetTaxesGroupResponse.class)))
@@ -91,7 +89,6 @@ public class TaxGroupApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public TaxGroupData retrieveTemplate() {
         context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);

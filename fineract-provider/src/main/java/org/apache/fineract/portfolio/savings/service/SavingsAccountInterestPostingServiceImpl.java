@@ -87,7 +87,8 @@ public class SavingsAccountInterestPostingServiceImpl implements SavingsAccountI
             if (!DateUtils.isAfter(interestPostingTransactionDate, interestPostingUpToDate)) {
                 interestPostedToDate = interestPostedToDate.plus(interestEarnedToBePostedForPeriod);
                 SavingsAccountTransactionData postingTransaction = null;
-                if (this.depositAccountType(savingsAccountData).isSavingsDeposit() && savingsAccountData.isAllowOverdraft()) {
+                if (this.depositAccountType(savingsAccountData) == DepositAccountType.SAVINGS_DEPOSIT
+                        && savingsAccountData.isAllowOverdraft()) {
                     postingTransaction = findInterestPostingTransactionForInterest(interestPostingTransactionDate, savingsAccountData,
                             isOverdraft);
                 } else {
@@ -647,7 +648,7 @@ public class SavingsAccountInterestPostingServiceImpl implements SavingsAccountI
     }
 
     private boolean isWithHoldTaxApplicableForInterestPosting(final SavingsAccountData savingsAccountData) {
-        return this.withHoldTax(savingsAccountData) && this.depositAccountType(savingsAccountData).isSavingsDeposit();
+        return this.withHoldTax(savingsAccountData) && this.depositAccountType(savingsAccountData) == DepositAccountType.SAVINGS_DEPOSIT;
     }
 
     private boolean withHoldTax(final SavingsAccountData savingsAccountData) {

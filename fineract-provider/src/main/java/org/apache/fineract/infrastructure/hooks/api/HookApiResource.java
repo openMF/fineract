@@ -55,7 +55,6 @@ import org.apache.fineract.infrastructure.security.service.PlatformSecurityConte
 import org.springframework.stereotype.Component;
 
 @Path("/v1/hooks")
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 @Tag(name = "Hooks", description = "Hooks are a mechanism to trigger custom code on the occurence of events. ")
@@ -117,6 +116,7 @@ public class HookApiResource {
     }
 
     @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Create a Hook", description = "The following parameters can be passed for the creation of a hook :-\n" + "\n"
             + "name - string - Required. The name of the template that is being called. (See /hooks/template for the list of valid hook names.)\n"
             + "\n" + "isActive - boolean - Determines whether the hook is actually triggered.\n" + "\n"
@@ -136,6 +136,7 @@ public class HookApiResource {
 
     @PUT
     @Path("{hookId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Update a Hook", description = "Updates the details of a hook.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = HookApiResourceSwagger.PutHookRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = HookApiResourceSwagger.PutHookResponse.class)))

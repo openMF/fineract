@@ -131,12 +131,13 @@ public class WorkingCapitalRequestFactory {
                 .principal(new BigDecimal(200))//
                 .minPrincipal(new BigDecimal(15))//
                 .maxPrincipal(new BigDecimal(300000))//
-                .amortizationType(PutWorkingCapitalLoanProductsProductIdRequest.AmortizationTypeEnum.EIR)//
+                .discount(new BigDecimal(50)).amortizationType(PutWorkingCapitalLoanProductsProductIdRequest.AmortizationTypeEnum.EIR)//
                 .npvDayCount(DAYS365.value)//
                 .delinquencyBucketId(null)//
                 .dateFormat(DATE_FORMAT)//
                 .locale(LOCALE_EN)//
-                .allowAttributeOverrides(allowAttributeOverrides).paymentAllocation(List.of(//
+                .allowAttributeOverrides(allowAttributeOverrides)//
+                .paymentAllocation(List.of(//
                         createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(), //
                                 List.of(FEE, PRINCIPAL, PENALTY))));//
     }

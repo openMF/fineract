@@ -22,7 +22,7 @@ import org.apache.fineract.infrastructure.core.exception.AbstractPlatformDomainR
 
 public class LoanChargeCannotBePayedException extends AbstractPlatformDomainRuleException {
 
-    /*** enum of reasons of why Loan Charge cannot be waived **/
+    /*** enum of reasons of why Loan Charge cannot be paid **/
     public enum LoanChargeCannotBePayedReason {
 
         ALREADY_PAID, //
@@ -37,11 +37,11 @@ public class LoanChargeCannotBePayedException extends AbstractPlatformDomainRule
             } else if (name().equalsIgnoreCase("ALREADY_WAIVED")) {
                 return "This loan charge has already been waived";
             } else if (name().equalsIgnoreCase("LOAN_INACTIVE")) {
-                return "This loan charge can be payed as the loan associated with it is currently inactive";
+                return "This loan charge cannot be paid as the loan associated with it is currently inactive";
             } else if (name().equalsIgnoreCase("CHARGE_NOT_ACCOUNT_TRANSFER")) {
-                return "This loan charge can be payed as the charge payment mode is not account transfer";
+                return "This loan charge cannot be paid as the charge payment mode is not account transfer";
             } else if (name().equalsIgnoreCase("CHARGE_NOT_PAYABLE")) {
-                return "This loan charge is not Payable through account transfer";
+                return "This loan charge is not payable through account transfer";
             }
 
             return name();

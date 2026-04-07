@@ -62,7 +62,6 @@ public class ClientAddressApiResource {
 
     @GET
     @Path("addresses/template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve client address template", operationId = "retrieveTemplateClientAddress")
     public AddressData getAddressesTemplate() {
@@ -90,7 +89,6 @@ public class ClientAddressApiResource {
 
     @GET
     @Path("/{clientid}/addresses")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List all addresses for a Client", operationId = "retrieveAllClientAddresses", description = """
             Example Requests:

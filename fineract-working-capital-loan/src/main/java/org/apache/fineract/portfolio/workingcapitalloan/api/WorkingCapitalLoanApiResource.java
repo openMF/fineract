@@ -70,7 +70,6 @@ public class WorkingCapitalLoanApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveWorkingCapitalLoanTemplate", summary = "Retrieve Working Capital Loan application template", description = "Returns loan details plus productOptions, fundOptions, delinquencyBucketOptions, periodFrequencyTypeOptions.")
     @ApiResponses({
@@ -83,7 +82,6 @@ public class WorkingCapitalLoanApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveAllWorkingCapitalLoans", summary = "List Working Capital Loans", description = "Uses Spring Data pagination: page, size, sort (e.g. sort=id,asc or sort=accountNumber,desc). "
             + "Filter by clientId, externalId, status, accountNo. Response: content, totalElements, totalPages, size, number.")
@@ -101,7 +99,6 @@ public class WorkingCapitalLoanApiResource {
 
     @GET
     @Path("{loanId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveWorkingCapitalLoanById", summary = "Retrieve a Working Capital Loan", description = "Retrieves a Working Capital Loan by id.")
     @ApiResponses({
@@ -113,7 +110,6 @@ public class WorkingCapitalLoanApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveWorkingCapitalLoanByExternalId", summary = "Retrieve a Working Capital Loan by external id", description = "Retrieves a Working Capital Loan by external id.")
     @ApiResponses({
@@ -155,7 +151,6 @@ public class WorkingCapitalLoanApiResource {
 
     @DELETE
     @Path("{loanId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "deleteWorkingCapitalLoanApplication", summary = "Delete a Working Capital Loan application", description = "Only loans in \"Submitted and awaiting approval\" status can be deleted.")
     @ApiResponses({
@@ -182,7 +177,6 @@ public class WorkingCapitalLoanApiResource {
 
     @DELETE
     @Path("external-id/{loanExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "deleteWorkingCapitalLoanApplicationByExternalId", summary = "Delete a Working Capital Loan application by external id", description = "Only loans in \"Submitted and awaiting approval\" status can be deleted.")
     @ApiResponses({
@@ -271,6 +265,45 @@ public class WorkingCapitalLoanApiResource {
             throw new UnrecognizedQueryParamException("command", commandParam);
         }
 
+        return this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+    }
+
+    @PUT
+    @Path("{loanId}/discount")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(operationId = "updateWorkingCapitalLoanDiscountById", summary = "Update discount for a disbursed Working Capital Loan", description = "Discount can be added one time after disbursement and only on disbursement date.")
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdDiscountRequest.class)))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdResponse.class))) })
+    public CommandProcessingResult updateDiscountById(
+            @PathParam("loanId") @Parameter(description = "loanId", required = true) final Long loanId,
+            @Parameter(hidden = true) final String apiRequestBodyAsJson) {
+        return updateDiscount(loanId, null, apiRequestBodyAsJson);
+    }
+
+    @PUT
+    @Path("external-id/{loanExternalId}/discount")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(operationId = "updateWorkingCapitalLoanDiscountByExternalId", summary = "Update discount for a disbursed Working Capital Loan by external id", description = "Discount can be added one time after disbursement and only on disbursement date.")
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdDiscountRequest.class)))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdResponse.class))) })
+    public CommandProcessingResult updateDiscountByExternalId(
+            @PathParam("loanExternalId") @Parameter(description = "loanExternalId", required = true) final String loanExternalId,
+            @Parameter(hidden = true) final String apiRequestBodyAsJson) {
+        return updateDiscount(null, loanExternalId, apiRequestBodyAsJson);
+    }
+
+    private CommandProcessingResult updateDiscount(final Long loanId, final String loanExternalIdStr, final String apiRequestBodyAsJson) {
+        final Long resolvedLoanId = loanId != null ? loanId
+                : readPlatformService.getResolvedLoanId(ExternalIdFactory.produce(loanExternalIdStr));
+        if (resolvedLoanId == null) {
+            throw new WorkingCapitalLoanNotFoundException(ExternalIdFactory.produce(loanExternalIdStr));
+        }
+        final CommandWrapper commandRequest = new CommandWrapperBuilder().withJson(apiRequestBodyAsJson)
+                .updateDiscountWorkingCapitalLoanApplication(resolvedLoanId).build();
         return this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
     }
 }

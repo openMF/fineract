@@ -152,7 +152,6 @@ public class RecurringDepositProductsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Recuring Deposit Products", operationId = "retrieveAllRecurringDepositProducts", description = "Lists Recuring Deposit Products\n\n"
             + "Example Requests:\n" + "\n" + "recurringdepositproducts\n" + "\n" + "\n" + "recurringdepositproducts?fields=name")
@@ -173,7 +172,6 @@ public class RecurringDepositProductsApiResource {
 
     @GET
     @Path("{productId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Recurring Deposit Product", operationId = "retrieveOneRecurringDepositProduct", description = "Retrieves a Recurring Deposit Product\n\n"
             + "Example Requests:\n" + "\n" + "recurringdepositproducts/1\n" + "\n" + "\n" + "recurringdepositproducts/1?template=true\n"
@@ -219,7 +217,6 @@ public class RecurringDepositProductsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Recurring Deposit Product Template", operationId = "retrieveTemplateRecurringDepositProduct")
     public String retrieveTemplate(@Context final UriInfo uriInfo) {
@@ -316,7 +313,6 @@ public class RecurringDepositProductsApiResource {
 
     @DELETE
     @Path("{productId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Recurring Deposit Product", operationId = "deleteRecurringDepositProduct", description = "Deletes a Recurring Deposit Product")
     @ApiResponses({

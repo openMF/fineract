@@ -92,7 +92,6 @@ public class GLAccountsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(tags = {
             "General Ledger Account" }, summary = "Retrieve GL Accounts Template", description = """
@@ -122,7 +121,6 @@ public class GLAccountsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(tags = {
             "General Ledger Account" }, summary = "List General Ledger Account", description = """
@@ -153,7 +151,6 @@ public class GLAccountsApiResource {
 
     @GET
     @Path("{glAccountId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(tags = { "General Ledger Account" }, summary = "Retrieve a General Ledger Account", description = """
             Example Requests:
@@ -212,7 +209,6 @@ public class GLAccountsApiResource {
 
     @DELETE
     @Path("{glAccountId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(tags = {
             "General Ledger Account" }, summary = "Delete a GL Account", operationId = "deleteGLAccount", description = "Deletes a GL Account")

@@ -78,7 +78,6 @@ public class CollateralManagementApiResource {
 
     @GET
     @Path("{collateralId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Get Collateral", description = "Fetch Collateral")
     public CollateralManagementData getCollateral(
@@ -91,7 +90,6 @@ public class CollateralManagementApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Get All Collaterals", description = "Fetch all Collateral Products")
     public List<CollateralManagementData> getAllCollaterals() {
@@ -102,7 +100,6 @@ public class CollateralManagementApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Get Collateral Template", description = "Get Collateral Template")
     public List<CurrencyData> getCollateralTemplate() {
@@ -128,7 +125,6 @@ public class CollateralManagementApiResource {
     @DELETE
     @Path("{collateralId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Collateral", description = "Delete Collateral")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CollateralManagementApiResourceSwagger.DeleteCollateralProductResponse.class)))
     public CommandProcessingResult deleteCollateral(

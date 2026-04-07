@@ -128,6 +128,30 @@ public class LoanModifyApprovedAmountTest extends BaseLoanIntegrationTest {
     }
 
     @Test
+    public void testShouldFailWhenApprovedAmountIsSame() {
+
+        final PostClientsResponse client = clientHelper.createClient(ClientHelper.defaultClientCreationRequest());
+        final PostLoanProductsResponse loanProductsResponse = loanProductHelper.createLoanProduct(create4IProgressive());
+
+        runAt("1 January 2024", () -> {
+            Long loanId = applyAndApproveProgressiveLoan(client.getClientId(), loanProductsResponse.getResourceId(), "1 January 2024",
+                    1000.0, 10.0, 4, null);
+
+            disburseLoan(loanId, BigDecimal.valueOf(100), "1 January 2024");
+
+            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
+            BigDecimal sameApprovedAmount = loanDetails.getApprovedPrincipal();
+
+            CallFailedRuntimeException exception = assertThrows(CallFailedRuntimeException.class,
+                    () -> modifyLoanApprovedAmount(loanId, sameApprovedAmount));
+
+            assertEquals(403, exception.getResponse().code());
+            assertTrue(exception.getMessage()
+                    .contains("validation.msg.loan.approved.amount.amount.must.be.different.from.current.approved.amount"));
+        });
+    }
+
+    @Test
     public void testModifyLoanApprovedAmountTooHigh() {
         BigDecimal twoThousand = BigDecimal.valueOf(2000.0);
 

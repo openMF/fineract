@@ -1055,9 +1055,13 @@ public class LoanChargeWritePlatformServiceImpl implements LoanChargeWritePlatfo
         loanCharge = this.loanChargeRepository.saveAndFlush(loanCharge);
 
         // we want to apply charge transactions only for those loans charges that are applied when a loan is active and
-        // the loan product uses Upfront Accruals, or only when the loan are closed too,
-        if ((loan.getStatus().isActive() && loan.isNoneOrCashOrUpfrontAccrualAccountingEnabledOnLoanProduct())
-                || loan.getStatus().isOverpaid() || loan.getStatus().isClosedObligationsMet()) {
+        // the loan product uses Upfront Accrual accounting (or None/Cash when allow-cash-and-non-cash-accrual is true),
+        // or only when the loan is closed too
+        final boolean accrualEnabledForActiveStatus = configurationDomainService.isAllowCashAndNonCashAccrual()
+                ? loan.isNoneOrCashOrUpfrontAccrualAccountingEnabledOnLoanProduct()
+                : loan.isUpfrontAccrualAccountingEnabledOnLoanProduct();
+        if ((loan.getStatus().isActive() && accrualEnabledForActiveStatus) || loan.getStatus().isOverpaid()
+                || loan.getStatus().isClosedObligationsMet()) {
             final LoanTransaction applyLoanChargeTransaction = loanChargeService.handleChargeAppliedTransaction(loan, loanCharge, null);
             if (applyLoanChargeTransaction != null) {
                 this.loanTransactionRepository.saveAndFlush(applyLoanChargeTransaction);

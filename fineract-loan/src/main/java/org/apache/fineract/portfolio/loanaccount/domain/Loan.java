@@ -1691,7 +1691,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom<Long> {
     }
 
     public boolean hasInvalidLoanType() {
-        return getLoanType().isInvalid();
+        return getLoanType() == AccountType.INVALID;
     }
 
     public boolean isIndividualLoan() {

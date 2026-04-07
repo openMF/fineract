@@ -409,6 +409,16 @@ final class ClientsApiResourceSwagger {
         public String dateFormat;
         @Schema(example = "en")
         public String locale;
+        @Schema(example = "03 August 2021")
+        public String closureDate;
+        @Schema(example = "1")
+        public Long closureReasonId;
+        @Schema(example = "03 August 2021")
+        public String reactivationDate;
+        @Schema(example = "03 August 2021")
+        public String rejectionDate;
+        @Schema(example = "1")
+        public Long rejectionReasonId;
     }
 
     @Schema(description = "PostClientsClientIdResponse")

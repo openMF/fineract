@@ -25,7 +25,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -70,7 +69,6 @@ public class LoanBuyDownFeeApiResource {
 
     @Path("/{loanId}/buydown-fees")
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Get the amortization details of Buy Down fees for a loan", description = "Returns a list of all Buy Down fee entries with amortization details for the specified loan.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = BuyDownFeeAmortizationDetails.class))))
@@ -83,7 +81,6 @@ public class LoanBuyDownFeeApiResource {
 
     @GET
     @Path("/external-id/{loanExternalId}/buydown-fees")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Get the amortization details of Buy Down fees for a loan by external ID", description = "Returns a list of all Buy Down fee entries with amortization details for the loan specified by external ID.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = BuyDownFeeAmortizationDetails.class))))
@@ -102,7 +99,6 @@ public class LoanBuyDownFeeApiResource {
      */
     @GET
     @Path("{loanId}/buydown-fees/{loanTransactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a BuyDown Fees allocation data", description = "Retrieves BuyDown Fees allocation data according to the Loan ID and Loan Transaction ID"
             + "Example Requests:\n" + "\n" + "/loans/1/buydown-fees/1\n" + "\n" + "\n"
@@ -119,7 +115,6 @@ public class LoanBuyDownFeeApiResource {
      */
     @GET
     @Path("external-id/{loanExternalId}/buydown-fees/{loanTransactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a BuyDown Fees allocation data", description = "Retrieves BuyDown Fees allocation data according to the Loan external ID and Loan Transaction ID"
             + "Example Requests:\n" + "\n" + "/loans/external-id/1/buydown-fees/1\n" + "\n" + "\n"
@@ -137,7 +132,6 @@ public class LoanBuyDownFeeApiResource {
      */
     @GET
     @Path("{loanId}/buydown-fees/external-id/{loanTransactionExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a BuyDown Fees allocation data", description = "Retrieves BuyDown Fees allocation data according to the Loan ID and Loan Transaction external ID"
             + "Example Requests:\n" + "\n" + "/loans/1/buydown-fees/external-id/1\n" + "\n" + "\n"
@@ -155,7 +149,6 @@ public class LoanBuyDownFeeApiResource {
      */
     @GET
     @Path("external-id/{loanExternalId}/buydown-fees/external-id/{loanTransactionExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a BuyDown Fees allocation data", description = "Retrieves BuyDown Fees allocation data according to the Loan external ID and Loan Transaction external ID"
             + "Example Requests:\n" + "\n" + "/loans/external-id/1/buydown-fees/1\n" + "\n" + "\n"

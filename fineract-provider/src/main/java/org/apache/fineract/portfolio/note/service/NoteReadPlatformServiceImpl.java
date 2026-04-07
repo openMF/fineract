@@ -141,6 +141,10 @@ public class NoteReadPlatformServiceImpl implements NoteReadPlatformService {
             case GROUP:
                 conditionSql = " n.group_id = ? ";
             break;
+            case SHARE_ACCOUNT:
+                paramList.add(NoteType.SHARE_ACCOUNT.getValue());
+                conditionSql = " n.share_account_id = ? and note_type_enum = ? ";
+            break;
             default:
             break;
         }

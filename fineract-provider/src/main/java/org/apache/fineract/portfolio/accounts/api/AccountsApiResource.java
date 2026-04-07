@@ -76,7 +76,6 @@ public class AccountsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Share Account Template", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed Value Lists\n\n" + "Example Requests:\n" + "\n" + "accounts/share/template?clientId=1\n"
@@ -91,7 +90,6 @@ public class AccountsApiResource {
 
     @GET
     @Path("{accountId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a share application/account", description = "Retrieves a share application/account\n\n"
             + "Example Requests :\n" + "\n" + "shareaccount/1")
@@ -103,7 +101,6 @@ public class AccountsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List share applications/accounts", description = "Lists share applications/accounts\n\n" + "Example Requests:\n"
             + "\n" + "shareaccount")

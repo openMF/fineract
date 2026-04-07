@@ -1272,12 +1272,12 @@ public final class LoanApplicationValidator {
             if (!StringUtils.isBlank(loanTypeStr)) {
                 final AccountType loanType = AccountType.fromName(loanTypeStr);
 
-                if (loanType.isInvalid()) {
+                if (loanType == AccountType.INVALID) {
                     baseDataValidator.reset().parameter(LoanApiConstants.loanTypeParameterName).value(loanType.getValue())
                             .isOneOfEnumValues(AccountType.class);
                 }
 
-                if (!loanType.isInvalid() && loanType.isIndividualAccount()) {
+                if (loanType == AccountType.INVALID && loanType.isIndividualAccount()) {
                     // collateral
                     final String collateralParameterName = LoanApiConstants.collateralParameterName;
                     if (element.isJsonObject() && this.fromApiJsonHelper.parameterExists(collateralParameterName, element)) {

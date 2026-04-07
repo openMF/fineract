@@ -57,7 +57,6 @@ import org.springframework.stereotype.Component;
  * Templates.
  */
 @Path("/v1/email/campaign")
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 @RequiredArgsConstructor

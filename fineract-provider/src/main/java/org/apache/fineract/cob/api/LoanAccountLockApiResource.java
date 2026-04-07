@@ -20,7 +20,6 @@ package org.apache.fineract.cob.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -42,7 +41,6 @@ public class LoanAccountLockApiResource {
 
     @GET
     @Path("locked")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List locked loan accounts", description = "Returns the locked loan IDs")
     public LoanAccountLockResponseDTO retrieveLockedAccounts(@QueryParam("page") Integer pageParam,

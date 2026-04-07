@@ -64,11 +64,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.fineract.infrastructure.codes.service.CodeReadPlatformService;
@@ -924,7 +924,7 @@ public class DatatableWriteServiceImpl implements DatatableWriteService {
         } catch (final EmptyResultDataAccessException e) {
             log.warn("Error occurred.", e);
         }
-        return ObjectUtils.defaultIfNull(codeId, 0);
+        return Objects.requireNonNullElse(codeId, 0);
     }
 
     /**

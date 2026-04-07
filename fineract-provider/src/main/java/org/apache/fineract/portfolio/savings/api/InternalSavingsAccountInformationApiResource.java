@@ -19,7 +19,6 @@
 package org.apache.fineract.portfolio.savings.api;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -62,7 +61,6 @@ public class InternalSavingsAccountInformationApiResource implements Initializin
 
     @GET
     @Path("status/{statusId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @SuppressFBWarnings("SLF4J_SIGN_ONLY_FORMAT")
     public List<Long> getSavingsAccountsByStatus(@Context final UriInfo uriInfo, @PathParam("statusId") Integer statusId) {

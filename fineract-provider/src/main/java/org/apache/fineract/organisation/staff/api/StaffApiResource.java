@@ -64,7 +64,6 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Path("/v1/staff")
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 @Tag(name = "Staff", description = "Allows you to model staff members. At present the key role of significance is whether this staff member is a loan officer or not.")
@@ -133,6 +132,7 @@ public class StaffApiResource {
     }
 
     @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Create a staff member", operationId = "createStaff", description = """
             Creates a staff member.
 
@@ -159,6 +159,7 @@ public class StaffApiResource {
 
     @PUT
     @Path("{staffId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Update a Staff Member", description = "Updates the details of a staff member.")
     public StaffUpdateResponse updateStaff(@PathParam("staffId") @Parameter(description = "staffId") final Long staffId,
             @RequestBody(required = true) @Valid StaffUpdateRequest request) {

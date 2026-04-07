@@ -117,7 +117,6 @@ public class CentersApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Center Template", description = """
             Retrieves a Center Template
@@ -157,7 +156,6 @@ public class CentersApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Centers", description = """
             The default implementation supports pagination and sorting with the default pagination size set to 200 records. The parameter limit with description -1 will return all entries.
@@ -224,7 +222,6 @@ public class CentersApiResource {
 
     @GET
     @Path("{centerId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Center", description = """
             Retrieves a Center
@@ -331,7 +328,6 @@ public class CentersApiResource {
 
     @DELETE
     @Path("{centerId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Center", description = "A Center can be deleted if it is in pending state and has no association - groups, loans or savings")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CentersApiResourceSwagger.DeleteCentersCenterIdResponse.class)))
@@ -424,7 +420,6 @@ public class CentersApiResource {
 
     @GET
     @Path("{centerId}/accounts")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Center accounts overview", description = """
             An example of how a savings summary for a Center can be provided. This is requested in a specific use case of the reference application.

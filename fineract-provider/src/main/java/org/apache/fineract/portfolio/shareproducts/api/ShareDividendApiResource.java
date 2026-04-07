@@ -64,7 +64,6 @@ public class ShareDividendApiResource {
     private final SqlValidator sqlValidator;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String retrieveAll(@PathParam("productId") final Long productId, @QueryParam("offset") final Integer offset,
             @QueryParam("limit") final Integer limit, @QueryParam("orderBy") final String orderBy,
@@ -82,7 +81,6 @@ public class ShareDividendApiResource {
 
     @GET
     @Path("{dividendId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String retrieveDividendDetails(@PathParam("dividendId") final Long dividendId, @QueryParam("offset") final Integer offset,
             @QueryParam("limit") final Integer limit, @QueryParam("orderBy") final String orderBy,
@@ -131,7 +129,6 @@ public class ShareDividendApiResource {
 
     @DELETE
     @Path("{dividendId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String deleteDividendDetail(@PathParam("productId") final Long productId, @PathParam("dividendId") final Long dividendId) {
         this.platformSecurityContext.authenticatedUser();

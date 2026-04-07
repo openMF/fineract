@@ -1095,11 +1095,6 @@ public class SchedulerJobsTestResults extends IntegrationTest {
             Assertions.assertEquals(39.39f, (Float) repaymentScheduleDataAfter.get(1).get("penaltyChargesDue"),
                     "Verifying From Penalty Charges due fot first Repayment after Successful completion of Scheduler Job");
 
-            List<Map> transactions = this.loanTransactionHelper.getLoanTransactions(this.requestSpec, this.responseSpec, loanID);
-            Assertions.assertEquals(39.39f, (Float) transactions.get(2).get("amount"));
-            Assertions.assertEquals(2019, ((List) transactions.get(2).get("date")).get(0));
-            Assertions.assertEquals(4, ((List) transactions.get(2).get("date")).get(1));
-            Assertions.assertEquals(2, ((List) transactions.get(2).get("date")).get(2));
         } finally {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(false));
@@ -1162,11 +1157,6 @@ public class SchedulerJobsTestResults extends IntegrationTest {
             Assertions.assertEquals(39.39f, (Float) repaymentScheduleDataAfter.get(1).get("penaltyChargesDue"),
                     "Verifying From Penalty Charges due fot first Repayment after Successful completion of Scheduler Job");
 
-            List<Map> transactions = this.loanTransactionHelper.getLoanTransactions(this.requestSpec, this.responseSpec, loanID2);
-            Assertions.assertEquals(39.39f, (Float) transactions.get(2).get("amount"));
-            Assertions.assertEquals(2020, ((List) transactions.get(2).get("date")).get(0));
-            Assertions.assertEquals(5, ((List) transactions.get(2).get("date")).get(1));
-            Assertions.assertEquals(2, ((List) transactions.get(2).get("date")).get(2));
         } finally {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(false));

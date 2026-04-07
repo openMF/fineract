@@ -73,7 +73,6 @@ public class ClientTransactionsApiResource {
 
     @GET
     @Path("{clientId}/transactions")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Client Transactions", operationId = "retrieveAllClientTransactions", description = "The list capability of client transaction can support pagination."
             + "\n\n" + "Example Requests:\n\n" + "clients/189/transactions\n\n" + "clients/189/transactions?offset=10&limit=50")
@@ -88,7 +87,6 @@ public class ClientTransactionsApiResource {
 
     @GET
     @Path("{clientId}/transactions/{transactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Client Transaction", operationId = "retrieveClientTransaction", description = "Example Requests:\n"
             + "clients/1/transactions/1\n" + "\n" + "\n" + "clients/1/transactions/1?fields=id,officeName")
@@ -118,7 +116,6 @@ public class ClientTransactionsApiResource {
 
     @GET
     @Path("external-id/{clientExternalId}/transactions")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Client Transactions", operationId = "retrieveAllClientTransactionsByClientExternalId", description = "The list capability of client transaction can support pagination."
             + "\n\n" + "Example Requests:\n\n" + "clients/external-id/7dd80a7c-ycba-a446-t378-91eb6f53e854/transactions\n\n"
@@ -142,7 +139,6 @@ public class ClientTransactionsApiResource {
 
     @GET
     @Path("external-id/{clientExternalId}/transactions/{transactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Client Transaction", operationId = "retrieveClientTransactionByClientExternalId", description = "Example Requests:\n"
             + "clients/external-id/7dd80a7c-ycba-a446-t378-91eb6f53e854/transactions/1\n" + "\n" + "\n"
@@ -189,7 +185,6 @@ public class ClientTransactionsApiResource {
 
     @GET
     @Path("{clientId}/transactions/external-id/{transactionExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Client Transaction", operationId = "retrieveClientTransactionByTransactionExternalId", description = "Example Requests:\n"
             + "clients/1/transactions/external-id/7dd80a7c-ycba-a446-t378-91eb6f53e854\n" + "\n" + "\n"
@@ -214,7 +209,6 @@ public class ClientTransactionsApiResource {
 
     @GET
     @Path("external-id/{clientExternalId}/transactions/external-id/{transactionExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Client Transaction", operationId = "retrieveClientTransactionByClientAndTransactionExternalId", description = "Example Requests:\n"
             + "clients/external-id/7dd80a7c-ycba-a446-t378-91eb6f53e854/transactions/external-id/7dd80a7c-ycba-a446-t378-91eb6f53e854\n"

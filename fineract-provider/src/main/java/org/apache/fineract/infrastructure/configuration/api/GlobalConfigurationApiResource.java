@@ -79,7 +79,6 @@ public class GlobalConfigurationApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Global Configuration | Retrieve Global Configuration for surveys", description = "Returns the list global enable/disable configurations.\n"
             + "\n" + "Example Requests:\n" + "\n" + "configurations\n\n" + "\n"
@@ -99,7 +98,6 @@ public class GlobalConfigurationApiResource {
 
     @GET
     @Path("{configId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Global Configuration", operationId = "retrieveOneGlobalConfiguration", description = "Returns a global enable/disable configurations.\n"
             + "\n" + "Example Requests:\n" + "\n" + "configurations/1")
@@ -117,7 +115,6 @@ public class GlobalConfigurationApiResource {
 
     @GET
     @Path("name/{name}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Global Configuration", description = "Returns a global enable/disable configuration.\n" + "\n"
             + "Example Requests:\n" + "\n" + "configurations/name/enable-address")

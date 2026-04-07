@@ -40,7 +40,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Path("/v1/caches")
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 @Tag(name = "Cache", description = """
@@ -72,6 +71,7 @@ public class CacheApiResource {
     }
 
     @PUT
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Switch Cache", description = "Switches the cache to chosen one.")
     public CacheSwitchResponse switchCache(@Valid CacheSwitchRequest request) {
         final var command = new CacheSwitchCommand();

@@ -34,6 +34,6 @@ public class DefaultContentPathRandomizer implements ContentPathRandomizer {
     @Override
     public String randomize() {
         // TODO: make length configurable
-        return RandomStringUtils.secureStrong().randomAlphabetic(16);
+        return RandomStringUtils.secureStrong().nextAlphabetic(16);
     }
 }

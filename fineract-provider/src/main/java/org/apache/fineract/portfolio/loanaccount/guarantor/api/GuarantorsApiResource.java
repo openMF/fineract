@@ -90,7 +90,6 @@ public class GuarantorsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public GuarantorData newGuarantorTemplate(@PathParam("loanId") final Long loanId) {
         this.context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSION);
@@ -103,7 +102,6 @@ public class GuarantorsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public List<GuarantorData> retrieveGuarantorDetails(@PathParam("loanId") final Long loanId) {
         this.context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSION);
@@ -113,7 +111,6 @@ public class GuarantorsApiResource {
 
     @GET
     @Path("{guarantorId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public GuarantorData retrieveGuarantorDetails(@Context final UriInfo uriInfo, @PathParam("loanId") final Long loanId,
             @PathParam("guarantorId") final Long guarantorId) {
@@ -158,7 +155,6 @@ public class GuarantorsApiResource {
 
     @DELETE
     @Path("{guarantorId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public CommandProcessingResult deleteGuarantor(@PathParam("loanId") final Long loanId, @PathParam("guarantorId") final Long guarantorId,
             @QueryParam("guarantorFundingId") final Long guarantorFundingId) {
@@ -169,7 +165,6 @@ public class GuarantorsApiResource {
 
     @GET
     @Path("accounts/template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public GuarantorData accountsTemplate(@QueryParam("clientId") final Long clientId, @PathParam("loanId") final Long loanId) {
 

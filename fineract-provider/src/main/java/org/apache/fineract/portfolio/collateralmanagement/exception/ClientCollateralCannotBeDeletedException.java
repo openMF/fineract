@@ -22,7 +22,7 @@ import org.apache.fineract.infrastructure.core.exception.AbstractPlatformDomainR
 
 public class ClientCollateralCannotBeDeletedException extends AbstractPlatformDomainRuleException {
 
-    /*** enum of reasons of why Collateral cannot be waived **/
+    /*** enum of reasons of why Client Collateral cannot be deleted **/
     public enum ClientCollateralCannotBeDeletedReason {
 
         CLIENT_COLLATERAL_IS_ALREADY_ATTACHED;

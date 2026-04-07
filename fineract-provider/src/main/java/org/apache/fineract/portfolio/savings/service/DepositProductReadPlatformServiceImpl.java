@@ -106,9 +106,9 @@ public class DepositProductReadPlatformServiceImpl implements DepositProductRead
         DepositProductData depositProduct = this.retrieveOne(depositAccountType, depositProductId);
         Collection<InterestRateChartData> charts = this.chartReadPlatformService.retrieveAllWithSlabsWithTemplate(depositProductId);
 
-        if (depositAccountType.isFixedDeposit()) {
+        if (depositAccountType == DepositAccountType.FIXED_DEPOSIT) {
             depositProduct = FixedDepositProductData.withInterestChart(depositProduct, charts);
-        } else if (depositAccountType.isRecurringDeposit()) {
+        } else if (depositAccountType == DepositAccountType.RECURRING_DEPOSIT) {
             depositProduct = RecurringDepositProductData.withInterestChart(depositProduct, charts);
         }
 
@@ -116,9 +116,9 @@ public class DepositProductReadPlatformServiceImpl implements DepositProductRead
     }
 
     private DepositProductMapper getDepositProductMapper(final DepositAccountType depositAccountType) {
-        if (depositAccountType.isFixedDeposit()) {
+        if (depositAccountType == DepositAccountType.FIXED_DEPOSIT) {
             return FIXED_DEPOSIT_PRODUCT_MAPPER;
-        } else if (depositAccountType.isRecurringDeposit()) {
+        } else if (depositAccountType == DepositAccountType.RECURRING_DEPOSIT) {
             return RECURRING_DEPOSIT_PRODUCT_MAPPER;
         }
         return null;

@@ -109,7 +109,6 @@ public class FixedDepositAccountsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Fixed Deposit Account Template", operationId = "retrieveTemplateFixedDepositAccount", description = """
             This is a convenience resource. It can be useful when building maintenance user interface screens for fixed deposit applications. The template data returned consists of any or all of:
@@ -140,7 +139,6 @@ public class FixedDepositAccountsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Fixed deposit applications/accounts", operationId = "retrieveAllFixedDepositAccounts", description = """
             Lists Fixed Deposit Accounts
@@ -203,7 +201,6 @@ public class FixedDepositAccountsApiResource {
 
     @GET
     @Path("{accountId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a fixed deposit application/account", operationId = "retrieveOneFixedDepositAccount", description = """
             Retrieves a fixed deposit application/account
@@ -242,7 +239,6 @@ public class FixedDepositAccountsApiResource {
 
     @GET
     @Path("calculate-fd-interest")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = FixedDepositAccountsApiResourceSwagger.CalculateFixedDepositInterestResponse.class)))
     public String calculateFixedDepositInterest(@Context final UriInfo uriInfo,
@@ -444,7 +440,6 @@ public class FixedDepositAccountsApiResource {
 
     @DELETE
     @Path("{accountId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a fixed deposit application", operationId = "deleteFixedDepositAccount", description = "At present we support hard delete of fixed deposit application so long as its in 'Submitted and pending approval' state. One the application is moves past this state, it is not possible to do a 'hard' delete of the application or the account. An API endpoint will be added to close/de-activate the fixed deposit account.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = FixedDepositAccountsApiResourceSwagger.DeleteFixedDepositAccountsAccountIdResponse.class)))
@@ -459,7 +454,6 @@ public class FixedDepositAccountsApiResource {
 
     @GET
     @Path("{accountId}/template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String accountClosureTemplate(@PathParam("accountId") @Parameter(description = "accountId") final Long accountId,
             @QueryParam("command") @Parameter(description = "command") final String commandParam, @Context final UriInfo uriInfo) {

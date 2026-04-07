@@ -94,7 +94,6 @@ public class LoanDisbursementDetailApiResource {
 
     @GET
     @Path("{disbursementId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String retriveDetail(@PathParam("loanId") final Long loanId, @PathParam("disbursementId") final Long disbursementId,
             @Context final UriInfo uriInfo) {

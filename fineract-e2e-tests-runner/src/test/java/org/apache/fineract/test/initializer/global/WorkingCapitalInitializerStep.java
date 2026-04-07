@@ -20,12 +20,14 @@ package org.apache.fineract.test.initializer.global;
 
 import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsResponse;
+import org.apache.fineract.client.models.PostAllowAttributeOverrides;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsResponse;
 import org.apache.fineract.test.data.workingcapitalproduct.DefaultWorkingCapitalLoanProduct;
@@ -52,6 +54,16 @@ public class WorkingCapitalInitializerStep implements FineractGlobalInitializerS
         final PostWorkingCapitalLoanProductsResponse responseDefaultWCPL = createWorkingCapitalLoanProductIdempotent(defaultWCPLRequest);
         TestContext.INSTANCE.set(TestContextKey.DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP, responseDefaultWCPL);
 
+        final String workingCapitalProductDiscountDefaultName = DefaultWorkingCapitalLoanProduct.WCLP_DISCOUNT.getName();
+        final PostWorkingCapitalLoanProductsRequest defaultWCPLPDiscountRequest = workingCapitalRequestFactory
+                .defaultWorkingCapitalLoanProductAllowAttributesOverrideRequest() //
+                .name(workingCapitalProductDiscountDefaultName) //
+                .discount(new BigDecimal(50)); //
+        final PostWorkingCapitalLoanProductsResponse responseDefaultWCPLDiscount = createWorkingCapitalLoanProductIdempotent(
+                defaultWCPLPDiscountRequest);
+        TestContext.INSTANCE.set(TestContextKey.DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_DISCOUNT,
+                responseDefaultWCPLDiscount);
+
         final String workingCapitalProductDisallowOverridesDefaultName = DefaultWorkingCapitalLoanProduct.WCLP_DISALLOW_ATTRIBUTES_OVERRIDE
                 .getName();
         final PostWorkingCapitalLoanProductsRequest defaultWCPLDisallowOverridesRequest = workingCapitalRequestFactory
@@ -61,6 +73,21 @@ public class WorkingCapitalInitializerStep implements FineractGlobalInitializerS
                 defaultWCPLDisallowOverridesRequest);
         TestContext.INSTANCE.set(TestContextKey.DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_DISALLOW_OVERRIDES,
                 responseDefaultWCPLDisallowOverrides);
+
+        final String workingCapitalProductDiscountDisallowOverridesDefaultName = DefaultWorkingCapitalLoanProduct.WCLP_DISCOUNT_DISALLOW_ATTRIBUTES_OVERRIDE
+                .getName();
+        PostAllowAttributeOverrides allowAttributeOverridesDisabled = new PostAllowAttributeOverrides()
+                .delinquencyBucketClassification(false).discountDefault(false).periodPaymentFrequencyType(false)
+                .periodPaymentFrequency(false);
+        final PostWorkingCapitalLoanProductsRequest defaultWCPLDiscountDisallowOverridesRequest = workingCapitalRequestFactory
+                .defaultWorkingCapitalLoanProductRequest() //
+                .name(workingCapitalProductDiscountDisallowOverridesDefaultName) //
+                .discount(new BigDecimal(50)) //
+                .allowAttributeOverrides(allowAttributeOverridesDisabled); //
+        final PostWorkingCapitalLoanProductsResponse responseDefaultWCPLDiscountDisallowOverrides = createWorkingCapitalLoanProductIdempotent(
+                defaultWCPLDiscountDisallowOverridesRequest);
+        TestContext.INSTANCE.set(TestContextKey.DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_DISCOUNT_DISALLOW_OVERRIDES,
+                responseDefaultWCPLDiscountDisallowOverrides);
 
         final String workingCapitalProductForUpdateName = DefaultWorkingCapitalLoanProduct.WCLP_FOR_UPDATE.getName();
         final PostWorkingCapitalLoanProductsRequest defaultForUpdateWCPLRequest = workingCapitalRequestFactory

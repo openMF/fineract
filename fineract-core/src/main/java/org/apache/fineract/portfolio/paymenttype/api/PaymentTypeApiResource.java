@@ -59,7 +59,6 @@ public class PaymentTypeApiResource {
     private final DefaultToApiJsonSerializer<PaymentTypeData> jsonSerializer;
 
     @GET
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all Payment Types", description = "Retrieve list of payment types")
     public List<PaymentTypeData> getAllPaymentTypes(@QueryParam("onlyWithCode") final boolean onlyWithCode) {
@@ -68,7 +67,6 @@ public class PaymentTypeApiResource {
 
     @GET
     @Path("{paymentTypeId}")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a Payment Type", description = "Retrieves a payment type")
     public PaymentTypeData retrieveOnePaymentType(@PathParam("paymentTypeId") final Long paymentTypeId) {
@@ -110,7 +108,6 @@ public class PaymentTypeApiResource {
 
     @DELETE
     @Path("{paymentTypeId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Payment Type", operationId = "deleteCodePaymentType", description = "Deletes payment type")
     public PaymentTypeDeleteResponse deleteCode(@PathParam("paymentTypeId") final Long paymentTypeId) {

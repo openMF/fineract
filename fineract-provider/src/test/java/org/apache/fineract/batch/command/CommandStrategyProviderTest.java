@@ -35,6 +35,7 @@ import org.apache.fineract.batch.command.internal.ApproveLoanCommandStrategy;
 import org.apache.fineract.batch.command.internal.ApproveLoanRescheduleCommandStrategy;
 import org.apache.fineract.batch.command.internal.CollectChargesByLoanExternalIdCommandStrategy;
 import org.apache.fineract.batch.command.internal.CollectChargesCommandStrategy;
+import org.apache.fineract.batch.command.internal.CreateAccountTransferCommandStrategy;
 import org.apache.fineract.batch.command.internal.CreateChargeByLoanExternalIdCommandStrategy;
 import org.apache.fineract.batch.command.internal.CreateChargeCommandStrategy;
 import org.apache.fineract.batch.command.internal.CreateClientCommandStrategy;
@@ -44,6 +45,7 @@ import org.apache.fineract.batch.command.internal.CreateSavingsAccountChargeComm
 import org.apache.fineract.batch.command.internal.CreateTransactionByLoanExternalIdCommandStrategy;
 import org.apache.fineract.batch.command.internal.CreateTransactionLoanCommandStrategy;
 import org.apache.fineract.batch.command.internal.DisburseLoanCommandStrategy;
+import org.apache.fineract.batch.command.internal.DisburseToSavingsCommandStrategy;
 import org.apache.fineract.batch.command.internal.GetChargeByChargeExternalIdCommandStrategy;
 import org.apache.fineract.batch.command.internal.GetChargeByIdCommandStrategy;
 import org.apache.fineract.batch.command.internal.GetDatatableEntryByAppTableIdAndDataTableIdCommandStrategy;
@@ -57,6 +59,7 @@ import org.apache.fineract.batch.command.internal.GetReagePreviewByLoanExternalI
 import org.apache.fineract.batch.command.internal.GetReagePreviewByLoanIdCommandStrategy;
 import org.apache.fineract.batch.command.internal.LoanStateTransistionsByExternalIdCommandStrategy;
 import org.apache.fineract.batch.command.internal.ModifyLoanApplicationCommandStrategy;
+import org.apache.fineract.batch.command.internal.PaySavingsAccountChargeCommandStrategy;
 import org.apache.fineract.batch.command.internal.UnknownCommandStrategy;
 import org.apache.fineract.batch.command.internal.UpdateClientCommandStrategy;
 import org.apache.fineract.batch.command.internal.UpdateDatatableEntryOneToManyCommandStrategy;
@@ -94,6 +97,10 @@ public class CommandStrategyProviderTest {
                 Arguments.of("savingsaccounts", HttpMethod.POST, "applySavingsCommandStrategy", mock(ApplySavingsCommandStrategy.class)),
                 Arguments.of("savingsaccounts/123/charges", HttpMethod.POST, "createSavingsAccountChargeCommandStrategy",
                         mock(CreateSavingsAccountChargeCommandStrategy.class)),
+                Arguments.of("savingsaccounts/123/charges/47?command=paycharge", HttpMethod.POST, "paySavingsAccountChargeCommandStrategy",
+                        mock(PaySavingsAccountChargeCommandStrategy.class)),
+                Arguments.of("savingsaccounts/123/charges/47?command=waive", HttpMethod.POST, "paySavingsAccountChargeCommandStrategy",
+                        mock(PaySavingsAccountChargeCommandStrategy.class)),
                 Arguments.of("loans/123/charges", HttpMethod.POST, "createChargeCommandStrategy", mock(CreateChargeCommandStrategy.class)),
                 Arguments.of("loans/external-id/8dfad438-2319-48ce-8520-10a62801e9a1/charges", HttpMethod.POST,
                         "createChargeByLoanExternalIdCommandStrategy", mock(CreateChargeByLoanExternalIdCommandStrategy.class)),
@@ -165,6 +172,8 @@ public class CommandStrategyProviderTest {
                         mock(ApproveLoanCommandStrategy.class)),
                 Arguments.of("loans/123?command=disburse", HttpMethod.POST, "disburseLoanCommandStrategy",
                         mock(DisburseLoanCommandStrategy.class)),
+                Arguments.of("loans/123?command=disburseToSavings", HttpMethod.POST, "disburseToSavingsCommandStrategy",
+                        mock(DisburseToSavingsCommandStrategy.class)),
                 Arguments.of("loans/external-id/8dfad438-2319-48ce-8520-10a62801e9a1?command=approve", HttpMethod.POST,
                         "loanStateTransistionsByExternalIdCommandStrategy", mock(LoanStateTransistionsByExternalIdCommandStrategy.class)),
                 Arguments.of("loans/external-id/8dfad438-2319-48ce-8520-10a62801e9a1?command=disburse", HttpMethod.POST,
@@ -232,7 +241,9 @@ public class CommandStrategyProviderTest {
                 Arguments.of(
                         "loans/external-id/8dfad438-2319-48ce-8520-10a62801e9a1/transactions/reage-preview?frequency-number=2&frequencyType=long-string",
                         HttpMethod.GET, "getReagePreviewByLoanExternalIdCommandStrategy",
-                        mock(GetReagePreviewByLoanExternalIdCommandStrategy.class)));
+                        mock(GetReagePreviewByLoanExternalIdCommandStrategy.class)),
+                Arguments.of("accounttransfers", HttpMethod.POST, "createAccountTransferCommandStrategy",
+                        mock(CreateAccountTransferCommandStrategy.class)));
     }
 
     /**

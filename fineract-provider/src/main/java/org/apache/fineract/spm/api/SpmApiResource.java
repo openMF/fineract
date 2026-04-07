@@ -59,7 +59,6 @@ public class SpmApiResource {
     private final SpmService spmService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Transactional
     @Operation(summary = "List all Surveys", operationId = "fetchAllSurveys", description = "")
@@ -84,7 +83,6 @@ public class SpmApiResource {
 
     @GET
     @Path("/{id}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Transactional
     @Operation(summary = "Retrieve a Survey", description = "")

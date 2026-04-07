@@ -72,7 +72,6 @@ import org.apache.fineract.infrastructure.security.service.SqlValidator;
 import org.springframework.stereotype.Component;
 
 @Path("/v1/jobs")
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 @RequiredArgsConstructor
@@ -150,6 +149,7 @@ public class SchedulerJobApiResource {
 
     @POST
     @Path("{" + SchedulerJobApiConstants.JOB_ID + "}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Run a Job", description = "Manually Execute Specific Job.")
     @RequestBody(content = @Content(schema = @Schema(implementation = SchedulerJobApiResourceSwagger.ExecuteJobRequest.class)))
     @ApiResponse(responseCode = "200", description = "POST: jobs/1?command=executeJob")
@@ -161,6 +161,7 @@ public class SchedulerJobApiResource {
 
     @POST
     @Path(SHORT_NAME_PARAM + "/{shortName}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Run a Job", description = "Manually Execute Specific Job.")
     @RequestBody(content = @Content(schema = @Schema(implementation = SchedulerJobApiResourceSwagger.ExecuteJobRequest.class)))
     @ApiResponse(responseCode = "200", description = "POST: jobs/short-name/SA_PINT?command=executeJob")
@@ -173,6 +174,7 @@ public class SchedulerJobApiResource {
 
     @PUT
     @Path("{" + SchedulerJobApiConstants.JOB_ID + "}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Update a Job", description = "Updates the details of a job.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = SchedulerJobApiResourceSwagger.PutJobsJobIDRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK")
@@ -183,6 +185,7 @@ public class SchedulerJobApiResource {
 
     @PUT
     @Path(SHORT_NAME_PARAM + "/{shortName}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Update a Job", description = "Updates the details of a job.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = SchedulerJobApiResourceSwagger.PutJobsJobIDRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK")

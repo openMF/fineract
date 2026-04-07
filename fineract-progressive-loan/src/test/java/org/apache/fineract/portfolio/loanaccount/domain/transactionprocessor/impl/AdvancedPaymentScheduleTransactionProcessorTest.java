@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType;
+import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.domain.ActionContext;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
@@ -121,7 +122,8 @@ class AdvancedPaymentScheduleTransactionProcessorTest {
     public void setUp() {
         underTest = new AdvancedPaymentScheduleTransactionProcessor(emiCalculator, Mockito.mock(InterestRefundService.class),
                 Mockito.mock(ExternalIdFactory.class), Mockito.mock(LoanScheduleComponent.class), Mockito.mock(LoanChargeValidator.class),
-                Mockito.mock(LoanBalanceService.class), Mockito.mock(LoanChargeService.class), Mockito.mock(ScheduledDateGenerator.class));
+                Mockito.mock(LoanBalanceService.class), Mockito.mock(LoanChargeService.class), Mockito.mock(ScheduledDateGenerator.class),
+                Mockito.mock(ConfigurationDomainService.class));
 
         ThreadLocalContextUtil.setTenant(new FineractPlatformTenant(1L, "default", "Default", "Asia/Kolkata", null));
         ThreadLocalContextUtil.setActionContext(ActionContext.DEFAULT);
@@ -534,8 +536,6 @@ class AdvancedPaymentScheduleTransactionProcessorTest {
         Money disbursementMoney = Money.of(currency, postMaturityDisbursementAmount);
 
         LoanProductRelatedDetail loanProductRelatedDetail = mock(LoanProductRelatedDetail.class);
-        org.apache.fineract.portfolio.loanproduct.domain.LoanProduct loanProduct = mock(
-                org.apache.fineract.portfolio.loanproduct.domain.LoanProduct.class);
         when(loanProductRelatedDetail.getInstallmentAmountInMultiplesOf()).thenReturn(null);
         when(loanProductRelatedDetail.isEnableDownPayment()).thenReturn(false);
 

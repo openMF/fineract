@@ -67,7 +67,6 @@ public class ConfigureBusinessStepApiResource {
 
     @GET
     @Path("{jobName}/steps")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Business Step Configurations for a Job", description = "Returns the configured Business Steps for a job")
     public JobBusinessStepConfigData retrieveAllConfiguredBusinessStep(
@@ -94,7 +93,6 @@ public class ConfigureBusinessStepApiResource {
 
     @GET
     @Path("{jobName}/available-steps")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Business Step Configurations for a Job", description = "Returns the available Business Steps for a job")
     public JobBusinessStepDetail retrieveAllAvailableBusinessStep(

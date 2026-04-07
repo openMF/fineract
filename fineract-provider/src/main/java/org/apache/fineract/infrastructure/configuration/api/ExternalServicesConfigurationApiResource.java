@@ -64,7 +64,6 @@ public class ExternalServicesConfigurationApiResource {
 
     @GET
     @Path("{servicename}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve External Services Configuration", description = "Returns a external Service configurations based on the Service Name.\n"
             + "\n" + "Service Names supported are S3 and SMTP.\n" + "\n" + "Example Requests:\n" + "\n" + "externalservice/SMTP")

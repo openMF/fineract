@@ -63,7 +63,6 @@ public class RateApiResource {
 
     @GET
     @Path("{rateId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public RateData retrieveRate(@PathParam("rateId") Long rateId) {
 
@@ -83,7 +82,6 @@ public class RateApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public List<RateData> getAllRates() {
 

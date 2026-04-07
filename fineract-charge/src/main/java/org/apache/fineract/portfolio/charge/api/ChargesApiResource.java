@@ -71,7 +71,6 @@ public class ChargesApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Charges", description = """
             Returns the list of defined charges.
@@ -86,7 +85,6 @@ public class ChargesApiResource {
 
     @GET
     @Path("{chargeId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Charge", description = """
             Returns the details of a defined Charge.
@@ -111,7 +109,6 @@ public class ChargesApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Charge Template", description = """
             This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:

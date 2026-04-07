@@ -55,7 +55,6 @@ import org.springframework.stereotype.Component;
 
 @Path("/v1/interestratecharts")
 @Component
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Tag(name = "Interest Rate Chart", description = "This defines an interest rate scheme that can be associated to a term deposit product. This will have a slab (band or range) of deposit periods and the associated interest rates applicable along with incentives for each band.")
 @RequiredArgsConstructor
@@ -104,6 +103,7 @@ public class InterestRateChartsApiResource {
     }
 
     @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Create a Chart", description = "Creates a new chart which can be attached to a term deposit products (FD or RD).")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = InterestRateChartCreateResponse.class)))
     public InterestRateChartCreateResponse create(final InterestRateChartCreateRequest request) {
@@ -116,6 +116,7 @@ public class InterestRateChartsApiResource {
 
     @PUT
     @Path("{chartId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Update a Chart", description = "It updates the chart")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = InterestRateChartUpdateResponse.class)))
     public InterestRateChartUpdateResponse update(@PathParam("chartId") final Long chartId, final InterestRateChartUpdateRequest request) {

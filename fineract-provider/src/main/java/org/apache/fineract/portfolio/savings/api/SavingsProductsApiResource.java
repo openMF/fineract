@@ -138,7 +138,6 @@ public class SavingsProductsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Savings Products", operationId = "retrieveAllSavingsProducts", description = "Lists Savings Products\n\n"
             + "Example Requests:\n" + "\n" + "savingsproducts\n" + "\n" + "savingsproducts?fields=name")
@@ -155,7 +154,6 @@ public class SavingsProductsApiResource {
 
     @GET
     @Path("{productId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Savings Product", operationId = "retrieveOneSavingsProduct", description = "Retrieves a Savings Product\n\n"
             + "Example Requests:\n" + "\n" + "savingsproducts/1\n" + "\n" + "savingsproducts/1?template=true\n" + "\n"
@@ -197,7 +195,6 @@ public class SavingsProductsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Savings Product Template", operationId = "retrieveTemplateSavingsProduct", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed description Lists\n" + "Example Request:\n" + "Account Mapping:\n" + "\n"
@@ -289,7 +286,6 @@ public class SavingsProductsApiResource {
 
     @DELETE
     @Path("{productId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Savings Product", operationId = "deleteSavingsProduct", description = "Deletes a Savings Product")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = SavingsProductsApiResourceSwagger.DeleteSavingsProductsProductIdResponse.class)))

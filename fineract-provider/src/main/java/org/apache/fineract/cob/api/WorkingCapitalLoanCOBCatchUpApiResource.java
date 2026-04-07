@@ -48,7 +48,6 @@ public class WorkingCapitalLoanCOBCatchUpApiResource {
 
     @GET
     @Path("oldest-cob-closed")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieves the oldest COB processed Working Capital Loan", description = "Retrieves the COB business date and the oldest COB processed loan")
     public OldestCOBProcessedLoanDTO getOldestCOBProcessedLoan() {
@@ -71,7 +70,6 @@ public class WorkingCapitalLoanCOBCatchUpApiResource {
 
     @GET
     @Path("is-catch-up-running")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieves whether Working Capital Loan COB catch up is running", description = "Retrieves whether Working Capital Loan COB catch up is running, and the current execution date if it is running.")
     public IsCatchUpRunningDTO isCatchUpRunning() {

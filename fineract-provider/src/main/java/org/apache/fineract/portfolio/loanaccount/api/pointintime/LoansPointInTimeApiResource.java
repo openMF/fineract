@@ -46,7 +46,6 @@ public class LoansPointInTimeApiResource implements LoansPointInTimeApi {
 
     @GET
     @Path("{loanId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Override
     public LoanPointInTimeData retrieveLoanPointInTime(@PathParam("loanId") @Parameter(description = "loanId", required = true) Long loanId,
@@ -58,7 +57,6 @@ public class LoansPointInTimeApiResource implements LoansPointInTimeApi {
 
     @GET
     @Path("external-id/{loanExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Override
     public LoanPointInTimeData retrieveLoanPointInTimeByExternalId(

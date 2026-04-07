@@ -62,7 +62,6 @@ public class TaxComponentApiResource {
     private final DefaultToApiJsonSerializer<String> toApiJsonSerializer;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Tax Components", description = "List Tax Components")
     @ApiResponses({
@@ -74,7 +73,6 @@ public class TaxComponentApiResource {
 
     @GET
     @Path("{taxComponentId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Tax Component", description = "Retrieve Tax Component")
     @ApiResponses({
@@ -87,7 +85,6 @@ public class TaxComponentApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public TaxComponentData retrieveTemplate() {
         context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);

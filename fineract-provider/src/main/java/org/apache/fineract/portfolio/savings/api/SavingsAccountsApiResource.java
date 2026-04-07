@@ -97,7 +97,6 @@ public class SavingsAccountsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Savings Account Template", operationId = "retrieveSavingsAccountTemplate", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed Value Lists\n\n" + "Example Requests:\n" + "\n" + "savingsaccounts/template?clientId=1\n"
@@ -119,7 +118,6 @@ public class SavingsAccountsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List savings applications/accounts", operationId = "retrieveAllSavingsAccounts", description = "Lists savings applications/accounts\n\n"
             + "Example Requests:\n" + "\n" + "savingsaccounts\n" + "\n" + "\n" + "savingsaccounts?fields=name")
@@ -180,7 +178,6 @@ public class SavingsAccountsApiResource {
 
     @GET
     @Path("{accountId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a savings account", operationId = "retrieveSavingsAccount")
     public SavingsAccountData retrieveOne(@PathParam("accountId") final Long accountId,
@@ -193,7 +190,6 @@ public class SavingsAccountsApiResource {
 
     @GET
     @Path("/external-id/{externalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a savings account by external ID", operationId = "retrieveSavingsAccountByExternalId")
     public SavingsAccountData retrieveOne(@PathParam("externalId") final String externalId,
@@ -404,7 +400,6 @@ public class SavingsAccountsApiResource {
 
     @DELETE
     @Path("{accountId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a savings application", operationId = "deleteSavingsAccount", description = "At present we support hard delete of savings application so long as its in 'Submitted and pending approval' state. One the application is moves past this state, it is not possible to do a 'hard' delete of the application or the account. An API endpoint will be added to close/de-activate the savings account.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = SavingsAccountsApiResourceSwagger.DeleteSavingsAccountsAccountIdResponse.class)))
@@ -415,7 +410,6 @@ public class SavingsAccountsApiResource {
 
     @DELETE
     @Path("/external-id/{externalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a savings application by externalId", operationId = "deleteSavingsAccountByExternalId", description = "At present we support hard delete of savings application so long as its in 'Submitted and pending approval' state. One the application is moves past this state, it is not possible to do a 'hard' delete of the application or the account. An API endpoint will be added to close/de-activate the savings account.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = SavingsAccountsApiResourceSwagger.DeleteSavingsAccountsAccountIdResponse.class)))

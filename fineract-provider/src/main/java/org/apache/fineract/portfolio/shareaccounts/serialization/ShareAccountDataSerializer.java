@@ -152,13 +152,15 @@ public class ShareAccountDataSerializer {
         baseDataValidator.reset().parameter(ShareAccountApiConstants.requestedshares_paramname).value(requestedShares).notNull()
                 .longGreaterThanZero();
 
-        if (shareProduct.getMinimumClientShares() != null && requestedShares < shareProduct.getMinimumClientShares()) {
+        if (requestedShares != null && shareProduct.getMinimumClientShares() != null
+                && requestedShares < shareProduct.getMinimumClientShares()) {
             baseDataValidator.reset().parameter(ShareAccountApiConstants.requestedshares_paramname).value(requestedShares).failWithCode(
                     "client.can.not.purchase.shares.lessthan.product.definition",
                     "Client can not purchase shares less than product definition");
         }
 
-        if (shareProduct.getMaximumClientShares() != null && requestedShares > shareProduct.getMaximumClientShares()) {
+        if (requestedShares != null && shareProduct.getMaximumClientShares() != null
+                && requestedShares > shareProduct.getMaximumClientShares()) {
             baseDataValidator.reset().parameter(ShareAccountApiConstants.requestedshares_paramname).value(requestedShares).failWithCode(
                     "client.can.not.purchase.shares.morethan.product.definition",
                     "Client can not purchase shares more than product definition");

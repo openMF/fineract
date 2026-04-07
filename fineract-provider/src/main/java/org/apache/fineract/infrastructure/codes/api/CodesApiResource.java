@@ -75,7 +75,6 @@ public class CodesApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Codes", description = "Returns the list of codes.\n" + "\n" + "Example Requests:\n" + "\n" + "codes")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = CodesApiResourceSwagger.GetCodesResponse.class))))
@@ -106,7 +105,6 @@ public class CodesApiResource {
 
     @GET
     @Path("{codeId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Code", description = "Returns the details of a Code.\n" + "\n" + "Example Requests:\n" + "\n"
             + "codes/1")
@@ -121,7 +119,6 @@ public class CodesApiResource {
 
     @GET
     @Path("name/{codeName}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Code", description = "Returns the details of a Code.\n" + "\n" + "Example Requests:\n" + "\n"
             + "codes/1")
@@ -154,7 +151,6 @@ public class CodesApiResource {
 
     @DELETE
     @Path("{codeId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Code", description = "Deletes a code if it is not system defined.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CodesApiResourceSwagger.DeleteCodesResponse.class)))

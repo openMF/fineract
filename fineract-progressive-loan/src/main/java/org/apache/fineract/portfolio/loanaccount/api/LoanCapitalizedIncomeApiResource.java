@@ -24,7 +24,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -70,7 +69,6 @@ public class LoanCapitalizedIncomeApiResource {
 
     @Path("/{loanId}/deferredincome")
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(deprecated = true, summary = "Fetch the Capitalized Income related informations")
     public LoanCapitalizedIncomeData fetchLoanCapitalizedIncomeData(
@@ -82,7 +80,6 @@ public class LoanCapitalizedIncomeApiResource {
 
     @GET
     @Path("/external-id/{loanExternalId}/deferredincome")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(deprecated = true, summary = "Get the amortization details of Capitalized Income for a loan by external ID")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanCapitalizedIncomeData.class)))
@@ -98,7 +95,6 @@ public class LoanCapitalizedIncomeApiResource {
 
     @Path("/{loanId}/capitalized-incomes")
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Fetch the Capitalized Income related informations")
     public List<CapitalizedIncomeDetails> fetchCapitalizedIncomeDetails(
@@ -110,7 +106,6 @@ public class LoanCapitalizedIncomeApiResource {
 
     @GET
     @Path("/external-id/{loanExternalId}/capitalized-incomes")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Get the amortization details of Capitalized Income for a loan by external ID")
     public List<CapitalizedIncomeDetails> fetchCapitalizedIncomeDetailsByExternalId(
@@ -128,7 +123,6 @@ public class LoanCapitalizedIncomeApiResource {
      */
     @GET
     @Path("{loanId}/capitalized-incomes/{loanTransactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a capitalized income allocation data", description = "Retrieves capitalized income allocation data according to the Loan ID and Loan Transaction ID"
             + "Example Requests:\n" + "\n" + "/loans/1/capitalized-incomes/1\n" + "\n" + "\n"
@@ -145,7 +139,6 @@ public class LoanCapitalizedIncomeApiResource {
      */
     @GET
     @Path("external-id/{loanExternalId}/capitalized-incomes/{loanTransactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a capitalized income allocation data", description = "Retrieves capitalized income allocation data according to the Loan external ID and Loan Transaction ID"
             + "Example Requests:\n" + "\n" + "/loans/external-id/1/capitalized-incomes/1\n" + "\n" + "\n"
@@ -163,7 +156,6 @@ public class LoanCapitalizedIncomeApiResource {
      */
     @GET
     @Path("{loanId}/capitalized-incomes/external-id/{loanTransactionExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a capitalized income allocation data", description = "Retrieves capitalized income allocation data according to the Loan ID and Loan Transaction external ID"
             + "Example Requests:\n" + "\n" + "/loans/1/capitalized-incomes/external-id/1\n" + "\n" + "\n"
@@ -181,7 +173,6 @@ public class LoanCapitalizedIncomeApiResource {
      */
     @GET
     @Path("external-id/{loanExternalId}/capitalized-incomes/external-id/{loanTransactionExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a capitalized income allocation data", description = "Retrieves capitalized income allocation data according to the Loan external ID and Loan Transaction external ID"
             + "Example Requests:\n" + "\n" + "/loans/external-id/1/capitalized-incomes/1\n" + "\n" + "\n"

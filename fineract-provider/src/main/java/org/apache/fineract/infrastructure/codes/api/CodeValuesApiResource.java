@@ -84,7 +84,6 @@ public class CodeValuesApiResource {
 
     @GET
     @Path("{codeId}/codevalues")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Code Values", description = "Returns the list of Code Values for a given Code\n" + "\n"
             + "Example Requests:\n" + "\n" + "codes/1/codevalues", parameters = @Parameter(name = "codeId", description = "co"))
@@ -102,7 +101,6 @@ public class CodeValuesApiResource {
 
     @GET
     @Path("{codeId}/codevalues/{codeValueId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Code description", description = "Returns the details of a Code Value\n" + "\n" + "Example Requests:\n"
             + "\n" + "codes/1/codevalues/1")
@@ -158,7 +156,6 @@ public class CodeValuesApiResource {
 
     @DELETE
     @Path("{codeId}/codevalues/{codeValueId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Code description", description = "Deletes a code description")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CodeValuesApiResourceSwagger.DeleteCodeValueDataResponse.class)))
@@ -174,7 +171,6 @@ public class CodeValuesApiResource {
 
     @GET
     @Path("name/{codeName}/codevalues")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Code Values", operationId = "retrieveAllCodeValuesByCodeName", description = "Returns the list of Code Values for a given Code\n"
             + "\n" + "Example Requests:\n" + "\n" + "codes/1/codevalues", parameters = @Parameter(name = "codeId", description = "co"))
@@ -189,7 +185,6 @@ public class CodeValuesApiResource {
 
     @GET
     @Path("name/{codeName}/codevalues/{codeValueId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Code description", description = "Returns the details of a Code Value\n" + "\n" + "Example Requests:\n"
             + "\n" + "codes/name/ADDRESS_TYPE/codevalues/1")
@@ -239,7 +234,6 @@ public class CodeValuesApiResource {
 
     @DELETE
     @Path("name/{codeName}/codevalues/{codeValueId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Code description", description = "Deletes a code description")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CodeValuesApiResourceSwagger.DeleteCodeValueDataResponse.class)))

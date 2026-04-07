@@ -18,7 +18,7 @@
  */
 package org.apache.fineract.portfolio.charge.exception;
 
-import org.apache.commons.lang3.ObjectUtils;
+import java.util.Objects;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.infrastructure.core.exception.AbstractPlatformDomainRuleException;
 import org.apache.fineract.infrastructure.core.exception.AbstractPlatformResourceNotFoundException;
@@ -49,6 +49,6 @@ public class LoanChargeNotFoundException extends AbstractPlatformResourceNotFoun
 
     public LoanChargeNotFoundException(ExternalId externalId) {
         super("error.msg.loanCharge.external.id.invalid", "Loan Charge with external identifier "
-                + ObjectUtils.defaultIfNull(externalId, ExternalId.empty()).getValue() + " does not exist", externalId);
+                + Objects.requireNonNullElse(externalId, ExternalId.empty()).getValue() + " does not exist", externalId);
     }
 }

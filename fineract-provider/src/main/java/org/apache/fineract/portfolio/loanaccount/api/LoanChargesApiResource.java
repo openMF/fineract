@@ -93,7 +93,6 @@ public class LoanChargesApiResource {
 
     @GET
     @Path("{loanId}/charges")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Loan Charges", description = "It lists all the Loan Charges specific to a Loan \n\n" + "Example Requests:\n"
             + "\n" + "loans/1/charges\n" + "\n" + "\n" + "loans/1/charges?fields=name,amountOrPercentage")
@@ -106,7 +105,6 @@ public class LoanChargesApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}/charges")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Loan Charges", operationId = "retrieveAllLoanChargesByLoanExternalId", description = "It lists all the Loan Charges specific to a Loan \n\n"
             + "Example Requests:\n" + "\n" + "loans/1/charges\n" + "\n" + "\n" + "loans/1/charges?fields=name,amountOrPercentage")
@@ -120,7 +118,6 @@ public class LoanChargesApiResource {
 
     @GET
     @Path("{loanId}/charges/template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Loan Charges Template", operationId = "retrieveTemplateLoanCharge", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed description Lists\n" + "Example Request:\n" + "\n" + "loans/1/charges/template\n" + "\n")
@@ -133,7 +130,6 @@ public class LoanChargesApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}/charges/template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Loan Charges Template", operationId = "retrieveTemplateLoanChargeByLoanExternalId", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed description Lists\n" + "Example Request:\n" + "\n" + "loans/1/charges/template\n" + "\n")
@@ -146,7 +142,6 @@ public class LoanChargesApiResource {
 
     @GET
     @Path("{loanId}/charges/{loanChargeId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Loan Charge", description = "Retrieves Loan Charge according to the Loan ID and Loan Charge ID"
             + "Example Requests:\n" + "\n" + "/loans/1/charges/1\n" + "\n" + "\n" + "/loans/1/charges/1?fields=name,amountOrPercentage")
@@ -159,7 +154,6 @@ public class LoanChargesApiResource {
 
     @GET
     @Path("{loanId}/charges/external-id/{loanChargeExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Loan Charge", operationId = "retrieveLoanChargeByChargeExternalId", description = "Retrieves Loan Charge according to the Loan ID and Loan Charge External ID"
             + "Example Requests:\n" + "\n" + "/loans/1/charges/1\n" + "\n" + "\n"
@@ -174,7 +168,6 @@ public class LoanChargesApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}/charges/{loanChargeId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Loan Charge", operationId = "retrieveLoanChargeByLoanExternalId", description = "Retrieves Loan Charge according to the Loan external ID and Loan Charge ID"
             + "Example Requests:\n" + "\n" + "/loans/1/charges/1\n" + "\n" + "\n" + "/loans/1/charges/1?fields=name,amountOrPercentage")
@@ -187,7 +180,6 @@ public class LoanChargesApiResource {
 
     @GET
     @Path("external-id/{loanExternalId}/charges/external-id/{loanChargeExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Loan Charge", operationId = "retrieveLoanChargeByLoanAndChargeExternalId", description = "Retrieves Loan Charge according to the Loan External ID and Loan Charge External ID"
             + "Example Requests:\n" + "\n" + "/loans/1/charges/1\n" + "\n" + "\n" + "/loans/1/charges/1?fields=name,amountOrPercentage")
@@ -345,7 +337,6 @@ public class LoanChargesApiResource {
 
     @DELETE
     @Path("{loanId}/charges/{loanChargeId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Loan Charge", description = "Note: Currently, A Loan Charge may only be removed from Loans that are not yet approved.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanChargesApiResourceSwagger.DeleteLoansLoanIdChargesChargeIdResponse.class)))
@@ -357,7 +348,6 @@ public class LoanChargesApiResource {
 
     @DELETE
     @Path("{loanId}/charges/external-id/{loanChargeExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Loan Charge", operationId = "deleteLoanChargeByChargeExternalId", description = "Note: Currently, A Loan Charge may only be removed from Loans that are not yet approved.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanChargesApiResourceSwagger.DeleteLoansLoanIdChargesChargeIdResponse.class)))
@@ -369,7 +359,6 @@ public class LoanChargesApiResource {
 
     @DELETE
     @Path("external-id/{loanExternalId}/charges/{loanChargeId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Loan Charge", operationId = "deleteLoanChargeByLoanExternalId", description = "Note: Currently, A Loan Charge may only be removed from Loans that are not yet approved.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanChargesApiResourceSwagger.DeleteLoansLoanIdChargesChargeIdResponse.class)))
@@ -381,7 +370,6 @@ public class LoanChargesApiResource {
 
     @DELETE
     @Path("external-id/{loanExternalId}/charges/external-id/{loanChargeExternalId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Loan Charge", operationId = "deleteLoanChargeByLoanAndChargeExternalId", description = "Note: Currently, A Loan Charge may only be removed from Loans that are not yet approved.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanChargesApiResourceSwagger.DeleteLoansLoanIdChargesChargeIdResponse.class)))

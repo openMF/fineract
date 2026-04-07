@@ -20,13 +20,13 @@ package org.apache.fineract.test.factory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.apache.fineract.client.models.PostSavingsCharges;
 import org.apache.fineract.client.models.PostSavingsProductsRequest;
 
 public final class SavingsProductRequestFactory {
 
     public static final String DEFAULT_SAVINGS_PRODUCT_NAME = "CEUR";
-
     public static final String DEFAULT_SAVINGS_PRODUCT_SHORT_NAME = "CEU";
     public static final String DEFAULT_SAVINGS_PRODUCT_DESCRIPTION = "";
     public static final String DEFAULT_SAVINGS_PRODUCT_CURRENCY_CODE = "EUR";
@@ -43,10 +43,11 @@ public final class SavingsProductRequestFactory {
     private SavingsProductRequestFactory() {}
 
     public static PostSavingsProductsRequest defaultSavingsProductRequest() {
+        String uniqueId = UUID.randomUUID().toString().replace("-", "").substring(0, 4).toUpperCase();
         List<PostSavingsCharges> charges = new ArrayList<>();
 
-        return new PostSavingsProductsRequest().name(DEFAULT_SAVINGS_PRODUCT_NAME)//
-                .shortName(DEFAULT_SAVINGS_PRODUCT_SHORT_NAME)//
+        return new PostSavingsProductsRequest().name(DEFAULT_SAVINGS_PRODUCT_NAME + "-" + uniqueId)//
+                .shortName(uniqueId)//
                 .description(DEFAULT_SAVINGS_PRODUCT_DESCRIPTION)//
                 .currencyCode(DEFAULT_SAVINGS_PRODUCT_CURRENCY_CODE)//
                 .digitsAfterDecimal(DEFAULT_SAVINGS_PRODUCT_DIGITS_AFTER_DECIMAL)//

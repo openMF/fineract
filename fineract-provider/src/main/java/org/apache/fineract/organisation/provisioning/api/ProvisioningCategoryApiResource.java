@@ -50,7 +50,6 @@ public class ProvisioningCategoryApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public List<ProvisioningCategoryData> retrieveAll() {
         platformSecurityContext.authenticatedUser();
@@ -80,7 +79,6 @@ public class ProvisioningCategoryApiResource {
 
     @DELETE
     @Path("{categoryId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public CommandProcessingResult deleteProvisioningCategory(@PathParam("categoryId") final Long categoryId) {
         platformSecurityContext.authenticatedUser();

@@ -83,7 +83,6 @@ public class SavingsAccountTransactionsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a savings account transaction template", operationId = "retrieveTemplateSavingsAccountTransaction")
     public String retrieveTemplate(@PathParam("savingsId") final Long savingsId,
@@ -106,7 +105,6 @@ public class SavingsAccountTransactionsApiResource {
 
     @GET
     @Path("{transactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a savings account transaction", operationId = "retrieveOneSavingsAccountTransaction")
     public String retrieveOne(@PathParam("savingsId") final Long savingsId, @PathParam("transactionId") final Long transactionId,

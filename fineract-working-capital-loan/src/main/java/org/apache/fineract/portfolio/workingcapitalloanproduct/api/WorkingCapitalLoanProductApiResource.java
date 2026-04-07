@@ -88,7 +88,6 @@ public class WorkingCapitalLoanProductApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(operationId = "retrieveAllWorkingCapitalLoanProducts", summary = "List Working Capital Loan Products", description = "Lists all Working Capital Loan Products")
     @ApiResponses({
@@ -100,7 +99,6 @@ public class WorkingCapitalLoanProductApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Working Capital Loan Product Details Template", operationId = "retrieveTemplateWorkingCapitalLoanProduct", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed description Lists\n" + "Example Request:\n" + "\n"
@@ -114,7 +112,6 @@ public class WorkingCapitalLoanProductApiResource {
 
     @GET
     @Path("{productId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Working Capital Loan Product", operationId = "retrieveOneWorkingCapitalLoanProduct", description = "Retrieves a Working Capital Loan Product\n\n"
             + "Example Requests:\n" + "\n" + "workingcapitalloanproducts/1\n" + "\n" + "\n" + "workingcapitalloanproducts/1?template=true\n"
@@ -145,7 +142,6 @@ public class WorkingCapitalLoanProductApiResource {
 
     @DELETE
     @Path("{productId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Working Capital Loan Product", operationId = "deleteWorkingCapitalLoanProduct", description = "Deletes a Working Capital Loan Product if it is not in use")
     @ApiResponses({
@@ -158,7 +154,6 @@ public class WorkingCapitalLoanProductApiResource {
 
     @DELETE
     @Path("external-id/{externalProductId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Working Capital Loan Product", operationId = "deleteWorkingCapitalLoanProductByExternalId", description = "Deletes a Working Capital Loan Product by external ID if it is not in use")
     @ApiResponses({
@@ -179,7 +174,6 @@ public class WorkingCapitalLoanProductApiResource {
 
     @GET
     @Path("external-id/{externalProductId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Working Capital Loan Product", operationId = "retrieveOneWorkingCapitalLoanProductByExternalId", description = "Retrieves a Working Capital Loan Product by external ID\n\n"
             + "Example Requests:\n" + "\n" + "workingcapitalloanproducts/external-id/2075e308-d4a8-44d9-8203-f5a947b8c2f4")

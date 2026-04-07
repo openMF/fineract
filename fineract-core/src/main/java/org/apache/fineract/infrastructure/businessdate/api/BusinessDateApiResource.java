@@ -52,7 +52,6 @@ public class BusinessDateApiResource {
     private final BusinessDateMapper businessDateMapper;
 
     @GET
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "List all business dates", description = "")
     public List<BusinessDateResponse> getBusinessDates() {
@@ -61,7 +60,6 @@ public class BusinessDateApiResource {
 
     @GET
     @Path("{type}")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a specific Business date", description = "")
     public BusinessDateResponse getBusinessDate(@PathParam("type") @Parameter(description = "type") final String type) {

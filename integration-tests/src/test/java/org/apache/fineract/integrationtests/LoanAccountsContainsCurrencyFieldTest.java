@@ -66,10 +66,9 @@ public class LoanAccountsContainsCurrencyFieldTest extends BaseLoanIntegrationTe
 
         // given
         globalConfigurationHelper.manageConfigurations(GlobalConfigurationConstants.ENABLE_AUTO_GENERATED_EXTERNAL_ID, true);
-        final String jsonPayload = ClientHelper.getBasicClientAsJSON(ClientHelper.DEFAULT_OFFICE_ID, ClientHelper.LEGALFORM_ID_PERSON,
-                null);
         // when
-        final PostClientsResponse clientResponse = ClientHelper.addClientAsPerson(requestSpec, responseSpec, jsonPayload);
+        final PostClientsResponse clientResponse = ClientHelper.addClientAsPerson(ClientHelper.DEFAULT_OFFICE_ID,
+                ClientHelper.LEGALFORM_ID_PERSON, null);
         final String clientExternalId = clientResponse.getResourceExternalId();
         final long clientId = clientResponse.getClientId();
 
@@ -81,8 +80,7 @@ public class LoanAccountsContainsCurrencyFieldTest extends BaseLoanIntegrationTe
         final Integer loanId = createLoanAccount(loanTransactionHelper, String.valueOf(clientId), String.valueOf(loanProductId),
                 formattedDate);
 
-        GetClientsClientIdAccountsResponse clientAccountsResponse = ClientHelper.getClientAccounts(requestSpec, responseSpec,
-                clientExternalId);
+        GetClientsClientIdAccountsResponse clientAccountsResponse = ClientHelper.getClientAccounts(clientExternalId);
 
         if (clientAccountsResponse.getLoanAccounts() == null) {
             // Handle the case where getClientAccounts returned null

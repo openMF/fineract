@@ -81,7 +81,6 @@ public class CalendarsApiResource {
 
     @GET
     @Path("{calendarId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public CalendarData retrieveCalendar(@PathParam("calendarId") final Long calendarId, @PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId, @Context final UriInfo uriInfo) {
@@ -110,7 +109,6 @@ public class CalendarsApiResource {
      * @return
      */
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public List<CalendarData> retrieveCalendarsByEntity(@PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId, @Context final UriInfo uriInfo,
@@ -135,7 +133,6 @@ public class CalendarsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public CalendarData retrieveNewCalendarDetails(@Context final UriInfo uriInfo, @PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId) {
@@ -177,7 +174,6 @@ public class CalendarsApiResource {
 
     @DELETE
     @Path("{calendarId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public CommandProcessingResult deleteCalendar(@PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId, @PathParam("calendarId") final Long calendarId) {

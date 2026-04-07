@@ -41,7 +41,6 @@ import org.apache.fineract.infrastructure.security.service.PlatformSecurityConte
 import org.springframework.stereotype.Component;
 
 @Path("/v1/email/configuration")
-@Consumes({ MediaType.APPLICATION_JSON })
 @Produces({ MediaType.APPLICATION_JSON })
 @Component
 @RequiredArgsConstructor
@@ -66,6 +65,7 @@ public class EmailConfigurationApiResource {
     }
 
     @PUT
+    @Consumes({ MediaType.APPLICATION_JSON })
     public String updateConfiguration(@Context final UriInfo uriInfo, final String apiRequestBodyAsJson) {
 
         final CommandWrapper commandRequest = new CommandWrapperBuilder().updateEmailConfiguration().withJson(apiRequestBodyAsJson).build();

@@ -68,11 +68,6 @@ public enum ConditionType {
         return this.code;
     }
 
-    // TODO: why not just use the enum values... just more boilerplate code here!!
-    public boolean isInvalid() {
-        return ConditionType.INVALID.getValue().equals(this.value);
-    }
-
     // TODO: do we really need this?!?
     public static Object[] integerValues() {
         return Arrays.stream(values()).filter(value -> !INVALID.equals(value)).map(value -> value.value).toList().toArray();

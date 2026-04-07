@@ -79,7 +79,6 @@ public class BulkLoansApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String loanReassignmentTemplate(@QueryParam(OFFICE_ID) final Long officeId,
             @QueryParam(FROM_LOAN_OFFICER_ID) final Long loanOfficerId, @Context final UriInfo uriInfo) {

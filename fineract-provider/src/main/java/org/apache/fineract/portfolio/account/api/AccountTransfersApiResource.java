@@ -62,7 +62,6 @@ public class AccountTransfersApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Account Transfer Template", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n\n"
             + "\n\n" + "Field Defaults\n\n" + "Allowed Value Lists\n\n" + "Example Requests:\n\n" + "\n\n"
@@ -95,7 +94,6 @@ public class AccountTransfersApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List account transfers", description = "Lists account's transfers\n\n" + "Example Requests:\n\n" + "\n\n"
             + "accounttransfers")
@@ -117,7 +115,6 @@ public class AccountTransfersApiResource {
 
     @GET
     @Path("{transferId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve account transfer", description = "Retrieves account transfer\n\n" + "Example Requests :\n\n" + "\n\n"
             + "accounttransfers/1")
@@ -129,7 +126,6 @@ public class AccountTransfersApiResource {
 
     @GET
     @Path("templateRefundByTransfer")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Refund of an Active Loan by Transfer Template", description = "Retrieves Refund of an Active Loan by Transfer Template"
             + "Example Requests :\n\n" + "\n\n"

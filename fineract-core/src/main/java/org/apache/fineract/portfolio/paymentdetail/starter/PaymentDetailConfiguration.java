@@ -21,7 +21,7 @@ package org.apache.fineract.portfolio.paymentdetail.starter;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetailRepository;
 import org.apache.fineract.portfolio.paymentdetail.service.PaymentDetailWritePlatformService;
 import org.apache.fineract.portfolio.paymentdetail.service.PaymentDetailWritePlatformServiceJpaRepositoryImpl;
-import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepositoryWrapper;
+import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +32,7 @@ public class PaymentDetailConfiguration {
     @Bean
     @ConditionalOnMissingBean(PaymentDetailWritePlatformService.class)
     PaymentDetailWritePlatformService paymentDetailWritePlatformService(PaymentDetailRepository paymentDetailRepository,
-            PaymentTypeRepositoryWrapper paymentTyperepositoryWrapper) {
-        return new PaymentDetailWritePlatformServiceJpaRepositoryImpl(paymentDetailRepository, paymentTyperepositoryWrapper);
+            PaymentTypeRepository paymentTypeRepository) {
+        return new PaymentDetailWritePlatformServiceJpaRepositoryImpl(paymentDetailRepository, paymentTypeRepository);
     }
 }

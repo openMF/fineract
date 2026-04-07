@@ -76,7 +76,6 @@ public class ExternalAssetOwnerLoanProductAttributesApiResource {
 
     @GET
     @Path("/{loanProductId}/attributes")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(tags = {
             "External Asset Owner Loan Product Attributes" }, summary = "Retrieve All Loan Product Attributes", description = "Retrieves all Loan Product Attributes with a given loanProductId", parameters = {

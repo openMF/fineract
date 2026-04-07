@@ -85,7 +85,6 @@ public class RecurringDepositAccountTransactionsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Recurring Deposit Account Transaction Template", operationId = "retrieveTemplateRecurringDepositAccountTransaction", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed Value Lists\n" + "Example Requests:\n" + "\n"
@@ -129,7 +128,6 @@ public class RecurringDepositAccountTransactionsApiResource {
 
     @GET
     @Path("{transactionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Recurring Deposit Account Transaction", operationId = "retrieveOneRecurringDepositAccountTransaction", description = "Retrieves Recurring Deposit Account Transaction\n\n"
             + "Example Requests:\n" + "\n" + "recurringdepositaccounts/1/transactions/1")

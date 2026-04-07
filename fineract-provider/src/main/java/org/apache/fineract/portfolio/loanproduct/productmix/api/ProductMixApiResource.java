@@ -70,7 +70,6 @@ public class ProductMixApiResource {
     private final LoanProductReadPlatformService loanProductReadPlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String retrieveTemplate(@PathParam("productId") final Long productId, @Context final UriInfo uriInfo) {
 
@@ -111,7 +110,6 @@ public class ProductMixApiResource {
     }
 
     @DELETE
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public CommandProcessingResult deleteProductMix(@PathParam("productId") final Long productId) {
 

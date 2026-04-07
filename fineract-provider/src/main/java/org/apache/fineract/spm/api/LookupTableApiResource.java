@@ -58,7 +58,6 @@ public class LookupTableApiResource {
     private final LookupTableService lookupTableService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Transactional
     @Operation(summary = "List all Lookup Table entries", description = "List all Lookup Table entries for a survey.")
@@ -79,7 +78,6 @@ public class LookupTableApiResource {
 
     @GET
     @Path("/{key}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Transactional
     @Operation(summary = "Retrieve a Lookup Table entry", description = "Retrieve a Lookup Table entry for a survey.")

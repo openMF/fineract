@@ -73,7 +73,6 @@ public class TellerApiResource {
     private final DefaultToApiJsonSerializer<String> apiJsonSerializer;
 
     @GET
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "List all tellers", description = "Retrieves list tellers")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersResponse.class))))
@@ -83,7 +82,6 @@ public class TellerApiResource {
 
     @GET
     @Path("{tellerId}")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve tellers", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersResponse.class)))
@@ -124,7 +122,6 @@ public class TellerApiResource {
 
     @DELETE
     @Path("{tellerId}")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     public CommandProcessingResult deleteTeller(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId) {
         final CommandWrapper request = new CommandWrapperBuilder().deleteTeller(tellerId).build();
@@ -133,7 +130,6 @@ public class TellerApiResource {
 
     @GET
     @Path("{tellerId}/cashiers")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "List Cashiers", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersTellerIdCashiersResponse.class)))
@@ -153,7 +149,6 @@ public class TellerApiResource {
 
     @GET
     @Path("{tellerId}/cashiers/{cashierId}")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a cashier", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersTellerIdCashiersCashierIdResponse.class)))
@@ -164,7 +159,6 @@ public class TellerApiResource {
 
     @GET
     @Path("{tellerId}/cashiers/template")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Find Cashiers", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersTellerIdCashiersTemplateResponse.class)))
@@ -217,7 +211,6 @@ public class TellerApiResource {
 
     @DELETE
     @Path("{tellerId}/cashiers/{cashierId}")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Delete Cashier", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.DeleteTellersTellerIdCashiersCashierIdResponse.class)))
@@ -264,7 +257,6 @@ public class TellerApiResource {
 
     @GET
     @Path("{tellerId}/cashiers/{cashierId}/transactions")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve Cashier Transactions", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersTellerIdCashiersCashiersIdTransactionsResponse.class)))
@@ -284,7 +276,6 @@ public class TellerApiResource {
 
     @GET
     @Path("{tellerId}/cashiers/{cashierId}/summaryandtransactions")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve Transactions With Summary For Cashier", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersTellerIdCashiersCashiersIdSummaryAndTransactionsResponse.class)))
@@ -306,7 +297,6 @@ public class TellerApiResource {
 
     @GET
     @Path("{tellerId}/cashiers/{cashierId}/transactions/template")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve Cashier Transaction Template", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersTellerIdCashiersCashiersIdTransactionsTemplateResponse.class)))
@@ -318,7 +308,6 @@ public class TellerApiResource {
 
     @GET
     @Path("{tellerId}/transactions")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<TellerTransactionData> getTransactionData(
             @PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
@@ -331,7 +320,6 @@ public class TellerApiResource {
 
     @GET
     @Path("{tellerId}/transactions/{transactionId}")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     public TellerTransactionData findTransactionData(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerid,
             @PathParam("transactionId") @Parameter(description = "transactionId") final Long transactionId) {
@@ -340,7 +328,6 @@ public class TellerApiResource {
 
     @GET
     @Path("{tellerId}/journals")
-    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<TellerJournalData> getJournalData(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
             @QueryParam("cashierId") @Parameter(description = "cashierId") final Long cashierDate,

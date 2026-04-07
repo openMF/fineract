@@ -87,7 +87,6 @@ public class StandingInstructionApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Standing Instruction Template", description = "This is a convenience resource. "
             + "It can be useful when building maintenance user interface screens for client applications. "
@@ -141,7 +140,6 @@ public class StandingInstructionApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Standing Instructions", description = "Example Requests:\n" + "\n" + "standinginstructions")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = StandingInstructionApiResourceSwagger.GetStandingInstructionsResponse.class)))
@@ -175,7 +173,6 @@ public class StandingInstructionApiResource {
 
     @GET
     @Path("{standingInstructionId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Standing Instruction", description = "Example Requests :\n" + "\n" + "standinginstructions/1")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = StandingInstructionApiResourceSwagger.GetStandingInstructionsStandingInstructionIdResponse.class)))

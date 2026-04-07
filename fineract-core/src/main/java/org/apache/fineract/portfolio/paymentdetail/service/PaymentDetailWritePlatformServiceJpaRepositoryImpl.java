@@ -25,7 +25,8 @@ import org.apache.fineract.portfolio.paymentdetail.PaymentDetailConstants;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetailRepository;
 import org.apache.fineract.portfolio.paymenttype.domain.PaymentType;
-import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepositoryWrapper;
+import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepository;
+import org.apache.fineract.portfolio.paymenttype.exception.PaymentTypeNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class PaymentDetailWritePlatformServiceJpaRepositoryImpl implements Payme
 
     private final PaymentDetailRepository paymentDetailRepository;
     // private final CodeValueRepositoryWrapper codeValueRepositoryWrapper;
-    private final PaymentTypeRepositoryWrapper paymentTyperepositoryWrapper;
+    private final PaymentTypeRepository paymentTypeRepository;
 
     @Override
     public PaymentDetail createPaymentDetail(final JsonCommand command, final Map<String, Object> changes) {
@@ -42,7 +43,8 @@ public class PaymentDetailWritePlatformServiceJpaRepositoryImpl implements Payme
             return null;
         }
 
-        final PaymentType paymentType = this.paymentTyperepositoryWrapper.findOneWithNotFoundDetection(paymentTypeId);
+        final PaymentType paymentType = this.paymentTypeRepository.findById(paymentTypeId)
+                .orElseThrow(() -> new PaymentTypeNotFoundException(paymentTypeId));
         final PaymentDetail paymentDetail = PaymentDetail.generatePaymentDetail(paymentType, command, changes);
         return paymentDetail;
 

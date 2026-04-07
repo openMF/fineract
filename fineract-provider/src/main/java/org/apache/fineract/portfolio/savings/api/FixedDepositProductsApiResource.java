@@ -155,7 +155,6 @@ public class FixedDepositProductsApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Fixed Deposit Products", operationId = "retrieveAllFixedDepositProducts", description = """
             Lists Fixed Deposit Products
@@ -182,7 +181,6 @@ public class FixedDepositProductsApiResource {
 
     @GET
     @Path("{productId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Fixed Deposit Product", operationId = "retrieveOneFixedDepositProduct", description = """
             Retrieves a Fixed Deposit Product
@@ -236,7 +234,6 @@ public class FixedDepositProductsApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Fixed Deposit Product Template", operationId = "retrieveTemplateFixedDepositProduct")
     public String retrieveTemplate(@Context final UriInfo uriInfo) {
@@ -337,7 +334,6 @@ public class FixedDepositProductsApiResource {
 
     @DELETE
     @Path("{productId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Fixed Deposit Product", operationId = "deleteFixedDepositProduct", description = "Deletes a Fixed Deposit Product")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = FixedDepositProductsApiResourceSwagger.DeleteFixedDepositProductsProductIdResponse.class)))

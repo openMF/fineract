@@ -78,7 +78,6 @@ public class DatatablesApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Data Tables", description = "Lists registered data tables and the Apache Fineract Core application table they are registered to.\n"
             + "\n" + "ARGUMENTS\n" + "\n" + "apptable  - optional" + "\n" + "The Apache Fineract core application table.\n" + "\n"
@@ -188,7 +187,6 @@ public class DatatablesApiResource {
 
     @GET
     @Path("{datatable}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Data Table Details", description = "Lists a registered data table details and the Apache Fineract Core application table they are registered to.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = DatatablesApiResourceSwagger.GetDataTablesResponse.class)))
@@ -230,7 +228,6 @@ public class DatatablesApiResource {
 
     @GET
     @Path("{datatable}/{apptableId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Entry(s) from Data Table", description = "Gets the entry (if it exists) for data tables that are one to one with the application table. \n"
             + "Gets the entries (if they exist) for data tables that are one to many with the application table.\n" + "\n"
@@ -263,7 +260,6 @@ public class DatatablesApiResource {
 
     @GET
     @Path("{datatable}/{apptableId}/{datatableId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String getDatatableManyEntry(@PathParam("datatable") final String datatable, @PathParam("apptableId") final Long apptableId,
             @PathParam("datatableId") final Long datatableId, @QueryParam("order") final String order,
@@ -352,7 +348,6 @@ public class DatatablesApiResource {
 
     @DELETE
     @Path("{datatable}/{apptableId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete Entry(s) in Data Table", description = "Deletes the entry (if it exists) for data tables that are one-to-one with the application table. \n"
             + "Deletes the entries (if they exist) for data tables that are one-to-many with the application table.")
@@ -371,7 +366,6 @@ public class DatatablesApiResource {
 
     @DELETE
     @Path("{datatable}/{apptableId}/{datatableId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete Entry in Datatable (One to Many)", description = "Deletes the entry (if it exists) for data tables that are one to many with the application table.\n"
             + "\n")

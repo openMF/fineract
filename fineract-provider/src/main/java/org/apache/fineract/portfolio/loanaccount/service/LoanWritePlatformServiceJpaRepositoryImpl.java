@@ -492,6 +492,14 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                     isRegularTransaction, isExceptionForBalanceCheck);
             this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
         }
+        if (!disBuLoanCharges.isEmpty()) {
+            // transferFunds marks each charge as paid and creates REPAYMENT_AT_DISBURSEMENT loan transactions,
+            // but it does not recompute the LoanSummary fields (feeChargesPaid, feeChargesOutstanding,
+            // totalOutstanding, etc.). Without this, those fields remain stale from the saveAndFlush above,
+            // causing the loan balance to appear higher than what the client actually owes.
+            loanBalanceService.updateLoanSummaryDerivedFields(loan);
+            saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
+        }
         updateRecurringCalendarDatesForInterestRecalculation(loan);
         loanAccrualsProcessingService.processAccrualsOnInterestRecalculation(loan, loan.isInterestBearingAndInterestRecalculationEnabled(),
                 true);
@@ -575,11 +583,15 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         final Money interestApplied = Money.of(loan.getCurrency(), loan.getSummary().getTotalInterestCharged());
 
         /*
-         * Add an interest applied transaction of the interest is accrued upfront (Up front accrual), no accounting or
-         * cash based accounting is selected
+         * Add an interest applied transaction only when the interest is accrued upfront (Up front accrual). When
+         * allow-cash-and-non-cash-accrual global config is enabled (legacy mode), accrual transactions are also created
+         * for None and Cash based accounting for backward compatibility.
          */
         if (((loan.isMultiDisburmentLoan() && loan.getDisbursedLoanDisbursementDetails().size() == 1) || !loan.isMultiDisburmentLoan())
-                && loan.isNoneOrCashOrUpfrontAccrualAccountingEnabledOnLoanProduct() && interestApplied.isGreaterThanZero()) {
+                && (configurationDomainService.isAllowCashAndNonCashAccrual()
+                        ? loan.isNoneOrCashOrUpfrontAccrualAccountingEnabledOnLoanProduct()
+                        : loan.isUpfrontAccrualAccountingEnabledOnLoanProduct())
+                && interestApplied.isGreaterThanZero()) {
             ExternalId externalId = ExternalId.empty();
             if (TemporaryConfigurationServiceContainer.isExternalIdAutoGenerationEnabled()) {
                 externalId = ExternalId.generate();

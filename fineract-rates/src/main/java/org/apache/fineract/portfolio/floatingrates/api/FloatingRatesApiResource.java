@@ -73,7 +73,6 @@ public class FloatingRatesApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Floating Rates", description = "Lists Floating Rates")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = FloatingRatesApiResourceSwagger.GetFloatingRatesResponse.class))))
@@ -84,7 +83,6 @@ public class FloatingRatesApiResource {
 
     @GET
     @Path("{floatingRateId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Floating Rate", description = "Retrieves Floating Rate")
     public FloatingRateData retrieveOne(@PathParam("floatingRateId") @Parameter(description = "floatingRateId") final Long floatingRateId) {

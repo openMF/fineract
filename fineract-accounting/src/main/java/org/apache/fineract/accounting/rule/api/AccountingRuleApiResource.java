@@ -93,7 +93,6 @@ public class AccountingRuleApiResource {
 
     @GET
     @Path("template")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Accounting Rule Details Template", description = """
             This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:
@@ -109,7 +108,6 @@ public class AccountingRuleApiResource {
     }
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Accounting Rules", description = """
             Returns the list of defined accounting rules.
@@ -131,7 +129,6 @@ public class AccountingRuleApiResource {
 
     @GET
     @Path("{accountingRuleId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a Accounting rule", description = """
             Returns the details of a defined Accounting rule.
@@ -190,7 +187,6 @@ public class AccountingRuleApiResource {
 
     @DELETE
     @Path("{accountingRuleId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Delete a Accounting Rule", description = "Deletes a Accounting rule.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = AccountingRuleApiResourceSwagger.DeleteAccountingRulesResponse.class)))

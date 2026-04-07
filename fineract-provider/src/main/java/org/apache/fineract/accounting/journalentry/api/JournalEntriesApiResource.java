@@ -97,7 +97,6 @@ public class JournalEntriesApiResource {
     private final SqlValidator sqlValidator;
 
     @GET
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "List Journal Entries", operationId = "retrieveAllJournalEntries", description = "The list capability of journal entries can support pagination and sorting.\n\n"
             + "Example Requests:\n" + "\n" + "journalentries\n" + "\n" + "journalentries?transactionId=PB37X8Y21EQUY4S\n" + "\n"
@@ -165,7 +164,6 @@ public class JournalEntriesApiResource {
 
     @GET
     @Path("{journalEntryId}")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve a single Entry", description = "Example Requests:\n" + "\n" + "journalentries/1\n" + "\n" + "\n" + "\n"
             + "journalentries/1?fields=officeName,glAccountId,entryType,amount\n" + "\n" + "journalentries/1?runningBalance=true\n" + "\n"
@@ -241,7 +239,6 @@ public class JournalEntriesApiResource {
 
     @GET
     @Path("provisioning")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String retrieveJournalEntries(@QueryParam("offset") final Integer offset, @QueryParam("limit") final Integer limit,
             @QueryParam("entryId") final Long entryId, @Context final UriInfo uriInfo) {
@@ -256,7 +253,6 @@ public class JournalEntriesApiResource {
 
     @GET
     @Path("openingbalance")
-    @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String retrieveOpeningBalance(@Context final UriInfo uriInfo, @QueryParam("officeId") final Long officeId,
             @QueryParam("currencyCode") final String currencyCode) {

@@ -312,7 +312,6 @@ public class ProductToGLAccountMappingReadPlatformServiceImpl implements Product
                         : productToGLAccountMappingRepository.findAllBuyDownFeeClassificationsMappings(loanProductId,
                                 portfolioProductType.getValue());
 
-        productToGLAccountMappingRepository.findAllChargeOffReasonsMappings(loanProductId, portfolioProductType.getValue());
         List<ClassificationToGLAccountData> classificationToGLAccountMappers = mappings.isEmpty() ? null : new ArrayList<>();
         for (final ProductToGLAccountMapping mapping : mappings) {
             final Long glAccountId = mapping.getGlAccount().getId();

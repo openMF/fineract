@@ -118,6 +118,10 @@ public class BatchApiStepDef extends AbstractStepDef {
     private static final String ERROR_DEVELOPER_MESSAGE_CLIENT = "Client with identifier {externalId} does not exist";
     private static final String ERROR_DEVELOPER_MESSAGE_LOAN_EXTERNAL = "Loan with external identifier {externalId} does not exist";
     private static final String PWD_USER_WITH_ROLE = "1234567890Aa!";
+    private static final String ENCLOSING_TRANSACTION = "enclosingTransaction";
+    private static final String IDEMPOTENCY_KEY = "Idempotency-Key";
+    private static final String CLIENT_ID_REGEX = "\"clientId\":1";
+    private static final String CLIENT_ID_REPLACEMENT = "\"clientId\":\"$.clientId\"";
 
     @Autowired
     private FineractFeignClient fineractFeignClient;
@@ -163,7 +167,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         // request 2 - create Loan
         PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(1L);
         String bodyLoansRequest = toJson(loansRequest);
-        String bodyLoansRequestMod = bodyLoansRequest.replace("\"clientId\":1", "\"clientId\":\"$.clientId\"");
+        String bodyLoansRequestMod = bodyLoansRequest.replace(CLIENT_ID_REGEX, CLIENT_ID_REPLACEMENT);
 
         BatchRequest batchRequest2 = new BatchRequest();
         batchRequest2.requestId(BATCH_API_SAMPLE_REQUEST_ID_2);
@@ -208,7 +212,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         requestList.add(batchRequest3);
         requestList.add(batchRequest4);
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", false);
+        queryParams.put(ENCLOSING_TRANSACTION, false);
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
         testContext().set(TestContextKey.BATCH_API_CALL_RESPONSE, batchResponseList);
     }
@@ -233,7 +237,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         // request 2 - create Loan
         PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(1L);
         String bodyLoansRequest = toJson(loansRequest);
-        String bodyLoansRequestMod = bodyLoansRequest.replace("\"clientId\":1", "\"clientId\":\"$.clientId\"");
+        String bodyLoansRequestMod = bodyLoansRequest.replace(CLIENT_ID_REGEX, CLIENT_ID_REPLACEMENT);
 
         BatchRequest batchRequest2 = new BatchRequest();
         batchRequest2.requestId(BATCH_API_SAMPLE_REQUEST_ID_2);
@@ -272,7 +276,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         String bodyLoanRepaymentRequest1 = toJson(loanRepaymentRequest1);
 
         String idempotencyKey = UUID.randomUUID().toString();
-        headers.add(new Header().name("Idempotency-Key").value(idempotencyKey));
+        headers.add(new Header().name(IDEMPOTENCY_KEY).value(idempotencyKey));
 
         BatchRequest batchRequest5 = new BatchRequest();
         batchRequest5.requestId(BATCH_API_SAMPLE_REQUEST_ID_5);
@@ -302,7 +306,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         requestList.add(batchRequest5);
         requestList.add(batchRequest6);
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", false);
+        queryParams.put(ENCLOSING_TRANSACTION, false);
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
         testContext().set(TestContextKey.BATCH_API_CALL_RESPONSE, batchResponseList);
     }
@@ -322,7 +326,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
         Boolean isEnclosingTransaction = Boolean.valueOf(enclosingTransaction);
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", isEnclosingTransaction);
+        queryParams.put(ENCLOSING_TRANSACTION, isEnclosingTransaction);
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
         testContext().set(TestContextKey.BATCH_API_CALL_RESPONSE, batchResponseList);
         testContext().set(TestContextKey.BATCH_API_CALL_IDEMPOTENCY_KEY, idempotencyKey);
@@ -345,7 +349,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
         Boolean isEnclosingTransaction = Boolean.valueOf(enclosingTransaction);
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", isEnclosingTransaction);
+        queryParams.put(ENCLOSING_TRANSACTION, isEnclosingTransaction);
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
         testContext().set(TestContextKey.BATCH_API_CALL_RESPONSE, batchResponseList);
         testContext().set(TestContextKey.BATCH_API_CALL_IDEMPOTENCY_KEY, idempotencyKey);
@@ -375,7 +379,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
         Boolean isEnclosingTransaction = Boolean.valueOf(enclosingTransaction);
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", isEnclosingTransaction);
+        queryParams.put(ENCLOSING_TRANSACTION, isEnclosingTransaction);
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
         testContext().set(TestContextKey.BATCH_API_CALL_RESPONSE, batchResponseList);
         testContext().set(TestContextKey.BATCH_API_CALL_IDEMPOTENCY_KEY, idempotencyKey);
@@ -408,7 +412,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
         Boolean isEnclosingTransaction = Boolean.valueOf(enclosingTransaction);
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", isEnclosingTransaction);
+        queryParams.put(ENCLOSING_TRANSACTION, isEnclosingTransaction);
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
 
         testContext().set(TestContextKey.BATCH_API_CALL_RESPONSE, batchResponseList);
@@ -436,7 +440,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
         Boolean isEnclosingTransaction = Boolean.valueOf(enclosingTransaction);
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", isEnclosingTransaction);
+        queryParams.put(ENCLOSING_TRANSACTION, isEnclosingTransaction);
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
         testContext().set(TestContextKey.BATCH_API_CALL_RESPONSE, batchResponseList);
         testContext().set(TestContextKey.BATCH_API_CALL_IDEMPOTENCY_KEY, idempotencyKey);
@@ -459,7 +463,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
         Boolean isEnclosingTransaction = Boolean.valueOf(enclosingTransaction);
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", isEnclosingTransaction);
+        queryParams.put(ENCLOSING_TRANSACTION, isEnclosingTransaction);
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
         testContext().set(TestContextKey.BATCH_API_CALL_RESPONSE, batchResponseList);
         testContext().set(TestContextKey.BATCH_API_CALL_IDEMPOTENCY_KEY, idempotencyKey);
@@ -490,7 +494,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
         Boolean isEnclosingTransaction = Boolean.valueOf(enclosingTransaction);
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", isEnclosingTransaction);
+        queryParams.put(ENCLOSING_TRANSACTION, isEnclosingTransaction);
         // TODO: Feign doesn't support per-request headers via API signature - need to use RequestInterceptor
         // List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams,
         // headerMap);
@@ -543,7 +547,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
         Boolean isEnclosingTransaction = Boolean.valueOf(enclosingTransaction);
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", isEnclosingTransaction);
+        queryParams.put(ENCLOSING_TRANSACTION, isEnclosingTransaction);
 
         // Feign throws exceptions on errors instead of returning error in response body
         ErrorResponse errorResponse = null;
@@ -595,7 +599,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
         Boolean isEnclosingTransaction = Boolean.valueOf(enclosingTransaction);
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", isEnclosingTransaction);
+        queryParams.put(ENCLOSING_TRANSACTION, isEnclosingTransaction);
         // TODO: Feign doesn't support per-request headers - need to use RequestInterceptor
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
         BatchResponse lastBatchResponse = batchResponseList.get(batchResponseList.size() - 1);
@@ -612,7 +616,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         requestList.add(updateDatatable(2L, 1L));
 
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", false);
+        queryParams.put(ENCLOSING_TRANSACTION, false);
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
         testContext().set(TestContextKey.BATCH_API_CALL_RESPONSE, batchResponseList);
         testContext().set(TestContextKey.BATCH_API_CALL_IDEMPOTENCY_KEY, idempotencyKey);
@@ -628,7 +632,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         Set<Header> headers = new HashSet<>();
         headers.add(HEADER);
         if (idempotencyKey != null) {
-            headers.add(new Header().name("Idempotency-Key").value(idempotencyKey));
+            headers.add(new Header().name(IDEMPOTENCY_KEY).value(idempotencyKey));
         }
         BatchRequest batchRequest = new BatchRequest();
         batchRequest.requestId(requestId);
@@ -649,7 +653,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         Set<Header> headers = new HashSet<>();
         headers.add(HEADER);
         if (idempotencyKey != null) {
-            headers.add(new Header().name("Idempotency-Key").value(idempotencyKey));
+            headers.add(new Header().name(IDEMPOTENCY_KEY).value(idempotencyKey));
         }
         BatchRequest batchRequest = new BatchRequest();
         batchRequest.requestId(requestId);
@@ -793,9 +797,8 @@ public class BatchApiStepDef extends AbstractStepDef {
         Set<Header> headersSecondTransaction = batchResponseSecondTransaction.getHeaders();
         List<Header> headersListSecondTransaction = new ArrayList<>(Objects.requireNonNull(headersSecondTransaction));
 
-        String idempotencyKey = "Idempotency-Key";
-        String idempotencyValueFirstTransaction = getHeaderValueByHeaderKey(headersListFirstTransaction, idempotencyKey);
-        String idempotencyValueSecondTransaction = getHeaderValueByHeaderKey(headersListSecondTransaction, idempotencyKey);
+        String idempotencyValueFirstTransaction = getHeaderValueByHeaderKey(headersListFirstTransaction, IDEMPOTENCY_KEY);
+        String idempotencyValueSecondTransaction = getHeaderValueByHeaderKey(headersListSecondTransaction, IDEMPOTENCY_KEY);
 
         assertThat(idempotencyValueSecondTransaction)
                 .as(ErrorMessageHelper.idempotencyKeyNoMatch(idempotencyValueSecondTransaction, idempotencyValueFirstTransaction))
@@ -982,7 +985,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         requestList.add(createChargeOffRequest(1L, loanId, idempotencyKey, chargeOffDate));
 
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", false);
+        queryParams.put(ENCLOSING_TRANSACTION, false);
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
         testContext().set(TestContextKey.BATCH_API_CALL_RESPONSE, batchResponseList);
         testContext().set(TestContextKey.BATCH_API_CALL_IDEMPOTENCY_KEY, idempotencyKey);
@@ -1032,7 +1035,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
         // Execute batch request
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", true);
+        queryParams.put(ENCLOSING_TRANSACTION, true);
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
         testContext().set(TestContextKey.BATCH_API_CALL_RESPONSE, batchResponseList);
         testContext().set(TestContextKey.BATCH_API_CALL_IDEMPOTENCY_KEY, idempotencyKey);
@@ -1087,7 +1090,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
         // Execute batch request
         Map<String, Object> queryParams = new HashMap<>();
-        queryParams.put("enclosingTransaction", true);
+        queryParams.put(ENCLOSING_TRANSACTION, true);
         List<BatchResponse> batchResponseList = batchApiApi().handleBatchRequests(requestList, queryParams);
         testContext().set(TestContextKey.BATCH_API_CALL_RESPONSE, batchResponseList);
         testContext().set(TestContextKey.BATCH_API_CALL_IDEMPOTENCY_KEY, idempotencyKey);
@@ -1119,7 +1122,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         Set<Header> headers = new HashSet<>();
         headers.add(HEADER);
         if (idempotencyKey != null) {
-            headers.add(new Header().name("Idempotency-Key").value(idempotencyKey));
+            headers.add(new Header().name(IDEMPOTENCY_KEY).value(idempotencyKey));
         }
 
         BatchRequest batchRequest = new BatchRequest();
@@ -1166,7 +1169,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         Set<Header> headers = new HashSet<>();
         headers.add(HEADER);
         if (idempotencyKey != null) {
-            headers.add(new Header().name("Idempotency-Key").value(idempotencyKey));
+            headers.add(new Header().name(IDEMPOTENCY_KEY).value(idempotencyKey));
         }
 
         BatchRequest batchRequest = new BatchRequest();
@@ -1183,7 +1186,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         PostLoansRequest loansRequest = loanExternalId == null ? loanRequestFactory.defaultLoansRequest(1L)
                 : loanRequestFactory.defaultLoansRequest(1L).externalId(loanExternalId);
         String bodyLoansRequest = toJson(loansRequest);
-        String bodyLoansRequestMod = bodyLoansRequest.replace("\"clientId\":1", "\"clientId\":\"$.clientId\"");
+        String bodyLoansRequestMod = bodyLoansRequest.replace(CLIENT_ID_REGEX, CLIENT_ID_REPLACEMENT);
 
         BatchRequest batchRequest = new BatchRequest();
         batchRequest.requestId(requestId);
@@ -1201,7 +1204,7 @@ public class BatchApiStepDef extends AbstractStepDef {
                 : loanRequestFactory.defaultProgressiveLoansRequest(1L).externalId(loanExternalId);
         loansRequest.setInterestRatePerPeriod(BigDecimal.ONE);
         String bodyLoansRequest = toJson(loansRequest);
-        String bodyLoansRequestMod = bodyLoansRequest.replace("\"clientId\":1", "\"clientId\":\"$.clientId\"");
+        String bodyLoansRequestMod = bodyLoansRequest.replace(CLIENT_ID_REGEX, CLIENT_ID_REPLACEMENT);
 
         BatchRequest batchRequest = new BatchRequest();
         batchRequest.requestId(requestId);
@@ -1319,7 +1322,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         Set<Header> headers = new HashSet<>();
         headers.add(HEADER);
         if (idempotencyKey != null) {
-            headers.add(new Header().name("Idempotency-Key").value(idempotencyKey));
+            headers.add(new Header().name(IDEMPOTENCY_KEY).value(idempotencyKey));
         }
 
         return headers;

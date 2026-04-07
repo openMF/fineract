@@ -112,7 +112,7 @@ public final class CommonEnumerations {
     public static List<EnumOptionData> conditionType(final ConditionType[] conditionTypes, final String codePrefix) {
         final List<EnumOptionData> optionDatas = new ArrayList<>();
         for (final ConditionType conditionType : conditionTypes) {
-            if (!conditionType.isInvalid()) {
+            if (conditionType != ConditionType.INVALID) {
                 optionDatas.add(conditionType(conditionType, codePrefix));
             }
         }
