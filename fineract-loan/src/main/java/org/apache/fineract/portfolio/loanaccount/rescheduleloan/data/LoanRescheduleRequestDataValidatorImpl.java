@@ -98,7 +98,7 @@ public class LoanRescheduleRequestDataValidatorImpl implements LoanRescheduleReq
         }
     }
 
-    public static void validateEMIAndEndDate(FromJsonHelper fromJsonHelper, Loan loan, JsonElement jsonElement,
+    public static void validateEMIAndEndDate(FromJsonHelper fromJsonHelper, JsonElement jsonElement, LocalDate rescheduleFromDate,
             DataValidatorBuilder dataValidatorBuilder) {
         final LocalDate endDate = fromJsonHelper.extractLocalDateNamed(RescheduleLoansApiConstants.endDateParamName, jsonElement);
         final BigDecimal emi = fromJsonHelper.extractBigDecimalWithLocaleNamed(RescheduleLoansApiConstants.emiParamName, jsonElement);
@@ -106,13 +106,9 @@ public class LoanRescheduleRequestDataValidatorImpl implements LoanRescheduleReq
             dataValidatorBuilder.reset().parameter(RescheduleLoansApiConstants.endDateParamName).value(endDate).notNull();
             dataValidatorBuilder.reset().parameter(RescheduleLoansApiConstants.emiParamName).value(emi).notNull().positiveAmount();
 
-            if (endDate != null) {
-                LoanRepaymentScheduleInstallment endInstallment = loan.fetchLoanRepaymentScheduleInstallmentByDueDate(endDate);
-
-                if (endInstallment == null) {
-                    dataValidatorBuilder.reset().parameter(RescheduleLoansApiConstants.endDateParamName)
-                            .failWithCode("repayment.schedule.installment.does.not.exist", "Repayment schedule installment does not exist");
-                }
+            if (endDate != null && DateUtils.isBefore(endDate, rescheduleFromDate)) {
+                dataValidatorBuilder.reset().parameter(RescheduleLoansApiConstants.endDateParamName)
+                        .failWithCode("end.date.before.reschedule.from.date", "End date cannot be before the reschedule from date");
             }
         }
     }
@@ -272,7 +268,7 @@ public class LoanRescheduleRequestDataValidatorImpl implements LoanRescheduleReq
             validateRescheduleReasonId(fromJsonHelper, jsonElement, dataValidatorBuilder);
             validateRescheduleReasonComment(fromJsonHelper, jsonElement, dataValidatorBuilder);
             validateAndRetrieveAdjustedDate(fromJsonHelper, jsonElement, rescheduleFromDate, dataValidatorBuilder);
-            validateEMIAndEndDate(fromJsonHelper, loan, jsonElement, dataValidatorBuilder);
+            validateEMIAndEndDate(fromJsonHelper, jsonElement, rescheduleFromDate, dataValidatorBuilder);
             validateIsThereAnyIncomingChange(fromJsonHelper, jsonElement, dataValidatorBuilder);
             validateMultiDisburseLoan(loan, dataValidatorBuilder);
 

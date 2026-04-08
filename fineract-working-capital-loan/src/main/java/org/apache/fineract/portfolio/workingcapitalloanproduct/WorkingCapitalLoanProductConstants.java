@@ -68,6 +68,28 @@ public final class WorkingCapitalLoanProductConstants {
     public static final String delinquencyGraceDaysParamName = "delinquencyGraceDays";
     public static final String delinquencyStartTypeParamName = "delinquencyStartType";
 
+    // Accounting
+    public static final String accountingRuleParamName = "accountingRule";
+    public static final String fundSourceAccountIdParamName = "fundSourceAccountId";
+    public static final String loanPortfolioAccountIdParamName = "loanPortfolioAccountId";
+    public static final String transfersInSuspenseAccountIdParamName = "transfersInSuspenseAccountId";
+    public static final String deferredIncomeLiabilityAccountIdParamName = "deferredIncomeLiabilityAccountId";
+    public static final String incomeFromDiscountFeeAccountIdParamName = "incomeFromDiscountFeeAccountId";
+    public static final String incomeFromFeeAccountIdParamName = "incomeFromFeeAccountId";
+    public static final String incomeFromPenaltyAccountIdParamName = "incomeFromPenaltyAccountId";
+    public static final String incomeFromRecoveryAccountIdParamName = "incomeFromRecoveryAccountId";
+    public static final String writeOffAccountIdParamName = "writeOffAccountId";
+    public static final String overpaymentLiabilityAccountIdParamName = "overpaymentLiabilityAccountId";
+    public static final String incomeFromChargeOffInterestAccountIdParamName = "incomeFromChargeOffInterestAccountId";
+    public static final String incomeFromChargeOffFeesAccountIdParamName = "incomeFromChargeOffFeesAccountId";
+    public static final String incomeFromChargeOffPenaltyAccountIdParamName = "incomeFromChargeOffPenaltyAccountId";
+    public static final String incomeFromGoodwillCreditInterestAccountIdParamName = "incomeFromGoodwillCreditInterestAccountId";
+    public static final String incomeFromGoodwillCreditFeesAccountIdParamName = "incomeFromGoodwillCreditFeesAccountId";
+    public static final String incomeFromGoodwillCreditPenaltyAccountIdParamName = "incomeFromGoodwillCreditPenaltyAccountId";
+    public static final String goodwillCreditAccountIdParamName = "goodwillCreditAccountId";
+    public static final String chargeOffExpenseAccountIdParamName = "chargeOffExpenseAccountId";
+    public static final String chargeOffFraudExpenseAccountIdParamName = "chargeOffFraudExpenseAccountId";
+
     // Resource name for permissions
     public static final String WCLP_RESOURCE_NAME = "WORKINGCAPITALLOANPRODUCT";
 }

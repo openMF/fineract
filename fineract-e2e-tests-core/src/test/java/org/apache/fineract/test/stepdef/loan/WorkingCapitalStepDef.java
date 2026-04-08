@@ -39,14 +39,19 @@ import org.apache.fineract.client.models.DeleteWorkingCapitalLoanProductsProduct
 import org.apache.fineract.client.models.GetConfigurableAttributes;
 import org.apache.fineract.client.models.GetPaymentAllocation;
 import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsProductIdResponse;
+import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsResponse;
 import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsTemplateResponse;
 import org.apache.fineract.client.models.PostAllowAttributeOverrides;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest.AccountingRuleEnum;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsResponse;
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdResponse;
 import org.apache.fineract.client.models.StringEnumOptionData;
+import org.apache.fineract.test.data.accounttype.AccountTypeResolver;
+import org.apache.fineract.test.data.accounttype.DefaultAccountType;
 import org.apache.fineract.test.data.workingcapitalproduct.DefaultWorkingCapitalLoanProduct;
+import org.apache.fineract.test.data.workingcapitalproduct.WCGLAccountMapping;
 import org.apache.fineract.test.factory.LoanProductsRequestFactory;
 import org.apache.fineract.test.factory.WorkingCapitalRequestFactory;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
@@ -54,16 +59,14 @@ import org.apache.fineract.test.helper.Utils;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
 import org.assertj.core.api.SoftAssertions;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @RequiredArgsConstructor
 public class WorkingCapitalStepDef extends AbstractStepDef {
 
-    @Autowired
-    private WorkingCapitalRequestFactory workingCapitalRequestFactory;
-
+    private final WorkingCapitalRequestFactory workingCapitalRequestFactory;
     private final FineractFeignClient fineractFeignClient;
+    private final AccountTypeResolver accountTypeResolver;
 
     public static final String NAME_FIELD_NAME = "name";
     public static final String SHORT_NAME_FIELD = "shortName";
@@ -88,6 +91,8 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
     public static final String DELINQUENCY_START_TYPE_FIELD_NAME = "delinquencyStartType";
     public static final String BREACH_ID_FIELD_NAME = "breachId";
     public static final String LOCALE_FIELD_NAME = "locale";
+
+    private static final long NON_EXISTENT_GL_ACCOUNT_ID = 999999L;
 
     private WorkingCapitalLoanProductsApi workingCapitalApi() {
         return fineractFeignClient.workingCapitalLoanProducts();
@@ -371,6 +376,349 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
                 .contains(ErrorMessageHelper.workingCapitalLoanProductIdentifiedDoesNotExistFailure(String.valueOf(externalId)));
     }
 
+    @When("Admin creates a new Working Capital Loan Product with accounting rule {string}")
+    public void createWorkingCapitalLoanProductWithAccountingRule(final String accountingRule) {
+        final String workingCapitalProductDefaultName = DefaultWorkingCapitalLoanProduct.WCLP.getName()
+                + Utils.randomStringGenerator("_", 10);
+        final PostWorkingCapitalLoanProductsRequest request;
+        if ("CASH_BASED".equals(accountingRule)) {
+            request = workingCapitalRequestFactory.defaultWorkingCapitalLoanProductRequestWithCashAccounting()//
+                    .name(workingCapitalProductDefaultName);
+        } else {
+            request = workingCapitalRequestFactory.defaultWorkingCapitalLoanProductRequest()//
+                    .name(workingCapitalProductDefaultName)//
+                    .accountingRule(AccountingRuleEnum.valueOf(accountingRule));
+        }
+        final PostWorkingCapitalLoanProductsResponse response = createWorkingCapitalLoanProduct(request);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST, request);
+    }
+
+    @When("Admin creates a new Working Capital Loan Product with Cash based accounting for GL mapping verification")
+    public void createWorkingCapitalLoanProductWithCashAccountingForGLMappingVerification() {
+        final String workingCapitalProductDefaultName = DefaultWorkingCapitalLoanProduct.WCLP.getName()
+                + Utils.randomStringGenerator("_", 10);
+        final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory
+                .defaultWorkingCapitalLoanProductRequestWithDistinctCashAccountingMappings()//
+                .name(workingCapitalProductDefaultName);
+
+        final PostWorkingCapitalLoanProductsResponse response = createWorkingCapitalLoanProduct(request);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST, request);
+    }
+
+    @Then("Admin verifies Working Capital Loan Product has accounting rule {string}")
+    public void verifyWorkingCapitalLoanProductHasAccountingRule(final String expectedAccountingRule) {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long resourceId = createResponse.getResourceId();
+
+        final GetWorkingCapitalLoanProductsProductIdResponse product = workingCapitalApi().retrieveOneWorkingCapitalLoanProduct(resourceId,
+                Map.of());
+
+        final SoftAssertions assertions = new SoftAssertions();
+        assertions.assertThat(product.getAccountingRule()).isNotNull();
+        assertions.assertThat(product.getAccountingRule().getId()).isEqualTo(expectedAccountingRule);
+
+        if ("CASH_BASED".equals(expectedAccountingRule)) {
+            assertions.assertThat(product.getAccountingMappings()).isNotNull();
+            assertions.assertThat(product.getAccountingMappings()).isNotEmpty();
+            assertions.assertThat(product.getAccountingMappings()).containsKey("fundSourceAccount");
+            assertions.assertThat(product.getAccountingMappings()).containsKey("loanPortfolioAccount");
+            assertions.assertThat(product.getAccountingMappings()).containsKey("transfersInSuspenseAccount");
+            assertions.assertThat(product.getAccountingMappings()).containsKey("deferredIncomeLiabilityAccount");
+            assertions.assertThat(product.getAccountingMappings()).containsKey("incomeFromDiscountFeeAccount");
+            assertions.assertThat(product.getAccountingMappings()).containsKey("incomeFromFeeAccount");
+            assertions.assertThat(product.getAccountingMappings()).containsKey("incomeFromPenaltyAccount");
+            assertions.assertThat(product.getAccountingMappings()).containsKey("incomeFromRecoveryAccount");
+            assertions.assertThat(product.getAccountingMappings()).containsKey("writeOffAccount");
+            assertions.assertThat(product.getAccountingMappings()).containsKey("overpaymentLiabilityAccount");
+        } else {
+            assertions.assertThat(product.getAccountingMappings()).isNullOrEmpty();
+        }
+        assertions.assertAll();
+    }
+
+    @Then("Admin failed to create a new Working Capital Loan Product with Cash based accounting and missing required GL accounts")
+    public void createWorkingCapitalLoanProductWithCashAccountingMissingRequiredAccountsFailed() {
+        final String workingCapitalProductDefaultName = DefaultWorkingCapitalLoanProduct.WCLP.getName()
+                + Utils.randomStringGenerator("_", 10);
+        final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory.defaultWorkingCapitalLoanProductRequest()//
+                .name(workingCapitalProductDefaultName)//
+                .accountingRule(AccountingRuleEnum.CASH_BASED);
+        // Missing all required GL account IDs
+
+        final CallFailedRuntimeException exception = fail(() -> workingCapitalApi().createWorkingCapitalLoanProduct(request, Map.of()));
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.incorrectExpectedValueInResponse()).isEqualTo(400);
+    }
+
+    @When("Admin updates Working Capital Loan Product accounting rule from None to Cash based")
+    public void updateWorkingCapitalLoanProductAccountingNoneToCash() {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long resourceId = createResponse.getResourceId();
+
+        final PostWorkingCapitalLoanProductsRequest cashRequest = workingCapitalRequestFactory
+                .defaultWorkingCapitalLoanProductRequestWithCashAccounting();
+        final PutWorkingCapitalLoanProductsProductIdRequest updateRequest = buildCashBasedUpdateRequest(cashRequest);
+
+        final PutWorkingCapitalLoanProductsProductIdResponse response = ok(
+                () -> workingCapitalApi().updateWorkingCapitalLoanProduct(resourceId, updateRequest, Map.of()));
+
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_REQUEST, updateRequest);
+    }
+
+    @When("Admin updates Working Capital Loan Product accounting rule from Cash based to None")
+    public void updateWorkingCapitalLoanProductAccountingCashToNone() {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long resourceId = createResponse.getResourceId();
+
+        final PutWorkingCapitalLoanProductsProductIdRequest updateRequest = new PutWorkingCapitalLoanProductsProductIdRequest()//
+                .locale("en")//
+                .accountingRule(PutWorkingCapitalLoanProductsProductIdRequest.AccountingRuleEnum.NONE);
+
+        final PutWorkingCapitalLoanProductsProductIdResponse response = ok(
+                () -> workingCapitalApi().updateWorkingCapitalLoanProduct(resourceId, updateRequest, Map.of()));
+
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_REQUEST, updateRequest);
+    }
+
+    @When("Admin updates GL account mappings on existing Cash based Working Capital Loan Product")
+    public void updateWCGLAccountMappingsOnExistingCashBasedProduct() {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long resourceId = createResponse.getResourceId();
+
+        final PostWorkingCapitalLoanProductsRequest cashRequest = workingCapitalRequestFactory
+                .defaultWorkingCapitalLoanProductRequestWithCashAccounting();
+
+        final PutWorkingCapitalLoanProductsProductIdRequest updateRequest = new PutWorkingCapitalLoanProductsProductIdRequest()//
+                .locale("en")//
+                .writeOffAccountId(cashRequest.getChargeOffExpenseAccountId());
+
+        final PutWorkingCapitalLoanProductsProductIdResponse response = ok(
+                () -> workingCapitalApi().updateWorkingCapitalLoanProduct(resourceId, updateRequest, Map.of()));
+
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_REQUEST, updateRequest);
+    }
+
+    @Then("Admin verifies Working Capital Loan Product template has accounting options")
+    public void verifyWorkingCapitalLoanProductTemplateHasAccountingOptions() {
+        final GetWorkingCapitalLoanProductsTemplateResponse template = workingCapitalApi()
+                .retrieveTemplateWorkingCapitalLoanProduct(Map.of());
+        assertThat(template.getAccountingRuleOptions()).isNotNull();
+        assertThat(template.getAccountingRuleOptions()).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(template.getAccountingMappingOptions()).isNotNull();
+        assertThat(template.getAccountingMappingOptions()).isNotEmpty();
+    }
+
+    @Then("Admin deletes Working Capital Loan Product and verifies GL account mappings are cleaned up")
+    public void deleteWorkingCapitalLoanProductAndVerifyMappingsCleanedUp() {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long resourceId = createResponse.getResourceId();
+
+        final DeleteWorkingCapitalLoanProductsProductIdResponse deleteResponse = ok(
+                () -> workingCapitalApi().deleteWorkingCapitalLoanProduct(resourceId, Map.of()));
+        assertThat(deleteResponse.getResourceId()).isEqualTo(resourceId);
+
+        final CallFailedRuntimeException exception = fail(
+                () -> workingCapitalApi().retrieveOneWorkingCapitalLoanProduct(resourceId, Map.of()));
+        assertThat(exception.getStatus()).isEqualTo(404);
+    }
+
+    @Then("Admin verifies Working Capital Loan Product GL account mapping values match the request")
+    public void verifyWorkingCapitalLoanProductGLAccountMappingValues() {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final PostWorkingCapitalLoanProductsRequest createRequest = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST);
+        final Long resourceId = createResponse.getResourceId();
+
+        final GetWorkingCapitalLoanProductsProductIdResponse product = workingCapitalApi().retrieveOneWorkingCapitalLoanProduct(resourceId,
+                Map.of());
+
+        final SoftAssertions assertions = new SoftAssertions();
+        assertions.assertThat(product.getAccountingRule()).isNotNull();
+        assertions.assertThat(product.getAccountingRule().getId()).isEqualTo("CASH_BASED");
+
+        final Map<String, ?> mappings = product.getAccountingMappings();
+        final List<WCGLAccountMapping> expectedMappings = WCGLAccountMapping.all().stream()
+                .filter(mapping -> mapping.required() || mapping.extractor().apply(createRequest) != null).toList();
+
+        assertions.assertThat(mappings).isNotNull().isNotEmpty().hasSize(expectedMappings.size())
+                .containsOnlyKeys(expectedMappings.stream().map(WCGLAccountMapping::responseKey).toArray(String[]::new));
+
+        for (final WCGLAccountMapping mapping : expectedMappings) {
+            assertGLAccountMappingId(assertions, mappings, mapping.responseKey(), mapping.extractor().apply(createRequest));
+        }
+
+        assertions.assertAll();
+    }
+
+    @Then("Admin verifies Working Capital Loan Product has no accounting mappings")
+    public void verifyWorkingCapitalLoanProductHasNoAccountingMappings() {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long resourceId = createResponse.getResourceId();
+
+        final GetWorkingCapitalLoanProductsProductIdResponse product = workingCapitalApi().retrieveOneWorkingCapitalLoanProduct(resourceId,
+                Map.of());
+
+        assertThat(product.getAccountingRule()).isNotNull();
+        assertThat(product.getAccountingRule().getId()).isEqualTo("NONE");
+        assertThat(product.getAccountingMappings()).isNullOrEmpty();
+    }
+
+    @Then("Admin failed to create a Working Capital Loan Product with Cash based accounting and non-existent GL account ID with status {int}")
+    public void createWorkingCapitalLoanProductWithNonExistentGLAccountFailed(final int expectedStatus) {
+        final String name = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
+        final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory
+                .defaultWorkingCapitalLoanProductRequestWithCashAccounting()//
+                .name(name)//
+                .fundSourceAccountId(NON_EXISTENT_GL_ACCOUNT_ID);
+
+        final CallFailedRuntimeException exception = fail(() -> workingCapitalApi().createWorkingCapitalLoanProduct(request, Map.of()));
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.incorrectExpectedValueInResponse()).isEqualTo(expectedStatus);
+    }
+
+    @Then("Admin failed to update Working Capital Loan Product to Cash based without required GL accounts with status {int}")
+    public void updateWorkingCapitalLoanProductToCashBasedWithoutRequiredGLAccountsFailed(final int expectedStatus) {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long resourceId = createResponse.getResourceId();
+
+        final PutWorkingCapitalLoanProductsProductIdRequest updateRequest = new PutWorkingCapitalLoanProductsProductIdRequest()//
+                .locale("en")//
+                .accountingRule(PutWorkingCapitalLoanProductsProductIdRequest.AccountingRuleEnum.CASH_BASED);
+
+        final CallFailedRuntimeException exception = fail(
+                () -> workingCapitalApi().updateWorkingCapitalLoanProduct(resourceId, updateRequest, Map.of()));
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.incorrectExpectedValueInResponse()).isEqualTo(expectedStatus);
+    }
+
+    @When("Admin updates writeOff GL account on Cash based Working Capital Loan Product")
+    public void updateWriteOffGLAccountOnCashBasedProduct() {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final PostWorkingCapitalLoanProductsRequest originalRequest = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST);
+        final Long resourceId = createResponse.getResourceId();
+
+        final Long newWriteOffAccountId = accountTypeResolver.resolve(DefaultAccountType.CREDIT_LOSS_BAD_DEBT);
+
+        // Validator requires all mandatory GL accounts when accountingRule is present — re-send originals
+        final PutWorkingCapitalLoanProductsProductIdRequest updateRequest = buildCashBasedUpdateRequest(originalRequest)//
+                .writeOffAccountId(newWriteOffAccountId);
+
+        ok(() -> workingCapitalApi().updateWorkingCapitalLoanProduct(resourceId, updateRequest, Map.of()));
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_REQUEST, updateRequest);
+    }
+
+    @Then("Admin verifies Working Capital Loan Product writeOff GL account was updated")
+    public void verifyWriteOffGLAccountWasUpdated() {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final PutWorkingCapitalLoanProductsProductIdRequest updateRequest = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_REQUEST);
+        final Long resourceId = createResponse.getResourceId();
+
+        final GetWorkingCapitalLoanProductsProductIdResponse product = workingCapitalApi().retrieveOneWorkingCapitalLoanProduct(resourceId,
+                Map.of());
+
+        final Map<String, ?> mappings = product.getAccountingMappings();
+        assertThat(mappings).isNotNull();
+        assertGLAccountMappingId(mappings, WCGLAccountMapping.WRITE_OFF.responseKey(), updateRequest.getWriteOffAccountId());
+    }
+
+    @Then("Admin verifies Working Capital Loan Product list contains the product with accounting rule {string}")
+    public void verifyWorkingCapitalLoanProductListContainsProductWithAccountingRule(final String expectedAccountingRule) {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long resourceId = createResponse.getResourceId();
+
+        final List<GetWorkingCapitalLoanProductsResponse> allProducts = ok(
+                () -> workingCapitalApi().retrieveAllWorkingCapitalLoanProducts(Map.of()));
+
+        final GetWorkingCapitalLoanProductsResponse found = allProducts.stream()//
+                .filter(p -> resourceId.equals(p.getId()))//
+                .findFirst()//
+                .orElse(null);
+
+        assertThat(found).as("Product with id %d should be present in list", resourceId).isNotNull();
+        assertThat(found.getAccountingRule()).isNotNull();
+        assertThat(found.getAccountingRule().getId()).isEqualTo(expectedAccountingRule);
+    }
+
+    @Then("Admin failed to create a Working Capital Loan Product with wrong GL account type for loanPortfolio with status {int}")
+    public void createWorkingCapitalLoanProductWithWrongGLAccountTypeFailed(final int expectedStatus) {
+        final String name = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
+        final Long incomeAccountId = accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME);
+
+        final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory
+                .defaultWorkingCapitalLoanProductRequestWithCashAccounting()//
+                .name(name)//
+                .loanPortfolioAccountId(incomeAccountId);
+
+        final CallFailedRuntimeException exception = fail(() -> workingCapitalApi().createWorkingCapitalLoanProduct(request, Map.of()));
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.incorrectExpectedValueInResponse()).isEqualTo(expectedStatus);
+    }
+
+    @Then("Admin verifies Working Capital Loan Product template has NONE and CASH_BASED accounting rule options")
+    public void verifyWorkingCapitalLoanProductTemplateAccountingRuleOptions() {
+        final GetWorkingCapitalLoanProductsTemplateResponse template = workingCapitalApi()
+                .retrieveTemplateWorkingCapitalLoanProduct(Map.of());
+
+        assertThat(template.getAccountingRuleOptions()).isNotNull();
+        assertThat(template.getAccountingRuleOptions()).hasSizeGreaterThanOrEqualTo(2);
+
+        final List<String> ruleIds = template.getAccountingRuleOptions().stream()//
+                .map(StringEnumOptionData::getId)//
+                .toList();
+        assertThat(ruleIds).contains("NONE", "CASH_BASED");
+
+        assertThat(template.getAccountingMappingOptions()).isNotNull();
+        assertThat(template.getAccountingMappingOptions()).isNotEmpty();
+    }
+
+    private void assertGLAccountMappingId(final SoftAssertions assertions, final Map<String, ?> mappings, final String key,
+            final Long expectedAccountId) {
+        assertions.assertThat(mappings).as("accountingMappings should contain key: %s", key).containsKey(key);
+        final Object value = mappings.get(key);
+        final Long actualId = extractAccountId(value);
+        if (actualId == null) {
+            assertions.fail("accountingMappings[%s]: could not extract id from %s", key,
+                    value != null ? value.getClass().getSimpleName() : "null");
+            return;
+        }
+        assertions.assertThat(actualId).as("GL account id for %s", key).isEqualTo(expectedAccountId);
+    }
+
+    private Long extractAccountId(final Object accountValue) {
+        if (accountValue instanceof Map<?, ?> map) {
+            final Object id = map.get("id");
+            return id instanceof Number n ? n.longValue() : null;
+        }
+        // Handle strongly-typed GLAccountData (CI-generated client)
+        try {
+            final var method = accountValue.getClass().getMethod("getId");
+            final Object id = method.invoke(accountValue);
+            return id instanceof Number n ? n.longValue() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void assertGLAccountMappingId(final Map<String, ?> mappings, final String key, final Long expectedAccountId) {
+        final SoftAssertions assertions = new SoftAssertions();
+        assertGLAccountMappingId(assertions, mappings, key, expectedAccountId);
+        assertions.assertAll();
+    }
+
     public PostWorkingCapitalLoanProductsResponse createWorkingCapitalLoanProduct(
             PostWorkingCapitalLoanProductsRequest workingCapitalProductRequest) {
         String workingCapitalProductName = workingCapitalProductRequest.getName();
@@ -384,6 +732,22 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
             log.error("FAILED to create working capital product '{}'", workingCapitalProductName, e);
             throw e;
         }
+    }
+
+    private PutWorkingCapitalLoanProductsProductIdRequest buildCashBasedUpdateRequest(final PostWorkingCapitalLoanProductsRequest source) {
+        return new PutWorkingCapitalLoanProductsProductIdRequest()//
+                .locale("en")//
+                .accountingRule(PutWorkingCapitalLoanProductsProductIdRequest.AccountingRuleEnum.CASH_BASED)//
+                .fundSourceAccountId(source.getFundSourceAccountId())//
+                .loanPortfolioAccountId(source.getLoanPortfolioAccountId())//
+                .transfersInSuspenseAccountId(source.getTransfersInSuspenseAccountId())//
+                .deferredIncomeLiabilityAccountId(source.getDeferredIncomeLiabilityAccountId())//
+                .incomeFromDiscountFeeAccountId(source.getIncomeFromDiscountFeeAccountId())//
+                .incomeFromFeeAccountId(source.getIncomeFromFeeAccountId())//
+                .incomeFromPenaltyAccountId(source.getIncomeFromPenaltyAccountId())//
+                .incomeFromRecoveryAccountId(source.getIncomeFromRecoveryAccountId())//
+                .writeOffAccountId(source.getWriteOffAccountId())//
+                .overpaymentLiabilityAccountId(source.getOverpaymentLiabilityAccountId());
     }
 
     public void checkWorkingCapitalLoanProductCreate() {
@@ -425,7 +789,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         assertions.assertThat(resourceId).isEqualTo(getWorkingCapitalProductResponse.getId());
 
         // check currency
-        assert getWorkingCapitalProductResponse.getCurrency() != null;
+        assertions.assertThat(getWorkingCapitalProductResponse.getCurrency()).isNotNull();
         assertions.assertThat(workingCapitalLoanProductCreateRequest.getCurrencyCode())
                 .isEqualTo(getWorkingCapitalProductResponse.getCurrency().getCode());
         assertions.assertThat(workingCapitalLoanProductCreateRequest.getDigitsAfterDecimal())
@@ -437,17 +801,22 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         assertions.assertThat(workingCapitalLoanProductCreateRequest.getCloseDate())
                 .isEqualTo(getWorkingCapitalProductResponse.getCloseDate());
 
-        assert getWorkingCapitalProductResponse.getAmortizationType() != null;
-        assert workingCapitalLoanProductCreateRequest.getAmortizationType() != null;
+        assertions.assertThat(getWorkingCapitalProductResponse.getAmortizationType()).isNotNull();
+        assertions.assertThat(workingCapitalLoanProductCreateRequest.getAmortizationType()).isNotNull();
         assertions.assertThat(workingCapitalLoanProductCreateRequest.getAmortizationType().getValue())
                 .isEqualTo(getWorkingCapitalProductResponse.getAmortizationType().getCode());
         assertions.assertThat(workingCapitalLoanProductCreateRequest.getNpvDayCount())
                 .isEqualTo(getWorkingCapitalProductResponse.getNpvDayCount());
+        assertions.assertThat(getWorkingCapitalProductResponse.getRepaymentEvery()).isNotNull();
+        assertions.assertThat(workingCapitalLoanProductCreateRequest.getRepaymentEvery()).isNotNull();
         assertions.assertThat(
                 workingCapitalLoanProductCreateRequest.getRepaymentEvery().compareTo(getWorkingCapitalProductResponse.getRepaymentEvery()))
                 .isEqualTo(0);
+        assertions.assertThat(workingCapitalLoanProductCreateRequest.getRepaymentFrequencyType()).isNotNull();
+        assertions.assertThat(getWorkingCapitalProductResponse.getRepaymentFrequencyType()).isNotNull();
         assertions.assertThat(workingCapitalLoanProductCreateRequest.getRepaymentFrequencyType().getValue())
                 .isEqualTo(getWorkingCapitalProductResponse.getRepaymentFrequencyType().getCode());
+        assertions.assertThat(workingCapitalLoanProductCreateRequest.getPeriodPaymentRate()).isNotNull();
         assertions.assertThat(workingCapitalLoanProductCreateRequest.getPeriodPaymentRate()
                 .compareTo(getWorkingCapitalProductResponse.getPeriodPaymentRate())).isEqualTo(0);
         assertions.assertThat(workingCapitalLoanProductCreateRequest.getMinPeriodPaymentRate())
@@ -462,25 +831,28 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         }
 
         // check payment allocation rules
-        assert workingCapitalLoanProductCreateRequest.getPaymentAllocation() != null;
+        assertions.assertThat(workingCapitalLoanProductCreateRequest.getPaymentAllocation()).isNotNull();
         workingCapitalLoanProductCreateRequest.getPaymentAllocation().forEach(paymentAllocation -> {
-            assert getWorkingCapitalProductResponse.getPaymentAllocation() != null;
+            assertThat(getWorkingCapitalProductResponse.getPaymentAllocation()).isNotNull();
             GetPaymentAllocation getPaymentAllocation = getWorkingCapitalProductResponse.getPaymentAllocation().stream()
                     .filter(paymentAllocationSearched -> {
-                        assert paymentAllocation.getTransactionType() != null;
+                        assertThat(paymentAllocation.getTransactionType()).isNotNull();
                         return paymentAllocation.getTransactionType().getValue().equals(paymentAllocationSearched.getTransactionType());
                     }).findFirst().orElseThrow(() -> new RuntimeException("No paymentAllocation is found!"));
             assertions.assertThat(paymentAllocation.getPaymentAllocationOrder())
                     .containsAll(getPaymentAllocation.getPaymentAllocationOrder());
         });
 
+        assertions.assertThat(workingCapitalLoanProductCreateRequest.getPrincipal()).isNotNull();
         assertions
                 .assertThat(
                         workingCapitalLoanProductCreateRequest.getPrincipal().compareTo(getWorkingCapitalProductResponse.getPrincipal()))
                 .isEqualTo(0);
+        assertions.assertThat(workingCapitalLoanProductCreateRequest.getMaxPrincipal()).isNotNull();
         assertions.assertThat(
                 workingCapitalLoanProductCreateRequest.getMaxPrincipal().compareTo(getWorkingCapitalProductResponse.getMaxPrincipal()))
                 .isEqualTo(0);
+        assertions.assertThat(workingCapitalLoanProductCreateRequest.getMinPrincipal()).isNotNull();
         assertions.assertThat(
                 workingCapitalLoanProductCreateRequest.getMinPrincipal().compareTo(getWorkingCapitalProductResponse.getMinPrincipal()))
                 .isEqualTo(0);
@@ -489,7 +861,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
             PostAllowAttributeOverrides allowAttributeOverridesCreateResponse = workingCapitalLoanProductCreateRequest
                     .getAllowAttributeOverrides();
             GetConfigurableAttributes allowAttributeOverridesGetResponse = getWorkingCapitalProductResponse.getAllowAttributeOverrides();
-            assert allowAttributeOverridesGetResponse != null;
+            assertions.assertThat(allowAttributeOverridesGetResponse).isNotNull();
             assertions.assertThat(allowAttributeOverridesCreateResponse.getDiscountDefault())
                     .isEqualTo(allowAttributeOverridesGetResponse.getDiscountDefault());
             assertions.assertThat(allowAttributeOverridesCreateResponse.getDelinquencyBucketClassification())
@@ -542,7 +914,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         assertions.assertThat(resourceId).isEqualTo(getWorkingCapitalProductResponse.getId());
 
         // check currency
-        assert getWorkingCapitalProductResponse.getCurrency() != null;
+        assertions.assertThat(getWorkingCapitalProductResponse.getCurrency()).isNotNull();
         assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getCurrencyCode())
                 .isEqualTo(getWorkingCapitalProductResponse.getCurrency().getCode());
         assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getDigitsAfterDecimal())
@@ -554,17 +926,22 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getCloseDate())
                 .isEqualTo(getWorkingCapitalProductResponse.getCloseDate());
 
-        assert getWorkingCapitalProductResponse.getAmortizationType() != null;
-        assert workingCapitalLoanProductsUpdateRequest.getAmortizationType() != null;
+        assertions.assertThat(getWorkingCapitalProductResponse.getAmortizationType()).isNotNull();
+        assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getAmortizationType()).isNotNull();
         assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getAmortizationType().getValue())
                 .isEqualTo(getWorkingCapitalProductResponse.getAmortizationType().getCode());
         assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getNpvDayCount())
                 .isEqualTo(getWorkingCapitalProductResponse.getNpvDayCount());
+        assertions.assertThat(getWorkingCapitalProductResponse.getRepaymentEvery()).isNotNull();
+        assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getRepaymentEvery()).isNotNull();
         assertions.assertThat(
                 workingCapitalLoanProductsUpdateRequest.getRepaymentEvery().compareTo(getWorkingCapitalProductResponse.getRepaymentEvery()))
                 .isEqualTo(0);
+        assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getRepaymentFrequencyType()).isNotNull();
+        assertions.assertThat(getWorkingCapitalProductResponse.getRepaymentFrequencyType()).isNotNull();
         assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getRepaymentFrequencyType().getValue())
                 .isEqualTo(getWorkingCapitalProductResponse.getRepaymentFrequencyType().getCode());
+        assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getPeriodPaymentRate()).isNotNull();
         assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getPeriodPaymentRate()
                 .compareTo(getWorkingCapitalProductResponse.getPeriodPaymentRate())).isEqualTo(0);
         assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getMinPeriodPaymentRate())
@@ -579,12 +956,12 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         }
 
         // check payment allocation rules
-        assert workingCapitalLoanProductsUpdateRequest.getPaymentAllocation() != null;
+        assertions.assertThat(workingCapitalLoanProductsUpdateRequest.getPaymentAllocation()).isNotNull();
         workingCapitalLoanProductsUpdateRequest.getPaymentAllocation().forEach(paymentAllocation -> {
-            assert getWorkingCapitalProductResponse.getPaymentAllocation() != null;
+            assertThat(getWorkingCapitalProductResponse.getPaymentAllocation()).isNotNull();
             GetPaymentAllocation getPaymentAllocation = getWorkingCapitalProductResponse.getPaymentAllocation().stream()
                     .filter(paymentAllocationSearched -> {
-                        assert paymentAllocation.getTransactionType() != null;
+                        assertThat(paymentAllocation.getTransactionType()).isNotNull();
                         return paymentAllocation.getTransactionType().getValue().equals(paymentAllocationSearched.getTransactionType());
                     }).findFirst().orElseThrow(() -> new RuntimeException("No paymentAllocation is found!"));
             assertions.assertThat(paymentAllocation.getPaymentAllocationOrder())
@@ -606,7 +983,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
             PostAllowAttributeOverrides allowAttributeOverridesCreateResponse = workingCapitalLoanProductsUpdateRequest
                     .getAllowAttributeOverrides();
             GetConfigurableAttributes allowAttributeOverridesGetResponse = getWorkingCapitalProductResponse.getAllowAttributeOverrides();
-            assert allowAttributeOverridesGetResponse != null;
+            assertions.assertThat(allowAttributeOverridesGetResponse).isNotNull();
             assertions.assertThat(allowAttributeOverridesCreateResponse.getDiscountDefault())
                     .isEqualTo(allowAttributeOverridesGetResponse.getDiscountDefault());
             assertions.assertThat(allowAttributeOverridesCreateResponse.getDelinquencyBucketClassification())

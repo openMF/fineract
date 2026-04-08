@@ -40,8 +40,11 @@ import org.apache.fineract.client.models.PaymentAllocationOrder;
 import org.apache.fineract.client.models.PostAllowAttributeOverrides;
 import org.apache.fineract.client.models.PostPaymentAllocation;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest.AccountingRuleEnum;
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdRequest;
 import org.apache.fineract.client.models.WorkingCapitalBreachRequest;
+import org.apache.fineract.test.data.accounttype.AccountTypeResolver;
+import org.apache.fineract.test.data.accounttype.DefaultAccountType;
 import org.apache.fineract.test.data.delinquency.DelinquencyBucketType;
 import org.apache.fineract.test.data.delinquency.DelinquencyFrequencyType;
 import org.apache.fineract.test.data.delinquency.DelinquencyMinimumPayment;
@@ -54,6 +57,7 @@ public class WorkingCapitalRequestFactory {
 
     private final LoanProductsRequestFactory loanProductsRequestFactory;
     private final FineractFeignClient fineractClient;
+    private final AccountTypeResolver accountTypeResolver;
 
     public static final String WCLP_NAME_PREFIX = "WCLP-";
     public static final String WCLP_DESCRIPTION = "Working Capital Loan Product";
@@ -65,6 +69,41 @@ public class WorkingCapitalRequestFactory {
     public static final String DEFAULT_WC_BREACH_FREQUENCY_TYPE = "MONTHS";
     public static final String DEFAULT_WC_BREACH_AMOUNT_CALCULATION_TYPE = "PERCENTAGE";
     public static final BigDecimal DEFAULT_WC_BREACH_AMOUNT = new BigDecimal("1.23");
+
+    public PostWorkingCapitalLoanProductsRequest defaultWorkingCapitalLoanProductRequestWithCashAccounting() {
+        return defaultWorkingCapitalLoanProductRequest()//
+                .accountingRule(AccountingRuleEnum.CASH_BASED)//
+                .fundSourceAccountId(accountTypeResolver.resolve(DefaultAccountType.SUSPENSE_CLEARING_ACCOUNT))//
+                .loanPortfolioAccountId(accountTypeResolver.resolve(DefaultAccountType.LOANS_RECEIVABLE))//
+                .transfersInSuspenseAccountId(accountTypeResolver.resolve(DefaultAccountType.TRANSFER_IN_SUSPENSE_ACCOUNT))//
+                .deferredIncomeLiabilityAccountId(accountTypeResolver.resolve(DefaultAccountType.DEFERRED_CAPITALIZED_INCOME))//
+                .incomeFromDiscountFeeAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME))//
+                .incomeFromFeeAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_INCOME))//
+                .incomeFromPenaltyAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_INCOME))//
+                .incomeFromRecoveryAccountId(accountTypeResolver.resolve(DefaultAccountType.RECOVERIES))//
+                .writeOffAccountId(accountTypeResolver.resolve(DefaultAccountType.WRITTEN_OFF))//
+                .overpaymentLiabilityAccountId(accountTypeResolver.resolve(DefaultAccountType.OVERPAYMENT_ACCOUNT))//
+                .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
+                .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
+                .incomeFromGoodwillCreditPenaltyAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
+                .incomeFromChargeOffFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
+                .incomeFromChargeOffPenaltyAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
+                .chargeOffExpenseAccountId(accountTypeResolver.resolve(DefaultAccountType.CREDIT_LOSS_BAD_DEBT))//
+                .chargeOffFraudExpenseAccountId(accountTypeResolver.resolve(DefaultAccountType.CREDIT_LOSS_BAD_DEBT_FRAUD));//
+    }
+
+    /**
+     * Creates a Cash based accounting request where optional Income-type GL accounts are overridden with distinct (but
+     * still type-correct) accounts to verify each mapping is stored and returned independently.
+     */
+    public PostWorkingCapitalLoanProductsRequest defaultWorkingCapitalLoanProductRequestWithDistinctCashAccountingMappings() {
+        return defaultWorkingCapitalLoanProductRequestWithCashAccounting()//
+                .incomeFromPenaltyAccountId(accountTypeResolver.resolve(DefaultAccountType.RECOVERIES))//
+                .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
+                .incomeFromGoodwillCreditPenaltyAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_INCOME))//
+                .incomeFromChargeOffFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.RECOVERIES))//
+                .incomeFromChargeOffPenaltyAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF));
+    }
 
     public PostWorkingCapitalLoanProductsRequest defaultWorkingCapitalLoanProductRequest() {
         String name = Utils.randomStringGenerator(WCLP_NAME_PREFIX, 10);
@@ -91,6 +130,7 @@ public class WorkingCapitalRequestFactory {
                 .delinquencyBucketId(getWCDelinquencyBucketIdByName(DEFAULT_WC_DELINQUENCY_BUCKET_NAME))//
                 .dateFormat(DATE_FORMAT)//
                 .locale(LOCALE_EN)//
+                .accountingRule(AccountingRuleEnum.NONE)//
                 .paymentAllocation(List.of(//
                         createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(),
                                 List.of(PENALTY, FEE, PRINCIPAL))));//

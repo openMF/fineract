@@ -27,6 +27,8 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -44,7 +46,9 @@ import org.apache.fineract.organisation.holiday.domain.Holiday;
 import org.apache.fineract.organisation.holiday.domain.HolidayRepositoryWrapper;
 import org.apache.fineract.organisation.holiday.exception.HolidayDateException;
 import org.apache.fineract.organisation.office.domain.Office;
+import org.apache.fineract.organisation.office.domain.OfficeRepository;
 import org.apache.fineract.organisation.office.domain.OfficeRepositoryWrapper;
+import org.apache.fineract.organisation.office.exception.OfficeNotFoundException;
 import org.apache.fineract.organisation.workingdays.domain.WorkingDays;
 import org.apache.fineract.organisation.workingdays.domain.WorkingDaysRepositoryWrapper;
 import org.apache.fineract.organisation.workingdays.service.WorkingDaysUtil;
@@ -61,6 +65,7 @@ public class HolidayWritePlatformServiceJpaRepositoryImpl implements HolidayWrit
     private final WorkingDaysRepositoryWrapper daysRepositoryWrapper;
     private final PlatformSecurityContext context;
     private final OfficeRepositoryWrapper officeRepositoryWrapper;
+    private final OfficeRepository officeRepository;
     private final FromJsonHelper fromApiJsonHelper;
 
     @Transactional
@@ -162,11 +167,21 @@ public class HolidayWritePlatformServiceJpaRepositoryImpl implements HolidayWrit
                 && topLevelJsonElement.get(HolidayApiConstants.officesParamName).isJsonArray()) {
 
             final JsonArray array = topLevelJsonElement.get(HolidayApiConstants.officesParamName).getAsJsonArray();
+            Set<Long> officeIds = new HashSet<>(array.size());
+            for (int i = 0; i < array.size(); i++) {
+                officeIds.add(
+                        this.fromApiJsonHelper.extractLongNamed(HolidayApiConstants.officeIdParamName, array.get(i).getAsJsonObject()));
+            }
+            Map<Long, Office> officeMap = this.officeRepository.findAllById(officeIds).stream()
+                    .collect(Collectors.toMap(Office::getId, Function.identity()));
             offices = new HashSet<>(array.size());
             for (int i = 0; i < array.size(); i++) {
-                final JsonObject officeElement = array.get(i).getAsJsonObject();
-                final Long officeId = this.fromApiJsonHelper.extractLongNamed(HolidayApiConstants.officeIdParamName, officeElement);
-                final Office office = this.officeRepositoryWrapper.findOneWithNotFoundDetection(officeId);
+                final Long officeId = this.fromApiJsonHelper.extractLongNamed(HolidayApiConstants.officeIdParamName,
+                        array.get(i).getAsJsonObject());
+                final Office office = officeMap.get(officeId);
+                if (office == null) {
+                    throw new OfficeNotFoundException(officeId);
+                }
                 offices.add(office);
             }
         }

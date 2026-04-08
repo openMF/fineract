@@ -23,11 +23,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.fineract.accounting.glaccount.data.GLAccountData;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.data.StringEnumOptionData;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
@@ -82,6 +84,10 @@ public class WorkingCapitalLoanProductData implements Serializable {
     // Configurable attributes (allowAttributeOverrides)
     private WorkingCapitalLoanProductConfigurableAttributesData allowAttributeOverrides;
 
+    // Accounting
+    private StringEnumOptionData accountingRule;
+    private Map<String, GLAccountData> accountingMappings;
+
     // Template related
     private Collection<FundData> fundOptions;
     private Collection<CurrencyData> currencyOptions;
@@ -92,6 +98,8 @@ public class WorkingCapitalLoanProductData implements Serializable {
     private List<EnumOptionData> advancedPaymentAllocationTransactionTypes;
     private Collection<DelinquencyBucketData> delinquencyBucketOptions;
     private List<WorkingCapitalBreachData> breachOptions;
+    private List<StringEnumOptionData> accountingRuleOptions;
+    private Map<String, List<GLAccountData>> accountingMappingOptions;
 
     public WorkingCapitalLoanProductData applyTemplate(final WorkingCapitalLoanProductData productTemplate) {
         setFundOptions(productTemplate.getFundOptions());
@@ -103,6 +111,8 @@ public class WorkingCapitalLoanProductData implements Serializable {
         setDelinquencyBucketOptions(productTemplate.getDelinquencyBucketOptions());
         setBreachOptions(productTemplate.getBreachOptions());
         setDelinquencyStartTypeOptions(productTemplate.getDelinquencyStartTypeOptions());
+        setAccountingRuleOptions(productTemplate.getAccountingRuleOptions());
+        setAccountingMappingOptions(productTemplate.getAccountingMappingOptions());
         return this;
     }
 }

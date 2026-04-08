@@ -40,4 +40,5 @@
   <include relativeToChangelogFile="true" file="parts/0016_configurable_attributes_not_null.xml"/>
   <include relativeToChangelogFile="true" file="parts/0017_wc_loan_breach_management.xml"/>
   <include relativeToChangelogFile="true" file="parts/0018_wc_loan_discount_permissions.xml"/>
+  <include relativeToChangelogFile="true" file="parts/0019_wc_loan_product_accounting.xml"/>
 </databaseChangeLog>

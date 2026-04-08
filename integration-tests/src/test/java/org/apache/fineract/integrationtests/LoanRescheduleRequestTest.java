@@ -30,13 +30,18 @@ import io.restassured.path.json.JsonPath;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import org.apache.fineract.client.models.AdvancedPaymentData;
 import org.apache.fineract.client.models.GetLoanRescheduleRequestResponse;
 import org.apache.fineract.client.models.GetLoansLoanIdResponse;
+import org.apache.fineract.client.models.LoanTermVariationsData;
 import org.apache.fineract.client.models.PostClientsResponse;
 import org.apache.fineract.client.models.PostCreateRescheduleLoansRequest;
 import org.apache.fineract.client.models.PostCreateRescheduleLoansResponse;
@@ -407,6 +412,56 @@ public class LoanRescheduleRequestTest extends BaseLoanIntegrationTest {
             GetLoanRescheduleRequestResponse getLoanRescheduleRequestResponse = Assertions.assertDoesNotThrow(
                     () -> loanRescheduleRequestHelper.readLoanRescheduleRequest(rescheduleLoansResponse.getResourceId(), null));
             Assertions.assertNotNull(getLoanRescheduleRequestResponse);
+        });
+    }
+
+    @Test
+    public void testCreateLoanRescheduleChangeEMIWithExtraTermsUsesFutureScheduleForEndDate() {
+        PostClientsResponse client = ClientHelper.createClient(ClientHelper.defaultClientCreationRequest());
+        Long commonLoanProductId = createLoanProductPeriodicWithInterest();
+
+        AtomicReference<Long> loanIdRef = new AtomicReference<>();
+        runAt("01 March 2024", () -> {
+            Long loanId = applyForLoanApplicationWithInterest(client.getClientId(), commonLoanProductId, BigDecimal.valueOf(4000),
+                    "1 March 2024", "1 March 2024");
+            loanIdRef.set(loanId);
+            loanTransactionHelper.approveLoan("1 March 2024", loanId.intValue());
+            loanTransactionHelper.disburseLoan("1 March 2024", loanId.intValue(), "4000", null);
+
+            String requestJSON = new LoanRescheduleRequestTestBuilder().updateGraceOnPrincipal(null).updateGraceOnInterest(null)
+                    .updateExtraTerms("2").updateEMI("500").updateEmiChangeEndDate("01 September 2024")
+                    .updateRescheduleFromDate("01 April 2024").updateSubmittedOnDate("01 March 2024").build(loanId.toString());
+
+            Integer rescheduleRequestId = loanRescheduleRequestHelper.createLoanRescheduleRequest(requestJSON);
+            Assertions.assertNotNull(rescheduleRequestId);
+
+            GetLoanRescheduleRequestResponse createResponse = loanRescheduleRequestHelper
+                    .readLoanRescheduleRequest(rescheduleRequestId.longValue(), null);
+            Assertions.assertNotNull(createResponse);
+            Assertions.assertNotNull(createResponse.getLoanTermVariationsData());
+
+            Set<LocalDate> emiTermVariationDates = createResponse.getLoanTermVariationsData().stream()
+                    .filter(variation -> variation.getTermType() != null && variation.getTermType().getId() != null
+                            && variation.getTermType().getId() == 1L)
+                    .map(LoanTermVariationsData::getTermVariationApplicableFrom).collect(Collectors.toCollection(TreeSet::new));
+
+            Set<LocalDate> expectedEMIVariationDates = Set.of(LocalDate.of(2024, 4, 1), LocalDate.of(2024, 5, 1), LocalDate.of(2024, 6, 1),
+                    LocalDate.of(2024, 7, 1), LocalDate.of(2024, 8, 1), LocalDate.of(2024, 9, 1));
+            assertEquals(expectedEMIVariationDates, emiTermVariationDates,
+                    "EMI term variations should include installment dates created by extra terms");
+
+            approveLoanReschedule(rescheduleRequestId.longValue(), "01 March 2024");
+
+            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoan(requestSpec, responseSpec, loanIdRef.get().intValue());
+
+            Set<LocalDate> repaymentDueDates = loanDetails.getRepaymentSchedule().getPeriods().stream()
+                    .filter(period -> period.getPeriod() != null && period.getPeriod() > 0).map(period -> period.getDueDate())
+                    .collect(Collectors.toCollection(TreeSet::new));
+
+            assertTrue(repaymentDueDates.containsAll(expectedEMIVariationDates),
+                    "Repayment schedule should include all projected installment dates up to the EMI end date");
+            assertEquals(LocalDate.of(2024, 9, 1), ((TreeSet<LocalDate>) repaymentDueDates).last(),
+                    "Repayment schedule should end on the EMI change end date when extra terms are applied");
         });
     }
 

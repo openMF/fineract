@@ -62,6 +62,8 @@ import org.apache.fineract.infrastructure.security.service.PlatformSecurityConte
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @Slf4j
@@ -197,8 +199,23 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
         }
 
         result.setRollbackTransaction(null);
-        publishHookEvent(wrapper.entityName(), wrapper.actionName(), command, result); // TODO must be performed in a
-        // new transaction
+
+        // When running inside an enclosing batch transaction, defer hook publication
+        // until after the transaction commits. This prevents webhooks from firing for
+        // commands that are subsequently rolled back when a later command in the batch
+        // fails (e.g. a withdrawal succeeds but its fee charge fails, rolling back both).
+        if (isEnclosingTransaction && TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+
+                @Override
+                public void afterCommit() {
+                    publishHookEvent(wrapper.entityName(), wrapper.actionName(), command, result);
+                }
+            });
+        } else {
+            publishHookEvent(wrapper.entityName(), wrapper.actionName(), command, result);
+        }
+
         return result;
     }
 

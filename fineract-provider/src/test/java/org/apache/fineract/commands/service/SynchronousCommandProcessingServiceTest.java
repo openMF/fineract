@@ -20,6 +20,7 @@ package org.apache.fineract.commands.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -52,6 +54,7 @@ import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDoma
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.infrastructure.core.domain.BatchRequestContextHolder;
 import org.apache.fineract.infrastructure.core.domain.FineractRequestContextHolder;
 import org.apache.fineract.infrastructure.core.exception.IdempotentCommandProcessUnderProcessingException;
 import org.apache.fineract.infrastructure.core.serialization.ToApiJsonSerializer;
@@ -67,6 +70,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.context.ApplicationContext;
 import org.springframework.lang.NonNull;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -597,5 +601,104 @@ public class SynchronousCommandProcessingServiceTest {
         when(commandSourceService.saveResultSameTransaction(any(CommandSource.class))).thenReturn(commandSource);
         underTest.executeCommand(commandWrapper, jsonCommand, false);
         verify(commandSourceService, times(4)).getCommandSource(commandId);
+    }
+
+    /**
+     * Test that when running inside an enclosing batch transaction, hook events are NOT published immediately but
+     * deferred to afterCommit. This prevents webhooks (e.g. SMS notifications) from firing for commands that are
+     * subsequently rolled back when a later command in the batch fails.
+     */
+    @Test
+    public void testHookEventDeferredInEnclosingTransaction() {
+        CommandWrapper commandWrapper = getCommandWrapper();
+
+        long commandId = 1L;
+        JsonCommand jsonCommand = Mockito.mock(JsonCommand.class);
+        when(jsonCommand.commandId()).thenReturn(commandId);
+
+        NewCommandSourceHandler commandHandler = Mockito.mock(NewCommandSourceHandler.class);
+        CommandProcessingResult commandProcessingResult = Mockito.mock(CommandProcessingResult.class);
+        when(commandProcessingResult.isRollbackTransaction()).thenReturn(false);
+        when(commandHandler.processCommand(jsonCommand)).thenReturn(commandProcessingResult);
+        when(commandHandlerProvider.getHandler(Mockito.any(), Mockito.any())).thenReturn(commandHandler);
+
+        when(configurationDomainService.isMakerCheckerEnabledForTask(Mockito.any())).thenReturn(false);
+        String idk = "idk";
+        when(idempotencyKeyResolver.resolve(commandWrapper)).thenReturn(idk);
+        CommandSource commandSource = Mockito.mock(CommandSource.class);
+        when(commandSource.getId()).thenReturn(commandId);
+        when(commandSourceService.findCommandSource(commandWrapper, idk)).thenReturn(null);
+        when(commandSourceService.getCommandSource(commandId)).thenReturn(commandSource);
+
+        AppUser appUser = Mockito.mock(AppUser.class);
+        when(context.authenticatedUser(Mockito.any(CommandWrapper.class))).thenReturn(appUser);
+        when(commandSourceService.saveInitialNewTransaction(commandWrapper, jsonCommand, appUser, idk)).thenReturn(commandSource);
+        when(commandSourceService.saveResultSameTransaction(commandSource)).thenReturn(commandSource);
+        when(commandSource.getStatus()).thenReturn(CommandProcessingResultType.PROCESSED.getValue());
+
+        when(commandSourceService.processCommand(commandHandler, jsonCommand, commandSource, appUser, false))
+                .thenReturn(commandProcessingResult);
+
+        // Simulate enclosing batch transaction with active synchronization
+        BatchRequestContextHolder.setIsEnclosingTransaction(true);
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            underTest.executeCommand(commandWrapper, jsonCommand, false);
+
+            // Hook event should NOT have been published immediately
+            verify(applicationContext, never()).publishEvent(any());
+
+            // It should be registered as an afterCommit synchronization
+            assertEquals(1, TransactionSynchronizationManager.getSynchronizations().size());
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+            BatchRequestContextHolder.resetIsEnclosingTransaction();
+        }
+    }
+
+    /**
+     * Test that when NOT in an enclosing transaction, no TransactionSynchronization is registered. The code takes the
+     * immediate path (not the deferred path), preserving existing behaviour for non-batch single-request commands.
+     */
+    @Test
+    public void testHookEventNotDeferredOutsideEnclosingTransaction() {
+        CommandWrapper commandWrapper = getCommandWrapper();
+
+        long commandId = 1L;
+        JsonCommand jsonCommand = Mockito.mock(JsonCommand.class);
+        when(jsonCommand.commandId()).thenReturn(commandId);
+        when(jsonCommand.json()).thenReturn(null); // null causes publishHookEvent to exit early; avoids mocking the
+                                                   // full hook-serialisation chain
+
+        NewCommandSourceHandler commandHandler = Mockito.mock(NewCommandSourceHandler.class);
+        CommandProcessingResult commandProcessingResult = Mockito.mock(CommandProcessingResult.class);
+        when(commandProcessingResult.isRollbackTransaction()).thenReturn(false);
+        when(commandHandler.processCommand(jsonCommand)).thenReturn(commandProcessingResult);
+        when(commandHandlerProvider.getHandler(Mockito.any(), Mockito.any())).thenReturn(commandHandler);
+
+        when(configurationDomainService.isMakerCheckerEnabledForTask(Mockito.any())).thenReturn(false);
+        String idk = "idk";
+        when(idempotencyKeyResolver.resolve(commandWrapper)).thenReturn(idk);
+        CommandSource commandSource = Mockito.mock(CommandSource.class);
+        when(commandSource.getId()).thenReturn(commandId);
+        when(commandSourceService.findCommandSource(commandWrapper, idk)).thenReturn(null);
+        when(commandSourceService.getCommandSource(commandId)).thenReturn(commandSource);
+
+        AppUser appUser = Mockito.mock(AppUser.class);
+        when(context.authenticatedUser(Mockito.any(CommandWrapper.class))).thenReturn(appUser);
+        when(commandSourceService.saveInitialNewTransaction(commandWrapper, jsonCommand, appUser, idk)).thenReturn(commandSource);
+        when(commandSourceService.saveResultSameTransaction(commandSource)).thenReturn(commandSource);
+        when(commandSource.getStatus()).thenReturn(CommandProcessingResultType.PROCESSED.getValue());
+
+        when(commandSourceService.processCommand(commandHandler, jsonCommand, commandSource, appUser, false))
+                .thenReturn(commandProcessingResult);
+
+        // Not in enclosing transaction (default)
+        BatchRequestContextHolder.resetIsEnclosingTransaction();
+
+        underTest.executeCommand(commandWrapper, jsonCommand, false);
+
+        // The deferred path was not taken: no TransactionSynchronization should have been registered.
+        assertFalse(TransactionSynchronizationManager.isSynchronizationActive());
     }
 }

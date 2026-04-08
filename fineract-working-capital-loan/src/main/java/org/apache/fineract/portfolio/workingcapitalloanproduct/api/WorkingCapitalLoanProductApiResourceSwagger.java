@@ -22,6 +22,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import org.apache.fineract.accounting.glaccount.data.GLAccountData;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.data.StringEnumOptionData;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
@@ -103,6 +105,44 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
 
         // Configurable attributes
         public PostAllowAttributeOverrides allowAttributeOverrides;
+
+        // Accounting
+        @Schema(example = "CASH_BASED", description = "NONE or CASH_BASED", allowableValues = { "NONE", "CASH_BASED" })
+        public String accountingRule;
+        @Schema(example = "1")
+        public Long fundSourceAccountId;
+        @Schema(example = "2")
+        public Long loanPortfolioAccountId;
+        @Schema(example = "3")
+        public Long transfersInSuspenseAccountId;
+        @Schema(example = "4")
+        public Long deferredIncomeLiabilityAccountId;
+        @Schema(example = "5")
+        public Long incomeFromDiscountFeeAccountId;
+        @Schema(example = "6")
+        public Long incomeFromFeeAccountId;
+        @Schema(example = "6")
+        public Long incomeFromPenaltyAccountId;
+        @Schema(example = "7")
+        public Long incomeFromRecoveryAccountId;
+        @Schema(example = "8")
+        public Long writeOffAccountId;
+        @Schema(example = "9")
+        public Long overpaymentLiabilityAccountId;
+        @Schema(example = "10")
+        public Long incomeFromChargeOffFeesAccountId;
+        @Schema(example = "11")
+        public Long incomeFromChargeOffPenaltyAccountId;
+        @Schema(example = "12")
+        public Long incomeFromGoodwillCreditFeesAccountId;
+        @Schema(example = "13")
+        public Long incomeFromGoodwillCreditPenaltyAccountId;
+        @Schema(example = "16")
+        public Long goodwillCreditAccountId;
+        @Schema(example = "17")
+        public Long chargeOffExpenseAccountId;
+        @Schema(example = "18")
+        public Long chargeOffFraudExpenseAccountId;
 
         @Schema(example = "en_GB")
         public String locale;
@@ -222,6 +262,10 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         // Configurable attributes
         public GetConfigurableAttributes allowAttributeOverrides;
 
+        // Accounting
+        public StringEnumOptionData accountingRule;
+        public Map<String, GLAccountData> accountingMappings;
+
         @Schema(description = "GetDelinquencyBucket")
         public static final class GetDelinquencyBucket {
 
@@ -317,6 +361,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public List<StringEnumOptionData> delinquencyStartTypeOptions;
         public List<EnumOptionData> advancedPaymentAllocationTransactionTypes;
         public List<GetWorkingCapitalLoanProductsResponse.GetDelinquencyBucket> delinquencyBucketOptions;
+        public List<StringEnumOptionData> accountingRuleOptions;
+        public Map<String, Object> accountingMappingOptions;
     }
 
     @Schema(description = "GetWorkingCapitalLoanProductsProductIdResponse")
@@ -381,6 +427,10 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
 
         // Configurable attributes
         public GetWorkingCapitalLoanProductsResponse.GetConfigurableAttributes allowAttributeOverrides;
+
+        // Accounting
+        public StringEnumOptionData accountingRule;
+        public Map<String, GLAccountData> accountingMappings;
     }
 
     @Schema(description = "PutWorkingCapitalLoanProductsProductIdRequest")
@@ -451,6 +501,44 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
 
         // Configurable attributes
         public PostWorkingCapitalLoanProductsRequest.PostAllowAttributeOverrides allowAttributeOverrides;
+
+        // Accounting
+        @Schema(example = "CASH_BASED", description = "NONE or CASH_BASED", allowableValues = { "NONE", "CASH_BASED" })
+        public String accountingRule;
+        @Schema(example = "1")
+        public Long fundSourceAccountId;
+        @Schema(example = "2")
+        public Long loanPortfolioAccountId;
+        @Schema(example = "3")
+        public Long transfersInSuspenseAccountId;
+        @Schema(example = "4")
+        public Long deferredIncomeLiabilityAccountId;
+        @Schema(example = "5")
+        public Long incomeFromDiscountFeeAccountId;
+        @Schema(example = "6")
+        public Long incomeFromFeeAccountId;
+        @Schema(example = "6")
+        public Long incomeFromPenaltyAccountId;
+        @Schema(example = "7")
+        public Long incomeFromRecoveryAccountId;
+        @Schema(example = "8")
+        public Long writeOffAccountId;
+        @Schema(example = "9")
+        public Long overpaymentLiabilityAccountId;
+        @Schema(example = "10")
+        public Long incomeFromChargeOffFeesAccountId;
+        @Schema(example = "11")
+        public Long incomeFromChargeOffPenaltyAccountId;
+        @Schema(example = "12")
+        public Long incomeFromGoodwillCreditFeesAccountId;
+        @Schema(example = "13")
+        public Long incomeFromGoodwillCreditPenaltyAccountId;
+        @Schema(example = "16")
+        public Long goodwillCreditAccountId;
+        @Schema(example = "17")
+        public Long chargeOffExpenseAccountId;
+        @Schema(example = "18")
+        public Long chargeOffFraudExpenseAccountId;
 
         @Schema(example = "en_GB")
         public String locale;

@@ -22,6 +22,8 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -87,6 +89,11 @@ public class WorkingCapitalLoanProduct extends AbstractPersistableCustom<Long> {
     @Column(name = "description")
     private String description;
 
+    // Accounting
+    @Enumerated(EnumType.STRING)
+    @Column(name = "accounting_type", nullable = false)
+    private WorkingCapitalAccountingRuleType accountingRule;
+
     // Currency (MonetaryCurrency is @Embeddable)
     @Embedded
     private MonetaryCurrency currency;
@@ -107,11 +114,12 @@ public class WorkingCapitalLoanProduct extends AbstractPersistableCustom<Long> {
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "wcProduct", orphanRemoval = true, fetch = FetchType.EAGER)
     private WorkingCapitalLoanProductConfigurableAttributes configurableAttributes;
 
-    public WorkingCapitalLoanProduct(String name, String shortName, ExternalId externalId, Fund fund, DelinquencyBucket delinquencyBucket,
-            WorkingCapitalBreach breach, LocalDate startDate, LocalDate closeDate, String description, MonetaryCurrency currency,
-            WorkingCapitalLoanProductRelatedDetail relatedDetail, WorkingCapitalLoanProductMinMaxConstraints minMaxConstraints,
-            List<WorkingCapitalLoanProductPaymentAllocationRule> paymentAllocationRules,
-            WorkingCapitalLoanProductConfigurableAttributes configurableAttributes) {
+    public WorkingCapitalLoanProduct(final String name, final String shortName, final ExternalId externalId, final Fund fund,
+            final DelinquencyBucket delinquencyBucket, final LocalDate startDate, final LocalDate closeDate, final String description,
+            final WorkingCapitalAccountingRuleType accountingRule, final MonetaryCurrency currency,
+            final WorkingCapitalLoanProductRelatedDetail relatedDetail, final WorkingCapitalLoanProductMinMaxConstraints minMaxConstraints,
+            final List<WorkingCapitalLoanProductPaymentAllocationRule> paymentAllocationRules,
+            final WorkingCapitalLoanProductConfigurableAttributes configurableAttributes, final WorkingCapitalBreach breach) {
         this.name = name;
         this.shortName = shortName;
         this.externalId = externalId;
@@ -121,6 +129,7 @@ public class WorkingCapitalLoanProduct extends AbstractPersistableCustom<Long> {
         this.startDate = startDate;
         this.closeDate = closeDate;
         this.description = description;
+        this.accountingRule = accountingRule;
         this.currency = currency;
         this.relatedDetail = relatedDetail;
         this.minMaxConstraints = minMaxConstraints;

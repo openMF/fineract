@@ -34,6 +34,7 @@ import org.apache.fineract.portfolio.workingcapitalloanbreach.mapper.WorkingCapi
 import org.apache.fineract.portfolio.workingcapitalloanproduct.data.WorkingCapitalLoanProductConfigurableAttributesData;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.data.WorkingCapitalLoanProductData;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.data.WorkingCapitalPaymentAllocationData;
+import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAccountingRuleType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAmortizationType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct;
@@ -68,6 +69,10 @@ public interface WorkingCapitalLoanProductMapper {
     @Mapping(target = "allowAttributeOverrides", source = "configurableAttributes", qualifiedByName = "configurableAttributesToData")
     @Mapping(target = "delinquencyGraceDays", source = "relatedDetail.delinquencyGraceDays")
     @Mapping(target = "delinquencyStartType", source = "relatedDetail.delinquencyStartType", qualifiedByName = "delinquencyStartTypeToStringEnumOptionData")
+    @Mapping(target = "accountingRule", source = "accountingRule", qualifiedByName = "accountingRuleToStringEnumOptionData")
+    @Mapping(target = "accountingMappings", ignore = true)
+    @Mapping(target = "accountingRuleOptions", ignore = true)
+    @Mapping(target = "accountingMappingOptions", ignore = true)
     @Mapping(target = "fundOptions", ignore = true)
     @Mapping(target = "currencyOptions", ignore = true)
     @Mapping(target = "amortizationTypeOptions", ignore = true)
@@ -133,6 +138,14 @@ public interface WorkingCapitalLoanProductMapper {
             return new WorkingCapitalPaymentAllocationData(rule.getTransactionType() != null ? rule.getTransactionType() : null,
                     paymentAllocationOrder);
         }).toList();
+    }
+
+    @Named("accountingRuleToStringEnumOptionData")
+    default StringEnumOptionData accountingRuleToStringEnumOptionData(final WorkingCapitalAccountingRuleType accountingRule) {
+        if (accountingRule == null) {
+            return null;
+        }
+        return accountingRule.toData();
     }
 
     @Named("configurableAttributesToData")

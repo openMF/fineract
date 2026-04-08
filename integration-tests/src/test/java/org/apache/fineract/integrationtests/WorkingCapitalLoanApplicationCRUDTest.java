@@ -71,7 +71,7 @@ public class WorkingCapitalLoanApplicationCRUDTest {
         requestSpec.header("Authorization", "Basic " + Utils.loginIntoServerAndGetBase64EncodedAuthenticationKey());
         requestSpec.header("Fineract-Platform-TenantId", "default");
         responseSpec = new ResponseSpecBuilder().expectStatusCode(200).build();
-        delinquencyBucketId = (long) DelinquencyBucketsHelper.createDefaultBucket();
+        delinquencyBucketId = DelinquencyBucketsHelper.createDefaultBucket();
         fundId = (long) FundsResourceHandler.createFund(requestSpec, responseSpec);
     }
 

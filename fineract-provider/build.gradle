@@ -30,7 +30,7 @@ apply plugin: 'se.thinkcode.cucumber-runner'
 apply plugin: 'com.docktape.swagger-brake'
 
 swaggerBrake {
-    newApi = "${project.buildDir}/resources/main/static/fineract.json"
+    newApi = findProperty('apiNew') ?:"${project.buildDir}/resources/main/static/fineract.json"
     oldApi = findProperty('apiBaseline') ?: "${projectDir}/config/swagger/fineract-baseline.json"
     outputFormats = ['JSON']
     outputFilePath = "${project.buildDir}/swagger-brake"
@@ -38,14 +38,18 @@ swaggerBrake {
     strictValidation = false
 }
 
-checkBreakingChanges.dependsOn resolve
 checkBreakingChanges.onlyIf {
     def baseline = findProperty('apiBaseline') ?: "${projectDir}/config/swagger/fineract-baseline.json"
     def exists = file(baseline).exists()
     if (!exists) {
         logger.lifecycle("Skipping checkBreakingChanges: baseline file not found at ${baseline}")
     }
-    exists
+    def apiNew = findProperty('apiNew') ?: "${project.buildDir}/resources/main/static/fineract.json"
+    def existsApiNew = file(apiNew).exists()
+    if (!existsApiNew) {
+        logger.lifecycle("Skipping checkBreakingChanges: new api file not found at ${apiNew}")
+    }
+    exists && existsApiNew
 }
 
 check.dependsOn('cucumber')

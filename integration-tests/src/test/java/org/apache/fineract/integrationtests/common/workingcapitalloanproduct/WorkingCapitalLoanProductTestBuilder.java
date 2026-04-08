@@ -29,6 +29,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.ObjectMapperFactory;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest.AccountingRuleEnum;
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdRequest;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPeriodFrequencyType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAmortizationType;
@@ -48,6 +49,7 @@ public class WorkingCapitalLoanProductTestBuilder {
     private static final Integer DEFAULT_PERIOD_PAYMENT_FREQUENCY = 30;
     private static final String DEFAULT_PERIOD_PAYMENT_FREQUENCY_TYPE = WorkingCapitalLoanPeriodFrequencyType.DAYS.name();
     private static final List<String> DEFAULT_PAYMENT_ALLOCATION_TYPES = List.of("PENALTY", "FEE", "PRINCIPAL");
+    private static final AccountingRuleEnum DEFAULT_ACCOUNTING_RULE = AccountingRuleEnum.NONE;
 
     private String name = DEFAULT_NAME;
     private String shortName = DEFAULT_SHORT_NAME;
@@ -74,6 +76,7 @@ public class WorkingCapitalLoanProductTestBuilder {
     private Map<String, Boolean> allowAttributeOverrides;
     private Integer delinquencyGraceDays;
     private String delinquencyStartType;
+    private AccountingRuleEnum accountingRule = DEFAULT_ACCOUNTING_RULE;
 
     public WorkingCapitalLoanProductTestBuilder withName(final String name) {
         this.name = name;
@@ -200,6 +203,11 @@ public class WorkingCapitalLoanProductTestBuilder {
         return this;
     }
 
+    public WorkingCapitalLoanProductTestBuilder withAccountingRule(final AccountingRuleEnum accountingRule) {
+        this.accountingRule = accountingRule;
+        return this;
+    }
+
     public PostWorkingCapitalLoanProductsRequest build() {
         final PostWorkingCapitalLoanProductsRequest request = new PostWorkingCapitalLoanProductsRequest();
         populateCommonFields(request);
@@ -245,6 +253,7 @@ public class WorkingCapitalLoanProductTestBuilder {
         request.setDelinquencyGraceDays(this.delinquencyGraceDays);
         request.setDelinquencyStartType(this.delinquencyStartType);
         request.setBreachId(this.breachId);
+        request.setAccountingRule(this.accountingRule);
         request.setLocale("en_US");
         request.setDateFormat("yyyy-MM-dd");
     }
@@ -277,6 +286,9 @@ public class WorkingCapitalLoanProductTestBuilder {
         request.setDelinquencyGraceDays(this.delinquencyGraceDays);
         request.setDelinquencyStartType(this.delinquencyStartType);
         request.setBreachId(this.breachId);
+        if (this.accountingRule != null) {
+            request.setAccountingRule(PutWorkingCapitalLoanProductsProductIdRequest.AccountingRuleEnum.valueOf(this.accountingRule.name()));
+        }
         request.setLocale("en_US");
         request.setDateFormat("yyyy-MM-dd");
     }

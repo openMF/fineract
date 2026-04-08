@@ -26,10 +26,12 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
+import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.infrastructure.core.exception.GeneralPlatformDomainRuleException;
+import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.portfolio.delinquency.domain.DelinquencyBucket;
@@ -43,6 +45,7 @@ import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapita
 import org.apache.fineract.portfolio.workingcapitalloanbreach.domain.WorkingCapitalBreach;
 import org.apache.fineract.portfolio.workingcapitalloanbreach.repository.WorkingCapitalBreachRepository;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.WorkingCapitalLoanProductConstants;
+import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAccountingRuleType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAdvancedPaymentAllocationsJsonParser;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAmortizationType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
@@ -75,6 +78,7 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
     private final DelinquencyBucketRepository delinquencyBucketRepository;
     private final WorkingCapitalAdvancedPaymentAllocationsJsonParser advancedPaymentAllocationsJsonParser;
     private final WorkingCapitalBreachRepository breachRepository;
+    private final WorkingCapitalProductAccountingMappingService wcAccountingMappingService;
 
     @Transactional
     @Override
@@ -98,6 +102,9 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
                 paymentAllocationRules);
 
         this.repository.saveAndFlush(product);
+
+        // Create GL account mappings if accounting is enabled
+        this.wcAccountingMappingService.createAccountMapping(product.getId(), command);
 
         return new CommandProcessingResultBuilder() //
                 .withCommandId(command.commandId()) //
@@ -142,6 +149,28 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
 
         final Map<String, Object> changes = updateProductFields(product, command);
 
+        // Handle accounting rule update
+        if (command.parameterExists(WorkingCapitalLoanProductConstants.accountingRuleParamName)) {
+            final String newAccountingRuleValue = command
+                    .stringValueOfParameterNamed(WorkingCapitalLoanProductConstants.accountingRuleParamName);
+            if (newAccountingRuleValue == null || newAccountingRuleValue.isBlank()) {
+                throw new PlatformApiDataValidationException(List.of(ApiParameterError.parameterError(
+                        "validation.msg.WORKINGCAPITALLOANPRODUCT.accountingRule.cannot.be.blank",
+                        "The parameter `accountingRule` is mandatory.", WorkingCapitalLoanProductConstants.accountingRuleParamName)));
+            }
+            final WorkingCapitalAccountingRuleType newAccountingRule = WorkingCapitalAccountingRuleType.valueOf(newAccountingRuleValue);
+            final boolean accountingRuleChanged = newAccountingRule != product.getAccountingRule();
+
+            if (accountingRuleChanged) {
+                product.setAccountingRule(newAccountingRule);
+                changes.put(WorkingCapitalLoanProductConstants.accountingRuleParamName, newAccountingRuleValue);
+            }
+
+            final Map<String, Object> accountingMappingChanges = this.wcAccountingMappingService.updateAccountMapping(productId, command,
+                    accountingRuleChanged, newAccountingRule);
+            changes.putAll(accountingMappingChanges);
+        }
+
         if (!changes.isEmpty()) {
             this.repository.saveAndFlush(product);
         }
@@ -164,6 +193,7 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
             throw new WorkingCapitalLoanProductCannotBeDeletedException(productId);
         }
 
+        this.wcAccountingMappingService.deleteAccountMapping(productId);
         this.repository.delete(product);
 
         return new CommandProcessingResultBuilder() //
@@ -351,11 +381,17 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
         final WorkingCapitalLoanProductMinMaxConstraints minMaxConstraints = new WorkingCapitalLoanProductMinMaxConstraints(minPrincipal,
                 maxPrincipal, minPeriodPaymentRate, maxPeriodPaymentRate);
 
+        // Accounting
+        final String accountingRuleValue = command.parameterExists(WorkingCapitalLoanProductConstants.accountingRuleParamName)
+                ? command.stringValueOfParameterNamed(WorkingCapitalLoanProductConstants.accountingRuleParamName)
+                : WorkingCapitalAccountingRuleType.NONE.name();
+        final WorkingCapitalAccountingRuleType accountingRule = WorkingCapitalAccountingRuleType.valueOf(accountingRuleValue);
+
         // Configurable attributes
         final WorkingCapitalLoanProductConfigurableAttributes configurableAttributes = createConfigurableAttributesFromCommand(command);
 
-        return new WorkingCapitalLoanProduct(name, shortName, externalId, fund, delinquencyBucket, breach, startDate, closeDate,
-                description, currency, relatedDetail, minMaxConstraints, paymentAllocationRules, configurableAttributes);
+        return new WorkingCapitalLoanProduct(name, shortName, externalId, fund, delinquencyBucket, startDate, closeDate, description,
+                accountingRule, currency, relatedDetail, minMaxConstraints, paymentAllocationRules, configurableAttributes, breach);
     }
 
     private WorkingCapitalBreach findBreachByIdIfProvided(final Long breachId) {
