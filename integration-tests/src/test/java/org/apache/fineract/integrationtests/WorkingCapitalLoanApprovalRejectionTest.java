@@ -20,6 +20,7 @@ package org.apache.fineract.integrationtests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -355,6 +356,24 @@ public class WorkingCapitalLoanApprovalRejectionTest {
         CallFailedRuntimeException ex = applicationHelper.runApproveExpectingFailure(loanId,
                 WorkingCapitalLoanApplicationTestBuilder.buildApproveJson(getSubmittedOnDate(loanId), null, BigDecimal.valueOf(200)));
         assertNotNull(ex);
+
+        applicationHelper.deleteById(loanId);
+        productHelper.deleteWorkingCapitalLoanProductById(productId);
+    }
+
+    @Test
+    public void testApproveWithDiscountFailsWhenProductDisallowsDiscountOverride() {
+        final Long productId = createProduct();
+        final Long clientId = createClient();
+
+        final Long loanId = submitLoan(clientId, productId);
+
+        final CallFailedRuntimeException ex = applicationHelper.runApproveExpectingFailure(loanId, WorkingCapitalLoanApplicationTestBuilder
+                .buildApproveJson(getSubmittedOnDate(loanId), BigDecimal.valueOf(5000), BigDecimal.valueOf(10)));
+        assertNotNull(ex);
+        assertEquals(400, ex.getStatus());
+        assertNotNull(ex.getDeveloperMessage());
+        assertTrue(ex.getDeveloperMessage().contains("override.not.allowed.by.product"));
 
         applicationHelper.deleteById(loanId);
         productHelper.deleteWorkingCapitalLoanProductById(productId);

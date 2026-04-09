@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.portfolio.loanproduct.productmix.api;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -71,6 +72,7 @@ public class ProductMixApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Retrieve Product Mix Template", operationId = "retrieveTemplateProductMix")
     public String retrieveTemplate(@PathParam("productId") final Long productId, @Context final UriInfo uriInfo) {
 
         this.context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
@@ -88,6 +90,7 @@ public class ProductMixApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Create Product Mix", operationId = "createProductMix")
     public CommandProcessingResult createProductMix(@PathParam("productId") final Long productId,
             final ProductMixRequest productMixRequest) {
 
@@ -100,6 +103,7 @@ public class ProductMixApiResource {
     @PUT
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Update Product Mix", operationId = "updateProductMix")
     public CommandProcessingResult updateProductMix(@PathParam("productId") final Long productId,
             final ProductMixRequest productMixRequest) {
 
@@ -111,6 +115,7 @@ public class ProductMixApiResource {
 
     @DELETE
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Delete Product Mix", operationId = "deleteProductMix")
     public CommandProcessingResult deleteProductMix(@PathParam("productId") final Long productId) {
 
         final CommandWrapper commandRequest = new CommandWrapperBuilder().deleteProductMix(productId).build();

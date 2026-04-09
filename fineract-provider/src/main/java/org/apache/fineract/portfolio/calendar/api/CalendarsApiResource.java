@@ -24,6 +24,7 @@ import static org.apache.fineract.portfolio.calendar.domain.CalendarEntityType.G
 import static org.apache.fineract.portfolio.calendar.domain.CalendarEntityType.LOANS;
 import static org.apache.fineract.portfolio.calendar.domain.CalendarEntityType.SAVINGS;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -82,6 +83,7 @@ public class CalendarsApiResource {
     @GET
     @Path("{calendarId}")
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Retrieve a Calendar", operationId = "retrieveCalendar")
     public CalendarData retrieveCalendar(@PathParam("calendarId") final Long calendarId, @PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId, @Context final UriInfo uriInfo) {
 
@@ -110,6 +112,7 @@ public class CalendarsApiResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Retrieve Calendars by Entity", operationId = "retrieveCalendarsByEntityId")
     public List<CalendarData> retrieveCalendarsByEntity(@PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId, @Context final UriInfo uriInfo,
             @DefaultValue("all") @QueryParam("calendarType") final String calendarType) {
@@ -134,6 +137,7 @@ public class CalendarsApiResource {
     @GET
     @Path("template")
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Retrieve Calendar Template", operationId = "retrieveTemplateCalendar")
     public CalendarData retrieveNewCalendarDetails(@Context final UriInfo uriInfo, @PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId) {
         context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
@@ -143,6 +147,7 @@ public class CalendarsApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Create a Calendar", operationId = "createCalendar")
     public CommandProcessingResult createCalendar(@PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId, CalendarRequest calendarRequest) {
 
@@ -163,6 +168,7 @@ public class CalendarsApiResource {
     @Path("{calendarId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Update a Calendar", operationId = "updateCalendar")
     public CommandProcessingResult updateCalendar(@PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId, @PathParam("calendarId") final Long calendarId, final String jsonRequestBody) {
 
@@ -175,6 +181,7 @@ public class CalendarsApiResource {
     @DELETE
     @Path("{calendarId}")
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Delete a Calendar", operationId = "deleteCalendar")
     public CommandProcessingResult deleteCalendar(@PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId, @PathParam("calendarId") final Long calendarId) {
 

@@ -61,7 +61,7 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
         final InterestPauseRequestDto interestPauseRequest = LoanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
                 .endDate(endDate);
         final CommandProcessingResult interestPauseResponse = ok(
-                () -> fineractClient.loanInterestPause().createInterestPause(loanId, interestPauseRequest));
+                () -> fineractClient.loanInterestPause().createLoanInterestPause(loanId, interestPauseRequest));
 
         Assertions.assertNotNull(interestPauseResponse);
         final Long variationId = interestPauseResponse.getResourceId();
@@ -77,7 +77,7 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
         final Long variationId = testContext().get(TestContextKey.INTEREST_PAUSE_VARIATION_ID);
         Assertions.assertNotNull(variationId, "Interest pause variation ID must be set before deletion");
 
-        executeVoid(() -> fineractClient.loanInterestPause().deleteInterestPause(loanId, variationId));
+        executeVoid(() -> fineractClient.loanInterestPause().deleteLoanInterestPause(loanId, variationId));
     }
 
     @Then("Update the interest pause period with start date {string} and end date {string}")
@@ -91,11 +91,11 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
 
         final InterestPauseRequestDto interestPauseRequest = LoanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
                 .endDate(endDate);
-        ok(() -> fineractClient.loanInterestPause().updateInterestPause(loanId, variationId, interestPauseRequest));
+        ok(() -> fineractClient.loanInterestPause().updateLoanInterestPause(loanId, variationId, interestPauseRequest));
     }
 
     @Then("Admin is not able to add an interest pause period with start date {string} and end date {string}")
-    public void createInterestPauseFailure(final String startDate, final String endDate) throws IOException {
+    public void createLoanInterestPauseFailure(final String startDate, final String endDate) throws IOException {
         final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         Assertions.assertNotNull(loanResponse);
         final Long loanId = loanResponse.getLoanId();
@@ -104,13 +104,13 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
                 .endDate(endDate);
 
         CallFailedRuntimeException exception = fail(
-                () -> fineractClient.loanInterestPause().createInterestPause(loanId, interestPauseRequest));
+                () -> fineractClient.loanInterestPause().createLoanInterestPause(loanId, interestPauseRequest));
         assertThat(exception.getStatus()).as(ErrorMessageHelper.addInterestPauseForNotInterestBearingLoanFailure()).isEqualTo(403);
         assertThat(exception.getDeveloperMessage()).contains(ErrorMessageHelper.addInterestPauseForNotInterestBearingLoanFailure());
     }
 
     @Then("Admin is not able to add an interest pause period with start date {string} and end date {string} due to inactive loan status")
-    public void createInterestPauseForInactiveLoanFailure(final String startDate, final String endDate) throws IOException {
+    public void createLoanInterestPauseForInactiveLoanFailure(final String startDate, final String endDate) throws IOException {
         final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         Assertions.assertNotNull(loanResponse);
         final Long loanId = loanResponse.getLoanId();
@@ -119,7 +119,7 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
                 .endDate(endDate);
 
         CallFailedRuntimeException exception = fail(
-                () -> fineractClient.loanInterestPause().createInterestPause(loanId, interestPauseRequest));
+                () -> fineractClient.loanInterestPause().createLoanInterestPause(loanId, interestPauseRequest));
         assertThat(exception.getStatus()).as(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure()).isEqualTo(403);
         assertThat(exception.getDeveloperMessage()).contains(ErrorMessageHelper.addInterestPauseForNotInactiveLoanFailure());
     }

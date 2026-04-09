@@ -21,6 +21,7 @@ package org.apache.fineract.portfolio.workingcapitalloan.service;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.infrastructure.codes.service.CodeValueReadPlatformService;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.portfolio.paymenttype.service.PaymentTypeReadService;
 import org.apache.fineract.portfolio.workingcapitalloan.WorkingCapitalLoanConstants;
@@ -47,6 +48,7 @@ public class WorkingCapitalLoanTransactionReadPlatformServiceImpl implements Wor
     private final WorkingCapitalLoanTransactionRepository transactionRepository;
     private final WorkingCapitalLoanRepository workingCapitalLoanRepository;
     private final PaymentTypeReadService paymentTypeReadPlatformService;
+    private final CodeValueReadPlatformService codeValueReadPlatformService;
     private final WorkingCapitalLoanTransactionMapper transactionMapper;
 
     @Override
@@ -61,7 +63,10 @@ public class WorkingCapitalLoanTransactionReadPlatformServiceImpl implements Wor
         } else if (WorkingCapitalLoanConstants.DISBURSE_LOAN_COMMAND.equals(command)) {
             return WorkingCapitalLoanCommandTemplateData.builder().expectedAmount(wcLoan.getApprovedPrincipal())
                     .expectedDisbursementDate(expectedDisbursementDate).currency(wcLoan.getLoanProduct().getCurrency().toData())
-                    .paymentTypeOptions(paymentTypeReadPlatformService.retrieveAllPaymentTypes()).build();
+                    .paymentTypeOptions(paymentTypeReadPlatformService.retrieveAllPaymentTypes())
+                    .classificationOptions(codeValueReadPlatformService
+                            .retrieveCodeValuesByCode(WorkingCapitalLoanConstants.DISBURSEMENT_CLASSIFICATION_CODE_NAME))
+                    .build();
         }
         return null;
     }

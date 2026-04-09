@@ -3348,8 +3348,7 @@ public class LoanStepDef extends AbstractStepDef {
         Long loanProductId = loanProductResolver.resolve(product);
         log.debug("loanProductId: {}", loanProductId);
 
-        GetLoanProductsProductIdResponse loanProductDetails = ok(
-                () -> fineractClient.loanProducts().retrieveLoanProductDetails(loanProductId));
+        GetLoanProductsProductIdResponse loanProductDetails = ok(() -> fineractClient.loanProducts().retrieveOneLoanProduct(loanProductId));
         List<AdvancedPaymentData> paymentAllocation = loanProductDetails.getPaymentAllocation();
 
         List<AdvancedPaymentData> newPaymentAllocation = new ArrayList<>();
@@ -3599,7 +3598,7 @@ public class LoanStepDef extends AbstractStepDef {
         final DefaultLoanProduct product = DefaultLoanProduct.valueOf(loanProductName);
         final Long loanProductId = loanProductResolver.resolve(product);
         final GetLoanProductsProductIdResponse loanProductDetails = ok(
-                () -> fineractClient.loanProducts().retrieveLoanProductDetailsUniversal(loanProductId, Map.of("template", "true")));
+                () -> fineractClient.loanProducts().retrieveOneLoanProductUniversal(loanProductId, Map.of("template", "true")));
         assertNotNull(loanProductDetails);
         final List<GetLoanProductsChargeOffReasonOptions> chargeOffReasonOptions = loanProductDetails.getChargeOffReasonOptions();
         assertNotNull(chargeOffReasonOptions);
@@ -3709,7 +3708,7 @@ public class LoanStepDef extends AbstractStepDef {
         final DefaultLoanProduct product = DefaultLoanProduct.valueOf(loanProduct);
         final Long loanProductId = loanProductResolver.resolve(product);
         final GetLoanProductsProductIdResponse loanProductDetails = ok(
-                () -> fineractClient.loanProducts().retrieveLoanProductDetails(loanProductId));
+                () -> fineractClient.loanProducts().retrieveOneLoanProduct(loanProductId));
 
         final List<PostLoansRequestChargeData> loanCharges = new ArrayList<>();
 
@@ -6018,7 +6017,7 @@ public class LoanStepDef extends AbstractStepDef {
     public void callInternalAPIToRemoveProgressiveLoanModelByLoanId() {
         final PostLoansResponse loanCreateResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         final long loanId = loanCreateResponse.getLoanId();
-        ok(() -> fineractClient.progressiveLoan().deleteModel(loanId));
+        ok(() -> fineractClient.progressiveLoan().deleteInternalProgressiveLoan(loanId));
     }
 
     public static AdvancedPaymentData editPaymentAllocationFutureInstallment(String transactionType, String futureInstallmentAllocationRule,

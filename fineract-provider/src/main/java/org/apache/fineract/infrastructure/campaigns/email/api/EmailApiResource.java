@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.infrastructure.campaigns.email.api;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -66,6 +67,7 @@ public class EmailApiResource {
     private final SqlValidator sqlValidator;
 
     @GET
+    @Operation(summary = "List all email messages", operationId = "retrieveAllEmails")
     public String retrieveAllEmails(@Context final UriInfo uriInfo) {
         context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
         final Collection<EmailData> emailMessages = readPlatformService.retrieveAll();
@@ -75,6 +77,7 @@ public class EmailApiResource {
 
     @GET
     @Path("pendingEmail")
+    @Operation(summary = "Retrieve pending email messages", operationId = "retrievePendingEmail")
     public String retrievePendingEmail(@QueryParam("offset") final Integer offset, @QueryParam("limit") final Integer limit,
             @QueryParam("orderBy") final String orderBy, @QueryParam("sortOrder") final String sortOrder, @Context final UriInfo uriInfo) {
 
@@ -90,6 +93,7 @@ public class EmailApiResource {
 
     @GET
     @Path("sentEmail")
+    @Operation(summary = "Retrieve sent email messages", operationId = "retrieveSentEmail")
     public String retrieveSentEmail(@QueryParam("offset") final Integer offset, @QueryParam("limit") final Integer limit,
             @QueryParam("orderBy") final String orderBy, @QueryParam("sortOrder") final String sortOrder, @Context final UriInfo uriInfo) {
 
@@ -107,6 +111,7 @@ public class EmailApiResource {
 
     @GET
     @Path("messageByStatus")
+    @Operation(summary = "Retrieve email messages by status", operationId = "retrieveAllEmailByStatus")
     public String retrieveAllEmailByStatus(@QueryParam("offset") final Integer offset, @QueryParam("limit") final Integer limit,
             @QueryParam("status") final Integer status, @QueryParam("orderBy") final String orderBy,
             @QueryParam("sortOrder") final String sortOrder, @QueryParam("fromDate") final DateParam fromDateParam,
@@ -131,6 +136,7 @@ public class EmailApiResource {
 
     @GET
     @Path("failedEmail")
+    @Operation(summary = "Retrieve failed email messages", operationId = "retrieveFailedEmail")
     public String retrieveFailedEmail(@QueryParam("offset") final Integer offset, @QueryParam("limit") final Integer limit,
             @QueryParam("orderBy") final String orderBy, @QueryParam("sortOrder") final String sortOrder, @Context final UriInfo uriInfo) {
 
@@ -148,6 +154,7 @@ public class EmailApiResource {
 
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Create an email message", operationId = "createEmail")
     public String create(final String apiRequestBodyAsJson) {
 
         final CommandWrapper commandRequest = new CommandWrapperBuilder().createEmail().withJson(apiRequestBodyAsJson).build();
@@ -159,6 +166,7 @@ public class EmailApiResource {
 
     @GET
     @Path("{resourceId}")
+    @Operation(summary = "Retrieve an email message", operationId = "retrieveOneEmail")
     public String retrieveOne(@PathParam("resourceId") final Long resourceId, @Context final UriInfo uriInfo) {
 
         final EmailData emailMessage = readPlatformService.retrieveOne(resourceId);
@@ -170,6 +178,7 @@ public class EmailApiResource {
     @PUT
     @Path("{resourceId}")
     @Consumes({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Update an email message", operationId = "updateEmail")
     public String update(@PathParam("resourceId") final Long resourceId, final String apiRequestBodyAsJson) {
 
         final CommandWrapper commandRequest = new CommandWrapperBuilder().updateEmail(resourceId).withJson(apiRequestBodyAsJson).build();
@@ -181,6 +190,7 @@ public class EmailApiResource {
 
     @DELETE
     @Path("{resourceId}")
+    @Operation(summary = "Delete an email message", operationId = "deleteEmail")
     public String delete(@PathParam("resourceId") final Long resourceId) {
 
         final CommandWrapper commandRequest = new CommandWrapperBuilder().deleteEmail(resourceId).build();

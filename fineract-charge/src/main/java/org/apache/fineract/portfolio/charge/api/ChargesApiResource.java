@@ -72,7 +72,7 @@ public class ChargesApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve Charges", description = """
+    @Operation(summary = "Retrieve Charges", operationId = "retrieveAllCharges", description = """
             Returns the list of defined charges.
 
             Example Requests:
@@ -86,7 +86,7 @@ public class ChargesApiResource {
     @GET
     @Path("{chargeId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve a Charge", description = """
+    @Operation(summary = "Retrieve a Charge", operationId = "retrieveOneCharge", description = """
             Returns the details of a defined Charge.
 
             Example Requests:
@@ -110,7 +110,7 @@ public class ChargesApiResource {
     @GET
     @Path("template")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve Charge Template", description = """
+    @Operation(summary = "Retrieve Charge Template", operationId = "retrieveTemplateCharge", description = """
             This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:
 
             Field Defaults
@@ -127,7 +127,7 @@ public class ChargesApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create/Define a Charge", description = "Define a new charge that can later be associated with loans and savings through their respective product definitions or directly on each account instance.")
+    @Operation(summary = "Create/Define a Charge", operationId = "createCharge", description = "Define a new charge that can later be associated with loans and savings through their respective product definitions or directly on each account instance.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = ChargeRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ChargesApiResourceSwagger.PostChargesResponse.class)))
     public CommandProcessingResult createCharge(@Parameter(hidden = true) ChargeRequest chargeRequest) {
@@ -140,7 +140,7 @@ public class ChargesApiResource {
     @Path("{chargeId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Update a Charge", description = "Updates the details of a Charge.")
+    @Operation(summary = "Update a Charge", operationId = "updateCharge", description = "Updates the details of a Charge.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = ChargeRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ChargesApiResourceSwagger.PutChargesChargeIdResponse.class)))
     public CommandProcessingResult updateCharge(@PathParam("chargeId") @Parameter(description = "chargeId") final Long chargeId,
@@ -153,7 +153,7 @@ public class ChargesApiResource {
     @DELETE
     @Path("{chargeId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Delete a Charge", description = "Deletes a Charge.")
+    @Operation(summary = "Delete a Charge", operationId = "deleteCharge", description = "Deletes a Charge.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ChargesApiResourceSwagger.DeleteChargesChargeIdResponse.class)))
     public CommandProcessingResult deleteCharge(@PathParam("chargeId") @Parameter(description = "chargeId") final Long chargeId) {
         final CommandWrapper commandRequest = new CommandWrapperBuilder().deleteCharge(chargeId).build();

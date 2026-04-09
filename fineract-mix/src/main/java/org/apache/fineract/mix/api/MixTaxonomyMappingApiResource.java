@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.mix.api;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -46,6 +47,7 @@ public class MixTaxonomyMappingApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Retrieve Mix Taxonomy Mapping", operationId = "retrieveMixTaxonomyMapping")
     public MixTaxonomyMappingData retrieveTaxonomyMapping() {
         return this.readTaxonomyMappingService.retrieveTaxonomyMapping();
     }
@@ -53,6 +55,7 @@ public class MixTaxonomyMappingApiResource {
     @PUT
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Update Mix Taxonomy Mapping", operationId = "updateMixTaxonomyMapping")
     public MixTaxonomyMappingUpdateResponse updateTaxonomyMapping(final MixTaxonomyMappingUpdateRequest request) {
         // TODO support multiple configuration file loading; this is the legacy behavior
         if (request.getId() == null) {

@@ -495,6 +495,8 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public String actualDisbursementDate;
         @Schema(example = "1000", description = "Disbursement amount; required for disburse. Cannot exceed approved principal.")
         public BigDecimal transactionAmount;
+        @Schema(example = "1", description = "Optional disbursement transaction classification: id of a code value under system code working_capital_loan_disbursement_classification")
+        public Long classificationId;
         @Schema(example = "ext-disburse-001", description = "External ID; optional for disburse")
         public String externalId;
         @Schema(description = "Payment details (Account No, Cheque No, Routing Code, Receipt No, Bank code)")

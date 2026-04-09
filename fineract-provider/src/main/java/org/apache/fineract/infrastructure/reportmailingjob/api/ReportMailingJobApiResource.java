@@ -71,7 +71,7 @@ public class ReportMailingJobApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create a Report Mailing Job", description = "Mandatory Fields: "
+    @Operation(summary = "Create a Report Mailing Job", operationId = "createReportMailingJob", description = "Mandatory Fields: "
             + "name, startDateTime, stretchyReportId, emailRecipients, emailSubject, emailMessage, emailAttachmentFileFormatId, recurrence, isActive\n"
             + "\n" + "Optional Fields: " + "description, stretchyReportParamMap")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = ReportMailingJobApiResourceSwagger.PostReportMailingJobsRequest.class)))
@@ -89,7 +89,7 @@ public class ReportMailingJobApiResource {
     @Path("{entityId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Update a Report Mailing Job\n", description = "")
+    @Operation(summary = "Update a Report Mailing Job\n", operationId = "updateReportMailingJob", description = "")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = ReportMailingJobApiResourceSwagger.PutReportMailingJobsRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ReportMailingJobApiResourceSwagger.PutReportMailingJobsResponse.class)))
     public String updateReportMailingJob(@PathParam("entityId") @Parameter(description = "entityId") final Long entityId,
@@ -107,7 +107,7 @@ public class ReportMailingJobApiResource {
     @Path("{entityId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Delete a Report Mailing Job", description = "")
+    @Operation(summary = "Delete a Report Mailing Job", operationId = "deleteReportMailingJob", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ReportMailingJobApiResourceSwagger.DeleteReportMailingJobsResponse.class)))
     public String deleteReportMailingJob(@PathParam("entityId") @Parameter(description = "entityId") final Long entityId,
             @Parameter(hidden = true) final String apiRequestBodyAsJson) {
@@ -123,8 +123,8 @@ public class ReportMailingJobApiResource {
     @GET
     @Path("{entityId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve a Report Mailing Job", description = "Example Requests:\n" + "\n" + "reportmailingjobs/1\n" + "\n" + "\n"
-            + "reportmailingjobs/1?template=true")
+    @Operation(summary = "Retrieve a Report Mailing Job", operationId = "retrieveOneReportMailingJob", description = "Example Requests:\n"
+            + "\n" + "reportmailingjobs/1\n" + "\n" + "\n" + "reportmailingjobs/1?template=true")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ReportMailingJobApiResourceSwagger.GetReportMailingJobsResponse.class)))
     public String retrieveReportMailingJob(@PathParam("entityId") @Parameter(description = "entityId") final Long entityId,
             @Context final UriInfo uriInfo) {
@@ -147,7 +147,7 @@ public class ReportMailingJobApiResource {
     @GET
     @Path("template")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve Report Mailing Job Details Template", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for report mailing job applications. The template data returned consists of any or all of:\n"
+    @Operation(summary = "Retrieve Report Mailing Job Details Template", operationId = "retrieveTemplateReportMailingJob", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for report mailing job applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed description Lists\n" + "Example Request:\n" + "\n" + "reportmailingjobs/template")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ReportMailingJobApiResourceSwagger.GetReportMailingJobsTemplate.class)))
     public String retrieveReportMailingJobTemplate(@Context final UriInfo uriInfo) {
@@ -164,7 +164,8 @@ public class ReportMailingJobApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "List Report Mailing Jobs", description = "Example Requests:\n" + "\n" + "reportmailingjobs")
+    @Operation(summary = "List Report Mailing Jobs", operationId = "retrieveAllReportMailingJobs", description = "Example Requests:\n"
+            + "\n" + "reportmailingjobs")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReportMailingJobApiResourceSwagger.GetReportMailingJobsResponse.class))))
     public String retrieveAllReportMailingJobs(@Context final UriInfo uriInfo,
             @QueryParam("offset") @Parameter(description = "offset") final Integer offset,

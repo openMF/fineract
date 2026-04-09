@@ -67,7 +67,7 @@ public class TaxGroupApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "List Tax Group", description = "List Tax Group")
+    @Operation(summary = "List Tax Group", operationId = "retrieveAllTaxGroups", description = "List Tax Group")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TaxGroupApiResourceSwagger.GetTaxesGroupResponse.class))))
     public List<TaxGroupData> retrieveAllTaxGroups() {
         context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
@@ -77,7 +77,7 @@ public class TaxGroupApiResource {
     @GET
     @Path("{taxGroupId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve Tax Group", description = "Retrieve Tax Group")
+    @Operation(summary = "Retrieve Tax Group", operationId = "retrieveOneTaxGroup", description = "Retrieve Tax Group")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TaxGroupApiResourceSwagger.GetTaxesGroupResponse.class)))
     public TaxGroupData retrieveTaxGroup(@PathParam("taxGroupId") @Parameter(description = "taxGroupId") final Long taxGroupId,
             @Context final UriInfo uriInfo) {
@@ -90,6 +90,7 @@ public class TaxGroupApiResource {
     @GET
     @Path("template")
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Retrieve Tax Group Template", operationId = "retrieveTemplateTaxGroup")
     public TaxGroupData retrieveTemplate() {
         context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
         return readPlatformService.retrieveTaxGroupTemplate();
@@ -98,8 +99,9 @@ public class TaxGroupApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create a new Tax Group", description = "Create a new Tax Group\n" + "Mandatory Fields: name and taxComponents\n"
-            + "Mandatory Fields in taxComponents: taxComponentId\n" + "Optional Fields in taxComponents: id, startDate and endDate")
+    @Operation(summary = "Create a new Tax Group", operationId = "createTaxGroup", description = "Create a new Tax Group\n"
+            + "Mandatory Fields: name and taxComponents\n" + "Mandatory Fields in taxComponents: taxComponentId\n"
+            + "Optional Fields in taxComponents: id, startDate and endDate")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = TaxGroupApiResourceSwagger.PostTaxesGroupRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TaxGroupApiResourceSwagger.PostTaxesGroupResponse.class)))
     public CommandProcessingResult createTaxGroup(@Parameter(hidden = true) TaxGroupRequest taxGroupRequest) {
@@ -112,7 +114,7 @@ public class TaxGroupApiResource {
     @Path("{taxGroupId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Update Tax Group", description = "Updates Tax Group. Only end date can be up-datable and can insert new tax components.")
+    @Operation(summary = "Update Tax Group", operationId = "updateTaxGroup", description = "Updates Tax Group. Only end date can be up-datable and can insert new tax components.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = TaxGroupApiResourceSwagger.PutTaxesGroupTaxGroupIdRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TaxGroupApiResourceSwagger.PutTaxesGroupTaxGroupIdResponse.class)))
     public CommandProcessingResult updateTaxGroup(@PathParam("taxGroupId") @Parameter(description = "taxGroupId") final Long taxGroupId,

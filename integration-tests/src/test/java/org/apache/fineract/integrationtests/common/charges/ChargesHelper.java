@@ -809,6 +809,6 @@ public final class ChargesHelper {
     }
 
     public GetChargesResponse retrieveCharge(final Long chargeId) {
-        return Calls.ok(FineractClientHelper.getFineractClient().charges.retrieveCharge(chargeId));
+        return Calls.ok(FineractClientHelper.getFineractClient().charges.retrieveOneCharge(chargeId));
     }
 }

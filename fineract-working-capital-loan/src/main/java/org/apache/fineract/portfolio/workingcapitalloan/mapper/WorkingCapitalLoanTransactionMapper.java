@@ -18,6 +18,8 @@
  */
 package org.apache.fineract.portfolio.workingcapitalloan.mapper;
 
+import org.apache.fineract.infrastructure.codes.data.CodeValueData;
+import org.apache.fineract.infrastructure.codes.domain.CodeValue;
 import org.apache.fineract.infrastructure.core.config.MapstructMapperConfig;
 import org.apache.fineract.portfolio.loanaccount.data.LoanTransactionEnumData;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
@@ -33,8 +35,10 @@ import org.mapstruct.Named;
 @Mapper(config = MapstructMapperConfig.class)
 public interface WorkingCapitalLoanTransactionMapper {
 
+    @Mapping(target = "wcLoanId", source = "wcLoan.id")
     @Mapping(target = "type", source = "transactionType", qualifiedByName = "loanTransactionTypeToEnumData")
     @Mapping(target = "paymentDetailData", source = "paymentDetail", qualifiedByName = "paymentDetailToData")
+    @Mapping(target = "classification", source = "classification", qualifiedByName = "codeValueToData")
     @Mapping(target = "transactionDate", source = "transactionDate")
     @Mapping(target = "principalPortion", source = "allocation.principalPortion")
     @Mapping(target = "feeChargesPortion", source = "allocation.feeChargesPortion")
@@ -54,5 +58,10 @@ public interface WorkingCapitalLoanTransactionMapper {
         return PaymentDetailData.builder().id(paymentDetail.getId()).accountNumber(paymentDetail.getAccountNumber())
                 .checkNumber(paymentDetail.getCheckNumber()).routingCode(paymentDetail.getRoutingCode())
                 .receiptNumber(paymentDetail.getReceiptNumber()).bankNumber(paymentDetail.getBankNumber()).build();
+    }
+
+    @Named("codeValueToData")
+    default CodeValueData codeValueToData(final CodeValue codeValue) {
+        return codeValue == null ? null : CodeValueData.instance(codeValue.getId(), codeValue.getLabel());
     }
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.portfolio.meeting.api;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -74,6 +75,7 @@ public class MeetingsApiResource {
 
     @GET
     @Path("template")
+    @Operation(summary = "Retrieve Meeting Template", operationId = "retrieveTemplateMeeting")
     public MeetingData template(@PathParam("entityType") final String entityType, @PathParam("entityId") final Long entityId,
             @QueryParam("calendarId") final Long calendarId) {
 
@@ -107,6 +109,7 @@ public class MeetingsApiResource {
     }
 
     @GET
+    @Operation(summary = "List Meetings", operationId = "retrieveAllMeetings")
     public Collection<MeetingData> retrieveMeetings(@PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId, @QueryParam("limit") final Integer limit) {
 
@@ -116,6 +119,7 @@ public class MeetingsApiResource {
 
     @GET
     @Path("{meetingId}")
+    @Operation(summary = "Retrieve a Meeting", operationId = "retrieveOneMeeting")
     public MeetingData retrieveMeeting(@PathParam("meetingId") final Long meetingId, @PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId) {
 
@@ -130,6 +134,7 @@ public class MeetingsApiResource {
 
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Create a Meeting", operationId = "createMeeting")
     public MeetingCreateResponse createMeeting(@PathParam("entityType") final String entityType, @PathParam("entityId") final Long entityId,
             final MeetingCreateRequest request) {
 
@@ -155,6 +160,7 @@ public class MeetingsApiResource {
     @Path("{meetingId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Update a Meeting", operationId = "updateMeeting")
     public MeetingUpdateResponse updateMeeting(@PathParam("entityType") final String entityType, @PathParam("entityId") final Long entityId,
             @PathParam("meetingId") final Long meetingId, final MeetingUpdateRequest request) {
 
@@ -179,6 +185,7 @@ public class MeetingsApiResource {
 
     @DELETE
     @Path("{meetingId}")
+    @Operation(summary = "Delete a Meeting", operationId = "deleteMeeting")
     public MeetingDeleteResponse deleteMeeting(@PathParam("entityType") final String entityType, @PathParam("entityId") final Long entityId,
             @PathParam("meetingId") final Long meetingId) {
 
@@ -196,6 +203,7 @@ public class MeetingsApiResource {
     @POST
     @Path("{meetingId}")
     @Consumes({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Update Meeting Attendance", operationId = "updateMeetingAttendance")
     public MeetingAttendanceUpdateResponse updateMeetingAttendance(@PathParam("entityType") final String entityType,
             @PathParam("entityId") final Long entityId, @PathParam("meetingId") final Long meetingId,
             @QueryParam("command") final String commandParam, final MeetingAttendanceUpdateRequest request) {

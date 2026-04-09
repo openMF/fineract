@@ -63,6 +63,7 @@ public class ExternalAssetOwnerLoanProductAttributesApiResource {
     @Path("/{loanProductId}/attributes")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Create External Asset Owner Loan Product Attribute", operationId = "createExternalAssetOwnerLoanProductAttribute")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = ExternalAssetOwnerLoanProductAttributesApiResourceSwagger.PostExternalAssetOwnerLoanProductAttributeRequest.class)))
     public CommandProcessingResult postExternalAssetOwnerLoanProductAttribute(
             @PathParam("loanProductId") @Parameter(description = "loanProductId") final Long loanProductId,
@@ -78,7 +79,7 @@ public class ExternalAssetOwnerLoanProductAttributesApiResource {
     @Path("/{loanProductId}/attributes")
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(tags = {
-            "External Asset Owner Loan Product Attributes" }, summary = "Retrieve All Loan Product Attributes", description = "Retrieves all Loan Product Attributes with a given loanProductId", parameters = {
+            "External Asset Owner Loan Product Attributes" }, summary = "Retrieve All Loan Product Attributes", operationId = "retrieveAllExternalAssetOwnerLoanProductAttributes", description = "Retrieves all Loan Product Attributes with a given loanProductId", parameters = {
                     @Parameter(name = "loanProductId", description = "loanProductId"),
                     @Parameter(name = "attributeKey", description = "attributeKey") })
     public Page<ExternalTransferLoanProductAttributesData> getExternalAssetOwnerLoanProductAttributes(@Context final UriInfo uriInfo,
@@ -96,7 +97,7 @@ public class ExternalAssetOwnerLoanProductAttributesApiResource {
     @Produces({ MediaType.APPLICATION_JSON })
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = ExternalAssetOwnerLoanProductAttributesApiResourceSwagger.PutExternalAssetOwnerLoanProductAttributeRequest.class)))
     @Operation(tags = {
-            "External Asset Owner Loan Product Attributes" }, summary = "Update a Loan Product Attribute", description = "Updates a loan product attribute with a given loan product id and attribute id", parameters = {
+            "External Asset Owner Loan Product Attributes" }, summary = "Update a Loan Product Attribute", operationId = "updateExternalAssetOwnerLoanProductAttribute", description = "Updates a loan product attribute with a given loan product id and attribute id", parameters = {
                     @Parameter(name = "loanProductId", description = "loanProductId"),
                     @Parameter(name = "attributeId", description = "attributeId") })
     public CommandProcessingResult updateLoanProductAttribute(

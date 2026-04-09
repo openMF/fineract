@@ -93,7 +93,7 @@ public final class TaxGroupHelper {
     }
 
     public static GetTaxesGroupResponse retrieveTaxGroup(Long taxGroupId) {
-        return Calls.ok(FineractClientHelper.getFineractClient().taxGroups.retrieveTaxGroup(taxGroupId));
+        return Calls.ok(FineractClientHelper.getFineractClient().taxGroups.retrieveOneTaxGroup(taxGroupId));
     }
 
     public static List<GetTaxesGroupResponse> retrieveAllTaxGroups() {

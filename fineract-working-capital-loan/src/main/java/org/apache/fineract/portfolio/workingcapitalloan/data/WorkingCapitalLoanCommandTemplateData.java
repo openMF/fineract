@@ -27,6 +27,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.portfolio.paymenttype.data.PaymentTypeData;
 
@@ -51,4 +52,5 @@ public class WorkingCapitalLoanCommandTemplateData implements Serializable {
     private CurrencyData currency;
 
     private Collection<PaymentTypeData> paymentTypeOptions;
+    private Collection<CodeValueData> classificationOptions;
 }

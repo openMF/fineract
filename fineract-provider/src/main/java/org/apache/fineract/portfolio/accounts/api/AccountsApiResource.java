@@ -77,7 +77,7 @@ public class AccountsApiResource {
     @GET
     @Path("template")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve Share Account Template", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
+    @Operation(summary = "Retrieve Share Account Template", operationId = "retrieveTemplateShareAccount", description = "This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:\n"
             + "\n" + "Field Defaults\n" + "Allowed Value Lists\n\n" + "Example Requests:\n" + "\n" + "accounts/share/template?clientId=1\n"
             + "\n" + "\n" + "accounts/share/template?clientId=1&productId=1")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = AccountsApiResourceSwagger.GetAccountsTypeTemplateResponse.class)))
@@ -91,7 +91,7 @@ public class AccountsApiResource {
     @GET
     @Path("{accountId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve a share application/account", description = "Retrieves a share application/account\n\n"
+    @Operation(summary = "Retrieve a share application/account", operationId = "retrieveOneShareAccount", description = "Retrieves a share application/account\n\n"
             + "Example Requests :\n" + "\n" + "shareaccount/1")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = AccountsApiResourceSwagger.GetAccountsTypeAccountIdResponse.class)))
     public ShareAccountData retrieveAccount(@PathParam("accountId") @Parameter(description = "accountId") final Long accountId,
@@ -102,8 +102,8 @@ public class AccountsApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "List share applications/accounts", description = "Lists share applications/accounts\n\n" + "Example Requests:\n"
-            + "\n" + "shareaccount")
+    @Operation(summary = "List share applications/accounts", operationId = "retrieveAllShareAccounts", description = "Lists share applications/accounts\n\n"
+            + "Example Requests:\n" + "\n" + "shareaccount")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = AccountsApiResourceSwagger.GetAccountsTypeResponse.class)))
     public Page<AccountData> retrieveAllAccounts(@PathParam("type") @Parameter(description = "type") final String accountType,
             @QueryParam("offset") @Parameter(description = "offset") final Integer offset,
@@ -114,7 +114,7 @@ public class AccountsApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Submit new share application", description = "Submits new share application\n\n"
+    @Operation(summary = "Submit new share application", operationId = "createShareAccount", description = "Submits new share application\n\n"
             + "Mandatory Fields: clientId, productId, submittedDate, savingsAccountId, requestedShares, applicationDate\n\n"
             + "Optional Fields: accountNo, externalId\n\n"
             + "Inherited from Product (if not provided): minimumActivePeriod, minimumActivePeriodFrequencyType, lockinPeriodFrequency, lockinPeriodFrequencyType")
@@ -132,7 +132,7 @@ public class AccountsApiResource {
     @Path("{accountId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Approve share application | Undo approval share application | Reject share application | Activate a share account | Close a share account | Apply additional shares on a share account | Approve additional shares request on a share account | Reject additional shares request on a share account | Redeem shares on a share account", description = "Approve share application:\n\n"
+    @Operation(summary = "Approve share application | Undo approval share application | Reject share application | Activate a share account | Close a share account | Apply additional shares on a share account | Approve additional shares request on a share account | Reject additional shares request on a share account | Redeem shares on a share account", operationId = "handleCommandsShareAccount", description = "Approve share application:\n\n"
             + "Approves share application so long as its in 'Submitted and pending approval' state.\n\n"
             + "Undo approval share application:\n\n"
             + "Will move 'approved' share application back to 'Submitted and pending approval' state.\n\n" + "Reject share application:\n\n"
@@ -167,7 +167,7 @@ public class AccountsApiResource {
     @Path("{accountId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Modify a share application", description = "Share application can only be modified when in 'Submitted and pending approval' state. Once the application is approved, the details cannot be changed using this method. Specific api endpoints will be created to allow change of interest detail such as rate, compounding period, posting period etc")
+    @Operation(summary = "Modify a share application", operationId = "updateShareAccount", description = "Share application can only be modified when in 'Submitted and pending approval' state. Once the application is approved, the details cannot be changed using this method. Specific api endpoints will be created to allow change of interest detail such as rate, compounding period, posting period etc")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = AccountsApiResourceSwagger.PutAccountsTypeAccountIdRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = AccountsApiResourceSwagger.PutAccountsTypeAccountIdResponse.class)))
     public CommandProcessingResult updateAccount(@PathParam("type") @Parameter(description = "type") final String accountType,
@@ -182,6 +182,7 @@ public class AccountsApiResource {
     @GET
     @Path("downloadtemplate")
     @Produces("application/vnd.ms-excel")
+    @Operation(summary = "Download share accounts bulk imports template", operationId = "getShareAccountTemplate")
     public Response getSharedAccountsTemplate(@QueryParam("officeId") final Long officeId,
             @QueryParam("dateFormat") final String dateFormat,
             @PathParam("type") @Parameter(description = "type") final String accountType) {
@@ -191,6 +192,7 @@ public class AccountsApiResource {
     @POST
     @Path("uploadtemplate")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Operation(summary = "Upload share accounts bulk imports data", operationId = "postShareAccountTemplate")
     @RequestBody(description = "Upload shared accounts template", content = {
             @Content(mediaType = MediaType.MULTIPART_FORM_DATA, schema = @Schema(implementation = UploadRequest.class)) })
     public Long postSharedAccountsTemplate(@FormDataParam("file") InputStream uploadedInputStream,

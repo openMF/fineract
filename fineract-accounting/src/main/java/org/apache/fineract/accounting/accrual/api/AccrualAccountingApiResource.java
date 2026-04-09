@@ -51,7 +51,7 @@ public class AccrualAccountingApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Executes Periodic Accrual Accounting", method = "POST", description = """
+    @Operation(summary = "Executes Periodic Accrual Accounting", operationId = "executePeriodicAccrualAccounting", method = "POST", description = """
             Mandatory Fields
 
             tillDate

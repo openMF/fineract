@@ -55,7 +55,7 @@ public class StandingInstructionHistoryApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Standing Instructions Logged History", description = "The list capability of history can support pagination and sorting \n\n"
+    @Operation(summary = "Standing Instructions Logged History", operationId = "retrieveAllStandingInstructionHistory", description = "The list capability of history can support pagination and sorting \n\n"
             + "Example Requests :\n" + "\n" + "standinginstructionrunhistory\n" + "\n"
             + "standinginstructionrunhistory?orderBy=name&sortOrder=DESC\n" + "\n" + "standinginstructionrunhistory?offset=10&limit=50")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = StandingInstructionHistoryApiResourceSwagger.GetStandingInstructionRunHistoryResponse.class)))

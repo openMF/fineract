@@ -118,7 +118,7 @@ public class CentersApiResource {
     @GET
     @Path("template")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve a Center Template", description = """
+    @Operation(summary = "Retrieve a Center Template", operationId = "retrieveTemplateCenter", description = """
             Retrieves a Center Template
 
             Example Requests:
@@ -157,7 +157,7 @@ public class CentersApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "List Centers", description = """
+    @Operation(summary = "List Centers", operationId = "retrieveAllCenters", description = """
             The default implementation supports pagination and sorting with the default pagination size set to 200 records. The parameter limit with description -1 will return all entries.
 
             Example Requests:
@@ -223,7 +223,7 @@ public class CentersApiResource {
     @GET
     @Path("{centerId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve a Center", description = """
+    @Operation(summary = "Retrieve a Center", operationId = "retrieveOneCenter", description = """
             Retrieves a Center
 
             Example Requests:
@@ -287,7 +287,7 @@ public class CentersApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create a Center", description = """
+    @Operation(summary = "Create a Center", operationId = "createCenter", description = """
             Creates a Center
 
             Mandatory Fields: name, officeId, active, activationDate (if active=true)
@@ -311,7 +311,7 @@ public class CentersApiResource {
     @Path("{centerId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Update a Center", description = "Updates a Center")
+    @Operation(summary = "Update a Center", operationId = "updateCenter", description = "Updates a Center")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = CentersApiResourceSwagger.PutCentersCenterIdRequest.class)))
 
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CentersApiResourceSwagger.PutCentersCenterIdResponse.class)))
@@ -329,7 +329,7 @@ public class CentersApiResource {
     @DELETE
     @Path("{centerId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Delete a Center", description = "A Center can be deleted if it is in pending state and has no association - groups, loans or savings")
+    @Operation(summary = "Delete a Center", operationId = "deleteCenter", description = "A Center can be deleted if it is in pending state and has no association - groups, loans or savings")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CentersApiResourceSwagger.DeleteCentersCenterIdResponse.class)))
     public String delete(@PathParam("centerId") @Parameter(description = "centerId") final Long centerId) {
 
@@ -344,7 +344,7 @@ public class CentersApiResource {
     @Path("{centerId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Activate a Center | Generate Collection Sheet | Save Collection Sheet | Close a Center | Associate Groups | Disassociate Groups", description = """
+    @Operation(summary = "Activate a Center | Generate Collection Sheet | Save Collection Sheet | Close a Center | Associate Groups | Disassociate Groups", operationId = "handleCommandsCenter", description = """
             Activate a Center:
 
             Centers can be created in a Pending state. This API exists to enable center activation. If the center happens to be already active, this API will result in an error.
@@ -421,7 +421,7 @@ public class CentersApiResource {
     @GET
     @Path("{centerId}/accounts")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve Center accounts overview", description = """
+    @Operation(summary = "Retrieve Center accounts overview", operationId = "retrieveGroupAccountsCenter", description = """
             An example of how a savings summary for a Center can be provided. This is requested in a specific use case of the reference application.
 
             It is quite reasonable to add resources like this to simplify User Interface development.
@@ -451,6 +451,7 @@ public class CentersApiResource {
     @GET
     @Path("downloadtemplate")
     @Produces("application/vnd.ms-excel")
+    @Operation(summary = "Download Centers Bulk Template", operationId = "getBulkTemplateCenter")
     public Response getCentersTemplate(@QueryParam("officeId") final Long officeId, @QueryParam("staffId") final Long staffId,
             @QueryParam("dateFormat") final String dateFormat) {
         return bulkImportWorkbookPopulatorService.getTemplate(GlobalEntityType.CENTERS.toString(), officeId, staffId, dateFormat);
@@ -459,6 +460,7 @@ public class CentersApiResource {
     @POST
     @Path("uploadtemplate")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Operation(summary = "Upload Centers Bulk Template", operationId = "postBulkTemplateCenter")
     @RequestBody(description = "Upload centers template", content = {
             @Content(mediaType = MediaType.MULTIPART_FORM_DATA, schema = @Schema(implementation = UploadRequest.class)) })
     public String postCentersTemplate(@FormDataParam("file") InputStream uploadedInputStream,

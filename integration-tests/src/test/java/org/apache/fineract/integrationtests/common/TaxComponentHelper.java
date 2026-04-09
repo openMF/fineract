@@ -83,7 +83,7 @@ public final class TaxComponentHelper {
     }
 
     public static GetTaxesComponentsResponse retrieveTaxComponent(Long taxComponentId) {
-        return Calls.ok(FineractClientHelper.getFineractClient().taxComponents.retrieveTaxComponent(taxComponentId));
+        return Calls.ok(FineractClientHelper.getFineractClient().taxComponents.retrieveOneTaxComponent(taxComponentId));
     }
 
 }

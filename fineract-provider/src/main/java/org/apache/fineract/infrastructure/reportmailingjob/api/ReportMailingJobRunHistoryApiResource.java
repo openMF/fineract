@@ -58,7 +58,7 @@ public class ReportMailingJobRunHistoryApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "List Report Mailing Job History", description = "The list capability of report mailing job history can support pagination and sorting.\n"
+    @Operation(summary = "List Report Mailing Job History", operationId = "retrieveAllReportMailingJobRunHistory", description = "The list capability of report mailing job history can support pagination and sorting.\n"
             + "\n" + "Example Requests:\n" + "\n" + "reportmailingjobrunhistory/1")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ReportMailingJobRunHistoryData.class)))
     public String retrieveAllByReportMailingJobId(@Context final UriInfo uriInfo,

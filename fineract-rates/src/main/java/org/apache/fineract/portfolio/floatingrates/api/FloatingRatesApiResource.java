@@ -62,8 +62,8 @@ public class FloatingRatesApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create a new Floating Rate", description = "Creates a new Floating Rate\n" + "Mandatory Fields: name\n"
-            + "Optional Fields: isBaseLendingRate, isActive, ratePeriods")
+    @Operation(summary = "Create a new Floating Rate", operationId = "createFloatingRate", description = "Creates a new Floating Rate\n"
+            + "Mandatory Fields: name\n" + "Optional Fields: isBaseLendingRate, isActive, ratePeriods")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = FloatingRateRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = FloatingRatesApiResourceSwagger.PostFloatingRatesResponse.class)))
     public CommandProcessingResult createFloatingRate(@Parameter(hidden = true) final FloatingRateRequest floatingRateRequest) {
@@ -74,7 +74,7 @@ public class FloatingRatesApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "List Floating Rates", description = "Lists Floating Rates")
+    @Operation(summary = "List Floating Rates", operationId = "retrieveAllFloatingRates", description = "Lists Floating Rates")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = FloatingRatesApiResourceSwagger.GetFloatingRatesResponse.class))))
     public List<FloatingRateData> retrieveAll() {
         this.context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME);
@@ -84,7 +84,7 @@ public class FloatingRatesApiResource {
     @GET
     @Path("{floatingRateId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve Floating Rate", description = "Retrieves Floating Rate")
+    @Operation(summary = "Retrieve Floating Rate", operationId = "retrieveOneFloatingRate", description = "Retrieves Floating Rate")
     public FloatingRateData retrieveOne(@PathParam("floatingRateId") @Parameter(description = "floatingRateId") final Long floatingRateId) {
         this.context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME);
         return floatingRatesReadPlatformService.retrieveOne(floatingRateId);
@@ -94,7 +94,7 @@ public class FloatingRatesApiResource {
     @Path("{floatingRateId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Update Floating Rate", description = "Updates new Floating Rate. Rate Periods in the past cannot be modified. All the future rateperiods would be replaced with the new ratePeriods data sent.")
+    @Operation(summary = "Update Floating Rate", operationId = "updateFloatingRate", description = "Updates new Floating Rate. Rate Periods in the past cannot be modified. All the future rateperiods would be replaced with the new ratePeriods data sent.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = FloatingRateRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = FloatingRatesApiResourceSwagger.PutFloatingRatesFloatingRateIdResponse.class)))
     public CommandProcessingResult updateFloatingRate(

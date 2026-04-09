@@ -73,6 +73,8 @@ public final class WorkingCapitalLoanTransactionsApiResourceSwagger {
         public String reversalExternalId;
         @Schema(example = "[2024, 2, 5]")
         public LocalDate reversedOnDate;
+        @Schema(description = "Transaction classification (code value)")
+        public CodeValueData classification;
         @Schema(example = "10000.00", description = "Principal portion from allocation")
         public BigDecimal principalPortion;
         @Schema(example = "0.00", description = "Fee charges portion from allocation")
@@ -111,5 +113,16 @@ public final class WorkingCapitalLoanTransactionsApiResourceSwagger {
         public String receiptNumber;
         @Schema(example = "ban123")
         public String bankNumber;
+    }
+
+    @Schema(description = "Code value data (id + name)")
+    public static final class CodeValueData {
+
+        private CodeValueData() {}
+
+        @Schema(example = "1")
+        public Long id;
+        @Schema(example = "Some classification")
+        public String name;
     }
 }

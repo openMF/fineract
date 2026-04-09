@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.fineract.infrastructure.codes.domain.CodeValue;
+import org.apache.fineract.infrastructure.codes.domain.CodeValueRepository;
 import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
@@ -54,6 +56,7 @@ public class WorkingCapitalLoanDataValidator {
     private final FromJsonHelper fromApiJsonHelper;
     private final ExpectedDisbursementDateValidator expectedDisbursementDateValidator;
     private final WorkingCapitalLoanTransactionRepository transactionRepository;
+    private final CodeValueRepository codeValueRepository;
 
     // Per requirement: only principal, discount, approved date, expected disbursement date, and notes
     private static final Set<String> APPROVAL_SUPPORTED_PARAMETERS = new HashSet<>(
@@ -67,10 +70,11 @@ public class WorkingCapitalLoanDataValidator {
     private static final Set<String> UNDO_APPROVAL_SUPPORTED_PARAMETERS = new HashSet<>(
             Arrays.asList("locale", "dateFormat", WorkingCapitalLoanConstants.noteParamName));
 
-    private static final Set<String> DISBURSAL_SUPPORTED_PARAMETERS = new HashSet<>(Arrays.asList("locale", "dateFormat",
-            WorkingCapitalLoanConstants.actualDisbursementDateParamName, WorkingCapitalLoanConstants.transactionAmountParamName,
-            WorkingCapitalLoanConstants.discountAmountParamName, WorkingCapitalLoanConstants.noteParamName,
-            WorkingCapitalLoanConstants.paymentDetailsParamName, WorkingCapitalLoanConstants.externalIdParameterName));
+    private static final Set<String> DISBURSAL_SUPPORTED_PARAMETERS = new HashSet<>(
+            Arrays.asList("locale", "dateFormat", WorkingCapitalLoanConstants.actualDisbursementDateParamName,
+                    WorkingCapitalLoanConstants.transactionAmountParamName, WorkingCapitalLoanConstants.discountAmountParamName,
+                    WorkingCapitalLoanConstants.noteParamName, WorkingCapitalLoanConstants.paymentDetailsParamName,
+                    WorkingCapitalLoanConstants.externalIdParameterName, WorkingCapitalLoanConstants.classificationIdParamName));
 
     private static final Set<String> PAYMENT_DETAILS_SUPPORTED_PARAMETERS = new HashSet<>(
             Arrays.asList(WorkingCapitalLoanConstants.paymentTypeIdParamName, WorkingCapitalLoanConstants.accountNumberParamName,
@@ -143,6 +147,10 @@ public class WorkingCapitalLoanDataValidator {
 
         // discountAmount must be >= 0 and <= current (creation-time) discount
         if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanConstants.discountAmountParamName, element)) {
+            if (isDiscountOverrideAllowed(loan)) {
+                baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName)
+                        .failWithCode("override.not.allowed.by.product");
+            }
             final BigDecimal discountAmount = this.fromApiJsonHelper
                     .extractBigDecimalNamed(WorkingCapitalLoanConstants.discountAmountParamName, element, new HashSet<>());
             baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName).value(discountAmount).ignoreIfNull()
@@ -268,6 +276,10 @@ public class WorkingCapitalLoanDataValidator {
         }
 
         if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanConstants.discountAmountParamName, element)) {
+            if (isDiscountOverrideAllowed(loan)) {
+                baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName)
+                        .failWithCode("override.not.allowed.by.product");
+            }
             final BigDecimal discountAmount = this.fromApiJsonHelper
                     .extractBigDecimalNamed(WorkingCapitalLoanConstants.discountAmountParamName, element, new HashSet<>());
             baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName).value(discountAmount).ignoreIfNull()
@@ -300,6 +312,20 @@ public class WorkingCapitalLoanDataValidator {
         }
 
         validateDisbursementPaymentDetails(baseDataValidator, element);
+
+        final Long classificationId = this.fromApiJsonHelper.extractLongNamed(WorkingCapitalLoanConstants.classificationIdParamName,
+                element);
+        baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.classificationIdParamName).value(classificationId).ignoreIfNull()
+                .positiveAmount();
+        if (classificationId != null) {
+            final CodeValue codeValue = this.codeValueRepository
+                    .findByCodeNameAndId(WorkingCapitalLoanConstants.DISBURSEMENT_CLASSIFICATION_CODE_NAME, classificationId);
+            if (codeValue == null) {
+                baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.classificationIdParamName).failWithCode(
+                        "code.value.classification.not.exists",
+                        "Code value does not exists in the code " + WorkingCapitalLoanConstants.DISBURSEMENT_CLASSIFICATION_CODE_NAME);
+            }
+        }
 
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
@@ -366,9 +392,7 @@ public class WorkingCapitalLoanDataValidator {
                 .resource(WorkingCapitalLoanConstants.RESOURCE_NAME);
         final JsonElement element = this.fromApiJsonHelper.parse(json);
 
-        final boolean discountOverrideAllowed = loan.getLoanProduct() != null && loan.getLoanProduct().getConfigurableAttributes() != null
-                && loan.getLoanProduct().getConfigurableAttributes().isDiscountDefault();
-        if (!discountOverrideAllowed) {
+        if (isDiscountOverrideAllowed(loan)) {
             baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName)
                     .failWithCode("override.not.allowed.by.product");
         }
@@ -409,5 +433,10 @@ public class WorkingCapitalLoanDataValidator {
         if (!dataValidationErrors.isEmpty()) {
             throw new PlatformApiDataValidationException(dataValidationErrors);
         }
+    }
+
+    private boolean isDiscountOverrideAllowed(final WorkingCapitalLoan loan) {
+        return loan.getLoanProduct() == null || loan.getLoanProduct().getConfigurableAttributes() == null
+                || !loan.getLoanProduct().getConfigurableAttributes().isDiscountDefault();
     }
 }

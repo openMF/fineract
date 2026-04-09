@@ -938,7 +938,7 @@ public class LoanTransactionHelper {
 
     public Response<CommandProcessingResult> createInterestPause(Long loanId, String startDate, String endDate) {
         log.info("Creating interest pause for Loan {} from {} to {}", loanId, startDate, endDate);
-        return Calls.executeU(FineractClientHelper.getFineractClient().loanInterestPauseApi.createInterestPause(loanId,
+        return Calls.executeU(FineractClientHelper.getFineractClient().loanInterestPauseApi.createLoanInterestPause(loanId,
                 new InterestPauseRequestDto().startDate(startDate).endDate(endDate).dateFormat(DATE_FORMAT).locale("en")));
     }
 

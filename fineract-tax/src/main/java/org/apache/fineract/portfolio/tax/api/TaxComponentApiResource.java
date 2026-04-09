@@ -63,7 +63,7 @@ public class TaxComponentApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "List Tax Components", description = "List Tax Components")
+    @Operation(summary = "List Tax Components", operationId = "retrieveAllTaxComponents", description = "List Tax Components")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TaxComponentApiResourceSwagger.GetTaxesComponentsResponse.class)))) })
     public List<TaxComponentData> retrieveAllTaxComponents() {
@@ -74,7 +74,7 @@ public class TaxComponentApiResource {
     @GET
     @Path("{taxComponentId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve Tax Component", description = "Retrieve Tax Component")
+    @Operation(summary = "Retrieve Tax Component", operationId = "retrieveOneTaxComponent", description = "Retrieve Tax Component")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TaxComponentApiResourceSwagger.GetTaxesComponentsResponse.class))) })
     public TaxComponentData retrieveTaxComponent(
@@ -86,6 +86,7 @@ public class TaxComponentApiResource {
     @GET
     @Path("template")
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Retrieve Tax Component Template", operationId = "retrieveTemplateTaxComponent")
     public TaxComponentData retrieveTemplate() {
         context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
         return readPlatformService.retrieveTaxComponentTemplate();
@@ -94,7 +95,7 @@ public class TaxComponentApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create a new Tax Component", description = "Creates a new Tax Component\n\n"
+    @Operation(summary = "Create a new Tax Component", operationId = "createTaxComponent", description = "Creates a new Tax Component\n\n"
             + "Mandatory Fields: name, percentage\n\n"
             + "Optional Fields: debitAccountType, debitAccountId, creditAccountType, creditAccountId, startDate")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = TaxComponentApiResourceSwagger.PostTaxesComponentsRequest.class)))
@@ -110,7 +111,7 @@ public class TaxComponentApiResource {
     @Path("{taxComponentId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Update Tax Component", description = "Updates Tax component. Debit and credit account details cannot be modified. All the future tax components would be replaced with the new percentage.")
+    @Operation(summary = "Update Tax Component", operationId = "updateTaxComponent", description = "Updates Tax component. Debit and credit account details cannot be modified. All the future tax components would be replaced with the new percentage.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = TaxComponentApiResourceSwagger.PutTaxesComponentsTaxComponentIdRequest.class)))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TaxComponentApiResourceSwagger.PutTaxesComponentsTaxComponentIdResponse.class))) })

@@ -33,6 +33,7 @@ import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoa
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanNote;
 import org.apache.fineract.portfolio.workingcapitalloan.exception.WorkingCapitalLoanApplicationNotInSubmittedStateCannotBeDeletedException;
 import org.apache.fineract.portfolio.workingcapitalloan.exception.WorkingCapitalLoanNotFoundException;
+import org.apache.fineract.portfolio.workingcapitalloan.repository.ProjectedAmortizationLoanModelRepository;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanNoteRepository;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanRepository;
 import org.apache.fineract.portfolio.workingcapitalloan.serialization.WorkingCapitalLoanApplicationDataValidator;
@@ -49,6 +50,7 @@ public class WorkingCapitalLoanApplicationWritePlatformServiceImpl implements Wo
     private final WorkingCapitalLoanRepository repository;
     private final WorkingCapitalLoanAssembler assembler;
     private final WorkingCapitalLoanNoteRepository noteRepository;
+    private final ProjectedAmortizationLoanModelRepository projectedAmortizationLoanModelRepository;
 
     @Transactional
     @Override
@@ -122,6 +124,7 @@ public class WorkingCapitalLoanApplicationWritePlatformServiceImpl implements Wo
         }
         final List<WorkingCapitalLoanNote> relatedNotes = this.noteRepository.findByWcLoanId(loan.getId());
         this.noteRepository.deleteAllInBatch(relatedNotes);
+        projectedAmortizationLoanModelRepository.findByLoanId(loan.getId()).ifPresent(projectedAmortizationLoanModelRepository::delete);
         this.repository.delete(loan);
 
         return new CommandProcessingResultBuilder() //

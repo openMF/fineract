@@ -48,7 +48,7 @@ public class LoanProductsDetailsApiResource {
     @GET
     @Path("basic-details")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "List Loan Products with basic details", description = "Lists Loan Products with basic details to be listed")
+    @Operation(summary = "List Loan Products with basic details", operationId = "retrieveAllLoanProductsDetails", description = "Lists Loan Products with basic details to be listed")
     public Collection<LoanProductBasicDetailsData> fetchProducts(@Context final UriInfo uriInfo) {
         this.context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
 

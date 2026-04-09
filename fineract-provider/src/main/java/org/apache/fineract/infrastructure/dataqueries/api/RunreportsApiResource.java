@@ -64,7 +64,7 @@ public class RunreportsApiResource {
     @GET
     @Path("/availableExports/{reportName}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Return all available export types for the specific report", description = "Returns the list of all available export types for a given report.")
+    @Operation(summary = "Return all available export types for the specific report", operationId = "retrieveAllAvailableExports", description = "Returns the list of all available export types for a given report.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReportExportType.class))))
     @ApiResponse(responseCode = "400", description = "Bad Request - Invalid report name or parameters")
     @ApiResponse(responseCode = "500", description = "Internal Server Error")
@@ -88,7 +88,7 @@ public class RunreportsApiResource {
     @Path("{reportName}")
     @Timed(value = "fineract.report.execution", description = "Time taken to execute reports", extraTags = { "component", "reporting" })
     @Produces({ MediaType.APPLICATION_JSON, "text/csv", "application/vnd.ms-excel", "application/pdf", "text/html" })
-    @Operation(summary = "Run a predefined report", description = ReportParameters.FULL_DESCRIPTION)
+    @Operation(summary = "Run a predefined report", operationId = "runReport", description = ReportParameters.FULL_DESCRIPTION)
     @ApiResponse(responseCode = "200", description = "OK - Report executed successfully", content = @Content(schema = @Schema(implementation = RunreportsApiResourceSwagger.RunReportsResponse.class)))
     @ApiResponse(responseCode = "400", description = "Bad Request - Missing or invalid parameters")
     @ApiResponse(responseCode = "401", description = "Unauthorized - Not authorized to run this report")

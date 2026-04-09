@@ -80,7 +80,7 @@ public class SmsCampaignApiResource {
 
     @GET
     @Path("template")
-    @Operation(summary = "Retrieve a SMS Campaign", description = """
+    @Operation(summary = "Retrieve a SMS Campaign", operationId = "retrieveTemplateSmsCampaign", description = """
             Example Requests:
 
             smscampaigns/1
@@ -99,7 +99,7 @@ public class SmsCampaignApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create a SMS Campaign", description = """
+    @Operation(summary = "Create a SMS Campaign", operationId = "createSmsCampaign", description = """
             Mandatory Fields
             campaignName, campaignType, triggerType, providerId, runReportId, message
 
@@ -117,7 +117,7 @@ public class SmsCampaignApiResource {
     @GET
     @Path("{resourceId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve a SMS Campaign", description = """
+    @Operation(summary = "Retrieve a SMS Campaign", operationId = "retrieveOneSmsCampaign", description = """
             Example Requests:
 
             smscampaigns/1
@@ -130,7 +130,7 @@ public class SmsCampaignApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "List SMS Campaigns", description = """
+    @Operation(summary = "List SMS Campaigns", operationId = "retrieveAllSmsCampaigns", description = """
             Example Requests:
 
             smscampaigns""")
@@ -147,7 +147,7 @@ public class SmsCampaignApiResource {
     @Path("{campaignId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Update a Campaign")
+    @Operation(summary = "Update a Campaign", operationId = "updateSmsCampaign")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = CommandWrapper.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CommandProcessingResult.class)))
     public CommandProcessingResult updateCampaign(@PathParam("campaignId") final Long campaignId,
@@ -161,7 +161,7 @@ public class SmsCampaignApiResource {
     @Path("{campaignId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "SMS Campaign", description = "Activates | Deactivates | Reactivates")
+    @Operation(summary = "SMS Campaign", operationId = "handleCommandsSmsCampaign", description = "Activates | Deactivates | Reactivates")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CommandProcessingResult.class)))
     public CommandProcessingResult handleCommands(@PathParam("campaignId") final Long campaignId,
             @QueryParam("command") final String commandParam, @Parameter(hidden = true) SmsCampaignHandlerDto campaignHandlerDto) {
@@ -173,6 +173,7 @@ public class SmsCampaignApiResource {
     @Path("preview")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Preview SMS Campaign message", operationId = "previewSmsCampaign")
     public CampaignPreviewData preview(SmsCampaignPreviewDto previewDto) {
         context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
         final String strPreviewDtoJson = toApiJsonSerializer.serialize(previewDto);
@@ -183,7 +184,7 @@ public class SmsCampaignApiResource {
 
     @DELETE
     @Path("{campaignId}")
-    @Operation(summary = "Delete a SMS Campaign", description = "Note: Only closed SMS Campaigns can be deleted")
+    @Operation(summary = "Delete a SMS Campaign", operationId = "deleteSmsCampaign", description = "Note: Only closed SMS Campaigns can be deleted")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CommandProcessingResult.class)))
     public CommandProcessingResult delete(@PathParam("campaignId") final Long campaignId) {
         final CommandWrapper commandRequest = new CommandWrapperBuilder().deleteSmsCampaign(campaignId).build();

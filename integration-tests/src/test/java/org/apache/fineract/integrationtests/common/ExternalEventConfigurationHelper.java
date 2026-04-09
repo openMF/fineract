@@ -190,6 +190,16 @@ public class ExternalEventConfigurationHelper {
         loanDisbursalTransactionBusinessEvent.put("enabled", false);
         defaults.add(loanDisbursalTransactionBusinessEvent);
 
+        Map<String, Object> wcLoanDisbursalTransactionBusinessEvent = new HashMap<>();
+        wcLoanDisbursalTransactionBusinessEvent.put("type", "WorkingCapitalLoanDisbursalTransactionBusinessEvent");
+        wcLoanDisbursalTransactionBusinessEvent.put("enabled", false);
+        defaults.add(wcLoanDisbursalTransactionBusinessEvent);
+
+        Map<String, Object> wcLoanUndoDisbursalTransactionBusinessEvent = new HashMap<>();
+        wcLoanUndoDisbursalTransactionBusinessEvent.put("type", "WorkingCapitalLoanUndoDisbursalTransactionBusinessEvent");
+        wcLoanUndoDisbursalTransactionBusinessEvent.put("enabled", false);
+        defaults.add(wcLoanUndoDisbursalTransactionBusinessEvent);
+
         Map<String, Object> loanForeClosurePostBusinessEvent = new HashMap<>();
         loanForeClosurePostBusinessEvent.put("type", "LoanForeClosurePostBusinessEvent");
         loanForeClosurePostBusinessEvent.put("enabled", false);

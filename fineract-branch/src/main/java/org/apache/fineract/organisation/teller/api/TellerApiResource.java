@@ -74,7 +74,7 @@ public class TellerApiResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "List all tellers", description = "Retrieves list tellers")
+    @Operation(summary = "List all tellers", operationId = "retrieveAllTellers", description = "Retrieves list tellers")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersResponse.class))))
     public Collection<TellerData> getTellerData(@QueryParam("officeId") @Parameter(description = "officeId") final Long officeId) {
         return readPlatformService.getTellers(officeId);
@@ -83,7 +83,7 @@ public class TellerApiResource {
     @GET
     @Path("{tellerId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve tellers", description = "")
+    @Operation(summary = "Retrieve tellers", operationId = "retrieveOneTeller", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersResponse.class)))
     public TellerData findTeller(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId) {
         return readPlatformService.findTeller(tellerId);
@@ -92,7 +92,7 @@ public class TellerApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Create teller", description = """
+    @Operation(summary = "Create teller", operationId = "createTeller", description = """
             Mandatory Fields
             Teller name, OfficeId, Description, Start Date, Status
             Optional Fields
@@ -109,7 +109,7 @@ public class TellerApiResource {
     @Path("{tellerId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Update teller", description = "")
+    @Operation(summary = "Update teller", operationId = "updateTeller", description = "")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.PutTellersRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.PutTellersResponse.class)))
     public CommandProcessingResult updateTeller(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
@@ -123,6 +123,7 @@ public class TellerApiResource {
     @DELETE
     @Path("{tellerId}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Delete teller", operationId = "deleteTeller")
     public CommandProcessingResult deleteTeller(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId) {
         final CommandWrapper request = new CommandWrapperBuilder().deleteTeller(tellerId).build();
         return this.commandWritePlatformService.logCommandSource(request);
@@ -131,7 +132,7 @@ public class TellerApiResource {
     @GET
     @Path("{tellerId}/cashiers")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "List Cashiers", description = "")
+    @Operation(summary = "List Cashiers", operationId = "retrieveAllCashiersForTeller", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersTellerIdCashiersResponse.class)))
     public CashiersForTeller getCashierData(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
             @QueryParam("fromdate") @Parameter(description = "fromdate") final String fromDateStr,
@@ -150,7 +151,7 @@ public class TellerApiResource {
     @GET
     @Path("{tellerId}/cashiers/{cashierId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve a cashier", description = "")
+    @Operation(summary = "Retrieve a cashier", operationId = "retrieveOneCashierForTeller", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersTellerIdCashiersCashierIdResponse.class)))
     public CashierData findCashierData(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
             @PathParam("cashierId") @Parameter(description = "cashierId") final Long cashierId) {
@@ -160,7 +161,7 @@ public class TellerApiResource {
     @GET
     @Path("{tellerId}/cashiers/template")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Find Cashiers", description = "")
+    @Operation(summary = "Find Cashiers", operationId = "retrieveCashierTemplateForTeller", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersTellerIdCashiersTemplateResponse.class)))
     public CashierData getCashierTemplate(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId) {
 
@@ -174,7 +175,7 @@ public class TellerApiResource {
     @Path("{tellerId}/cashiers")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Create Cashiers", description = """
+    @Operation(summary = "Create Cashiers", operationId = "createCashierForTeller", description = """
             Mandatory Fields:\s
             Cashier/staff, Fromm Date, To Date, Full Day or From time and To time
 
@@ -196,7 +197,7 @@ public class TellerApiResource {
     @Path("{tellerId}/cashiers/{cashierId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Update Cashier", description = "")
+    @Operation(summary = "Update Cashier", operationId = "updateCashierForTeller", description = "")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.PutTellersTellerIdCashiersCashierIdRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.PutTellersTellerIdCashiersCashierIdResponse.class)))
     public CommandProcessingResult updateCashier(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
@@ -212,7 +213,7 @@ public class TellerApiResource {
     @DELETE
     @Path("{tellerId}/cashiers/{cashierId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Delete Cashier", description = "")
+    @Operation(summary = "Delete Cashier", operationId = "deleteCashierForTeller", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.DeleteTellersTellerIdCashiersCashierIdResponse.class)))
     public CommandProcessingResult deleteCashier(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
             @PathParam("cashierId") @Parameter(description = "cashierId") final Long cashierId) {
@@ -226,7 +227,8 @@ public class TellerApiResource {
     @Path("{tellerId}/cashiers/{cashierId}/allocate")
     @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Allocate Cash To Cashier", description = "Mandatory Fields: \n" + "Date, Amount, Currency, Notes/Comments")
+    @Operation(summary = "Allocate Cash To Cashier", operationId = "allocateCashToCashier", description = "Mandatory Fields: \n"
+            + "Date, Amount, Currency, Notes/Comments")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.PostTellersTellerIdCashiersCashierIdAllocateRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.PostTellersTellerIdCashiersCashierIdAllocateResponse.class)))
     public CommandProcessingResult allocateCashToCashier(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
@@ -243,7 +245,8 @@ public class TellerApiResource {
     @Path("{tellerId}/cashiers/{cashierId}/settle")
     @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Settle Cash From Cashier", description = "Mandatory Fields\n" + "Date, Amount, Currency, Notes/Comments")
+    @Operation(summary = "Settle Cash From Cashier", operationId = "settleCashFromCashier", description = "Mandatory Fields\n"
+            + "Date, Amount, Currency, Notes/Comments")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.PostTellersTellerIdCashiersCashierIdSettleRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.PostTellersTellerIdCashiersCashierIdSettleResponse.class)))
     public CommandProcessingResult settleCashFromCashier(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
@@ -258,7 +261,7 @@ public class TellerApiResource {
     @GET
     @Path("{tellerId}/cashiers/{cashierId}/transactions")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve Cashier Transactions", description = "")
+    @Operation(summary = "Retrieve Cashier Transactions", operationId = "retrieveCashierTransactions", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersTellerIdCashiersCashiersIdTransactionsResponse.class)))
     public Page<CashierTransactionData> getTransactionsForCashier(
             @PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
@@ -277,7 +280,7 @@ public class TellerApiResource {
     @GET
     @Path("{tellerId}/cashiers/{cashierId}/summaryandtransactions")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve Transactions With Summary For Cashier", description = "")
+    @Operation(summary = "Retrieve Transactions With Summary For Cashier", operationId = "retrieveCashierTransactionsWithSummary", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersTellerIdCashiersCashiersIdSummaryAndTransactionsResponse.class)))
     public CashierTransactionsWithSummaryData getTransactionsWithSummaryForCashier(
             @PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
@@ -298,7 +301,7 @@ public class TellerApiResource {
     @GET
     @Path("{tellerId}/cashiers/{cashierId}/transactions/template")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve Cashier Transaction Template", description = "")
+    @Operation(summary = "Retrieve Cashier Transaction Template", operationId = "retrieveTemplateCashierTransaction", description = "")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = TellerApiResourceSwagger.GetTellersTellerIdCashiersCashiersIdTransactionsTemplateResponse.class)))
     public CashierTransactionData getCashierTxnTemplate(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
             @PathParam("cashierId") @Parameter(description = "cashierId") final Long cashierId) {
@@ -309,6 +312,7 @@ public class TellerApiResource {
     @GET
     @Path("{tellerId}/transactions")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "List Teller Transactions", operationId = "retrieveAllTransactionsForTeller")
     public Collection<TellerTransactionData> getTransactionData(
             @PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
             @QueryParam("dateRange") @Parameter(description = "dateRange") final String dateRange) {
@@ -321,6 +325,7 @@ public class TellerApiResource {
     @GET
     @Path("{tellerId}/transactions/{transactionId}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve Teller Transaction", operationId = "retrieveOneTransactionForTeller")
     public TellerTransactionData findTransactionData(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerid,
             @PathParam("transactionId") @Parameter(description = "transactionId") final Long transactionId) {
         return this.readPlatformService.findTellerTransaction(transactionId);
@@ -329,6 +334,7 @@ public class TellerApiResource {
     @GET
     @Path("{tellerId}/journals")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "List Teller Journals", operationId = "retrieveAllJournalsForTeller")
     public Collection<TellerJournalData> getJournalData(@PathParam("tellerId") @Parameter(description = "tellerId") final Long tellerId,
             @QueryParam("cashierId") @Parameter(description = "cashierId") final Long cashierDate,
             @QueryParam("dateRange") @Parameter(description = "dateRange") final String dateRange) {

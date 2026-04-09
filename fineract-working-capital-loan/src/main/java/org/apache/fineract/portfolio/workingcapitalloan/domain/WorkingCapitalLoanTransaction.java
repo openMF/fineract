@@ -69,6 +69,7 @@ public class WorkingCapitalLoanTransaction extends AbstractAuditableWithUTCDateT
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "classification_cv_id")
+    @Setter
     private CodeValue classification;
 
     @Column(name = "external_id", length = 100, unique = true)
@@ -101,7 +102,8 @@ public class WorkingCapitalLoanTransaction extends AbstractAuditableWithUTCDateT
     }
 
     public static WorkingCapitalLoanTransaction disbursement(final WorkingCapitalLoan loan, final BigDecimal amount,
-            final PaymentDetail paymentDetail, final LocalDate disbursementDate, final ExternalId externalId) {
+            final PaymentDetail paymentDetail, final LocalDate disbursementDate, final ExternalId externalId,
+            final CodeValue classification) {
         final WorkingCapitalLoanTransaction txn = new WorkingCapitalLoanTransaction();
         txn.wcLoan = loan;
         txn.transactionType = LoanTransactionType.DISBURSEMENT;
@@ -109,6 +111,7 @@ public class WorkingCapitalLoanTransaction extends AbstractAuditableWithUTCDateT
         txn.submittedOnDate = disbursementDate;
         txn.transactionAmount = amount;
         txn.paymentDetail = paymentDetail;
+        txn.classification = classification;
         txn.externalId = externalId != null ? externalId : ExternalId.empty();
         txn.reversed = false;
         txn.reversalExternalId = null;

@@ -88,7 +88,7 @@ public class StandingInstructionApiResource {
     @GET
     @Path("template")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve Standing Instruction Template", description = "This is a convenience resource. "
+    @Operation(summary = "Retrieve Standing Instruction Template", operationId = "retrieveTemplateStandingInstruction", description = "This is a convenience resource. "
             + "It can be useful when building maintenance user interface screens for client applications. "
             + "The template data returned consists of any or all of:\n" + "\n" + "Field Defaults\n" + "Allowed Value Lists\n"
             + "Example Requests:\n" + "\n" + "standinginstructions/template?fromAccountType=2&fromOfficeId=1\n" + "\n"
@@ -107,7 +107,7 @@ public class StandingInstructionApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create new Standing Instruction", description = "Ability to create new instruction for transfer of monetary funds from one account to another")
+    @Operation(summary = "Create new Standing Instruction", operationId = "createStandingInstruction", description = "Ability to create new instruction for transfer of monetary funds from one account to another")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = StandingInstructionCreationRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = StandingInstructionApiResourceSwagger.PostStandingInstructionsResponse.class)))
     public CommandProcessingResult create(@Parameter(hidden = true) StandingInstructionCreationRequest creationRequest) {
@@ -121,7 +121,7 @@ public class StandingInstructionApiResource {
     @Path("{standingInstructionId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Update Standing Instruction | Delete Standing Instruction", description = "Ability to modify existing instruction for transfer of monetary funds from one account to another.\n"
+    @Operation(summary = "Update Standing Instruction | Delete Standing Instruction", operationId = "updateStandingInstruction", description = "Ability to modify existing instruction for transfer of monetary funds from one account to another.\n"
             + "\n" + "PUT https://DomainName/api/v1/standinginstructions/1?command=update\n" + "\n\n"
             + "Ability to modify existing instruction for transfer of monetary funds from one account to another.\n" + "\n"
             + "PUT https://DomainName/api/v1/standinginstructions/1?command=delete")
@@ -141,7 +141,8 @@ public class StandingInstructionApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "List Standing Instructions", description = "Example Requests:\n" + "\n" + "standinginstructions")
+    @Operation(summary = "List Standing Instructions", operationId = "retrieveAllStandingInstructions", description = "Example Requests:\n"
+            + "\n" + "standinginstructions")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = StandingInstructionApiResourceSwagger.GetStandingInstructionsResponse.class)))
     public Page<StandingInstructionData> retrieveAll(
             @QueryParam("externalId") @Parameter(description = "externalId") final String externalId,
@@ -174,7 +175,8 @@ public class StandingInstructionApiResource {
     @GET
     @Path("{standingInstructionId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve Standing Instruction", description = "Example Requests :\n" + "\n" + "standinginstructions/1")
+    @Operation(summary = "Retrieve Standing Instruction", operationId = "retrieveOneStandingInstruction", description = "Example Requests :\n"
+            + "\n" + "standinginstructions/1")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = StandingInstructionApiResourceSwagger.GetStandingInstructionsStandingInstructionIdResponse.class)))
     public StandingInstructionData retrieveOne(
             @PathParam("standingInstructionId") @Parameter(description = "standingInstructionId") final Long standingInstructionId,

@@ -29,5 +29,7 @@ public interface WorkingCapitalLoanAmortizationScheduleWriteService {
 
     void generateAndSaveAmortizationScheduleOnDisbursement(WorkingCapitalLoan loan, BigDecimal disbursedAmount, LocalDate disbursementDate);
 
+    void generateAndSaveAmortizationScheduleOnApproval(WorkingCapitalLoan loan);
+
     void regenerateAmortizationScheduleOnUndoDisbursal(WorkingCapitalLoan loan);
 }

@@ -51,13 +51,13 @@ public class CashierTransactionsHelper {
 
     public GetTellersTellerIdCashiersCashiersIdTransactionsResponse getTellersTellerIdCashiersCashiersIdTransactionsResponse(Long tellerId,
             Long cashierId, String currencyCode, int offset, int limit, String orderBy, String sortOrder) {
-        return Calls.ok(FineractClientHelper.getFineractClient().tellers.getTransactionsForCashier(tellerId, cashierId, currencyCode,
+        return Calls.ok(FineractClientHelper.getFineractClient().tellers.retrieveCashierTransactions(tellerId, cashierId, currencyCode,
                 offset, limit, orderBy, sortOrder));
     }
 
     public GetTellersTellerIdCashiersCashiersIdSummaryAndTransactionsResponse getTellersTellerIdCashiersCashiersIdSummaryAndTransactionsResponse(
             Long tellerId, Long cashierId, String currencyCode, int offset, int limit, String orderBy, String sortOrder) {
-        return Calls.ok(FineractClientHelper.getFineractClient().tellers.getTransactionsWithSummaryForCashier(tellerId, cashierId,
+        return Calls.ok(FineractClientHelper.getFineractClient().tellers.retrieveCashierTransactionsWithSummary(tellerId, cashierId,
                 currencyCode, offset, limit, orderBy, sortOrder));
     }
 

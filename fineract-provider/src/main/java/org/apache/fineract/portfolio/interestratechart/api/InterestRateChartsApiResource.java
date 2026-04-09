@@ -66,7 +66,7 @@ public class InterestRateChartsApiResource {
 
     @GET
     @Path("template")
-    @Operation(summary = "Retrieve Chart Details Template", description = """
+    @Operation(summary = "Retrieve Chart Details Template", operationId = "retrieveTemplateInterestRateChart", description = """
             This is a convenience resource. It can be useful when building maintenance user interface screens for creating a chart. The template data returned consists of any or all of: Field Defaults Allowed Value Lists
             Example Request: interestratecharts/template
             """)
@@ -76,7 +76,7 @@ public class InterestRateChartsApiResource {
     }
 
     @GET
-    @Operation(summary = "Retrieve all Charts", description = """
+    @Operation(summary = "Retrieve all Charts", operationId = "retrieveAllInterestRateCharts", description = """
             Retrieve list of charts associated with a term deposit product(FD or RD).
             Example Requests: interestratecharts?productId=1
             """)
@@ -88,8 +88,8 @@ public class InterestRateChartsApiResource {
 
     @GET
     @Path("{chartId}")
-    @Operation(summary = "Retrieve a Chart", description = "It retrieves the Interest Rate Chart\n" + "Example Requests:\n" + "\n"
-            + "interestratecharts/1")
+    @Operation(summary = "Retrieve a Chart", operationId = "retrieveOneInterestRateChart", description = "It retrieves the Interest Rate Chart\n"
+            + "Example Requests:\n" + "\n" + "interestratecharts/1")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = InterestRateChartsApiResourceSwagger.GetInterestRateChartsResponse.class)))
     public InterestRateChartData retrieveOne(@PathParam("chartId") final Long chartId,
             @QueryParam("associations") final String associations) {
@@ -104,7 +104,7 @@ public class InterestRateChartsApiResource {
 
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create a Chart", description = "Creates a new chart which can be attached to a term deposit products (FD or RD).")
+    @Operation(summary = "Create a Chart", operationId = "createInterestRateChart", description = "Creates a new chart which can be attached to a term deposit products (FD or RD).")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = InterestRateChartCreateResponse.class)))
     public InterestRateChartCreateResponse create(final InterestRateChartCreateRequest request) {
 
@@ -117,7 +117,7 @@ public class InterestRateChartsApiResource {
     @PUT
     @Path("{chartId}")
     @Consumes({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Update a Chart", description = "It updates the chart")
+    @Operation(summary = "Update a Chart", operationId = "updateInterestRateChart", description = "It updates the chart")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = InterestRateChartUpdateResponse.class)))
     public InterestRateChartUpdateResponse update(@PathParam("chartId") final Long chartId, final InterestRateChartUpdateRequest request) {
         request.setId(chartId);
@@ -129,7 +129,7 @@ public class InterestRateChartsApiResource {
 
     @DELETE
     @Path("{chartId}")
-    @Operation(summary = "Delete a Chart", description = "It deletes the chart")
+    @Operation(summary = "Delete a Chart", operationId = "deleteInterestRateChart", description = "It deletes the chart")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = InterestRateChartDeleteResponse.class)))
     public InterestRateChartDeleteResponse delete(@PathParam("chartId") final Long chartId) {
         final var command = new InterestRateChartDeleteCommand();

@@ -96,7 +96,16 @@ public class WorkingCapitalLoanAmortizationScheduleWriteServiceImpl implements W
     }
 
     @Override
+    public void generateAndSaveAmortizationScheduleOnApproval(final WorkingCapitalLoan loan) {
+        generateAndSaveForApprovedLoanState(loan);
+    }
+
+    @Override
     public void regenerateAmortizationScheduleOnUndoDisbursal(final WorkingCapitalLoan loan) {
+        generateAndSaveForApprovedLoanState(loan);
+    }
+
+    private void generateAndSaveForApprovedLoanState(final WorkingCapitalLoan loan) {
         Validate.notNull(loan, "loan must not be null");
 
         final MathContext mc = MoneyHelper.getMathContext();
@@ -115,17 +124,22 @@ public class WorkingCapitalLoanAmortizationScheduleWriteServiceImpl implements W
         final WorkingCapitalLoanDisbursementDetails detail = loan.getDisbursementDetails() != null
                 && !loan.getDisbursementDetails().isEmpty() ? loan.getDisbursementDetails().getFirst() : null;
         final LocalDate expectedDisbursementDate = detail != null ? detail.getExpectedDisbursementDate() : null;
-        final BigDecimal expectedAmount = detail != null && detail.getExpectedAmount() != null ? detail.getExpectedAmount()
-                : loan.getApprovedPrincipal();
+
+        final BigDecimal netDisbursementAmount;
+        if (loan.getApprovedPrincipal() != null && loan.getApprovedPrincipal().compareTo(BigDecimal.ZERO) > 0) {
+            netDisbursementAmount = loan.getApprovedPrincipal();
+        } else {
+            netDisbursementAmount = detail != null && detail.getExpectedAmount() != null ? detail.getExpectedAmount() : BigDecimal.ZERO;
+        }
 
         Validate.isTrue(totalPayment.signum() > 0, "totalPayment must be positive");
         Validate.notNull(periodPaymentRate, "periodPaymentRate must not be null");
         Validate.notNull(npvDayCount, "npvDayCount must not be null");
         Validate.notNull(expectedDisbursementDate, "expectedDisbursementDate must not be null");
-        Validate.notNull(expectedAmount, "expectedAmount must not be null");
+        Validate.isTrue(netDisbursementAmount.signum() > 0, "net disbursement amount for schedule must be positive");
 
-        final ProjectedAmortizationScheduleModel model = ProjectedAmortizationScheduleModel.generate(discount, expectedAmount, totalPayment,
-                periodPaymentRate, npvDayCount, expectedDisbursementDate, mc, resolveCurrency(loan));
+        final ProjectedAmortizationScheduleModel model = ProjectedAmortizationScheduleModel.generate(discount, netDisbursementAmount,
+                totalPayment, periodPaymentRate, npvDayCount, expectedDisbursementDate, mc, resolveCurrency(loan));
         scheduleRepositoryWrapper.writeModel(loan, model);
     }
 

@@ -44,9 +44,12 @@ import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.CommandProcessingResult;
 import org.apache.fineract.client.models.DeleteWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.GetDisbursementDetail;
+import org.apache.fineract.client.models.GetWorkingCapitalLoanTransactionIdResponse;
 import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostAllowAttributeOverrides;
 import org.apache.fineract.client.models.PostClientsResponse;
+import org.apache.fineract.client.models.PostCodeValueDataResponse;
+import org.apache.fineract.client.models.PostCodeValuesDataRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
@@ -61,6 +64,7 @@ import org.apache.fineract.test.data.workingcapitalproduct.DefaultWorkingCapital
 import org.apache.fineract.test.data.workingcapitalproduct.WorkingCapitalLoanProductResolver;
 import org.apache.fineract.test.factory.WorkingCapitalLoanRequestFactory;
 import org.apache.fineract.test.factory.WorkingCapitalRequestFactory;
+import org.apache.fineract.test.helper.CodeHelper;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.Utils;
 import org.apache.fineract.test.messaging.event.EventCheckHelper;
@@ -74,11 +78,14 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
     private static final String DATE_FORMAT = "dd MMMM yyyy";
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
     private static final Long NON_EXISTENT_LOAN_ID = 999_999_999L;
+    private static final String WC_DISBURSE_CLASSIFICATION_ID = "wcDisburseClassificationId";
+    private static final String WC_DISBURSE_CLASSIFICATION_CODE_NAME = "working_capital_loan_disbursement_classification";
 
     private final FineractFeignClient fineractClient;
     private final WorkingCapitalLoanProductResolver workingCapitalLoanProductResolver;
     private final WorkingCapitalLoanRequestFactory workingCapitalLoanRequestFactory;
     private final WorkingCapitalRequestFactory workingCapitalProductRequestFactory;
+    private final CodeHelper codeHelper;
     private final EventCheckHelper eventCheckHelper;
 
     @When("Admin creates a working capital loan with the following data:")
@@ -507,6 +514,23 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         assertThat(exception.getDeveloperMessage()).contains(ErrorMessageHelper.discountAmountExceedFailure());
     }
 
+    @When("Admin failed to approve the working capital loan on {string} with {string} amount and expected disbursement date on {string} with {string} discount amount due to override disallowed by product")
+    public void approveWorkingCapitalLoanWithDiscountOverrideDisallowedFailure(final String approveDate, final String approvedAmount,
+            final String expectedDisbursementDate, final String discountAmount) {
+        final PostWorkingCapitalLoansLoanIdRequest approveRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanApproveRequest()//
+                .approvedOnDate(approveDate)//
+                .approvedLoanAmount(new BigDecimal(approvedAmount))//
+                .discountAmount(new BigDecimal(discountAmount))//
+                .expectedDisbursementDate(expectedDisbursementDate);//
+
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoans()
+                .stateTransitionWorkingCapitalLoanById(getCreatedLoanId(), "approve", approveRequest));
+
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.discountOverrideDisallowedByProductFailure()).isEqualTo(400);
+        assertThat(exception.getDeveloperMessage()).contains(ErrorMessageHelper.discountOverrideDisallowedByProductFailure());
+    }
+
     @When("Admin rejects the working capital loan on {string}")
     public void rejectWorkingCapitalLoan(final String rejectDate) {
         final PostWorkingCapitalLoansLoanIdRequest rejectRequest = workingCapitalLoanRequestFactory.defaultWorkingCapitalLoanRejectRequest()
@@ -589,6 +613,25 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         checkChangesExpectedStatus(TestContextKey.LOAN_DISBURSE_RESPONSE, ACTIVE);
     }
 
+    @And("Admin successfully disburse the Working Capital loan on {string} with {string} EUR transaction amount and valid classification")
+    public void disburseWCLoanWithClassification(final String actualDisbursementDate, final String transactionAmount) {
+        final Long classificationCodeId = codeHelper.retrieveCodeByName(WC_DISBURSE_CLASSIFICATION_CODE_NAME).getId();
+        final PostCodeValueDataResponse codeValue = codeHelper.createCodeValue(classificationCodeId,
+                new PostCodeValuesDataRequest().name(Utils.randomStringGenerator("WCL_CLS_", 8)).isActive(true).position(0));
+        final Long classificationId = codeValue.getSubResourceId();
+        testContext().set(WC_DISBURSE_CLASSIFICATION_ID, classificationId);
+
+        final PostWorkingCapitalLoansLoanIdRequest disburseRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanDisburseRequest().actualDisbursementDate(actualDisbursementDate)//
+                .transactionAmount(new BigDecimal(transactionAmount))//
+                .classificationId(classificationId);
+        testContext().set(TestContextKey.LOAN_DISBURSE_REQUEST, disburseRequest);
+
+        executeStateTransition("disburse", disburseRequest, TestContextKey.LOAN_DISBURSE_RESPONSE, false);
+        verifyStateTransitionSuccess(TestContextKey.LOAN_DISBURSE_RESPONSE, "disbursement");
+        checkChangesExpectedStatus(TestContextKey.LOAN_DISBURSE_RESPONSE, ACTIVE);
+    }
+
     @Then("Verify Working Capital loan disbursement was successful on {string} with {string} EUR transaction amount")
     public void checkDisbursementData(String actualDisbursementDate, String transactionAmount) {
         final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
@@ -632,6 +675,20 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         assertThat(exception.getDeveloperMessage()).contains(ErrorMessageHelper.discountAmountExceedFailure());
     }
 
+    @When("Admin failed to disburse the working capital loan on {string} with {string} amount with {string} discount amount due to override disallowed by product")
+    public void disburseWorkingCapitalLoanWithDiscountOverrideDisallowedFailure(final String actualDisbursementDate,
+            final String transactionAmount, final String discountAmount) {
+        final PostWorkingCapitalLoansLoanIdRequest disburseRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanDisburseRequest().actualDisbursementDate(actualDisbursementDate)//
+                .discountAmount(new BigDecimal(discountAmount)).transactionAmount(new BigDecimal(transactionAmount));
+
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoans()
+                .stateTransitionWorkingCapitalLoanById(getCreatedLoanId(), "disburse", disburseRequest));
+
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.discountOverrideDisallowedByProductFailure()).isEqualTo(400);
+        assertThat(exception.getDeveloperMessage()).contains(ErrorMessageHelper.discountOverrideDisallowedByProductFailure());
+    }
+
     @Then("Verify Working Capital loan disbursement was successful")
     public void checkDisbursementData() {
         final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
@@ -649,6 +706,24 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         String formattedDate = disbursementDetails.getActualDisbursementDate().format(FORMATTER);
         assertThat(formattedDate).isEqualTo(disburseLoanRequest.getActualDisbursementDate());
         assertThat(disbursementDetails.getActualAmount().compareTo(disburseLoanRequest.getTransactionAmount())).isEqualTo(0);
+    }
+
+    @Then("Verify Working Capital loan disbursement transaction has classification")
+    public void verifyDisbursementTransactionHasClassification() {
+        final Long expectedClassificationId = testContext().get(WC_DISBURSE_CLASSIFICATION_ID);
+        final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        final Long loanId = loanResponse.getLoanId();
+
+        final GetWorkingCapitalLoansLoanIdResponse loanDetailsResponse = ok(
+                () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
+        final GetWorkingCapitalLoanTransactionIdResponse disbursementTransaction = loanDetailsResponse.getTransactions().stream()
+                .filter(t -> t.getType() != null && "loanTransactionType.disbursement".equals(t.getType().getCode())
+                        && !Boolean.TRUE.equals(t.getReversed()))
+                .reduce((first, second) -> second).orElseThrow(() -> new IllegalStateException("Disbursement transaction not found"));
+
+        assertThat(disbursementTransaction.getClassification()).as("Disbursement classification").isNotNull();
+        assertThat(disbursementTransaction.getClassification().getId()).as("Disbursement classification id")
+                .isEqualTo(expectedClassificationId);
     }
 
     @Then("Admin successfully undo Working Capital disbursal")
@@ -671,6 +746,29 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         checkChangesExpectedStatus(TestContextKey.LOAN_UNDO_DISBURSE_RESPONSE, APPROVED);
     }
 
+    @Then("Working Capital disbursal transaction business event is raised")
+    public void workingCapitalDisbursalTransactionBusinessEventIsRaised() {
+        eventCheckHelper.workingCapitalLoanDisbursalTransactionEventCheck(getCreatedLoanId());
+    }
+
+    @Then("Working Capital disbursal transaction business event is raised with {string} amount and reversed {string}")
+    public void workingCapitalDisbursalTransactionBusinessEventIsRaisedWithAmountAndReversed(final String amount, final String reversed) {
+        eventCheckHelper.workingCapitalLoanDisbursalTransactionEventCheck(getCreatedLoanId(), new BigDecimal(amount));
+        assertThat(Boolean.parseBoolean(reversed)).isFalse();
+    }
+
+    @Then("Working Capital undo disbursal transaction business event is raised")
+    public void workingCapitalUndoDisbursalTransactionBusinessEventIsRaised() {
+        eventCheckHelper.workingCapitalLoanUndoDisbursalTransactionEventCheck(getCreatedLoanId());
+    }
+
+    @Then("Working Capital undo disbursal transaction business event is raised with {string} amount and reversed {string}")
+    public void workingCapitalUndoDisbursalTransactionBusinessEventIsRaisedWithAmountAndReversed(final String amount,
+            final String reversed) {
+        eventCheckHelper.workingCapitalLoanUndoDisbursalTransactionEventCheck(getCreatedLoanId(), new BigDecimal(amount));
+        assertThat(Boolean.parseBoolean(reversed)).isTrue();
+    }
+
     @Then("Admin fails to disburse the Working Capital loan on {string} with {string} EUR transaction amount because of not approved")
     public void disburseWCLoanFailureWithNotApproved(String actualDisbursementDate, String transactionAmount) {
         final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
@@ -683,6 +781,13 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         assertThat(exception.getStatus()).as(ErrorMessageHelper.dateFailureErrorCodeMsg()).isEqualTo(400);
         assertThat(exception.getDeveloperMessage())
                 .contains(ErrorMessageHelper.disburseNotApprovedFailure(SUBMITTED_AND_PENDING_APPROVAL.name()));
+    }
+
+    @Then("Admin fails to disburse the Working Capital loan on {string} with {string} EUR transaction amount because of loan status {string} with status code {int}")
+    public void disburseWCLoanFailureDueToStatus(String actualDisbursementDate, String transactionAmount, String loanStatus,
+            int statusCode) {
+        disburseWCLoanFailure(actualDisbursementDate, transactionAmount, statusCode,
+                ErrorMessageHelper.disburseNotApprovedFailure(loanStatus));
     }
 
     @Then("Admin fails to disburse the Working Capital loan on {string} with {string} EUR transaction amount with invalid data outcomes with error message {string}")
@@ -872,6 +977,15 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
                         : new Utils.DoubleFormatter(response.getPeriodPaymentRate().doubleValue()).format());
                 case "discount" -> actualValues.add(
                         response.getDiscount() == null ? "null" : new Utils.DoubleFormatter(response.getDiscount().doubleValue()).format());
+                case "totalPaidPrincipal" ->
+                    actualValues.add(response.getBalance() == null || response.getBalance().getTotalPaidPrincipal() == null ? null
+                            : new Utils.DoubleFormatter(response.getBalance().getTotalPaidPrincipal().doubleValue()).format());
+                case "realizedIncome" ->
+                    actualValues.add(response.getBalance() == null || response.getBalance().getRealizedIncome() == null ? null
+                            : new Utils.DoubleFormatter(response.getBalance().getRealizedIncome().doubleValue()).format());
+                case "unrealizedIncome" ->
+                    actualValues.add(response.getBalance() == null || response.getBalance().getUnrealizedIncome() == null ? null
+                            : new Utils.DoubleFormatter(response.getBalance().getUnrealizedIncome().doubleValue()).format());
                 default -> throw new IllegalStateException(String.format("Header name %s cannot be found", headerName));
             }
         }

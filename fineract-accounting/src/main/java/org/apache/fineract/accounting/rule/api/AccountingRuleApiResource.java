@@ -94,7 +94,7 @@ public class AccountingRuleApiResource {
     @GET
     @Path("template")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve Accounting Rule Details Template", description = """
+    @Operation(summary = "Retrieve Accounting Rule Details Template", operationId = "retrieveTemplateAccountingRule", description = """
             This is a convenience resource. It can be useful when building maintenance user interface screens for client applications. The template data returned consists of any or all of:
 
             Field Defaults
@@ -109,7 +109,7 @@ public class AccountingRuleApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve Accounting Rules", description = """
+    @Operation(summary = "Retrieve Accounting Rules", operationId = "retrieveAllAccountingRules", description = """
             Returns the list of defined accounting rules.
 
             Example Requests:
@@ -130,7 +130,7 @@ public class AccountingRuleApiResource {
     @GET
     @Path("{accountingRuleId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Retrieve a Accounting rule", description = """
+    @Operation(summary = "Retrieve a Accounting rule", operationId = "retrieveOneAccountingRule", description = """
             Returns the details of a defined Accounting rule.
 
             Example Requests:
@@ -150,7 +150,7 @@ public class AccountingRuleApiResource {
     @POST
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create/Define a Accounting rule", description = """
+    @Operation(summary = "Create/Define a Accounting rule", operationId = "createAccountingRule", description = """
             Define a new Accounting rule.
 
             Mandatory Fields
@@ -173,7 +173,7 @@ public class AccountingRuleApiResource {
     @Path("{accountingRuleId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Update a Accounting Rule", description = "Updates the details of a Accounting rule.")
+    @Operation(summary = "Update a Accounting Rule", operationId = "updateAccountingRule", description = "Updates the details of a Accounting rule.")
     @RequestBody(content = @Content(schema = @Schema(implementation = AccountRuleRequest.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = AccountingRuleApiResourceSwagger.PutAccountingRulesResponse.class)))
     public CommandProcessingResult updateAccountingRule(
@@ -188,7 +188,7 @@ public class AccountingRuleApiResource {
     @DELETE
     @Path("{accountingRuleId}")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Delete a Accounting Rule", description = "Deletes a Accounting rule.")
+    @Operation(summary = "Delete a Accounting Rule", operationId = "deleteAccountingRule", description = "Deletes a Accounting rule.")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = AccountingRuleApiResourceSwagger.DeleteAccountingRulesResponse.class)))
     public CommandProcessingResult deleteAccountingRule(
             @PathParam("accountingRuleId") @Parameter(description = "accountingRuleId") final Long accountingRuleId) {

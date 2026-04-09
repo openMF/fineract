@@ -42,7 +42,7 @@ public class LoanProductHelper {
     }
 
     public GetLoanProductsProductIdResponse retrieveLoanProductById(Long loanProductId) {
-        return Calls.ok(FineractClientHelper.getFineractClient().loanProducts.retrieveLoanProductDetails(loanProductId));
+        return Calls.ok(FineractClientHelper.getFineractClient().loanProducts.retrieveOneLoanProduct(loanProductId));
     }
 
     public PutLoanProductsProductIdResponse updateLoanProductByExternalId(String externalId, PutLoanProductsProductIdRequest request) {
@@ -58,6 +58,6 @@ public class LoanProductHelper {
     }
 
     public static Collection<LoanProductBasicDetailsData> fetchProductBasicDetailsList() {
-        return Calls.ok(FineractClientHelper.getFineractClient().loanProductsDetails.fetchProducts());
+        return Calls.ok(FineractClientHelper.getFineractClient().loanProductsDetails.retrieveAllLoanProductsDetails());
     }
 }

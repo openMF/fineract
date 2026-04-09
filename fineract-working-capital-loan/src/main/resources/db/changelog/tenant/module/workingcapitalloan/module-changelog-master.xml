@@ -41,4 +41,6 @@
   <include relativeToChangelogFile="true" file="parts/0017_wc_loan_breach_management.xml"/>
   <include relativeToChangelogFile="true" file="parts/0018_wc_loan_discount_permissions.xml"/>
   <include relativeToChangelogFile="true" file="parts/0019_wc_loan_product_accounting.xml"/>
+  <include relativeToChangelogFile="true" file="parts/0020_wc_loan_transaction_external_events.xml"/>
+  <include relativeToChangelogFile="true" file="parts/0021_wc_loan_disbursement_classification_code.xml"/>
 </databaseChangeLog>

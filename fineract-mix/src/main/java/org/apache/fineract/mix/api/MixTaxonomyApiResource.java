@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.mix.api;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -39,6 +40,7 @@ public class MixTaxonomyApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "List Mix Taxonomies", operationId = "retrieveAllMixTaxonomies")
     public List<MixTaxonomyData> retrieveAll() {
         return readTaxonomyService.retrieveAll();
     }

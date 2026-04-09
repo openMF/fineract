@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.mix.api;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -42,6 +43,7 @@ public class MixReportApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_XML })
+    @Operation(summary = "Retrieve Mix XBRL report", operationId = "retrieveMixReport")
     public String retrieveXBRLReport(@QueryParam("startDate") final Date startDate, @QueryParam("endDate") final Date endDate,
             @QueryParam("currency") final String currency) {
 

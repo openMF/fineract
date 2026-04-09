@@ -898,13 +898,12 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
                 .orElseThrow(() -> new RuntimeException("No loan product is found!")).getId();
 
         PageExternalTransferLoanProductAttributesData getExternalAssetOwnerLoanProductAttribute = externalAssetOwnerLoanProductAttributesApi()
-                .getExternalAssetOwnerLoanProductAttributes(loanProductId,
-                        Map.of("attributeKey", externalAssetOwnerLoanProductAttributeKey));
+                .retrieveAllExternalAssetOwnerLoanProductAttributes(loanProductId, externalAssetOwnerLoanProductAttributeKey);
 
         if (getExternalAssetOwnerLoanProductAttribute.getTotalFilteredRecords() == 0) {
             PostExternalAssetOwnerLoanProductAttributeRequest setLoanProductAttributeRequest = new PostExternalAssetOwnerLoanProductAttributeRequest()
                     .attributeKey(externalAssetOwnerLoanProductAttributeKey).attributeValue(externalAssetOwnerLoanProductAttributeValue);
-            externalAssetOwnerLoanProductAttributesApi().postExternalAssetOwnerLoanProductAttribute(loanProductId,
+            externalAssetOwnerLoanProductAttributesApi().createExternalAssetOwnerLoanProductAttribute(loanProductId,
                     setLoanProductAttributeRequest);
         } else {
             List<ExternalTransferLoanProductAttributesData> attributes = getExternalAssetOwnerLoanProductAttribute.getPageItems();
@@ -916,7 +915,7 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
                     .getAttributeId();
             PutExternalAssetOwnerLoanProductAttributeRequest setLoanProductAttributeRequest = new PutExternalAssetOwnerLoanProductAttributeRequest()
                     .attributeKey(externalAssetOwnerLoanProductAttributeKey).attributeValue(externalAssetOwnerLoanProductAttributeValue);
-            externalAssetOwnerLoanProductAttributesApi().updateLoanProductAttribute(loanProductId, attributeId,
+            externalAssetOwnerLoanProductAttributesApi().updateExternalAssetOwnerLoanProductAttribute(loanProductId, attributeId,
                     setLoanProductAttributeRequest);
         }
     }

@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.organisation.teller.api;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -43,6 +44,7 @@ public class CashierApiResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "List Cashiers", operationId = "retrieveAllCashiers")
     public Collection<CashierData> getCashierData(@QueryParam("officeId") final Long officeId, @QueryParam("tellerId") final Long tellerId,
             @QueryParam("staffId") final Long staffId, @QueryParam("date") final String date) {
         final LocalDate dateRestriction = date != null ? LocalDate.parse(date, DateTimeFormatter.BASIC_ISO_DATE)

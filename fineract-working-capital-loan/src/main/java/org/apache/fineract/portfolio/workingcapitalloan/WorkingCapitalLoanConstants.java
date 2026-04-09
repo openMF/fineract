@@ -59,6 +59,9 @@ public final class WorkingCapitalLoanConstants {
     // Disbursal / Undo disbursal parameters
     public static final String actualDisbursementDateParamName = "actualDisbursementDate";
     public static final String transactionAmountParamName = "transactionAmount";
+    public static final String classificationIdParamName = "classificationId";
+
+    public static final String DISBURSEMENT_CLASSIFICATION_CODE_NAME = "working_capital_loan_disbursement_classification";
     public static final String paymentDetailsParamName = "paymentDetails";
     public static final String paymentTypeIdParamName = "paymentTypeId";
     public static final String accountNumberParamName = "accountNumber";

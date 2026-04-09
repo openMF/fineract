@@ -41,7 +41,7 @@ public class ShareAccountCreationValidationTest extends IntegrationTest {
     public void shouldReturn400WhenRequiredShareAccountFieldsMissing() {
         String today = FORMATTER.format(Utils.getLocalDateOfTenant());
 
-        Long productId = ok(fineractClient().shareProducts.createProduct("share",
+        Long productId = ok(fineractClient().shareProducts.createShareProduct("share",
                 new PostProductsTypeRequest().name(Utils.uniqueRandomStringGenerator("SHARE_PROD_", 6))
                         .shortName(Utils.uniqueRandomStringGenerator("", 4)).description(Utils.randomStringGenerator("", 20))
                         .currencyCode("USD").digitsAfterDecimal(4).inMultiplesOf(0).locale("en_GB").totalShares(10000).sharesIssued(10000)
@@ -69,20 +69,20 @@ public class ShareAccountCreationValidationTest extends IntegrationTest {
                 new PostSavingsAccountsAccountIdRequest().dateFormat(DATE_FORMAT).locale("en").activatedOnDate(today), "activate"));
 
         // missing requestedShares
-        Response<PostAccountsTypeResponse> missingShares = Calls
-                .executeU(fineractClient().shareAccounts.createAccount("share", new AccountRequest().clientId(clientId).productId(productId)
+        Response<PostAccountsTypeResponse> missingShares = Calls.executeU(
+                fineractClient().shareAccounts.createShareAccount("share", new AccountRequest().clientId(clientId).productId(productId)
                         .savingsAccountId(savingsId).submittedDate(today).applicationDate(today).dateFormat(DATE_FORMAT).locale("en_GB")));
         assertThat(missingShares.code()).isEqualTo(400);
 
         // missing applicationDate
-        Response<PostAccountsTypeResponse> missingAppDate = Calls
-                .executeU(fineractClient().shareAccounts.createAccount("share", new AccountRequest().clientId(clientId).productId(productId)
+        Response<PostAccountsTypeResponse> missingAppDate = Calls.executeU(
+                fineractClient().shareAccounts.createShareAccount("share", new AccountRequest().clientId(clientId).productId(productId)
                         .savingsAccountId(savingsId).requestedShares(25L).submittedDate(today).dateFormat(DATE_FORMAT).locale("en_GB")));
         assertThat(missingAppDate.code()).isEqualTo(400);
 
         // missing savingsAccountId
-        Response<PostAccountsTypeResponse> missingSavings = Calls
-                .executeU(fineractClient().shareAccounts.createAccount("share", new AccountRequest().clientId(clientId).productId(productId)
+        Response<PostAccountsTypeResponse> missingSavings = Calls.executeU(
+                fineractClient().shareAccounts.createShareAccount("share", new AccountRequest().clientId(clientId).productId(productId)
                         .requestedShares(25L).submittedDate(today).applicationDate(today).dateFormat(DATE_FORMAT).locale("en_GB")));
         assertThat(missingSavings.code()).isEqualTo(400);
     }
