@@ -115,7 +115,7 @@ public class WorkingCapitalDelinquencyConfigStepDef extends AbstractStepDef {
         String name = delinquencyBucketRequestForUpdate.getName();
         DelinquencyBucketRequest delinquencyBucketRequest = workingCapitalRequestFactory.defaultWorkingCapitalDelinquencyBucketRequest()
                 .name(name); //
-        String errorMessage = ErrorMessageHelper.workingCapitalDelinquencyBucketCreateDuplicateNameFailure(delinquencyBucketIdForUpdate);
+        String errorMessage = ErrorMessageHelper.workingCapitalDelinquencyBucketDuplicateNameFailure(delinquencyBucketIdForUpdate);
         checkCreateWCDelinquencyBucketWithInvalidDataFailure(delinquencyBucketRequest, errorMessage, 403);
     }
 
@@ -175,7 +175,7 @@ public class WorkingCapitalDelinquencyConfigStepDef extends AbstractStepDef {
         String name = delinquencyBucketRequestForUpdate.getName();
         DelinquencyBucketRequest delinquencyBucketRequest = workingCapitalRequestFactory.defaultWorkingCapitalDelinquencyBucketRequest() //
                 .name(name); //
-        String errorMessage = ErrorMessageHelper.workingCapitalDelinquencyBucketCreateDuplicateNameFailure(delinquencyBucketId);
+        String errorMessage = ErrorMessageHelper.workingCapitalDelinquencyBucketDuplicateNameFailure(delinquencyBucketId);
         checkUpdateWCDelinquencyBucketWithInvalidDataFailure(delinquencyBucketIdForUpdate, delinquencyBucketRequest, errorMessage, 403);
     }
 

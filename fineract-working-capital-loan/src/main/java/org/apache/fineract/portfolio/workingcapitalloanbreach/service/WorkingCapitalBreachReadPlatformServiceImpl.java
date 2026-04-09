@@ -59,7 +59,7 @@ public class WorkingCapitalBreachReadPlatformServiceImpl implements WorkingCapit
     }
 
     private WorkingCapitalBreachData map(final WorkingCapitalBreach item) {
-        return WorkingCapitalBreachData.builder().id(item.getId()).breachFrequency(item.getBreachFrequency())
+        return WorkingCapitalBreachData.builder().id(item.getId()).name(item.getName()).breachFrequency(item.getBreachFrequency())
                 .breachFrequencyType(item.getBreachFrequencyType() != null ? item.getBreachFrequencyType().toStringEnumOptionData() : null)
                 .breachAmountCalculationType(item.getBreachAmountCalculationType() != null
                         ? item.getBreachAmountCalculationType().getValueAsStringEnumOptionData()

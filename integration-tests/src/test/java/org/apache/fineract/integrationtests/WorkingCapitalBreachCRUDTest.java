@@ -46,11 +46,12 @@ public class WorkingCapitalBreachCRUDTest {
 
     @Test
     public void testCreateRetrieveUpdateDeleteAndListEndpoints() {
-        final JsonObject createBody = breachJson(15, "DAYS", "PERCENTAGE", BigDecimal.valueOf(7.5));
+        final JsonObject createBody = breachJson("Default WCL Breach", 15, "DAYS", "PERCENTAGE", BigDecimal.valueOf(7.5));
         final Long breachId = breachHelper.create(createBody);
         assertNotNull(breachId);
 
         final JsonObject created = JsonParser.parseString(breachHelper.retrieveOneRaw(breachId)).getAsJsonObject();
+        assertEquals("Default WCL Breach", created.get("name").getAsString());
         assertEquals(15, created.get("breachFrequency").getAsInt());
         assertEquals("DAYS", created.getAsJsonObject("breachFrequencyType").get("id").getAsString());
         assertEquals("PERCENTAGE", created.getAsJsonObject("breachAmountCalculationType").get("id").getAsString());
@@ -60,17 +61,19 @@ public class WorkingCapitalBreachCRUDTest {
         boolean found = false;
         for (int i = 0; i < all.size(); i++) {
             if (all.get(i).getAsJsonObject().get("id").getAsLong() == breachId) {
+                assertEquals("Default WCL Breach", all.get(i).getAsJsonObject().get("name").getAsString());
                 found = true;
                 break;
             }
         }
         assertTrue(found);
 
-        final JsonObject updateBody = breachJson(20, "MONTHS", "FLAT", BigDecimal.valueOf(111));
+        final JsonObject updateBody = breachJson("Updated WCL Breach", 20, "MONTHS", "FLAT", BigDecimal.valueOf(111));
         final Long updatedId = breachHelper.update(breachId, updateBody);
         assertEquals(breachId, updatedId);
 
         final JsonObject updated = JsonParser.parseString(breachHelper.retrieveOneRaw(breachId)).getAsJsonObject();
+        assertEquals("Updated WCL Breach", updated.get("name").getAsString());
         assertEquals(20, updated.get("breachFrequency").getAsInt());
         assertEquals("MONTHS", updated.getAsJsonObject("breachFrequencyType").get("id").getAsString());
         assertEquals("FLAT", updated.getAsJsonObject("breachAmountCalculationType").get("id").getAsString());
@@ -80,9 +83,10 @@ public class WorkingCapitalBreachCRUDTest {
         assertEquals(breachId, deletedId);
     }
 
-    private static JsonObject breachJson(final Integer frequency, final String frequencyType, final String amountCalculationType,
-            final BigDecimal amount) {
+    private static JsonObject breachJson(final String name, final Integer frequency, final String frequencyType,
+            final String amountCalculationType, final BigDecimal amount) {
         final JsonObject json = new JsonObject();
+        json.addProperty("name", name);
         json.addProperty("breachFrequency", frequency);
         json.addProperty("breachFrequencyType", frequencyType);
         json.addProperty("breachAmountCalculationType", amountCalculationType);

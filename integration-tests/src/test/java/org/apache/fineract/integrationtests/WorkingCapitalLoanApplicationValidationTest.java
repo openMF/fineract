@@ -1016,6 +1016,7 @@ public class WorkingCapitalLoanApplicationValidationTest {
     private Long createBreach(final Integer breachFrequency, final String breachFrequencyType, final String breachAmountCalculationType,
             final BigDecimal breachAmount) {
         final JsonObject payload = new JsonObject();
+        payload.addProperty("name", "Validation WCL Breach");
         payload.addProperty("breachFrequency", breachFrequency);
         payload.addProperty("breachFrequencyType", breachFrequencyType);
         payload.addProperty("breachAmountCalculationType", breachAmountCalculationType);

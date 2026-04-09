@@ -82,6 +82,17 @@ public class WorkingCapitalBreachConfigStepDef extends AbstractStepDef {
         TestContext.GLOBAL.set(TestContextKey.WORKING_CAPITAL_BREACH_CREATE_REQUEST_FOR_UPDATE, request);
     }
 
+    @When("Admin failed to create WC Breach With duplicated name")
+    public void adminCreateWCBreachWithDuplicateNameFailure() {
+        Long existingBreachId = TestContext.GLOBAL.get(TestContextKey.WORKING_CAPITAL_BREACH_ID_FOR_UPDATE);
+        WorkingCapitalBreachRequest breachRequestForUpdate = TestContext.GLOBAL
+                .get(TestContextKey.WORKING_CAPITAL_BREACH_CREATE_REQUEST_FOR_UPDATE);
+        String name = breachRequestForUpdate.getName();
+        WorkingCapitalBreachRequest breachRequest = workingCapitalRequestFactory.defaultWorkingCapitalBreachRequest().name(name); //
+        String errorMessage = ErrorMessageHelper.workingCapitalBreachDuplicateNameFailure(existingBreachId);
+        checkCreateWCBreachWithInvalidDataFailure(breachRequest, errorMessage, 403);
+    }
+
     @Then("Check created Breach has the following values")
     public void checkCreatedBreachHasTheFollowingValues() {
         final Long id = TestContext.GLOBAL.get(TestContextKey.WORKING_CAPITAL_BREACH_ID);
@@ -112,6 +123,18 @@ public class WorkingCapitalBreachConfigStepDef extends AbstractStepDef {
                 .breachAmount(new BigDecimal("7.89"));
         ok(() -> fineractFeignClient.workingCapitalBreaches().updateWorkingCapitalBreach(id, request));
         TestContext.GLOBAL.set(TestContextKey.WORKING_CAPITAL_BREACH_UPDATE_REQUEST, request);
+    }
+
+    @When("Admin failed to update WC Breach With duplicated name")
+    public void adminUpdateWCBreachWithDuplicateNameFailure() {
+        Long breachIdForUpdate = TestContext.GLOBAL.get(TestContextKey.WORKING_CAPITAL_BREACH_ID_FOR_UPDATE);
+        Long existingBreachId = TestContext.GLOBAL.get(TestContextKey.WORKING_CAPITAL_BREACH_ID);
+        WorkingCapitalBreachRequest breachRequestForUpdate = TestContext.GLOBAL.get(TestContextKey.WORKING_CAPITAL_BREACH_CREATE_REQUEST);
+        String name = breachRequestForUpdate.getName();
+        WorkingCapitalBreachRequest breachRequest = workingCapitalRequestFactory.defaultWorkingCapitalBreachRequest() //
+                .name(name); //
+        String errorMessage = ErrorMessageHelper.workingCapitalBreachDuplicateNameFailure(existingBreachId);
+        checkUpdateWCBreachWithInvalidDataFailure(breachIdForUpdate, breachRequest, errorMessage, 403);
     }
 
     @Then("Check updated Breach has the following values")
@@ -213,6 +236,9 @@ public class WorkingCapitalBreachConfigStepDef extends AbstractStepDef {
         final Integer intValue = fieldValue != null && "breachFrequency".equals(fieldName) ? Integer.valueOf(fieldValue) : null;
         final BigDecimal decimalValue = fieldValue != null && "breachAmount".equals(fieldName) ? new BigDecimal(fieldValue) : null;
         switch (fieldName) {
+            case "name":
+                request.setName(fieldValue);
+            break;
             case "breachFrequency":
                 request.setBreachFrequency(intValue);
             break;
@@ -233,6 +259,7 @@ public class WorkingCapitalBreachConfigStepDef extends AbstractStepDef {
 
     private void checkBreachData(final WorkingCapitalBreachRequest request, final WorkingCapitalBreachData response) {
         final SoftAssertions assertions = new SoftAssertions();
+        assertions.assertThat(response.getName()).isEqualTo(request.getName());
         assertions.assertThat(response.getBreachFrequency()).isEqualTo(request.getBreachFrequency());
         assertions.assertThat(enumId(response.getBreachFrequencyType())).isEqualTo(request.getBreachFrequencyType());
         assertions.assertThat(enumId(response.getBreachAmountCalculationType())).isEqualTo(request.getBreachAmountCalculationType());

@@ -22,8 +22,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-public record WorkingCapitalBreachRequest(Integer breachFrequency, String breachFrequencyType, String breachAmountCalculationType,
-        BigDecimal breachAmount) implements Serializable {
+public record WorkingCapitalBreachRequest(String name, Integer breachFrequency, String breachFrequencyType,
+        String breachAmountCalculationType, BigDecimal breachAmount) implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;

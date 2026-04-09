@@ -44,6 +44,7 @@ public class WorkingCapitalBreachParseAndValidator extends ParseAndValidator {
     private static final String BREACH_FREQUENCY_TYPE_PARAM = "breachFrequencyType";
     private static final String BREACH_AMOUNT_CALCULATION_TYPE_PARAM = "breachAmountCalculationType";
     private static final String BREACH_AMOUNT_PARAM = "breachAmount";
+    private static final String NAME_PARAM = "name";
 
     public WorkingCapitalBreachRequest validateAndParse(@NotNull final JsonCommand command) {
         final DataValidatorBuilder dataValidator = new DataValidatorBuilder(new ArrayList<>()).resource("workingCapitalBreach.create");
@@ -59,8 +60,11 @@ public class WorkingCapitalBreachParseAndValidator extends ParseAndValidator {
             return null;
         }
 
-        jsonHelper.checkForUnsupportedParameters(element,
-                List.of(BREACH_FREQUENCY_PARAM, BREACH_FREQUENCY_TYPE_PARAM, BREACH_AMOUNT_CALCULATION_TYPE_PARAM, BREACH_AMOUNT_PARAM));
+        jsonHelper.checkForUnsupportedParameters(element, List.of(NAME_PARAM, BREACH_FREQUENCY_PARAM, BREACH_FREQUENCY_TYPE_PARAM,
+                BREACH_AMOUNT_CALCULATION_TYPE_PARAM, BREACH_AMOUNT_PARAM));
+
+        final String name = jsonHelper.extractStringNamed(NAME_PARAM, element);
+        dataValidator.reset().parameter(NAME_PARAM).value(name).notBlank().notExceedingLengthOf(100);
 
         final Integer breachFrequency = jsonHelper.extractIntegerNamed(BREACH_FREQUENCY_PARAM, element);
         dataValidator.reset().parameter(BREACH_FREQUENCY_PARAM).value(breachFrequency).notNull().integerGreaterThanZero();
@@ -77,7 +81,7 @@ public class WorkingCapitalBreachParseAndValidator extends ParseAndValidator {
         dataValidator.reset().parameter(BREACH_AMOUNT_PARAM).value(breachAmount).notNull().zeroOrPositiveAmount();
 
         return dataValidator.hasError() ? null
-                : new WorkingCapitalBreachRequest(breachFrequency, breachFrequencyTypeValue, breachAmountCalculationTypeValue,
+                : new WorkingCapitalBreachRequest(name, breachFrequency, breachFrequencyTypeValue, breachAmountCalculationTypeValue,
                         breachAmount);
     }
 }

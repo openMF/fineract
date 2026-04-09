@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.portfolio.workingcapitalloanbreach.data;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,6 +31,8 @@ import org.apache.fineract.infrastructure.core.data.StringEnumOptionData;
 public class WorkingCapitalBreachData {
 
     private Long id;
+    @Schema(example = "Default WCL Breach")
+    private String name;
     private Integer breachFrequency;
     private StringEnumOptionData breachFrequencyType;
     private StringEnumOptionData breachAmountCalculationType;

@@ -23,6 +23,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,11 +33,14 @@ import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoa
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalBreachAmountCalculationType;
 
 @Entity
-@Table(name = "m_wc_breach")
+@Table(name = "m_wc_breach", uniqueConstraints = { @UniqueConstraint(name = "uq_m_wc_breach_name", columnNames = { "name" }) })
 @Getter
 @Setter
 @NoArgsConstructor
 public class WorkingCapitalBreach extends AbstractPersistableCustom<Long> {
+
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
 
     @Column(name = "breach_frequency")
     private Integer breachFrequency;

@@ -144,11 +144,12 @@ public class WorkingCapitalLoanApplicationCRUDTest {
 
     @Test
     public void testSubmitWithoutBreachParamsUsesProductBreachDefaults() {
+        final String breachName = "Default WCL Breach";
         final Integer breachFrequency = 30;
         final String breachFrequencyType = "DAYS";
         final String breachAmountCalculationType = "PERCENTAGE";
         final BigDecimal breachAmount = BigDecimal.valueOf(10);
-        final Long breachId = createBreach(breachFrequency, breachFrequencyType, breachAmountCalculationType, breachAmount);
+        final Long breachId = createBreach(breachName, breachFrequency, breachFrequencyType, breachAmountCalculationType, breachAmount);
         final Long productId = createProductWithBreach(breachId);
         final Long clientId = createClient();
 
@@ -164,6 +165,7 @@ public class WorkingCapitalLoanApplicationCRUDTest {
         final JsonObject data = new Gson().fromJson(applicationHelper.retrieveById(loanId), JsonObject.class);
 
         final JsonObject breach = data.getAsJsonObject("breach");
+        assertEquals(breachName, breach.get("name").getAsString());
         assertEquals(breachFrequency.intValue(), breach.get("breachFrequency").getAsInt());
         assertRepaymentFrequencyTypeEquals(breachFrequencyType, breach.get("breachFrequencyType"));
         assertRepaymentFrequencyTypeEquals(breachAmountCalculationType, breach.get("breachAmountCalculationType"));
@@ -978,9 +980,10 @@ public class WorkingCapitalLoanApplicationCRUDTest {
                 .getResourceId();
     }
 
-    private Long createBreach(final Integer breachFrequency, final String breachFrequencyType, final String breachAmountCalculationType,
-            final BigDecimal breachAmount) {
+    private Long createBreach(final String name, final Integer breachFrequency, final String breachFrequencyType,
+            final String breachAmountCalculationType, final BigDecimal breachAmount) {
         final JsonObject payload = new JsonObject();
+        payload.addProperty("name", name);
         payload.addProperty("breachFrequency", breachFrequency);
         payload.addProperty("breachFrequencyType", breachFrequencyType);
         payload.addProperty("breachAmountCalculationType", breachAmountCalculationType);

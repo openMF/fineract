@@ -300,6 +300,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
 
             @Schema(example = "1")
             public Long id;
+            @Schema(example = "Default WCL Breach")
+            public String name;
             @Schema(example = "30")
             public Integer breachFrequency;
             public StringEnumOptionData breachFrequencyType;

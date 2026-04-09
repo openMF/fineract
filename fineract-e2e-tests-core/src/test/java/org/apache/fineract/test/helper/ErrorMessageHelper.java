@@ -1045,7 +1045,7 @@ public final class ErrorMessageHelper {
         return String.format("Working Capital Loan Product with identifier %s does not exist", identifierId);
     }
 
-    public static String workingCapitalDelinquencyBucketCreateDuplicateNameFailure(Long identifierId) {
+    public static String workingCapitalDelinquencyBucketDuplicateNameFailure(Long identifierId) {
         return String.format("Data integrity issue with resource: %d", identifierId);
     }
 
@@ -1059,6 +1059,10 @@ public final class ErrorMessageHelper {
 
     public static String workingCapitalBreachNotFoundFailure(final Long id) {
         return String.format("Working Capital Breach with id %d was not found.", id);
+    }
+
+    public static String workingCapitalBreachDuplicateNameFailure(final Long id) {
+        return String.format("Data integrity issue with resource: %d", id);
     }
 
     public static String disburseNotApprovedFailure(String status) {

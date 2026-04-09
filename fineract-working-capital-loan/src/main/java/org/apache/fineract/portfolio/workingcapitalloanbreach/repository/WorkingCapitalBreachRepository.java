@@ -18,7 +18,11 @@
  */
 package org.apache.fineract.portfolio.workingcapitalloanbreach.repository;
 
+import java.util.Optional;
 import org.apache.fineract.portfolio.workingcapitalloanbreach.domain.WorkingCapitalBreach;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface WorkingCapitalBreachRepository extends JpaRepository<WorkingCapitalBreach, Long> {}
+public interface WorkingCapitalBreachRepository extends JpaRepository<WorkingCapitalBreach, Long> {
+
+    Optional<WorkingCapitalBreach> findByName(String name);
+}

@@ -32,6 +32,7 @@ import org.mapstruct.Named;
 public interface WorkingCapitalBreachMapper {
 
     @Mapping(target = "id", source = "breach.id")
+    @Mapping(target = "name", source = "breach.name")
     @Mapping(target = "breachFrequency", source = "breach.breachFrequency")
     @Mapping(target = "breachFrequencyType", source = "breach.breachFrequencyType", qualifiedByName = "breachPeriodFrequencyTypeToStringEnumOptionData")
     @Mapping(target = "breachAmountCalculationType", source = "breach.breachAmountCalculationType", qualifiedByName = "breachAmountCalculationTypeToStringEnumOptionData")

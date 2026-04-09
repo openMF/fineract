@@ -44,6 +44,39 @@ public class WorkingCapitalBreachValidationTest {
     }
 
     @Test
+    public void testCreateFailsWhenNameIsMissing() {
+        final JsonObject body = validBreachJson();
+        body.remove("name");
+
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        assertEquals(400, ex.getStatus());
+        assertNotNull(ex.getDeveloperMessage());
+        assertTrue(ex.getDeveloperMessage().contains("name"));
+    }
+
+    @Test
+    public void testCreateFailsWhenNameIsBlank() {
+        final JsonObject body = validBreachJson();
+        body.addProperty("name", "   ");
+
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        assertEquals(400, ex.getStatus());
+        assertNotNull(ex.getDeveloperMessage());
+        assertTrue(ex.getDeveloperMessage().contains("name"));
+    }
+
+    @Test
+    public void testCreateFailsWhenNameTooLong() {
+        final JsonObject body = validBreachJson();
+        body.addProperty("name", "x".repeat(101));
+
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        assertEquals(400, ex.getStatus());
+        assertNotNull(ex.getDeveloperMessage());
+        assertTrue(ex.getDeveloperMessage().contains("name"));
+    }
+
+    @Test
     public void testCreateFailsWhenBreachFrequencyTypeIsMissing() {
         final JsonObject body = validBreachJson();
         body.remove("breachFrequencyType");
@@ -160,6 +193,7 @@ public class WorkingCapitalBreachValidationTest {
 
     private static JsonObject validBreachJson() {
         final JsonObject json = new JsonObject();
+        json.addProperty("name", "Default WCL Breach");
         json.addProperty("breachFrequency", 30);
         json.addProperty("breachFrequencyType", "DAYS");
         json.addProperty("breachAmountCalculationType", "PERCENTAGE");

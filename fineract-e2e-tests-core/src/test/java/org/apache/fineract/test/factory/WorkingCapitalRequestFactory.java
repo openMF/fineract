@@ -69,6 +69,7 @@ public class WorkingCapitalRequestFactory {
     public static final String DEFAULT_WC_BREACH_FREQUENCY_TYPE = "MONTHS";
     public static final String DEFAULT_WC_BREACH_AMOUNT_CALCULATION_TYPE = "PERCENTAGE";
     public static final BigDecimal DEFAULT_WC_BREACH_AMOUNT = new BigDecimal("1.23");
+    public static final String DEFAULT_WC_BREACH_NAME_PREFIX = "WCB-";
 
     public PostWorkingCapitalLoanProductsRequest defaultWorkingCapitalLoanProductRequestWithCashAccounting() {
         return defaultWorkingCapitalLoanProductRequest()//
@@ -237,6 +238,7 @@ public class WorkingCapitalRequestFactory {
 
     public WorkingCapitalBreachRequest defaultWorkingCapitalBreachRequest() {
         return new WorkingCapitalBreachRequest() //
+                .name(Utils.randomStringGenerator(DEFAULT_WC_BREACH_NAME_PREFIX, 12)) //
                 .breachFrequency(DEFAULT_WC_BREACH_FREQUENCY) //
                 .breachFrequencyType(DEFAULT_WC_BREACH_FREQUENCY_TYPE) //
                 .breachAmountCalculationType(DEFAULT_WC_BREACH_AMOUNT_CALCULATION_TYPE) //
