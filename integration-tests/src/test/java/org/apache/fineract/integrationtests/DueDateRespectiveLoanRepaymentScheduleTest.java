@@ -95,6 +95,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
         try {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(false));
             businessDateHelper.updateBusinessDate(new BusinessDateUpdateRequest().type(BusinessDateUpdateRequest.TypeEnum.BUSINESS_DATE)
                     .date("2023.02.01").dateFormat("yyyy.MM.dd").locale("en"));
 
@@ -178,6 +180,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
         } finally {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(false));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(true));
         }
     }
 
@@ -202,6 +206,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
                     new PutGlobalConfigurationsRequest().enabled(true));
             businessDateHelper.updateBusinessDate(new BusinessDateUpdateRequest().type(BusinessDateUpdateRequest.TypeEnum.BUSINESS_DATE)
                     .date("2023.02.01").dateFormat("yyyy.MM.dd").locale("en"));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(false));
 
             Integer penalty = ChargesHelper.createCharges(requestSpec, responseSpec,
                     ChargesHelper.getLoanSpecifiedDueDateJSON(ChargesHelper.CHARGE_CALCULATION_TYPE_FLAT, "50", true));
@@ -291,6 +297,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
         } finally {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(false));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(true));
         }
     }
 
@@ -625,6 +633,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
                     new PutGlobalConfigurationsRequest().enabled(true));
             businessDateHelper.updateBusinessDate(new BusinessDateUpdateRequest().type(BusinessDateUpdateRequest.TypeEnum.BUSINESS_DATE)
                     .date("2023.03.01").dateFormat("yyyy.MM.dd").locale("en"));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(false));
 
             Integer fee = ChargesHelper.createCharges(requestSpec, responseSpec,
                     ChargesHelper.getLoanSpecifiedDueDateJSON(ChargesHelper.CHARGE_CALCULATION_TYPE_FLAT, "20", false));
@@ -679,6 +689,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
         } finally {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(false));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(true));
         }
     }
 
@@ -696,6 +708,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
                     new PutGlobalConfigurationsRequest().enabled(true));
             businessDateHelper.updateBusinessDate(new BusinessDateUpdateRequest().type(BusinessDateUpdateRequest.TypeEnum.BUSINESS_DATE)
                     .date("2023.01.28").dateFormat("yyyy.MM.dd").locale("en"));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(false));
 
             Integer penalty = ChargesHelper.createCharges(requestSpec, responseSpec,
                     ChargesHelper.getLoanSpecifiedDueDateJSON(ChargesHelper.CHARGE_CALCULATION_TYPE_FLAT, "15", true));
@@ -809,6 +823,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
         } finally {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(false));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(true));
         }
     }
 
@@ -825,6 +841,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
         try {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(false));
             businessDateHelper.updateBusinessDate(new BusinessDateUpdateRequest().type(BusinessDateUpdateRequest.TypeEnum.BUSINESS_DATE)
                     .date("2023.02.15").dateFormat("yyyy.MM.dd").locale("en"));
 
@@ -1026,6 +1044,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
         } finally {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(false));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(true));
         }
     }
 
@@ -1045,6 +1065,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
         try {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(false));
             businessDateHelper.updateBusinessDate(new BusinessDateUpdateRequest().type(BusinessDateUpdateRequest.TypeEnum.BUSINESS_DATE)
                     .date("2023.02.15").dateFormat("yyyy.MM.dd").locale("en"));
 
@@ -1332,6 +1354,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
         } finally {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(false));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(true));
         }
     }
 
@@ -1351,6 +1375,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
                     .date("2023.05.14").dateFormat("yyyy.MM.dd").locale("en"));
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.CHARGE_ACCRUAL_DATE,
                     new PutGlobalConfigurationsRequest().stringValue("submitted-date"));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(false));
 
             Integer fee = ChargesHelper.createCharges(requestSpec, responseSpec,
                     ChargesHelper.getLoanSpecifiedDueDateJSON(ChargesHelper.CHARGE_CALCULATION_TYPE_FLAT, "3.65", false));
@@ -1513,6 +1539,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
                     new PutGlobalConfigurationsRequest().enabled(false));
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.CHARGE_ACCRUAL_DATE,
                     new PutGlobalConfigurationsRequest().stringValue("due-date"));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(true));
         }
     }
 
@@ -1532,6 +1560,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
                     .date("2023.05.14").dateFormat("yyyy.MM.dd").locale("en"));
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.CHARGE_ACCRUAL_DATE,
                     new PutGlobalConfigurationsRequest().stringValue("submitted-date"));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(false));
 
             Integer fee = ChargesHelper.createCharges(requestSpec, responseSpec,
                     ChargesHelper.getLoanSpecifiedDueDateJSON(ChargesHelper.CHARGE_CALCULATION_TYPE_FLAT, "3.65", false));
@@ -1694,6 +1724,8 @@ public class DueDateRespectiveLoanRepaymentScheduleTest extends BaseLoanIntegrat
                     new PutGlobalConfigurationsRequest().enabled(false));
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.CHARGE_ACCRUAL_DATE,
                     new PutGlobalConfigurationsRequest().stringValue("due-date"));
+            globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                    new PutGlobalConfigurationsRequest().enabled(true));
         }
     }
 

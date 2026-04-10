@@ -66,7 +66,7 @@ public class WorkingCapitalLoanDelinquencyActionApiResource {
     @Path("{loanId}/delinquency-actions")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create Delinquency Pause Action", description = "Creates a delinquency pause action for a Working Capital loan, extending the active delinquency range period and shifting future periods by the pause duration.")
+    @Operation(summary = "Create Delinquency Action", description = "Creates a delinquency action (pause or reschedule) for a Working Capital loan.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanDelinquencyActionApiResourceSwagger.PostWorkingCapitalLoansDelinquencyActionRequest.class)))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanDelinquencyActionApiResourceSwagger.PostWorkingCapitalLoansDelinquencyActionResponse.class))),
@@ -86,7 +86,7 @@ public class WorkingCapitalLoanDelinquencyActionApiResource {
     @Path("external-id/{loanExternalId}/delinquency-actions")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(operationId = "createDelinquencyActionByExternalId", summary = "Create Delinquency Pause Action by external id", description = "Creates a delinquency pause action for a Working Capital loan identified by external id, extending the active delinquency range period and shifting future periods by the pause duration.")
+    @Operation(operationId = "createDelinquencyActionByExternalId", summary = "Create Delinquency Action by external id", description = "Creates a delinquency action (pause or reschedule) for a Working Capital loan identified by external id.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanDelinquencyActionApiResourceSwagger.PostWorkingCapitalLoansDelinquencyActionRequest.class)))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanDelinquencyActionApiResourceSwagger.PostWorkingCapitalLoansDelinquencyActionResponse.class))),

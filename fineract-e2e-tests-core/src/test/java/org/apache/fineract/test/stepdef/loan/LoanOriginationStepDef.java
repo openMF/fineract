@@ -27,11 +27,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.fineract.avro.loan.v1.LoanTransactionAdjustmentDataV1;
+import org.apache.fineract.avro.loan.v1.LoanTransactionDataV1;
 import org.apache.fineract.avro.loan.v1.OriginatorDetailsV1;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
@@ -41,11 +44,14 @@ import org.apache.fineract.client.models.GetLoanOriginatorTemplateResponse;
 import org.apache.fineract.client.models.GetLoanOriginatorsResponse;
 import org.apache.fineract.client.models.GetLoansLoanIdOriginatorData;
 import org.apache.fineract.client.models.GetLoansLoanIdResponse;
+import org.apache.fineract.client.models.GetLoansLoanIdTransactions;
 import org.apache.fineract.client.models.PostClientsResponse;
 import org.apache.fineract.client.models.PostLoanOriginatorsRequest;
 import org.apache.fineract.client.models.PostLoanOriginatorsResponse;
 import org.apache.fineract.client.models.PostLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostLoansLoanIdResponse;
+import org.apache.fineract.client.models.PostLoansLoanIdTransactionsResponse;
+import org.apache.fineract.client.models.PostLoansLoanIdTransactionsTransactionIdRequest;
 import org.apache.fineract.client.models.PostLoansOriginatorData;
 import org.apache.fineract.client.models.PostLoansRequest;
 import org.apache.fineract.client.models.PostLoansResponse;
@@ -56,6 +62,8 @@ import org.apache.fineract.test.factory.LoanRequestFactory;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.messaging.EventAssertion;
 import org.apache.fineract.test.messaging.event.loan.LoanApprovedEvent;
+import org.apache.fineract.test.messaging.event.loan.transaction.LoanAccrualTransactionCreatedBusinessEvent;
+import org.apache.fineract.test.messaging.event.loan.transaction.LoanAdjustTransactionBusinessEvent;
 import org.apache.fineract.test.messaging.store.EventStore;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
@@ -65,6 +73,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class LoanOriginationStepDef extends AbstractStepDef {
 
     private static final long NON_EXISTENT_ID = Long.MAX_VALUE;
+    private static final String DATE_FORMAT = "dd MMMM yyyy";
+    private static final String DEFAULT_LOCALE = "en";
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
+    private static final String ADJUSTED_TRANSACTION_ID = "adjustedTransactionId";
 
     @Autowired
     private FineractFeignClient fineractClient;
@@ -601,6 +613,135 @@ public class LoanOriginationStepDef extends AbstractStepDef {
         CallFailedRuntimeException exception = fail(() -> fineractClient.loanOriginators().deleteLoanOriginator(originatorId));
         assertExpectedStatus(exception, expectedStatus);
         log.info("Deleting originator {} failed with expected status {}", originatorId, expectedStatus);
+    }
+
+    @When("Customer makes a repayment undo on {string} without event check")
+    public void makeLoanRepaymentUndoWithoutEventCheck(String transactionDate) {
+        eventStore.reset();
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
+        PostLoansLoanIdTransactionsResponse repaymentResponse = testContext().get(TestContextKey.LOAN_REPAYMENT_RESPONSE);
+        Long originalTransactionId = repaymentResponse.getResourceId();
+
+        PostLoansLoanIdTransactionsTransactionIdRequest repaymentUndoRequest = LoanRequestFactory.defaultRepaymentUndoRequest()
+                .transactionDate(transactionDate).dateFormat(DATE_FORMAT).locale(DEFAULT_LOCALE);
+
+        ok(() -> fineractClient.loanTransactions().adjustLoanTransaction(loanId, originalTransactionId, repaymentUndoRequest,
+                Map.<String, Object>of()));
+        testContext().set(ADJUSTED_TRANSACTION_ID, originalTransactionId);
+        log.info("Repayment {} undo on loan {} (event check skipped for separate originator verification)", originalTransactionId, loanId);
+    }
+
+    @When("Customer adjusts the repayment on {string} to {double} EUR without event check")
+    public void adjustLoanRepaymentWithoutEventCheck(String transactionDate, double transactionAmount) {
+        eventStore.reset();
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
+        PostLoansLoanIdTransactionsResponse repaymentResponse = testContext().get(TestContextKey.LOAN_REPAYMENT_RESPONSE);
+        Long originalTransactionId = repaymentResponse.getResourceId();
+
+        PostLoansLoanIdTransactionsTransactionIdRequest repaymentAdjustRequest = LoanRequestFactory
+                .defaultRepaymentAdjustRequest(transactionAmount).transactionDate(transactionDate).dateFormat(DATE_FORMAT)
+                .locale(DEFAULT_LOCALE);
+
+        PostLoansLoanIdTransactionsResponse repaymentAdjustmentResponse = ok(() -> fineractClient.loanTransactions()
+                .adjustLoanTransaction(loanId, originalTransactionId, repaymentAdjustRequest, Map.<String, Object>of()));
+        testContext().set(TestContextKey.LOAN_REPAYMENT_UNDO_RESPONSE, repaymentAdjustmentResponse);
+        testContext().set(ADJUSTED_TRANSACTION_ID, originalTransactionId);
+        log.info("Repayment {} adjusted to {} on loan {} (event check skipped for separate originator verification)", originalTransactionId,
+                transactionAmount, loanId);
+    }
+
+    @When("Customer reverses the waiver transaction on {string}")
+    public void reverseWaiverTransaction(String transactionDate) {
+        eventStore.reset();
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        long loanId = loanResponse.getLoanId();
+
+        GetLoansLoanIdResponse loanDetails = ok(
+                () -> fineractClient.loans().retrieveLoan(loanId, Map.<String, Object>of("associations", "transactions")));
+        Long waiveTransactionId = loanDetails.getTransactions().stream()
+                .filter(t -> "loanTransactionType.waiveCharges".equals(t.getType().getCode())).map(GetLoansLoanIdTransactions::getId)
+                .findFirst().orElseThrow(() -> new IllegalStateException("Waiver transaction not found on loan " + loanId));
+
+        PostLoansLoanIdTransactionsTransactionIdRequest undoRequest = LoanRequestFactory.defaultRepaymentUndoRequest()
+                .transactionDate(transactionDate).dateFormat(DATE_FORMAT).locale(DEFAULT_LOCALE);
+
+        ok(() -> fineractClient.loanTransactions().adjustLoanTransaction(loanId, waiveTransactionId, undoRequest,
+                Map.<String, Object>of()));
+        testContext().set(ADJUSTED_TRANSACTION_ID, waiveTransactionId);
+        log.info("Waiver transaction {} reversed on loan {} (for originator event verification)", waiveTransactionId, loanId);
+    }
+
+    // --- Originator event verification steps ---
+
+    @Then("LoanAdjustTransactionBusinessEvent is created with originator details in {string}")
+    public void verifyOriginatorInAdjustEvent(String nestedField) {
+        long loanId = getLoanId();
+        Long adjustedTransactionId = testContext().get(ADJUSTED_TRANSACTION_ID);
+        String expectedExternalId = testContext().get(TestContextKey.ORIGINATOR_EXTERNAL_ID);
+
+        eventAssertion.assertEvent(LoanAdjustTransactionBusinessEvent.class, adjustedTransactionId).extractingData(adjustmentData -> {
+            LoanTransactionDataV1 nested = resolveAdjustmentField(adjustmentData, nestedField);
+            assertThat(nested).as("Field '%s' in LoanAdjustTransactionBusinessEvent", nestedField).isNotNull();
+
+            List<OriginatorDetailsV1> originators = nested.getOriginators();
+            assertThat(originators).as("Originators in %s should not be null or empty", nestedField).isNotNull().isNotEmpty();
+            assertThat(originators.get(0).getExternalId()).as("Originator externalId in %s", nestedField).isEqualTo(expectedExternalId);
+            assertThat(originators.get(0).getStatus()).as("Originator status in %s", nestedField).isEqualTo("ACTIVE");
+            return adjustmentData.getTransactionToAdjust().getId();
+        }).isEqualTo(adjustedTransactionId);
+        log.info("Verified originator {} in LoanAdjustTransactionBusinessEvent.{} for loan {}", expectedExternalId, nestedField, loanId);
+    }
+
+    @Then("LoanAdjustTransactionBusinessEvent is created without originator details in {string}")
+    public void verifyNoOriginatorInAdjustEvent(String nestedField) {
+        Long adjustedTransactionId = testContext().get(ADJUSTED_TRANSACTION_ID);
+
+        eventAssertion.assertEvent(LoanAdjustTransactionBusinessEvent.class, adjustedTransactionId).extractingData(adjustmentData -> {
+            LoanTransactionDataV1 nested = resolveAdjustmentField(adjustmentData, nestedField);
+            assertThat(nested).as("Field '%s' in LoanAdjustTransactionBusinessEvent", nestedField).isNotNull();
+
+            List<OriginatorDetailsV1> originators = nested.getOriginators();
+            assertThat(originators).as("Originators in %s should be null or empty", nestedField).isNullOrEmpty();
+            return adjustmentData.getTransactionToAdjust().getId();
+        }).isEqualTo(adjustedTransactionId);
+        log.info("Verified no originators in LoanAdjustTransactionBusinessEvent.{}", nestedField);
+    }
+
+    @Then("LoanAccrualTransactionCreatedBusinessEvent is created with originator details on {string}")
+    public void verifyOriginatorInAccrualEvent(String date) {
+        long loanId = getLoanId();
+        String expectedExternalId = testContext().get(TestContextKey.ORIGINATOR_EXTERNAL_ID);
+
+        GetLoansLoanIdResponse loanDetails = ok(() -> fineractClient.loans().retrieveLoan(loanId,
+                Map.of("staffInSelectedOfficeOnly", "false", "associations", "transactions")));
+        GetLoansLoanIdTransactions accrualTransaction = loanDetails.getTransactions().stream()
+                .filter(t -> date.equals(FORMATTER.format(t.getDate())) && "Accrual".equals(t.getType().getValue()))
+                .reduce((first, second) -> second)
+                .orElseThrow(() -> new IllegalStateException(String.format("No Accrual transaction found on %s", date)));
+
+        eventAssertion.assertEvent(LoanAccrualTransactionCreatedBusinessEvent.class, accrualTransaction.getId())
+                .extractingData(loanTransactionDataV1 -> {
+                    List<OriginatorDetailsV1> originators = loanTransactionDataV1.getOriginators();
+                    assertThat(originators).as("Originators in LoanAccrualTransactionCreatedBusinessEvent should not be null or empty")
+                            .isNotNull().isNotEmpty();
+                    assertThat(originators.get(0).getExternalId()).as("Originator externalId in LoanAccrualTransactionCreatedBusinessEvent")
+                            .isEqualTo(expectedExternalId);
+                    assertThat(originators.get(0).getStatus()).as("Originator status in LoanAccrualTransactionCreatedBusinessEvent")
+                            .isEqualTo("ACTIVE");
+                    return loanTransactionDataV1.getId();
+                }).isEqualTo(accrualTransaction.getId());
+        log.info("Verified originator {} in LoanAccrualTransactionCreatedBusinessEvent on {} for loan {}", expectedExternalId, date,
+                loanId);
+    }
+
+    private LoanTransactionDataV1 resolveAdjustmentField(LoanTransactionAdjustmentDataV1 data, String field) {
+        return switch (field) {
+            case "transactionToAdjust" -> data.getTransactionToAdjust();
+            case "newTransactionDetail" -> data.getNewTransactionDetail();
+            default -> throw new IllegalArgumentException("Unknown adjustment field: " + field);
+        };
     }
 
     // --- Helper methods ---

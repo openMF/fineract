@@ -112,12 +112,18 @@ public class BatchApiTest extends BaseLoanIntegrationTest {
         this.datatableHelper = new DatatableHelper(this.requestSpec, this.responseSpec);
         globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_AUTO_GENERATED_EXTERNAL_ID,
                 new PutGlobalConfigurationsRequest().enabled(true));
+        globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                new PutGlobalConfigurationsRequest().enabled(false));
+
     }
 
     @AfterEach
     public void postActions() {
         globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_AUTO_GENERATED_EXTERNAL_ID,
                 new PutGlobalConfigurationsRequest().enabled(false));
+        globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ALLOW_CASH_AND_NON_CASH_ACCRUAL,
+                new PutGlobalConfigurationsRequest().enabled(true));
+
     }
 
     /**

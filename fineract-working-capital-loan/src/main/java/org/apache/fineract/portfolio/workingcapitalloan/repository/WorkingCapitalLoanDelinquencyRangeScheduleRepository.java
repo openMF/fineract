@@ -18,18 +18,27 @@
  */
 package org.apache.fineract.portfolio.workingcapitalloan.repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDelinquencyRangeSchedule;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface WorkingCapitalLoanDelinquencyRangeScheduleRepository
         extends JpaRepository<WorkingCapitalLoanDelinquencyRangeSchedule, Long> {
 
     List<WorkingCapitalLoanDelinquencyRangeSchedule> findByLoanIdOrderByPeriodNumberAsc(Long loanId);
 
+    @Query("SELECT SUM(s.delinquentAmount) FROM WorkingCapitalLoanDelinquencyRangeSchedule s WHERE s.loan.id = :loanId AND s.delinquentAmount > 0")
+    BigDecimal getTotalDelinquentAmount(@Param("loanId") Long loanId);
+
     Optional<WorkingCapitalLoanDelinquencyRangeSchedule> findTopByLoanIdOrderByPeriodNumberDesc(Long loanId);
+
+    List<WorkingCapitalLoanDelinquencyRangeSchedule> findByLoanIdAndToDateIsBeforeAndMinPaymentCriteriaMet(Long loanId,
+            LocalDate toDateBefore, Boolean minPaymentCriteriaMet);
 
     Optional<WorkingCapitalLoanDelinquencyRangeSchedule> findByLoanIdAndFromDateLessThanEqualAndToDateGreaterThanEqual(Long loanId,
             LocalDate date, LocalDate date2);

@@ -150,7 +150,7 @@ public class ExternalEventConfigurationValidationServiceTest {
                 () -> underTest.afterPropertiesSet());
 
         // then
-        String expectedMessage = "No external events configured";
+        String expectedMessage = "Configuration not found for external event LoanAccountsStayedLockedBusinessEvent";
 
         String actualMessage = exceptionThrown.getMessage();
 

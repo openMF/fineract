@@ -18,15 +18,12 @@
  */
 package org.apache.fineract.portfolio.loanorigination.enricher;
 
-import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.avro.loan.v1.LoanAccountDataV1;
 import org.apache.fineract.avro.loan.v1.OriginatorDetailsV1;
 import org.apache.fineract.infrastructure.core.service.DataEnricher;
-import org.apache.fineract.portfolio.loanorigination.domain.LoanOriginator;
-import org.apache.fineract.portfolio.loanorigination.domain.LoanOriginatorMapping;
-import org.apache.fineract.portfolio.loanorigination.domain.LoanOriginatorMappingRepository;
+import org.apache.fineract.portfolio.loanorigination.helper.LoanOriginatorDetailsResolver;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -35,8 +32,7 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(value = "fineract.module.loan-origination.enabled", havingValue = "true")
 public class LoanAccountDataV1OriginatorEnricher implements DataEnricher<LoanAccountDataV1> {
 
-    private final LoanOriginatorMappingRepository loanOriginatorMappingRepository;
-    private final LoanOriginatorAvroMapper loanOriginatorAvroMapper;
+    private final LoanOriginatorDetailsResolver loanOriginatorDetailsResolver;
 
     @Override
     public boolean isDataTypeSupported(final Class<LoanAccountDataV1> dataType) {
@@ -49,22 +45,7 @@ public class LoanAccountDataV1OriginatorEnricher implements DataEnricher<LoanAcc
             return;
         }
 
-        final List<LoanOriginatorMapping> mappings = loanOriginatorMappingRepository.findByLoanIdWithOriginatorDetails(data.getId());
-        if (mappings == null || mappings.isEmpty()) {
-            return;
-        }
-
-        final List<OriginatorDetailsV1> originators = new ArrayList<>();
-        for (LoanOriginatorMapping mapping : mappings) {
-            final LoanOriginator originator = mapping.getOriginator();
-            if (originator != null) {
-                final OriginatorDetailsV1 originatorDetails = loanOriginatorAvroMapper.toAvro(originator);
-                if (originatorDetails != null) {
-                    originators.add(originatorDetails);
-                }
-            }
-        }
-
+        final List<OriginatorDetailsV1> originators = loanOriginatorDetailsResolver.resolveOriginatorDetails(data.getId());
         if (!originators.isEmpty()) {
             data.setOriginators(originators);
         }

@@ -25,6 +25,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.Getter;
@@ -39,6 +40,10 @@ import org.apache.fineract.infrastructure.core.domain.AbstractAuditableWithUTCDa
 @Table(name = "m_wc_loan_delinquency_range_schedule", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "wc_loan_id", "period_number" }, name = "uc_wc_delinquency_range_schedule_loan_period") })
 public class WorkingCapitalLoanDelinquencyRangeSchedule extends AbstractAuditableWithUTCDateTimeCustom<Long> {
+
+    @Version
+    @Column(name = "version")
+    private Integer version;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wc_loan_id", nullable = false)

@@ -41,7 +41,7 @@ public class WcpCobBusinessStepInitializerStep implements FineractGlobalInitiali
     public void initialize() throws Exception {
         try {
             JobBusinessStepConfigData response = workFlowJobHelper.getConfiguredWorkflowSteps(WCP_COB_JOB_NAME);
-            log.info("WCP COB configured business steps: {}", response.getBusinessSteps());
+            log.debug("WCP COB configured business steps: {}", response.getBusinessSteps());
         } catch (CallFailedRuntimeException e) {
             log.warn("WCP COB business steps retrieval failed (expected if WCP COB not deployed): {}", e.getMessage());
             log.debug("Full stack trace:", e);

@@ -328,7 +328,7 @@ public class WorkingCapitalLoanProductValidationTest {
     public void testCreateWorkingCapitalLoanProductWithZeroDiscountDefault() {
         // Given - discount can be 0 (zeroOrPositiveAmount)
         final String uniqueName = "Test wcl Product " + UUID.randomUUID().toString().substring(0, 8);
-        final String uniqueShortName = "TW" + UUID.randomUUID().toString().substring(0, 2);
+        final String uniqueShortName = Utils.uniqueRandomStringGenerator("", 4);
         final PostWorkingCapitalLoanProductsRequest request = new WorkingCapitalLoanProductTestBuilder().withName(uniqueName)
                 .withShortName(uniqueShortName).withDiscount(BigDecimal.ZERO).build();
 
@@ -375,7 +375,7 @@ public class WorkingCapitalLoanProductValidationTest {
         // Given - minPeriodPaymentRate can be 0 (zeroOrPositiveAmount)
         // Note: periodPaymentRate must be >= min, so we set it to 0 as well
         final String uniqueName = "Test wcl Product " + UUID.randomUUID().toString().substring(0, 8);
-        final String uniqueShortName = "TW" + UUID.randomUUID().toString().substring(0, 2);
+        final String uniqueShortName = Utils.uniqueRandomStringGenerator("", 4);
         final PostWorkingCapitalLoanProductsRequest request = new WorkingCapitalLoanProductTestBuilder().withName(uniqueName)
                 .withShortName(uniqueShortName).withMinPeriodPaymentRate(BigDecimal.ZERO).withPeriodPaymentRate(BigDecimal.ZERO).build();
 
@@ -391,7 +391,7 @@ public class WorkingCapitalLoanProductValidationTest {
         // Given - maxPeriodPaymentRate can be 0 (zeroOrPositiveAmount)
         // Note: periodPaymentRate must be <= max, so we set it to 0 as well
         final String uniqueName = "Test wcl Product " + UUID.randomUUID().toString().substring(0, 8);
-        final String uniqueShortName = "TW" + UUID.randomUUID().toString().substring(0, 2);
+        final String uniqueShortName = Utils.uniqueRandomStringGenerator("", 4);
         final PostWorkingCapitalLoanProductsRequest request = new WorkingCapitalLoanProductTestBuilder().withName(uniqueName)
                 .withShortName(uniqueShortName).withMaxPeriodPaymentRate(BigDecimal.ZERO).withPeriodPaymentRate(BigDecimal.ZERO).build();
 
@@ -685,8 +685,8 @@ public class WorkingCapitalLoanProductValidationTest {
     public void testCreateWorkingCapitalLoanProductWithDuplicateName() {
         // Given
         final String uniqueName = "Test wcl Product " + UUID.randomUUID().toString().substring(0, 8);
-        final String uniqueShortName1 = "TW" + UUID.randomUUID().toString().substring(0, 2);
-        final String uniqueShortName2 = "TW" + UUID.randomUUID().toString().substring(0, 2);
+        final String uniqueShortName1 = Utils.uniqueRandomStringGenerator("", 4);
+        final String uniqueShortName2 = Utils.uniqueRandomStringGenerator("", 4);
         final PostWorkingCapitalLoanProductsRequest request1 = new WorkingCapitalLoanProductTestBuilder().withName(uniqueName)
                 .withShortName(uniqueShortName1).build();
         final PostWorkingCapitalLoanProductsRequest request2 = new WorkingCapitalLoanProductTestBuilder().withName(uniqueName)
@@ -732,8 +732,8 @@ public class WorkingCapitalLoanProductValidationTest {
         // Given
         final String uniqueName1 = "Test wcl Product " + UUID.randomUUID().toString().substring(0, 8);
         final String uniqueName2 = "Test wcl Product " + UUID.randomUUID().toString().substring(0, 8);
-        final String uniqueShortName1 = "TW" + UUID.randomUUID().toString().substring(0, 2);
-        final String uniqueShortName2 = "TW" + UUID.randomUUID().toString().substring(0, 2);
+        final String uniqueShortName1 = Utils.uniqueRandomStringGenerator("", 4);
+        final String uniqueShortName2 = Utils.uniqueRandomStringGenerator("", 4);
         final String externalId = UUID.randomUUID().toString();
         final PostWorkingCapitalLoanProductsRequest request1 = new WorkingCapitalLoanProductTestBuilder().withName(uniqueName1)
                 .withShortName(uniqueShortName1).withExternalId(externalId).build();
@@ -756,7 +756,7 @@ public class WorkingCapitalLoanProductValidationTest {
     public void testUpdateWorkingCapitalLoanProductWithInvalidDateRange() {
         // Given
         final String uniqueName = "Test wcl Product " + UUID.randomUUID().toString().substring(0, 8);
-        final String uniqueShortName = "TW" + UUID.randomUUID().toString().substring(0, 2);
+        final String uniqueShortName = Utils.uniqueRandomStringGenerator("", 4);
         final PostWorkingCapitalLoanProductsRequest createRequest = new WorkingCapitalLoanProductTestBuilder().withName(uniqueName)
                 .withShortName(uniqueShortName).build();
         final Long productId = wclProductHelper.createWorkingCapitalLoanProduct(createRequest).getResourceId();

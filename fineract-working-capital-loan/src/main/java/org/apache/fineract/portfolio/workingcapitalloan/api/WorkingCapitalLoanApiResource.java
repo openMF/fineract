@@ -20,6 +20,7 @@ package org.apache.fineract.portfolio.workingcapitalloan.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -35,7 +36,10 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.UriInfo;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.commands.domain.CommandWrapper;
 import org.apache.fineract.commands.service.CommandWrapperBuilder;
@@ -49,9 +53,11 @@ import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.portfolio.workingcapitalloan.WorkingCapitalLoanConstants;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanData;
+import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanDelinquencyTagHistoryData;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanTemplateData;
 import org.apache.fineract.portfolio.workingcapitalloan.exception.WorkingCapitalLoanNotFoundException;
 import org.apache.fineract.portfolio.workingcapitalloan.service.WorkingCapitalLoanApplicationReadPlatformService;
+import org.apache.fineract.portfolio.workingcapitalloan.service.WorkingCapitalLoanDelinquencyReadPlatformService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -67,6 +73,7 @@ public class WorkingCapitalLoanApiResource {
     private final PlatformSecurityContext context;
     private final WorkingCapitalLoanApplicationReadPlatformService readPlatformService;
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
+    private final WorkingCapitalLoanDelinquencyReadPlatformService workingCapitalLoanDelinquencyReadPlatformService;
 
     @GET
     @Path("template")
@@ -184,6 +191,39 @@ public class WorkingCapitalLoanApiResource {
     public CommandProcessingResult deleteLoanApplication(
             @PathParam("loanExternalId") @Parameter(description = "loanExternalId", required = true) final String loanExternalId) {
         return deleteLoanApplication(null, loanExternalId);
+    }
+
+    @GET
+    @Path("{loanId}/delinquencyrangetags")
+    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the Loan Delinquency Tag history using the Loan Id", description = "", operationId = "getDelinquencyRangeScheduleTagHistoryById")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.GetWorkingCapitalLoanDelinquencyRangeScheduleTagHistoryResponse.class)))) })
+    public List<WorkingCapitalLoanDelinquencyTagHistoryData> getDelinquencyRangeScheduleTagHistoryById(
+            @PathParam("loanId") @Parameter(description = "loanId", required = true) final Long loanId, @Context final UriInfo uriInfo) {
+        return getDelinquencyRangeScheduleTagHistory(loanId, null, uriInfo);
+    }
+
+    @GET
+    @Path("external-id/{externalId}/delinquencyrangetags")
+    @Consumes({ MediaType.TEXT_HTML, MediaType.APPLICATION_JSON })
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the Loan Delinquency Tag history using the Loan Id", description = "", operationId = "getDelinquencyRangeScheduleTagHistoryById")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.GetWorkingCapitalLoanDelinquencyRangeScheduleTagHistoryResponse.class)))) })
+    public List<WorkingCapitalLoanDelinquencyTagHistoryData> getDelinquencyRangeScheduleTagHistoryById(
+            @PathParam("externalId") @Parameter(description = "externalId", required = true) final String loanExternalId,
+            @Context final UriInfo uriInfo) {
+        return getDelinquencyRangeScheduleTagHistory(null, loanExternalId, uriInfo);
+    }
+
+    private List<WorkingCapitalLoanDelinquencyTagHistoryData> getDelinquencyRangeScheduleTagHistory(final Long loanId,
+            final String loanExternalIdStr, final UriInfo uriInfo) {
+        context.authenticatedUser().validateHasReadPermission("DELINQUENCY_TAGS");
+        final Long resolvedLoanId = loanId == null ? readPlatformService.getResolvedLoanId(ExternalIdFactory.produce(loanExternalIdStr))
+                : loanId;
+        return workingCapitalLoanDelinquencyReadPlatformService.retrieveDelinquencyRangeScheduleTagHistory(resolvedLoanId);
     }
 
     @POST

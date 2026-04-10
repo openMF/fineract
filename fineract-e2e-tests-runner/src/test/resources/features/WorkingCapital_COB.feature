@@ -8,9 +8,10 @@ Feature: Working Capital COB Job
   Scenario: Verify WC COB job registration, default business step, and scheduler metadata
     Then Admin checks that configured business jobs contain "WORKING_CAPITAL_LOAN_CLOSE_OF_BUSINESS"
     Then Admin verifies configured business steps for "WORKING_CAPITAL_LOAN_CLOSE_OF_BUSINESS" match:
-      | stepName                       | order |
-      | DUMMY_BUSINESS_STEP            | 1     |
-      | WC_DELINQUENCY_RANGE_SCHEDULE  | 2     |
+      | stepName                           | order |
+      | DUMMY_BUSINESS_STEP                | 1     |
+      | WC_DELINQUENCY_RANGE_SCHEDULE      | 2     |
+      | WC_LOAN_DELINQUENCY_CLASSIFICATION | 3     |
     Then Admin verifies scheduler job "WC_COB" has display name "Working Capital Loan COB"
     Then Admin verifies scheduler job "WC_COB" has active status "false"
 

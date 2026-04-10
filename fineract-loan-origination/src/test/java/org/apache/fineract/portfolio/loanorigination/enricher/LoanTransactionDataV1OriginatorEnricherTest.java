@@ -31,11 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import org.apache.fineract.avro.loan.v1.LoanTransactionDataV1;
 import org.apache.fineract.avro.loan.v1.OriginatorDetailsV1;
-import org.apache.fineract.infrastructure.core.domain.ExternalId;
-import org.apache.fineract.portfolio.loanorigination.domain.LoanOriginator;
-import org.apache.fineract.portfolio.loanorigination.domain.LoanOriginatorMapping;
-import org.apache.fineract.portfolio.loanorigination.domain.LoanOriginatorMappingRepository;
-import org.apache.fineract.portfolio.loanorigination.domain.LoanOriginatorStatus;
+import org.apache.fineract.portfolio.loanorigination.helper.LoanOriginatorDetailsResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,10 +43,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class LoanTransactionDataV1OriginatorEnricherTest {
 
     @Mock
-    private LoanOriginatorMappingRepository loanOriginatorMappingRepository;
-
-    @Mock
-    private LoanOriginatorAvroMapper loanOriginatorAvroMapper;
+    private LoanOriginatorDetailsResolver loanOriginatorDetailsResolver;
 
     @InjectMocks
     private LoanTransactionDataV1OriginatorEnricher enricher;
@@ -73,21 +66,14 @@ class LoanTransactionDataV1OriginatorEnricherTest {
     @Test
     void testEnrich_WithOriginators() {
         // Given
-        final LoanOriginator originator = createTestOriginator(1L, "test-originator-1", "Test Originator 1");
-        final LoanOriginatorMapping mapping = LoanOriginatorMapping.create(loanId, originator);
-        final List<LoanOriginatorMapping> mappings = List.of(mapping);
-
         final OriginatorDetailsV1 originatorDetails = createOriginatorDetailsV1(1L, "test-originator-1", "Test Originator 1");
-
-        when(loanOriginatorMappingRepository.findByLoanIdWithOriginatorDetails(loanId)).thenReturn(mappings);
-        when(loanOriginatorAvroMapper.toAvro(originator)).thenReturn(originatorDetails);
+        when(loanOriginatorDetailsResolver.resolveOriginatorDetails(loanId)).thenReturn(List.of(originatorDetails));
 
         // When
         enricher.enrich(loanTransactionData);
 
         // Then
-        verify(loanOriginatorMappingRepository).findByLoanIdWithOriginatorDetails(loanId);
-        verify(loanOriginatorAvroMapper).toAvro(originator);
+        verify(loanOriginatorDetailsResolver).resolveOriginatorDetails(loanId);
         assertNotNull(loanTransactionData.getOriginators());
         assertEquals(1, loanTransactionData.getOriginators().size());
         assertEquals("test-originator-1", loanTransactionData.getOriginators().getFirst().getExternalId());
@@ -96,17 +82,9 @@ class LoanTransactionDataV1OriginatorEnricherTest {
     @Test
     void testEnrich_WithMultipleOriginators() {
         // Given
-        final LoanOriginator originator1 = createTestOriginator(1L, "test-originator-1", "Test Originator 1");
-        final LoanOriginator originator2 = createTestOriginator(2L, "test-originator-2", "Test Originator 2");
-        final List<LoanOriginatorMapping> mappings = List.of(LoanOriginatorMapping.create(loanId, originator1),
-                LoanOriginatorMapping.create(loanId, originator2));
-
         final OriginatorDetailsV1 details1 = createOriginatorDetailsV1(1L, "test-originator-1", "Test Originator 1");
         final OriginatorDetailsV1 details2 = createOriginatorDetailsV1(2L, "test-originator-2", "Test Originator 2");
-
-        when(loanOriginatorMappingRepository.findByLoanIdWithOriginatorDetails(loanId)).thenReturn(mappings);
-        when(loanOriginatorAvroMapper.toAvro(originator1)).thenReturn(details1);
-        when(loanOriginatorAvroMapper.toAvro(originator2)).thenReturn(details2);
+        when(loanOriginatorDetailsResolver.resolveOriginatorDetails(loanId)).thenReturn(List.of(details1, details2));
 
         // When
         enricher.enrich(loanTransactionData);
@@ -119,14 +97,13 @@ class LoanTransactionDataV1OriginatorEnricherTest {
     @Test
     void testEnrich_NoOriginators() {
         // Given
-        when(loanOriginatorMappingRepository.findByLoanIdWithOriginatorDetails(loanId)).thenReturn(Collections.emptyList());
+        when(loanOriginatorDetailsResolver.resolveOriginatorDetails(loanId)).thenReturn(Collections.emptyList());
 
         // When
         enricher.enrich(loanTransactionData);
 
         // Then
-        verify(loanOriginatorMappingRepository).findByLoanIdWithOriginatorDetails(loanId);
-        verify(loanOriginatorAvroMapper, never()).toAvro(any());
+        verify(loanOriginatorDetailsResolver).resolveOriginatorDetails(loanId);
         assertNull(loanTransactionData.getOriginators());
     }
 
@@ -139,7 +116,7 @@ class LoanTransactionDataV1OriginatorEnricherTest {
         enricher.enrich(loanTransactionData);
 
         // Then
-        verify(loanOriginatorMappingRepository, never()).findByLoanIdWithOriginatorDetails(any());
+        verify(loanOriginatorDetailsResolver, never()).resolveOriginatorDetails(any());
         assertNull(loanTransactionData.getOriginators());
     }
 
@@ -149,13 +126,7 @@ class LoanTransactionDataV1OriginatorEnricherTest {
         enricher.enrich(null);
 
         // Then
-        verify(loanOriginatorMappingRepository, never()).findByLoanIdWithOriginatorDetails(any());
-    }
-
-    private LoanOriginator createTestOriginator(final Long id, final String externalId, final String name) {
-        final LoanOriginator originator = LoanOriginator.create(new ExternalId(externalId), name, LoanOriginatorStatus.ACTIVE, null, null);
-        originator.setId(id);
-        return originator;
+        verify(loanOriginatorDetailsResolver, never()).resolveOriginatorDetails(any());
     }
 
     private OriginatorDetailsV1 createOriginatorDetailsV1(final Long id, final String externalId, final String name) {

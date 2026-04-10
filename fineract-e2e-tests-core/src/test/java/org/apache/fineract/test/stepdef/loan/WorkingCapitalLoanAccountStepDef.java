@@ -863,7 +863,16 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         final PostWorkingCapitalLoansResponse response = ok(
                 () -> fineractClient.workingCapitalLoans().submitWorkingCapitalLoanApplication(loansRequest));
         testContext().set(TestContextKey.LOAN_CREATE_RESPONSE, response);
+        trackLoanIdIfEnabled(response.getLoanId());
         log.info("Working Capital Loan created with ID: {}", response.getLoanId());
+    }
+
+    @SuppressWarnings("unchecked")
+    private void trackLoanIdIfEnabled(final Long loanId) {
+        if (testContext().get(TestContextKey.WC_LOAN_IDS) == null) {
+            testContext().set(TestContextKey.WC_LOAN_IDS, new ArrayList<>());
+        }
+        ((List<Long>) testContext().get(TestContextKey.WC_LOAN_IDS)).add(loanId);
     }
 
     private void modifyWorkingCapitalLoanAccount(final List<String> loanData) {
@@ -945,6 +954,11 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
     }
 
     private Long resolveLoanProductId(final String loanProductName) {
+        if ("WCLP_DELINQUENCY".equals(loanProductName)) {
+            final PostWorkingCapitalLoanProductsResponse response = testContext()
+                    .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+            return response.getResourceId();
+        }
         final DefaultWorkingCapitalLoanProduct product = DefaultWorkingCapitalLoanProduct.valueOf(loanProductName);
         return workingCapitalLoanProductResolver.resolve(product);
     }

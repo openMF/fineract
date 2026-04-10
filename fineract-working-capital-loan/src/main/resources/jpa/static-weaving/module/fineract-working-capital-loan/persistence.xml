@@ -158,6 +158,7 @@
         <class>org.apache.fineract.cob.domain.WorkingCapitalLoanAccountLock</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDelinquencyAction</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDelinquencyRangeSchedule</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDelinquencyRangeScheduleTagHistory</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanBalance</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDisbursementDetails</class>

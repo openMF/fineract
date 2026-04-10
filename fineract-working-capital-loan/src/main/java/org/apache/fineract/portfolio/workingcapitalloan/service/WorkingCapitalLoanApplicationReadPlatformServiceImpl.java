@@ -30,10 +30,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.core.api.ApiFacingEnum;
 import org.apache.fineract.infrastructure.core.data.StringEnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
+import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.portfolio.accountdetails.data.WorkingCapitalLoanAccountSummaryData;
 import org.apache.fineract.portfolio.client.service.ClientReadPlatformService;
 import org.apache.fineract.portfolio.delinquency.data.DelinquencyBucketData;
 import org.apache.fineract.portfolio.delinquency.service.DelinquencyReadPlatformService;
+import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanCollectionData;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanData;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanTemplateData;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
@@ -66,6 +68,7 @@ public class WorkingCapitalLoanApplicationReadPlatformServiceImpl implements Wor
     private final DelinquencyReadPlatformService delinquencyReadPlatformService;
     private final WorkingCapitalLoanSummaryMapper workingCapitalLoanSummaryMapper;
     private final WorkingCapitalBreachReadPlatformService breachReadPlatformService;
+    private final WorkingCapitalLoanDelinquencyReadPlatformService workingCapitalLoanDelinquencyReadPlatformService;
 
     @Override
     public WorkingCapitalLoanTemplateData retrieveTemplate(final Long productId, final Long clientId) {
@@ -145,7 +148,11 @@ public class WorkingCapitalLoanApplicationReadPlatformServiceImpl implements Wor
     public WorkingCapitalLoanData retrieveOne(final Long loanId) {
         final WorkingCapitalLoan loan = this.repository.findByIdWithFullDetails(loanId)
                 .orElseThrow(() -> new WorkingCapitalLoanNotFoundException(loanId));
-        return this.mapper.toData(loan);
+        WorkingCapitalLoanData data = this.mapper.toData(loan);
+        WorkingCapitalLoanCollectionData collectionData = workingCapitalLoanDelinquencyReadPlatformService.getCollectionData(loanId,
+                ThreadLocalContextUtil.getBusinessDate());
+        data.setCollectionData(collectionData);
+        return data;
     }
 
     @Override
@@ -154,7 +161,11 @@ public class WorkingCapitalLoanApplicationReadPlatformServiceImpl implements Wor
                 .orElseThrow(() -> new WorkingCapitalLoanNotFoundException(externalId));
         final WorkingCapitalLoan loanWithDetails = this.repository.findByIdWithFullDetails(loan.getId())
                 .orElseThrow(() -> new WorkingCapitalLoanNotFoundException(loan.getId()));
-        return this.mapper.toData(loanWithDetails);
+        WorkingCapitalLoanData data = this.mapper.toData(loanWithDetails);
+        WorkingCapitalLoanCollectionData collectionData = workingCapitalLoanDelinquencyReadPlatformService.getCollectionData(loan.getId(),
+                ThreadLocalContextUtil.getBusinessDate());
+        data.setCollectionData(collectionData);
+        return data;
     }
 
     @Override

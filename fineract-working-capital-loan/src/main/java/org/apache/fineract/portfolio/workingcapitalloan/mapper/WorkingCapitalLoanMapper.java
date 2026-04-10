@@ -72,6 +72,7 @@ public interface WorkingCapitalLoanMapper {
     @Mapping(target = "transactions", source = "transactions")
     @Mapping(target = "delinquencyGraceDays", source = "loanProductRelatedDetails.delinquencyGraceDays")
     @Mapping(target = "delinquencyStartType", source = "loanProductRelatedDetails", qualifiedByName = "delinquencyStartTypeData")
+    @Mapping(target = "collectionData", ignore = true)
     WorkingCapitalLoanData toData(WorkingCapitalLoan loan);
 
     List<WorkingCapitalLoanData> toDataList(List<WorkingCapitalLoan> loans);

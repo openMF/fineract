@@ -26,6 +26,7 @@ import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,13 +39,16 @@ import org.apache.fineract.client.models.CommandProcessingResult;
 import org.apache.fineract.client.models.DeleteWorkingCapitalLoanProductsProductIdResponse;
 import org.apache.fineract.client.models.GetConfigurableAttributes;
 import org.apache.fineract.client.models.GetPaymentAllocation;
+import org.apache.fineract.client.models.GetWorkingCapitalLoanDelinquencyRangeScheduleTagHistoryResponse;
 import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsProductIdResponse;
 import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsResponse;
 import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsTemplateResponse;
+import org.apache.fineract.client.models.InternalWorkingCapitalLoanPaymentRequest;
 import org.apache.fineract.client.models.PostAllowAttributeOverrides;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest.AccountingRuleEnum;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsResponse;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansResponse;
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdResponse;
 import org.apache.fineract.client.models.StringEnumOptionData;
@@ -59,6 +63,7 @@ import org.apache.fineract.test.helper.Utils;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
 import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.Assertions;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -717,6 +722,53 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         final SoftAssertions assertions = new SoftAssertions();
         assertGLAccountMappingId(assertions, mappings, key, expectedAccountId);
         assertions.assertAll();
+    }
+
+    private Long getWorkingCapitalLoanResourceId() {
+        PostWorkingCapitalLoansResponse response = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        return response.getResourceId();
+    }
+
+    @When("Admin makes Internal Payment {string} on {string}")
+    public void internalPayWCLoan(String amount, String transactionDate) {
+        Long resourceId = getWorkingCapitalLoanResourceId();
+        fineractFeignClient.workingCapitalLoans().payment(resourceId, new InternalWorkingCapitalLoanPaymentRequest()
+                .amount(BigDecimal.valueOf(Double.parseDouble(amount))).transactionDate(LocalDate.parse(transactionDate)));
+    }
+
+    @Then("Delinquency Tag History for Working Capital loan has lines:")
+    public void checkDelinquencyHistory(final DataTable table) {
+        Long resourceId = getWorkingCapitalLoanResourceId();
+        List<GetWorkingCapitalLoanDelinquencyRangeScheduleTagHistoryResponse> actualLines = ok(
+                () -> fineractFeignClient.workingCapitalLoans().getDelinquencyRangeScheduleTagHistoryById(resourceId));
+
+        // Sort by addedOnDate (descending), then by periodNumber (descending)
+        actualLines.sort((a, b) -> {
+            int dateCompare = b.getAddedOnDate().compareTo(a.getAddedOnDate());
+            if (dateCompare != 0) {
+                return dateCompare;
+            }
+            return b.getPeriodNumber().compareTo(a.getPeriodNumber());
+        });
+
+        log.debug("Sorted Loan Delinquency History: {}", actualLines);
+        List<List<String>> rows = table.asLists();
+        Assertions.assertEquals(rows.size() - 1, actualLines.size());
+        for (int i = 0; i < rows.size() - 1; i++) {
+            GetWorkingCapitalLoanDelinquencyRangeScheduleTagHistoryResponse actual = actualLines.get(i);
+            Assertions.assertNotNull(actual);
+            List<String> expected = rows.get(i + 1);
+            Assertions.assertEquals(expected.get(0), actual.getPeriodNumber() != null ? actual.getPeriodNumber().toString() : null);
+            Assertions.assertEquals(expected.get(1), actual.getAddedOnDate() != null ? actual.getAddedOnDate().toString() : null);
+            Assertions.assertEquals(expected.get(2), actual.getLiftedOnDate() != null ? actual.getLiftedOnDate().toString() : null);
+
+            Assertions.assertNotNull(actual.getDelinquencyRange());
+            Assertions.assertEquals(expected.get(3), actual.getDelinquencyRange().getClassification());
+            Assertions.assertEquals(expected.get(4), actual.getDelinquencyRange().getMinimumAgeDays() == null ? null
+                    : actual.getDelinquencyRange().getMinimumAgeDays().toString());
+            Assertions.assertEquals(expected.get(5), actual.getDelinquencyRange().getMaximumAgeDays() == null ? null
+                    : actual.getDelinquencyRange().getMaximumAgeDays().toString());
+        }
     }
 
     public PostWorkingCapitalLoanProductsResponse createWorkingCapitalLoanProduct(

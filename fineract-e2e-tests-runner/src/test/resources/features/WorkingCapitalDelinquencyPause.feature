@@ -154,7 +154,7 @@ Feature: Working Capital Delinquency Pause
       | PAUSE  | 2026-02-15 | 2026-02-25 |
     And Working Capital loan delinquency range schedule has the following data:
       | periodNumber | fromDate   | toDate     | expectedAmount | paidAmount | outstandingAmount | minPaymentCriteriaMet | delinquentAmount | delinquentDays |
-      | 1            | 2026-01-01 | 2026-01-30 | 270.0          | 0.0        | 270.0             | false                  | null             | null           |
+      | 1            | 2026-01-01 | 2026-01-30 | 270.0          | 0.0        | 270.0             | false                  | 270.0             | 16           |
       | 2            | 2026-01-31 | 2026-03-11 | 270.0          | 0.0        | 270.0             | null                  | null             | null           |
 
   @TestRailId:C74485
@@ -197,7 +197,7 @@ Feature: Working Capital Delinquency Pause
     And Admin runs inline COB job for Working Capital Loan by loanId
     And Working Capital loan delinquency range schedule has the following data:
       | periodNumber | fromDate   | toDate     | expectedAmount | paidAmount | outstandingAmount | minPaymentCriteriaMet | delinquentAmount | delinquentDays |
-      | 1            | 2026-01-01 | 2026-03-12 | 270.0          | 0.0        | 270.0             | false                  | null             | null           |
+      | 1            | 2026-01-01 | 2026-03-12 | 270.0          | 0.0        | 270.0             | false                  | 270.0             | 3           |
       | 2            | 2026-03-13 | 2026-04-11 | 270.0          | 0.0        | 270.0             | null                  | null             | null           |
 
   @TestRailId:C74486
