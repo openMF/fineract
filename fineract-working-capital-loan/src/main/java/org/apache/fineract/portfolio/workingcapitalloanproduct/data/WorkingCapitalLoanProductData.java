@@ -95,6 +95,7 @@ public class WorkingCapitalLoanProductData implements Serializable {
     private List<StringEnumOptionData> periodFrequencyTypeOptions;
     private List<StringEnumOptionData> advancedPaymentAllocationTypes;
     private List<StringEnumOptionData> delinquencyStartTypeOptions;
+    private List<StringEnumOptionData> delinquencyMinimumPaymentTypeOptions;
     private List<EnumOptionData> advancedPaymentAllocationTransactionTypes;
     private Collection<DelinquencyBucketData> delinquencyBucketOptions;
     private List<WorkingCapitalBreachData> breachOptions;
@@ -113,6 +114,7 @@ public class WorkingCapitalLoanProductData implements Serializable {
         setDelinquencyStartTypeOptions(productTemplate.getDelinquencyStartTypeOptions());
         setAccountingRuleOptions(productTemplate.getAccountingRuleOptions());
         setAccountingMappingOptions(productTemplate.getAccountingMappingOptions());
+        setDelinquencyMinimumPaymentTypeOptions(productTemplate.getDelinquencyMinimumPaymentTypeOptions());
         return this;
     }
 }

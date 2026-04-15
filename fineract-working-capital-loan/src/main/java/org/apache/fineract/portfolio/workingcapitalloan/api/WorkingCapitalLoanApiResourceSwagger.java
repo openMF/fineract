@@ -48,6 +48,7 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public Collection<WorkingCapitalLoanProductApiResourceSwagger.GetWorkingCapitalLoanProductsResponse.GetDelinquencyBucket> delinquencyBucketOptions;
         public List<StringEnumOptionData> periodFrequencyTypeOptions;
         public List<StringEnumOptionData> delinquencyStartTypeOptions;
+        public List<StringEnumOptionData> delinquencyMinimumPaymentTypeOptions;
         public List<WorkingCapitalLoanProductApiResourceSwagger.GetWorkingCapitalLoanProductsResponse.GetWorkingCapitalLoanBreach> breachOptions;
     }
 

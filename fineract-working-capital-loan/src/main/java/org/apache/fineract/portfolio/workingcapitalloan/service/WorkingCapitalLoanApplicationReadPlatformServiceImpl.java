@@ -34,6 +34,7 @@ import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.portfolio.accountdetails.data.WorkingCapitalLoanAccountSummaryData;
 import org.apache.fineract.portfolio.client.service.ClientReadPlatformService;
 import org.apache.fineract.portfolio.delinquency.data.DelinquencyBucketData;
+import org.apache.fineract.portfolio.delinquency.domain.DelinquencyMinimumPaymentType;
 import org.apache.fineract.portfolio.delinquency.service.DelinquencyReadPlatformService;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanCollectionData;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanData;
@@ -81,6 +82,8 @@ public class WorkingCapitalLoanApplicationReadPlatformServiceImpl implements Wor
         final List<WorkingCapitalBreachData> breachOptions = breachReadPlatformService.retrieveAll();
         final List<StringEnumOptionData> delinquencyStartTypeOptions = ApiFacingEnum
                 .getValuesAsStringEnumOptionDataList(WorkingCapitalLoanDelinquencyStartType.class);
+        final List<StringEnumOptionData> delinquencyMinimumPaymentTypeOptions = ApiFacingEnum
+                .getValuesAsStringEnumOptionDataList(DelinquencyMinimumPaymentType.class);
         final WorkingCapitalLoanData.WorkingCapitalLoanDataBuilder builder = WorkingCapitalLoanData.builder();
         if (productId != null) {
             final WorkingCapitalLoanProductData product = this.productReadPlatformService.retrieveWorkingCapitalLoanProduct(productId);
@@ -109,7 +112,8 @@ public class WorkingCapitalLoanApplicationReadPlatformServiceImpl implements Wor
                 .delinquencyBucketOptions(delinquencyBucketOptions)//
                 .periodFrequencyTypeOptions(periodFrequencyTypeOptions)//
                 .breachOptions(breachOptions)//
-                .delinquencyStartTypeOptions(delinquencyStartTypeOptions).build();
+                .delinquencyStartTypeOptions(delinquencyStartTypeOptions)//
+                .delinquencyMinimumPaymentTypeOptions(delinquencyMinimumPaymentTypeOptions).build();
     }
 
     @Override

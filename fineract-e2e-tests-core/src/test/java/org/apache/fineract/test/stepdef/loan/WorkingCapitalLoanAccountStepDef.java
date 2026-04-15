@@ -94,6 +94,35 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         createWorkingCapitalLoanAccount(data.get(1));
     }
 
+    @When("Admin creates a working capital loan using created product with the following data:")
+    public void createWorkingCapitalLoanUsingCreatedProduct(final DataTable table) {
+        final List<List<String>> data = table.asLists();
+        final List<String> rawData = data.get(1);
+        final Long clientId = extractClientId();
+        final PostWorkingCapitalLoanProductsResponse productResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long loanProductId = productResponse.getResourceId();
+
+        final String submittedOnDate = rawData.get(0);
+        final String expectedDisbursementDate = rawData.get(1);
+        final String principal = rawData.get(2);
+        final String totalPayment = rawData.get(3);
+        final String periodPaymentRate = rawData.get(4);
+        final String discount = rawData.get(5);
+
+        final PostWorkingCapitalLoansRequest loansRequest = workingCapitalLoanRequestFactory.defaultWorkingCapitalLoansRequest(clientId)
+                .productId(loanProductId).submittedOnDate(submittedOnDate).expectedDisbursementDate(expectedDisbursementDate)
+                .principalAmount(new BigDecimal(principal)).totalPayment(new BigDecimal(totalPayment))
+                .periodPaymentRate(new BigDecimal(periodPaymentRate))
+                .discount(discount != null && !discount.isEmpty() ? new BigDecimal(discount) : null);
+        testContext().set(TestContextKey.LOAN_CREATE_REQUEST, loansRequest);
+
+        final PostWorkingCapitalLoansResponse response = ok(
+                () -> fineractClient.workingCapitalLoans().submitWorkingCapitalLoanApplication(loansRequest));
+        testContext().set(TestContextKey.LOAN_CREATE_RESPONSE, response);
+        log.info("Working Capital Loan created with dynamic product ID: {}, Loan ID: {}", loanProductId, response.getLoanId());
+    }
+
     @Then("Working capital loan creation was successful")
     public void verifyWorkingCapitalLoanCreationSuccess() {
         final PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);

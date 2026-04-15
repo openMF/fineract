@@ -46,4 +46,5 @@
   <include relativeToChangelogFile="true" file="parts/0022_wc_breach_name.xml"/>
   <include relativeToChangelogFile="true" file="parts/0023_wc_loan_delinquency_action_reschedule.xml"/>
   <include relativeToChangelogFile="true" file="parts/0024_wc_loan_delinquincy_service.xml"/>
+  <include relativeToChangelogFile="true" file="parts/0025_breach_schedule.xml"/>
 </databaseChangeLog>

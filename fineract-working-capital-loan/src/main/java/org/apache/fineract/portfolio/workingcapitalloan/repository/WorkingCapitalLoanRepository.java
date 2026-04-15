@@ -110,6 +110,9 @@ public interface WorkingCapitalLoanRepository extends JpaRepository<WorkingCapit
     @Query("select loan.id, loan.externalId, loan.accountNumber from WorkingCapitalLoanAccountLock lock left join WorkingCapitalLoan loan on lock.loanId = loan.id where lock.lockPlacedOnCobBusinessDate = :cobBusinessDate")
     List<COBIdAndExternalIdAndAccountNo> findAllStayedLockedByCobBusinessDate(@Param("cobBusinessDate") LocalDate cobBusinessDate);
 
+    @Query("select min(d.actualDisbursementDate) from WorkingCapitalLoanDisbursementDetails d where d.wcLoan.id = :loanId and d.actualDisbursementDate is not null")
+    Optional<LocalDate> findFirstActualDisbursementDate(@Param("loanId") Long loanId);
+
     boolean existsByLoanProduct_Id(Long productId);
 
     List<WorkingCapitalLoan> findByClient_Id(Long clientId);

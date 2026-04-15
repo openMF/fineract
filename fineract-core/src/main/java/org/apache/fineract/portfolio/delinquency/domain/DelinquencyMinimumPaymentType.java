@@ -22,24 +22,25 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.infrastructure.core.api.ApiFacingEnum;
 import org.apache.fineract.infrastructure.core.data.StringEnumOptionData;
 
 @Getter
 @RequiredArgsConstructor
-public enum DelinquencyMinimumPaymentType {
+public enum DelinquencyMinimumPaymentType implements ApiFacingEnum<DelinquencyMinimumPaymentType> {
 
     PERCENTAGE(1L, "delinquencyMinimumPayment.percentage", "Percentage payment type"), //
     FLAT(2L, "delinquencyMinimumPayment.flat", "Flat payment type");
 
     private final Long id;
     private final String code;
-    private final String description;
+    private final String humanReadableName;
 
     public static List<StringEnumOptionData> toStringEnumOptions() {
         return Arrays.stream(values()).map(DelinquencyMinimumPaymentType::toData).toList();
     }
 
     public StringEnumOptionData toData() {
-        return new StringEnumOptionData(name(), getCode(), getDescription());
+        return new StringEnumOptionData(name(), getCode(), getHumanReadableName());
     }
 }

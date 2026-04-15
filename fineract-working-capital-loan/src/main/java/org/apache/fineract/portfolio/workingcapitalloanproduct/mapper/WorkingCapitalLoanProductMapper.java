@@ -83,6 +83,7 @@ public interface WorkingCapitalLoanProductMapper {
     @Mapping(target = "applyTemplate", ignore = true)
     @Mapping(target = "delinquencyBucketOptions", ignore = true)
     @Mapping(target = "delinquencyStartTypeOptions", ignore = true)
+    @Mapping(target = "delinquencyMinimumPaymentTypeOptions", ignore = true)
     WorkingCapitalLoanProductData toData(WorkingCapitalLoanProduct entity);
 
     List<WorkingCapitalLoanProductData> toDataList(List<WorkingCapitalLoanProduct> entities);

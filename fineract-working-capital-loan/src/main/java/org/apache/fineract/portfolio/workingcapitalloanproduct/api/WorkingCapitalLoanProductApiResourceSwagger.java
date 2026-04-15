@@ -361,6 +361,7 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public List<WorkingCapitalBreachData> breachOptions;
         public List<StringEnumOptionData> advancedPaymentAllocationTypes;
         public List<StringEnumOptionData> delinquencyStartTypeOptions;
+        public List<StringEnumOptionData> delinquencyMinimumPaymentTypeOptions;
         public List<EnumOptionData> advancedPaymentAllocationTransactionTypes;
         public List<GetWorkingCapitalLoanProductsResponse.GetDelinquencyBucket> delinquencyBucketOptions;
         public List<StringEnumOptionData> accountingRuleOptions;

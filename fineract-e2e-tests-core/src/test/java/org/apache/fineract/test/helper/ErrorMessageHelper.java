@@ -662,6 +662,12 @@ public final class ErrorMessageHelper {
                 actual.toString(), expected.toString());
     }
 
+    public static String wrongStatusCodeInBreachScheduleRetrieval(Integer actual, Integer expected, Long loanId) {
+        return String.format(
+                "Not the expected HTTP status code for GET breach-schedule on loanId %d: Actual code is: %s. Expected code is: %s", loanId,
+                actual.toString(), expected.toString());
+    }
+
     public static String idNull() {
         return "The requested ID is null";
     }

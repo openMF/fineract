@@ -31,6 +31,7 @@ import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.organisation.monetary.service.CurrencyReadPlatformService;
 import org.apache.fineract.portfolio.delinquency.data.DelinquencyBucketData;
+import org.apache.fineract.portfolio.delinquency.domain.DelinquencyMinimumPaymentType;
 import org.apache.fineract.portfolio.delinquency.service.DelinquencyReadPlatformService;
 import org.apache.fineract.portfolio.fund.data.FundData;
 import org.apache.fineract.portfolio.fund.service.FundReadPlatformService;
@@ -104,6 +105,8 @@ public class WorkingCapitalLoanProductReadPlatformServiceImpl implements Working
                 .getValuesAsStringEnumOptionDataList(WorkingCapitalPaymentAllocationType.class);
         final List<StringEnumOptionData> delinquencyStartTypeOptions = ApiFacingEnum
                 .getValuesAsStringEnumOptionDataList(WorkingCapitalLoanDelinquencyStartType.class);
+        final List<StringEnumOptionData> delinquencyMinimumPaymentTypeOptions = ApiFacingEnum
+                .getValuesAsStringEnumOptionDataList(DelinquencyMinimumPaymentType.class);
         final List<EnumOptionData> advancedPaymentAllocationTransactionTypes = PaymentAllocationTransactionType
                 .getValuesAsEnumOptionDataList();
         final Collection<DelinquencyBucketData> delinquencyBucketOptions = this.delinquencyReadPlatformService
@@ -122,6 +125,7 @@ public class WorkingCapitalLoanProductReadPlatformServiceImpl implements Working
                 .advancedPaymentAllocationTypes(advancedPaymentAllocationTypes) //
                 .advancedPaymentAllocationTransactionTypes(advancedPaymentAllocationTransactionTypes) //
                 .delinquencyStartTypeOptions(delinquencyStartTypeOptions) //
+                .delinquencyMinimumPaymentTypeOptions(delinquencyMinimumPaymentTypeOptions) //
                 .delinquencyBucketOptions(
                         delinquencyBucketOptions != null && !delinquencyBucketOptions.isEmpty() ? delinquencyBucketOptions : null) //
                 .accountingRuleOptions(accountingRuleOptions) //

@@ -32,8 +32,9 @@ import org.springframework.util.StringUtils;
 public enum WorkingCapitalLoanPeriodFrequencyType implements ApiFacingEnum<WorkingCapitalLoanPeriodFrequencyType> {
 
     DAYS(1, "DAYS", "Days"), //
-    MONTHS(2, "MONTHS", "Months"), //
-    YEARS(3, "YEARS", "Years") //
+    WEEKS(2, "WEEKS", "Weeks"), //
+    MONTHS(3, "MONTHS", "Months"), //
+    YEARS(4, "YEARS", "Years") //
     ;
 
     private final Integer value;
@@ -50,6 +51,9 @@ public enum WorkingCapitalLoanPeriodFrequencyType implements ApiFacingEnum<Worki
 
         if (periodFrequencyTypeValue.trim().equalsIgnoreCase(DAYS.name())) {
             return DAYS;
+        }
+        if (periodFrequencyTypeValue.trim().equalsIgnoreCase(WEEKS.name())) {
+            return WEEKS;
         }
         if (periodFrequencyTypeValue.trim().equalsIgnoreCase(MONTHS.name())) {
             return MONTHS;

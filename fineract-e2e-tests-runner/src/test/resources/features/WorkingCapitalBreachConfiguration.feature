@@ -22,7 +22,7 @@ Feature: Working Capital Breach Configuration
       | breachFrequency              | "null"                  | The parameter `breachFrequency` is mandatory.                                     |
       | breachFrequency              | "0"                     | The parameter `breachFrequency` must be greater than 0.                           |
       | breachFrequencyType          | "null"                  | The parameter `breachFrequencyType` is mandatory.                                 |
-      | breachFrequencyType          | "INVALID"               | The parameter `breachFrequencyType` must be one of [ DAYS, MONTHS, YEARS ] .      |
+      | breachFrequencyType          | "INVALID"               | The parameter `breachFrequencyType` must be one of [ DAYS, WEEKS, MONTHS, YEARS ] .      |
       | breachAmountCalculationType  | "null"                  | The parameter `breachAmountCalculationType` is mandatory.                         |
       | breachAmountCalculationType  | "INVALID"               | The parameter `breachAmountCalculationType` must be one of [ PERCENTAGE, FLAT ] . |
       | breachAmount                 | "null"                  | The parameter `breachAmount` is mandatory.                                        |
@@ -42,7 +42,7 @@ Feature: Working Capital Breach Configuration
       | name                         | "null"                  | The parameter `name` is mandatory.                                                |
       | name                         | ""                      | The parameter `name` is mandatory.                                                |
       | breachFrequency              | "0"                     | The parameter `breachFrequency` must be greater than 0.                           |
-      | breachFrequencyType          | "INVALID"               | The parameter `breachFrequencyType` must be one of [ DAYS, MONTHS, YEARS ] .      |
+      | breachFrequencyType          | "INVALID"               | The parameter `breachFrequencyType` must be one of [ DAYS, WEEKS, MONTHS, YEARS ] .      |
       | breachAmountCalculationType  | "INVALID"               | The parameter `breachAmountCalculationType` must be one of [ PERCENTAGE, FLAT ] . |
       | breachAmount                 | "-1"                    | The parameter `breachAmount` must be greater than or equal to 0.                  |
 
