@@ -46,6 +46,7 @@ public final class WorkingCapitalLoanConstants {
     // Loan commands
     public static final String APPROVE_LOAN_COMMAND = "approve";
     public static final String DISBURSE_LOAN_COMMAND = "disburse";
+    public static final String REPAYMENT_LOAN_COMMAND = "repayment";
 
     // Approval / Rejection / Undo-approval parameters
     public static final String RESOURCE_NAME = WCL_RESOURCE_NAME;
@@ -62,6 +63,7 @@ public final class WorkingCapitalLoanConstants {
     public static final String classificationIdParamName = "classificationId";
 
     public static final String DISBURSEMENT_CLASSIFICATION_CODE_NAME = "working_capital_loan_disbursement_classification";
+    public static final String REPAYMENT_CLASSIFICATION_CODE_NAME = "working_capital_loan_repayment_classification";
     public static final String paymentDetailsParamName = "paymentDetails";
     public static final String paymentTypeIdParamName = "paymentTypeId";
     public static final String accountNumberParamName = "accountNumber";
@@ -69,4 +71,5 @@ public final class WorkingCapitalLoanConstants {
     public static final String routingCodeParamName = "routingCode";
     public static final String receiptNumberParamName = "receiptNumber";
     public static final String bankNumberParamName = "bankNumber";
+    public static final String transactionDateParamName = "transactionDate";
 }

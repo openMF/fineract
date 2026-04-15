@@ -39,10 +39,12 @@ public class InternalWorkingCapitalLoanPaymentServiceImpl implements InternalWor
     private final WorkingCapitalLoanDelinquencyRangeScheduleService delinquencyRangeScheduleService;
     private final GlobalConfigurationRepositoryWrapper globalConfigurationRepository;
     private final WorkingCapitalLoanDelinquencyClassificationService delinquencyClassificationService;
+    private final WorkingCapitalLoanBreachScheduleService breachScheduleService;
 
     @Override
     public void makePayment(Long loanId, BigDecimal amount, LocalDate transactionDate) {
         delinquencyRangeScheduleService.applyRepayment(loanId, transactionDate, amount);
+        breachScheduleService.applyRepayment(loanId, transactionDate, amount);
         if (globalConfigurationRepository.findOneByNameWithNotFoundDetection(ENABLE_INSTANT_DELINQUENCY_CALCULATION).isEnabled()) {
             WorkingCapitalLoan workingCapitalLoan = loanRepository.findById(loanId).orElseThrow();
             if (workingCapitalLoan.getLoanProductRelatedDetails() != null

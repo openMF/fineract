@@ -34,4 +34,6 @@ public interface WorkingCapitalLoanBreachScheduleRepository extends JpaRepositor
 
     List<WorkingCapitalLoanBreachSchedule> findByLoanIdAndToDateLessThanEqualAndBreachIsNull(Long loanId, LocalDate businessDate);
 
+    Optional<WorkingCapitalLoanBreachSchedule> findByLoanIdAndFromDateLessThanEqualAndToDateGreaterThanEqual(Long loanId,
+            LocalDate transactionDate, LocalDate transactionDate1);
 }

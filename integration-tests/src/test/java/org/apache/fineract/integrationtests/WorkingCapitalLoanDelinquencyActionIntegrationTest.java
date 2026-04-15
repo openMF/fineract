@@ -42,10 +42,10 @@ import org.apache.fineract.integrationtests.common.ClientHelper;
 import org.apache.fineract.integrationtests.common.FineractFeignClientHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.common.products.DelinquencyRangesHelper;
-import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanApplicationHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanApplicationTestBuilder;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanDelinquencyActionHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanDelinquencyRangeScheduleHelper;
+import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductTestBuilder;
 import org.junit.jupiter.api.Test;
@@ -55,7 +55,7 @@ public class WorkingCapitalLoanDelinquencyActionIntegrationTest {
 
     private static final int PERIOD_FREQUENCY_DAYS = 30;
 
-    private final WorkingCapitalLoanApplicationHelper applicationHelper = new WorkingCapitalLoanApplicationHelper();
+    private final WorkingCapitalLoanHelper applicationHelper = new WorkingCapitalLoanHelper();
     private final WorkingCapitalLoanProductHelper productHelper = new WorkingCapitalLoanProductHelper();
 
     /**
@@ -77,7 +77,7 @@ public class WorkingCapitalLoanDelinquencyActionIntegrationTest {
         final List<WorkingCapitalLoanDelinquencyRangeScheduleData> periodsAfterActivation = getRangeSchedule(loanId);
         assertEquals(1, periodsAfterActivation.size(), "Expected 1 initial period after activation");
 
-        final LocalDate expectedPeriodToDate = periodsAfterActivation.get(0).getToDate();
+        final LocalDate expectedPeriodToDate = periodsAfterActivation.getFirst().getToDate();
         log.info("Initial period toDate: {}", expectedPeriodToDate);
 
         // when - create a 10-day pause starting from disbursement date
@@ -92,16 +92,16 @@ public class WorkingCapitalLoanDelinquencyActionIntegrationTest {
         final List<WorkingCapitalLoanDelinquencyRangeScheduleData> periodsAfterPause = getRangeSchedule(loanId);
         assertEquals(1, periodsAfterPause.size());
 
-        final LocalDate newToDate = periodsAfterPause.get(0).getToDate();
+        final LocalDate newToDate = periodsAfterPause.getFirst().getToDate();
         assertEquals(expectedPeriodToDate.plusDays(10), newToDate, "Period toDate should be extended by 10 days (the pause duration)");
 
         // and - GET returns the saved action
         final List<WorkingCapitalLoanDelinquencyActionData> actions = WorkingCapitalLoanDelinquencyActionHelper
                 .retrieveDelinquencyActions(loanId);
         assertEquals(1, actions.size());
-        assertEquals(WorkingCapitalLoanDelinquencyActionData.ActionEnum.PAUSE, actions.get(0).getAction());
-        assertEquals(pauseStart, actions.get(0).getStartDate());
-        assertEquals(pauseEnd, actions.get(0).getEndDate());
+        assertEquals(WorkingCapitalLoanDelinquencyActionData.ActionEnum.PAUSE, actions.getFirst().getAction());
+        assertEquals(pauseStart, actions.getFirst().getStartDate());
+        assertEquals(pauseEnd, actions.getFirst().getEndDate());
     }
 
     /**
@@ -382,15 +382,15 @@ public class WorkingCapitalLoanDelinquencyActionIntegrationTest {
         final List<WorkingCapitalLoanDelinquencyActionData> actions = WorkingCapitalLoanDelinquencyActionHelper
                 .retrieveDelinquencyActionsByExternalId(externalId);
         assertEquals(1, actions.size());
-        assertEquals(WorkingCapitalLoanDelinquencyActionData.ActionEnum.PAUSE, actions.get(0).getAction());
-        assertEquals(pauseStart, actions.get(0).getStartDate());
-        assertEquals(pauseEnd, actions.get(0).getEndDate());
+        assertEquals(WorkingCapitalLoanDelinquencyActionData.ActionEnum.PAUSE, actions.getFirst().getAction());
+        assertEquals(pauseStart, actions.getFirst().getStartDate());
+        assertEquals(pauseEnd, actions.getFirst().getEndDate());
 
         // and - retrieve via loanId should return the same action (cross-check)
         final List<WorkingCapitalLoanDelinquencyActionData> actionsById = WorkingCapitalLoanDelinquencyActionHelper
                 .retrieveDelinquencyActions(loanId);
         assertEquals(1, actionsById.size());
-        assertEquals(actions.get(0).getId(), actionsById.get(0).getId());
+        assertEquals(actions.getFirst().getId(), actionsById.getFirst().getId());
     }
 
     /**
@@ -432,7 +432,7 @@ public class WorkingCapitalLoanDelinquencyActionIntegrationTest {
 
     private Long createProduct(final Long delinquencyBucketId) {
         final String uniqueName = "WCL Product " + Utils.randomStringGenerator("", 8);
-        final String uniqueShortName = Utils.randomStringGenerator("", 4);
+        final String uniqueShortName = Utils.uniqueRandomStringGenerator("", 4);
         return productHelper.createWorkingCapitalLoanProduct(new WorkingCapitalLoanProductTestBuilder().withName(uniqueName)
                 .withShortName(uniqueShortName).withDelinquencyBucketId(delinquencyBucketId).build()).getResourceId();
     }

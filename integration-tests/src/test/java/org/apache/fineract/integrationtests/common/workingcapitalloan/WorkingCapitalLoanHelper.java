@@ -28,6 +28,7 @@ import org.apache.fineract.client.feign.services.WorkingCapitalLoansApi;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.feign.util.FeignCalls;
 import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansResponse;
@@ -36,15 +37,15 @@ import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.integrationtests.common.FineractFeignClientHelper;
 
 /**
- * Integration-test helper for Working Capital Loan applications using the generated Feign client.
+ * Integration-test helper for Working Capital Loans using the generated Feign client.
  */
-public class WorkingCapitalLoanApplicationHelper {
+public class WorkingCapitalLoanHelper {
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getShared();
     private static final ObjectMapper RESPONSE_OBJECT_MAPPER = ObjectMapperFactory.getShared().copy()
             .setSerializationInclusion(JsonInclude.Include.ALWAYS);
 
-    public WorkingCapitalLoanApplicationHelper() {}
+    public WorkingCapitalLoanHelper() {}
 
     private static WorkingCapitalLoansApi api() {
         return FineractFeignClientHelper.getFineractFeignClient().workingCapitalLoans();
@@ -151,6 +152,17 @@ public class WorkingCapitalLoanApplicationHelper {
         return FeignCalls.ok(() -> api().stateTransitionWorkingCapitalLoanById(loanId, "undodisbursal", request)).getResourceId();
     }
 
+    public void makeRepaymentByLoanId(final Long loanId, final String jsonBody) {
+        final PostWorkingCapitalLoanTransactionsRequest request = fromJson(jsonBody, PostWorkingCapitalLoanTransactionsRequest.class);
+        FeignCalls.ok(() -> transactionsApi().executeWorkingCapitalLoanTransactionById(loanId, "repayment", request));
+    }
+
+    public void makeRepaymentByLoanExternalId(final String loanExternalId, final String jsonBody) {
+        final PostWorkingCapitalLoanTransactionsRequest request = fromJson(jsonBody, PostWorkingCapitalLoanTransactionsRequest.class);
+        FeignCalls.ok(() -> transactionsApi().executeWorkingCapitalLoanTransactionByExternalId(loanExternalId, request,
+                Map.of("command", "repayment")));
+    }
+
     public Long updateDiscountById(final Long loanId, final String jsonBody) {
         PutWorkingCapitalLoansLoanIdDiscountRequest request = fromJson(jsonBody, PutWorkingCapitalLoansLoanIdDiscountRequest.class);
         return FeignCalls.ok(() -> api().updateWorkingCapitalLoanDiscountById(loanId, request)).getResourceId();
@@ -233,6 +245,11 @@ public class WorkingCapitalLoanApplicationHelper {
     public CallFailedRuntimeException runUndoDisbursalExpectingFailure(final Long loanId, final String jsonBody) {
         PostWorkingCapitalLoansLoanIdRequest request = fromJson(jsonBody, PostWorkingCapitalLoansLoanIdRequest.class);
         return FeignCalls.fail(() -> api().stateTransitionWorkingCapitalLoanById(loanId, "undodisbursal", request));
+    }
+
+    public CallFailedRuntimeException runRepaymentByLoanIdExpectingFailure(final Long loanId, final String jsonBody) {
+        final PostWorkingCapitalLoanTransactionsRequest request = fromJson(jsonBody, PostWorkingCapitalLoanTransactionsRequest.class);
+        return FeignCalls.fail(() -> transactionsApi().executeWorkingCapitalLoanTransactionById(loanId, "repayment", request));
     }
 
     /**

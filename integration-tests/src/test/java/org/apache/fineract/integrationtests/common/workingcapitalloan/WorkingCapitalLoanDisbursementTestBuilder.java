@@ -135,4 +135,43 @@ public final class WorkingCapitalLoanDisbursementTestBuilder {
         }
         return json.toString();
     }
+
+    public static String buildRepaymentJson(final LocalDate transactionDate, final BigDecimal transactionAmount,
+            final Long classificationId, final String note, final Integer paymentTypeId, final String accountNumber) {
+        return buildRepaymentJson(transactionDate, transactionAmount, classificationId, note, paymentTypeId, accountNumber, null);
+    }
+
+    public static String buildRepaymentJson(final LocalDate transactionDate, final BigDecimal transactionAmount,
+            final Long classificationId, final String note, final Integer paymentTypeId, final String accountNumber,
+            final String externalId) {
+        final JsonObject json = new JsonObject();
+        json.addProperty("locale", DEFAULT_LOCALE);
+        json.addProperty("dateFormat", DEFAULT_DATE_FORMAT);
+        if (transactionDate != null) {
+            json.addProperty("transactionDate", transactionDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+        }
+        if (transactionAmount != null) {
+            json.addProperty("transactionAmount", transactionAmount);
+        }
+        if (classificationId != null) {
+            json.addProperty("classificationId", classificationId);
+        }
+        if (note != null) {
+            json.addProperty("note", note);
+        }
+        if (paymentTypeId != null || accountNumber != null) {
+            final JsonObject paymentDetails = new JsonObject();
+            if (paymentTypeId != null) {
+                paymentDetails.addProperty("paymentTypeId", paymentTypeId);
+            }
+            if (accountNumber != null) {
+                paymentDetails.addProperty("accountNumber", accountNumber);
+            }
+            json.add("paymentDetails", paymentDetails);
+        }
+        if (externalId != null) {
+            json.addProperty("externalId", externalId);
+        }
+        return json.toString();
+    }
 }

@@ -16,15 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.workingcapitalloan.domain;
+package org.apache.fineract.infrastructure.event.business.domain.workingcapitalloan.transaction;
 
-public enum WorkingCapitalLoanEvent {
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransaction;
 
-    LOAN_APPROVED, //
-    LOAN_APPROVAL_UNDO, //
-    LOAN_REJECTED, //
-    LOAN_DISBURSED, //
-    LOAN_DISBURSAL_UNDO, //
-    LOAN_REPAID_IN_FULL, //
-    LOAN_OVERPAID //
+public class WorkingCapitalLoanRepaymentTransactionBusinessEvent extends WorkingCapitalLoanTransactionBusinessEvent {
+
+    private static final String TYPE = "WorkingCapitalLoanRepaymentTransactionBusinessEvent";
+
+    public WorkingCapitalLoanRepaymentTransactionBusinessEvent(final WorkingCapitalLoanTransaction value) {
+        super(value);
+    }
+
+    public WorkingCapitalLoanRepaymentTransactionBusinessEvent(final WorkingCapitalLoanTransaction value, final Long aggregateRootId) {
+        super(value, aggregateRootId);
+    }
+
+    @Override
+    public String getType() {
+        return TYPE;
+    }
 }

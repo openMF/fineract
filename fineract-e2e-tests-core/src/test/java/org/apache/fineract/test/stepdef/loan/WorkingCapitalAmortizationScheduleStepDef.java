@@ -35,6 +35,7 @@ import org.apache.fineract.client.models.PostWorkingCapitalLoansResponse;
 import org.apache.fineract.client.models.ProjectedAmortizationScheduleData;
 import org.apache.fineract.client.models.ProjectedAmortizationScheduleGenerateRequest;
 import org.apache.fineract.client.models.ProjectedAmortizationSchedulePaymentData;
+import org.apache.fineract.test.helper.WorkingCapitalScheduleMatcher;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContext;
 import org.apache.fineract.test.support.TestContextKey;
@@ -147,19 +148,16 @@ public class WorkingCapitalAmortizationScheduleStepDef extends AbstractStepDef {
 
     private static void assertDecimal(final SoftAssertions assertions, final String field, final BigDecimal actual,
             final String expectedStr) {
-        if (expectedStr == null || expectedStr.isBlank()) {
+        if (WorkingCapitalScheduleMatcher.isBlank(expectedStr)) {
             return;
         }
-        final BigDecimal expected = new BigDecimal(expectedStr);
-        assertions.assertThat(actual).as(field).isNotNull();
-        if (actual != null) {
-            assertions.assertThat(actual.compareTo(expected)).as("%s: expected=%s actual=%s", field, expected, actual).isEqualTo(0);
-        }
+        assertions.assertThat(WorkingCapitalScheduleMatcher.matchesDecimal(actual, expectedStr))
+                .as("%s: expected=%s actual=%s", field, expectedStr, actual).isTrue();
     }
 
     private static void assertNullableDecimal(final SoftAssertions assertions, final String field, final BigDecimal actual,
             final String expectedStr) {
-        if (expectedStr == null || expectedStr.isBlank()) {
+        if (WorkingCapitalScheduleMatcher.isBlank(expectedStr)) {
             assertions.assertThat(actual).as(field + " should be null").isNull();
             return;
         }
@@ -167,29 +165,29 @@ public class WorkingCapitalAmortizationScheduleStepDef extends AbstractStepDef {
     }
 
     private static void assertInt(final SoftAssertions assertions, final String field, final Integer actual, final String expectedStr) {
-        if (expectedStr == null || expectedStr.isBlank()) {
+        if (WorkingCapitalScheduleMatcher.isBlank(expectedStr)) {
             return;
         }
-        assertions.assertThat(actual).as(field).isEqualTo(Integer.parseInt(expectedStr));
+        assertions.assertThat(WorkingCapitalScheduleMatcher.matchesInteger(actual, expectedStr)).as(field).isTrue();
     }
 
     private static void assertLong(final SoftAssertions assertions, final String field, final Long actual, final String expectedStr) {
-        if (expectedStr == null || expectedStr.isBlank()) {
+        if (WorkingCapitalScheduleMatcher.isBlank(expectedStr)) {
             return;
         }
-        assertions.assertThat(actual).as(field).isEqualTo(Long.parseLong(expectedStr));
+        assertions.assertThat(WorkingCapitalScheduleMatcher.matchesLong(actual, expectedStr)).as(field).isTrue();
     }
 
     private static void assertDate(final SoftAssertions assertions, final String field, final LocalDate actual, final String expectedStr) {
-        if (expectedStr == null || expectedStr.isBlank()) {
+        if (WorkingCapitalScheduleMatcher.isBlank(expectedStr)) {
             return;
         }
-        assertions.assertThat(actual).as(field).isEqualTo(LocalDate.parse(expectedStr));
+        assertions.assertThat(WorkingCapitalScheduleMatcher.matchesDate(actual, expectedStr)).as(field).isTrue();
     }
 
     private static void assertOptionalDecimal(final SoftAssertions assertions, final String field, final BigDecimal actual,
             final String expectedStr) {
-        if (expectedStr == null || expectedStr.isBlank()) {
+        if (WorkingCapitalScheduleMatcher.isBlank(expectedStr)) {
             assertions.assertThat(actual).as(field + " should not be null").isNotNull();
             return;
         }

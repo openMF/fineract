@@ -41,6 +41,7 @@ import org.apache.fineract.client.models.PostAllowAttributeOverrides;
 import org.apache.fineract.client.models.PostPaymentAllocation;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest.AccountingRuleEnum;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdRequest;
 import org.apache.fineract.client.models.WorkingCapitalBreachRequest;
 import org.apache.fineract.test.data.accounttype.AccountTypeResolver;
@@ -243,6 +244,12 @@ public class WorkingCapitalRequestFactory {
                 .breachFrequencyType(DEFAULT_WC_BREACH_FREQUENCY_TYPE) //
                 .breachAmountCalculationType(DEFAULT_WC_BREACH_AMOUNT_CALCULATION_TYPE) //
                 .breachAmount(DEFAULT_WC_BREACH_AMOUNT);
+    }
+
+    public PostWorkingCapitalLoanTransactionsRequest defaultWorkingCapitalLoanRepaymentRequest() {
+        return new PostWorkingCapitalLoanTransactionsRequest() //
+                .dateFormat(DATE_FORMAT) //
+                .locale(LOCALE_EN);
     }
 
     private Long getWCDelinquencyBucketIdByName(String bucketName) {

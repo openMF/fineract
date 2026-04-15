@@ -118,4 +118,22 @@ public class WorkingCapitalLoanTransaction extends AbstractAuditableWithUTCDateT
         txn.reversedOnDate = null;
         return txn;
     }
+
+    public static WorkingCapitalLoanTransaction repayment(final WorkingCapitalLoan loan, final BigDecimal amount,
+            final PaymentDetail paymentDetail, final LocalDate transactionDate, final CodeValue classification,
+            final ExternalId externalId) {
+        final WorkingCapitalLoanTransaction txn = new WorkingCapitalLoanTransaction();
+        txn.wcLoan = loan;
+        txn.transactionType = LoanTransactionType.REPAYMENT;
+        txn.transactionDate = transactionDate;
+        txn.submittedOnDate = transactionDate;
+        txn.transactionAmount = amount;
+        txn.paymentDetail = paymentDetail;
+        txn.classification = classification;
+        txn.externalId = externalId != null ? externalId : ExternalId.empty();
+        txn.reversed = false;
+        txn.reversalExternalId = null;
+        txn.reversedOnDate = null;
+        return txn;
+    }
 }

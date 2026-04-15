@@ -310,6 +310,11 @@ public class ExternalEventConfigurationHelper {
         loanTransactionMakeRepaymentPreBusinessEvent.put("enabled", false);
         defaults.add(loanTransactionMakeRepaymentPreBusinessEvent);
 
+        Map<String, Object> wcLoanTransactionMakeRepaymentBusinessEvent = new HashMap<>();
+        wcLoanTransactionMakeRepaymentBusinessEvent.put("type", "WorkingCapitalLoanRepaymentTransactionBusinessEvent");
+        wcLoanTransactionMakeRepaymentBusinessEvent.put("enabled", false);
+        defaults.add(wcLoanTransactionMakeRepaymentBusinessEvent);
+
         Map<String, Object> loanTransactionMerchantIssuedRefundPostBusinessEvent = new HashMap<>();
         loanTransactionMerchantIssuedRefundPostBusinessEvent.put("type", "LoanTransactionMerchantIssuedRefundPostBusinessEvent");
         loanTransactionMerchantIssuedRefundPostBusinessEvent.put("enabled", false);

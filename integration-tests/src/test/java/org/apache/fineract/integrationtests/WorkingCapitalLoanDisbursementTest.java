@@ -49,9 +49,9 @@ import org.apache.fineract.integrationtests.common.FineractFeignClientHelper;
 import org.apache.fineract.integrationtests.common.GlobalConfigurationHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.common.system.CodeHelper;
-import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanApplicationHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanApplicationTestBuilder;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanDisbursementTestBuilder;
+import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductTestBuilder;
 import org.apache.fineract.portfolio.workingcapitalloan.WorkingCapitalLoanConstants;
@@ -60,7 +60,7 @@ import org.junit.jupiter.api.Test;
 
 public class WorkingCapitalLoanDisbursementTest {
 
-    private final WorkingCapitalLoanApplicationHelper applicationHelper = new WorkingCapitalLoanApplicationHelper();
+    private final WorkingCapitalLoanHelper applicationHelper = new WorkingCapitalLoanHelper();
     private final WorkingCapitalLoanProductHelper productHelper = new WorkingCapitalLoanProductHelper();
     private final CodeHelper codeHelper = new CodeHelper();
     private final GlobalConfigurationHelper globalConfigurationHelper = new GlobalConfigurationHelper();

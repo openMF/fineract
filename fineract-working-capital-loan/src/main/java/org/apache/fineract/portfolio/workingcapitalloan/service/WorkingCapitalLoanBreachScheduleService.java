@@ -18,10 +18,12 @@
  */
 package org.apache.fineract.portfolio.workingcapitalloan.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanBreachScheduleData;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanBreachSchedule;
 
 public interface WorkingCapitalLoanBreachScheduleService {
 
@@ -35,4 +37,7 @@ public interface WorkingCapitalLoanBreachScheduleService {
 
     List<WorkingCapitalLoanBreachScheduleData> retrieveBreachSchedule(Long loanId);
 
+    boolean evaluateBreachOnDate(WorkingCapitalLoanBreachSchedule period, LocalDate businessDate);
+
+    void applyRepayment(Long loanId, LocalDate transactionDate, BigDecimal amount);
 }

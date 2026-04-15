@@ -429,7 +429,7 @@ public class FeignTrialBalanceSummaryReportTest extends FeignIntegrationTest {
     private Long createLoanProduct() {
         return loanHelper.createLoanProduct(new PostLoanProductsRequest()//
                 .name("TrialBal Product " + System.currentTimeMillis())//
-                .shortName(UUID.randomUUID().toString().substring(0, 4).toUpperCase())//
+                .shortName(Utils.uniqueRandomStringGenerator("", 4))//
                 .currencyCode("USD")//
                 .digitsAfterDecimal(2)//
                 .inMultiplesOf(1)//

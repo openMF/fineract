@@ -34,6 +34,7 @@ import org.apache.fineract.client.models.PostLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostLoansOriginatorData;
 import org.apache.fineract.client.models.PostLoansRequest;
 import org.apache.fineract.client.models.PostLoansResponse;
+import org.apache.fineract.integrationtests.common.Utils;
 
 public class FeignLoanHelper {
 
@@ -46,7 +47,7 @@ public class FeignLoanHelper {
     public Long createSimpleLoanProduct() {
         PostLoanProductsRequest request = new PostLoanProductsRequest()//
                 .name("Simple Loan Product " + System.currentTimeMillis())//
-                .shortName(java.util.UUID.randomUUID().toString().substring(0, 4).toUpperCase())//
+                .shortName(Utils.uniqueRandomStringGenerator("", 4))//
                 .currencyCode("USD")//
                 .digitsAfterDecimal(2)//
                 .inMultiplesOf(1)//

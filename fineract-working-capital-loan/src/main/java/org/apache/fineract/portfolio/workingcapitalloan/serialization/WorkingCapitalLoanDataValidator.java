@@ -85,6 +85,10 @@ public class WorkingCapitalLoanDataValidator {
             Arrays.asList("locale", "dateFormat", WorkingCapitalLoanConstants.noteParamName));
     private static final Set<String> ADD_DISCOUNT_SUPPORTED_PARAMETERS = new HashSet<>(Arrays.asList("locale", "dateFormat",
             WorkingCapitalLoanConstants.discountAmountParamName, WorkingCapitalLoanConstants.noteParamName));
+    private static final Set<String> REPAYMENT_SUPPORTED_PARAMETERS = new HashSet<>(Arrays.asList("locale", "dateFormat",
+            WorkingCapitalLoanConstants.transactionDateParamName, WorkingCapitalLoanConstants.transactionAmountParamName,
+            WorkingCapitalLoanConstants.classificationIdParamName, WorkingCapitalLoanConstants.noteParamName,
+            WorkingCapitalLoanConstants.paymentDetailsParamName, WorkingCapitalLoanConstants.externalIdParameterName));
 
     private static final int NOTE_MAX_LENGTH = 1000;
     private static final int EXTERNAL_ID_MAX_LENGTH = 100;
@@ -122,7 +126,7 @@ public class WorkingCapitalLoanDataValidator {
         }
 
         // approvedLoanAmount must be positive and <= proposedPrincipal
-        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanConstants.approvedLoanAmountParamName, element)) {
+        if (this.fromApiJsonHelper.parameterHasValue(WorkingCapitalLoanConstants.approvedLoanAmountParamName, element)) {
             final BigDecimal approvedLoanAmount = this.fromApiJsonHelper
                     .extractBigDecimalNamed(WorkingCapitalLoanConstants.approvedLoanAmountParamName, element, new HashSet<>());
             baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.approvedLoanAmountParamName).value(approvedLoanAmount)
@@ -146,7 +150,7 @@ public class WorkingCapitalLoanDataValidator {
         }
 
         // discountAmount must be >= 0 and <= current (creation-time) discount
-        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanConstants.discountAmountParamName, element)) {
+        if (this.fromApiJsonHelper.parameterHasValue(WorkingCapitalLoanConstants.discountAmountParamName, element)) {
             if (isDiscountOverrideAllowed(loan)) {
                 baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName)
                         .failWithCode("override.not.allowed.by.product");
@@ -275,7 +279,7 @@ public class WorkingCapitalLoanDataValidator {
                     .failWithCode("amount.cannot.exceed.approved.principal");
         }
 
-        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanConstants.discountAmountParamName, element)) {
+        if (this.fromApiJsonHelper.parameterHasValue(WorkingCapitalLoanConstants.discountAmountParamName, element)) {
             if (isDiscountOverrideAllowed(loan)) {
                 baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName)
                         .failWithCode("override.not.allowed.by.product");
@@ -298,7 +302,7 @@ public class WorkingCapitalLoanDataValidator {
         baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.noteParamName).value(note).ignoreIfNull()
                 .notExceedingLengthOf(NOTE_MAX_LENGTH);
 
-        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanConstants.externalIdParameterName, element)) {
+        if (this.fromApiJsonHelper.parameterHasValue(WorkingCapitalLoanConstants.externalIdParameterName, element)) {
             final String externalIdStr = this.fromApiJsonHelper.extractStringNamed(WorkingCapitalLoanConstants.externalIdParameterName,
                     element);
             baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.externalIdParameterName).value(externalIdStr).ignoreIfNull()
@@ -426,6 +430,84 @@ public class WorkingCapitalLoanDataValidator {
         baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.noteParamName).value(note).ignoreIfNull()
                 .notExceedingLengthOf(NOTE_MAX_LENGTH);
 
+        throwExceptionIfValidationWarningsExist(dataValidationErrors);
+    }
+
+    public void validateRepayment(final String json, final WorkingCapitalLoan loan) {
+        if (StringUtils.isBlank(json)) {
+            throw new InvalidJsonException();
+        }
+        final Type typeOfMap = new TypeToken<Map<String, Object>>() {}.getType();
+        this.fromApiJsonHelper.checkForUnsupportedParameters(typeOfMap, json, REPAYMENT_SUPPORTED_PARAMETERS);
+
+        final JsonElement element = this.fromApiJsonHelper.parse(json);
+        if (element != null && element.isJsonObject()) {
+            final JsonObject root = element.getAsJsonObject();
+            if (root.has(WorkingCapitalLoanConstants.paymentDetailsParamName)
+                    && root.get(WorkingCapitalLoanConstants.paymentDetailsParamName).isJsonObject()) {
+                final String paymentDetailsJson = root.getAsJsonObject(WorkingCapitalLoanConstants.paymentDetailsParamName).toString();
+                this.fromApiJsonHelper.checkForUnsupportedParameters(typeOfMap, paymentDetailsJson, PAYMENT_DETAILS_SUPPORTED_PARAMETERS);
+            }
+        }
+
+        final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
+                .resource(WorkingCapitalLoanConstants.RESOURCE_NAME);
+
+        final LocalDate transactionDate = this.fromApiJsonHelper.extractLocalDateNamed(WorkingCapitalLoanConstants.transactionDateParamName,
+                element);
+        baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.transactionDateParamName).value(transactionDate).notNull();
+        if (transactionDate != null) {
+            if (DateUtils.isDateInTheFuture(transactionDate)) {
+                baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.transactionDateParamName)
+                        .failWithCode("cannot.be.a.future.date");
+            }
+            final LocalDate disbursalDate = loan.getDisbursementDetails() != null && !loan.getDisbursementDetails().isEmpty()
+                    ? loan.getDisbursementDetails().getFirst().getActualDisbursementDate()
+                    : null;
+            if (DateUtils.isBefore(transactionDate, disbursalDate)) {
+                baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.transactionDateParamName)
+                        .failWithCode("cannot.be.before.disbursal.date");
+            }
+        }
+
+        final BigDecimal transactionAmount = this.fromApiJsonHelper
+                .extractBigDecimalNamed(WorkingCapitalLoanConstants.transactionAmountParamName, element, new HashSet<>());
+        baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.transactionAmountParamName).value(transactionAmount).notNull()
+                .positiveAmount();
+
+        final Integer classificationId = this.fromApiJsonHelper
+                .extractIntegerSansLocaleNamed(WorkingCapitalLoanConstants.classificationIdParamName, element);
+        baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.classificationIdParamName).value(classificationId).ignoreIfNull()
+                .integerGreaterThanZero();
+        if (classificationId != null) {
+            final CodeValue codeValue = this.codeValueRepository
+                    .findByCodeNameAndId(WorkingCapitalLoanConstants.REPAYMENT_CLASSIFICATION_CODE_NAME, classificationId.longValue());
+            if (codeValue == null) {
+                baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.classificationIdParamName).failWithCode(
+                        "code.value.classification.not.exists",
+                        "Code value does not exist in code " + WorkingCapitalLoanConstants.REPAYMENT_CLASSIFICATION_CODE_NAME);
+            }
+        }
+
+        final String note = this.fromApiJsonHelper.extractStringNamed(WorkingCapitalLoanConstants.noteParamName, element);
+        baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.noteParamName).value(note).ignoreIfNull()
+                .notExceedingLengthOf(NOTE_MAX_LENGTH);
+
+        if (this.fromApiJsonHelper.parameterHasValue(WorkingCapitalLoanConstants.externalIdParameterName, element)) {
+            final String externalIdStr = this.fromApiJsonHelper.extractStringNamed(WorkingCapitalLoanConstants.externalIdParameterName,
+                    element);
+            baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.externalIdParameterName).value(externalIdStr).ignoreIfNull()
+                    .notExceedingLengthOf(EXTERNAL_ID_MAX_LENGTH);
+            if (externalIdStr != null && !externalIdStr.isBlank()) {
+                final ExternalId externalId = ExternalIdFactory.produce(externalIdStr);
+                if (!externalId.isEmpty() && this.transactionRepository.existsByExternalId(externalId)) {
+                    baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.externalIdParameterName).failWithCode("already.exists");
+                }
+            }
+        }
+
+        validateDisbursementPaymentDetails(baseDataValidator, element);
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
 

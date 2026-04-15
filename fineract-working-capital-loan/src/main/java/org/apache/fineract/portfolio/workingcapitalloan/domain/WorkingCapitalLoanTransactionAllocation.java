@@ -59,7 +59,7 @@ public class WorkingCapitalLoanTransactionAllocation extends AbstractAuditableWi
 
     protected WorkingCapitalLoanTransactionAllocation() {}
 
-    public static WorkingCapitalLoanTransactionAllocation forDisbursement(final WorkingCapitalLoanTransaction transaction,
+    public static WorkingCapitalLoanTransactionAllocation forPrincipalAllocation(final WorkingCapitalLoanTransaction transaction,
             final BigDecimal principalAmount) {
         final WorkingCapitalLoanTransactionAllocation allocation = new WorkingCapitalLoanTransactionAllocation();
         allocation.wcLoanTransaction = transaction;

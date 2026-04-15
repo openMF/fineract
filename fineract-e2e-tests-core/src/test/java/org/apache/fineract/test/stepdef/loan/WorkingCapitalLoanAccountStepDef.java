@@ -34,9 +34,11 @@ import io.cucumber.java.en.When;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
@@ -52,14 +54,21 @@ import org.apache.fineract.client.models.PostCodeValueDataResponse;
 import org.apache.fineract.client.models.PostCodeValuesDataRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsResponse;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsPaymentDetailRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansResponse;
+import org.apache.fineract.client.models.ProjectedAmortizationScheduleData;
+import org.apache.fineract.client.models.ProjectedAmortizationSchedulePaymentData;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdDiscountRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.test.data.LoanStatus;
+import org.apache.fineract.test.data.paymenttype.DefaultPaymentType;
+import org.apache.fineract.test.data.paymenttype.PaymentTypeResolver;
 import org.apache.fineract.test.data.workingcapitalproduct.DefaultWorkingCapitalLoanProduct;
 import org.apache.fineract.test.data.workingcapitalproduct.WorkingCapitalLoanProductResolver;
 import org.apache.fineract.test.factory.WorkingCapitalLoanRequestFactory;
@@ -67,6 +76,7 @@ import org.apache.fineract.test.factory.WorkingCapitalRequestFactory;
 import org.apache.fineract.test.helper.CodeHelper;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.Utils;
+import org.apache.fineract.test.helper.WorkingCapitalScheduleMatcher;
 import org.apache.fineract.test.messaging.event.EventCheckHelper;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
@@ -87,6 +97,7 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
     private final WorkingCapitalRequestFactory workingCapitalProductRequestFactory;
     private final CodeHelper codeHelper;
     private final EventCheckHelper eventCheckHelper;
+    private final PaymentTypeResolver paymentTypeResolver;
 
     @When("Admin creates a working capital loan with the following data:")
     public void createWorkingCapitalLoan(final DataTable table) {
@@ -1337,5 +1348,233 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         final PostWorkingCapitalLoanProductsResponse productResponse = ok(
                 () -> fineractClient.workingCapitalLoanProducts().createWorkingCapitalLoanProduct(productRequest, Map.of()));
         return productResponse.getResourceId();
+    }
+
+    @Then("Customer makes repayment on {string} with {double} transaction amount on Working Capital loan")
+    public void makeWorkingCapitalLoanRepayment(final String transactionDate, final double transactionAmount) {
+        final Long loanId = getCreatedLoanId();
+        final PostWorkingCapitalLoanTransactionsRequest repaymentRequest = buildRepaymentRequest(transactionDate, transactionAmount, null);
+        final PostWorkingCapitalLoanTransactionsResponse response = executeRepaymentById(loanId, repaymentRequest);
+        validateRepaymentResponse(response, transactionAmount, transactionDate, loanId);
+    }
+
+    @Then("Customer makes repayment by loan external ID on {string} with {double} transaction amount on Working Capital loan")
+    public void makeWorkingCapitalLoanRepaymentByExternalId(final String transactionDate, final double transactionAmount) {
+        final Long loanId = getCreatedLoanId();
+        final String loanExternalId = retrieveLoanExternalId(loanId);
+        final PostWorkingCapitalLoanTransactionsRequest repaymentRequest = buildRepaymentRequest(transactionDate, transactionAmount, null);
+        final PostWorkingCapitalLoanTransactionsResponse response = executeRepaymentByExternalId(loanExternalId, repaymentRequest);
+        validateRepaymentResponse(response, transactionAmount, transactionDate, loanExternalId);
+    }
+
+    @Then("Customer makes repayment on {string} with {double} transaction amount on Working Capital loan with the following payment details:")
+    public void makeWorkingCapitalLoanRepaymentWithPaymentDetails(final String transactionDate, final double transactionAmount,
+            final DataTable table) {
+        final Long loanId = getCreatedLoanId();
+        final PostWorkingCapitalLoanTransactionsPaymentDetailRequest paymentDetails = buildPaymentDetailsFromTable(table);
+        final PostWorkingCapitalLoanTransactionsRequest repaymentRequest = buildRepaymentRequest(transactionDate, transactionAmount,
+                paymentDetails);
+        final PostWorkingCapitalLoanTransactionsResponse response = executeRepaymentById(loanId, repaymentRequest);
+        validateRepaymentResponse(response, transactionAmount, transactionDate, loanId);
+    }
+
+    private PostWorkingCapitalLoanTransactionsRequest buildRepaymentRequest(final String transactionDate, final double transactionAmount,
+            final PostWorkingCapitalLoanTransactionsPaymentDetailRequest paymentDetails) {
+        final PostWorkingCapitalLoanTransactionsRequest request = workingCapitalProductRequestFactory
+                .defaultWorkingCapitalLoanRepaymentRequest().transactionDate(transactionDate)
+                .transactionAmount(BigDecimal.valueOf(transactionAmount));
+
+        if (paymentDetails != null) {
+            request.paymentDetails(paymentDetails);
+        }
+
+        return request;
+    }
+
+    private PostWorkingCapitalLoanTransactionsResponse executeRepaymentById(final Long loanId,
+            final PostWorkingCapitalLoanTransactionsRequest repaymentRequest) {
+        log.debug("Making repayment for loan ID: {}, transactionDate: {}, transactionAmount: {}", loanId,
+                repaymentRequest.getTransactionDate(), repaymentRequest.getTransactionAmount());
+
+        return ok(() -> fineractClient.workingCapitalLoanTransactions().executeWorkingCapitalLoanTransactionById(loanId, "repayment",
+                repaymentRequest));
+    }
+
+    private PostWorkingCapitalLoanTransactionsResponse executeRepaymentByExternalId(final String loanExternalId,
+            final PostWorkingCapitalLoanTransactionsRequest repaymentRequest) {
+        log.debug("Making repayment for loan externalId: {}, transactionDate: {}, transactionAmount: {}", loanExternalId,
+                repaymentRequest.getTransactionDate(), repaymentRequest.getTransactionAmount());
+
+        return ok(() -> fineractClient.workingCapitalLoanTransactions().executeWorkingCapitalLoanTransactionByExternalId(loanExternalId,
+                "repayment", repaymentRequest));
+    }
+
+    @Then("Working Capital loan amortization schedule has {int} periods, with the following data for periods:")
+    public void verifyAmortizationSchedulePeriods(final int linesExpected, final DataTable table) {
+        final Long loanId = getCreatedLoanId();
+        final ProjectedAmortizationScheduleData schedule = ok(
+                () -> fineractClient.workingCapitalLoans().retrieveAmortizationSchedule(loanId));
+        assertNotNull(schedule, "Amortization schedule should not be null");
+        assertNotNull(schedule.getPayments(), "Amortization schedule payments should not be null");
+
+        final List<ProjectedAmortizationSchedulePaymentData> periods = schedule.getPayments();
+        final int linesActual = (int) periods.stream().filter(p -> p.getPaymentNo() != null).count();
+
+        final List<List<String>> data = table.asLists();
+        for (int i = 1; i < data.size(); i++) {
+            final List<String> expectedValues = data.get(i);
+            final List<String> headers = data.getFirst();
+            final int dateColumn = headers.indexOf("paymentDate");
+            assertThat(dateColumn).as("Table must contain 'paymentDate' column").isGreaterThanOrEqualTo(0);
+            final String paymentDateExpected = expectedValues.get(dateColumn);
+
+            final List<ProjectedAmortizationSchedulePaymentData> matchingPeriods = periods.stream()
+                    .filter(p -> p.getPaymentDate() != null && paymentDateExpected.equals(FORMATTER.format(p.getPaymentDate()))).toList();
+
+            final boolean containsExpectedValues = matchingPeriods.stream()
+                    .anyMatch(period -> matchesExpectedWcAmortizationRow(headers, expectedValues, period));
+            assertThat(containsExpectedValues).as(
+                    "Wrong value in line %s of amortization schedule. actual=%s, expected=%s", i, matchingPeriods.stream()
+                            .map(period -> fetchValuesOfWcAmortizationSchedule(headers, period)).collect(Collectors.toList()),
+                    expectedValues).isTrue();
+        }
+
+        assertThat(linesActual).as("Wrong number of lines in WC amortization schedule. actual=%s, expected=%s", linesActual, linesExpected)
+                .isEqualTo(linesExpected);
+    }
+
+    private String asText(final BigDecimal value) {
+        return value == null ? null : value.toString();
+    }
+
+    private boolean matchesExpectedWcAmortizationRow(final List<String> headers, final List<String> expectedValues,
+            final ProjectedAmortizationSchedulePaymentData period) {
+        for (int idx = 0; idx < headers.size(); idx++) {
+            final String header = headers.get(idx);
+            final String expected = expectedValues.get(idx);
+            final String actual = extractWcScheduleCellValue(header, period);
+            final boolean matches = "paymentDate".equals(header) ? WorkingCapitalScheduleMatcher.matchesFormattedDate(actual, expected)
+                    : "discountFactor".equals(header)
+                            ? WorkingCapitalScheduleMatcher.matchesDecimalWithScale(parseDecimal(actual), expected, 10)
+                            : WorkingCapitalScheduleMatcher.matchesDecimal(parseDecimal(actual), expected);
+            if (!matches) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private List<String> fetchValuesOfWcAmortizationSchedule(final List<String> header,
+            final ProjectedAmortizationSchedulePaymentData period) {
+        final List<String> actualValues = new ArrayList<>();
+        for (final String headerName : header) {
+            actualValues.add(extractWcScheduleCellValue(headerName, period));
+        }
+        return actualValues;
+    }
+
+    private String extractWcScheduleCellValue(final String headerName, final ProjectedAmortizationSchedulePaymentData period) {
+        return switch (headerName) {
+            case "paymentNo" -> period.getPaymentNo() == null ? null : period.getPaymentNo().toString();
+            case "paymentDate" -> period.getPaymentDate() == null ? null : FORMATTER.format(period.getPaymentDate());
+            case "count" -> period.getCount() == null ? null : period.getCount().toString();
+            case "paymentsLeft" -> period.getPaymentsLeft() == null ? null : period.getPaymentsLeft().toString();
+            case "expectedPaymentAmount" -> asText(period.getExpectedPaymentAmount());
+            case "forecastPaymentAmount" -> asText(period.getForecastPaymentAmount());
+            case "discountFactor" -> asText(period.getDiscountFactor());
+            case "npvValue" -> asText(period.getNpvValue());
+            case "balance" -> asText(period.getBalance());
+            case "expectedAmortizationAmount" -> asText(period.getExpectedAmortizationAmount());
+            case "netAmortizationAmount" -> asText(period.getNetAmortizationAmount());
+            case "actualPaymentAmount" -> asText(period.getActualPaymentAmount());
+            case "actualAmortizationAmount" -> asText(period.getActualAmortizationAmount());
+            case "incomeModification" -> asText(period.getIncomeModification());
+            case "deferredBalance" -> asText(period.getDeferredBalance());
+            default -> throw new IllegalStateException(String.format("Header name %s cannot be found", headerName));
+        };
+    }
+
+    private BigDecimal parseDecimal(final String value) {
+        return WorkingCapitalScheduleMatcher.isBlank(value) ? null : new BigDecimal(value);
+    }
+
+    private void validateRepaymentResponse(final PostWorkingCapitalLoanTransactionsResponse response, final double transactionAmount,
+            final String transactionDate, final Object loanIdentifier) {
+        assertNotNull(response, "Repayment response should not be null");
+        assertNotNull(response.getResourceId(), "Repayment transaction ID should not be null");
+        log.debug("Working Capital loan repayment of {} made on {} for loan {}, transaction ID: {}", transactionAmount, transactionDate,
+                loanIdentifier, response.getResourceId());
+    }
+
+    private PostWorkingCapitalLoanTransactionsPaymentDetailRequest buildPaymentDetailsFromTable(final DataTable table) {
+        final Map<String, String> paymentDetailsMap = convertDataTableToMap(table);
+        return buildPaymentDetailsObject(paymentDetailsMap);
+    }
+
+    private Map<String, String> convertDataTableToMap(final DataTable table) {
+        final List<List<String>> rows = table.asLists(String.class);
+        final List<String> headers = rows.get(0);
+        final List<String> values = rows.get(1);
+
+        final Map<String, String> map = new HashMap<>();
+        for (int i = 0; i < headers.size(); i++) {
+            map.put(headers.get(i), values.get(i));
+        }
+        return map;
+    }
+
+    private PostWorkingCapitalLoanTransactionsPaymentDetailRequest buildPaymentDetailsObject(final Map<String, String> paymentDetailsMap) {
+        final PostWorkingCapitalLoanTransactionsPaymentDetailRequest paymentDetails = new PostWorkingCapitalLoanTransactionsPaymentDetailRequest();
+
+        if (paymentDetailsMap.containsKey("paymentType")) {
+            final DefaultPaymentType paymentType = DefaultPaymentType.valueOf(paymentDetailsMap.get("paymentType"));
+            final long paymentTypeId = paymentTypeResolver.resolve(paymentType);
+            paymentDetails.paymentTypeId(paymentTypeId);
+        }
+        if (paymentDetailsMap.containsKey("accountNumber")) {
+            paymentDetails.accountNumber(paymentDetailsMap.get("accountNumber"));
+        }
+        if (paymentDetailsMap.containsKey("checkNumber")) {
+            paymentDetails.checkNumber(paymentDetailsMap.get("checkNumber"));
+        }
+        if (paymentDetailsMap.containsKey("routingCode")) {
+            paymentDetails.routingCode(paymentDetailsMap.get("routingCode"));
+        }
+        if (paymentDetailsMap.containsKey("receiptNumber")) {
+            paymentDetails.receiptNumber(paymentDetailsMap.get("receiptNumber"));
+        }
+        if (paymentDetailsMap.containsKey("bankNumber")) {
+            paymentDetails.bankNumber(paymentDetailsMap.get("bankNumber"));
+        }
+
+        return paymentDetails;
+    }
+
+    @Then("Initiating a repayment on {string} with {double} transaction amount on Working Capital loan results an error with the following data:")
+    public void initiateRepaymentResultsAnErrorWithDetails(final String transactionDate, final double transactionAmount,
+            final DataTable table) {
+        final Long loanId = getCreatedLoanId();
+        final PostWorkingCapitalLoanTransactionsRequest repaymentRequest = buildRepaymentRequest(transactionDate, transactionAmount, null);
+
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoanTransactions()
+                .executeWorkingCapitalLoanTransactionById(loanId, "repayment", repaymentRequest));
+
+        if (table != null) {
+            verifyRepaymentErrorWithTable(exception, table);
+        }
+
+        log.debug("Verified working capital loan repayment failed with expected error for loan {}", loanId);
+    }
+
+    private void verifyRepaymentErrorWithTable(final CallFailedRuntimeException exception, final DataTable table) {
+        final List<List<String>> data = table.asLists();
+        final String expectedHttpCode = data.get(1).get(0);
+        final String expectedErrorMessage = data.get(1).get(1);
+
+        log.debug("Checking for Http code: {} and error message: \"{}\"", expectedHttpCode, expectedErrorMessage);
+
+        assertThat(exception.getStatus()).as("HTTP status code should be " + expectedHttpCode)
+                .isEqualTo(Integer.parseInt(expectedHttpCode));
+        assertThat(exception.getMessage()).as("Should contain error message").contains(expectedErrorMessage);
     }
 }

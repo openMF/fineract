@@ -16,15 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.workingcapitalloan.domain;
+package org.apache.fineract.portfolio.workingcapitalloan.data;
 
-public enum WorkingCapitalLoanEvent {
+import java.math.BigDecimal;
 
-    LOAN_APPROVED, //
-    LOAN_APPROVAL_UNDO, //
-    LOAN_REJECTED, //
-    LOAN_DISBURSED, //
-    LOAN_DISBURSAL_UNDO, //
-    LOAN_REPAID_IN_FULL, //
-    LOAN_OVERPAID //
+public record RepaymentAmortizationData(BigDecimal currentDayAmortizedAmount, BigDecimal totalAmortizedAmount) {
 }

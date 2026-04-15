@@ -31,6 +31,7 @@ import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.infrastructure.core.serialization.gson.JsonExclude;
 import org.apache.fineract.infrastructure.core.service.MathUtil;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
@@ -48,6 +49,7 @@ import org.apache.fineract.organisation.monetary.domain.Money;
  */
 @Getter
 @Accessors(fluent = true)
+@Slf4j
 public final class ProjectedAmortizationScheduleModel {
 
     private static final String MODEL_VERSION = "1";
@@ -162,15 +164,34 @@ public final class ProjectedAmortizationScheduleModel {
                 expectedDisbursementDate, Money.of(currency, expectedPayment, mc), term, eir, mc, currency);
     }
 
+    public LocalDate normalizePaymentDateForSchedule(final LocalDate paymentDate) {
+        Objects.requireNonNull(paymentDate, "paymentDate");
+        final LocalDate firstInstallmentDate = expectedDisbursementDate.plusDays(1);
+        if (paymentDate.isBefore(firstInstallmentDate) || paymentDate.equals(expectedDisbursementDate)) {
+            return firstInstallmentDate;
+        }
+
+        if (payments == null || payments.isEmpty()) {
+            return paymentDate;
+        }
+        final ProjectedPayment nearestUnpaid = payments.stream().filter(p -> p.paymentNo() > 0).filter(p -> p.actualPaymentAmount() == null)
+                .findFirst().orElse(null);
+        if (nearestUnpaid != null && nearestUnpaid.date() != null) {
+            return nearestUnpaid.date();
+        }
+        return paymentDate;
+    }
+
     public void applyPayment(final LocalDate paymentDate, final BigDecimal amount) {
         Objects.requireNonNull(paymentDate, "paymentDate");
         Objects.requireNonNull(amount, "amount");
-        final int index = resolvePaymentIndex(paymentDate);
+        final LocalDate scheduleDate = normalizePaymentDateForSchedule(paymentDate);
+        final int index = resolvePaymentIndex(scheduleDate);
         if (index < 0 || index >= loanTerm) {
             throw new IllegalArgumentException("paymentDate " + paymentDate + " is outside the valid range ["
                     + expectedDisbursementDate.plusDays(1) + " .. " + expectedDisbursementDate.plusDays(loanTerm) + "]");
         }
-        appliedPayments.add(new AppliedPayment(paymentDate, amount));
+        appliedPayments.add(new AppliedPayment(scheduleDate, amount));
         rebuildPayments();
     }
 
@@ -182,6 +203,38 @@ public final class ProjectedAmortizationScheduleModel {
         newModel.appliedPayments.addAll(appliedPayments);
         newModel.rebuildPayments();
         return newModel;
+    }
+
+    public void recalculateNetAmortizationAndDeferredBalanceFrom(final LocalDate repaymentDate) {
+        if (repaymentDate == null || payments == null || payments.isEmpty()) {
+            return;
+        }
+        final ProjectedPayment lastRepayment = payments.stream().filter(p -> p.paymentNo() > 0).filter(p -> repaymentDate.equals(p.date()))
+                .reduce((a, b) -> b).orElse(null);
+
+        if (lastRepayment == null) {
+            log.warn("Repayment date {} not found among projected payments; skipping net/deferred recalculation", repaymentDate);
+            return;
+        }
+
+        int fromIndex = payments.indexOf(lastRepayment);
+
+        BigDecimal runningNetAmortization = amountOrZero(payments.get(fromIndex).netAmortizationAmount());
+        BigDecimal runningDeferredBalance = amountOrZero(payments.get(fromIndex).deferredBalance());
+
+        final List<ProjectedPayment> adjusted = new ArrayList<>(payments.subList(0, fromIndex + 1));
+        for (int i = fromIndex + 1; i < payments.size(); i++) {
+            final ProjectedPayment current = payments.get(i);
+            final BigDecimal actualTotalAmortization = amountOrZero(current.actualAmortizationAmount());
+            runningNetAmortization = runningNetAmortization.subtract(actualTotalAmortization, mc);
+            runningDeferredBalance = runningDeferredBalance.subtract(actualTotalAmortization, mc);
+
+            adjusted.add(new ProjectedPayment(current.paymentNo(), current.date(), current.count(), current.paymentsLeft(),
+                    current.expectedPaymentAmount(), current.forecastPaymentAmount(), current.discountFactor(), current.npvValue(),
+                    current.balance(), current.expectedAmortizationAmount(), money(runningNetAmortization), current.actualPaymentAmount(),
+                    current.actualAmortizationAmount(), current.incomeModification(), money(runningDeferredBalance)));
+        }
+        this.payments = List.copyOf(adjusted);
     }
 
     private void rebuildPayments() {
@@ -273,6 +326,10 @@ public final class ProjectedAmortizationScheduleModel {
         }
 
         return result;
+    }
+
+    private static BigDecimal amountOrZero(final Money value) {
+        return value != null && value.getAmount() != null ? value.getAmount() : BigDecimal.ZERO;
     }
 
     private ProjectedPayment createDisbursementPayment(final int appliedCount) {

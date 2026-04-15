@@ -114,13 +114,44 @@ public class WorkingCapitalLoanBreachScheduleServiceImpl implements WorkingCapit
     }
 
     @Override
+    public boolean evaluateBreachOnDate(final WorkingCapitalLoanBreachSchedule period, final LocalDate businessDate) {
+        final boolean canBreach = period.getOutstandingAmount().compareTo(BigDecimal.ZERO) > 0;
+        if (canBreach) {
+            if (businessDate.isAfter(period.getToDate())) {
+                period.setBreach(true);
+            }
+        } else {
+            period.setBreach(false);
+        }
+        log.debug("Evaluated breach schedule period {} for WC loan {}: breach={}", period.getPeriodNumber(), period.getLoan().getId(),
+                period.getBreach());
+        return period.getBreach() != null;
+    }
+
+    @Override
+    public void applyRepayment(Long loanId, LocalDate transactionDate, BigDecimal amount) {
+        Optional<WorkingCapitalLoanBreachSchedule> currentPeriod = repository
+                .findByLoanIdAndFromDateLessThanEqualAndToDateGreaterThanEqual(loanId, transactionDate, transactionDate);
+        currentPeriod.ifPresent(period -> applyRepayment(period, amount, loanId));
+    }
+
+    private void applyRepayment(final WorkingCapitalLoanBreachSchedule period, BigDecimal payAmount, Long loanId) {
+        BigDecimal newPaidAmount = period.getPaidAmount().add(payAmount);
+        period.setPaidAmount(newPaidAmount);
+        period.setOutstandingAmount(period.getOutstandingAmount().subtract(payAmount).max(BigDecimal.ZERO));
+        if (period.getOutstandingAmount().compareTo(BigDecimal.ZERO) == 0 && period.getBreach() == null) {
+            period.setBreach(false);
+        }
+        repository.saveAndFlush(period);
+        log.debug("Applied repayment of {} to Breach Schedule period {} for WC loan {}", payAmount, period.getPeriodNumber(), loanId);
+    }
+
+    @Override
     public void evaluateExpiredPeriods(final WorkingCapitalLoan loan, final LocalDate businessDate) {
         final List<WorkingCapitalLoanBreachSchedule> unevaluatedPeriods = repository
                 .findByLoanIdAndToDateLessThanEqualAndBreachIsNull(loan.getId(), businessDate);
         for (final WorkingCapitalLoanBreachSchedule period : unevaluatedPeriods) {
-            final boolean breached = period.getOutstandingAmount().compareTo(BigDecimal.ZERO) > 0;
-            period.setBreach(breached);
-            log.debug("Evaluated breach schedule period {} for WC loan {}: breach={}", period.getPeriodNumber(), loan.getId(), breached);
+            evaluateBreachOnDate(period, businessDate);
         }
         if (!unevaluatedPeriods.isEmpty()) {
             repository.saveAllAndFlush(unevaluatedPeriods);
