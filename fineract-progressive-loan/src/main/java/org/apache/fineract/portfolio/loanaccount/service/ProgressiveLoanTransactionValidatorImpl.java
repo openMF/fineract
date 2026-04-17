@@ -516,6 +516,16 @@ public class ProgressiveLoanTransactionValidatorImpl implements ProgressiveLoanT
     }
 
     @Override
+    public void validateLoanNotClosedOrOverpaidForTransactions(Loan loan) {
+        loanTransactionValidator.validateLoanNotClosedOrOverpaidForTransactions(loan);
+    }
+
+    @Override
+    public void validateLoanNotClosedOrOverpaidForTransactions(Loan loan, LoanTransactionType loanTransactionType) {
+        loanTransactionValidator.validateLoanNotClosedOrOverpaidForTransactions(loan, loanTransactionType);
+    }
+
+    @Override
     public void validateActivityNotBeforeLastTransactionDate(Loan loan, LocalDate activityDate, LoanEvent event) {
         loanTransactionValidator.validateActivityNotBeforeLastTransactionDate(loan, activityDate, event);
     }

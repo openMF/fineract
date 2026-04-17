@@ -37,6 +37,7 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
 import org.apache.fineract.infrastructure.codes.domain.CodeValueRepository;
+import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
@@ -111,6 +112,7 @@ public class LoanTransactionValidatorImpl implements LoanTransactionValidator {
     private final LoanDownPaymentTransactionValidator loanDownPaymentTransactionValidator;
     private final LoanDisbursementValidator loanDisbursementValidator;
     private final CodeValueRepository codeValueRepository;
+    private final ConfigurationDomainService configurationDomainService;
 
     private void throwExceptionIfValidationWarningsExist(final List<ApiParameterError> dataValidationErrors) {
         if (!dataValidationErrors.isEmpty()) {
@@ -667,6 +669,23 @@ public class LoanTransactionValidatorImpl implements LoanTransactionValidator {
         }
     }
 
+    @Override
+    public void validateLoanNotClosedOrOverpaidForTransactions(Loan loan) {
+        validateLoanNotClosedOrOverpaidForTransactions(loan, null);
+    }
+
+    @Override
+    public void validateLoanNotClosedOrOverpaidForTransactions(Loan loan, LoanTransactionType loanTransactionType) {
+        boolean blockTransactions = configurationDomainService.isBlockTransactionsOnClosedOverpaidLoansEnabled();
+        if (LoanTransactionType.CREDIT_BALANCE_REFUND.equals(loanTransactionType)) {
+            return;
+        }
+        if (blockTransactions && (loan.isClosed() || loan.getStatus().isOverpaid())) {
+            throw new GeneralPlatformDomainRuleException("error.msg.loan.transaction.not.allowed.on.closed.or.overpaid",
+                    "Monetary transactions are not allowed on closed or overpaid loan accounts", loan.getId());
+        }
+    }
+
     protected void validateLoanHasNoLaterChargeRefundTransactionToReverseOrCreateATransaction(Loan loan, LocalDate transactionDate,
             String reversedOrCreated) {
         for (LoanTransaction txn : loan.getLoanTransactions()) {
@@ -789,6 +808,7 @@ public class LoanTransactionValidatorImpl implements LoanTransactionValidator {
         validateLoanClientIsActive(loan);
         validateLoanHasCurrency(loan);
         validateLoanGroupIsActive(loan);
+        validateLoanNotClosedOrOverpaidForTransactions(loan, LoanTransactionType.INTEREST_PAYMENT_WAIVER);
         loanDownPaymentTransactionValidator.validateLoanStatusIsActiveOrFullyPaidOrOverpaid(loan);
         validateLoanDisbursementIsBeforeTransactionDate(loan, transactionDate);
         validateLoanHasNoLaterChargeRefundTransactionToReverseOrCreateATransaction(loan, transactionDate, "created");
@@ -826,6 +846,7 @@ public class LoanTransactionValidatorImpl implements LoanTransactionValidator {
     public void validateRefund(final Loan loan, LoanTransactionType loanTransactionType, final LocalDate transactionDate,
             ScheduleGeneratorDTO scheduleGeneratorDTO) {
         checkClientOrGroupActive(loan);
+        validateLoanNotClosedOrOverpaidForTransactions(loan, loanTransactionType);
         loanDownPaymentTransactionValidator.validateLoanStatusIsActiveOrFullyPaidOrOverpaid(loan);
         validateActivityNotBeforeClientOrGroupTransferDate(loan, transactionDate);
         validateRepaymentTypeTransactionNotBeforeAChargeRefund(loan, loanTransactionType, transactionDate);

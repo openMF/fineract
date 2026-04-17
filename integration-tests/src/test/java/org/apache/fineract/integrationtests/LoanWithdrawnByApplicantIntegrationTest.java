@@ -32,7 +32,7 @@ public class LoanWithdrawnByApplicantIntegrationTest extends BaseLoanIntegration
     public void loanWithdrawnByApplicant() {
         final Long clientId = ClientHelper.createClient(new PostClientsRequest() //
                 .officeId(1L) //
-                .legalFormId(1L) //
+                .legalFormId(ClientHelper.LEGALFORM_ID_PERSON) //
                 .firstname(Utils.randomFirstNameGenerator()) //
                 .lastname(Utils.randomLastNameGenerator()) //
                 .active(true) //

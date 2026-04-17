@@ -165,4 +165,6 @@ public interface ConfigurationDomainService {
     Integer retrieveMaxLoginRetries();
 
     boolean isAllowCashAndNonCashAccrual();
+
+    boolean isBlockTransactionsOnClosedOverpaidLoansEnabled();
 }

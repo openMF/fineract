@@ -34,7 +34,7 @@ public enum JdbcJavaType {
             return value == null ? null : (Boolean.TRUE.equals(value) ? 1 : 0);
         }
     },
-    BOOLEAN(JavaType.BOOLEAN, new DialectType(JDBCType.BIT), new DialectType(JDBCType.BOOLEAN, null, "BOOL")) { //
+    BOOLEAN(JavaType.BOOLEAN, new DialectType(JDBCType.BIT, null, "BOOL", "BOOLEAN"), new DialectType(JDBCType.BOOLEAN, null, "BOOL")) { //
 
         @Override
         public Object toJdbcValueImpl(@NonNull DatabaseType dialect, Object value) {

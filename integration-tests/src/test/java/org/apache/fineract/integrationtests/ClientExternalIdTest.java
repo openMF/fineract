@@ -232,7 +232,6 @@ public class ClientExternalIdTest {
         ClientHelper.closeClient(clientExternalId, closureReasonId);
         ClientHelper.reactivateClient(clientExternalId);
 
-        // then
         final DeleteClientsClientIdResponse clientDeleteResponse = ClientHelper.deleteClientByExternalId(clientExternalId);
         assertNotNull(clientDeleteResponse);
         assertNotNull(clientDeleteResponse.getResourceExternalId());
