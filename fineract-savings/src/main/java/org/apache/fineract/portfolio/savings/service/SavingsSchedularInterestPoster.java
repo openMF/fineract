@@ -67,16 +67,10 @@ public class SavingsSchedularInterestPoster {
     public void postInterest() throws JobExecutionException {
         if (!savingAccounts.isEmpty()) {
             List<Throwable> errors = new ArrayList<>();
-            LocalDate yesterday = DateUtils.getBusinessLocalDate().minusDays(1);
             for (SavingsAccountData savingsAccountData : savingAccounts) {
                 boolean postInterestAsOn = false;
                 LocalDate transactionDate = null;
                 try {
-                    if (isInterestAlreadyPostedForPeriod(savingsAccountData, yesterday)) {
-                        log.debug("Interest already posted for savings account {} up to date {}, skipping", savingsAccountData.getId(),
-                                savingsAccountData.getSummary().getInterestPostedTillDate());
-                        continue;
-                    }
                     SavingsAccountData savingsAccountDataRet = savingsAccountWritePlatformService.postInterest(savingsAccountData,
                             postInterestAsOn, transactionDate, backdatedTxnsAllowedTill);
                     savingsAccountDataList.add(savingsAccountDataRet);
@@ -168,15 +162,18 @@ public class SavingsSchedularInterestPoster {
         String queryForSavingsUpdate = batchQueryForSavingsSummaryUpdate();
         String queryForTransactionInsertion = batchQueryForTransactionInsertion();
         String queryForTransactionUpdate = batchQueryForTransactionsUpdate();
-        List<Object[]> paramsForTransactionInsertion = new ArrayList<>();
-        List<Object[]> paramsForSavingsSummary = new ArrayList<>();
-        List<Object[]> paramsForTransactionUpdate = new ArrayList<>();
-        List<String> transRefNo = new ArrayList<>();
         LocalDate currentDate = DateUtils.getBusinessLocalDate();
         Long userId = platformSecurityContext.authenticatedUser().getId();
+
+        List<Object[]> paramsForSavingsSummary = new ArrayList<>();
+        List<List<String>> perAccountRefNos = new ArrayList<>();
+        List<List<Object[]>> perAccountInsertionParams = new ArrayList<>();
+        List<List<Object[]>> perAccountUpdateParams = new ArrayList<>();
+
         for (SavingsAccountData savingsAccountData : savingsAccountDataList) {
             OffsetDateTime auditTime = DateUtils.getAuditOffsetDateTime();
             SavingsAccountSummaryData savingsAccountSummaryData = savingsAccountData.getSummary();
+
             paramsForSavingsSummary.add(new Object[] { savingsAccountSummaryData.getTotalDeposits(),
                     savingsAccountSummaryData.getTotalWithdrawals(), savingsAccountSummaryData.getTotalInterestEarned(),
                     savingsAccountSummaryData.getTotalInterestPosted(), savingsAccountSummaryData.getTotalWithdrawalFees(),
@@ -186,14 +183,19 @@ public class SavingsSchedularInterestPoster {
                     savingsAccountSummaryData.getLastInterestCalculationDate(),
                     savingsAccountSummaryData.getInterestPostedTillDate() != null ? savingsAccountSummaryData.getInterestPostedTillDate()
                             : savingsAccountSummaryData.getLastInterestCalculationDate(),
-                    auditTime, userId, savingsAccountData.getId() });
+                    auditTime, userId, savingsAccountData.getId(), savingsAccountData.getVersion() });
+
+            List<String> transRefNo = new ArrayList<>();
+            List<Object[]> insertionParams = new ArrayList<>();
+            List<Object[]> updateParams = new ArrayList<>();
+
             List<SavingsAccountTransactionData> savingsAccountTransactionDataList = savingsAccountData.getSavingsAccountTransactionData();
             for (SavingsAccountTransactionData savingsAccountTransactionData : savingsAccountTransactionDataList) {
                 if (savingsAccountTransactionData.getId() == null && !MathUtil.isZero(savingsAccountTransactionData.getAmount())) {
                     UUID uuid = UUID.randomUUID();
                     savingsAccountTransactionData.setRefNo(uuid.toString());
                     transRefNo.add(uuid.toString());
-                    paramsForTransactionInsertion.add(new Object[] { savingsAccountData.getId(), savingsAccountData.getOfficeId(),
+                    insertionParams.add(new Object[] { savingsAccountData.getId(), savingsAccountData.getOfficeId(),
                             savingsAccountTransactionData.isReversed(), savingsAccountTransactionData.getTransactionType().getId(),
                             savingsAccountTransactionData.getTransactionDate(), savingsAccountTransactionData.getAmount(),
                             savingsAccountTransactionData.getBalanceEndDate(), savingsAccountTransactionData.getBalanceNumberOfDays(),
@@ -202,35 +204,58 @@ public class SavingsSchedularInterestPoster {
                             savingsAccountTransactionData.getRefNo(), savingsAccountTransactionData.isReversalTransaction(),
                             savingsAccountTransactionData.getOverdraftAmount(), currentDate });
                 } else {
-                    paramsForTransactionUpdate.add(new Object[] { savingsAccountTransactionData.isReversed(),
-                            savingsAccountTransactionData.getAmount(), savingsAccountTransactionData.getOverdraftAmount(),
-                            savingsAccountTransactionData.getBalanceEndDate(), savingsAccountTransactionData.getBalanceNumberOfDays(),
-                            savingsAccountTransactionData.getRunningBalance(), savingsAccountTransactionData.getCumulativeBalance(),
-                            savingsAccountTransactionData.isReversalTransaction(), auditTime, userId,
-                            savingsAccountTransactionData.getId() });
+                    updateParams.add(new Object[] { savingsAccountTransactionData.isReversed(), savingsAccountTransactionData.getAmount(),
+                            savingsAccountTransactionData.getOverdraftAmount(), savingsAccountTransactionData.getBalanceEndDate(),
+                            savingsAccountTransactionData.getBalanceNumberOfDays(), savingsAccountTransactionData.getRunningBalance(),
+                            savingsAccountTransactionData.getCumulativeBalance(), savingsAccountTransactionData.isReversalTransaction(),
+                            auditTime, userId, savingsAccountTransactionData.getId() });
                 }
             }
             savingsAccountData.setUpdatedTransactions(savingsAccountTransactionDataList);
+
+            perAccountRefNos.add(transRefNo);
+            perAccountInsertionParams.add(insertionParams);
+            perAccountUpdateParams.add(updateParams);
         }
 
-        if (transRefNo.size() > 0) {
-            this.jdbcTemplate.batchUpdate(queryForSavingsUpdate, paramsForSavingsSummary);
-            this.jdbcTemplate.batchUpdate(queryForTransactionInsertion, paramsForTransactionInsertion);
-            this.jdbcTemplate.batchUpdate(queryForTransactionUpdate, paramsForTransactionUpdate);
-            log.debug("`Total No Of Interest Posting:` {}", transRefNo.size());
-            List<SavingsAccountTransactionData> savingsAccountTransactionDataList = fetchTransactionsFromIds(transRefNo);
-            if (savingsAccountDataList != null) {
-                log.debug("Fetched Transactions from DB: {}", savingsAccountTransactionDataList.size());
+        boolean anyNewTransactions = perAccountRefNos.stream().anyMatch(list -> !list.isEmpty());
+        if (!anyNewTransactions) {
+            return;
+        }
+
+        int[] updateCounts = this.jdbcTemplate.batchUpdate(queryForSavingsUpdate, paramsForSavingsSummary);
+
+        List<String> allTransRefNo = new ArrayList<>();
+        List<Object[]> allInsertionParams = new ArrayList<>();
+        List<Object[]> allUpdateParams = new ArrayList<>();
+        List<SavingsAccountData> successfulAccounts = new ArrayList<>();
+
+        for (int i = 0; i < updateCounts.length; i++) {
+            if (updateCounts[i] == 0) {
+                log.warn("Optimistic lock failure for savings account id={} — concurrent modification detected."
+                        + " Skipping. Will retry on next run.", savingsAccountDataList.get(i).getId());
+                continue;
             }
+            allTransRefNo.addAll(perAccountRefNos.get(i));
+            allInsertionParams.addAll(perAccountInsertionParams.get(i));
+            allUpdateParams.addAll(perAccountUpdateParams.get(i));
+            successfulAccounts.add(savingsAccountDataList.get(i));
+        }
+
+        if (!allTransRefNo.isEmpty()) {
+            this.jdbcTemplate.batchUpdate(queryForTransactionInsertion, allInsertionParams);
+            this.jdbcTemplate.batchUpdate(queryForTransactionUpdate, allUpdateParams);
+            log.debug("`Total No Of Interest Posting:` {}", allTransRefNo.size());
+            List<SavingsAccountTransactionData> fetchedTransactions = fetchTransactionsFromIds(allTransRefNo);
+            log.debug("Fetched Transactions from DB: {}", fetchedTransactions.size());
 
             HashMap<String, SavingsAccountTransactionData> savingsAccountTransactionMap = new HashMap<>();
-            for (SavingsAccountTransactionData savingsAccountTransactionData : savingsAccountTransactionDataList) {
+            for (SavingsAccountTransactionData savingsAccountTransactionData : fetchedTransactions) {
                 final String key = savingsAccountTransactionData.getRefNo();
                 savingsAccountTransactionMap.put(key, savingsAccountTransactionData);
             }
-            batchUpdateJournalEntries(savingsAccountDataList, savingsAccountTransactionMap);
+            batchUpdateJournalEntries(successfulAccounts, savingsAccountTransactionMap);
         }
-
     }
 
     private String batchQueryForTransactionInsertion() {
@@ -245,20 +270,12 @@ public class SavingsSchedularInterestPoster {
         return "update m_savings_account set total_deposits_derived=?, total_withdrawals_derived=?, total_interest_earned_derived=?, total_interest_posted_derived=?, total_withdrawal_fees_derived=?, "
                 + "total_fees_charge_derived=?, total_penalty_charge_derived=?, total_annual_fees_derived=?, account_balance_derived=?, total_overdraft_interest_derived=?, total_withhold_tax_derived=?, "
                 + "last_interest_calculation_date=?, interest_posted_till_date=?, " + LAST_MODIFIED_DATE_DB_FIELD + " = ?, "
-                + LAST_MODIFIED_BY_DB_FIELD + " = ? WHERE id=? ";
+                + LAST_MODIFIED_BY_DB_FIELD + " = ?, version = version + 1 WHERE id=? AND version=?";
     }
 
     private String batchQueryForTransactionsUpdate() {
         return "UPDATE m_savings_account_transaction "
                 + "SET is_reversed=?, amount=?, overdraft_amount_derived=?, balance_end_date_derived=?, balance_number_of_days_derived=?, running_balance_derived=?, cumulative_balance_derived=?, is_reversal=?, "
                 + LAST_MODIFIED_DATE_DB_FIELD + " = ?, " + LAST_MODIFIED_BY_DB_FIELD + " = ? " + "WHERE id=?";
-    }
-
-    private boolean isInterestAlreadyPostedForPeriod(SavingsAccountData savingsAccountData, LocalDate yesterday) {
-        LocalDate interestPostedTillDate = savingsAccountData.getSummary().getInterestPostedTillDate();
-        if (interestPostedTillDate == null) {
-            return false;
-        }
-        return !interestPostedTillDate.isBefore(yesterday);
     }
 }
