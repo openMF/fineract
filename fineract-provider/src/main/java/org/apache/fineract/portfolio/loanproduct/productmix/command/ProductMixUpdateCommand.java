@@ -16,20 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.loanproduct.productmix.service;
+package org.apache.fineract.portfolio.loanproduct.productmix.command;
 
-import org.apache.fineract.portfolio.loanproduct.productmix.data.ProductMixCreateRequest;
-import org.apache.fineract.portfolio.loanproduct.productmix.data.ProductMixCreateResponse;
-import org.apache.fineract.portfolio.loanproduct.productmix.data.ProductMixDeleteRequest;
-import org.apache.fineract.portfolio.loanproduct.productmix.data.ProductMixDeleteResponse;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.apache.fineract.command.core.Command;
 import org.apache.fineract.portfolio.loanproduct.productmix.data.ProductMixUpdateRequest;
-import org.apache.fineract.portfolio.loanproduct.productmix.data.ProductMixUpdateResponse;
 
-public interface ProductMixWritePlatformService {
-
-    ProductMixCreateResponse createProductMix(ProductMixCreateRequest request);
-
-    ProductMixUpdateResponse updateProductMix(ProductMixUpdateRequest request);
-
-    ProductMixDeleteResponse deleteProductMix(ProductMixDeleteRequest request);
-}
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class ProductMixUpdateCommand extends Command<ProductMixUpdateRequest> {}

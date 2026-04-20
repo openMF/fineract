@@ -20,10 +20,21 @@ package org.apache.fineract.portfolio.loanproduct.productmix.data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.List;
+import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
+import org.apache.fineract.commands.annotation.CommandType;
 
-public record ProductMixRequest(List<Long> restrictedProducts) implements Serializable {
+@Data
+@Builder
+@Jacksonized
+@CommandType(entity = "PRODUCTMIX", action = "DELETE")
+public class ProductMixDeleteResponse implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
+
+    private Long productId;
+    private Map<String, Object> changes;
 }

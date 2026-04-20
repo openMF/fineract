@@ -1431,6 +1431,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
                 .withClientId(savingsAccountCharge.savingsAccount().clientId()) //
                 .withGroupId(savingsAccountCharge.savingsAccount().groupId()) //
                 .withSavingsId(savingsAccountCharge.savingsAccount().getId()) //
+                .withTransactionId(chargeTransaction.getId().toString()) //
                 .build();
 
     }
