@@ -59,6 +59,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 23 January 2021  | Credit Balance Refund  | 85.63  | 85.63     | 0.0      | 0.0  | 0.0       | 85.63        | false    | true     |
       | 22 January 2021  | Accrual                | 5.42   | 0.0       | 5.42     | 0.0  | 0.0       | 0.0          | false    | false    |
     And In Loan Transactions the "2"th Transaction has Transaction type="Repayment" and is reverted
+    When Admin sets the business date to "01 February 2021"
+    When Loan Pay-off is made on "01 February 2021"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3303
   Scenario: UC18-3 - In case of refund reversal the Interest Refund transaction needs to be recalculated
@@ -103,6 +106,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 22 January 2021  | Accrual                | 5.7    | 0.0       | 5.7      | 0.0  | 0.0       | 0.0          | false    | false    |
     Then In Loan Transactions the "2"th Transaction has Transaction type="Merchant Issued Refund" and is reverted
     Then In Loan Transactions the "3"th Transaction has Transaction type="Interest Refund" and is reverted
+    When Admin sets the business date to "01 February 2021"
+    When Loan Pay-off is made on "01 February 2021"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3313
   Scenario: Verify that due date charges after maturity date is recognized on repayment schedule
@@ -162,6 +168,8 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Charges tab has the following data:
       | Name    | isPenalty | Payment due at     | Due as of   | Calculation type | Due  | Paid | Waived | Outstanding |
       | NSF fee | true      | Specified due date | 15 May 2024 | Flat             | 10.0 | 0.0  | 0.0    | 10.0        |
+    When Loan Pay-off is made on "15 May 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3333
   Scenario: Verify that due date charges after maturity date with inline COB run is recognized on repayment schedule
@@ -234,6 +242,8 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Charges tab has the following data:
       | Name    | isPenalty | Payment due at     | Due as of        | Calculation type | Due  | Paid | Waived | Outstanding |
       | NSF fee | true      | Specified due date | 15 February 2024 | Flat             | 10.0 | 0.0  | 0.0    | 10.0        |
+    When Loan Pay-off is made on "15 February 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3314
   Scenario: Verify that interest refund transaction won't be created and displayed when Merchant issued refund happens on disbursement date
@@ -276,6 +286,7 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 01 January 2024  | Disbursement           | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
       | 01 January 2024  | Merchant Issued Refund | 100.0  | 100.0     | 0.0      | 0.0  | 0.0       | 0.0          | false    | false    |
     And Admin set "LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALCULATION_DAILY_TILL_PRECLOSE" loan product "MERCHANT_ISSUED_REFUND" transaction type to "REAMORTIZATION" future installment allocation rule
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3322
   Scenario: Verify accrual activity with amend rate factor after calculated interest for period was rounded - UC1: Preclose, with full disbursement at first day, accrual activity after month
@@ -342,6 +353,8 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 30 January 2024  | Accrual          | 0.19   | 0.0       | 0.19     | 0.0  | 0.0       | 0.0          |
       | 31 January 2024  | Accrual          | 0.19   | 0.0       | 0.19     | 0.0  | 0.0       | 0.0          |
       | 01 February 2024 | Accrual          | 0.18   | 0.0       | 0.18     | 0.0  | 0.0       | 0.0          |
+    When Loan Pay-off is made on "02 February 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3323
   Scenario: Verify accrual activity with amend rate factor after calculated interest for period was rounded - UC2: Preclose, with multi disbursements, accrual activity after month
@@ -452,6 +465,8 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 30 January 2024  | Accrual          | 0.38   | 0.0       | 0.38     | 0.0  | 0.0       | 0.0          |
       | 31 January 2024  | Accrual          | 0.38   | 0.0       | 0.38     | 0.0  | 0.0       | 0.0          |
       | 01 February 2024 | Accrual          | 0.37   | 0.0       | 0.37     | 0.0  | 0.0       | 0.0          |
+    When Loan Pay-off is made on "02 February 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3327
   Scenario: Verify accruals isn't reversed and replayed in COB for loan with disabled auto repayment for down payment
@@ -507,6 +522,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 03 January 2024  | Disbursement     | 800.0  | 0.0       | 0.0      | 0.0  | 0.0       | 800.0        | false    | false    |
       | 03 January 2024  | Repayment        | 200.0  | 200.0     | 0.0      | 0.0  | 0.0       | 600.0        | false    | false    |
       | 04 January 2024  | Accrual          | 0.11   | 0.0       | 0.11     | 0.0  | 0.0       | 0.0          | false    | false    |
+    When Admin sets the business date to "03 May 2024"
+    When Loan Pay-off is made on "03 May 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3328
   Scenario: Verify accruals isn't reversed and replayed in COB for loan with enabled auto repayment for down payment
@@ -561,6 +579,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 03 January 2024  | Disbursement     | 800.0  | 0.0       | 0.0      | 0.0  | 0.0       | 800.0        | false    | false    |
       | 03 January 2024  | Down Payment     | 200.0  | 200.0     | 0.0      | 0.0  | 0.0       | 600.0        | false    | false    |
       | 04 January 2024  | Accrual          | 0.11   | 0.0       | 0.11     | 0.0  | 0.0       | 0.0          | false    | false    |
+    When Admin sets the business date to "03 May 2024"
+    When Loan Pay-off is made on "03 May 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3329
   Scenario: Verify interest rate should not be calculated on past due principle amount for progressive loans - case when lesser than EMI amount was paid
@@ -625,6 +646,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 01 January 2024  | Disbursement     | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
       | 01 February 2024 | Accrual          | 0.58   | 0.0       | 0.58     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 15 February 2024 | Repayment        | 15.0   | 15.0      | 0.0      | 0.0  | 0.0       | 85.0         | false    | false    |
+    When Admin sets the business date to "01 July 2024"
+    When Loan Pay-off is made on "01 July 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3330
   Scenario: Verify interest rate should not be calculated on past due principle amount for progressive loans - case when full EMI amount was paid
@@ -689,6 +713,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 01 January 2024  | Disbursement     | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
       | 01 February 2024 | Accrual          | 0.58   | 0.0       | 0.58     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 15 February 2024 | Repayment        | 17.01  | 16.43     | 0.58     | 0.0  | 0.0       | 83.57        | false    | false    |
+    When Admin sets the business date to "01 July 2024"
+    When Loan Pay-off is made on "01 July 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3331
   Scenario: Verify interest rate should not be calculated on past due principle amount for progressive loans - case when excess EMI amount was paid
@@ -753,6 +780,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 01 January 2024  | Disbursement     | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
       | 01 February 2024 | Accrual          | 0.58   | 0.0       | 0.58     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 15 February 2024 | Repayment        | 34.02  | 33.2      | 0.82     | 0.0  | 0.0       | 66.8         | false    | false    |
+    When Admin sets the business date to "01 July 2024"
+    When Loan Pay-off is made on "01 July 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3332
   Scenario: Verify interest rate should not be calculated on past due principle amount for progressive loans - case when multiple disbursal occurred with full EMI amount was paid
@@ -819,6 +849,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 01 January 2024  | Disbursement     | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
       | 10 February 2024 | Disbursement     | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 200.0        | false    | false    |
       | 15 March 2024    | Repayment        | 54.33  | 52.86     | 1.47     | 0.0  | 0.0       | 147.14       | false    | false    |
+    When Admin sets the business date to "01 July 2024"
+    When Loan Pay-off is made on "01 July 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3334
   Scenario: Verify that COB works properly while creating accruals for a overpaid account (accruals created on COB not when charge is created)
@@ -885,6 +918,8 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | Name    | isPenalty | Payment due at     | Due as of       | Calculation type | Due  | Paid | Waived | Outstanding |
       | NSF fee | true      | Specified due date | 23 October 2024 | Flat             | 20.0 | 2.0  | 0.0    | 18.0        |
     When Admin set "LP1_ADV_PMT_ALLOC_PROGRESSIVE_LOAN_SCHEDULE_HORIZONTAL" loan product "DEFAULT" transaction type to "NEXT_INSTALLMENT" future installment allocation rule
+    When Loan Pay-off is made on "24 October 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3384
   Scenario: Verify the repayment schedule in case of interest bearing loan, interest recalculation enabled, 12 months loan, Merchant issued refund (next installment) on disbursement date
@@ -943,6 +978,7 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 01 January 2025  | Disbursement           | 1000.0 | 0.0       | 0.0      | 0.0  | 0.0       | 1000.0       | false    | false    |
       | 01 January 2025  | Merchant Issued Refund | 1000.0 | 1000.0    | 0.0      | 0.0  | 0.0       | 0.0          | false    | false    |
     And Admin set "LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALCULATION_DAILY_TILL_PRECLOSE_PMT_ALLOC_1" loan product "MERCHANT_ISSUED_REFUND" transaction type to "REAMORTIZATION" future installment allocation rule
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3385
   Scenario: Verify the repayment schedule in case of interest bearing loan, interest recalculation enabled, 12 months loan, Merchant issued refund (reamortization) on disbursement date
@@ -1000,6 +1036,7 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | Transaction date | Transaction Type       | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 01 January 2025  | Disbursement           | 1000.0 | 0.0       | 0.0      | 0.0  | 0.0       | 1000.0       | false    | false    |
       | 01 January 2025  | Merchant Issued Refund | 1000.0 | 1000.0    | 0.0      | 0.0  | 0.0       | 0.0          | false    | false    |
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3387
   Scenario: Verify that no negative amount is calculated for Accruals
@@ -1331,6 +1368,7 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 10 January 2025  | Repayment        | 680.3  | 668.69    | 11.61    | 0.0  | 0.0       | 0.0          | false    | false    |
       | 10 January 2025  | Accrual Activity | 11.61  | 0.0       | 11.61    | 0.0  | 0.0       | 0.0          | false    | false    |
       | 11 January 2025  | Accrual          | 11.48  | 0.0       | 11.48    | 0.0  | 0.0       | 0.0          | false    | false    |
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3433
   Scenario: Verify partial interest calculated on loan with disbursement date '12 December 2023' and 10000 amount - UC1
@@ -1356,6 +1394,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount  | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 12 December 2023 | Disbursement     | 10000.0 | 0.0       | 0.0      | 0.0  | 0.0       | 10000.0      | false    | false    |
+    When Admin sets the business date to "12 June 2024"
+    When Loan Pay-off is made on "12 June 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3434
   Scenario: Verify partial interest calculated on loan with disbursement date '12 December 2023' and 331.77 amount - UC2
@@ -1380,6 +1421,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 12 December 2023 | Disbursement     | 331.77 | 0.0       | 0.0      | 0.0  | 0.0       | 331.77       | false    | false    |
+    When Admin sets the business date to "12 May 2024"
+    When Loan Pay-off is made on "12 May 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3435
   Scenario: Verify partial interest calculated on loan with disbursement date '23 July 2024' and 15000 amount - UC3
@@ -1403,6 +1447,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount  | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 23 July 2024     | Disbursement     | 15000.0 | 0.0       | 0.0      | 0.0  | 0.0       | 15000.0      | false    | false    |
+    When Admin sets the business date to "23 November 2024"
+    When Loan Pay-off is made on "23 November 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3436
   Scenario: Verify interest calculated on loan that disbursed on 31 date with disbursement date '31 October 2023' and 2450 amount - UC4
@@ -1428,6 +1475,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 31 October 2023  | Disbursement     | 2450.0 | 0.0       | 0.0      | 0.0  | 0.0       | 2450.0       | false    | false    |
+    When Admin sets the business date to "30 April 2024"
+    When Loan Pay-off is made on "30 April 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3437
   Scenario: Verify interest calculated on loan that disbursed on 31 date with backdated disbursement date '31 October 2023' and 2450 amount - UC5
@@ -1453,6 +1503,8 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 31 October 2023  | Disbursement     | 2450.0 | 0.0       | 0.0      | 0.0  | 0.0       | 2450.0       | false    | false    |
+    When Loan Pay-off is made on "21 January 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3438
   Scenario: Verify interest calculated on loan that disbursed on 31 date with disbursement date '31 October 2023' and 245000 amount - UC6
@@ -1478,6 +1530,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount   | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 31 October 2023  | Disbursement     | 245000.0 | 0.0       | 0.0      | 0.0  | 0.0       | 245000.0     | false    | false    |
+    When Admin sets the business date to "30 April 2024"
+    When Loan Pay-off is made on "30 April 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3439
   Scenario: Verify interest calculated on loan that disbursed on 31 date with backdated disbursement date '31 October 2023' and 5000 amount - UC7
@@ -1503,6 +1558,8 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 31 October 2023  | Disbursement     | 5000.0 | 0.0       | 0.0      | 0.0  | 0.0       | 5000.0       | false    | false    |
+    When Loan Pay-off is made on "21 January 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3440
   Scenario: Verify interest calculated on loan that disbursed on 30 date with disbursement date '30 October 2021' and 1500 amount - UC8
@@ -1528,6 +1585,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 30 October 2021  | Disbursement     | 1500.0 | 0.0       | 0.0      | 0.0  | 0.0       | 1500.0       | false    | false    |
+    When Admin sets the business date to "30 April 2022"
+    When Loan Pay-off is made on "30 April 2022"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3441
   Scenario: Verify interest calculated on loan that disbursed on 29 date with disbursement date '29 October 2022' and 5000 amount - UC9
@@ -1553,6 +1613,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 29 October 2022  | Disbursement     | 5000.0 | 0.0       | 0.0      | 0.0  | 0.0       | 5000.0       | false    | false    |
+    When Admin sets the business date to "29 October 2023"
+    When Loan Pay-off is made on "29 October 2023"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3455
   Scenario: Verify interest calculated on backdated loan with zero interest rate  - UC1
@@ -1575,6 +1638,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 13 January 2025  | Disbursement     | 900.0  | 0.0       | 0.0      | 0.0  | 0.0       | 900.0        | false    | false    |
+    When Admin sets the business date to "13 April 2025"
+    When Loan Pay-off is made on "13 April 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3456
   Scenario: Verify interest calculated on backdated loan with zero interest rate and run COB - UC2
@@ -1612,6 +1678,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 13 January 2025  | Disbursement     | 900.0  | 0.0       | 0.0      | 0.0  | 0.0       | 900.0        | false    | false    |
+    When Admin sets the business date to "13 April 2025"
+    When Loan Pay-off is made on "13 April 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3457
   Scenario: Verify interest calculated on backdated loan with zero interest rate and repayment - UC3
@@ -1648,6 +1717,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 13 January 2025  | Disbursement     | 900.0  | 0.0       | 0.0      | 0.0  | 0.0       | 900.0        | false    | false    |
       | 20 January 2025  | Repayment        | 300.0  | 300.0     | 0.0      | 0.0  | 0.0       | 600.0        | false    | false    |
+    When Admin sets the business date to "13 April 2025"
+    When Loan Pay-off is made on "13 April 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3458
   Scenario: Verify interest calculated on backdated loan with zero interest rate and repayment reversal - UC4
@@ -1698,6 +1770,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 13 January 2025  | Disbursement     | 900.0  | 0.0       | 0.0      | 0.0  | 0.0       | 900.0        | false    | false    |
       | 14 February 2025 | Repayment        | 300.0  | 300.0     | 0.0      | 0.0  | 0.0       | 600.0        | true     | false    |
+    When Admin sets the business date to "13 April 2025"
+    When Loan Pay-off is made on "13 April 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3459
   Scenario: Verify interest calculated on backdated loan with zero interest rate and pay-off - UC5
@@ -1758,6 +1833,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due      | Paid | In advance | Late | Outstanding |
       | 10000.0       | 279.23   | 0.0  | 0.0       | 10279.23 | 0.0  | 0.0        | 0.0  | 10279.23    |
+    When Admin sets the business date to "12 June 2024"
+    When Loan Pay-off is made on "12 June 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3539
   Scenario: Verify leap year calculation with no February month but leap year - UC2
@@ -1778,6 +1856,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due      | Paid | In advance | Late | Outstanding |
       | 15000.0       | 381.66   | 0.0  | 0.0       | 15381.66 | 0.0  | 0.0        | 0.0  | 15381.66    |
+    When Admin sets the business date to "23 November 2024"
+    When Loan Pay-off is made on "23 November 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3540
   Scenario: Verify leap year calculation with February in one period - UC3
@@ -1800,6 +1881,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due       | Paid | In advance | Late | Outstanding |
       | 245000.0      | 33090.31 | 0.0  | 0.0       | 278090.31 | 0.0  | 0.0        | 0.0  | 278090.31   |
+    When Admin sets the business date to "30 April 2024"
+    When Loan Pay-off is made on "30 April 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3541
   Scenario: Verify leap year calculation with no February month - leap and non-leap year split - UC4
@@ -1822,6 +1906,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due     | Paid | In advance | Late | Outstanding |
       | 2450.0        | 71.45    | 0.0  | 0.0       | 2521.45 | 0.0  | 0.0        | 0.0  | 2521.45     |
+    When Admin sets the business date to "30 April 2025"
+    When Loan Pay-off is made on "30 April 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3542
   Scenario: Verify leap year calculation with no leap year - UC5
@@ -1844,6 +1931,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due     | Paid | In advance | Late | Outstanding |
       | 5000.0        | 206.05   | 0.0  | 0.0       | 5206.05 | 0.0  | 0.0        | 0.0  | 5206.05     |
+    When Admin sets the business date to "29 October 2023"
+    When Loan Pay-off is made on "29 October 2023"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3622
   Scenario: Verify that RecalculationRestFrequencyType SameAsRepaymentPeriod work as intended in case of minimal amount (0.05 cent) of payments
@@ -1899,6 +1989,8 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due      | Paid | In advance | Late | Outstanding |
       | 8000.0        | 3456.78  | 0.0  | 0.0       | 11456.78 | 0.05 | 0.0        | 0.04 | 11456.73    |
+    When Loan Pay-off is made on "02 July 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3657
   Scenario: Verify tranche interest bearing progressive loan that expects two tranches with repayment and undo last disbursement - UC1
@@ -2057,6 +2149,8 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 31 January 2025  | Accrual           | 0.11   | 0.0       | 0.11     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 01 February 2025 | Accrual           | 0.11   | 0.0       | 0.11     | 0.0  | 0.0       | 0.0          | false    | false    |
     Then Admin fails to disburse the loan on "02 February 2025" with "200" amount
+    When Loan Pay-off is made on "02 February 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3658
   Scenario: Verify tranche interest bearing progressive loan that expects two tranches with two repayments and undo last disbursement - UC2
@@ -2250,6 +2344,8 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 31 January 2025  | Accrual           | 0.11   | 0.0       | 0.11     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 01 February 2025 | Accrual           | 0.09   | 0.0       | 0.09     | 0.0  | 0.0       | 0.0          | false    | false    |
     Then Admin fails to disburse the loan on "02 February 2025" with "200" amount
+    When Loan Pay-off is made on "02 February 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3659
   Scenario: Verify tranche interest bearing progressive loan that expects tranche with added 2 more tranches and undo last disbursement - UC3
@@ -2437,6 +2533,8 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 14 January 2025  | Accrual          | 0.17   | 0.0       | 0.17     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 15 January 2025  | Accrual          | 0.17   | 0.0       | 0.17     | 0.0  | 0.0       | 0.0          | false    | false    |
     Then Admin fails to disburse the loan on "16 January 2025" with "100" amount
+    When Loan Pay-off is made on "16 January 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3660
   Scenario: Verify tranche interest bearing progressive loan that expects tranche with repayment and undo disbursement - UC4
@@ -2605,6 +2703,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 01 February 2025 | Disbursement      | 750.0  | 0.0       | 0.0      | 0.0  | 0.0       | 750.0        | false    | false    |
       | 01 March 2025    | Disbursement      | 200.0  | 0.0       | 0.0      | 0.0  | 0.0       | 950.0        | false    | false    |
     Then Admin fails to disburse the loan on "01 March 2025" with "50" amount
+    When Admin sets the business date to "01 August 2025"
+    When Loan Pay-off is made on "01 August 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3636
   Scenario: Verify that no negative amount interest refund created after multiple Merchant Issued Refund
@@ -2712,6 +2813,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 06 April 2025    | Accrual                | 0.17   | 0.0       | 0.17     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 07 April 2025    | Merchant Issued Refund | 1.99   | 1.99      | 0.0      | 0.0  | 0.0       | 279.61       | false    | false    |
       | 07 April 2025    | Accrual                | 0.16   | 0.0       | 0.16     | 0.0  | 0.0       | 0.0          | false    | false    |
+    When Admin sets the business date to "05 October 2025"
+    When Loan Pay-off is made on "05 October 2025"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3783
   Scenario: Verify that remaining repayment periods are correctly calculated when early repayment is made on till rest frequency type loan
@@ -2762,6 +2866,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 05 January 2024  | Accrual          | 0.02   | 0.0       | 0.02     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 06 January 2024  | Accrual          | 0.01   | 0.0       | 0.01     | 0.0  | 0.0       | 0.0          | false    | false    |
       | 07 January 2024  | Repayment        | 17.01  | 16.9      | 0.11     | 0.0  | 0.0       | 83.1         | false    | false    |
+    When Admin sets the business date to "01 July 2024"
+    When Loan Pay-off is made on "01 July 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3798
   Scenario: Verify prepayment on daily interest recalculation loan with preClosureInterestCalculationStrategy = till rest frequency date
@@ -2911,6 +3018,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | Transaction date | Transaction Type        | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 01 June 2024     | Disbursement            | 1000.0 | 0.0       | 0.0      | 0.0  | 0.0       | 1000.0       | false    | false    |
       | 15 July 2024     | Repayment               | 813.6  | 792.23    | 21.37    | 0.0  | 0.0       | 457.77       | true     | false    |
+    When Admin sets the business date to "01 September 2024"
+    When Loan Pay-off is made on "01 September 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3831
   Scenario: Progressive loan - flat interest, multi-disbursement, allowPartialPeriodInterestCalculation = true, actual/actual, second disbursement on the due date of installment period
@@ -2995,6 +3105,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 01 June 2024     | Disbursement            | 1000.0 | 0.0       | 0.0      | 0.0  | 0.0       | 1000.0       | false    | false    |
       | 01 August 2024   | Repayment               | 1282.5 | 1250.0    | 32.5     | 0.0  | 0.0       | 0.0          | true     | false    |
       | 01 August 2024   | Accrual                 | 32.5   | 0.0       | 32.5     | 0.0  | 0.0       | 0.0          | false    | false    |
+    When Admin sets the business date to "01 September 2024"
+    When Loan Pay-off is made on "01 September 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3832
   Scenario: Progressive loan - flat interest, multi-disbursement, allowPartialPeriodInterestCalculation = true, 360/30, second disbursement in the middle of installment period
@@ -3077,6 +3190,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | Transaction date | Transaction Type        | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 01 June 2024     | Disbursement            | 1000.0 | 0.0       | 0.0      | 0.0  | 0.0       | 1000.0       | false    | false    |
       | 15 July 2024     | Repayment               | 813.6  | 792.23    | 21.37    | 0.0  | 0.0       | 457.77       | true     | false    |
+    When Admin sets the business date to "01 September 2024"
+    When Loan Pay-off is made on "01 September 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3833
   Scenario: Progressive loan - flat interest, multi-disbursement, allowPartialPeriodInterestCalculation = true, 360/30, second disbursement on the due date of installment period
@@ -3161,6 +3277,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 01 June 2024     | Disbursement            | 1000.0 | 0.0       | 0.0      | 0.0  | 0.0       | 1000.0       | false    | false    |
       | 01 August 2024   | Repayment               | 1282.5 | 1250.0    | 32.5     | 0.0  | 0.0       | 0.0          | true     | false    |
       | 01 August 2024   | Accrual                 | 32.5   | 0.0       | 32.5     | 0.0  | 0.0       | 0.0          | false    | false    |
+    When Admin sets the business date to "01 September 2024"
+    When Loan Pay-off is made on "01 September 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3834
   Scenario: Progressive loan - down payment, flat interest, multi-disbursement, allowPartialPeriodInterestCalculation = true, actual/actual, second disbursement in the middle of installment period
@@ -3233,6 +3352,9 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | ASSET     | 112601       | Loans Receivable          |       | 906.67 |
       | ASSET     | 112603       | Interest/Fee Receivable   |       | 16.03  |
       | LIABILITY | 145023       | Suspense/Clearing account | 922.7 |        |
+    When Admin sets the business date to "01 September 2024"
+    When Loan Pay-off is made on "01 September 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C3835
   Scenario: Progressive loan - flat interest, multi-disbursement, allowPartialPeriodInterestCalculation = false, actual/actual, second disbursement in the middle of installment period
@@ -3315,4 +3437,7 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
       | 01 June 2024     | Disbursement     | 1000.0 | 0.0       | 0.0      | 0.0  | 0.0       | 1000.0       | false    | false    |
       | 15 July 2024     | Repayment        | 814.17 | 791.67    | 22.5     | 0.0  | 0.0       | 458.33       | true     | false    |
+    When Admin sets the business date to "01 September 2024"
+    When Loan Pay-off is made on "01 September 2024"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 

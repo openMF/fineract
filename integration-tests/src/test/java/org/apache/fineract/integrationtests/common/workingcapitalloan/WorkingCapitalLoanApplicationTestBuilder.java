@@ -209,12 +209,8 @@ public class WorkingCapitalLoanApplicationTestBuilder {
         if (delinquencyBucketId != null) {
             json.addProperty("delinquencyBucketId", delinquencyBucketId);
         }
-        if (delinquencyGraceDays != null) {
-            json.addProperty("delinquencyGraceDays", delinquencyGraceDays);
-        }
-        if (delinquencyStartType != null) {
-            json.addProperty("delinquencyStartType", delinquencyStartType);
-        }
+        json.addProperty("delinquencyGraceDays", delinquencyGraceDays);
+        json.addProperty("delinquencyStartType", delinquencyStartType);
         if (breachId != null) {
             json.addProperty("breachId", breachId);
         }
