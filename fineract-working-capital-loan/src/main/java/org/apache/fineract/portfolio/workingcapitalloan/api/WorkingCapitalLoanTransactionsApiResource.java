@@ -151,7 +151,7 @@ public class WorkingCapitalLoanTransactionsApiResource {
     @GET
     @Path("{loanId}/template")
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(operationId = "retrieveWorkingCapitalLoanTemplate", summary = "Retrieve Working Capital Loan action template", description = "Returns loan data for applying the proper loan action")
+    @Operation(operationId = "retrieveWorkingCapitalLoanActionTemplate", summary = "Retrieve Working Capital Loan action template", description = "Returns loan data for applying the proper loan action")
     public WorkingCapitalLoanCommandTemplateData retrieveWorkingCapitalLoanTemplate(
             @PathParam("loanId") @Parameter(description = "loanId", required = true) final Long loanId,
             @QueryParam("templateType") @Parameter(description = "templateType") final String templateType,
