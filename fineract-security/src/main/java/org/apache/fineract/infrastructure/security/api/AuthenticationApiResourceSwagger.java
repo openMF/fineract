@@ -72,5 +72,9 @@ public final class AuthenticationApiResourceSwagger {
         public Collection<RoleData> roles;
         @Schema(example = "ALL_FUNCTIONS")
         public Collection<String> permissions;
+        @Schema(example = "false")
+        public boolean shouldRenewPassword;
+        @Schema(example = "false")
+        public boolean isTwoFactorAuthenticationRequired;
     }
 }
