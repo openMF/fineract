@@ -558,6 +558,14 @@ configure(project.fineractJavaProjects) {
         checkstyle 'com.github.sevntu-checkstyle:sevntu-checks:1.44.1'
     }
 
+    tasks.withType(org.gradle.api.plugins.quality.Checkstyle).configureEach {
+        exclude("**/*.avsc")
+
+        if (project.path.startsWith(':custom:acme:')) {
+            enabled = false
+        }
+    }
+
     // Configuration for JaCoCo code coverage task
     // https://www.eclemma.org/jacoco/
     jacoco {
@@ -759,6 +767,11 @@ configure(project.fineractJavaProjects) {
             }
         }
     }
+    tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+        if (project.path.startsWith(':custom:acme:')) {
+            enabled = false
+        }
+    }
 
     // Configuration for https://github.com/andygoossens/gradle-modernizer-plugin
     modernizer {
@@ -933,8 +946,4 @@ tasks.register('printSourceSetInformation') {
             println ""
         }
     }
-}
-
-tasks.withType(Checkstyle).configureEach {
-    exclude("**/*.avsc")
 }

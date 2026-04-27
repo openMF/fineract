@@ -791,6 +791,30 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder createWorkingCapitalNearBreach() {
+        this.actionName = "CREATE";
+        this.entityName = "WORKINGCAPITALNEARBREACH";
+        this.entityId = null;
+        this.href = "/working-capital/near-breach";
+        return this;
+    }
+
+    public CommandWrapperBuilder updateWorkingCapitalNearBreach(final Long breachId) {
+        this.actionName = "UPDATE";
+        this.entityName = "WORKINGCAPITALNEARBREACH";
+        this.entityId = breachId;
+        this.href = "/working-capital/near-breach/" + breachId;
+        return this;
+    }
+
+    public CommandWrapperBuilder deleteWorkingCapitalNearBreach(final Long breachId) {
+        this.actionName = "DELETE";
+        this.entityName = "WORKINGCAPITALNEARBREACH";
+        this.entityId = breachId;
+        this.href = "/working-capital/near-breach/" + breachId;
+        return this;
+    }
+
     public CommandWrapperBuilder createWorkingCapitalLoanApplication() {
         this.actionName = ACTION_CREATE;
         this.entityName = ENTITY_WORKINGCAPITALLOAN;

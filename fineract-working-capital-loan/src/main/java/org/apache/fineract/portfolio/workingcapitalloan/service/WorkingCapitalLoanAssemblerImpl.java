@@ -57,6 +57,8 @@ import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoa
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanRepository;
 import org.apache.fineract.portfolio.workingcapitalloanbreach.domain.WorkingCapitalBreach;
 import org.apache.fineract.portfolio.workingcapitalloanbreach.repository.WorkingCapitalBreachRepository;
+import org.apache.fineract.portfolio.workingcapitalloannearbreach.domain.WorkingCapitalNearBreach;
+import org.apache.fineract.portfolio.workingcapitalloannearbreach.repository.WorkingCapitalNearBreachRepository;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.WorkingCapitalLoanProductConstants;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAdvancedPaymentAllocationsJsonParser;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
@@ -83,6 +85,7 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
     private final AccountNumberGeneratorService accountNumberGeneratorService;
     private final WorkingCapitalLoanRepository workingCapitalLoanRepository;
     private final WorkingCapitalBreachRepository breachRepository;
+    private final WorkingCapitalNearBreachRepository nearBreachRepository;
 
     @Override
     public WorkingCapitalLoan assembleFrom(final JsonCommand command) {
@@ -185,7 +188,14 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
         } else {
             detail.setBreach(product.getBreach());
         }
-
+        final Long nearBreachId = fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.nearBreachIdParamName, element)
+                ? fromApiJsonHelper.extractLongNamed(WorkingCapitalLoanProductConstants.nearBreachIdParamName, element)
+                : null;
+        if (nearBreachId != null) {
+            detail.setNearBreach(findNearBreachById(nearBreachId));
+        } else {
+            detail.setNearBreach(product.getNearBreach());
+        }
         detail.setDelinquencyGraceDays(
                 fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element)
                         ? fromApiJsonHelper.extractIntegerNamed(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element,
@@ -356,6 +366,14 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
                 detail.setBreach(breachId != null ? findBreachById(breachId) : null);
                 changes.put(WorkingCapitalLoanProductConstants.breachIdParamName, breachId);
             }
+            final Long existingNearBreachId = detail.getNearBreach() != null ? detail.getNearBreach().getId() : null;
+            if (fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.nearBreachIdParamName, element) && command
+                    .isChangeInLongParameterNamed(WorkingCapitalLoanProductConstants.nearBreachIdParamName, existingNearBreachId)) {
+                final Long nearBreachId = fromApiJsonHelper.extractLongNamed(WorkingCapitalLoanProductConstants.nearBreachIdParamName,
+                        element);
+                detail.setNearBreach(nearBreachId != null ? findNearBreachById(nearBreachId) : null);
+                changes.put(WorkingCapitalLoanProductConstants.nearBreachIdParamName, nearBreachId);
+            }
             if (fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName, element)) {
                 final Long bucketId = fromApiJsonHelper.extractLongNamed(WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName,
                         element);
@@ -434,5 +452,11 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
         return breachRepository.findById(breachId)
                 .orElseThrow(() -> new GeneralPlatformDomainRuleException("error.msg.wclp.breach.not.found",
                         "Working Capital Breach with id " + breachId + " was not found.", breachId));
+    }
+
+    private WorkingCapitalNearBreach findNearBreachById(final Long nearBreachId) {
+        return nearBreachRepository.findById(nearBreachId)
+                .orElseThrow(() -> new GeneralPlatformDomainRuleException("error.msg.wclp.nearbreach.not.found",
+                        "Working Capital Near Breach with id " + nearBreachId + " was not found.", nearBreachId));
     }
 }

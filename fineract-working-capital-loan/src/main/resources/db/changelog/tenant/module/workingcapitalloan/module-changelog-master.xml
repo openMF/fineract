@@ -54,4 +54,5 @@
   <include relativeToChangelogFile="true" file="parts/0030_wc_loan_credit_balance_refund_classification_code.xml"/>
   <include relativeToChangelogFile="true" file="parts/0031_wc_loan_credit_balance_refund_external_events.xml"/>
   <include relativeToChangelogFile="true" file="parts/0032_wc_loan_balance_overpayment_amount.xml"/>
+  <include relativeToChangelogFile="true" file="parts/0033_wc_near_breach_configuration.xml"/>
 </databaseChangeLog>
