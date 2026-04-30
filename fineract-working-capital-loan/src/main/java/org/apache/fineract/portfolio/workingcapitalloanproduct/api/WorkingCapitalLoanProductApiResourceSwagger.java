@@ -24,10 +24,16 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import org.apache.fineract.accounting.glaccount.data.GLAccountData;
+import org.apache.fineract.accounting.producttoaccountmapping.data.AdvancedMappingToExpenseAccountData;
+import org.apache.fineract.accounting.producttoaccountmapping.data.ChargeToGLAccountMapper;
+import org.apache.fineract.accounting.producttoaccountmapping.data.PaymentTypeToGLAccountMapper;
+import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.data.StringEnumOptionData;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
+import org.apache.fineract.portfolio.charge.data.ChargeData;
 import org.apache.fineract.portfolio.fund.data.FundData;
+import org.apache.fineract.portfolio.paymenttype.data.PaymentTypeData;
 import org.apache.fineract.portfolio.workingcapitalloanbreach.data.WorkingCapitalBreachData;
 import org.apache.fineract.portfolio.workingcapitalloannearbreach.data.WorkingCapitalNearBreachData;
 
@@ -162,6 +168,11 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public Long chargeOffExpenseAccountId;
         @Schema(example = "18")
         public Long chargeOffFraudExpenseAccountId;
+        public List<WorkingCapitalLoanPaymentChannelToFundSourceMappings> paymentChannelToFundSourceMappings;
+        public List<WorkingCapitalLoanProductChargeToGLAccountMapper> feeToIncomeAccountMappings;
+        public List<WorkingCapitalLoanProductChargeToGLAccountMapper> penaltyToIncomeAccountMappings;
+        public List<WorkingCapitalPostChargeOffReasonToExpenseAccountMappings> chargeOffReasonToExpenseAccountMappings;
+        public List<WorkingCapitalPostWriteOffReasonToExpenseAccountMappings> writeOffReasonsToExpenseMappings;
 
         @Schema(example = "en_GB")
         public String locale;
@@ -206,6 +217,42 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
             public Boolean periodPaymentFrequency;
             @Schema(example = "true")
             public Boolean periodPaymentFrequencyType;
+        }
+
+        @Schema(description = "WorkingCapitalLoanPaymentChannelToFundSourceMappings")
+        public static final class WorkingCapitalLoanPaymentChannelToFundSourceMappings {
+
+            private WorkingCapitalLoanPaymentChannelToFundSourceMappings() {}
+
+            public Long paymentTypeId;
+            public Long fundSourceAccountId;
+        }
+
+        @Schema(description = "WorkingCapitalLoanProductChargeToGLAccountMapper")
+        public static final class WorkingCapitalLoanProductChargeToGLAccountMapper {
+
+            private WorkingCapitalLoanProductChargeToGLAccountMapper() {}
+
+            public Long chargeId;
+            public Long incomeAccountId;
+        }
+
+        @Schema(description = "WorkingCapitalPostChargeOffReasonToExpenseAccountMappings")
+        public static final class WorkingCapitalPostChargeOffReasonToExpenseAccountMappings {
+
+            private WorkingCapitalPostChargeOffReasonToExpenseAccountMappings() {}
+
+            public Long chargeOffReasonCodeValueId;
+            public Long expenseAccountId;
+        }
+
+        @Schema(description = "WorkingCapitalPostWriteOffReasonToExpenseAccountMappings")
+        public static final class WorkingCapitalPostWriteOffReasonToExpenseAccountMappings {
+
+            private WorkingCapitalPostWriteOffReasonToExpenseAccountMappings() {}
+
+            public Long writeOffReasonCodeValueId;
+            public Long expenseAccountId;
         }
     }
 
@@ -285,6 +332,11 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         // Accounting
         public StringEnumOptionData accountingRule;
         public Map<String, GLAccountData> accountingMappings;
+        public List<PaymentTypeToGLAccountMapper> paymentChannelToFundSourceMappings;
+        public List<ChargeToGLAccountMapper> feeToIncomeAccountMappings;
+        public List<ChargeToGLAccountMapper> penaltyToIncomeAccountMappings;
+        public List<AdvancedMappingToExpenseAccountData> chargeOffReasonToExpenseAccountMappings;
+        public List<AdvancedMappingToExpenseAccountData> writeOffReasonsToExpenseMappings;
 
         @Schema(description = "GetDelinquencyBucket")
         public static final class GetDelinquencyBucket {
@@ -375,6 +427,9 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         private GetWorkingCapitalLoanProductsTemplateResponse() {}
 
         public List<FundData> fundOptions;
+        public List<PaymentTypeData> paymentTypeOptions;
+        public List<ChargeData> chargeOptions;
+        public List<ChargeData> penaltyOptions;
         public List<CurrencyData> currencyOptions;
         public List<StringEnumOptionData> amortizationTypeOptions;
         public List<StringEnumOptionData> periodFrequencyTypeOptions;
@@ -387,6 +442,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public List<GetWorkingCapitalLoanProductsResponse.GetDelinquencyBucket> delinquencyBucketOptions;
         public List<StringEnumOptionData> accountingRuleOptions;
         public Map<String, Object> accountingMappingOptions;
+        public List<CodeValueData> chargeOffReasonOptions;
+        public List<CodeValueData> writeOffReasonOptions;
     }
 
     @Schema(description = "GetWorkingCapitalLoanProductsProductIdResponse")
@@ -456,6 +513,11 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         // Accounting
         public StringEnumOptionData accountingRule;
         public Map<String, GLAccountData> accountingMappings;
+        public List<PaymentTypeToGLAccountMapper> paymentChannelToFundSourceMappings;
+        public List<ChargeToGLAccountMapper> feeToIncomeAccountMappings;
+        public List<ChargeToGLAccountMapper> penaltyToIncomeAccountMappings;
+        public List<AdvancedMappingToExpenseAccountData> chargeOffReasonToExpenseAccountMappings;
+        public List<AdvancedMappingToExpenseAccountData> writeOffReasonsToExpenseMappings;
     }
 
     @Schema(description = "PutWorkingCapitalLoanProductsProductIdRequest")
@@ -566,6 +628,11 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public Long chargeOffExpenseAccountId;
         @Schema(example = "18")
         public Long chargeOffFraudExpenseAccountId;
+        public List<PostWorkingCapitalLoanProductsRequest.WorkingCapitalLoanPaymentChannelToFundSourceMappings> paymentChannelToFundSourceMappings;
+        public List<PostWorkingCapitalLoanProductsRequest.WorkingCapitalLoanProductChargeToGLAccountMapper> feeToIncomeAccountMappings;
+        public List<PostWorkingCapitalLoanProductsRequest.WorkingCapitalLoanProductChargeToGLAccountMapper> penaltyToIncomeAccountMappings;
+        public List<PostWorkingCapitalLoanProductsRequest.WorkingCapitalPostChargeOffReasonToExpenseAccountMappings> chargeOffReasonToExpenseAccountMappings;
+        public List<PostWorkingCapitalLoanProductsRequest.WorkingCapitalPostWriteOffReasonToExpenseAccountMappings> writeOffReasonsToExpenseMappings;
 
         @Schema(example = "en_GB")
         public String locale;

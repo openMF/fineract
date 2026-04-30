@@ -120,7 +120,13 @@ public class WorkingCapitalLoanProductDataValidator {
                     WorkingCapitalLoanProductConstants.chargeOffExpenseAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.chargeOffFraudExpenseAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.breachIdParamName, //
-                    WorkingCapitalLoanProductConstants.nearBreachIdParamName //
+                    WorkingCapitalLoanProductConstants.nearBreachIdParamName, //
+                    WorkingCapitalLoanProductConstants.paymentChannelToFundSourceMappingsParamName, //
+                    WorkingCapitalLoanProductConstants.feeToIncomeAccountMappingsParamName, //
+                    WorkingCapitalLoanProductConstants.penaltyToIncomeAccountMappingsParamName, //
+                    WorkingCapitalLoanProductConstants.chargeOffReasonToExpenseAccountMappingsParamName, //
+                    WorkingCapitalLoanProductConstants.writeOffReasonsToExpenseMappingsParamName, //
+                    WorkingCapitalLoanProductConstants.breachIdParamName //
             ));
 
     public void validateForCreate(final String json) {

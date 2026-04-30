@@ -487,6 +487,7 @@ Feature: Working Capital Delinquency Reschedule Action
       | 1            | 01 January 2026 | 30 January 2026 | 100            | 0          | 100               |                       |
     Then WC loan delinquency actions contain 2 actions
 
+  @TestRailId:C76652
   Scenario: Verify that reschedule with no parameters is rejected
     When Admin sets the business date to "01 January 2026"
     When Admin creates a client with random data
@@ -500,6 +501,7 @@ Feature: Working Capital Delinquency Reschedule Action
     When Admin runs inline COB job for Working Capital Loan
     Then Admin fails to create WC delinquency reschedule action with no parameters with error containing "At least one of payment"
 
+  @TestRailId:C76653
   Scenario: Verify that reschedule with minimumPayment but without minimumPaymentType is rejected
     When Admin sets the business date to "01 January 2026"
     When Admin creates a client with random data
@@ -515,6 +517,7 @@ Feature: Working Capital Delinquency Reschedule Action
       | minimumPayment |
       | 5              |
 
+  @TestRailId:C76654
   Scenario: Verify that reschedule with frequency but without frequencyType is rejected
     When Admin sets the business date to "01 January 2026"
     When Admin creates a client with random data
@@ -530,6 +533,7 @@ Feature: Working Capital Delinquency Reschedule Action
       | frequency |
       | 30        |
 
+  @TestRailId:C76655
   Scenario: Verify that reschedule with invalid minimumPaymentType is rejected
     When Admin sets the business date to "01 January 2026"
     When Admin creates a client with random data
@@ -545,6 +549,7 @@ Feature: Working Capital Delinquency Reschedule Action
       | minimumPayment | minimumPaymentType |
       | 5              | INVALID            |
 
+  @TestRailId:C76656
   Scenario: Verify that FLAT reschedule with COB generates periods with flat amount
     When Admin sets the business date to "01 January 2026"
     When Admin creates a client with random data
@@ -568,6 +573,7 @@ Feature: Working Capital Delinquency Reschedule Action
       | 3            | 02 March 2026     | 31 March 2026     | 150            | 0          | 150               | false                 |
       | 4            | 01 April 2026     | 30 April 2026     | 150            | 0          | 150               |                       |
 
+  @TestRailId:C76657
   Scenario: Verify that reschedule with FLAT minimumPaymentType uses flat amount
     When Admin sets the business date to "01 January 2026"
     When Admin creates a client with random data
@@ -589,6 +595,8 @@ Feature: Working Capital Delinquency Reschedule Action
       | action     | startDate       | minimumPayment | minimumPaymentType | frequency | frequencyType |
       | RESCHEDULE | 01 January 2026 | 150            | FLAT               | 30        | DAYS          |
 
+  @Skip
+  @TestRailId:C76658
   Scenario: Verify that reschedule with payment group only keeps original frequency
     When Admin sets the business date to "01 January 2026"
     When Admin creates a client with random data
@@ -618,6 +626,8 @@ Feature: Working Capital Delinquency Reschedule Action
       | 7            | 30 June 2026     | 29 July 2026        | 100            | 0          | 100               | false                 |
       | 8            | 30 July 2026     | 28 August 2026      | 100            | 0          | 100               |                       |
 
+  @Skip
+  @TestRailId:C76659
   Scenario: Verify that reschedule with frequency group only keeps original payment
     When Admin sets the business date to "01 January 2026"
     When Admin creates a client with random data

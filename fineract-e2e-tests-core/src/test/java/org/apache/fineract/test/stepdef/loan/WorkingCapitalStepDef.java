@@ -25,6 +25,7 @@ import static org.apache.fineract.test.support.TestContextKey.WORKING_CAPITAL_NE
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -36,6 +37,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.feign.ObjectMapperFactory;
 import org.apache.fineract.client.feign.services.WorkingCapitalLoanProductsApi;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.CommandProcessingResult;
@@ -47,6 +49,7 @@ import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsProductIdR
 import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsResponse;
 import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsTemplateResponse;
 import org.apache.fineract.client.models.InternalWorkingCapitalLoanPaymentRequest;
+import org.apache.fineract.client.models.PaymentTypeToGLAccountMapper;
 import org.apache.fineract.client.models.PostAllowAttributeOverrides;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest.AccountingRuleEnum;
@@ -56,9 +59,13 @@ import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdR
 import org.apache.fineract.client.models.PutWorkingCapitalLoanProductsProductIdResponse;
 import org.apache.fineract.client.models.StringEnumOptionData;
 import org.apache.fineract.client.models.WorkingCapitalBreachRequest;
+import org.apache.fineract.client.models.WorkingCapitalLoanPaymentChannelToFundSourceMappings;
 import org.apache.fineract.client.models.WorkingCapitalNearBreachRequest;
+import org.apache.fineract.client.models.WorkingCapitalPostChargeOffReasonToExpenseAccountMappings;
+import org.apache.fineract.client.models.WorkingCapitalPostWriteOffReasonToExpenseAccountMappings;
 import org.apache.fineract.test.data.accounttype.AccountTypeResolver;
 import org.apache.fineract.test.data.accounttype.DefaultAccountType;
+import org.apache.fineract.test.data.paymenttype.PaymentTypeResolver;
 import org.apache.fineract.test.data.workingcapitalproduct.DefaultWorkingCapitalLoanProduct;
 import org.apache.fineract.test.data.workingcapitalproduct.WCGLAccountMapping;
 import org.apache.fineract.test.data.workingcapitalproduct.WorkingCapitalBreachFrequencyType;
@@ -66,6 +73,8 @@ import org.apache.fineract.test.factory.LoanProductsRequestFactory;
 import org.apache.fineract.test.factory.WorkingCapitalRequestFactory;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.Utils;
+import org.apache.fineract.test.helper.WorkingCapitalLoanProductAdvancedAccountingTestHelper;
+import org.apache.fineract.test.helper.WorkingCapitalLoanProductAdvancedAccountingTestHelper.AdvancedAccountingExpectation;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
 import org.assertj.core.api.SoftAssertions;
@@ -78,6 +87,11 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
     private final WorkingCapitalRequestFactory workingCapitalRequestFactory;
     private final FineractFeignClient fineractFeignClient;
     private final AccountTypeResolver accountTypeResolver;
+    private final PaymentTypeResolver paymentTypeResolver;
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getShared();
+    private static final String WC_ADVANCED_MAPPINGS_EXPECTED_CREATE = "wcAdvancedMappingsExpectedCreate";
+    private static final String WC_ADVANCED_MAPPINGS_EXPECTED_UPDATE = "wcAdvancedMappingsExpectedUpdate";
+    private static final String WC_ADVANCED_MAPPINGS_EXPECTED_FIRST_UPDATE = "wcAdvancedMappingsExpectedFirstUpdate";
 
     public static final String NAME_FIELD_NAME = "name";
     public static final String SHORT_NAME_FIELD = "shortName";
@@ -105,6 +119,29 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
     public static final String LOCALE_FIELD_NAME = "locale";
 
     private static final long NON_EXISTENT_GL_ACCOUNT_ID = 999999L;
+
+    // GL Account IDs for advanced accounting mappings
+    private static final Long DEFAULT_PAYMENT_TYPE_ID = 1L;
+    private static final Long DEFAULT_FUND_SOURCE_ACCOUNT_ID = 1L;
+    private static final Long DEFAULT_LOAN_PORTFOLIO_ACCOUNT_ID = 1L;
+    private static final Long DEFAULT_TRANSFERS_IN_SUSPENSE_ACCOUNT_ID = 21L;
+    private static final Long DEFAULT_DEFERRED_INCOME_LIABILITY_ACCOUNT_ID = 22L;
+    private static final Long DEFAULT_INCOME_FROM_DISCOUNT_FEE_ACCOUNT_ID = 10L;
+    private static final Long DEFAULT_INCOME_FROM_FEE_ACCOUNT_ID = 10L;
+    private static final Long DEFAULT_INCOME_FROM_PENALTY_ACCOUNT_ID = 9L;
+    private static final Long DEFAULT_INCOME_FROM_RECOVERY_ACCOUNT_ID = 15L;
+    private static final Long DEFAULT_WRITE_OFF_ACCOUNT_ID = 16L;
+    private static final Long DEFAULT_OVERPAYMENT_LIABILITY_ACCOUNT_ID = 17L;
+
+    // Code Value IDs for advanced mappings
+    private static final Long DEFAULT_CHARGE_OFF_REASON_CODE_VALUE_ID = 29L;
+    private static final Long DEFAULT_CHARGE_OFF_EXPENSE_ACCOUNT_ID_FOR_MAPPING = 23L;
+    private static final Long DEFAULT_WRITE_OFF_REASON_CODE_VALUE_ID = 66L;
+    private static final Long DEFAULT_WRITE_OFF_EXPENSE_ACCOUNT_ID_FOR_MAPPING = 23L;
+
+    // Alternative IDs for duplicate testing
+    private static final Long ALTERNATIVE_PAYMENT_TYPE_ID = 2L;
+    private static final Long ALTERNATIVE_FUND_SOURCE_ACCOUNT_ID = 2L;
 
     private WorkingCapitalLoanProductsApi workingCapitalApi() {
         return fineractFeignClient.workingCapitalLoanProducts();
@@ -304,7 +341,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
 
     @When("Admin creates a Working Capital Loan Product with custom breach config and overrides enabled:")
     public void createWorkingCapitalLoanProductWithCustomBreachConfig(final DataTable table) {
-        final Map<String, String> data = table.asMaps().get(0);
+        final Map<String, String> data = table.asMaps().getFirst();
 
         final String breachName = "WC Breach " + Utils.randomStringGenerator("", 10);
         final WorkingCapitalBreachRequest breachRequest = new WorkingCapitalBreachRequest().name(breachName)
@@ -324,6 +361,47 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
                 .defaultWorkingCapitalLoanProductAllowAttributesOverrideRequest() //
                 .name(name) //
                 .breachId(breachId) //
+                .delinquencyGraceDays(graceDays);
+
+        final PostWorkingCapitalLoanProductsResponse response = createWorkingCapitalLoanProduct(request);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST, request);
+        checkWorkingCapitalLoanProductCreate();
+    }
+
+    @When("Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:")
+    public void createWorkingCapitalLoanProductWithBreachAndNearBreachConfig(final DataTable table) {
+        final Map<String, String> data = table.asMaps().getFirst();
+
+        final String breachName = "WC Breach " + Utils.randomStringGenerator("", 10);
+        final WorkingCapitalBreachRequest breachRequest = new WorkingCapitalBreachRequest().name(breachName)
+                .breachFrequency(Integer.valueOf(data.get("breachFrequency"))).breachFrequencyType(data.get("breachFrequencyType"))
+                .breachAmountCalculationType(data.get("breachAmountCalculationType"))
+                .breachAmount(new BigDecimal(data.get("breachAmount")));
+        final CommandProcessingResult breachCreateResponse = ok(
+                () -> fineractFeignClient.workingCapitalBreaches().createWorkingCapitalBreach(breachRequest));
+        final Long breachId = breachCreateResponse.getResourceId();
+        testContext().set(TestContextKey.WORKING_CAPITAL_BREACH_ID, breachId);
+
+        final WorkingCapitalNearBreachRequest nearBreachRequest = new WorkingCapitalNearBreachRequest()
+                .nearBreachName("WC Near Breach " + Utils.randomStringGenerator("", 10))
+                .nearBreachFrequency(Integer.valueOf(data.get("nearBreachFrequency")))
+                .nearBreachFrequencyType(data.get("nearBreachFrequencyType"))
+                .nearBreachThreshold(new BigDecimal(data.get("nearBreachThreshold")));
+        final CommandProcessingResult nearBreachCreateResponse = ok(
+                () -> fineractFeignClient.workingCapitalNearBreaches().createWorkingCapitalNearBreach(nearBreachRequest));
+        final Long nearBreachId = nearBreachCreateResponse.getResourceId();
+        testContext().set(TestContextKey.WORKING_CAPITAL_NEAR_BREACH_ID, nearBreachId);
+
+        final String graceDaysStr = data.get("delinquencyGraceDays");
+        final Integer graceDays = graceDaysStr != null && !graceDaysStr.isEmpty() ? Integer.valueOf(graceDaysStr) : null;
+
+        final String name = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
+        final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory
+                .defaultWorkingCapitalLoanProductAllowAttributesOverrideRequest() //
+                .name(name) //
+                .breachId(breachId) //
+                .nearBreachId(nearBreachId) //
                 .delinquencyGraceDays(graceDays);
 
         final PostWorkingCapitalLoanProductsResponse response = createWorkingCapitalLoanProduct(request);
@@ -1696,6 +1774,58 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_TEMPLATE_RESPONSE, template);
     }
 
+    @When("Admin creates a new Working Capital Loan Product with Cash based accounting and advanced mappings")
+    public void createWorkingCapitalLoanProductWithAdvancedMappings() {
+        final String productName = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
+        final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory
+                .defaultWorkingCapitalLoanProductRequestWithCashAccounting().name(productName);
+
+        final AdvancedAccountingExpectation expected = WorkingCapitalLoanProductAdvancedAccountingTestHelper
+                .prepareAdvancedMappings(request, paymentTypeResolver, fineractFeignClient);
+        testContext().set(WC_ADVANCED_MAPPINGS_EXPECTED_CREATE, expected);
+
+        final PostWorkingCapitalLoanProductsResponse response = createWorkingCapitalLoanProduct(request);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST, request);
+    }
+
+    @When("Admin updates Working Capital Loan Product with advanced mappings")
+    public void updateWorkingCapitalLoanProductWithAdvancedMappings() {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long resourceId = createResponse.getResourceId();
+        final PostWorkingCapitalLoanProductsRequest cashRequest = workingCapitalRequestFactory
+                .defaultWorkingCapitalLoanProductRequestWithCashAccounting();
+        final PutWorkingCapitalLoanProductsProductIdRequest updateRequest = buildCashBasedUpdateRequest(cashRequest);
+        final AdvancedAccountingExpectation expected = WorkingCapitalLoanProductAdvancedAccountingTestHelper
+                .prepareAdvancedMappings(updateRequest, paymentTypeResolver, fineractFeignClient);
+        testContext().set(WC_ADVANCED_MAPPINGS_EXPECTED_UPDATE, expected);
+
+        final PutWorkingCapitalLoanProductsProductIdResponse response = ok(
+                () -> workingCapitalApi().updateWorkingCapitalLoanProduct(resourceId, updateRequest, Map.of()));
+
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_REQUEST, updateRequest);
+    }
+
+    @When("Admin updates Working Capital Loan Product with advanced mappings twice")
+    public void updateWorkingCapitalLoanProductWithAdvancedMappingsTwice() {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long resourceId = createResponse.getResourceId();
+
+        final PutWorkingCapitalLoanProductsProductIdRequest firstUpdateRequest = buildAdvancedMappingsUpdateRequest();
+        ok(() -> workingCapitalApi().updateWorkingCapitalLoanProduct(resourceId, firstUpdateRequest, Map.of()));
+        testContext().set(WC_ADVANCED_MAPPINGS_EXPECTED_FIRST_UPDATE, testContext().get(WC_ADVANCED_MAPPINGS_EXPECTED_UPDATE));
+
+        final PutWorkingCapitalLoanProductsProductIdRequest secondUpdateRequest = buildAdvancedMappingsUpdateRequest();
+        final PutWorkingCapitalLoanProductsProductIdResponse response = ok(
+                () -> workingCapitalApi().updateWorkingCapitalLoanProduct(resourceId, secondUpdateRequest, Map.of()));
+
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_REQUEST, secondUpdateRequest);
+    }
+
     @Then("Working Capital Loan Product template has delinquencyStartTypeOptions containing:")
     public void verifyTemplateDelinquencyStartTypeOptions(final DataTable table) {
         final List<String> expectedOptions = table.asList();
@@ -1704,6 +1834,213 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         assertThat(template.getDelinquencyStartTypeOptions()).isNotNull().isNotEmpty();
         final List<String> actualCodes = template.getDelinquencyStartTypeOptions().stream().map(StringEnumOptionData::getCode).toList();
         assertThat(actualCodes).containsAll(expectedOptions);
+    }
+
+    @Then("Working Capital Loan Product template has advanced accounting options")
+    public void verifyTemplateAdvancedAccountingOptions() {
+        final GetWorkingCapitalLoanProductsTemplateResponse template = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_TEMPLATE_RESPONSE);
+        WorkingCapitalLoanProductAdvancedAccountingTestHelper.assertTemplateHasOptions(template);
+    }
+
+    @Then("Working Capital Loan Product has advanced accounting mappings")
+    public void verifyProductHasAdvancedAccountingMappings() {
+        final GetWorkingCapitalLoanProductsProductIdResponse product = retrieveCreatedProduct();
+        final AdvancedAccountingExpectation expected = testContext().get().containsKey(WC_ADVANCED_MAPPINGS_EXPECTED_UPDATE)
+                ? testContext().get(WC_ADVANCED_MAPPINGS_EXPECTED_UPDATE)
+                : testContext().get(WC_ADVANCED_MAPPINGS_EXPECTED_CREATE);
+        WorkingCapitalLoanProductAdvancedAccountingTestHelper.assertProductHasExpectedAdvancedMappings(OBJECT_MAPPER, product, expected);
+    }
+
+    @Then("Working Capital Loan Product has latest advanced accounting mappings after second update")
+    public void verifyProductHasLatestAdvancedAccountingMappingsAfterSecondUpdate() {
+        final GetWorkingCapitalLoanProductsProductIdResponse product = retrieveCreatedProduct();
+        final AdvancedAccountingExpectation firstExpected = testContext().get(WC_ADVANCED_MAPPINGS_EXPECTED_FIRST_UPDATE);
+        final AdvancedAccountingExpectation secondExpected = testContext().get(WC_ADVANCED_MAPPINGS_EXPECTED_UPDATE);
+
+        WorkingCapitalLoanProductAdvancedAccountingTestHelper.assertProductHasExpectedAdvancedMappings(OBJECT_MAPPER, product,
+                secondExpected);
+        assertThat(secondExpected.feeChargeId()).as("Fee mapping charge should be replaced on second update")
+                .isNotEqualTo(firstExpected.feeChargeId());
+        assertThat(secondExpected.penaltyChargeId()).as("Penalty mapping charge should be replaced on second update")
+                .isNotEqualTo(firstExpected.penaltyChargeId());
+    }
+
+    private PutWorkingCapitalLoanProductsProductIdRequest buildAdvancedMappingsUpdateRequest() {
+        final PostWorkingCapitalLoanProductsRequest cashRequest = workingCapitalRequestFactory
+                .defaultWorkingCapitalLoanProductRequestWithCashAccounting();
+        final PutWorkingCapitalLoanProductsProductIdRequest updateRequest = buildCashBasedUpdateRequest(cashRequest);
+        final AdvancedAccountingExpectation expected = WorkingCapitalLoanProductAdvancedAccountingTestHelper
+                .prepareAdvancedMappings(updateRequest, paymentTypeResolver, fineractFeignClient);
+        testContext().set(WC_ADVANCED_MAPPINGS_EXPECTED_UPDATE, expected);
+        return updateRequest;
+    }
+
+    @When("Admin attempts to create Working Capital Loan Product with null paymentTypeId in payment channel mappings")
+    public void attemptCreateWithNullPaymentTypeId() {
+        List<WorkingCapitalLoanPaymentChannelToFundSourceMappings> paymentChannelMappings = List
+                .of(new WorkingCapitalLoanPaymentChannelToFundSourceMappings().paymentTypeId(null)
+                        .fundSourceAccountId(DEFAULT_FUND_SOURCE_ACCOUNT_ID));
+        attemptCreateWithAdvancedMappings(paymentChannelMappings, buildDefaultChargeOffMappings(), buildDefaultWriteOffMappings());
+    }
+
+    @When("Admin attempts to create Working Capital Loan Product with null fundSourceAccountId in payment channel mappings")
+    public void attemptCreateWithNullFundSourceAccountId() {
+        List<WorkingCapitalLoanPaymentChannelToFundSourceMappings> paymentChannelMappings = List
+                .of(new WorkingCapitalLoanPaymentChannelToFundSourceMappings().paymentTypeId(DEFAULT_PAYMENT_TYPE_ID)
+                        .fundSourceAccountId(null));
+        attemptCreateWithAdvancedMappings(paymentChannelMappings, buildDefaultChargeOffMappings(), buildDefaultWriteOffMappings());
+    }
+
+    @When("Admin attempts to create Working Capital Loan Product with null chargeOffReasonCodeValueId in charge-off mappings")
+    public void attemptCreateWithNullChargeOffReasonCodeValueId() {
+        List<WorkingCapitalPostChargeOffReasonToExpenseAccountMappings> chargeOffMappings = List
+                .of(new WorkingCapitalPostChargeOffReasonToExpenseAccountMappings().chargeOffReasonCodeValueId(null)
+                        .expenseAccountId(DEFAULT_CHARGE_OFF_EXPENSE_ACCOUNT_ID_FOR_MAPPING));
+        attemptCreateWithAdvancedMappings(buildDefaultPaymentChannelMappings(), chargeOffMappings, buildDefaultWriteOffMappings());
+    }
+
+    @When("Admin attempts to create Working Capital Loan Product with null expenseAccountId in charge-off mappings")
+    public void attemptCreateWithNullChargeOffExpenseAccountId() {
+        List<WorkingCapitalPostChargeOffReasonToExpenseAccountMappings> chargeOffMappings = List
+                .of(new WorkingCapitalPostChargeOffReasonToExpenseAccountMappings()
+                        .chargeOffReasonCodeValueId(DEFAULT_CHARGE_OFF_REASON_CODE_VALUE_ID).expenseAccountId(null));
+        attemptCreateWithAdvancedMappings(buildDefaultPaymentChannelMappings(), chargeOffMappings, buildDefaultWriteOffMappings());
+    }
+
+    @When("Admin attempts to create Working Capital Loan Product with null writeOffReasonCodeValueId in write-off mappings")
+    public void attemptCreateWithNullWriteOffReasonCodeValueId() {
+        List<WorkingCapitalPostWriteOffReasonToExpenseAccountMappings> writeOffMappings = List
+                .of(new WorkingCapitalPostWriteOffReasonToExpenseAccountMappings().writeOffReasonCodeValueId(null)
+                        .expenseAccountId(DEFAULT_WRITE_OFF_EXPENSE_ACCOUNT_ID_FOR_MAPPING));
+        attemptCreateWithAdvancedMappings(buildDefaultPaymentChannelMappings(), buildDefaultChargeOffMappings(), writeOffMappings);
+    }
+
+    @When("Admin attempts to create Working Capital Loan Product with null expenseAccountId in write-off mappings")
+    public void attemptCreateWithNullWriteOffExpenseAccountId() {
+        List<WorkingCapitalPostWriteOffReasonToExpenseAccountMappings> writeOffMappings = List
+                .of(new WorkingCapitalPostWriteOffReasonToExpenseAccountMappings()
+                        .writeOffReasonCodeValueId(DEFAULT_WRITE_OFF_REASON_CODE_VALUE_ID).expenseAccountId(null));
+        attemptCreateWithAdvancedMappings(buildDefaultPaymentChannelMappings(), buildDefaultChargeOffMappings(), writeOffMappings);
+    }
+
+    @When("Admin attempts to create Working Capital Loan Product with duplicate paymentTypeId in payment channel mappings")
+    public void attemptCreateWithDuplicatePaymentTypeId() {
+        List<WorkingCapitalLoanPaymentChannelToFundSourceMappings> paymentChannelMappings = List.of(
+                new WorkingCapitalLoanPaymentChannelToFundSourceMappings().paymentTypeId(DEFAULT_PAYMENT_TYPE_ID)
+                        .fundSourceAccountId(DEFAULT_FUND_SOURCE_ACCOUNT_ID),
+                new WorkingCapitalLoanPaymentChannelToFundSourceMappings().paymentTypeId(DEFAULT_PAYMENT_TYPE_ID)
+                        .fundSourceAccountId(ALTERNATIVE_FUND_SOURCE_ACCOUNT_ID));
+        attemptCreateWithAdvancedMappings(paymentChannelMappings, buildDefaultChargeOffMappings(), buildDefaultWriteOffMappings());
+    }
+
+    @When("Admin attempts to create Working Capital Loan Product with duplicate fundSourceAccountId in payment channel mappings")
+    public void attemptCreateWithDuplicateFundSourceAccountId() {
+        List<WorkingCapitalLoanPaymentChannelToFundSourceMappings> paymentChannelMappings = List.of(
+                new WorkingCapitalLoanPaymentChannelToFundSourceMappings().paymentTypeId(DEFAULT_PAYMENT_TYPE_ID)
+                        .fundSourceAccountId(DEFAULT_FUND_SOURCE_ACCOUNT_ID),
+                new WorkingCapitalLoanPaymentChannelToFundSourceMappings().paymentTypeId(ALTERNATIVE_PAYMENT_TYPE_ID)
+                        .fundSourceAccountId(DEFAULT_FUND_SOURCE_ACCOUNT_ID));
+        attemptCreateWithAdvancedMappings(paymentChannelMappings, buildDefaultChargeOffMappings(), buildDefaultWriteOffMappings());
+    }
+
+    @When("Admin creates Working Capital Loan Product with unique payment channel mappings")
+    public void createWithUniquePaymentChannelMappings() {
+        List<WorkingCapitalLoanPaymentChannelToFundSourceMappings> paymentChannelMappings = List.of(
+                new WorkingCapitalLoanPaymentChannelToFundSourceMappings().paymentTypeId(DEFAULT_PAYMENT_TYPE_ID)
+                        .fundSourceAccountId(DEFAULT_FUND_SOURCE_ACCOUNT_ID),
+                new WorkingCapitalLoanPaymentChannelToFundSourceMappings().paymentTypeId(ALTERNATIVE_PAYMENT_TYPE_ID)
+                        .fundSourceAccountId(ALTERNATIVE_FUND_SOURCE_ACCOUNT_ID));
+        PostWorkingCapitalLoanProductsRequest request = buildAdvancedMappingsRequest(paymentChannelMappings,
+                buildDefaultChargeOffMappings(), buildDefaultWriteOffMappings());
+        PostWorkingCapitalLoanProductsResponse response = createWorkingCapitalLoanProduct(request);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, response);
+    }
+
+    private List<WorkingCapitalLoanPaymentChannelToFundSourceMappings> buildDefaultPaymentChannelMappings() {
+        return List.of(new WorkingCapitalLoanPaymentChannelToFundSourceMappings().paymentTypeId(DEFAULT_PAYMENT_TYPE_ID)
+                .fundSourceAccountId(DEFAULT_FUND_SOURCE_ACCOUNT_ID));
+    }
+
+    private List<WorkingCapitalPostChargeOffReasonToExpenseAccountMappings> buildDefaultChargeOffMappings() {
+        return List.of(new WorkingCapitalPostChargeOffReasonToExpenseAccountMappings()
+                .chargeOffReasonCodeValueId(DEFAULT_CHARGE_OFF_REASON_CODE_VALUE_ID)
+                .expenseAccountId(DEFAULT_CHARGE_OFF_EXPENSE_ACCOUNT_ID_FOR_MAPPING));
+    }
+
+    private List<WorkingCapitalPostWriteOffReasonToExpenseAccountMappings> buildDefaultWriteOffMappings() {
+        return List.of(new WorkingCapitalPostWriteOffReasonToExpenseAccountMappings()
+                .writeOffReasonCodeValueId(DEFAULT_WRITE_OFF_REASON_CODE_VALUE_ID)
+                .expenseAccountId(DEFAULT_WRITE_OFF_EXPENSE_ACCOUNT_ID_FOR_MAPPING));
+    }
+
+    private PostWorkingCapitalLoanProductsRequest buildAdvancedMappingsRequest(
+            List<WorkingCapitalLoanPaymentChannelToFundSourceMappings> paymentChannelMappings,
+            List<WorkingCapitalPostChargeOffReasonToExpenseAccountMappings> chargeOffMappings,
+            List<WorkingCapitalPostWriteOffReasonToExpenseAccountMappings> writeOffMappings) {
+        final String productName = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
+        return workingCapitalRequestFactory.defaultWorkingCapitalLoanProductAllowAttributesOverrideRequest().name(productName)
+                .accountingRule(AccountingRuleEnum.CASH_BASED).fundSourceAccountId(DEFAULT_FUND_SOURCE_ACCOUNT_ID)
+                .loanPortfolioAccountId(DEFAULT_LOAN_PORTFOLIO_ACCOUNT_ID)
+                .transfersInSuspenseAccountId(DEFAULT_TRANSFERS_IN_SUSPENSE_ACCOUNT_ID)
+                .deferredIncomeLiabilityAccountId(DEFAULT_DEFERRED_INCOME_LIABILITY_ACCOUNT_ID)
+                .incomeFromDiscountFeeAccountId(DEFAULT_INCOME_FROM_DISCOUNT_FEE_ACCOUNT_ID)
+                .incomeFromFeeAccountId(DEFAULT_INCOME_FROM_FEE_ACCOUNT_ID)
+                .incomeFromPenaltyAccountId(DEFAULT_INCOME_FROM_PENALTY_ACCOUNT_ID)
+                .incomeFromRecoveryAccountId(DEFAULT_INCOME_FROM_RECOVERY_ACCOUNT_ID).writeOffAccountId(DEFAULT_WRITE_OFF_ACCOUNT_ID)
+                .overpaymentLiabilityAccountId(DEFAULT_OVERPAYMENT_LIABILITY_ACCOUNT_ID)
+                .paymentChannelToFundSourceMappings(paymentChannelMappings).chargeOffReasonToExpenseAccountMappings(chargeOffMappings)
+                .writeOffReasonsToExpenseMappings(writeOffMappings).feeToIncomeAccountMappings(List.of())
+                .penaltyToIncomeAccountMappings(List.of());
+    }
+
+    private void attemptCreateWithAdvancedMappings(List<WorkingCapitalLoanPaymentChannelToFundSourceMappings> paymentChannelMappings,
+            List<WorkingCapitalPostChargeOffReasonToExpenseAccountMappings> chargeOffMappings,
+            List<WorkingCapitalPostWriteOffReasonToExpenseAccountMappings> writeOffMappings) {
+        PostWorkingCapitalLoanProductsRequest request = buildAdvancedMappingsRequest(paymentChannelMappings, chargeOffMappings,
+                writeOffMappings);
+        try {
+            createWorkingCapitalLoanProduct(request);
+        } catch (CallFailedRuntimeException e) {
+            testContext().set(TestContextKey.ERROR_RESPONSE, e);
+        }
+    }
+
+    @Then("Admin gets validation error with status code {int} and message {string}")
+    public void validateErrorResponse(int expectedStatusCode, String expectedErrorMessage) {
+        CallFailedRuntimeException exception = testContext().get(TestContextKey.ERROR_RESPONSE);
+        assertThat(exception).as(ErrorMessageHelper.incorrectExpectedValueInResponse()).isNotNull();
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.incorrectExpectedValueInResponse()).isEqualTo(expectedStatusCode);
+        assertThat(exception.getDeveloperMessage()).as(ErrorMessageHelper.incorrectExpectedValueInResponse())
+                .contains(expectedErrorMessage);
+    }
+
+    @Then("Working Capital Loan Product is created successfully with two payment channel mappings")
+    public void verifyWorkingCapitalLoanProductCreatedWithTwoMappings() {
+        PostWorkingCapitalLoanProductsResponse response = testContext().get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        assertThat(response).as(ErrorMessageHelper.incorrectExpectedValueInResponse()).isNotNull();
+        assertThat(response.getResourceId()).as(ErrorMessageHelper.incorrectExpectedValueInResponse()).isNotNull();
+        assertThat(response.getResourceId()).as(ErrorMessageHelper.incorrectExpectedValueInResponse()).isGreaterThan(0L);
+
+        Long productId = response.getResourceId();
+        GetWorkingCapitalLoanProductsProductIdResponse productDetails = ok(
+                () -> workingCapitalApi().retrieveOneWorkingCapitalLoanProduct(productId, Map.of()));
+
+        assertThat(productDetails).as(ErrorMessageHelper.incorrectExpectedValueInResponse()).isNotNull();
+        assertThat(productDetails.getPaymentChannelToFundSourceMappings()).as(ErrorMessageHelper.incorrectExpectedValueInResponse())
+                .isNotNull();
+        assertThat(productDetails.getPaymentChannelToFundSourceMappings()).as(ErrorMessageHelper.incorrectExpectedValueInResponse())
+                .hasSize(2);
+
+        List<PaymentTypeToGLAccountMapper> mappings = productDetails.getPaymentChannelToFundSourceMappings();
+        assertThat(mappings.get(0).getPaymentType().getId()).as(ErrorMessageHelper.incorrectExpectedValueInResponse())
+                .isEqualTo(DEFAULT_PAYMENT_TYPE_ID);
+        assertThat(mappings.get(0).getFundSourceAccount().getId()).as(ErrorMessageHelper.incorrectExpectedValueInResponse())
+                .isEqualTo(DEFAULT_FUND_SOURCE_ACCOUNT_ID);
+        assertThat(mappings.get(1).getPaymentType().getId()).as(ErrorMessageHelper.incorrectExpectedValueInResponse())
+                .isEqualTo(ALTERNATIVE_PAYMENT_TYPE_ID);
+        assertThat(mappings.get(1).getFundSourceAccount().getId()).as(ErrorMessageHelper.incorrectExpectedValueInResponse())
+                .isEqualTo(ALTERNATIVE_FUND_SOURCE_ACCOUNT_ID);
     }
 
 }

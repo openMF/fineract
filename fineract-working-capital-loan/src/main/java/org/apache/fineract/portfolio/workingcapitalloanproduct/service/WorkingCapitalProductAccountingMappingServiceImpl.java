@@ -18,18 +18,23 @@
  */
 package org.apache.fineract.portfolio.workingcapitalloanproduct.service;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.apache.fineract.accounting.common.AccountingConstants;
 import org.apache.fineract.accounting.common.AccountingConstants.CashAccountsForLoan;
 import org.apache.fineract.accounting.common.AccountingConstants.LoanProductAccountingDataParams;
 import org.apache.fineract.accounting.glaccount.data.GLAccountData;
 import org.apache.fineract.accounting.producttoaccountmapping.domain.ProductToGLAccountMapping;
 import org.apache.fineract.accounting.producttoaccountmapping.domain.ProductToGLAccountMappingRepository;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
+import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.portfolio.PortfolioProductType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAccountingRuleType;
@@ -44,6 +49,25 @@ public class WorkingCapitalProductAccountingMappingServiceImpl implements Workin
     private final ProductToGLAccountMappingRepository accountMappingRepository;
     private final FromJsonHelper fromApiJsonHelper;
 
+    private void validateCreateAccountMapping(final JsonElement element, String arrayName, String key) {
+        final JsonArray array = this.fromApiJsonHelper.extractJsonArrayNamed(arrayName, element);
+        if (array != null) {
+            ArrayList<String> values = new ArrayList<>(array.size());
+            for (int i = 0; i < array.size(); i++) {
+                final JsonObject jsonObject = array.get(i).getAsJsonObject();
+                if (jsonObject.get(key) != null) {
+                    String value = jsonObject.get(key).getAsString();
+                    if (!values.contains(value)) {
+                        values.add(value);
+                    } else {
+                        String e = arrayName + "." + key;
+                        throw new PlatformApiDataValidationException("duplicated.enrty.for." + e, "Duplicated entry for " + e, e);
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     @Transactional
     public void createAccountMapping(final Long wcLoanProductId, final JsonCommand command) {
@@ -51,8 +75,23 @@ public class WorkingCapitalProductAccountingMappingServiceImpl implements Workin
         final String accountingRuleValue = this.fromApiJsonHelper.extractStringNamed("accountingRule", element);
         final WorkingCapitalAccountingRuleType accountingRuleType = WorkingCapitalAccountingRuleType.valueOf(accountingRuleValue);
 
+        validateCreateAccountMapping(element,
+                AccountingConstants.LoanProductAccountingParams.PAYMENT_CHANNEL_FUND_SOURCE_MAPPING.getValue(),
+                AccountingConstants.LoanProductAccountingParams.PAYMENT_TYPE.getValue());
+        validateCreateAccountMapping(element, AccountingConstants.LoanProductAccountingParams.PENALTY_INCOME_ACCOUNT_MAPPING.getValue(),
+                AccountingConstants.LoanProductAccountingParams.CHARGE_ID.getValue());
+        validateCreateAccountMapping(element, AccountingConstants.LoanProductAccountingParams.FEE_INCOME_ACCOUNT_MAPPING.getValue(),
+                AccountingConstants.LoanProductAccountingParams.CHARGE_ID.getValue());
+        validateCreateAccountMapping(element,
+                AccountingConstants.LoanProductAccountingParams.CHARGE_OFF_REASON_TO_EXPENSE_ACCOUNT_MAPPINGS.getValue(),
+                AccountingConstants.LoanProductAccountingParams.CHARGE_OFF_REASON_CODE_VALUE_ID.getValue());
+        validateCreateAccountMapping(element,
+                AccountingConstants.LoanProductAccountingParams.WRITE_OFF_REASON_TO_EXPENSE_ACCOUNT_MAPPINGS.getValue(),
+                AccountingConstants.LoanProductAccountingParams.WRITE_OFF_REASON_CODE_VALUE_ID.getValue());
+
         if (accountingRuleType.isCashBased()) {
             this.mappingHelper.saveCashBasedAccountMapping(element, wcLoanProductId);
+            this.mappingHelper.saveAdvancedMappings(command, element, wcLoanProductId);
         }
     }
 
@@ -72,6 +111,7 @@ public class WorkingCapitalProductAccountingMappingServiceImpl implements Workin
         } else {
             if (accountingRuleType.isCashBased()) {
                 this.mappingHelper.handleChangesToCashBasedAccountMapping(wcLoanProductId, changes, element);
+                this.mappingHelper.updateAdvancedMappings(command, element, wcLoanProductId, changes);
             }
         }
         return changes;

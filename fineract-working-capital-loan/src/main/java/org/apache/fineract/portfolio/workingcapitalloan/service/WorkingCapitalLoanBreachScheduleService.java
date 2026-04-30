@@ -33,11 +33,11 @@ public interface WorkingCapitalLoanBreachScheduleService {
 
     boolean hasSchedule(Long loanId);
 
-    void evaluateExpiredPeriods(WorkingCapitalLoan loan, LocalDate businessDate);
-
     List<WorkingCapitalLoanBreachScheduleData> retrieveBreachSchedule(Long loanId);
 
     boolean evaluateBreachOnDate(WorkingCapitalLoanBreachSchedule period, LocalDate businessDate);
 
     void applyRepayment(Long loanId, LocalDate transactionDate, BigDecimal amount);
+
+    void evaluateBreachAndNearBreach(WorkingCapitalLoan loan, LocalDate businessDate);
 }

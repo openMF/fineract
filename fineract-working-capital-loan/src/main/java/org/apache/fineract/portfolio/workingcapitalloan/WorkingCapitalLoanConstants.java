@@ -74,4 +74,7 @@ public final class WorkingCapitalLoanConstants {
     public static final String receiptNumberParamName = "receiptNumber";
     public static final String bankNumberParamName = "bankNumber";
     public static final String transactionDateParamName = "transactionDate";
+
+    public static final String WRITE_OFF_REASONS = "WriteOffReasons";
+    public static final String CHARGE_OFF_REASONS = "ChargeOffReasons";
 }

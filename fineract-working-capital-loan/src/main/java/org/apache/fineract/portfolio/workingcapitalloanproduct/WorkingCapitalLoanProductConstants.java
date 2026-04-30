@@ -90,6 +90,11 @@ public final class WorkingCapitalLoanProductConstants {
     public static final String goodwillCreditAccountIdParamName = "goodwillCreditAccountId";
     public static final String chargeOffExpenseAccountIdParamName = "chargeOffExpenseAccountId";
     public static final String chargeOffFraudExpenseAccountIdParamName = "chargeOffFraudExpenseAccountId";
+    public static final String paymentChannelToFundSourceMappingsParamName = "paymentChannelToFundSourceMappings";
+    public static final String feeToIncomeAccountMappingsParamName = "feeToIncomeAccountMappings";
+    public static final String penaltyToIncomeAccountMappingsParamName = "penaltyToIncomeAccountMappings";
+    public static final String chargeOffReasonToExpenseAccountMappingsParamName = "chargeOffReasonToExpenseAccountMappings";
+    public static final String writeOffReasonsToExpenseMappingsParamName = "writeOffReasonsToExpenseMappings";
 
     // Near Breach
     public static final String nearBreachNameParamName = "nearBreachName";

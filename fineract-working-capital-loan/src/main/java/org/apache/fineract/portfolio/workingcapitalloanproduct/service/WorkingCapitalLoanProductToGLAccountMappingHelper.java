@@ -32,6 +32,8 @@ import org.apache.fineract.accounting.glaccount.domain.GLAccountType;
 import org.apache.fineract.accounting.producttoaccountmapping.domain.ProductToGLAccountMapping;
 import org.apache.fineract.accounting.producttoaccountmapping.domain.ProductToGLAccountMappingRepository;
 import org.apache.fineract.accounting.producttoaccountmapping.exception.ProductToGLAccountMappingInvalidException;
+import org.apache.fineract.accounting.producttoaccountmapping.service.ProductToGLAccountMappingHelper;
+import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.portfolio.PortfolioProductType;
 import org.springframework.stereotype.Component;
@@ -46,6 +48,7 @@ public class WorkingCapitalLoanProductToGLAccountMappingHelper {
     private final ProductToGLAccountMappingRepository accountMappingRepository;
     private final GLAccountRepositoryWrapper accountRepositoryWrapper;
     private final FromJsonHelper fromApiJsonHelper;
+    private final ProductToGLAccountMappingHelper productToGLAccountMappingHelper;
 
     public void saveCashBasedAccountMapping(final JsonElement element, final Long productId) {
         // assets / liabilities (fund source can be either asset or liability)
@@ -175,6 +178,33 @@ public class WorkingCapitalLoanProductToGLAccountMappingHelper {
         putChangeIfPresent(changes, element, LoanProductAccountingParams.CHARGE_OFF_EXPENSE);
         putChangeIfPresent(changes, element, LoanProductAccountingParams.CHARGE_OFF_FRAUD_EXPENSE);
         return changes;
+    }
+
+    public void saveAdvancedMappings(final JsonCommand command, final JsonElement element, final Long productId) {
+        this.productToGLAccountMappingHelper.savePaymentChannelToFundSourceMappings(command, element, productId, null, PRODUCT_TYPE);
+        this.productToGLAccountMappingHelper.saveChargesToGLAccountMappings(command, element, productId, null, PRODUCT_TYPE, true);
+        this.productToGLAccountMappingHelper.saveChargesToGLAccountMappings(command, element, productId, null, PRODUCT_TYPE, false);
+        this.productToGLAccountMappingHelper.saveReasonToGLAccountMappings(command, element, productId, null, PRODUCT_TYPE,
+                LoanProductAccountingParams.CHARGE_OFF_REASON_TO_EXPENSE_ACCOUNT_MAPPINGS,
+                LoanProductAccountingParams.CHARGE_OFF_REASON_CODE_VALUE_ID, CashAccountsForLoan.CHARGE_OFF_EXPENSE);
+        this.productToGLAccountMappingHelper.saveReasonToGLAccountMappings(command, element, productId, null, PRODUCT_TYPE,
+                LoanProductAccountingParams.WRITE_OFF_REASON_TO_EXPENSE_ACCOUNT_MAPPINGS,
+                LoanProductAccountingParams.WRITE_OFF_REASON_CODE_VALUE_ID, CashAccountsForLoan.LOSSES_WRITTEN_OFF);
+    }
+
+    public void updateAdvancedMappings(final JsonCommand command, final JsonElement element, final Long productId,
+            final Map<String, Object> changes) {
+        this.productToGLAccountMappingHelper.updatePaymentChannelToFundSourceMappings(command, element, productId, changes, PRODUCT_TYPE);
+        this.productToGLAccountMappingHelper.updateChargeToIncomeAccountMappings(command, element, productId, changes, PRODUCT_TYPE, true);
+        this.productToGLAccountMappingHelper.updateChargeToIncomeAccountMappings(command, element, productId, changes, PRODUCT_TYPE, false);
+        this.productToGLAccountMappingHelper.updateReasonToGLAccountMappings(command, element, productId, changes, PRODUCT_TYPE,
+                this.accountMappingRepository.findAllChargeOffReasonsMappings(productId, PRODUCT_TYPE.getValue()),
+                LoanProductAccountingParams.CHARGE_OFF_REASON_TO_EXPENSE_ACCOUNT_MAPPINGS,
+                LoanProductAccountingParams.CHARGE_OFF_REASON_CODE_VALUE_ID, CashAccountsForLoan.CHARGE_OFF_EXPENSE);
+        this.productToGLAccountMappingHelper.updateReasonToGLAccountMappings(command, element, productId, changes, PRODUCT_TYPE,
+                this.accountMappingRepository.findAllWriteOffReasonsMappings(productId, PRODUCT_TYPE.getValue()),
+                LoanProductAccountingParams.WRITE_OFF_REASON_TO_EXPENSE_ACCOUNT_MAPPINGS,
+                LoanProductAccountingParams.WRITE_OFF_REASON_CODE_VALUE_ID, CashAccountsForLoan.LOSSES_WRITTEN_OFF);
     }
 
     private void putChange(final Map<String, Object> changes, final JsonElement element, final LoanProductAccountingParams param) {

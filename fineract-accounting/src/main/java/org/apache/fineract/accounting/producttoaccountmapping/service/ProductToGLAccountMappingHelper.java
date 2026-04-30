@@ -167,8 +167,18 @@ public class ProductToGLAccountMappingHelper {
             }
             for (int i = 0; i < paymentChannelMappingArray.size(); i++) {
                 final JsonObject jsonObject = paymentChannelMappingArray.get(i).getAsJsonObject();
-                final Long paymentTypeId = jsonObject.get(LoanProductAccountingParams.PAYMENT_TYPE.getValue()).getAsLong();
-                final Long paymentSpecificFundAccountId = jsonObject.get(LoanProductAccountingParams.FUND_SOURCE.getValue()).getAsLong();
+                JsonElement jsonPaymentTypeId = jsonObject.get(LoanProductAccountingParams.PAYMENT_TYPE.getValue());
+                JsonElement jsonElementFoundId = jsonObject.get(LoanProductAccountingParams.FUND_SOURCE.getValue());
+                if (jsonPaymentTypeId == null) {
+                    throw new PlatformApiDataValidationException("payment.type.id.is.mandatory", "field: paymentTypeId is mandatory",
+                            LoanProductAccountingParams.PAYMENT_TYPE.getValue());
+                }
+                if (jsonElementFoundId == null) {
+                    throw new PlatformApiDataValidationException("fund.source.account.id.is.mandatory",
+                            "field: fundSourceAccountId is mandatory", LoanProductAccountingParams.FUND_SOURCE.getValue());
+                }
+                final Long paymentTypeId = jsonPaymentTypeId.getAsLong();
+                final Long paymentSpecificFundAccountId = jsonElementFoundId.getAsLong();
                 savePaymentChannelToFundSourceMapping(productId, paymentTypeId, paymentSpecificFundAccountId, portfolioProductType);
             }
         }
@@ -200,7 +210,18 @@ public class ProductToGLAccountMappingHelper {
             }
             for (int i = 0; i < chargeToIncomeAccountMappingArray.size(); i++) {
                 final JsonObject jsonObject = chargeToIncomeAccountMappingArray.get(i).getAsJsonObject();
-                final Long chargeId = jsonObject.get(LoanProductAccountingParams.CHARGE_ID.getValue()).getAsLong();
+                JsonElement chargeIdJson = jsonObject.get(LoanProductAccountingParams.CHARGE_ID.getValue());
+                JsonElement incomeAccountJson = jsonObject.get(LoanProductAccountingParams.INCOME_ACCOUNT_ID.getValue());
+                if (chargeIdJson == null) {
+                    throw new PlatformApiDataValidationException("charge.id.is.mandatory", "chargeId is mandatory",
+                            LoanProductAccountingParams.CHARGE_ID.getValue());
+                }
+                if (incomeAccountJson == null) {
+                    throw new PlatformApiDataValidationException("income.account.id.is.mandatory", "incomeAccountId is mandatory",
+                            LoanProductAccountingParams.INCOME_ACCOUNT_ID.getValue());
+
+                }
+                final Long chargeId = chargeIdJson.getAsLong();
                 final Long incomeAccountId = jsonObject.get(LoanProductAccountingParams.INCOME_ACCOUNT_ID.getValue()).getAsLong();
                 saveChargeToFundSourceMapping(productId, chargeId, incomeAccountId, portfolioProductType, isPenalty);
             }
@@ -222,8 +243,20 @@ public class ProductToGLAccountMappingHelper {
 
             for (int i = 0; i < reasonToExpenseAccountMappingArray.size(); i++) {
                 final JsonObject jsonObject = reasonToExpenseAccountMappingArray.get(i).getAsJsonObject();
-                final Long reasonId = jsonObject.get(reasonCodeValueIdParam.getValue()).getAsLong();
-                final Long expenseAccountId = jsonObject.get(LoanProductAccountingParams.EXPENSE_GL_ACCOUNT_ID.getValue()).getAsLong();
+
+                JsonElement reasonIdJson = jsonObject.get(reasonCodeValueIdParam.getValue());
+                JsonElement expenseAccountJson = jsonObject.get(LoanProductAccountingParams.EXPENSE_GL_ACCOUNT_ID.getValue());
+                if (reasonIdJson == null) {
+                    throw new PlatformApiDataValidationException(reasonCodeValueIdParam.getValue() + ".is.mandatory",
+                            reasonCodeValueIdParam.getValue() + " is mandatory", reasonCodeValueIdParam.getValue());
+                }
+                if (expenseAccountJson == null) {
+                    throw new PlatformApiDataValidationException("expense.gl.account.id.is.mandatory", "expenseGlAccountId is mandatory",
+                            LoanProductAccountingParams.EXPENSE_GL_ACCOUNT_ID.getValue());
+                }
+
+                final Long reasonId = reasonIdJson.getAsLong();
+                final Long expenseAccountId = expenseAccountJson.getAsLong();
 
                 saveReasonToExpenseMapping(productId, reasonId, expenseAccountId, portfolioProductType, cashAccountsForLoan);
             }

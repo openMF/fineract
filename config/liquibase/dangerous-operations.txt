@@ -1,0 +1,14 @@
+# Dangerous Liquibase DDL operations for safety checks.
+# Format: element|severity|risk description
+# Lines starting with # are comments.
+#
+# Severity levels:
+#   CRITICAL - Blocks PR when targeting critical tables
+#   HIGH     - Blocks PR when targeting critical tables, warning otherwise
+
+dropColumn|CRITICAL|Dropping a column breaks old code that SELECT/UPDATE it during rolling deployment
+dropTable|CRITICAL|Dropping a table breaks old code that references it during rolling deployment
+renameColumn|CRITICAL|Renaming a column breaks old code that references the old name during rolling deployment
+renameTable|CRITICAL|Renaming a table breaks old code that references the old name during rolling deployment
+modifyDataType|HIGH|Changing data type can cause full table lock and type mismatch with old code
+addNotNullConstraint|HIGH|Adding NOT NULL constraint breaks old code INSERTs that omit this column

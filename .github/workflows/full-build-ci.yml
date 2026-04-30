@@ -76,6 +76,16 @@ jobs:
     uses: ./.github/workflows/verify-liquibase-backward-compatibility.yml
     secrets: inherit
 
+  run-liquibase-ddl-safety:
+    needs: build-core
+    uses: ./.github/workflows/verify-liquibase-ddl-safety.yml
+    secrets: inherit
+
+  run-regression-safety-db-changes:
+    needs: build-core
+    uses: ./.github/workflows/regression-safety-db-changes.yml
+    secrets: inherit
+
   run-sonarqube:
     needs: build-core
     uses: ./.github/workflows/sonarqube.yml

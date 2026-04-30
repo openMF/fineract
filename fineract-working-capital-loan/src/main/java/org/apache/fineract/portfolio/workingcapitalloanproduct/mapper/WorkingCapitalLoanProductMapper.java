@@ -74,9 +74,17 @@ public interface WorkingCapitalLoanProductMapper {
     @Mapping(target = "delinquencyStartType", source = "relatedDetail.delinquencyStartType", qualifiedByName = "delinquencyStartTypeToStringEnumOptionData")
     @Mapping(target = "accountingRule", source = "accountingRule", qualifiedByName = "accountingRuleToStringEnumOptionData")
     @Mapping(target = "accountingMappings", ignore = true)
+    @Mapping(target = "paymentChannelToFundSourceMappings", ignore = true)
+    @Mapping(target = "feeToIncomeAccountMappings", ignore = true)
+    @Mapping(target = "penaltyToIncomeAccountMappings", ignore = true)
+    @Mapping(target = "chargeOffReasonToExpenseAccountMappings", ignore = true)
+    @Mapping(target = "writeOffReasonsToExpenseMappings", ignore = true)
     @Mapping(target = "accountingRuleOptions", ignore = true)
     @Mapping(target = "accountingMappingOptions", ignore = true)
     @Mapping(target = "fundOptions", ignore = true)
+    @Mapping(target = "paymentTypeOptions", ignore = true)
+    @Mapping(target = "chargeOptions", ignore = true)
+    @Mapping(target = "penaltyOptions", ignore = true)
     @Mapping(target = "currencyOptions", ignore = true)
     @Mapping(target = "amortizationTypeOptions", ignore = true)
     @Mapping(target = "periodFrequencyTypeOptions", ignore = true)
@@ -88,6 +96,8 @@ public interface WorkingCapitalLoanProductMapper {
     @Mapping(target = "delinquencyStartTypeOptions", ignore = true)
     @Mapping(target = "delinquencyMinimumPaymentTypeOptions", ignore = true)
     @Mapping(target = "nearBreachOptions", ignore = true)
+    @Mapping(target = "chargeOffReasonOptions", ignore = true)
+    @Mapping(target = "writeOffReasonOptions", ignore = true)
     WorkingCapitalLoanProductData toData(WorkingCapitalLoanProduct entity);
 
     List<WorkingCapitalLoanProductData> toDataList(List<WorkingCapitalLoanProduct> entities);

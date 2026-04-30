@@ -1,0 +1,125 @@
+name: Verify Liquibase DDL Safety
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ddl-safety-check:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Download workspace
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: fineract-workspace-${{ github.run_id }}
+          path: .
+
+      - name: Extract workspace
+        run: tar -xf fineract-workspace.tar
+
+      - name: Fetch base branch
+        run: git fetch origin "${{ github.event.pull_request.base.ref }}" --no-tags
+
+      - name: Detect Liquibase changes
+        id: changes
+        run: |
+          MERGE_BASE=$(git merge-base "origin/${{ github.event.pull_request.base.ref }}" HEAD)
+          CHANGES=$(git diff --name-only "$MERGE_BASE"..HEAD -- '**/db/changelog/**/*.xml' || true)
+          if [ -n "$CHANGES" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "$CHANGES"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No Liquibase changes detected."
+          fi
+
+      - name: Check for override label
+        if: steps.changes.outputs.has_changes == 'true'
+        id: override
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LABELS=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[].name' 2>/dev/null || true)
+          if echo "$LABELS" | grep -q "ddl-safety-override"; then
+            echo "override=true" >> $GITHUB_OUTPUT
+            echo "Override label found — check will report but not block."
+          else
+            echo "override=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run DDL safety check
+        if: steps.changes.outputs.has_changes == 'true'
+        id: ddl-check
+        continue-on-error: true
+        run: |
+          chmod +x scripts/check-liquibase-ddl-safety.sh
+          ./scripts/check-liquibase-ddl-safety.sh \
+            --base-ref origin/${{ github.event.pull_request.base.ref }} \
+            --head-ref HEAD \
+            --config config/liquibase \
+            --output-dir ${{ runner.temp }}/ddl-safety-report
+
+      - name: Write step summary
+        if: always()
+        run: |
+          if [ "${{ steps.changes.outputs.has_changes }}" != "true" ]; then
+            echo "## Liquibase DDL Safety Check - SKIPPED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "No Liquibase changelog XML changes detected." >> $GITHUB_STEP_SUMMARY
+          elif [ -f "${{ runner.temp }}/ddl-safety-report/report.md" ]; then
+            cat "${{ runner.temp }}/ddl-safety-report/report.md" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## Liquibase DDL Safety Check - PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "No dangerous DDL changes detected." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Comment on PR
+        if: always() && steps.changes.outputs.has_changes == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          MARKER="<!-- liquibase-ddl-safety-report -->"
+
+          # Find existing comment by marker
+          COMMENT_ID=$(gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
+            --jq ".[] | select(.body | contains(\"${MARKER}\")) | .id" | head -1)
+
+          if [ "${{ steps.ddl-check.outcome }}" == "failure" ] && \
+             [ -f "${{ runner.temp }}/ddl-safety-report/report.md" ]; then
+            BODY="${MARKER}
+          $(cat ${{ runner.temp }}/ddl-safety-report/report.md)"
+
+            if [ -n "$COMMENT_ID" ]; then
+              gh api "repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" \
+                -X PATCH -f body="${BODY}"
+            else
+              gh pr comment "${PR_NUMBER}" --repo ${{ github.repository }} --body "${BODY}"
+            fi
+          elif [ -n "$COMMENT_ID" ]; then
+            # No violations anymore, delete the old comment
+            gh api "repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" -X DELETE
+          fi
+
+      - name: Archive report
+        if: always() && steps.changes.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: ddl-safety-report
+          path: ${{ runner.temp }}/ddl-safety-report/
+          retention-days: 1
+
+      - name: Fail if critical violations found (unless overridden)
+        if: steps.changes.outputs.has_changes == 'true' && steps.ddl-check.outcome == 'failure' && steps.override.outputs.override != 'true'
+        run: |
+          echo "::error::Dangerous DDL changes detected on critical tables. See the report above for details."
+          echo "::error::Add the 'ddl-safety-override' label to bypass this check if the change is intentional."
+          exit 1

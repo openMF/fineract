@@ -1,0 +1,34 @@
+# Critical tables for DDL safety checks.
+# Dangerous DDL operations on these tables BLOCK the PR.
+# These are high-traffic production tables where DDL can cause locks,
+# data loss, or break running instances during rolling deployments.
+#
+# One table name per line. Lines starting with # are comments.
+
+# Loan core tables
+m_loan
+m_loan_transaction
+m_loan_transaction_relation
+m_loan_transaction_repayment_schedule_mapping
+m_loan_repayment_schedule
+m_loan_charge
+m_loan_disbursement_detail
+m_loan_arrears_aging
+m_loan_repayment_schedule_history
+
+# Delinquency
+m_loan_delinquency_tag_history
+m_delinquency_range
+
+# Savings core tables
+m_savings_account
+m_savings_account_transaction
+
+# Accounting
+acc_gl_journal_entry
+
+# Client
+m_client
+
+# Payment
+m_payment_detail
