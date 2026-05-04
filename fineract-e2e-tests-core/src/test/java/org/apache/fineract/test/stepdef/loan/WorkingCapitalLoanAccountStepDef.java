@@ -1559,6 +1559,15 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         createWorkingCapitalLoanAccountWithBreachNearBreachData(loanData, breachIdFromWCLP, nearBreachIdFromWCLP);
     }
 
+    @Then("Admin creates working capital loan with with breach on {string} date")
+    public void createLoanWithBreachOverrideAllowedWithBreachData(String submittedOnDate) {
+        final Long breachId = createBreachAndGetId();
+
+        final PostWorkingCapitalLoansRequest loansRequest = createWorkingCapitalLoanAccountDefaultRequest(submittedOnDate)
+                .breachId(breachId);
+        createWorkingCapitalLoanAccount(loansRequest);
+    }
+
     @Then("Admin creates working capital loan with with breach and near breach on {string} date")
     public void createLoanWithBreachOverrideAllowedWithBreachAndNearBreachData(String submittedOnDate) {
         final Long breachId = createBreachAndGetId();

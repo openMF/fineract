@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.portfolio.delinquency.starter;
 
+import java.util.List;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.event.business.service.BusinessEventNotifierService;
 import org.apache.fineract.portfolio.delinquency.domain.DelinquencyBucketMappingsRepository;
@@ -39,6 +40,7 @@ import org.apache.fineract.portfolio.delinquency.service.DelinquencyWritePlatfor
 import org.apache.fineract.portfolio.delinquency.service.LoanDelinquencyDomainService;
 import org.apache.fineract.portfolio.delinquency.service.LoanDelinquencyDomainServiceImpl;
 import org.apache.fineract.portfolio.delinquency.service.PossibleNextRepaymentCalculationServiceDiscovery;
+import org.apache.fineract.portfolio.delinquency.spi.DelinquencyBucketUsageChecker;
 import org.apache.fineract.portfolio.delinquency.validator.DelinquencyActionParseAndValidator;
 import org.apache.fineract.portfolio.delinquency.validator.DelinquencyBucketParseAndValidator;
 import org.apache.fineract.portfolio.delinquency.validator.DelinquencyRangeParseAndValidator;
@@ -86,12 +88,13 @@ public class DelinquencyConfiguration {
             DelinquencyActionParseAndValidator delinquencyActionParseAndValidator,
             DelinquencyEffectivePauseHelper delinquencyEffectivePauseHelper,
             DelinquencyWritePlatformServiceHelper delinquencyWritePlatformServiceHelper,
-            DelinquencyMinimumPaymentPeriodAndRuleRepository delinquencyMinimumPaymentPeriodAndRuleRepository) {
+            DelinquencyMinimumPaymentPeriodAndRuleRepository delinquencyMinimumPaymentPeriodAndRuleRepository,
+            final List<DelinquencyBucketUsageChecker> delinquencyBucketUsageCheckers) {
         return new DelinquencyWritePlatformServiceImpl(dataValidatorBucket, dataValidatorRange, repositoryRange, repositoryBucket,
                 repositoryBucketMappings, loanDelinquencyTagRepository, loanRepository, loanProductRepository, loanDelinquencyDomainService,
                 loanInstallmentDelinquencyTagRepository, delinquencyReadPlatformService, loanDelinquencyActionRepository,
                 delinquencyActionParseAndValidator, delinquencyEffectivePauseHelper, businessEventNotifierService,
-                delinquencyWritePlatformServiceHelper, delinquencyMinimumPaymentPeriodAndRuleRepository);
+                delinquencyWritePlatformServiceHelper, delinquencyMinimumPaymentPeriodAndRuleRepository, delinquencyBucketUsageCheckers);
     }
 
     @Bean

@@ -22,6 +22,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
+import org.apache.fineract.portfolio.delinquency.domain.DelinquencyBucket;
+import org.apache.fineract.portfolio.workingcapitalloanbreach.domain.WorkingCapitalBreach;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -72,4 +74,8 @@ public interface WorkingCapitalLoanProductRepository
 
     @Query("select wclp FROM WorkingCapitalLoanProduct wclp where wclp.closeDate is null or wclp.closeDate >= :businessDate")
     List<WorkingCapitalLoanProduct> fetchActiveWorkingCapitalLoanProducts(LocalDate businessDate);
+
+    boolean existsByDelinquencyBucket(DelinquencyBucket delinquencyBucket);
+
+    boolean existsByBreach(WorkingCapitalBreach breach);
 }

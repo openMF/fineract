@@ -58,6 +58,7 @@ import org.apache.fineract.portfolio.delinquency.exception.DelinquencyBucketAges
 import org.apache.fineract.portfolio.delinquency.exception.DelinquencyBucketNotFoundException;
 import org.apache.fineract.portfolio.delinquency.exception.DelinquencyRangeInvalidAgesException;
 import org.apache.fineract.portfolio.delinquency.helper.DelinquencyEffectivePauseHelper;
+import org.apache.fineract.portfolio.delinquency.spi.DelinquencyBucketUsageChecker;
 import org.apache.fineract.portfolio.delinquency.validator.DelinquencyActionParseAndValidator;
 import org.apache.fineract.portfolio.delinquency.validator.DelinquencyBucketParseAndValidator;
 import org.apache.fineract.portfolio.delinquency.validator.DelinquencyRangeParseAndValidator;
@@ -91,6 +92,7 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
     private final BusinessEventNotifierService businessEventNotifierService;
     private final DelinquencyWritePlatformServiceHelper delinquencyHelper;
     private final DelinquencyMinimumPaymentPeriodAndRuleRepository delinquencyMinimumPaymentPeriodAndRuleRepository;
+    private final List<DelinquencyBucketUsageChecker> delinquencyBucketUsageCheckers;
 
     @Override
     public CommandProcessingResult createDelinquencyRange(JsonCommand command) {
@@ -172,6 +174,12 @@ public class DelinquencyWritePlatformServiceImpl implements DelinquencyWritePlat
             if (delinquencyBucketLinked > 0) {
                 throw new PlatformDataIntegrityException("error.msg.data.integrity.issue.entity.linked",
                         "Data integrity issue with resource: " + delinquencyBucket.getId());
+            }
+            for (final DelinquencyBucketUsageChecker checker : delinquencyBucketUsageCheckers) {
+                if (checker.hasUsages(delinquencyBucket)) {
+                    throw new PlatformDataIntegrityException("error.msg.data.integrity.issue.entity.linked",
+                            String.format("Data integrity issue with resource: %d", delinquencyBucket.getId()));
+                }
             }
 
             delinquencyMinimumPaymentPeriodAndRuleRepository.findByBucketId(delinquencyBucket.getId())

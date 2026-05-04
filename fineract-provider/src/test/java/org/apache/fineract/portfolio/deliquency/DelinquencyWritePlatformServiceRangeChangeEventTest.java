@@ -156,7 +156,7 @@ public class DelinquencyWritePlatformServiceRangeChangeEventTest {
                 repositoryBucketMappings, loanDelinquencyTagRepository, loanRepository, loanProductRepository, loanDelinquencyDomainService,
                 loanInstallmentDelinquencyTagRepository, delinquencyReadPlatformService, loanDelinquencyActionRepository,
                 delinquencyActionParseAndValidator, delinquencyEffectivePauseHelper, businessEventNotifierService,
-                delinquencyWritePlatformServiceHelper, delinquencyMinimumPaymentPeriodAndRuleRepository);
+                delinquencyWritePlatformServiceHelper, delinquencyMinimumPaymentPeriodAndRuleRepository, List.of());
     }
 
     @AfterAll

@@ -18,7 +18,6 @@
  */
 package org.apache.fineract.test.helper;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -29,27 +28,19 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.client.models.BatchResponse;
 import org.apache.fineract.client.models.Header;
 import org.apache.fineract.client.models.LoanAccountLockResponseDTO;
-import retrofit2.Response;
 
 public final class ErrorMessageHelper {
 
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy");
+    public static final String DATA_INTEGRITY_ISSUE_ENTITY_LINKED_CODE = "error.msg.data.integrity.issue.entity.linked";
 
     private ErrorMessageHelper() {}
-
-    public static String requestFailed(Response response) throws IOException {
-        return String.format("Request failed. Error:%n%s", response.errorBody() != null ? response.errorBody().string() : null);
-    }
-
-    public static String requestFailedWithCode(Response response) {
-        return String.format("Response has error code: %2d", response.code());
-    }
 
     public static String batchRequestFailedWithCode(BatchResponse response) {
         return String.format("Response has error code: %2d in request: %2d", response.getStatusCode(), response.getRequestId());
     }
 
-    public static String chargeAppliesToIsInvalid(Enum chargeAppliesTo) {
+    public static String chargeAppliesToIsInvalid(final Enum<?> chargeAppliesTo) {
         return String.format("%s is invalid input for charge applies to field", chargeAppliesTo);
     }
 
@@ -1072,6 +1063,14 @@ public final class ErrorMessageHelper {
     }
 
     public static String workingCapitalBreachDuplicateNameFailure(final Long id) {
+        return String.format("Data integrity issue with resource: %d", id);
+    }
+
+    public static String workingCapitalDelinquencyBucketLinkedToLoanProductFailure(final Long id) {
+        return String.format("Data integrity issue with resource: %d", id);
+    }
+
+    public static String workingCapitalBreachLinkedToLoanProductFailure(final Long id) {
         return String.format("Data integrity issue with resource: %d", id);
     }
 

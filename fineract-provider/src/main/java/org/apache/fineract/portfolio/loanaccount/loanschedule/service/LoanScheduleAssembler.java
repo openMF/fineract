@@ -477,8 +477,10 @@ public class LoanScheduleAssembler {
             officeId = group.getOffice().getId();
         }
         final boolean isHolidayEnabled = this.configurationDomainService.isRescheduleRepaymentsOnHolidaysEnabled();
-        final List<Holiday> holidays = this.holidayRepository.findByOfficeIdAndGreaterThanDate(officeId, expectedDisbursementDate,
-                HolidayStatusType.ACTIVE.getValue());
+        final List<Holiday> holidays = officeId != null
+                ? this.holidayRepository.findByOfficeIdAndGreaterThanDate(officeId, expectedDisbursementDate,
+                        HolidayStatusType.ACTIVE.getValue())
+                : List.of();
         final WorkingDays workingDays = this.workingDaysRepository.findOne();
         HolidayDetailDTO detailDTO = new HolidayDetailDTO(isHolidayEnabled, holidays, workingDays);
         final boolean isInterestToBeRecoveredFirstWhenGreaterThanEMI = this.configurationDomainService
@@ -722,8 +724,10 @@ public class LoanScheduleAssembler {
         }
 
         final LocalDate expectedDisbursementDate = this.fromApiJsonHelper.extractLocalDateNamed("expectedDisbursementDate", element);
-        final List<Holiday> holidays = this.holidayRepository.findByOfficeIdAndGreaterThanDate(officeId, expectedDisbursementDate,
-                HolidayStatusType.ACTIVE.getValue());
+        final List<Holiday> holidays = officeId != null
+                ? this.holidayRepository.findByOfficeIdAndGreaterThanDate(officeId, expectedDisbursementDate,
+                        HolidayStatusType.ACTIVE.getValue())
+                : List.of();
         final WorkingDays workingDays = this.workingDaysRepository.findOne();
 
         validateDisbursementDateIsOnNonWorkingDay(loanApplicationTerms.getExpectedDisbursementDate(), workingDays);

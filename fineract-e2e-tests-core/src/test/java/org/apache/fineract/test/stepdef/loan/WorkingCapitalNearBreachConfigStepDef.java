@@ -191,27 +191,13 @@ public class WorkingCapitalNearBreachConfigStepDef extends AbstractStepDef {
         checkRetrieveWCNearBreachNotFoundFailure(Long.valueOf(id));
     }
 
-    @Then("Admin failed to delete WC Near Breach that is still assigned to WC loan product")
+    @Then("Admin failed to delete WC Near Breach that is still assigned to WC loan product or account")
     public void adminDeleteWCBreachAssignedToWCLPFailure() {
         final Long id = TestContext.INSTANCE.get(TestContextKey.WORKING_CAPITAL_NEAR_BREACH_ID);
         String errorMessage = "The request caused a data integrity issue to be fired by the database.";
-        // checkDeleteWCNearBreachFailure(id, 403, errorMessage);
         final CallFailedRuntimeException exception = fail(
                 () -> fineractFeignClient.workingCapitalNearBreaches().deleteWorkingCapitalNearBreach(id));
         assertThat(exception.getStatus()).isEqualTo(403);
-        // assertThat(exception.getDeveloperMessage()).contains(errorMessage);
-        assertThat(exception.getMessage()).contains(errorMessage);
-    }
-
-    @Then("Admin failed to delete WC Near Breach that is still assigned to WC loan account")
-    public void adminDeleteWCBreachAssignedToWCLAccountFailure() {
-        final Long id = TestContext.INSTANCE.get(TestContextKey.WORKING_CAPITAL_NEAR_BREACH_ID);
-        String errorMessage = "The request caused a data integrity issue to be fired by the database.";
-        // checkDeleteWCNearBreachFailure(id, 403, errorMessage);
-        final CallFailedRuntimeException exception = fail(
-                () -> fineractFeignClient.workingCapitalNearBreaches().deleteWorkingCapitalNearBreach(id));
-        assertThat(exception.getStatus()).isEqualTo(403);
-        // assertThat(exception.getDeveloperMessage()).contains(errorMessage);
         assertThat(exception.getMessage()).contains(errorMessage);
     }
 
@@ -270,13 +256,6 @@ public class WorkingCapitalNearBreachConfigStepDef extends AbstractStepDef {
     }
 
     private void checkDeleteWCNearBreachNotFoundFailure(final Long id) {
-        /*
-         * final CallFailedRuntimeException exception = fail( () ->
-         * fineractFeignClient.workingCapitalNearBreaches().deleteWorkingCapitalNearBreach(id));
-         * assertThat(exception.getStatus()).isEqualTo(404);
-         * assertThat(exception.getDeveloperMessage()).contains(ErrorMessageHelper.
-         * workingCapitalNearBreachNotFoundFailure(id));
-         */
         String errorMessage = ErrorMessageHelper.workingCapitalNearBreachNotFoundFailure(id);
         checkDeleteWCNearBreachFailure(id, 404, errorMessage);
     }
@@ -286,17 +265,7 @@ public class WorkingCapitalNearBreachConfigStepDef extends AbstractStepDef {
                 () -> fineractFeignClient.workingCapitalNearBreaches().deleteWorkingCapitalNearBreach(id));
         assertThat(exception.getStatus()).isEqualTo(statusCode);
         assertThat(exception.getDeveloperMessage()).contains(errorMessage);
-        // assertThat(exception.getMessage()).contains(errorMessage);
     }
-
-    /*
-     * private void checkDeleteWCNearBreachFailure(final Long id, int statusCode, String errorMessage) { final
-     * CallFailedRuntimeException exception = fail( () ->
-     * fineractFeignClient.workingCapitalNearBreaches().deleteWorkingCapitalNearBreach(id));
-     * assertThat(exception.getStatus()).isEqualTo(statusCode); //
-     * assertThat(exception.getDeveloperMessage()).contains(errorMessage);
-     * assertThat(exception.getMessage()).contains(errorMessage); }
-     */
 
     private void checkRetrieveWCNearBreachNotFoundFailure(final Long id) {
         final CallFailedRuntimeException exception = fail(

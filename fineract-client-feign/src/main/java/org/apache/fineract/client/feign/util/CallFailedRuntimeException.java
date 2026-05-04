@@ -31,11 +31,13 @@ public class CallFailedRuntimeException extends RuntimeException {
 
     private final int status;
     private final String developerMessage;
+    private final String userMessageGlobalisationCode;
 
     public CallFailedRuntimeException(FeignException cause) {
         super(createMessage(cause), cause);
         this.status = cause.status();
         this.developerMessage = extractDeveloperMessage(cause);
+        this.userMessageGlobalisationCode = cause.getUserMessageGlobalisationCode();
     }
 
     private static String createMessage(FeignException e) {

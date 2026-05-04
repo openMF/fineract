@@ -49,15 +49,12 @@ import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContext;
 import org.apache.fineract.test.support.TestContextKey;
 import org.assertj.core.api.SoftAssertions;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 @RequiredArgsConstructor
 public class WorkingCapitalDelinquencyConfigStepDef extends AbstractStepDef {
 
-    @Autowired
-    private WorkingCapitalRequestFactory workingCapitalRequestFactory;
-
+    private final WorkingCapitalRequestFactory workingCapitalRequestFactory;
     private final FineractFeignClient fineractFeignClient;
 
     @When("Admin Calls Delinquency Template")
@@ -346,6 +343,20 @@ public class WorkingCapitalDelinquencyConfigStepDef extends AbstractStepDef {
         String errorMessage = ErrorMessageHelper.workingCapitalDelinquencyBucketDoesntExistFailure(id);
         assertThat(exception.getStatus()).as(errorMessage).isEqualTo(404);
         assertThat(exception.getDeveloperMessage()).contains(errorMessage);
+    }
+
+    @Then("Admin failed to delete WC Delinquency Bucket that is assigned to a Working Capital Loan Product")
+    public void adminFailedToDeleteWCDelinquencyBucketAssignedToLoanProduct() {
+        final Long id = TestContext.GLOBAL.get(TestContextKey.DELINQUENCY_BUCKET_ID);
+        final CallFailedRuntimeException exception = fail(
+                () -> fineractFeignClient.delinquencyRangeAndBucketsManagement().deleteBucket(id));
+
+        assertThat(exception.getStatus()).as(ErrorMessageHelper.incorrectExpectedValueInResponse()).isEqualTo(403);
+        assertThat(exception.getUserMessageGlobalisationCode()).isEqualTo(ErrorMessageHelper.DATA_INTEGRITY_ISSUE_ENTITY_LINKED_CODE);
+        assertThat(exception.getDeveloperMessage()) //
+                .contains(ErrorMessageHelper.workingCapitalDelinquencyBucketLinkedToLoanProductFailure(id)) //
+                .doesNotContain("Cannot delete or update a parent row") //
+                .doesNotContain("m_wc_loan_product");
     }
 
 }

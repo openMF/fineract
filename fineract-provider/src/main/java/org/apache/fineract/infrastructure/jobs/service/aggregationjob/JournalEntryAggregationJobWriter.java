@@ -25,12 +25,14 @@ import org.apache.fineract.infrastructure.jobs.service.aggregationjob.data.Journ
 import org.apache.fineract.infrastructure.jobs.service.aggregationjob.services.JournalEntryAggregationWriterService;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
+@StepScope
 @Slf4j
 @RequiredArgsConstructor
 public class JournalEntryAggregationJobWriter implements ItemWriter<JournalEntryAggregationSummaryData>, StepExecutionListener {

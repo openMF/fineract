@@ -19,20 +19,27 @@
 package org.apache.fineract.client.feign;
 
 import feign.Request;
+import java.io.Serial;
 import java.nio.charset.Charset;
+import lombok.Getter;
 
 /**
  * Base exception class for Feign client exceptions.
  */
 public class FeignException extends RuntimeException {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final int status;
     private final Request request;
     private final byte[] responseBody;
+    @Getter
     private final String developerMessage;
+    @Getter
     private final String userMessage;
+    @Getter
+    private final String userMessageGlobalisationCode;
 
     protected FeignException(int status, String message, Request request) {
         this(status, message, request, (byte[]) null);
@@ -49,6 +56,7 @@ public class FeignException extends RuntimeException {
         this.responseBody = responseBody;
         this.developerMessage = null;
         this.userMessage = null;
+        this.userMessageGlobalisationCode = null;
     }
 
     protected FeignException(int status, String message, Request request, byte[] responseBody, Throwable cause) {
@@ -58,15 +66,22 @@ public class FeignException extends RuntimeException {
         this.responseBody = responseBody;
         this.developerMessage = null;
         this.userMessage = null;
+        this.userMessageGlobalisationCode = null;
     }
 
     public FeignException(int status, String message, Request request, byte[] responseBody, String developerMessage, String userMessage) {
+        this(status, message, request, responseBody, developerMessage, userMessage, null);
+    }
+
+    public FeignException(final int status, final String message, final Request request, final byte[] responseBody,
+            final String developerMessage, final String userMessage, final String userMessageGlobalisationCode) {
         super(message);
         this.status = status;
         this.request = request;
         this.responseBody = responseBody;
         this.developerMessage = developerMessage;
         this.userMessage = userMessage;
+        this.userMessageGlobalisationCode = userMessageGlobalisationCode;
     }
 
     public int status() {
@@ -83,14 +98,6 @@ public class FeignException extends RuntimeException {
 
     public String responseBodyAsString() {
         return responseBody != null ? new String(responseBody, Charset.defaultCharset()) : null;
-    }
-
-    public String getDeveloperMessage() {
-        return developerMessage;
-    }
-
-    public String getUserMessage() {
-        return userMessage;
     }
 
     @Override
