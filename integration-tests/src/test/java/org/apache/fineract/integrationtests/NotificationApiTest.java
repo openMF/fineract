@@ -26,14 +26,16 @@ import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 import java.util.List;
+import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.GetNotification;
 import org.apache.fineract.client.models.GetNotificationsResponse;
 import org.apache.fineract.client.models.GetOfficesResponse;
 import org.apache.fineract.client.models.PostClientsRequest;
 import org.apache.fineract.client.models.PostUsersRequest;
 import org.apache.fineract.client.models.PostUsersResponse;
+import org.apache.fineract.integrationtests.client.feign.helpers.FeignNotificationHelper;
 import org.apache.fineract.integrationtests.common.ClientHelper;
-import org.apache.fineract.integrationtests.common.NotificationHelper;
+import org.apache.fineract.integrationtests.common.FineractFeignClientHelper;
 import org.apache.fineract.integrationtests.common.OfficeHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.useradministration.users.UserHelper;
@@ -46,11 +48,11 @@ public class NotificationApiTest {
     public static final int SUPER_USER_ID = 1;
     public static final String CLIENT_OBJECT_TYPE = "client";
     public static final String CREATED_ACTION_TYPE = "created";
+
     private RequestSpecification requestSpec;
     private ResponseSpecification responseSpec;
-
-    private RequestSpecification newUserRequestSpec;
-    private ResponseSpecification newUserResponseSpec;
+    private FeignNotificationHelper notificationHelper;
+    private FeignNotificationHelper newUserNotificationHelper;
 
     @BeforeEach
     public void setUp() {
@@ -59,10 +61,12 @@ public class NotificationApiTest {
         requestSpec.header("Authorization", "Basic " + Utils.loginIntoServerAndGetBase64EncodedAuthenticationKey());
         responseSpec = new ResponseSpecBuilder().expectStatusCode(200).build();
 
+        notificationHelper = new FeignNotificationHelper(FineractFeignClientHelper.getFineractFeignClient());
+
         GetOfficesResponse headOffice = OfficeHelper.getHeadOffice();
         String username = Utils.uniqueRandomStringGenerator("NotificationUser", 4);
-        String password = Utils.randomStringGenerator("A1b2c3d4e5f$", 1); // prefix is to conform with the password
-                                                                          // rules
+        String password = Utils.randomStringGenerator("A1b2c3d4e5f$", 1);
+
         PostUsersRequest createUserRequest = new PostUsersRequest().username(username).firstname(Utils.randomFirstNameGenerator())
                 .lastname(Utils.randomLastNameGenerator()).email("whatever@mifos.org").password(password).repeatPassword(password)
                 .sendPasswordToEmail(false).roles(List.of(SUPER_USER_ROLE_ID)).officeId(headOffice.getId());
@@ -70,32 +74,29 @@ public class NotificationApiTest {
         PostUsersResponse userCreationResponse = UserHelper.createUser(requestSpec, responseSpec, createUserRequest);
         Assertions.assertNotNull(userCreationResponse.getResourceId());
 
-        newUserRequestSpec = new RequestSpecBuilder().setContentType(ContentType.JSON).build();
-        newUserRequestSpec.header("Authorization",
-                "Basic " + Utils.loginIntoServerAndGetBase64EncodedAuthenticationKey(username, password));
-        newUserResponseSpec = new ResponseSpecBuilder().expectStatusCode(200).build();
-
+        FineractFeignClient newUserClient = FineractFeignClientHelper.createNewFineractFeignClient(username, password);
+        newUserNotificationHelper = new FeignNotificationHelper(newUserClient);
     }
 
     @Test
     public void testNotificationRetrievalWorksWhenNoNotificationsAreAvailable() {
         // given
         // when
-        GetNotificationsResponse response = NotificationHelper.getNotifications(requestSpec, responseSpec);
+        GetNotificationsResponse response = notificationHelper.getNotifications();
         // then
         Assertions.assertNotNull(response);
     }
 
     @Test
     public void testNotificationRetrievalWorksWhenOneNotificationIsAvailable() {
-        // given
+        // given (still using RestAssured-based ClientHelper - to be migrated separately)
         PostClientsRequest clientRequest = ClientHelper.defaultClientCreationRequest();
         Integer clientId = ClientHelper.createClient(requestSpec, responseSpec, clientRequest);
         Assertions.assertNotNull(clientId);
 
         // when
-        NotificationHelper.waitUntilNotificationsAreAvailable(newUserRequestSpec, newUserResponseSpec);
-        GetNotificationsResponse response = NotificationHelper.getNotifications(newUserRequestSpec, newUserResponseSpec);
+        newUserNotificationHelper.waitUntilNotificationsAreAvailable();
+        GetNotificationsResponse response = newUserNotificationHelper.getNotifications();
         // then
         Assertions.assertNotNull(response);
         List<GetNotification> pageItems = response.getPageItems();
