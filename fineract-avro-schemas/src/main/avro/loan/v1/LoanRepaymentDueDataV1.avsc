@@ -49,6 +49,17 @@
                     "type": "map"
                 }
             ]
+        },
+        {
+            "default": null,
+            "name": "originators",
+            "type": [
+                "null",
+                {
+                    "type": "array",
+                    "items": "org.apache.fineract.avro.loan.v1.OriginatorDetailsV1"
+                }
+            ]
         }
     ]
 }

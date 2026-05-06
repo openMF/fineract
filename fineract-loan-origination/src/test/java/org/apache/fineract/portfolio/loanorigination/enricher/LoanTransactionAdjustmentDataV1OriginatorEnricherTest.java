@@ -21,7 +21,6 @@ package org.apache.fineract.portfolio.loanorigination.enricher;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -29,6 +28,9 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
+import org.apache.fineract.avro.loan.v1.LoanAccountDelinquencyRangeDataV1;
+import org.apache.fineract.avro.loan.v1.LoanRepaymentDueDataV1;
 import org.apache.fineract.avro.loan.v1.LoanTransactionAdjustmentDataV1;
 import org.apache.fineract.avro.loan.v1.LoanTransactionDataV1;
 import org.apache.fineract.avro.loan.v1.OriginatorDetailsV1;
@@ -36,6 +38,9 @@ import org.apache.fineract.portfolio.loanorigination.helper.LoanOriginatorDetail
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -65,9 +70,16 @@ class LoanTransactionAdjustmentDataV1OriginatorEnricherTest {
         adjustmentData.setNewTransactionDetail(newTransactionDetail);
     }
 
-    @Test
-    void testIsDataTypeSupported() {
-        assertTrue(enricher.isDataTypeSupported(LoanTransactionAdjustmentDataV1.class));
+    private static Stream<Arguments> dataTypeTestProvider() {
+        return Stream.of(Arguments.of(LoanTransactionAdjustmentDataV1.class, true), Arguments.of(LoanRepaymentDueDataV1.class, false),
+                Arguments.of(LoanAccountDelinquencyRangeDataV1.class, false));
+    }
+
+    @ParameterizedTest
+    @MethodSource("dataTypeTestProvider")
+    @SuppressWarnings("unchecked")
+    void testIsDataTypeSupported(final Class<?> classToTest, final boolean expectedResult) {
+        assertEquals(expectedResult, enricher.isDataTypeSupported((Class<LoanTransactionAdjustmentDataV1>) classToTest));
     }
 
     @Test
@@ -100,10 +112,15 @@ class LoanTransactionAdjustmentDataV1OriginatorEnricherTest {
         enricher.enrich(adjustmentData);
 
         // Then
+        verify(loanOriginatorDetailsResolver).resolveOriginatorDetails(loanId);
         assertNotNull(transactionToAdjust.getOriginators());
         assertEquals(2, transactionToAdjust.getOriginators().size());
+        assertEquals("test-originator-1", transactionToAdjust.getOriginators().get(0).getExternalId());
+        assertEquals("test-originator-2", transactionToAdjust.getOriginators().get(1).getExternalId());
         assertNotNull(newTransactionDetail.getOriginators());
         assertEquals(2, newTransactionDetail.getOriginators().size());
+        assertEquals("test-originator-1", newTransactionDetail.getOriginators().get(0).getExternalId());
+        assertEquals("test-originator-2", newTransactionDetail.getOriginators().get(1).getExternalId());
     }
 
     @Test

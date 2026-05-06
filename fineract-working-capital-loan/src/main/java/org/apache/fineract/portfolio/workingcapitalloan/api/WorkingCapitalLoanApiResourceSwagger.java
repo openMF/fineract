@@ -474,10 +474,16 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public Long clientId;
         @Schema(example = "3")
         public Long loanId;
+        @Schema(example = "95174ff9-1a75-4d72-a413-6f9b1cb988b7")
+        public String loanExternalId;
         @Schema(example = "3")
         public Long resourceId;
         @Schema(example = "95174ff9-1a75-4d72-a413-6f9b1cb988b7")
         public String resourceExternalId;
+        @Schema(example = "3")
+        public Long subResourceId;
+        @Schema(example = "95174ff9-1a75-4d72-a413-6f9b1cb988b7")
+        public String subResourceExternalId;
         public Object changes;
     }
 
@@ -512,6 +518,8 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public String externalId;
         @Schema(description = "Payment details (Account No, Cheque No, Routing Code, Receipt No, Bank code)")
         public PostWorkingCapitalLoansLoanIdDisbursementPaymentDetails paymentDetails;
+        @Schema(description = "Related resource ID for transaction, e.g., related transaction ID")
+        public Long relatedResourceId;
     }
 
     @Schema(description = "Request for updating discount on a disbursed Working Capital Loan")

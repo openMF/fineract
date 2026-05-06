@@ -74,6 +74,7 @@ import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_DISBURSE;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_DISBURSETOSAVINGS;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_DISBURSEWITHOUTAUTODOWNPAYMENT;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_DISCOUNTFEE;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_DOWNPAYMENT;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_ENABLE;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ACTION_EXECUTE;
@@ -874,6 +875,14 @@ public class CommandWrapperBuilder {
 
     public CommandWrapperBuilder undoWorkingCapitalLoanApplicationDisbursal(final Long loanId) {
         this.actionName = ACTION_DISBURSALUNDO;
+        this.entityName = ENTITY_WORKINGCAPITALLOAN;
+        this.entityId = loanId;
+        this.href = "/workingcapitalloans/" + loanId;
+        return this;
+    }
+
+    public CommandWrapperBuilder discountWorkingCapitalLoanApplicationDisbursal(final Long loanId) {
+        this.actionName = ACTION_DISCOUNTFEE;
         this.entityName = ENTITY_WORKINGCAPITALLOAN;
         this.entityId = loanId;
         this.href = "/workingcapitalloans/" + loanId;

@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.fineract.portfolio.workingcapitalloan.handler;
 
 import lombok.RequiredArgsConstructor;
@@ -25,18 +26,16 @@ import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.portfolio.workingcapitalloan.service.WorkingCapitalLoanWritePlatformService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@CommandType(entity = "WORKINGCAPITALLOAN", action = "UPDATEDISCOUNT")
-public class UpdateDiscountWorkingCapitalLoanCommandHandler implements NewCommandSourceHandler {
+@CommandType(entity = "WORKINGCAPITALLOAN", action = "DISCOUNTFEE")
+public class WorkingCapitalLoanDiscountFeeCommandHandler implements NewCommandSourceHandler {
 
     private final WorkingCapitalLoanWritePlatformService writePlatformService;
 
-    @Transactional
     @Override
-    public CommandProcessingResult processCommand(final JsonCommand command) {
-        return this.writePlatformService.updateDiscount(command.entityId(), command);
+    public CommandProcessingResult processCommand(JsonCommand command) {
+        return writePlatformService.makeDiscountFee(command.getResourceId(), command);
     }
 }

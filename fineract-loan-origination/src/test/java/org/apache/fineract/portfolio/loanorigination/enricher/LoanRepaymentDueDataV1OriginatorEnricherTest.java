@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.apache.fineract.avro.loan.v1.LoanAccountDataV1;
 import org.apache.fineract.avro.loan.v1.LoanAccountDelinquencyRangeDataV1;
-import org.apache.fineract.avro.loan.v1.LoanTransactionDataV1;
+import org.apache.fineract.avro.loan.v1.LoanRepaymentDueDataV1;
 import org.apache.fineract.avro.loan.v1.OriginatorDetailsV1;
 import org.apache.fineract.portfolio.loanorigination.helper.LoanOriginatorDetailsResolver;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,34 +45,34 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class LoanAccountDataV1OriginatorEnricherTest {
+class LoanRepaymentDueDataV1OriginatorEnricherTest {
 
     @Mock
     private LoanOriginatorDetailsResolver loanOriginatorDetailsResolver;
 
     @InjectMocks
-    private LoanAccountDataV1OriginatorEnricher enricher;
+    private LoanRepaymentDueDataV1OriginatorEnricher enricher;
 
-    private LoanAccountDataV1 loanAccountData;
+    private LoanRepaymentDueDataV1 loanRepaymentDueData;
     private Long loanId;
 
     @BeforeEach
     void setUp() {
         loanId = 1L;
-        loanAccountData = new LoanAccountDataV1();
-        loanAccountData.setId(loanId);
+        loanRepaymentDueData = new LoanRepaymentDueDataV1();
+        loanRepaymentDueData.setLoanId(loanId);
     }
 
     private static Stream<Arguments> dataTypeTestProvider() {
-        return Stream.of(Arguments.of(LoanAccountDataV1.class, true), Arguments.of(LoanAccountDelinquencyRangeDataV1.class, false),
-                Arguments.of(LoanTransactionDataV1.class, false));
+        return Stream.of(Arguments.of(LoanRepaymentDueDataV1.class, true), Arguments.of(LoanAccountDataV1.class, false),
+                Arguments.of(LoanAccountDelinquencyRangeDataV1.class, false));
     }
 
     @ParameterizedTest
     @MethodSource("dataTypeTestProvider")
     @SuppressWarnings("unchecked")
     void testIsDataTypeSupported(final Class<?> classToTest, final boolean expectedResult) {
-        assertEquals(expectedResult, enricher.isDataTypeSupported((Class<LoanAccountDataV1>) classToTest));
+        assertEquals(expectedResult, enricher.isDataTypeSupported((Class<LoanRepaymentDueDataV1>) classToTest));
     }
 
     @Test
@@ -82,13 +82,13 @@ class LoanAccountDataV1OriginatorEnricherTest {
         when(loanOriginatorDetailsResolver.resolveOriginatorDetails(loanId)).thenReturn(List.of(originatorDetails));
 
         // When
-        enricher.enrich(loanAccountData);
+        enricher.enrich(loanRepaymentDueData);
 
         // Then
         verify(loanOriginatorDetailsResolver).resolveOriginatorDetails(loanId);
-        assertNotNull(loanAccountData.getOriginators());
-        assertEquals(1, loanAccountData.getOriginators().size());
-        assertEquals("test-originator-1", loanAccountData.getOriginators().getFirst().getExternalId());
+        assertNotNull(loanRepaymentDueData.getOriginators());
+        assertEquals(1, loanRepaymentDueData.getOriginators().size());
+        assertEquals("test-originator-1", loanRepaymentDueData.getOriginators().getFirst().getExternalId());
     }
 
     @Test
@@ -99,14 +99,14 @@ class LoanAccountDataV1OriginatorEnricherTest {
         when(loanOriginatorDetailsResolver.resolveOriginatorDetails(loanId)).thenReturn(List.of(details1, details2));
 
         // When
-        enricher.enrich(loanAccountData);
+        enricher.enrich(loanRepaymentDueData);
 
         // Then
         verify(loanOriginatorDetailsResolver).resolveOriginatorDetails(loanId);
-        assertNotNull(loanAccountData.getOriginators());
-        assertEquals(2, loanAccountData.getOriginators().size());
-        assertEquals("test-originator-1", loanAccountData.getOriginators().get(0).getExternalId());
-        assertEquals("test-originator-2", loanAccountData.getOriginators().get(1).getExternalId());
+        assertNotNull(loanRepaymentDueData.getOriginators());
+        assertEquals(2, loanRepaymentDueData.getOriginators().size());
+        assertEquals("test-originator-1", loanRepaymentDueData.getOriginators().get(0).getExternalId());
+        assertEquals("test-originator-2", loanRepaymentDueData.getOriginators().get(1).getExternalId());
     }
 
     @Test
@@ -115,24 +115,24 @@ class LoanAccountDataV1OriginatorEnricherTest {
         when(loanOriginatorDetailsResolver.resolveOriginatorDetails(loanId)).thenReturn(Collections.emptyList());
 
         // When
-        enricher.enrich(loanAccountData);
+        enricher.enrich(loanRepaymentDueData);
 
         // Then
         verify(loanOriginatorDetailsResolver).resolveOriginatorDetails(loanId);
-        assertNull(loanAccountData.getOriginators());
+        assertNull(loanRepaymentDueData.getOriginators());
     }
 
     @Test
     void testEnrich_NullLoanId() {
         // Given
-        loanAccountData.setId(null);
+        loanRepaymentDueData.setLoanId(null);
 
         // When
-        enricher.enrich(loanAccountData);
+        enricher.enrich(loanRepaymentDueData);
 
         // Then
         verify(loanOriginatorDetailsResolver, never()).resolveOriginatorDetails(any());
-        assertNull(loanAccountData.getOriginators());
+        assertNull(loanRepaymentDueData.getOriginators());
     }
 
     @Test

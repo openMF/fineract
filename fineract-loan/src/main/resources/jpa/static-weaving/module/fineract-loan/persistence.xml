@@ -141,6 +141,7 @@
         <class>org.apache.fineract.portfolio.loanproduct.domain.LoanProductVariableInstallmentConfig</class>
         <class>org.apache.fineract.portfolio.loanproduct.domain.PaymentAllocationTypeListConverter</class>
         <class>org.apache.fineract.portfolio.loanproduct.domain.SupportedInterestRefundTypesListConverter</class>
+        <class>org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionRelationTypeEnumConverter</class>
         <class>org.apache.fineract.portfolio.repaymentwithpostdatedchecks.domain.PostDatedChecks</class>
 
         <!--  fineract-rates module: -->

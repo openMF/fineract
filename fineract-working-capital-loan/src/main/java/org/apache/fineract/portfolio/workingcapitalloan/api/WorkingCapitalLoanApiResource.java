@@ -299,6 +299,8 @@ public class WorkingCapitalLoanApiResource {
             commandRequest = builder.disburseWorkingCapitalLoanApplication(resolvedLoanId).build();
         } else if (CommandParameterUtil.is(commandParam, "undodisbursal")) {
             commandRequest = builder.undoWorkingCapitalLoanApplicationDisbursal(resolvedLoanId).build();
+        } else if (CommandParameterUtil.is(commandParam, "discountfee")) {
+            commandRequest = builder.discountWorkingCapitalLoanApplicationDisbursal(resolvedLoanId).build();
         }
 
         if (commandRequest == null) {
@@ -308,42 +310,4 @@ public class WorkingCapitalLoanApiResource {
         return this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
     }
 
-    @PUT
-    @Path("{loanId}/discount")
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(operationId = "updateWorkingCapitalLoanDiscountById", summary = "Update discount for a disbursed Working Capital Loan", description = "Discount can be added one time after disbursement and only on disbursement date.")
-    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdDiscountRequest.class)))
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdResponse.class))) })
-    public CommandProcessingResult updateDiscountById(
-            @PathParam("loanId") @Parameter(description = "loanId", required = true) final Long loanId,
-            @Parameter(hidden = true) final String apiRequestBodyAsJson) {
-        return updateDiscount(loanId, null, apiRequestBodyAsJson);
-    }
-
-    @PUT
-    @Path("external-id/{loanExternalId}/discount")
-    @Consumes({ MediaType.APPLICATION_JSON })
-    @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(operationId = "updateWorkingCapitalLoanDiscountByExternalId", summary = "Update discount for a disbursed Working Capital Loan by external id", description = "Discount can be added one time after disbursement and only on disbursement date.")
-    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdDiscountRequest.class)))
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdResponse.class))) })
-    public CommandProcessingResult updateDiscountByExternalId(
-            @PathParam("loanExternalId") @Parameter(description = "loanExternalId", required = true) final String loanExternalId,
-            @Parameter(hidden = true) final String apiRequestBodyAsJson) {
-        return updateDiscount(null, loanExternalId, apiRequestBodyAsJson);
-    }
-
-    private CommandProcessingResult updateDiscount(final Long loanId, final String loanExternalIdStr, final String apiRequestBodyAsJson) {
-        final Long resolvedLoanId = loanId != null ? loanId
-                : readPlatformService.getResolvedLoanId(ExternalIdFactory.produce(loanExternalIdStr));
-        if (resolvedLoanId == null) {
-            throw new WorkingCapitalLoanNotFoundException(ExternalIdFactory.produce(loanExternalIdStr));
-        }
-        final CommandWrapper commandRequest = new CommandWrapperBuilder().withJson(apiRequestBodyAsJson)
-                .updateDiscountWorkingCapitalLoanApplication(resolvedLoanId).build();
-        return this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-    }
 }

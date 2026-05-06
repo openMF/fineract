@@ -25,12 +25,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
@@ -95,6 +98,9 @@ public class WorkingCapitalLoanTransaction extends AbstractAuditableWithUTCDateT
     @OneToOne(mappedBy = "wcLoanTransaction", cascade = CascadeType.ALL, orphanRemoval = true)
     private WorkingCapitalLoanTransactionAllocation allocation;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "fromTransaction")
+    private Set<WorkingCapitalLoanTransactionRelation> loanTransactionRelations = new HashSet<>();
+
     protected WorkingCapitalLoanTransaction() {}
 
     public LoanTransactionType getTypeOf() {
@@ -123,6 +129,23 @@ public class WorkingCapitalLoanTransaction extends AbstractAuditableWithUTCDateT
         final WorkingCapitalLoanTransaction txn = new WorkingCapitalLoanTransaction();
         txn.initialize(loan, LoanTransactionType.CREDIT_BALANCE_REFUND, transactionDate, amount, paymentDetail, classification, externalId);
         return txn;
+    }
+
+    public static WorkingCapitalLoanTransaction discountFee(final WorkingCapitalLoan loan, final ExternalId externalId,
+            final BigDecimal amount, final LocalDate transactionDate, final CodeValue classification, final PaymentDetail paymentDetail) {
+        WorkingCapitalLoanTransaction transaction = new WorkingCapitalLoanTransaction();
+        transaction.wcLoan = loan;
+        transaction.transactionType = LoanTransactionType.DISCOUNT_FEE;
+        transaction.transactionAmount = amount;
+        transaction.transactionDate = transactionDate;
+        transaction.submittedOnDate = transactionDate;
+        transaction.externalId = externalId != null ? externalId : ExternalId.empty();
+        transaction.paymentDetail = paymentDetail;
+        transaction.classification = classification;
+        transaction.reversed = false;
+        transaction.reversalExternalId = null;
+        transaction.reversedOnDate = null;
+        return transaction;
     }
 
     private void initialize(final WorkingCapitalLoan loan, final LoanTransactionType transactionType, final LocalDate transactionDate,

@@ -123,7 +123,8 @@ public class WorkingCapitalLoanRepaymentTest {
         assertEqualBigDecimal(BigDecimal.valueOf(100), loanData.getAsJsonObject("balance").get("overpaymentAmount"));
         final JsonArray content = JsonParser.parseString(loanHelper.retrieveTransactionsByLoanIdRaw(loanId)).getAsJsonObject()
                 .getAsJsonArray("content");
-        assertEquals(2, content.size());
+        // expected transactions: disburse, discount fee, repayment
+        assertEquals(3, content.size());
     }
 
     @Test

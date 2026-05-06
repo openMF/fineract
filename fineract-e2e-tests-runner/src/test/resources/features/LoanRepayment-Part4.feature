@@ -308,3 +308,87 @@ Feature: LoanRepayment - Part4
     Then Loan is closed with zero outstanding balance and it's all installments have obligations met
     When Admin set "LP2_DOWNPAYMENT_ADV_PMT_ALLOC_PROGRESSIVE_LOAN_SCHEDULE_VERTICAL_INTEREST_RECALC" loan product "REPAYMENT" transaction type to "NEXT_INSTALLMENT" future installment allocation rule
 
+  @TestRailId:C78844 @AdvancedPaymentAllocation
+  Scenario: Verify installment due date logic for monthly installments - repayment start date type overridden on loan level by submitted on date
+    When Admin sets the business date to "31 January 2024"
+    When Admin creates a client with random data
+    When Admin creates a fully customized loan with the following data:
+      | LoanProduct                                      | submitted on date | expected disbursement date | with Principal | ANNUAL interest rate % | interest type | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            | Repayment start date type |
+      | LP2_ADV_PYMNT_ZERO_INTEREST_CHARGE_OFF_BEHAVIOUR | 31 January 2024   | 10 February 2024           | 1000           | 0                      | FLAT          | SAME_AS_REPAYMENT_PERIOD    | EQUAL_INSTALLMENTS | 4                 | MONTHS                | 1              | MONTHS                 | 4                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION | SUBMITTED_ON_DATE         |
+    Then Loan Repayment schedule has 4 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid | In advance | Late | Outstanding |
+      |    |      | 10 February 2024 |           | 1000.0          |               |          | 0.0  |           | 0.0   |      |            |      | 0.0         |
+      | 1  | 29   | 29 February 2024 |           | 750.0           | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+      | 2  | 31   | 31 March 2024    |           | 500.0           | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+      | 3  | 30   | 30 April 2024    |           | 250.0           | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+      | 4  | 31   | 31 May 2024      |           | 0.0             | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due    | Paid | In advance | Late | Outstanding |
+      | 1000.0        | 0.0      | 0.0  | 0.0       | 1000.0 | 0.0  | 0.0        | 0.0  | 1000.0      |
+    And Admin successfully approves the loan on "31 January 2024" with "1000" amount and expected disbursement date on "11 February 2024"
+    Then Loan Repayment schedule has 4 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid | In advance | Late | Outstanding |
+      |    |      | 11 February 2024 |           | 1000.0          |               |          | 0.0  |           | 0.0   |      |            |      | 0.0         |
+      | 1  | 29   | 29 February 2024 |           | 750.0           | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+      | 2  | 31   | 31 March 2024    |           | 500.0           | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+      | 3  | 30   | 30 April 2024    |           | 250.0           | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+      | 4  | 31   | 31 May 2024      |           | 0.0             | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due    | Paid | In advance | Late | Outstanding |
+      | 1000.0        | 0.0      | 0.0  | 0.0       | 1000.0 | 0.0  | 0.0        | 0.0  | 1000.0      |
+    When Admin sets the business date to "12 February 2024"
+    When Admin successfully disburse the loan on "12 February 2024" with "1000" EUR transaction amount
+    Then Loan Repayment schedule has 4 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid | In advance | Late | Outstanding |
+      |    |      | 12 February 2024 |           | 1000.0          |               |          | 0.0  |           | 0.0   | 0.0  |            |      |             |
+      | 1  | 29   | 29 February 2024 |           | 750.0           | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+      | 2  | 31   | 31 March 2024    |           | 500.0           | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+      | 3  | 30   | 30 April 2024    |           | 250.0           | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+      | 4  | 31   | 31 May 2024      |           | 0.0             | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due    | Paid  | In advance | Late | Outstanding |
+      | 1000.0        | 0.0      | 0.0  | 0.0       | 1000.0 | 0.0  | 0.0        | 0.0  | 1000.0      |
+
+  @TestRailId:C78845 @AdvancedPaymentAllocation
+  Scenario: Verify installment due date logic for monthly installments - repayment start date type overridden on loan level by disbursement date
+    When Admin sets the business date to "31 January 2024"
+    When Admin creates a client with random data
+    When Admin creates a fully customized loan with the following data:
+      | LoanProduct                                                                | submitted on date | expected disbursement date | with Principal | ANNUAL interest rate % | interest type | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            | Repayment start date type |
+      | LP2_DOWNPAYMENT_AUTO_ADVANCED_PAYMENT_ALLOCATION_REPAYMENT_START_SUBMITTED | 31 January 2024   | 10 February 2024           | 1000           | 0                      | FLAT          | SAME_AS_REPAYMENT_PERIOD    | EQUAL_INSTALLMENTS | 4                 | MONTHS                | 1              | MONTHS                 | 4                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION | DISBURSEMENT_DATE         |
+    Then Loan Repayment schedule has 5 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid | In advance | Late | Outstanding |
+      |    |      | 10 February 2024 |           | 1000.0          |               |          | 0.0  |           | 0.0   |      |            |      | 0.0         |
+      | 1  | 0    | 10 February 2024 |           | 750.0           | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+      | 2  | 29   | 10 March 2024    |           | 562.0           | 188.0         | 0.0      | 0.0  | 0.0       | 188.0 | 0.0  | 0.0        | 0.0  | 188.0       |
+      | 3  | 31   | 10 April 2024    |           | 374.0           | 188.0         | 0.0      | 0.0  | 0.0       | 188.0 | 0.0  | 0.0        | 0.0  | 188.0       |
+      | 4  | 30   | 10 May 2024      |           | 186.0           | 188.0         | 0.0      | 0.0  | 0.0       | 188.0 | 0.0  | 0.0        | 0.0  | 188.0       |
+      | 5  | 31   | 10 June 2024     |           | 0.0             | 186.0         | 0.0      | 0.0  | 0.0       | 186.0 | 0.0  | 0.0        | 0.0  | 186.0       |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due    | Paid | In advance | Late | Outstanding |
+      | 1000.0        | 0.0      | 0.0  | 0.0       | 1000.0 | 0.0  | 0.0        | 0.0  | 1000.0      |
+    And Admin successfully approves the loan on "31 January 2024" with "1000" amount and expected disbursement date on "11 February 2024"
+    Then Loan Repayment schedule has 5 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid | In advance | Late | Outstanding |
+      |    |      | 11 February 2024 |           | 1000.0          |               |          | 0.0  |           | 0.0   |      |            |      | 0.0         |
+      | 1  | 0    | 11 February 2024 |           | 750.0           | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 0.0  | 0.0        | 0.0  | 250.0       |
+      | 2  | 29   | 11 March 2024    |           | 562.0           | 188.0         | 0.0      | 0.0  | 0.0       | 188.0 | 0.0  | 0.0        | 0.0  | 188.0       |
+      | 3  | 31   | 11 April 2024    |           | 374.0           | 188.0         | 0.0      | 0.0  | 0.0       | 188.0 | 0.0  | 0.0        | 0.0  | 188.0       |
+      | 4  | 30   | 11 May 2024      |           | 186.0           | 188.0         | 0.0      | 0.0  | 0.0       | 188.0 | 0.0  | 0.0        | 0.0  | 188.0       |
+      | 5  | 31   | 11 June 2024     |           | 0.0             | 186.0         | 0.0      | 0.0  | 0.0       | 186.0 | 0.0  | 0.0        | 0.0  | 186.0       |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due    | Paid | In advance | Late | Outstanding |
+      | 1000.0        | 0.0      | 0.0  | 0.0       | 1000.0 | 0.0  | 0.0        | 0.0  | 1000.0      |
+    When Admin sets the business date to "12 February 2024"
+    When Admin successfully disburse the loan on "12 February 2024" with "1000" EUR transaction amount
+    Then Loan Repayment schedule has 5 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid   | In advance | Late | Outstanding |
+      |    |      | 12 February 2024 |                  | 1000.0          |               |          | 0.0  |           | 0.0   | 0.0    |            |      |             |
+      | 1  | 0    | 12 February 2024 | 12 February 2024 | 750.0           | 250.0         | 0.0      | 0.0  | 0.0       | 250.0 | 250.0  | 0.0        | 0.0  | 0.0         |
+      | 2  | 29   | 12 March 2024    |                  | 562.0           | 188.0         | 0.0      | 0.0  | 0.0       | 188.0 | 0.0    | 0.0        | 0.0  | 188.0       |
+      | 3  | 31   | 12 April 2024    |                  | 374.0           | 188.0         | 0.0      | 0.0  | 0.0       | 188.0 | 0.0    | 0.0        | 0.0  | 188.0       |
+      | 4  | 30   | 12 May 2024      |                  | 186.0           | 188.0         | 0.0      | 0.0  | 0.0       | 188.0 | 0.0    | 0.0        | 0.0  | 188.0       |
+      | 5  | 31   | 12 June 2024     |                  | 0.0             | 186.0         | 0.0      | 0.0  | 0.0       | 186.0 | 0.0    | 0.0        | 0.0  | 186.0       |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due    | Paid   | In advance | Late | Outstanding |
+      | 1000.0        | 0.0      | 0.0  | 0.0       | 1000.0 | 250.0  | 0.0        | 0.0  | 750.0       |

@@ -1435,6 +1435,9 @@ final class LoansApiResourceSwagger {
                 non-existing originators will be auto-created using the provided details (name, typeId, channelTypeId).""")
         public List<PostLoansOriginatorData> originators;
 
+        @Schema(example = "1")
+        public Integer repaymentStartDateType;
+
         static final class PostLoansRequestChargeData {
 
             private PostLoansRequestChargeData() {}

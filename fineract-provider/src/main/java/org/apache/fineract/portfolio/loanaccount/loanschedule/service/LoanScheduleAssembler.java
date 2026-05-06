@@ -271,7 +271,14 @@ public class LoanScheduleAssembler {
         LocalDate repaymentsStartingFromDate = this.fromApiJsonHelper.extractLocalDateNamed("repaymentsStartingFromDate", element);
         final LocalDate submittedOnDate = this.fromApiJsonHelper.extractLocalDateNamed("submittedOnDate", element);
 
-        final RepaymentStartDateType repaymentStartDateType = loanProduct.getRepaymentStartDateType();
+        RepaymentStartDateType repaymentStartDateType = loanProduct.getRepaymentStartDateType();
+        if (this.fromApiJsonHelper.parameterExists("repaymentStartDateType", element)) {
+            RepaymentStartDateType paramValue = RepaymentStartDateType
+                    .fromInt(this.fromApiJsonHelper.extractIntegerWithLocaleNamed(LoanApiConstants.REPAYMENT_START_DATE_TYPE, element));
+            if (paramValue != RepaymentStartDateType.INVALID) {
+                repaymentStartDateType = paramValue;
+            }
+        }
 
         LocalDate calculatedRepaymentsStartingFromDate = repaymentsStartingFromDate;
 
@@ -697,10 +704,6 @@ public class LoanScheduleAssembler {
             loanProductRelatedDetail.setInterestPeriodFrequencyType(PeriodFrequencyType.fromInt(newValue));
         }
         return loanProductRelatedDetail;
-    }
-
-    public LoanProductRelatedDetail assembleLoanProductRelatedDetail(final JsonElement element, final LoanProduct loanProduct) {
-        return assembleLoanProductRelatedDetail(assembleLoanApplicationTermsFrom(element, loanProduct), element);
     }
 
     public LoanScheduleModel assembleLoanScheduleFrom(final JsonElement element) {

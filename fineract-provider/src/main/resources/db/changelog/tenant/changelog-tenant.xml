@@ -250,4 +250,5 @@
     <include file="parts/0229_trial_balance_summary_fix_empty_space.xml" relativeToChangelogFile="true" />
     <include file="parts/0230_add_forgot_password.xml" relativeToChangelogFile="true" />
     <include file="parts/0231_remove_clientcharge_inactivate_permissions.xml" relativeToChangelogFile="true" />
+    <include file="parts/0232_add_repayment_start_date_to_loan.xml" relativeToChangelogFile="true" />
 </databaseChangeLog>

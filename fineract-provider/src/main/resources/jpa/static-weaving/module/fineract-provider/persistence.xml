@@ -157,6 +157,7 @@
         <class>org.apache.fineract.portfolio.loanproduct.domain.LoanProductVariableInstallmentConfig</class>
         <class>org.apache.fineract.portfolio.loanproduct.domain.PaymentAllocationTypeListConverter</class>
         <class>org.apache.fineract.portfolio.loanproduct.domain.SupportedInterestRefundTypesListConverter</class>
+        <class>org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionRelationTypeEnumConverter</class>
         <class>org.apache.fineract.portfolio.repaymentwithpostdatedchecks.domain.PostDatedChecks</class>
 
         <!--  fineract-loan-origination module: -->
@@ -310,6 +311,7 @@
         <class>org.apache.fineract.portfolio.workingcapitalloanbreach.domain.WorkingCapitalBreach</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransaction</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransactionAllocation</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransactionRelation</class>
         <class>org.apache.fineract.portfolio.workingcapitalloannearbreach.domain.WorkingCapitalNearBreach</class>
         <class>org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct</class>
         <class>org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductConfigurableAttributes</class>

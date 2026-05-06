@@ -76,6 +76,7 @@ public enum LoanTransactionType {
     BUY_DOWN_FEE_ADJUSTMENT(41, "loanTransactionType.buyDownFeeAdjustment"), //
     BUY_DOWN_FEE_AMORTIZATION(42, "loanTransactionType.buyDownFeeAmortization"), //
     BUY_DOWN_FEE_AMORTIZATION_ADJUSTMENT(43, "loanTransactionType.buyDownFeeAmortizationAdjustment"), //
+    DISCOUNT_FEE(44, "loanTransactionType.discountFee"), //
     ;
 
     private final Integer value;
@@ -135,6 +136,7 @@ public enum LoanTransactionType {
             case 41 -> LoanTransactionType.BUY_DOWN_FEE_ADJUSTMENT;
             case 42 -> LoanTransactionType.BUY_DOWN_FEE_AMORTIZATION;
             case 43 -> LoanTransactionType.BUY_DOWN_FEE_AMORTIZATION_ADJUSTMENT;
+            case 44 -> LoanTransactionType.DISCOUNT_FEE;
             default -> LoanTransactionType.INVALID;
         };
     }

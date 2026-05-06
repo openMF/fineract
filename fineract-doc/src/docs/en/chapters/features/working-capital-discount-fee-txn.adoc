@@ -1,0 +1,68 @@
+== Working Capital Loan — Discount Fee
+
+=== 1. Overview
+
+The **Discount Fee** is applicable for **Working Capital Loan** products and represents an upfront charge applied on the disbursed amount.
+
+Instead of collecting interest over time, the loan applies a **discounting mechanism**, where:
+* The borrower receives a **net disbursed amount** (principal minus discount fee)
+* The **full principal amount** remains repayable
+
+=== 2. Applicability
+
+| Condition | Status |
+|----------|--------|
+| Loan Type: Working Capital Loan | ✔ Supported |
+| Loan Type: Progressive Loan | ✘ Not supported |
+| Loan Type: Cumulative Loan | ✘ Not supported |
+
+* Discount Fee functionality is **exclusively available** for Working Capital Loan products.
+* It is not applicable for Progressive or Cumulative loan types.
+
+
+=== 3. Core Concept
+
+The Discount Fee represents an upfront charge applied on the loan and affects the **net disbursed amount**, while the **full principal remains repayable**.
+
+The Discount Fee can be configured and applied at multiple stages of the loan lifecycle:
+
+* At **Loan Application**
+* At **Loan Approval**
+* At **Disbursement**
+* **After Disbursement**, only if it is the **first monetary transaction following disbursement**
+
+This flexibility allows financial institutions to align discounting behavior with their operational and approval workflows.
+
+=== 4. Accounting & GL Handling
+
+⚠ Accounting integration for Discount Fee is **not implemented yet**.
+
+=== 5. Transaction Handling
+
+* A **Discount Fee Transaction** is created:
+- During **disbursement**, if discount fee is already defined OR provided in disbursement request
+* The transaction is created as a **separate transaction**
+* Each **disbursement** can have **only one associated Discount Fee transaction**
+
+Relationship rules:
+* Discount Fee transaction is always **linked to a disbursement transaction**
+* Link is maintained via `relatedResourceId`
+
+Schedule & balance updates:
+* Loan balances are updated **immediately** after transaction creation
+* Amortization Schedule is updated **immediately**
+* Allocation for Discount Fee transaction is applied to **principal**
+
+=== 6. Reversal Behavior
+
+* Disbursement reversal is allowed only if:
+- No other monetary transactions exist on the loan
+- No additional disbursements exist
+
+* When a disbursement is reversed:
+- Its associated Discount Fee transaction must also be **reversed**
+- Reversal maintains consistency between:
+- Loan balance
+- Amortization Schedule
+
+* Discount Fee transaction cannot exist without its related disbursement

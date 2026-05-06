@@ -129,6 +129,7 @@ import org.apache.fineract.test.data.InterestType;
 import org.apache.fineract.test.data.LoanStatus;
 import org.apache.fineract.test.data.LoanTermFrequencyType;
 import org.apache.fineract.test.data.RepaymentFrequencyType;
+import org.apache.fineract.test.data.RepaymentStartDateType;
 import org.apache.fineract.test.data.TransactionProcessingStrategyCode;
 import org.apache.fineract.test.data.TransactionType;
 import org.apache.fineract.test.data.codevalue.CodeNames;
@@ -677,7 +678,7 @@ public class LoanStepDef extends AbstractStepDef {
     @When("Admin creates a fully customized loan with the following data:")
     public void createFullyCustomizedLoan(final DataTable table) {
         final List<List<String>> data = table.asLists();
-        createCustomizedLoan(data.get(1), false);
+        createCustomizedLoan(data, null);
     }
 
     @When("Admin creates a fully customized loan with loan product`s charges and following data:")
@@ -686,10 +687,10 @@ public class LoanStepDef extends AbstractStepDef {
         createCustomizedLoanWithProductCharges(data.get(1));
     }
 
-    @When("Admin creates a fully customized loan with emi and the following data:")
-    public void createFullyCustomizedLoanWithEmi(final DataTable table) {
+    @When("Admin creates a fully customized loan with {string} emi and the following data:")
+    public void createFullyCustomizedLoanWithEmi(final String emiStr, final DataTable table) {
         final List<List<String>> data = table.asLists();
-        createCustomizedLoan(data.get(1), true);
+        createCustomizedLoan(data, emiStr);
     }
 
     @When("Admin creates a fully customized loan with interestRateFrequencyType and following data:")
@@ -3622,60 +3623,94 @@ public class LoanStepDef extends AbstractStepDef {
                 });
     }
 
-    private void createCustomizedLoan(final List<String> loanData, final boolean withEmi) {
-        final String loanProduct = loanData.get(0);
-        final String submitDate = loanData.get(1);
-        final String principal = loanData.get(2);
-        final BigDecimal interestRate = new BigDecimal(loanData.get(3));
-        final String interestTypeStr = loanData.get(4);
-        final String interestCalculationPeriodStr = loanData.get(5);
-        final String amortizationTypeStr = loanData.get(6);
-        final Integer loanTermFrequency = Integer.valueOf(loanData.get(7));
-        final String loanTermFrequencyType = loanData.get(8);
-        final Integer repaymentFrequency = Integer.valueOf(loanData.get(9));
-        final String repaymentFrequencyTypeStr = loanData.get(10);
-        final Integer numberOfRepayments = Integer.valueOf(loanData.get(11));
-        final Integer graceOnPrincipalPayment = Integer.valueOf(loanData.get(12));
-        final Integer graceOnInterestPayment = Integer.valueOf(loanData.get(13));
-        final Integer graceOnInterestCharged = Integer.valueOf(loanData.get(14));
-        final String transactionProcessingStrategyCode = loanData.get(15);
-
+    private void createCustomizedLoan(final List<List<String>> loanData, final String emiStr) {
         final PostClientsResponse clientResponse = testContext().get(TestContextKey.CLIENT_CREATE_RESPONSE);
         final Long clientId = clientResponse.getClientId();
+        final PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId).expectedDisbursementDate(null);
 
-        final DefaultLoanProduct product = DefaultLoanProduct.valueOf(loanProduct);
-        final Long loanProductId = loanProductResolver.resolve(product);
+        for (var i = 0; i < loanData.getFirst().size(); i++) {
+            String value = loanData.getLast().get(i);
+            switch (loanData.getFirst().get(i)) {
+                case "LoanProduct" -> {
+                    final DefaultLoanProduct product = DefaultLoanProduct.valueOf(value);
+                    final Long loanProductId = loanProductResolver.resolve(product);
+                    loansRequest.productId(loanProductId);
+                }
+                case "submitted on date" -> {
+                    loansRequest.submittedOnDate(value);
+                }
+                case "expected disbursement date" -> {
+                    loansRequest.expectedDisbursementDate(value);
+                }
+                case "with Principal" -> {
+                    loansRequest.principal(new BigDecimal(value));
+                }
+                case "ANNUAL interest rate %" -> {
+                    loansRequest.interestRatePerPeriod(new BigDecimal(value));
+                }
+                case "interest type" -> {
+                    final InterestType interestType = InterestType.valueOf(value);
+                    final Integer interestTypeValue = interestType.getValue();
+                    loansRequest.interestType(interestTypeValue);
+                }
+                case "interest calculation period" -> {
+                    final InterestCalculationPeriodTime interestCalculationPeriod = InterestCalculationPeriodTime.valueOf(value);
+                    final Integer interestCalculationPeriodValue = interestCalculationPeriod.getValue();
+                    loansRequest.interestCalculationPeriodType(interestCalculationPeriodValue);
+                }
+                case "amortization type" -> {
+                    final AmortizationType amortizationType = AmortizationType.valueOf(value);
+                    final Integer amortizationTypeValue = amortizationType.getValue();
+                    loansRequest.amortizationType(amortizationTypeValue);
+                }
+                case "loanTermFrequency" -> {
+                    loansRequest.loanTermFrequency(Integer.valueOf(value));
+                }
+                case "loanTermFrequencyType" -> {
+                    final LoanTermFrequencyType termFrequencyType = LoanTermFrequencyType.valueOf(value);
+                    final Integer loanTermFrequencyTypeValue = termFrequencyType.getValue();
+                    loansRequest.loanTermFrequencyType(loanTermFrequencyTypeValue);
+                }
+                case "repaymentEvery" -> {
+                    loansRequest.repaymentEvery(Integer.valueOf(value));
+                }
+                case "repaymentFrequencyType" -> {
+                    final RepaymentFrequencyType repaymentFrequencyType = RepaymentFrequencyType.valueOf(value);
+                    final Integer repaymentFrequencyTypeValue = repaymentFrequencyType.getValue();
+                    loansRequest.repaymentFrequencyType(repaymentFrequencyTypeValue);
+                }
+                case "numberOfRepayments" -> {
+                    loansRequest.numberOfRepayments(Integer.valueOf(value));
+                }
+                case "graceOnPrincipalPayment" -> {
+                    loansRequest.graceOnPrincipalPayment(Integer.valueOf(value));
+                }
+                case "graceOnInterestPayment" -> {
+                    loansRequest.graceOnInterestPayment(Integer.valueOf(value));
+                }
+                case "interest free period" -> {
+                    loansRequest.graceOnInterestCharged(Integer.valueOf(value));
+                }
+                case "Payment strategy" -> {
+                    final TransactionProcessingStrategyCode processingStrategyCode = TransactionProcessingStrategyCode.valueOf(value);
+                    final String transactionProcessingStrategyCodeValue = processingStrategyCode.getValue();
+                    loansRequest.transactionProcessingStrategyCode(transactionProcessingStrategyCodeValue);
+                }
+                case "Repayment start date type" -> {
+                    final RepaymentStartDateType repaymentStartDateType = RepaymentStartDateType.valueOf(value);
+                    loansRequest.repaymentStartDateType(repaymentStartDateType.getValue());
+                }
+                default -> throw new UnsupportedOperationException(loanData.getFirst().get(i) + " is not covered");
+            }
+        }
 
-        final LoanTermFrequencyType termFrequencyType = LoanTermFrequencyType.valueOf(loanTermFrequencyType);
-        final Integer loanTermFrequencyTypeValue = termFrequencyType.getValue();
+        // Fallback value
+        if (loansRequest.getExpectedDisbursementDate() == null) {
+            loansRequest.expectedDisbursementDate(loansRequest.getSubmittedOnDate());
+        }
 
-        final RepaymentFrequencyType repaymentFrequencyType = RepaymentFrequencyType.valueOf(repaymentFrequencyTypeStr);
-        final Integer repaymentFrequencyTypeValue = repaymentFrequencyType.getValue();
-
-        final InterestType interestType = InterestType.valueOf(interestTypeStr);
-        final Integer interestTypeValue = interestType.getValue();
-
-        final InterestCalculationPeriodTime interestCalculationPeriod = InterestCalculationPeriodTime.valueOf(interestCalculationPeriodStr);
-        final Integer interestCalculationPeriodValue = interestCalculationPeriod.getValue();
-
-        final AmortizationType amortizationType = AmortizationType.valueOf(amortizationTypeStr);
-        final Integer amortizationTypeValue = amortizationType.getValue();
-
-        final TransactionProcessingStrategyCode processingStrategyCode = TransactionProcessingStrategyCode
-                .valueOf(transactionProcessingStrategyCode);
-        final String transactionProcessingStrategyCodeValue = processingStrategyCode.getValue();
-
-        final PostLoansRequest loansRequest = loanRequestFactory.defaultLoansRequest(clientId).productId(loanProductId)
-                .principal(new BigDecimal(principal)).interestRatePerPeriod(interestRate).interestType(interestTypeValue)
-                .interestCalculationPeriodType(interestCalculationPeriodValue).amortizationType(amortizationTypeValue)
-                .loanTermFrequency(loanTermFrequency).loanTermFrequencyType(loanTermFrequencyTypeValue)
-                .numberOfRepayments(numberOfRepayments).repaymentEvery(repaymentFrequency)
-                .repaymentFrequencyType(repaymentFrequencyTypeValue).submittedOnDate(submitDate).expectedDisbursementDate(submitDate)
-                .graceOnPrincipalPayment(graceOnPrincipalPayment).graceOnInterestPayment(graceOnInterestPayment)
-                .graceOnInterestPayment(graceOnInterestCharged).transactionProcessingStrategyCode(transactionProcessingStrategyCodeValue);
-
-        if (withEmi) {
-            loansRequest.fixedEmiAmount(new BigDecimal(555));
+        if (emiStr != null) {
+            loansRequest.fixedEmiAmount(new BigDecimal(emiStr));
         }
 
         final PostLoansResponse response = ok(

@@ -145,7 +145,7 @@ public class LoanRepaymentBusinessEventSerializerTest {
         RepaymentPastDueDataV1 pastDue = new RepaymentPastDueDataV1(BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0),
                 BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0));
         LoanRepaymentDueDataV1 expectedSerializedData = new LoanRepaymentDueDataV1(1L, "0001", "externalId", currency, repaymentDue,
-                pastDue, data.getCustomData());
+                pastDue, data.getCustomData(), null);
 
         assertEquals(data, expectedSerializedData);
 
