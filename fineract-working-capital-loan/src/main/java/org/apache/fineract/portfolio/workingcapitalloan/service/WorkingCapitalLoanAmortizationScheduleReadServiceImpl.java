@@ -20,10 +20,11 @@ package org.apache.fineract.portfolio.workingcapitalloan.service;
 
 import java.math.MathContext;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
+import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
 import org.apache.fineract.portfolio.workingcapitalloan.calc.ProjectedAmortizationScheduleModel;
 import org.apache.fineract.portfolio.workingcapitalloan.data.ProjectedAmortizationScheduleData;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.apache.fineract.portfolio.workingcapitalloan.exception.ProjectedAmortizationScheduleNotFoundException;
 import org.apache.fineract.portfolio.workingcapitalloan.exception.WorkingCapitalLoanNotFoundException;
 import org.apache.fineract.portfolio.workingcapitalloan.mapper.ProjectedAmortizationScheduleMapper;
@@ -36,21 +37,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class WorkingCapitalLoanAmortizationScheduleReadServiceImpl implements WorkingCapitalLoanAmortizationScheduleReadService {
 
-    // TODO: currency should come from loan product once WCL lifecycle is implemented
-    private static final MonetaryCurrency DEFAULT_CURRENCY = new MonetaryCurrency("USD", 2, null);
-
     private final WorkingCapitalLoanRepository loanRepository;
     private final ProjectedAmortizationScheduleRepositoryWrapper scheduleRepositoryWrapper;
     private final ProjectedAmortizationScheduleMapper mapper;
 
     @Override
     public ProjectedAmortizationScheduleData retrieveAmortizationSchedule(final Long loanId) {
-        if (!loanRepository.existsById(loanId)) {
-            throw new WorkingCapitalLoanNotFoundException(loanId);
-        }
+        final WorkingCapitalLoan loan = loanRepository.findById(loanId).orElseThrow(() -> new WorkingCapitalLoanNotFoundException(loanId));
 
         final MathContext mc = MoneyHelper.getMathContext();
-        final ProjectedAmortizationScheduleModel model = scheduleRepositoryWrapper.readModel(loanId, mc, DEFAULT_CURRENCY)
+        final CurrencyData currency = WorkingCapitalLoanCurrencyResolver.resolveCurrency(loan);
+        final ProjectedAmortizationScheduleModel model = scheduleRepositoryWrapper.readModel(loanId, mc, currency)
                 .orElseThrow(() -> new ProjectedAmortizationScheduleNotFoundException(loanId));
 
         return mapper.toData(model);

@@ -1132,4 +1132,8 @@ public final class ErrorMessageHelper {
     public static String nearBreachIdNotFoundFailure(long nearBreachId) {
         return String.format("Working Capital Near Breach with id %s was not found.", nearBreachId);
     }
+
+    public static String periodPaymentRateOnNonActiveLoanFailure() {
+        return "rate.change.not.allowed.for.non.active.loan";
+    }
 }

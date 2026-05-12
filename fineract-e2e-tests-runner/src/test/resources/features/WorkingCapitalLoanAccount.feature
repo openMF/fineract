@@ -1530,3 +1530,61 @@ Feature: WorkingCapitalLoanAccount
       And Working capital loan account has the correct data:
         | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount | totalPaidPrincipal | realizedIncome | unrealizedIncome |
         | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | null     | 0.0                | 0.0            | 0.0              |
+
+  @TestRailId:C78813
+  Scenario Outline: Period payment rate on create of WCL account failed with outranged from loan product level rate change value - UC1
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin failed to create Working Capital with period payment rate "<rate_change_value>" value and outcomes with <rate_change_error_message> error message with default following data:
+      | LoanProduct              | submittedOnDate |
+      | WCLP_PERIOD_PAYMENT_RATE | 01 January 2026 |
+
+    Examples:
+      | rate_change_value | rate_change_error_message                                            |
+      | 0.5               | Failed data validation due to: must.be.greater.than.or.equal.to.min. |
+      | 99.5              | Failed data validation due to: must.be.less.than.or.equal.to.max.    |
+
+  @TestRailId:C78814
+  Scenario Outline: Period payment rate on create of WCL account failed with invalid rate change value - UC2
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin failed to create Working Capital on "01 January 2026" with period payment rate "<rate_change_value>" value and outcomes with <rate_change_error_message> error message
+
+    Examples:
+      | rate_change_value | rate_change_error_message                                            |
+      | -1               | The parameter `periodPaymentRate` must be greater than or equal to 0. |
+
+  @TestRailId:C78815
+  Scenario Outline: Period payment rate on modify of WCL account failed with with outranged from loan product level rate change value - UC3
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a working capital loan with the following data:
+      | LoanProduct              | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP_PERIOD_PAYMENT_RATE | 01 January 2026 | 01 January 2026          | 100             | 100          | 12.5              | 15       |
+    Then Working capital loan creation was successful
+    And Working capital loan account has the correct data:
+      | product.name             | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
+      | WCLP_PERIOD_PAYMENT_RATE | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 12.5              | 15.0             |
+    Then Admin failed to modify WC loan account with period payment rate "<rate_change_value>" value and outcomes with "<rate_change_error_message>" error message
+
+    Examples:
+      | rate_change_value | rate_change_error_message                                            |
+      | 0.5               | Failed data validation due to: must.be.greater.than.or.equal.to.min. |
+      | 99.5              | Failed data validation due to: must.be.less.than.or.equal.to.max.    |
+
+  @TestRailId:C78816
+  Scenario Outline: Period payment rate on modify of WCL account failed with invalid rate change value - UC4
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a working capital loan with the following data:
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 12.5              | 15       |
+    Then Working capital loan creation was successful
+    And Working capital loan account has the correct data:
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 12.5              | 15.0             |
+    Then Admin failed to modify WC loan account with period payment rate "<rate_change_value>" value and outcomes with "<rate_change_error_message>" error message
+
+    Examples:
+      | rate_change_value | rate_change_error_message                                             |
+      | -1                | The parameter `periodPaymentRate` must be greater than or equal to 0. |

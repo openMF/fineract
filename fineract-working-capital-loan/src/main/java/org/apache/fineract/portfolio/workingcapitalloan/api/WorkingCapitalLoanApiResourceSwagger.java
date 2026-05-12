@@ -621,4 +621,19 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public BigDecimal delinquentAmount;
     }
 
+    @Schema(description = "Request for updating period payment rate on an active Working Capital Loan")
+    public static final class PutWorkingCapitalLoansLoanIdRateRequest {
+
+        private PutWorkingCapitalLoansLoanIdRateRequest() {}
+
+        @Schema(example = "0.17", description = "New period payment rate")
+        public BigDecimal periodPaymentRate;
+
+        @Schema(example = "Rate change note")
+        public String note;
+
+        @Schema(example = "en_GB")
+        public String locale;
+    }
+
 }

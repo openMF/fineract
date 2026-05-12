@@ -23,7 +23,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
-import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
+import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.portfolio.workingcapitalloan.calc.ProjectedAmortizationScheduleModel;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.ProjectedAmortizationLoanModel;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
@@ -41,7 +41,7 @@ public class ProjectedAmortizationScheduleRepositoryWrapperImpl implements Proje
 
     @Override
     public Optional<ProjectedAmortizationScheduleModel> readModel(final Long loanId, @NonNull final MathContext mc,
-            @NonNull final MonetaryCurrency currency) {
+            @NonNull final CurrencyData currency) {
         return repository.findByLoanId(loanId) //
                 .map(ProjectedAmortizationLoanModel::getJsonModel) //
                 .map(json -> parserService.fromJson(json, mc, currency));
@@ -51,16 +51,20 @@ public class ProjectedAmortizationScheduleRepositoryWrapperImpl implements Proje
     @Transactional
     public void writeModel(@NonNull final WorkingCapitalLoan loan, @NonNull final ProjectedAmortizationScheduleModel model) {
         final String jsonModel = parserService.toJson(model);
-        final ProjectedAmortizationLoanModel entity = repository.findByLoanId(loan.getId()).orElseGet(() -> {
-            final ProjectedAmortizationLoanModel newEntity = new ProjectedAmortizationLoanModel();
-            newEntity.setLoan(loan);
-            return newEntity;
-        });
+        final ProjectedAmortizationLoanModel entity = findOrCreateEntity(loan);
         entity.setBusinessDate(ThreadLocalContextUtil.getBusinessDate());
         entity.setLastModifiedDate(DateUtils.getAuditOffsetDateTime());
         entity.setJsonModel(jsonModel);
         entity.setJsonModelVersion(ProjectedAmortizationScheduleModel.getModelVersion());
         repository.save(entity);
+    }
+
+    private ProjectedAmortizationLoanModel findOrCreateEntity(final WorkingCapitalLoan loan) {
+        return repository.findByLoanId(loan.getId()).orElseGet(() -> {
+            final ProjectedAmortizationLoanModel newEntity = new ProjectedAmortizationLoanModel();
+            newEntity.setLoan(loan);
+            return newEntity;
+        });
     }
 
 }

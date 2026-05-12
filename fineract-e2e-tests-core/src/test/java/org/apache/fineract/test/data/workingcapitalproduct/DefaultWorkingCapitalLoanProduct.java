@@ -31,7 +31,8 @@ public enum DefaultWorkingCapitalLoanProduct implements WorkingCapitalLoanProduc
     WCLP_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE, //
     WCLP_BREACH_NEAR_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE, //
     WCLP_ADVANCED_ACCOUNTING, //
-    WCLP_ACCOUNTING_CASH_BASED; //
+    WCLP_ACCOUNTING_CASH_BASED, //
+    WCLP_PERIOD_PAYMENT_RATE; //
 
     @Override
     public String getName() {

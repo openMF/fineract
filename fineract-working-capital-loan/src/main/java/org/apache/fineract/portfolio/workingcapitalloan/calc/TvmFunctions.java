@@ -31,9 +31,11 @@ import java.math.MathContext;
  */
 public final class TvmFunctions {
 
-    private static final int MAX_ITERATIONS = 100;
-    private static final BigDecimal TOLERANCE = new BigDecimal("1E-10");
+    private static final int MAX_ITERATIONS = 500;
+    private static final BigDecimal TOLERANCE = new BigDecimal("1E-12");
     private static final BigDecimal DEFAULT_GUESS = new BigDecimal("0.01");
+    private static final BigDecimal MIN_GUESS = new BigDecimal("1E-9");
+    private static final BigDecimal MAX_GUESS = new BigDecimal("0.1");
     private static final BigDecimal TWO = BigDecimal.valueOf(2);
 
     private TvmFunctions() {}
@@ -71,7 +73,8 @@ public final class TvmFunctions {
      *
      * @see #rate(int, BigDecimal, BigDecimal, MathContext)
      */
-    public static BigDecimal rate(final int nper, final BigDecimal pmt, final BigDecimal pv, final BigDecimal guess, final MathContext mc) {
+    private static BigDecimal rate(final int nper, final BigDecimal pmt, final BigDecimal pv, final BigDecimal guess,
+            final MathContext mc) {
         if (nper <= 0) {
             throw new IllegalArgumentException("nper must be positive, got: " + nper);
         }
@@ -119,8 +122,14 @@ public final class TvmFunctions {
     }
 
     /**
-     * Linear approximation for the initial Newton-Raphson guess: {@code r ≈ 2·(pmt·n + pv) / (pv·n)}. Falls back to
-     * {@value #DEFAULT_GUESS} if the estimate is non-positive.
+     * Linear approximation for the initial Newton-Raphson guess: {@code r ≈ 2·(pmt·n + pv) / (pv·n)}.
+     *
+     * <p>
+     * When total payments exceed the present value (typical for loans with origination fees), the formula yields a
+     * negative estimate. Its <em>absolute</em> value is still a good approximation of the periodic rate — it equals
+     * {@code 2·interest / (pv·n)} — so we return {@code |estimate|} instead of a fixed default. This avoids
+     * catastrophic divergence in Newton-Raphson when {@code nper} is large (e.g., daily-payment loans with thousands of
+     * periods), where the old default of 0.01 caused {@code (1+0.01)^nper} to explode.
      */
     private static BigDecimal estimateInitialGuess(final int nper, final BigDecimal pmt, final BigDecimal pv, final MathContext mc) {
         final BigDecimal n = BigDecimal.valueOf(nper);
@@ -129,7 +138,10 @@ public final class TvmFunctions {
             return DEFAULT_GUESS;
         }
         final BigDecimal estimate = pmt.multiply(n, mc).add(pv, mc).multiply(TWO, mc).divide(pvTimesN, mc);
-        return estimate.signum() > 0 ? estimate : DEFAULT_GUESS;
+        if (estimate.signum() == 0) {
+            return DEFAULT_GUESS;
+        }
+        return estimate.abs().max(MIN_GUESS);
     }
 
     /**

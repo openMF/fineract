@@ -21,16 +21,17 @@ package org.apache.fineract.portfolio.workingcapitalloan.service;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializer;
 import com.google.gson.ToNumberPolicy;
 import java.math.MathContext;
 import java.time.LocalDate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.infrastructure.core.serialization.gson.JsonExcludeAnnotationBasedExclusionStrategy;
 import org.apache.fineract.infrastructure.core.serialization.gson.LocalDateAdapter;
-import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
+import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.organisation.monetary.domain.Money;
-import org.apache.fineract.organisation.monetary.serialization.MoneyDeserializer;
-import org.apache.fineract.organisation.monetary.serialization.MoneySerializer;
 import org.apache.fineract.portfolio.workingcapitalloan.calc.ProjectedAmortizationScheduleModel;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -45,17 +46,18 @@ public class ProjectedAmortizationScheduleModelParserServiceGsonImpl implements 
     private static Gson createSerializer() {
         return new GsonBuilder() //
                 .registerTypeAdapter(LocalDate.class, new LocalDateAdapter().nullSafe()) //
-                .registerTypeAdapter(Money.class, new MoneySerializer()) //
+                .registerTypeAdapter(Money.class, (JsonSerializer<Money>) (src, typeOfSrc, context) -> new JsonPrimitive(src.getAmount())) //
                 .setNumberToNumberStrategy(ToNumberPolicy.BIG_DECIMAL) //
                 .addSerializationExclusionStrategy(new JsonExcludeAnnotationBasedExclusionStrategy()) //
                 .addDeserializationExclusionStrategy(new JsonExcludeAnnotationBasedExclusionStrategy()) //
                 .create();
     }
 
-    private static Gson createDeserializer(final MathContext mc, final MonetaryCurrency currency) {
+    private static Gson createDeserializer(final MathContext mc, final CurrencyData currency) {
         return new GsonBuilder() //
                 .registerTypeAdapter(LocalDate.class, new LocalDateAdapter().nullSafe()) //
-                .registerTypeAdapter(Money.class, new MoneyDeserializer(mc, currency)) //
+                .registerTypeAdapter(Money.class,
+                        (JsonDeserializer<Money>) (json, typeOfT, context) -> Money.of(currency, json.getAsBigDecimal(), mc)) //
                 .setNumberToNumberStrategy(ToNumberPolicy.BIG_DECIMAL) //
                 .registerTypeAdapter(ProjectedAmortizationScheduleModel.class,
                         (InstanceCreator<ProjectedAmortizationScheduleModel>) type -> ProjectedAmortizationScheduleModel
@@ -73,7 +75,7 @@ public class ProjectedAmortizationScheduleModelParserServiceGsonImpl implements 
     @Override
     @Nullable
     public ProjectedAmortizationScheduleModel fromJson(@Nullable final String json, @NonNull final MathContext mc,
-            @NonNull final MonetaryCurrency currency) {
+            @NonNull final CurrencyData currency) {
         if (json == null) {
             return null;
         }

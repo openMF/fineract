@@ -21,7 +21,7 @@ package org.apache.fineract.portfolio.workingcapitalloan.calc;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.LocalDate;
-import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
+import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.springframework.lang.NonNull;
 
 /**
@@ -36,9 +36,9 @@ public interface ProjectedAmortizationScheduleCalculator {
      * @return model with no payments applied
      */
     @NonNull
-    ProjectedAmortizationScheduleModel generateModel(@NonNull BigDecimal originationFeeAmount, @NonNull BigDecimal netDisbursementAmount,
+    ProjectedAmortizationScheduleModel generateModel(@NonNull BigDecimal discountFeeAmount, @NonNull BigDecimal netDisbursementAmount,
             @NonNull BigDecimal totalPaymentValue, @NonNull BigDecimal periodPaymentRate, int npvDayCount,
-            @NonNull LocalDate expectedDisbursementDate, @NonNull MathContext mc, @NonNull MonetaryCurrency currency);
+            @NonNull LocalDate expectedDisbursementDate, @NonNull MathContext mc, @NonNull CurrencyData currency);
 
     /**
      * Recalculates the model with updated financial parameters (at approval or disbursement). Preserves already applied
@@ -70,4 +70,20 @@ public interface ProjectedAmortizationScheduleCalculator {
      *            actual payment amount
      */
     void applyPayment(@NonNull ProjectedAmortizationScheduleModel model, @NonNull LocalDate paymentDate, @NonNull BigDecimal paymentAmount);
+
+    /**
+     * Applies a rate change to the model in-place. Adds a {@link ProjectedAmortizationScheduleModel.RateSegment} and
+     * rebuilds the payment list.
+     *
+     * @param model
+     *            the model to mutate
+     * @param newPeriodPaymentRate
+     *            the new period payment rate
+     * @param rateChangeDate
+     *            effective date of the rate change
+     * @return the same model instance (mutated)
+     */
+    @NonNull
+    ProjectedAmortizationScheduleModel applyRateChange(@NonNull ProjectedAmortizationScheduleModel model,
+            @NonNull BigDecimal newPeriodPaymentRate, @NonNull LocalDate rateChangeDate);
 }

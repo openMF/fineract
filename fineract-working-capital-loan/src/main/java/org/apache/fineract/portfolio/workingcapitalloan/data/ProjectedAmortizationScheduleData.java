@@ -30,14 +30,14 @@ import lombok.Getter;
 @AllArgsConstructor
 public class ProjectedAmortizationScheduleData {
 
-    private final BigDecimal originationFeeAmount;
+    private final BigDecimal discountFeeAmount;
     private final BigDecimal netDisbursementAmount;
     private final BigDecimal totalPaymentValue;
     private final BigDecimal periodPaymentRate;
     private final int npvDayCount;
     private final LocalDate expectedDisbursementDate;
     private final BigDecimal expectedPaymentAmount;
-    private final int loanTerm;
+    private final int originalPaymentNumber;
     private final BigDecimal effectiveInterestRate;
     private final List<ProjectedAmortizationSchedulePaymentData> payments;
 }

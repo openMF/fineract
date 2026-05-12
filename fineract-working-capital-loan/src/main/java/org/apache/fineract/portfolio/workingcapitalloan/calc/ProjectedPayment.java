@@ -38,9 +38,6 @@ public class ProjectedPayment {
 
     private final LocalDate date;
 
-    /** Remaining periods for calculation: {@code loanTerm + appliedPaymentCount - paymentNo}. */
-    private final long count;
-
     /** Exponent for discount factor: {@code DF = 1/(1+EIR)^paymentsLeft}. Zero for paid periods. */
     private final long paymentsLeft;
 
@@ -64,8 +61,8 @@ public class ProjectedPayment {
     /** {@code balance[i] + expectedPayment - balance[i-1]} (equivalent to {@code prevBalance × EIR}) */
     private final Money expectedAmortizationAmount;
 
-    /** First paid: sum of all NPV values; subsequent: {@code netAmort[i-1] - actualAmort[i-1]}. */
-    private final Money netAmortizationAmount;
+    /** First paid: sum of all NPV values; subsequent: {@code totalAmort[i-1] - actualAmort[i-1]}. */
+    private final Money totalAmortizedAmount;
 
     private final Money actualPaymentAmount;
 

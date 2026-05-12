@@ -24,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansDelinquencyActionRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
+import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdDiscountRequest;
+import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRateRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.test.data.workingcapitalproduct.DefaultWorkingCapitalLoanProduct;
 import org.apache.fineract.test.data.workingcapitalproduct.WorkingCapitalLoanProductResolver;
@@ -40,9 +42,11 @@ public class WorkingCapitalLoanRequestFactory {
     public static final String DEFAULT_LOCALE = "en";
     public static final DefaultWorkingCapitalLoanProduct DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT = DefaultWorkingCapitalLoanProduct.WCLP;
     public static final BigDecimal DEFAULT_PRINCIPAL = new BigDecimal(100);
+    public static final BigDecimal DEFAULT_DISCOUNT = new BigDecimal(100);
     public static final BigDecimal DEFAULT_TOTAL_PAYMENT = new BigDecimal(100);
     public static final BigDecimal DEFAULT_PERIOD_PAYMENT_RATE = new BigDecimal(1);
     public static final BigDecimal DEFAULT_DISCOUNT_ZERO = BigDecimal.ZERO;
+    public static final BigDecimal DEFAULT_PAYMENT_RATE = new BigDecimal(15);
 
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
     public static final String DATE_SUBMIT_STRING = FORMATTER.format(Utils.now().minusMonths(1L));
@@ -117,5 +121,18 @@ public class WorkingCapitalLoanRequestFactory {
                 .endDate(DATE_SUBMIT_STRING)//
                 .dateFormat(DATE_FORMAT)//
                 .locale(DEFAULT_LOCALE);//
+    }
+
+    public PutWorkingCapitalLoansLoanIdDiscountRequest defaultWorkingCapitalLoanUpdateDiscountRequest() {
+        return new PutWorkingCapitalLoansLoanIdDiscountRequest()//
+                .discountAmount(DEFAULT_DISCOUNT).note("")//
+                .dateFormat(DATE_FORMAT)//
+                .locale(DEFAULT_LOCALE);//
+    }
+
+    public PutWorkingCapitalLoansLoanIdRateRequest defaultWorkingCapitalLoanUpdateRateRequest() {
+        return new PutWorkingCapitalLoansLoanIdRateRequest() //
+                .periodPaymentRate(DEFAULT_PAYMENT_RATE) //
+                .locale(DEFAULT_LOCALE); //
     }
 }

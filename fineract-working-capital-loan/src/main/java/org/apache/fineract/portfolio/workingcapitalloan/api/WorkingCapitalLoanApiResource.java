@@ -54,10 +54,12 @@ import org.apache.fineract.infrastructure.security.service.PlatformSecurityConte
 import org.apache.fineract.portfolio.workingcapitalloan.WorkingCapitalLoanConstants;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanData;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanDelinquencyTagHistoryData;
+import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanPeriodPaymentRateChangeData;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanTemplateData;
 import org.apache.fineract.portfolio.workingcapitalloan.exception.WorkingCapitalLoanNotFoundException;
 import org.apache.fineract.portfolio.workingcapitalloan.service.WorkingCapitalLoanApplicationReadPlatformService;
 import org.apache.fineract.portfolio.workingcapitalloan.service.WorkingCapitalLoanDelinquencyReadPlatformService;
+import org.apache.fineract.portfolio.workingcapitalloan.service.WorkingCapitalLoanPeriodPaymentRateChangeReadService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -74,6 +76,7 @@ public class WorkingCapitalLoanApiResource {
     private final WorkingCapitalLoanApplicationReadPlatformService readPlatformService;
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
     private final WorkingCapitalLoanDelinquencyReadPlatformService workingCapitalLoanDelinquencyReadPlatformService;
+    private final WorkingCapitalLoanPeriodPaymentRateChangeReadService rateChangeReadService;
 
     @GET
     @Path("template")
@@ -310,4 +313,102 @@ public class WorkingCapitalLoanApiResource {
         return this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
     }
 
+    @PUT
+    @Path("{loanId}/discount")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(operationId = "updateWorkingCapitalLoanDiscountById", summary = "Update discount for a disbursed Working Capital Loan", description = "Discount can be added one time after disbursement and only on disbursement date.")
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdDiscountRequest.class)))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdResponse.class))) })
+    public CommandProcessingResult updateDiscountById(
+            @PathParam("loanId") @Parameter(description = "loanId", required = true) final Long loanId,
+            @Parameter(hidden = true) final String apiRequestBodyAsJson) {
+        return updateDiscount(loanId, null, apiRequestBodyAsJson);
+    }
+
+    @PUT
+    @Path("external-id/{loanExternalId}/discount")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(operationId = "updateWorkingCapitalLoanDiscountByExternalId", summary = "Update discount for a disbursed Working Capital Loan by external id", description = "Discount can be added one time after disbursement and only on disbursement date.")
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdDiscountRequest.class)))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdResponse.class))) })
+    public CommandProcessingResult updateDiscountByExternalId(
+            @PathParam("loanExternalId") @Parameter(description = "loanExternalId", required = true) final String loanExternalId,
+            @Parameter(hidden = true) final String apiRequestBodyAsJson) {
+        return updateDiscount(null, loanExternalId, apiRequestBodyAsJson);
+    }
+
+    private CommandProcessingResult updateDiscount(final Long loanId, final String loanExternalIdStr, final String apiRequestBodyAsJson) {
+        final Long resolvedLoanId = loanId != null ? loanId
+                : readPlatformService.getResolvedLoanId(ExternalIdFactory.produce(loanExternalIdStr));
+        if (resolvedLoanId == null) {
+            throw new WorkingCapitalLoanNotFoundException(ExternalIdFactory.produce(loanExternalIdStr));
+        }
+        final CommandWrapper commandRequest = new CommandWrapperBuilder().withJson(apiRequestBodyAsJson)
+                .updateDiscountWorkingCapitalLoanApplication(resolvedLoanId).build();
+        return this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+    }
+
+    @PUT
+    @Path("{loanId}/payment-rate")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(operationId = "updateWorkingCapitalLoanRateById", summary = "Update period payment rate for an active Working Capital Loan", description = "Modifies the period payment rate and triggers schedule recalculation for the remaining term.")
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdRateRequest.class)))
+    public CommandProcessingResult updatePeriodPaymentRateById(
+            @PathParam("loanId") @Parameter(description = "loanId", required = true) final Long loanId,
+            @Parameter(hidden = true) final String apiRequestBodyAsJson) {
+        return updatePeriodPaymentRate(loanId, null, apiRequestBodyAsJson);
+    }
+
+    @PUT
+    @Path("external-id/{loanExternalId}/payment-rate")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(operationId = "updateWorkingCapitalLoanRateByExternalId", summary = "Update period payment rate for an active Working Capital Loan by external id", description = "Modifies the period payment rate and triggers schedule recalculation for the remaining term.")
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanApiResourceSwagger.PutWorkingCapitalLoansLoanIdRateRequest.class)))
+    public CommandProcessingResult updatePeriodPaymentRateByExternalId(
+            @PathParam("loanExternalId") @Parameter(description = "loanExternalId", required = true) final String loanExternalId,
+            @Parameter(hidden = true) final String apiRequestBodyAsJson) {
+        return updatePeriodPaymentRate(null, loanExternalId, apiRequestBodyAsJson);
+    }
+
+    private CommandProcessingResult updatePeriodPaymentRate(final Long loanId, final String loanExternalIdStr,
+            final String apiRequestBodyAsJson) {
+        final Long resolvedLoanId = loanId != null ? loanId
+                : readPlatformService.getResolvedLoanId(ExternalIdFactory.produce(loanExternalIdStr));
+        if (resolvedLoanId == null) {
+            throw new WorkingCapitalLoanNotFoundException(ExternalIdFactory.produce(loanExternalIdStr));
+        }
+        final CommandWrapper commandRequest = new CommandWrapperBuilder().withJson(apiRequestBodyAsJson)
+                .updatePeriodPaymentRateWorkingCapitalLoanApplication(resolvedLoanId).build();
+        return this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+    }
+
+    @GET
+    @Path("{loanId}/rate-changes")
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(operationId = "getWorkingCapitalLoanRateChangeHistoryById", summary = "Retrieve rate change history for a Working Capital Loan", description = "Returns all rate change records for the loan, ordered by most recent first.")
+    public List<WorkingCapitalLoanPeriodPaymentRateChangeData> getRateChangeHistoryById(
+            @PathParam("loanId") @Parameter(description = "loanId", required = true) final Long loanId) {
+        this.context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
+        return this.rateChangeReadService.retrieveRateChangeHistory(loanId);
+    }
+
+    @GET
+    @Path("external-id/{loanExternalId}/rate-changes")
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(operationId = "getWorkingCapitalLoanRateChangeHistoryByExternalId", summary = "Retrieve rate change history for a Working Capital Loan by external id", description = "Returns all rate change records for the loan, ordered by most recent first.")
+    public List<WorkingCapitalLoanPeriodPaymentRateChangeData> getRateChangeHistoryByExternalId(
+            @PathParam("loanExternalId") @Parameter(description = "loanExternalId", required = true) final String loanExternalId) {
+        this.context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
+        final Long resolvedLoanId = readPlatformService.getResolvedLoanId(ExternalIdFactory.produce(loanExternalId));
+        if (resolvedLoanId == null) {
+            throw new WorkingCapitalLoanNotFoundException(ExternalIdFactory.produce(loanExternalId));
+        }
+        return this.rateChangeReadService.retrieveRateChangeHistory(resolvedLoanId);
+    }
 }

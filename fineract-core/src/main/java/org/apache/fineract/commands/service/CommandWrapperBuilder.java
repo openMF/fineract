@@ -910,6 +910,7 @@ public class CommandWrapperBuilder {
         this.actionName = ACTION_REPAYMENT;
         this.entityName = ENTITY_WORKINGCAPITALLOAN;
         this.entityId = loanId;
+        this.loanId = loanId;
         this.href = "/working-capital-loans/" + loanId + "/transactions?command=repayment";
         return this;
     }
@@ -919,6 +920,14 @@ public class CommandWrapperBuilder {
         this.entityName = ENTITY_WORKINGCAPITALLOAN;
         this.entityId = loanId;
         this.href = "/working-capital-loans/" + loanId + "/transactions?command=creditBalanceRefund";
+        return this;
+    }
+
+    public CommandWrapperBuilder updatePeriodPaymentRateWorkingCapitalLoanApplication(final Long loanId) {
+        this.actionName = "UPDATERATE";
+        this.entityName = "WORKINGCAPITALLOAN";
+        this.entityId = loanId;
+        this.href = "/workingcapitalloans/" + loanId;
         return this;
     }
 
@@ -1238,6 +1247,15 @@ public class CommandWrapperBuilder {
         this.entityId = null;
         this.loanId = loanId;
         this.href = "/loans/" + loanId + "/transactions/template?command=goodwillcredit";
+        return this;
+    }
+
+    public CommandWrapperBuilder goodwillCreditWorkingCapitalLoanTransaction(final Long loanId) {
+        this.actionName = ACTION_GOODWILLCREDIT;
+        this.entityName = ENTITY_WORKINGCAPITALLOAN;
+        this.entityId = loanId;
+        this.loanId = loanId;
+        this.href = "/working-capital-loans/" + loanId + "/transactions/template?command=goodwillcredit";
         return this;
     }
 

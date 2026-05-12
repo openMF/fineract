@@ -1181,7 +1181,7 @@ public class WorkingCapitalLoanDisbursementTest {
         final JsonObject schedule = retrieveAmortizationScheduleByLoanId(loanId);
         assertDateEquals(disbursementDate, schedule.get("expectedDisbursementDate"));
         assertEqualBigDecimal(disbursementAmount, schedule.get("netDisbursementAmount"));
-        assertEqualBigDecimal(discountAmount, schedule.get("originationFeeAmount"));
+        assertEqualBigDecimal(discountAmount, schedule.get("discountFeeAmount"));
         assertTrue(schedule.has("payments") && schedule.get("payments").isJsonArray(), "Schedule should contain payments");
         assertFalse(schedule.getAsJsonArray("payments").isEmpty(), "Schedule payments should not be empty after disburse");
     }

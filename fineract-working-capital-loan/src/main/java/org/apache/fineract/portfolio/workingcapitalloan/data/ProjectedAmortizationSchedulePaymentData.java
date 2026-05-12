@@ -31,15 +31,11 @@ public class ProjectedAmortizationSchedulePaymentData {
 
     private final int paymentNo;
     private final LocalDate paymentDate;
-    private final long count;
-    private final long paymentsLeft;
     private final BigDecimal expectedPaymentAmount;
-    private final BigDecimal forecastPaymentAmount;
     private final BigDecimal discountFactor;
     private final BigDecimal npvValue;
     private final BigDecimal balance;
     private final BigDecimal expectedAmortizationAmount;
-    private final BigDecimal netAmortizationAmount;
     private final BigDecimal actualPaymentAmount;
     private final BigDecimal actualAmortizationAmount;
     private final BigDecimal incomeModification;

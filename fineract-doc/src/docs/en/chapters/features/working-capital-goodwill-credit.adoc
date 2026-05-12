@@ -1,0 +1,128 @@
+= Goodwill Credit Transaction
+
+== Purpose
+
+The Goodwill Credit transaction represents a *credit adjustment provided to the borrower*, typically as a gesture of goodwill to address *customer grievances, service issues, or operational corrections.*
+
+It ensures:
+
+* Controlled handling of *customer compensation*
+* Proper *adjustment of outstanding dues*
+* Accurate *accounting of goodwill expenses*
+
+== Functionality
+
+* Goodwill Credit is a *monetary transaction* applied to a loan account.
+* Functionally, it is the same as a Repayment Transaction.
+* It is performed when:
+** A lender decides to credit an amount to the borrower without expecting repayment.
+* It results in:
+** Reduction in outstanding loan balance
+** Triggering of accounting entries
+
+== Goodwill Credit Handling
+
+* It results in:
+** Reduction of outstanding balance
+** Calculation of the actual Amortization amount
+** Posting Discount Fees Amortization transaction
+** Adjustment of the Amortization schedule
+** Allocation of payment across components
+** Triggering of accounting entries
+* API and parameters are similar to term loans
+
+== Validation Rules
+
+Goodwill credit can be applied only if:
+* Loan is *Active*, *Charged-Off*, or *Closed*
+Amount validation:
+* Must be *greater than zero*
+
+== Allocation Logic
+
+Repayment amount follows the allocation strategy set for the Repayment transaction type, if not, follows the default strategy
+
+== Schedule Impact
+* On Goodwill Credit:
+** System will:
+*** Adjust outstanding balances
+*** Update amortization schedule
+*** Recalculate future periods
+* For backdated payments:
+** System will:
+*** Reprocess schedule
+*** Replay all subsequent transactions and accounting entries
+
+== Accounting Treatment
+Goodwill Credit triggers Journal Entries (JE)
+
+=== Goodwill Credit
+
+|===
+|Dr|Expense from Goodwill Credit|Expense|Principal + Excess
+|Dr|Income from Goodwill Credit Fees|Income|Fees
+|Dr|Income from Goodwill Credit Penalty|Income|Penalty
+|Cr|Loan Portfolio|Asset|Principal
+|Cr|Fees Receivable|Asset|Fees
+|Cr|Penalty Receivable|Asset|Penalty
+|Cr|Overpayment Liability|Liability|Excess
+|===
+
+=== Goodwill Credit Reversal
+
+|===
+|Debit|Loan Portfolio|Asset|Principal
+|Debit|Fees Receivable|Asset|Fees
+|Debit|Penalty Receivable|Asset|Penalty
+|Debit|Overpayment Liability|Liability|Excess
+|Credit|Income from Goodwill Credit Fees|Income|Fees
+|Credit|Income from Goodwill Credit Penalty|Income|Penalty
+|Credit|Expense from Goodwill Credit|Expense|Principal + Excess
+|===
+
+=== Goodwill Credit After Charge Off
+
+|===
+|Debit|Expense from Goodwill Credit|Expense|Principal + Excess
+|Debit|Income from Goodwill Credit Fees|Income|Fees
+|Debit|Income from Goodwill Credit Penalty|Income|Penalty
+|Credit|Income from Recovery Repayment|Income|Principal
+|Credit|Income from Recovery Repayment|Income|Fees
+|Credit|Income from Recovery Repayment|Income|Penalty
+|Credit|Overpayment Liability|Liability|Excess
+|===
+
+=== Goodwill Credit After Charge Off Reversal
+
+|===
+|Debit|Income from Recovery Repayment|Income|Principal
+|Debit|Income from Recovery Repayment|Income|Fees
+|Debit|Income from Recovery Repayment|Income|Penalty
+|Debit|Overpayment Liability|Liability|Excess
+|Credit|Income from Goodwill Credit Fees|Income|Fees
+|Credit|Income from Goodwill Credit Penalty|Income|Penalty
+|Credit|Expense from Goodwill Credit|Expense|Principal + Excess
+|===
+
+== Reversal Handling
+
+* Reversal of Goodwill Credit transaction is allowed
+* Reversal behavior:
+** Creates a linked reversal transaction
+** Reverses:
+*** Allocated components (penalty, fee, principal)
+*** Outstanding balance impact
+*** Accounting entries
+* System will:
+** Reprocess the Amortization schedule
+** Replay subsequent transactions (if applicable)
+
+== Special Scenarios
+
+* Overpayment Handling:
+** Excess amount will be refunded via credit balance refund transaction
+* Post Charge-Off Repayment:
+** Treated as regular payment
+** Accounting follows charge-off rules
+* Post Write-Off Repayment:
+** Treated as recovery income

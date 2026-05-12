@@ -19,7 +19,7 @@
 package org.apache.fineract.portfolio.workingcapitalloan.service;
 
 import java.math.MathContext;
-import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
+import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.portfolio.workingcapitalloan.calc.ProjectedAmortizationScheduleModel;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -29,5 +29,5 @@ public interface ProjectedAmortizationScheduleModelParserService {
     String toJson(@NonNull ProjectedAmortizationScheduleModel model);
 
     @Nullable
-    ProjectedAmortizationScheduleModel fromJson(@Nullable String json, @NonNull MathContext mc, @NonNull MonetaryCurrency currency);
+    ProjectedAmortizationScheduleModel fromJson(@Nullable String json, @NonNull MathContext mc, @NonNull CurrencyData currency);
 }

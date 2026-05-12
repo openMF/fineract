@@ -145,7 +145,12 @@ public class WorkingCapitalInitializerStep implements FineractGlobalInitializerS
                                 workingCapitalRequestFactory.defaultWorkingCapitalLoanProductRequestWithCashAccounting()
                                         .name(DefaultWorkingCapitalLoanProduct.WCLP_ACCOUNTING_CASH_BASED.getName())
                                         .allowAttributeOverrides(allowAttributeOverrides).overpaymentLiabilityAccountId(
-                                                accountTypeResolver.resolve(DefaultAccountType.OTHER_CREDIT_LIABILITY)))));
+                                                accountTypeResolver.resolve(DefaultAccountType.OTHER_CREDIT_LIABILITY)))),
+                () -> TestContext.INSTANCE.set(TestContextKey.DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_PERIOD_PAYMENT_RATE,
+                        createWorkingCapitalLoanProductIdempotent(workingCapitalRequestFactory
+                                .defaultWorkingCapitalLoanProductAllowAttributesOverrideRequest().minPeriodPaymentRate(new BigDecimal(1))
+                                .maxPeriodPaymentRate(new BigDecimal(95)).periodPaymentRate(new BigDecimal(10))
+                                .name(DefaultWorkingCapitalLoanProduct.WCLP_PERIOD_PAYMENT_RATE.getName()))));
         ParallelExecutionHelper.runInParallel(items);
     }
 

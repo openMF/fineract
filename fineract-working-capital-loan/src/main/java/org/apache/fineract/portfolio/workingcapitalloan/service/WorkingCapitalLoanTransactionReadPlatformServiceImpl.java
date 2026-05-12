@@ -68,7 +68,8 @@ public class WorkingCapitalLoanTransactionReadPlatformServiceImpl implements Wor
                     .classificationOptions(codeValueReadPlatformService
                             .retrieveCodeValuesByCode(WorkingCapitalLoanConstants.DISBURSEMENT_CLASSIFICATION_CODE_NAME))
                     .build();
-        } else if (WorkingCapitalLoanConstants.REPAYMENT_LOAN_COMMAND.equals(command)) {
+        } else if (WorkingCapitalLoanConstants.REPAYMENT_LOAN_COMMAND.equals(command)
+                || WorkingCapitalLoanConstants.GOODWILL_CREDIT_LOAN_COMMAND.equals(command)) {
             return WorkingCapitalLoanCommandTemplateData.builder()
                     .expectedAmount(wcLoan.getBalance() != null ? wcLoan.getBalance().getPrincipalOutstanding() : null)
                     .currency(wcLoan.getLoanProduct().getCurrency().toData())

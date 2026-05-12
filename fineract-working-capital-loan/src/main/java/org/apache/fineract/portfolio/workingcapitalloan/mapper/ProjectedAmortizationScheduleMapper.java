@@ -35,17 +35,18 @@ public class ProjectedAmortizationScheduleMapper {
     private static final RoundingMode DISPLAY_ROUNDING = RoundingMode.HALF_UP;
 
     public ProjectedAmortizationScheduleData toData(final ProjectedAmortizationScheduleModel model) {
-        final List<ProjectedAmortizationSchedulePaymentData> paymentDataList = model.payments().stream().map(this::toPaymentData).toList();
+        final List<ProjectedAmortizationSchedulePaymentData> paymentDataList = model.projectedPayments().stream().map(this::toPaymentData)
+                .toList();
 
         return ProjectedAmortizationScheduleData.builder() //
-                .originationFeeAmount(roundMoney(model.originationFeeAmount())) //
+                .discountFeeAmount(roundMoney(model.discountFeeAmount())) //
                 .netDisbursementAmount(roundMoney(model.netDisbursementAmount())) //
                 .totalPaymentValue(roundMoney(model.totalPaymentValue())) //
                 .periodPaymentRate(model.periodPaymentRate()) //
                 .npvDayCount(model.npvDayCount()) //
                 .expectedDisbursementDate(model.expectedDisbursementDate()) //
                 .expectedPaymentAmount(roundMoney(model.expectedPaymentAmount())) //
-                .loanTerm(model.loanTerm()) //
+                .originalPaymentNumber(model.originalPaymentNumber()) //
                 .effectiveInterestRate(model.effectiveInterestRate()) //
                 .payments(paymentDataList) //
                 .build();
@@ -55,15 +56,11 @@ public class ProjectedAmortizationScheduleMapper {
         return ProjectedAmortizationSchedulePaymentData.builder() //
                 .paymentNo(payment.paymentNo()) //
                 .paymentDate(payment.date()) //
-                .count(payment.count()) //
-                .paymentsLeft(payment.paymentsLeft()) //
                 .expectedPaymentAmount(roundMoney(payment.expectedPaymentAmount())) //
-                .forecastPaymentAmount(roundMoney(payment.forecastPaymentAmount())) //
                 .discountFactor(payment.discountFactor()) //
                 .npvValue(roundMoney(payment.npvValue())) //
                 .balance(roundMoney(payment.balance())) //
                 .expectedAmortizationAmount(roundMoney(payment.expectedAmortizationAmount())) //
-                .netAmortizationAmount(roundMoney(payment.netAmortizationAmount())) //
                 .actualPaymentAmount(roundMoney(payment.actualPaymentAmount())) //
                 .actualAmortizationAmount(roundMoney(payment.actualAmortizationAmount())) //
                 .incomeModification(roundMoney(payment.incomeModification())) //

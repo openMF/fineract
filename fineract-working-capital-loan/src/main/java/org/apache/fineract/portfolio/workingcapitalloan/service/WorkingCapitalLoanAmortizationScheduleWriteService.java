@@ -37,4 +37,6 @@ public interface WorkingCapitalLoanAmortizationScheduleWriteService {
     RepaymentAmortizationData applyRepayment(WorkingCapitalLoan loan, LocalDate transactionDate, BigDecimal repaymentAmount);
 
     BigDecimal getWorkingCapitalLoanDiscountAmount(WorkingCapitalLoan loan);
+
+    void regenerateAmortizationScheduleOnRateChange(WorkingCapitalLoan loan, BigDecimal newRate);
 }
