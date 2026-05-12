@@ -37,6 +37,8 @@ public class CacheConfiguration {
                 new ConcurrentMapCache("jobsByShortName"), //
                 new ConcurrentMapCache("loanProductsByName"), //
                 new ConcurrentMapCache("accountTypesByName"), //
+                new ConcurrentMapCache("chargeTypesByName"), //
+                new ConcurrentMapCache("delinquencyBucketsByName"), //
                 new ConcurrentMapCache("codeValuesByName")));//
         return simpleCacheManager;
     }

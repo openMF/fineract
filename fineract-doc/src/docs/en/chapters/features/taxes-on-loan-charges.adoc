@@ -1,0 +1,128 @@
+= Taxes on Loan Charges
+
+[NOTE]
+====
+Introduced in link:https://issues.apache.org/jira/browse/FINERACT-1289[FINERACT-1289] — Tax component not working as expected: tax bifurcation in journal entries was not applied when a tax group was mapped to a loan charge.
+====
+
+== Overview
+
+When a loan charge (fee or penalty) is linked to a tax group, the system must produce separate journal entry lines for the base charge amount and the tax portion. Prior to this fix, the tax bifurcation was silently skipped and the full charge amount was posted as a single income entry, causing incorrect GL balances and tax liability omissions.
+
+This fix ensures that every time a loan charge amount is set or recalculated, any configured tax group is evaluated, the tax split is computed per tax component, and both the net charge amount and the tax liability are recorded as distinct journal entries under both accrual-based and cash-based accounting modes.
+
+=== Benefits
+
+* Tax liability GL accounts are credited correctly when a taxed charge is collected.
+* Income accounts reflect the net-of-tax charge amount rather than the gross amount.
+* Per-component tax breakdowns are persisted, enabling audit trails and reporting.
+* Both accrual and cash accounting modes handle tax bifurcation consistently.
+
+== Design
+
+=== Key Components
+
+|===
+| Component | Module | Purpose
+
+| `LoanChargeTaxDetails`
+| `fineract-loan`
+| JPA entity (`m_loan_charge_tax_details`) storing the computed tax amount per `TaxComponent` for a single `LoanCharge`.
+
+| `ChargeTaxApplicationService` / `ChargeTaxApplicationServiceImpl`
+| `fineract-tax`
+| Computes the per-component tax split from a `TaxGroup`, a base amount, and an effective date.
+
+| `LoanChargeService`
+| `fineract-loan`
+| Calls `applyTaxIfConfigured()` after every charge amount mutation (set, update, recalculate) to keep tax details in sync.
+
+| `ChargeTaxPaymentDTO`
+| `fineract-provider`
+| Carries per-component tax payment data (charge ID, credit GL account ID, amount, penalty flag) from the loan transaction to the accounting layer.
+
+| `LoanCommonAccountingHelper`
+| `fineract-provider`
+| Shared helper that filters tax payments by type (fee/penalty), computes net charge amounts, and creates credit/debit journal entries for tax liability accounts.
+
+| `AccrualBasedAccountingProcessorForLoan`
+| `fineract-provider`
+| Extended to split fee and penalty journal entries into net income and tax liability entries when tax payments are present.
+
+| `CashBasedAccountingProcessorForLoan`
+| `fineract-provider`
+| Extended with the same tax bifurcation logic for cash-basis accounting.
+|===
+
+=== Data Model
+
+Two schema changes are introduced by migration `1035_add_tax_to_loan_charge.xml`.
+
+[source,sql]
+----
+-- Column added to m_loan_charge to store the total tax amount for the charge
+ALTER TABLE m_loan_charge
+    ADD COLUMN tax_amount DECIMAL(19,6) NULL;
+
+-- New table storing the per-component tax breakdown for each loan charge
+CREATE TABLE m_loan_charge_tax_details (
+    id              BIGINT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    loan_charge_id  BIGINT          NOT NULL,  -- FK → m_loan_charge.id
+    tax_component_id BIGINT         NOT NULL,  -- FK → m_tax_component.id
+    amount          DECIMAL(19,6)   NOT NULL
+);
+----
+
+=== Accounting Impact
+
+When a loan transaction pays a charge that has associated tax, the journal entries are split between the net charge amount and the tax liability.
+
+==== Accrual-Based Accounting — Fee Payment
+
+|===
+| Side | Account | Amount
+
+| DR | Fees Receivable | Full fee amount (including tax)
+| CR | Income from Fees | Net fee amount (fee minus tax)
+| CR | Tax Liability (per component) | Tax amount
+|===
+
+==== Accrual-Based Accounting — Fee Reversal
+
+|===
+| Side | Account | Amount
+
+| CR | Fees Receivable | Full fee amount (including tax)
+| DR | Income from Fees | Net fee amount
+| DR | Tax Liability (per component) | Tax amount
+|===
+
+The same split applies to penalty charges using the penalty income and receivable accounts. Cash-based accounting follows the same debit/credit rules without the receivable leg.
+
+If no tax group is configured on the charge, or the computed tax is zero, the existing single-entry behaviour is preserved.
+
+== Configuration
+
+=== Prerequisites
+
+. Create one or more *Tax Components* (Administration → Tax Configuration → Tax Components) with the applicable percentage rate.
+. Create a *Tax Group* that references the tax components.
+. On the *Charge product*, assign the tax group under the _Tax Group_ field.
+. Add the charge to a *Loan Product* that has either *Periodic Accrual* or *Cash-Based* accounting enabled.
+
+=== Validation Rules
+
+* Tax is computed at the time the charge amount is set or updated; a later change to the charge amount triggers recomputation.
+* The effective date for tax rate lookup defaults to the charge submission date, falling back to the current business date when the submission date is absent.
+* If the tax group yields a zero total tax (e.g., all components have 0% rate on the effective date), no tax entries are created and the charge behaves as untaxed.
+
+== Usage Example
+
+. Configure a tax component "VAT 16%" and a tax group "Standard VAT".
+. Create a flat loan fee of 1,000 and link it to the "Standard VAT" group.
+. Add the fee to a loan product with periodic accrual accounting.
+. After disbursement, the fee appears with `amount = 1,000` and `tax_amount = 160`.
+. When the borrower repays the charge the system posts:
+** DR Fees Receivable 1,000
+** CR Income from Fees 840
+** CR Tax Liability 160

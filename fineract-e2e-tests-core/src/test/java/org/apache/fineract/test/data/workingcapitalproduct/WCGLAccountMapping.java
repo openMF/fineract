@@ -37,6 +37,12 @@ public record WCGLAccountMapping(String responseKey, boolean required, Function<
     public static final WCGLAccountMapping OVERPAYMENT_LIABILITY = new WCGLAccountMapping("overpaymentLiabilityAccount", true,
             PostWorkingCapitalLoanProductsRequest::getOverpaymentLiabilityAccountId);
 
+    // Assets — receivables (required)
+    public static final WCGLAccountMapping RECEIVABLE_FEE = new WCGLAccountMapping("receivableFeeAccount", true,
+            PostWorkingCapitalLoanProductsRequest::getReceivableFeeAccountId);
+    public static final WCGLAccountMapping RECEIVABLE_PENALTY = new WCGLAccountMapping("receivablePenaltyAccount", true,
+            PostWorkingCapitalLoanProductsRequest::getReceivablePenaltyAccountId);
+
     // Income (required)
     public static final WCGLAccountMapping INCOME_FROM_DISCOUNT_FEE = new WCGLAccountMapping("incomeFromDiscountFeeAccount", true,
             PostWorkingCapitalLoanProductsRequest::getIncomeFromDiscountFeeAccountId);
@@ -71,9 +77,10 @@ public record WCGLAccountMapping(String responseKey, boolean required, Function<
             PostWorkingCapitalLoanProductsRequest::getIncomeFromGoodwillCreditPenaltyAccountId);
 
     private static final List<WCGLAccountMapping> VALUES = List.of(FUND_SOURCE, LOAN_PORTFOLIO, TRANSFERS_IN_SUSPENSE,
-            DEFERRED_INCOME_LIABILITY, OVERPAYMENT_LIABILITY, INCOME_FROM_DISCOUNT_FEE, INCOME_FROM_FEE, INCOME_FROM_PENALTY,
-            INCOME_FROM_RECOVERY, WRITE_OFF, GOODWILL_CREDIT, CHARGE_OFF_EXPENSE, CHARGE_OFF_FRAUD_EXPENSE, INCOME_FROM_CHARGE_OFF_FEES,
-            INCOME_FROM_CHARGE_OFF_PENALTY, INCOME_FROM_GOODWILL_CREDIT_FEES, INCOME_FROM_GOODWILL_CREDIT_PENALTY);
+            DEFERRED_INCOME_LIABILITY, OVERPAYMENT_LIABILITY, RECEIVABLE_FEE, RECEIVABLE_PENALTY, INCOME_FROM_DISCOUNT_FEE, INCOME_FROM_FEE,
+            INCOME_FROM_PENALTY, INCOME_FROM_RECOVERY, WRITE_OFF, GOODWILL_CREDIT, CHARGE_OFF_EXPENSE, CHARGE_OFF_FRAUD_EXPENSE,
+            INCOME_FROM_CHARGE_OFF_FEES, INCOME_FROM_CHARGE_OFF_PENALTY, INCOME_FROM_GOODWILL_CREDIT_FEES,
+            INCOME_FROM_GOODWILL_CREDIT_PENALTY);
 
     public static List<WCGLAccountMapping> all() {
         return VALUES;

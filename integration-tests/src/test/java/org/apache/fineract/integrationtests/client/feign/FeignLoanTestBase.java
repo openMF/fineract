@@ -24,10 +24,12 @@ import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.GetLoansLoanIdResponse;
 import org.apache.fineract.client.models.GetLoansLoanIdStatus;
 import org.apache.fineract.client.models.GetLoansLoanIdTransactionsTemplateResponse;
+import org.apache.fineract.client.models.PostCreateRescheduleLoansRequest;
 import org.apache.fineract.client.models.PostLoanProductsRequest;
 import org.apache.fineract.client.models.PostLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostLoansLoanIdTransactionsRequest;
 import org.apache.fineract.client.models.PostLoansRequest;
+import org.apache.fineract.client.models.PostUpdateRescheduleLoansRequest;
 import org.apache.fineract.integrationtests.client.FeignIntegrationTest;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignAccountHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignBusinessDateHelper;
@@ -195,6 +197,20 @@ public abstract class FeignLoanTestBase extends FeignIntegrationTest implements 
         return loanId;
     }
 
+    protected Long createApproveAndDisburseProgressiveLoan(Long clientId, Long productId, String date, Double principal,
+            Integer numberOfRepayments) {
+        PostLoansRequest applyRequest = LoanRequestBuilders.applyProgressiveLoan(clientId, productId, date, principal, numberOfRepayments);
+        Long loanId = applyForLoan(applyRequest);
+
+        PostLoansLoanIdRequest approveRequest = LoanRequestBuilders.approveLoan(principal, date);
+        approveLoan(loanId, approveRequest);
+
+        PostLoansLoanIdRequest disburseRequest = LoanRequestBuilders.disburseLoan(principal, date);
+        disburseLoan(loanId, disburseRequest);
+
+        return loanId;
+    }
+
     protected Long createApprovedLoan(Long clientId, Long productId, String date, Double principal, Integer numberOfRepayments) {
         PostLoansRequest applyRequest = LoanRequestBuilders.applyLoan(clientId, productId, date, principal, numberOfRepayments);
         Long loanId = applyForLoan(applyRequest);
@@ -231,5 +247,28 @@ public abstract class FeignLoanTestBase extends FeignIntegrationTest implements 
 
     protected GetLoansLoanIdTransactionsTemplateResponse getPrepaymentAmount(Long loanId, String transactionDate, String dateFormat) {
         return transactionHelper.getPrepaymentAmount(loanId, transactionDate, dateFormat);
+    }
+
+    protected Long createRescheduleRequest(PostCreateRescheduleLoansRequest request) {
+        return loanHelper.createRescheduleRequest(request);
+    }
+
+    protected Long approveRescheduleRequest(Long scheduleId, PostUpdateRescheduleLoansRequest request) {
+        return loanHelper.approveRescheduleRequest(scheduleId, request);
+    }
+
+    protected void createAndApproveReschedule(Long loanId, String submittedOnDate, String rescheduleFromDate, String adjustedDueDate) {
+        loanHelper.createAndApproveRescheduleRequest(
+                LoanRequestBuilders.rescheduleRequest(loanId, submittedOnDate, rescheduleFromDate, adjustedDueDate),
+                LoanRequestBuilders.approveReschedule(submittedOnDate));
+    }
+
+    protected Long reAge(Long loanId, PostLoansLoanIdTransactionsRequest request) {
+        return transactionHelper.reAge(loanId, request);
+    }
+
+    protected PostLoansLoanIdTransactionsRequest reAge(String startDate, String frequencyType, Integer frequencyNumber,
+            Integer numberOfInstallments) {
+        return LoanRequestBuilders.reAge(startDate, frequencyType, frequencyNumber, numberOfInstallments);
     }
 }

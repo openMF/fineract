@@ -27,6 +27,8 @@ import java.util.Map;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.GetLoansLoanIdResponse;
+import org.apache.fineract.client.models.PostCreateRescheduleLoansRequest;
+import org.apache.fineract.client.models.PostCreateRescheduleLoansResponse;
 import org.apache.fineract.client.models.PostLoanProductsRequest;
 import org.apache.fineract.client.models.PostLoanProductsResponse;
 import org.apache.fineract.client.models.PostLoansLoanIdRequest;
@@ -34,6 +36,8 @@ import org.apache.fineract.client.models.PostLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostLoansOriginatorData;
 import org.apache.fineract.client.models.PostLoansRequest;
 import org.apache.fineract.client.models.PostLoansResponse;
+import org.apache.fineract.client.models.PostUpdateRescheduleLoansRequest;
+import org.apache.fineract.client.models.PostUpdateRescheduleLoansResponse;
 import org.apache.fineract.integrationtests.common.Utils;
 
 public class FeignLoanHelper {
@@ -199,6 +203,23 @@ public class FeignLoanHelper {
 
     private PostLoansRequest buildSubmittedLoanRequest(Long clientId) {
         return buildSubmittedLoanRequest(clientId, createSimpleLoanProduct());
+    }
+
+    public Long createRescheduleRequest(PostCreateRescheduleLoansRequest request) {
+        PostCreateRescheduleLoansResponse response = ok(() -> fineractClient.rescheduleLoans().createLoanRescheduleRequest(request));
+        return response.getResourceId();
+    }
+
+    public Long approveRescheduleRequest(Long scheduleId, PostUpdateRescheduleLoansRequest request) {
+        PostUpdateRescheduleLoansResponse response = ok(
+                () -> fineractClient.rescheduleLoans().updateLoanRescheduleRequest(scheduleId, request, "approve"));
+        return response.getResourceId();
+    }
+
+    public void createAndApproveRescheduleRequest(PostCreateRescheduleLoansRequest createRequest,
+            PostUpdateRescheduleLoansRequest approveRequest) {
+        Long scheduleId = createRescheduleRequest(createRequest);
+        approveRescheduleRequest(scheduleId, approveRequest);
     }
 
     private PostLoansRequest buildSubmittedLoanRequest(Long clientId, Long productId) {

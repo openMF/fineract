@@ -76,9 +76,7 @@ public class WorkingCapitalLoanAmortizationScheduleWriteServiceImpl implements W
         Validate.notNull(disbursementDate, "disbursementDate must not be null");
 
         final MathContext mc = MoneyHelper.getMathContext();
-        final BigDecimal discount = loan.getLoanProductRelatedDetails() != null && loan.getLoanProductRelatedDetails().getDiscount() != null
-                ? loan.getLoanProductRelatedDetails().getDiscount()
-                : BigDecimal.ZERO;
+        final BigDecimal discount = getWorkingCapitalLoanDiscountAmount(loan);
         final BigDecimal totalPayment = loan.getBalance() != null && loan.getBalance().getTotalPayment() != null
                 ? loan.getBalance().getTotalPayment()
                 : BigDecimal.ZERO;
@@ -107,13 +105,26 @@ public class WorkingCapitalLoanAmortizationScheduleWriteServiceImpl implements W
         generateAndSaveForApprovedLoanState(loan);
     }
 
+    @Override
+    public BigDecimal getWorkingCapitalLoanDiscountAmount(WorkingCapitalLoan loan) {
+        BigDecimal discount = BigDecimal.ZERO;
+        if (loan.getLoanProductRelatedDetails() != null) {
+            if (loan.getLoanStatus().isSubmittedAndPendingApproval() && loan.getLoanProductRelatedDetails().getDiscountProposed() != null) {
+                discount = loan.getLoanProductRelatedDetails().getDiscountProposed();
+            } else if (loan.getLoanStatus().isApproved() && loan.getLoanProductRelatedDetails().getDiscountApproved() != null) {
+                discount = loan.getLoanProductRelatedDetails().getDiscountApproved();
+            } else if (loan.getLoanStatus().isActive() && loan.getLoanProductRelatedDetails().getDiscount() != null) {
+                discount = loan.getLoanProductRelatedDetails().getDiscount();
+            }
+        }
+        return discount;
+    }
+
     private void generateAndSaveForApprovedLoanState(final WorkingCapitalLoan loan) {
         Validate.notNull(loan, "loan must not be null");
 
         final MathContext mc = MoneyHelper.getMathContext();
-        final BigDecimal discount = loan.getLoanProductRelatedDetails() != null && loan.getLoanProductRelatedDetails().getDiscount() != null
-                ? loan.getLoanProductRelatedDetails().getDiscount()
-                : BigDecimal.ZERO;
+        final BigDecimal discount = getWorkingCapitalLoanDiscountAmount(loan);
         final BigDecimal totalPayment = loan.getBalance() != null && loan.getBalance().getTotalPayment() != null
                 ? loan.getBalance().getTotalPayment()
                 : BigDecimal.ZERO;

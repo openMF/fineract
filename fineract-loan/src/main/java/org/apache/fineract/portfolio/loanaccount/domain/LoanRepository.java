@@ -285,4 +285,7 @@ public interface LoanRepository extends JpaRepository<Loan, Long>, JpaSpecificat
 
     @Query("SELECT CASE WHEN COUNT(l) > 0 THEN TRUE ELSE FALSE END FROM Loan l WHERE l.id = :loanId and l.loanStatus in :allowedLoanStatuses")
     Boolean isLoanInAllowedStatus(@Param("loanId") Long loanId, @Param("allowedLoanStatuses") List<LoanStatus> allowedLoanStatuses);
+
+    @Query("SELECT MAX(lt.dateOf) FROM LoanTransaction lt, Loan l WHERE lt.loan=l AND l.loanStatus = org.apache.fineract.portfolio.loanaccount.domain.LoanStatus.ACTIVE")
+    LocalDate findMaxTransactionDateOfActiveLoans();
 }

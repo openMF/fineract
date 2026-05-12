@@ -48,6 +48,7 @@ import org.apache.fineract.portfolio.loanaccount.service.LoanBalanceService;
 import org.apache.fineract.portfolio.loanaccount.service.LoanChargeService;
 import org.apache.fineract.portfolio.loanaccount.service.LoanScheduleGeneratorService;
 import org.apache.fineract.portfolio.loanaccount.service.LoanTransactionProcessingService;
+import org.apache.fineract.portfolio.tax.service.ChargeTaxApplicationService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -71,7 +72,7 @@ public class SingleLoanChargeRepaymentScheduleProcessingWrapperTest {
 
     private final LoanChargeService loanChargeService = new LoanChargeService(mock(LoanChargeValidator.class),
             mock(LoanTransactionProcessingService.class), mock(LoanLifecycleStateMachine.class), mock(LoanBalanceService.class),
-            mock(LoanScheduleGeneratorService.class));
+            mock(LoanScheduleGeneratorService.class), mock(ChargeTaxApplicationService.class));
 
     @BeforeAll
     public static void init() {

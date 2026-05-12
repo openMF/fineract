@@ -43,6 +43,7 @@ import org.apache.fineract.portfolio.charge.exception.LoanChargeWithoutMandatory
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanCharge;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanChargePaidBy;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanChargeTaxDetails;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanDisbursementDetails;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanEvent;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanInstallmentCharge;
@@ -56,6 +57,10 @@ import org.apache.fineract.portfolio.loanaccount.domain.SingleLoanChargeRepaymen
 import org.apache.fineract.portfolio.loanaccount.domain.transactionprocessor.MoneyHolder;
 import org.apache.fineract.portfolio.loanaccount.domain.transactionprocessor.TransactionCtx;
 import org.apache.fineract.portfolio.loanaccount.serialization.LoanChargeValidator;
+import org.apache.fineract.portfolio.tax.domain.TaxComponent;
+import org.apache.fineract.portfolio.tax.domain.TaxGroup;
+import org.apache.fineract.portfolio.tax.service.ChargeTaxApplicationService;
+import org.apache.fineract.portfolio.tax.service.TaxUtils;
 
 @RequiredArgsConstructor
 public class LoanChargeService {
@@ -65,6 +70,7 @@ public class LoanChargeService {
     private final LoanLifecycleStateMachine loanLifecycleStateMachine;
     private final LoanBalanceService loanBalanceService;
     private final LoanScheduleGeneratorService loanScheduleGeneratorService;
+    private final ChargeTaxApplicationService chargeTaxApplicationService;
 
     public void recalculateAllCharges(final Loan loan) {
         Set<LoanCharge> charges = loan.getActiveCharges();
@@ -393,6 +399,7 @@ public class LoanChargeService {
                 break;
             }
             loanCharge.setAmountOrPercentage(newValue);
+            applyTaxIfConfigured(loanCharge);
             if (loanCharge.isInstalmentFee()) {
                 updateInstallmentCharges(loanCharge);
             }
@@ -445,9 +452,28 @@ public class LoanChargeService {
             break;
         }
         loanCharge.setAmountOrPercentage(chargeAmount);
+        applyTaxIfConfigured(loanCharge);
         if (loanCharge.getLoan() != null && loanCharge.isInstalmentFee()) {
             updateInstallmentCharges(loanCharge);
         }
+    }
+
+    private void applyTaxIfConfigured(final LoanCharge loanCharge) {
+        TaxGroup taxGroup = loanCharge.getCharge().getTaxGroup();
+        if (taxGroup == null || loanCharge.getAmount() == null) {
+            return;
+        }
+        LocalDate effectiveDate = loanCharge.getSubmittedOnDate() != null ? loanCharge.getSubmittedOnDate()
+                : DateUtils.getBusinessLocalDate();
+        Map<TaxComponent, BigDecimal> taxSplit = chargeTaxApplicationService.computeTax(taxGroup, loanCharge.getAmount(), effectiveDate, 6);
+        BigDecimal totalTax = TaxUtils.totalTaxAmount(taxSplit);
+        if (totalTax.compareTo(BigDecimal.ZERO) == 0) {
+            return;
+        }
+        loanCharge.setTaxAmount(totalTax);
+        loanCharge.setAmountOutstanding(loanCharge.calculateOutstanding());
+        loanCharge.getTaxDetails().clear();
+        taxSplit.forEach((component, taxAmt) -> loanCharge.getTaxDetails().add(new LoanChargeTaxDetails(loanCharge, component, taxAmt)));
     }
 
     public void update(final LoanCharge loanCharge, final BigDecimal amount, final LocalDate dueDate, final Integer numberOfRepayments) {
@@ -814,6 +840,7 @@ public class LoanChargeService {
                 break;
             }
             loanCharge.setAmountOrPercentage(amount);
+            applyTaxIfConfigured(loanCharge);
             loanCharge.setAmountOutstanding(loanCharge.calculateOutstanding());
             if (loanCharge.getLoan() != null && loanCharge.isInstalmentFee()) {
                 updateInstallmentCharges(loanCharge);
@@ -854,6 +881,7 @@ public class LoanChargeService {
                 break;
             }
             loanCharge.setAmountOrPercentage(amount);
+            applyTaxIfConfigured(loanCharge);
             loanCharge.setAmountOutstanding(loanCharge.calculateOutstanding());
             if (loanCharge.getLoan() != null && loanCharge.isInstalmentFee()) {
                 updateInstallmentCharges(loanCharge, transactionDate);

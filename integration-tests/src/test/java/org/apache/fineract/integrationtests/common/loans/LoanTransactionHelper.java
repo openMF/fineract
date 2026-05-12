@@ -155,6 +155,10 @@ public class LoanTransactionHelper {
         this.paymentTypeHelper = new PaymentTypeHelper();
     }
 
+    public static LocalDate getMaxTransactionDateOfActiveLoans() {
+        return Calls.ok(FineractClientHelper.getFineractClient().legacy.getMaxTransactionDateOfActiveLoans());
+    }
+
     // TODO: Rewrite to use fineract-client instead!
     // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
     // org.apache.fineract.client.models.PostLoansLoanIdRequest)

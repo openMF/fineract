@@ -30,7 +30,6 @@ import com.google.gson.JsonParser;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +42,7 @@ import org.apache.fineract.integrationtests.client.feign.helpers.FeignExternalEv
 import org.apache.fineract.integrationtests.common.BusinessDateHelper;
 import org.apache.fineract.integrationtests.common.ClientHelper;
 import org.apache.fineract.integrationtests.common.FineractFeignClientHelper;
+import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanApplicationTestBuilder;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanDisbursementTestBuilder;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanHelper;
@@ -106,12 +106,12 @@ public class WorkingCapitalLoanRepaymentTest {
         final Long loanId = submitAndTrack(new WorkingCapitalLoanApplicationTestBuilder().withClientId(createdClientId)
                 .withProductId(productId).withPrincipal(BigDecimal.valueOf(5000)).withPeriodPaymentRate(BigDecimal.ONE)
                 .withTotalPayment(BigDecimal.valueOf(5500)).withDiscount(BigDecimal.valueOf(100)).buildSubmitJson());
-        final LocalDate approvedOnDate = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate approvedOnDate = Utils.getLocalDateOfTenant();
         loanHelper.approveById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildApproveJson(approvedOnDate, BigDecimal.valueOf(5000),
                 BigDecimal.valueOf(100)));
-        final LocalDate disbursementDate = LocalDate.now(ZoneId.systemDefault());
-        loanHelper.disburseById(loanId,
-                WorkingCapitalLoanDisbursementTestBuilder.buildDisburseJson(disbursementDate, BigDecimal.valueOf(5000)));
+        final LocalDate disbursementDate = Utils.getLocalDateOfTenant();
+        loanHelper.disburseById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildDisburseJson(disbursementDate,
+                BigDecimal.valueOf(5000), BigDecimal.valueOf(100), null, null, null, null, null, null, null));
         final LocalDate repaymentDate = disbursementDate.plusDays(1);
         BusinessDateHelper.runAt(repaymentDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")),
                 () -> loanHelper.makeRepaymentByLoanId(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildRepaymentJson(repaymentDate,
@@ -134,7 +134,7 @@ public class WorkingCapitalLoanRepaymentTest {
         final Long loanId = submitAndTrack(new WorkingCapitalLoanApplicationTestBuilder().withClientId(createdClientId)
                 .withProductId(productId).withPrincipal(BigDecimal.valueOf(5000)).withPeriodPaymentRate(BigDecimal.ONE)
                 .withTotalPayment(BigDecimal.valueOf(5500)).buildSubmitJson());
-        final LocalDate approvedOnDate = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate approvedOnDate = Utils.getLocalDateOfTenant();
         loanHelper.approveById(loanId,
                 WorkingCapitalLoanApplicationTestBuilder.buildApproveJson(approvedOnDate, BigDecimal.valueOf(5000), null));
         loanHelper.disburseById(loanId,
@@ -162,7 +162,7 @@ public class WorkingCapitalLoanRepaymentTest {
 
     @Test
     public void testRepaymentWithMissingTransactionAmountFails() {
-        final LocalDate approvedOnDate = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate approvedOnDate = Utils.getLocalDateOfTenant();
         final Long loanId = createApprovedAndDisbursedLoan(createProduct(), BigDecimal.valueOf(5000), BigDecimal.valueOf(5000),
                 approvedOnDate);
         final CallFailedRuntimeException[] exHolder = new CallFailedRuntimeException[1];
@@ -176,14 +176,14 @@ public class WorkingCapitalLoanRepaymentTest {
     public void testRepaymentWithFutureDateFails() {
         final Long loanId = createApprovedAndDisbursedLoan(createProduct(), BigDecimal.valueOf(5000), BigDecimal.valueOf(5000));
         final CallFailedRuntimeException ex = loanHelper.runRepaymentByLoanIdExpectingFailure(loanId,
-                WorkingCapitalLoanDisbursementTestBuilder.buildRepaymentJson(LocalDate.now(ZoneId.systemDefault()).plusDays(30),
+                WorkingCapitalLoanDisbursementTestBuilder.buildRepaymentJson(Utils.getLocalDateOfTenant().plusDays(30),
                         BigDecimal.valueOf(100), null, null, null, null));
         assertEquals(400, ex.getStatus());
     }
 
     @Test
     public void testRepaymentWithInvalidClassificationIdFails() {
-        final LocalDate approvedOnDate = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate approvedOnDate = Utils.getLocalDateOfTenant();
         final Long loanId = createApprovedAndDisbursedLoan(createProduct(), BigDecimal.valueOf(5000), BigDecimal.valueOf(5000),
                 approvedOnDate);
         final CallFailedRuntimeException[] exHolder = new CallFailedRuntimeException[1];
@@ -198,7 +198,7 @@ public class WorkingCapitalLoanRepaymentTest {
         final Long productId = createProduct();
         final Long loanId = submitAndTrack(new WorkingCapitalLoanApplicationTestBuilder().withClientId(createdClientId)
                 .withProductId(productId).withPrincipal(BigDecimal.valueOf(5000)).withPeriodPaymentRate(BigDecimal.ONE).buildSubmitJson());
-        final LocalDate approvedOnDate = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate approvedOnDate = Utils.getLocalDateOfTenant();
         loanHelper.approveById(loanId,
                 WorkingCapitalLoanApplicationTestBuilder.buildApproveJson(approvedOnDate, BigDecimal.valueOf(5000), null));
         final CallFailedRuntimeException ex = loanHelper.runRepaymentByLoanIdExpectingFailure(loanId,
@@ -209,7 +209,7 @@ public class WorkingCapitalLoanRepaymentTest {
 
     @Test
     public void testRepaymentWithDateBeforeDisbursementFails() {
-        final LocalDate approvedOnDate = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate approvedOnDate = Utils.getLocalDateOfTenant();
         final Long productId = createProduct();
         final Long loanId = submitAndTrack(new WorkingCapitalLoanApplicationTestBuilder().withClientId(createdClientId)
                 .withProductId(productId).withPrincipal(BigDecimal.valueOf(5000)).withPeriodPaymentRate(BigDecimal.ONE).buildSubmitJson());
@@ -226,7 +226,7 @@ public class WorkingCapitalLoanRepaymentTest {
 
     @Test
     public void testRepaymentWithNegativeAmountFails() {
-        final LocalDate approvedOnDate = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate approvedOnDate = Utils.getLocalDateOfTenant();
         final Long loanId = createApprovedAndDisbursedLoan(createProduct(), BigDecimal.valueOf(5000), BigDecimal.valueOf(5000),
                 approvedOnDate);
         final CallFailedRuntimeException[] exHolder = new CallFailedRuntimeException[1];
@@ -243,7 +243,7 @@ public class WorkingCapitalLoanRepaymentTest {
         final Long loanId = submitAndTrack(new WorkingCapitalLoanApplicationTestBuilder().withClientId(createdClientId)
                 .withProductId(productId).withPrincipal(BigDecimal.valueOf(5000)).withPeriodPaymentRate(BigDecimal.ONE)
                 .withExternalId(loanExternalId).buildSubmitJson());
-        final LocalDate approvedOnDate = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate approvedOnDate = Utils.getLocalDateOfTenant();
         loanHelper.approveById(loanId,
                 WorkingCapitalLoanApplicationTestBuilder.buildApproveJson(approvedOnDate, BigDecimal.valueOf(5000), null));
         loanHelper.disburseById(loanId,
@@ -261,7 +261,7 @@ public class WorkingCapitalLoanRepaymentTest {
     public void testRepaymentWithDuplicateTransactionExternalIdFails() {
         final Long productId = createProduct();
         final String sharedExternalId = "wcl-repay-ext-" + UUID.randomUUID();
-        final LocalDate approvedOnDate = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate approvedOnDate = Utils.getLocalDateOfTenant();
 
         final Long loanId1 = createApprovedAndDisbursedLoan(productId, BigDecimal.valueOf(5000), BigDecimal.valueOf(5000), approvedOnDate);
         final Long loanId2 = createApprovedAndDisbursedLoan(productId, BigDecimal.valueOf(3000), BigDecimal.valueOf(3000), approvedOnDate);
@@ -278,7 +278,7 @@ public class WorkingCapitalLoanRepaymentTest {
 
     @Test
     public void testRepaymentExactPayoffSetsClosedObligationsMet() {
-        final LocalDate approvedOnDate = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate approvedOnDate = Utils.getLocalDateOfTenant();
         final Long loanId = createApprovedAndDisbursedLoan(createProduct(), BigDecimal.valueOf(5000), BigDecimal.valueOf(5000),
                 approvedOnDate);
         final LocalDate repaymentDate = approvedOnDate.plusDays(1);
@@ -300,8 +300,8 @@ public class WorkingCapitalLoanRepaymentTest {
                 .buildSubmitJson());
         loanHelper.approveById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildApproveJson(disbursementDate, BigDecimal.valueOf(9000),
                 BigDecimal.valueOf(1000)));
-        loanHelper.disburseById(loanId,
-                WorkingCapitalLoanDisbursementTestBuilder.buildDisburseJson(disbursementDate, BigDecimal.valueOf(9000)));
+        loanHelper.disburseById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildDisburseJson(disbursementDate,
+                BigDecimal.valueOf(9000), BigDecimal.valueOf(1000), null, null, null, null, null, null, null));
 
         for (int day = 1; day <= 3; day++) {
             final int repaymentDay = day;
@@ -338,7 +338,7 @@ public class WorkingCapitalLoanRepaymentTest {
     }
 
     private Long createApprovedAndDisbursedLoan(final Long productId, final BigDecimal principal, final BigDecimal disburseAmount) {
-        return createApprovedAndDisbursedLoan(productId, principal, disburseAmount, LocalDate.now(ZoneId.systemDefault()));
+        return createApprovedAndDisbursedLoan(productId, principal, disburseAmount, Utils.getLocalDateOfTenant());
     }
 
     private Long createApprovedAndDisbursedLoan(final Long productId, final BigDecimal principal, final BigDecimal disburseAmount,

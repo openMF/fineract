@@ -392,8 +392,14 @@ public final class ProgressiveEMICalculator implements EMICalculator {
             calculateUnrecognizedInterestTillDateOnScheduleModelCopyAndDefer(scheduleModel,
                     latestNotLastOpenRepaymentPeriodBeforeDate.get(), transactionDate);
         }
+        // Amend payment amount if outstanding is lower
+        Money amendedInterestAmount = null;
+        if (scheduleModel.getTotalPaidInterest().plus(interestAmount).isGreaterThan(scheduleModel.getTotalDueInterest())) {
+            amendedInterestAmount = scheduleModel.getTotalDueInterest().minus(scheduleModel.getTotalPaidInterest());
+        }
+        Money finalInterestAmount = amendedInterestAmount != null ? amendedInterestAmount : interestAmount;
 
-        repaymentPeriod.ifPresent(rp -> rp.addPaidInterestAmount(interestAmount));
+        repaymentPeriod.ifPresent(rp -> rp.addPaidInterestAmount(finalInterestAmount));
         calculateOutstandingBalance(scheduleModel);
         calculateLastUnpaidRepaymentPeriodEMI(scheduleModel, transactionDate);
     }
@@ -405,7 +411,14 @@ public final class ProgressiveEMICalculator implements EMICalculator {
             return;
         }
         Optional<RepaymentPeriod> repaymentPeriod = findRepaymentPeriod(scheduleModel, repaymentPeriodFromDate, repaymentPeriodDueDate);
-        repaymentPeriod.ifPresent(rp -> rp.addPaidPrincipalAmount(principalAmount));
+        // Amend payment amount if outstanding is lower
+        Money amendedPrincipalAmount = null;
+        if (scheduleModel.getTotalPaidPrincipal().plus(principalAmount)
+                .isGreaterThan(scheduleModel.getTotalDuePrincipal().plus(scheduleModel.getTotalCreditedPrincipal()))) {
+            amendedPrincipalAmount = scheduleModel.getTotalDuePrincipal().minus(scheduleModel.getTotalPaidPrincipal());
+        }
+        Money finalPrincipalAmount = amendedPrincipalAmount != null ? amendedPrincipalAmount : principalAmount;
+        repaymentPeriod.ifPresent(rp -> rp.addPaidPrincipalAmount(finalPrincipalAmount));
         // If it is paid late, we need to calculate with the period due date
         LocalDate balanceCorrectionDate = DateUtils.isBefore(repaymentPeriodDueDate, transactionDate) ? repaymentPeriodDueDate
                 : transactionDate;
@@ -500,40 +513,72 @@ public final class ProgressiveEMICalculator implements EMICalculator {
     @NotNull
     public PeriodDueDetails getDueAmounts(@NotNull ProgressiveLoanInterestScheduleModel scheduleModel, @NotNull LocalDate periodFromDate,
             @NotNull LocalDate periodDueDate, @NotNull LocalDate targetDate) {
+
         ProgressiveLoanInterestScheduleModel recalculatedScheduleModelTillDate = recalculateScheduleModelTillDate(scheduleModel,
                 targetDate);
+
         RepaymentPeriod repaymentPeriod = recalculatedScheduleModelTillDate
                 .findRepaymentPeriodByFromAndDueDate(periodFromDate, periodDueDate).orElseThrow();
+
         long notFullyRepaidRepaymentPeriodCount = recalculatedScheduleModelTillDate.repaymentPeriods().stream()
                 .filter(rp -> !rp.isFullyPaid()).count();
-        boolean multiplePeriodIsUnpaid = notFullyRepaidRepaymentPeriodCount > 1L;
-        boolean onePeriodIsUnpaid = notFullyRepaidRepaymentPeriodCount == 1L;
-        if (!targetDate.isAfter(repaymentPeriod.getFromDate())) {
-            if (multiplePeriodIsUnpaid) {
-                repaymentPeriod.setEmi(repaymentPeriod.getOriginalEmi());
-                Money totalOutstandingPrincipal = recalculatedScheduleModelTillDate.getTotalOutstandingPrincipal();
-                Money outstandingPrincipal = repaymentPeriod.getOutstandingPrincipal();
-                // If there are less outstanding principal than anticipated
-                Money emiAdjustment = MathUtil.negativeToZero(outstandingPrincipal.minus(totalOutstandingPrincipal));
-                repaymentPeriod.setEmi(repaymentPeriod.getEmi().minus(emiAdjustment));
-            } else if (repaymentPeriod.isFullyPaid() && onePeriodIsUnpaid) {
-                repaymentPeriod.setEmi(MathUtil.min(repaymentPeriod.getOriginalEmi(), //
-                        recalculatedScheduleModelTillDate.getTotalDuePrincipal() //
-                                .minus(recalculatedScheduleModelTillDate.getTotalPaidPrincipal()) //
-                                .add(repaymentPeriod.getPaidPrincipal()) //
-                                .add(repaymentPeriod.getDueInterest()),
-                        false)); //
-            }
-        }
-        Money duePrincipal = repaymentPeriod.getDuePrincipal();
+
+        boolean isVertical = scheduleModel.loanProductRelatedDetail()
+                .getLoanScheduleProcessingType() == LoanScheduleProcessingType.VERTICAL;
+
+        adjustEmiIfRequired(repaymentPeriod, recalculatedScheduleModelTillDate, targetDate, notFullyRepaidRepaymentPeriodCount);
+
+        Money duePrincipal = isVertical && notFullyRepaidRepaymentPeriodCount > 1
+                ? repaymentPeriod.getEmiPlusCreditedAmountsPlusFutureUnrecognizedInterest()
+                : repaymentPeriod.getDuePrincipal();
+
         Money dueInterest = repaymentPeriod.getDueInterest();
-        if (scheduleModel.loanProductRelatedDetail().getLoanScheduleProcessingType() == LoanScheduleProcessingType.VERTICAL
-                && notFullyRepaidRepaymentPeriodCount > 1) {
-            duePrincipal = repaymentPeriod.getEmiPlusCreditedAmountsPlusFutureUnrecognizedInterest();
+
+        if (!isVertical) {
+            return new PeriodDueDetails(repaymentPeriod.getEmi(), duePrincipal, dueInterest);
         }
-        return new PeriodDueDetails(repaymentPeriod.getEmi(), //
-                duePrincipal, //
-                dueInterest); //
+
+        Money calculatedDuePrincipal = capDueAmount(duePrincipal, recalculatedScheduleModelTillDate.getTotalDuePrincipal(),
+                recalculatedScheduleModelTillDate.getTotalPaidPrincipal(), repaymentPeriod.getPaidPrincipal());
+
+        Money calculatedDueInterest = capDueAmount(dueInterest, recalculatedScheduleModelTillDate.getTotalDueInterest(),
+                recalculatedScheduleModelTillDate.getTotalPaidInterest(), repaymentPeriod.getPaidInterest());
+
+        return new PeriodDueDetails(repaymentPeriod.getEmi(), calculatedDuePrincipal, calculatedDueInterest);
+    }
+
+    private void adjustEmiIfRequired(RepaymentPeriod repaymentPeriod,
+            ProgressiveLoanInterestScheduleModel recalculatedScheduleModelTillDate, LocalDate targetDate,
+            long notFullyRepaidRepaymentPeriodCount) {
+
+        if (targetDate.isAfter(repaymentPeriod.getFromDate())) {
+            return;
+        }
+
+        if (notFullyRepaidRepaymentPeriodCount > 1L) {
+            repaymentPeriod.setEmi(repaymentPeriod.getOriginalEmi());
+
+            Money emiAdjustment = MathUtil.negativeToZero(
+                    repaymentPeriod.getOutstandingPrincipal().minus(recalculatedScheduleModelTillDate.getTotalOutstandingPrincipal()));
+
+            repaymentPeriod.setEmi(repaymentPeriod.getEmi().minus(emiAdjustment));
+            return;
+        }
+
+        if (repaymentPeriod.isFullyPaid() && notFullyRepaidRepaymentPeriodCount == 1L) {
+            repaymentPeriod.setEmi(MathUtil.min(repaymentPeriod.getOriginalEmi(),
+                    recalculatedScheduleModelTillDate.getTotalDuePrincipal()
+                            .minus(recalculatedScheduleModelTillDate.getTotalPaidPrincipal()).add(repaymentPeriod.getPaidPrincipal())
+                            .add(repaymentPeriod.getDueInterest()),
+                    false));
+        }
+    }
+
+    private Money capDueAmount(Money dueAmount, Money totalDueAmount, Money totalPaidAmount, Money paidAmount) {
+        Money maximumAmount = totalDueAmount.minus(totalPaidAmount);
+        maximumAmount = maximumAmount.isLessThan(paidAmount) ? paidAmount : maximumAmount;
+
+        return maximumAmount.isLessThan(dueAmount) ? maximumAmount : dueAmount;
     }
 
     @Override
@@ -1268,7 +1313,6 @@ public final class ProgressiveEMICalculator implements EMICalculator {
      *
      * @param interestRate
      *            Interest Rate in Percentage
-     *
      * @return Rate Interest Rate in fraction format
      */
     private BigDecimal calcNominalInterestRatePercentage(final BigDecimal interestRate, MathContext mc) {
@@ -1815,19 +1859,14 @@ public final class ProgressiveEMICalculator implements EMICalculator {
      *
      * @param interestRate
      *            Rate of Interest
-     *
      * @param repaymentEvery
      *            Repaid Every
-     *
      * @param daysInYear
      *            Days is Year based on DaysInYear enum
-     *
      * @param actualDaysInPeriod
      *            Always the actual number of days in the actual period
-     *
      * @param calculatedDaysInPeriod
      *            Calculated days in Period (It has importance related to Reschedule)
-     *
      * @return Rate Factor for period
      */
     private BigDecimal rateFactorByRepaymentEveryDay(final BigDecimal interestRate, final BigDecimal repaymentEvery,
@@ -1845,19 +1884,14 @@ public final class ProgressiveEMICalculator implements EMICalculator {
      *
      * @param interestRate
      *            Rate of Interest
-     *
      * @param repaymentEvery
      *            Repaid Every
-     *
      * @param daysInYear
      *            Days is Year based on DaysInYear enum
-     *
      * @param actualDaysInPeriod
      *            Always the actual number of days in the actual period
-     *
      * @param calculatedDaysInPeriod
      *            Calculated days in Period (It has importance related to Reschedule)
-     *
      * @return Rate Factor for period
      */
     private BigDecimal rateFactorByRepaymentEveryWeek(final BigDecimal interestRate, final BigDecimal repaymentEvery,
@@ -1875,22 +1909,16 @@ public final class ProgressiveEMICalculator implements EMICalculator {
      *
      * @param interestRate
      *            Rate of Interest
-     *
      * @param repaymentEvery
      *            Repaid Every
-     *
      * @param daysInMonth
      *            Days in Month based on DaysInMonth enum
-     *
      * @param daysInYear
      *            Days is Year based on DaysInYear enum
-     *
      * @param actualDaysInPeriod
      *            Always the actual number of days in the actual period
-     *
      * @param calculatedDaysInPeriod
      *            Calculated days in Period (It has importance related to Reschedule)
-     *
      * @return Rate Factor for period
      */
     BigDecimal rateFactorByRepaymentEveryMonth(final BigDecimal interestRate, final BigDecimal repaymentEvery, final BigDecimal daysInMonth,
@@ -1909,22 +1937,16 @@ public final class ProgressiveEMICalculator implements EMICalculator {
      *
      * @param interestRate
      *            Rate of Interest
-     *
      * @param repaymentPeriodMultiplierInDays
      *            Multiplier number in days of the repayment every parameter
-     *
      * @param repaymentEvery
      *            Repaid Every
-     *
      * @param daysInYear
      *            Days is Year based on DaysInYear enum
-     *
      * @param actualDaysInPeriod
      *            Always the actual number of days in the actual period
-     *
      * @param calculatedDaysInPeriod
      *            Calculated days in Period (It has importance related to Reschedule)
-     *
      * @return Rate Factor for period
      */
     private BigDecimal rateFactorByRepaymentPeriod(final BigDecimal interestRate, final BigDecimal repaymentPeriodMultiplierInDays,
@@ -1965,7 +1987,6 @@ public final class ProgressiveEMICalculator implements EMICalculator {
      * fn = 1 + fnValueFrom * rateFactorEnd
      *
      * @param previousFnValue
-     *
      * @param currentRateFactor
      *
      */

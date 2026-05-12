@@ -321,27 +321,49 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
             case INTEREST_RATE_FROM_INSTALLMENT -> handleChangeInterestRate(installments, termVariationsData, scheduleModel);
             case EXTEND_REPAYMENT_PERIOD ->
                 handleExtraRepaymentPeriod(installments, termVariationsData, scheduleModel, ctx.getAlreadyProcessedTransactions());
-            case DUE_DATE -> handleDueDateChangeOnRepaymentPeriod(installments, termVariationsData, scheduleModel);
+            case DUE_DATE -> handleDueDateChangeOnRepaymentPeriod(installments, termVariationsData, scheduleModel,
+                    ctx.getAlreadyProcessedTransactions());
             default -> throw new IllegalStateException("Unhandled LoanTermVariationType.");
         }
     }
 
     private void handleDueDateChangeOnRepaymentPeriod(final List<LoanRepaymentScheduleInstallment> installments,
-            final LoanTermVariationsData termVariationsData, final ProgressiveLoanInterestScheduleModel scheduleModel) {
+            final LoanTermVariationsData termVariationsData, final ProgressiveLoanInterestScheduleModel scheduleModel,
+            final List<LoanTransaction> alreadyProcessedTransactions) {
         final LocalDate targetRepaymentPeriodDueDate = termVariationsData.getTermVariationApplicableFrom();
         final LocalDate newDueDate = termVariationsData.getDateValue();
         final Loan loan = installments.getFirst().getLoan();
-        final LoanApplicationTerms loanApplicationTerms = new LoanApplicationTerms.Builder() //
-                .currency(loan.getCurrency().toData()) //
-                .repaymentEvery(loan.getLoanProductRelatedDetail().getRepayEvery()) //
-                .repaymentPeriodFrequencyType(loan.getLoanProductRelatedDetail().getRepaymentPeriodFrequencyType()) //
-                .fixedLength(loan.getLoanProductRelatedDetail().getFixedLength()) //
-                .seedDate(newDueDate) //
-                .build();
-        emiCalculator.changeDueDate(scheduleModel, loanApplicationTerms, targetRepaymentPeriodDueDate, newDueDate);
+
+        // Check if the target due date exists in the scheduleModel.
+        final boolean targetExistsInScheduleModel = scheduleModel.repaymentPeriods().stream()
+                .anyMatch(rp -> rp.getDueDate().equals(targetRepaymentPeriodDueDate));
+
+        // Determine if the target installment is re-aged. After a ReAge, base installments were zeroed
+        // by liftOutstandingBalances and re-aged installments carry the redistributed principal.
+        // A due-date variation that targets a non-re-aged base installment AFTER a ReAge was processed
+        // is stale — applying the scheduleModel's principal/interest would restore zeroed amounts.
+        final Optional<LoanRepaymentScheduleInstallment> targetInstallment = installments.stream()
+                .filter(inst -> inst.getDueDate().equals(targetRepaymentPeriodDueDate)).findFirst();
+        final boolean targetIsReAged = targetInstallment.map(LoanRepaymentScheduleInstallment::isReAged).orElse(false);
+        final boolean reAgeAlreadyProcessed = alreadyProcessedTransactions.stream().anyMatch(t -> t.isReAge() && t.isNotReversed());
+        final boolean isStalePreReAgeVariation = !targetIsReAged && reAgeAlreadyProcessed;
+
+        if (targetExistsInScheduleModel && !isStalePreReAgeVariation) {
+            final LoanApplicationTerms loanApplicationTerms = new LoanApplicationTerms.Builder() //
+                    .currency(loan.getCurrency().toData()) //
+                    .repaymentEvery(loan.getLoanProductRelatedDetail().getRepayEvery()) //
+                    .repaymentPeriodFrequencyType(loan.getLoanProductRelatedDetail().getRepaymentPeriodFrequencyType()) //
+                    .fixedLength(loan.getLoanProductRelatedDetail().getFixedLength()) //
+                    .seedDate(newDueDate) //
+                    .build();
+            emiCalculator.changeDueDate(scheduleModel, loanApplicationTerms, targetRepaymentPeriodDueDate, newDueDate);
+        }
+
+        final boolean dateShiftOnly = isStalePreReAgeVariation || !targetExistsInScheduleModel;
 
         IntStream.range(0, installments.size()).filter(i -> installments.get(i).getDueDate().equals(targetRepaymentPeriodDueDate))
                 .findFirst().ifPresent(targetInstallmentIndex -> {
+                    final long dateOffsetDays = ChronoUnit.DAYS.between(targetRepaymentPeriodDueDate, newDueDate);
                     long scheduleModelStartIndex = installments.subList(0, targetInstallmentIndex).stream()
                             .filter(inst -> !inst.isDownPayment() && !inst.isAdditional()).count();
 
@@ -350,8 +372,12 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
                         if (installment.isDownPayment() || installment.isAdditional()) {
                             continue;
                         }
-                        if (scheduleModelStartIndex >= scheduleModel.repaymentPeriods().size()) {
-                            break;
+                        if (dateShiftOnly || scheduleModelStartIndex >= scheduleModel.repaymentPeriods().size()) {
+                            if (isNotObligationsMet(installment)) {
+                                installment.updateFromDate(installment.getFromDate().plusDays(dateOffsetDays));
+                                installment.updateDueDate(installment.getDueDate().plusDays(dateOffsetDays));
+                            }
+                            continue;
                         }
 
                         final RepaymentPeriod repaymentPeriod = scheduleModel.repaymentPeriods().get((int) scheduleModelStartIndex);
@@ -367,13 +393,55 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
                     }
                 });
 
-        mergeAdditionalInstallmentsBeforeMaturityDate(installments, scheduleModel, loan);
+        // When the target date was already consumed by generate() and a ReAge was processed,
+        // the re-aged installments still carry their original dates. Shift them to apply the reschedule.
+        if (targetInstallment.isEmpty() && reAgeAlreadyProcessed) {
+            shiftReAgedInstallmentsAfterReschedule(installments, newDueDate, loan);
+        }
+
+        if (!dateShiftOnly) {
+            mergeAdditionalInstallmentsBeforeMaturityDate(installments, scheduleModel, loan);
+        }
 
         installments.sort(Comparator.comparing(LoanRepaymentScheduleInstallment::getDueDate));
         int installmentNumber = 1;
         for (LoanRepaymentScheduleInstallment installment : installments) {
             installment.updateInstallmentNumber(installmentNumber++);
         }
+    }
+
+    private void shiftReAgedInstallmentsAfterReschedule(final List<LoanRepaymentScheduleInstallment> installments,
+            final LocalDate newDueDate, final Loan loan) {
+        final Optional<LoanRepaymentScheduleInstallment> firstUnmetReAged = installments.stream()
+                .filter(inst -> inst.isReAged() && isNotObligationsMet(inst))
+                .min(Comparator.comparing(LoanRepaymentScheduleInstallment::getDueDate));
+
+        if (firstUnmetReAged.isEmpty() || !newDueDate.isAfter(firstUnmetReAged.get().getDueDate())) {
+            return;
+        }
+
+        final LocalDate firstReAgedDueDate = firstUnmetReAged.get().getDueDate();
+        final PeriodFrequencyType frequencyType = loan.getLoanProductRelatedDetail().getRepaymentPeriodFrequencyType();
+
+        for (final LoanRepaymentScheduleInstallment installment : installments) {
+            if (!installment.isReAged() || !isNotObligationsMet(installment)) {
+                continue;
+            }
+            final LocalDate shiftedDueDate = shiftDateByFrequency(installment.getDueDate(), firstReAgedDueDate, newDueDate, frequencyType);
+            installment.updateDueDate(shiftedDueDate);
+        }
+        reprocessInstallments(installments);
+    }
+
+    private LocalDate shiftDateByFrequency(final LocalDate dateToShift, final LocalDate fromDate, final LocalDate toDate,
+            final PeriodFrequencyType frequencyType) {
+        return switch (frequencyType) {
+            case DAYS -> dateToShift.plusDays(ChronoUnit.DAYS.between(fromDate, toDate));
+            case WEEKS -> dateToShift.plusWeeks(ChronoUnit.WEEKS.between(fromDate, toDate));
+            case MONTHS -> dateToShift.plusMonths(ChronoUnit.MONTHS.between(fromDate, toDate));
+            case YEARS -> dateToShift.plusYears(ChronoUnit.YEARS.between(fromDate, toDate));
+            default -> dateToShift.plusDays(ChronoUnit.DAYS.between(fromDate, toDate));
+        };
     }
 
     private void mergeAdditionalInstallmentsBeforeMaturityDate(final List<LoanRepaymentScheduleInstallment> installments,

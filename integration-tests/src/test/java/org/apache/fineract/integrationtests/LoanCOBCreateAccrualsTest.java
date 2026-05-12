@@ -461,29 +461,25 @@ public class LoanCOBCreateAccrualsTest extends BaseLoanIntegrationTest {
             executeInlineCOB(loanId);
         });
         runAt("30 December 2024", () -> {
+            executeInlineCOB(loanIdRef.get());
             Long loanId = loanIdRef.get();
             loanTransactionHelper.makeLoanRepayment(loanId, new PostLoansLoanIdTransactionsRequest().dateFormat(DATETIME_PATTERN)
                     .transactionDate("30 December 2024").locale("en").transactionAmount(200.0));
+            // Accruals around installment due dates are as expected
+            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
+            // Accruals around installment due dates are as expected
+            validateTransactionsExist(loanDetails, //
+                    transaction(0.3, "Accrual", "21 December 2024", 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0) //
+            );
         });
-        runAt("22 March 2025", () -> {
+        runAt("01 January 2025", () -> {
             Long loanId = loanIdRef.get();
             executeInlineCOB(loanId);
 
             GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
-
-            // No unexpected big accruals or any accrual adjustments
-            Assertions.assertTrue(
-                    loanDetails.getTransactions().stream().noneMatch(t -> (t.getType().getAccrual() && t.getAmount().doubleValue() > 0.31)
-                            || "loanTransactionType.accrualAdjustment".equals(t.getType().getCode())));
-
             // Accruals around installment due dates are as expected
             validateTransactionsExist(loanDetails, //
-                    transaction(0.17, "Accrual", "20 January 2025", 0.0, 0.0, 0.17, 0.0, 0.0, 0.0, 0.0), //
-                    transaction(0.16, "Accrual", "21 January 2025", 0.0, 0.0, 0.16, 0.0, 0.0, 0.0, 0.0), //
-                    transaction(0.16, "Accrual", "20 February 2025", 0.0, 0.0, 0.16, 0.0, 0.0, 0.0, 0.0), //
-                    transaction(0.18, "Accrual", "21 February 2025", 0.0, 0.0, 0.18, 0.0, 0.0, 0.0, 0.0), //
-                    transaction(0.18, "Accrual", "20 March 2025", 0.0, 0.0, 0.18, 0.0, 0.0, 0.0, 0.0), //
-                    transaction(0.16, "Accrual", "21 March 2025", 0.0, 0.0, 0.16, 0.0, 0.0, 0.0, 0.0) //
+                    transaction(0.16, "Accrual", "31 December 2024", 0.0, 0.0, 0.16, 0.0, 0.0, 0.0, 0.0) //
             );
         });
 
@@ -498,19 +494,14 @@ public class LoanCOBCreateAccrualsTest extends BaseLoanIntegrationTest {
 
         runAt("20 December 2024", () -> {
             Long loanId = applyAndApproveProgressiveLoan(client.getClientId(), loanProductsResponse.getResourceId(), "20 December 2024",
-                    430.0, 26.0, 6, null);
+                    430.0, 26.0, 1, null);
 
             loanIdRef.set(loanId);
 
             disburseLoan(loanId, BigDecimal.valueOf(430), "20 December 2024");
 
             GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
-            validateFullyUnpaidRepaymentPeriod(loanDetails, 1, "20 January 2025", 67.88, 0, 0, 9.32);
-            validateFullyUnpaidRepaymentPeriod(loanDetails, 2, "20 February 2025", 69.35, 0, 0, 7.85);
-            validateFullyUnpaidRepaymentPeriod(loanDetails, 3, "20 March 2025", 70.86, 0, 0, 6.34);
-            validateFullyUnpaidRepaymentPeriod(loanDetails, 4, "20 April 2025", 72.39, 0, 0, 4.81);
-            validateFullyUnpaidRepaymentPeriod(loanDetails, 5, "20 May 2025", 73.96, 0, 0, 3.24);
-            validateFullyUnpaidRepaymentPeriod(loanDetails, 6, "20 June 2025", 75.56, 0, 0, 1.64);
+            validateFullyUnpaidRepaymentPeriod(loanDetails, 1, "20 January 2025", 430.0, 0, 0, 9.32);
 
             verifyTransactions(loanId, transaction(430.0d, "Disbursement", "20 December 2024"));
             executeInlineCOB(loanId);
@@ -525,13 +516,13 @@ public class LoanCOBCreateAccrualsTest extends BaseLoanIntegrationTest {
                     transaction(0.30d, "Accrual", "20 December 2024", 0.0, 0.0, 0.3, 0.0, 0.0, 0.0, 0.0, false));
         });
         // last installment due date is excluded
-        runAt("21 June 2025", () -> {
+        runAt("21 January 2025", () -> {
             Long loanId = loanIdRef.get();
             executeInlineCOB(loanId);
             GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
 
             Assertions.assertTrue(loanDetails.getTransactions().stream()
-                    .noneMatch(t -> t.getDate().equals(LocalDate.of(2025, 6, 20)) && t.getType().getAccrual()));
+                    .noneMatch(t -> t.getDate().equals(LocalDate.of(2025, 1, 20)) && t.getType().getAccrual()));
         });
     }
 

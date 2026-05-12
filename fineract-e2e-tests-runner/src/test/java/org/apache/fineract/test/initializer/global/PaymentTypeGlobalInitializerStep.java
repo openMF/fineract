@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.PaymentTypeCreateRequest;
 import org.apache.fineract.client.models.PaymentTypeData;
+import org.apache.fineract.test.helper.ParallelExecutionHelper;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -70,14 +71,15 @@ public class PaymentTypeGlobalInitializerStep implements FineractGlobalInitializ
         paymentTypeNames.add(PAYMENT_TYPE_REPAYMENT_ADJUSTMENT_CHARGEBACK);
         paymentTypeNames.add(PAYMENT_TYPE_REPAYMENT_ADJUSTMENT_REFUND);
 
-        paymentTypeNames.forEach(paymentTypeName -> {
+        ParallelExecutionHelper.runInParallel(paymentTypeNames, paymentTypeName -> {
+            int index = paymentTypeNames.indexOf(paymentTypeName);
             var paymentTypeExists = paymentTypes.stream().anyMatch(pt -> paymentTypeName.equals(pt.getName()));
 
             if (paymentTypeExists) {
                 return;
             }
 
-            var position = Integer.valueOf(paymentTypeNames.indexOf(paymentTypeName) + 2).longValue();
+            var position = Integer.valueOf(index + 2).longValue();
             var postPaymentTypesRequest = new PaymentTypeCreateRequest().name(paymentTypeName).description(paymentTypeName)
                     .isCashPayment(false).position(position);
 

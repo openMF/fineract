@@ -20,17 +20,20 @@ package org.apache.fineract.test.initializer.global;
 
 import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
+import org.apache.fineract.client.models.GetCodeValuesDataResponse;
+import org.apache.fineract.client.models.GetCodesResponse;
 import org.apache.fineract.client.models.PostCodeValuesDataRequest;
 import org.apache.fineract.client.models.PostCodesRequest;
 import org.apache.fineract.client.models.PutCodeValuesDataRequest;
 import org.apache.fineract.test.data.codevalue.CodeNames;
+import org.apache.fineract.test.helper.ParallelExecutionHelper;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -95,176 +98,97 @@ public class CodeGlobalInitializerStep implements FineractGlobalInitializerStep 
     public static final String CAPITALIZED_INCOME_TRANSACTION_CLASSIFICATION_VALUE = "capitalized_income_transaction_classification_value";
 
     private final FineractFeignClient fineractClient;
+    private Map<String, List<String>> existingCodeAndCodeValues = new HashMap<>();
 
     @Override
     public void initialize() {
+        fetchExistingCodesAndCodeValues();
         createCodeNames();
         createCodeValues();
     }
 
+    private void fetchExistingCodesAndCodeValues() {
+        List<GetCodesResponse> existingCodes = fineractClient.codes().retrieveCodes();
+        existingCodes.forEach(code -> {
+            List<GetCodeValuesDataResponse> existingCodeValues = fineractClient.codeValues()
+                    .retrieveAllCodeValuesByCodeName(code.getName());
+            existingCodeAndCodeValues.put(code.getName(), existingCodeValues.stream().map(GetCodeValuesDataResponse::getName).toList());
+        });
+    }
+
     private void createCodeValues() {
-        // address type
-        List<String> addressNames = new ArrayList<>();
-        addressNames.add(CODE_VALUE_ADDRESS_TYPE_RESIDENTIAL);
-        addressNames.add(CODE_VALUE_ADDRESS_TYPE_OFFICE);
-        createCodeValues(CodeNames.ADDRESS_TYPE.getValue(), addressNames);
-
-        // Country
-        List<String> countryNames = new ArrayList<>();
-        countryNames.add(CODE_VALUE_COUNTRY_GERMANY);
-        createCodeValues(CodeNames.COUNTRY.getValue(), countryNames);
-
-        // State
-        List<String> stateNames = new ArrayList<>();
-        stateNames.add(CODE_VALUE_STATE_BERLIN);
-        createCodeValues(CodeNames.STATE.getValue(), stateNames);
-
-        // financial instrument
-        List<String> financialInstrumentNames = new ArrayList<>();
-        financialInstrumentNames.add(CODE_VALUE_FINANCIAL_INSTRUMENT_DEBIT);
-        financialInstrumentNames.add(CODE_VALUE_FINANCIAL_INSTRUMENT_CREDIT);
-        createCodeValues(CodeNames.FINANCIAL_INSTRUMENT.getValue(), financialInstrumentNames);
-
-        List<String> chargeOffReasonNames = new ArrayList<>();
-        chargeOffReasonNames.add(CODE_VALUE_CHARGE_OFF_REASON_FRAUD);
-        chargeOffReasonNames.add(CODE_VALUE_CHARGE_OFF_REASON_DELINQUENT);
-        chargeOffReasonNames.add(CODE_VALUE_CHARGE_OFF_REASON_OTHER);
-        createCodeValues(CodeNames.CHARGE_OFF.getValue(), chargeOffReasonNames);
-
-        // transaction type
-        List<String> transactionTypeNames = new ArrayList<>();
-        transactionTypeNames.add(CODE_VALUE_TRANSACTION_TYPE_SCHEDULED_PAYMENT);
-        createCodeValues(CodeNames.TRANSACTION_TYPE.getValue(), transactionTypeNames);
-
-        // bankruptcy tag
-        List<String> bankruptcyTagNames = new ArrayList<>();
-        bankruptcyTagNames.add(CODE_VALUE_BANKRUPTCY_TAG_PENDING);
-        bankruptcyTagNames.add(CODE_VALUE_BANKRUPTCY_TAG_BANKRUPTCY);
-        createCodeValues(CodeNames.BANKRUPTCY_TAG.getValue(), bankruptcyTagNames);
-
-        // pending fraud tag
-        List<String> pendingFraudTagNames = new ArrayList<>();
-        pendingFraudTagNames.add(CODE_VALUE_PENDING_FRAUD_TAG_PENDING);
-        pendingFraudTagNames.add(CODE_VALUE_PENDING_FRAUD_TAG_FRAUD);
-        createCodeValues(CodeNames.PENDING_FRAUD_TAG.getValue(), pendingFraudTagNames);
-
-        // pending deceased tag
-        List<String> pendingDeceasedTagNames = new ArrayList<>();
-        pendingDeceasedTagNames.add(CODE_VALUE_PENDING_DECEASED_TAG_PENDING);
-        pendingDeceasedTagNames.add(CODE_VALUE_PENDING_DECEASED_TAG_DECEASED);
-        createCodeValues(CodeNames.PENDING_DECEASED_TAG.getValue(), pendingDeceasedTagNames);
-
-        // hardship tag
-        List<String> hardshipTagNames = new ArrayList<>();
-        hardshipTagNames.add(CODE_VALUE_HARDSHIP_TAG_ACTIVE);
-        hardshipTagNames.add(CODE_VALUE_HARDSHIP_TAG_INACTIVE);
-        createCodeValues(CodeNames.HARDSHIP_TAG.getValue(), hardshipTagNames);
-
-        // active duty tag
-        List<String> activeDutyTagNames = new ArrayList<>();
-        activeDutyTagNames.add(CODE_VALUE_ACTIVE_DUTY_TAG_ACTIVE);
-        activeDutyTagNames.add(CODE_VALUE_ACTIVE_DUTY_TAG_INACTIVE);
-        createCodeValues(CodeNames.ACTIVE_DUTY_TAG.getValue(), activeDutyTagNames);
-
-        // customer identifiers put/post
-        List<String> customerIdentifierNamesPut = new ArrayList<>();
-        customerIdentifierNamesPut.add(CODE_VALUE_CUSTOMER_IDENTIFIERS_1);
-        customerIdentifierNamesPut.add(CODE_VALUE_CUSTOMER_IDENTIFIERS_2);
-        customerIdentifierNamesPut.add(CODE_VALUE_CUSTOMER_IDENTIFIERS_3);
-        customerIdentifierNamesPut.add(CODE_VALUE_CUSTOMER_IDENTIFIERS_4);
-        updateCodeValues(CodeNames.CUSTOMER_IDENTIFIER.getValue(), customerIdentifierNamesPut);
-
-        List<String> customerIdentifierNamesPost = new ArrayList<>();
-        customerIdentifierNamesPost.add(CODE_VALUE_CUSTOMER_IDENTIFIERS_5);
-        customerIdentifierNamesPost.add(CODE_VALUE_CUSTOMER_IDENTIFIERS_6);
-        customerIdentifierNamesPost.add(CODE_VALUE_CUSTOMER_IDENTIFIERS_7);
-        customerIdentifierNamesPost.add(CODE_VALUE_CUSTOMER_IDENTIFIERS_8);
-        createCodeValues(CodeNames.CUSTOMER_IDENTIFIER.getValue(), customerIdentifierNamesPost);
-
-        // gender
-        List<String> genderNames = new ArrayList<>();
-        genderNames.add(CODE_VALUE_GENDER_FEMALE);
-        genderNames.add(CODE_VALUE_GENDER_MALE);
-        createCodeValues(CodeNames.GENDER.getValue(), genderNames);
-
-        // client type
-        List<String> clientTypeNames = new ArrayList<>();
-        clientTypeNames.add(CODE_VALUE_CLIENT_TYPE_CORPORATE);
-        clientTypeNames.add(CODE_VALUE_CLIENT_TYPE_LEGAL);
-        clientTypeNames.add(CODE_VALUE_CLIENT_TYPE_NON_LEGAL);
-        createCodeValues(CodeNames.CLIENT_TYPE.getValue(), clientTypeNames);
-
-        // client classification
-        List<String> clientClassificationNames = new ArrayList<>();
-        clientClassificationNames.add(CODE_VALUE_CLIENT_CLASSIFICATION_LAWYER);
-        clientClassificationNames.add(CODE_VALUE_CLIENT_CLASSIFICATION_DIRECTOR);
-        clientClassificationNames.add(CODE_VALUE_CLIENT_CLASSIFICATION_NONE);
-        createCodeValues(CodeNames.CLIENT_CLASSIFICATION.getValue(), clientClassificationNames);
-
-        // add family member - relationship
-        List<String> familyMemberRelationshipNames = new ArrayList<>();
-        familyMemberRelationshipNames.add(CODE_VALUE_FAMILY_MEMBER_RELATIONSHIP_SPOUSE);
-        familyMemberRelationshipNames.add(CODE_VALUE_FAMILY_MEMBER_RELATIONSHIP_FATHER);
-        familyMemberRelationshipNames.add(CODE_VALUE_FAMILY_MEMBER_RELATIONSHIP_MOTHER);
-        familyMemberRelationshipNames.add(CODE_VALUE_FAMILY_MEMBER_RELATIONSHIP_CHILD);
-        createCodeValues(CodeNames.FAMILY_MEMBER_RELATIONSHIP.getValue(), familyMemberRelationshipNames);
-
-        // add family member - profession
-        List<String> familyMemberProfessionNames = new ArrayList<>();
-        familyMemberProfessionNames.add(CODE_VALUE_FAMILY_MEMBER_PROFESSION_EMPLOYEE);
-        familyMemberProfessionNames.add(CODE_VALUE_FAMILY_MEMBER_PROFESSION_SELF_EMPLOYED);
-        createCodeValues(CodeNames.FAMILY_MEMBER_PROFESSION.getValue(), familyMemberProfessionNames);
-
-        // add family member - marital status
-        List<String> familyMemberMaritalStatusNames = new ArrayList<>();
-        familyMemberMaritalStatusNames.add(CODE_VALUE_FAMILY_MARITAL_STATUS_MARRIED);
-        familyMemberMaritalStatusNames.add(CODE_VALUE_FAMILY_MARITAL_STATUS_SINGLE);
-        familyMemberMaritalStatusNames.add(CODE_VALUE_FAMILY_MARITAL_STATUS_WIDOWED);
-        createCodeValues(CodeNames.FAMILY_MARITAL_STATUS.getValue(), familyMemberMaritalStatusNames);
-
-        // add constitution (for client creation as Entity)
-        List<String> constitutionNames = new ArrayList<>();
-        constitutionNames.add(CODE_VALUE_CONSTITUTION_TEST);
-        createCodeValues(CodeNames.CONSTITUTION.getValue(), constitutionNames);
-
-        // add LoanRescheduleReason
-        List<String> rescheduleReasonNames = new ArrayList<>();
-        rescheduleReasonNames.add(CODE_VALUE_RESCHEDULE_REASON_TEST);
-        createCodeValues(CodeNames.LOAN_RESCHEDULE_REASON.getValue(), rescheduleReasonNames);
-
-        // add Write-off reasons
-        List<String> writeOffReasonNames = new ArrayList<>();
-        writeOffReasonNames.add(CODE_VALUE_WRITE_OFF_REASON_TEST_1);
-        writeOffReasonNames.add(CODE_VALUE_WRITE_OFF_REASON_TEST_2);
-        writeOffReasonNames.add(CODE_VALUE_WRITE_OFF_REASON_TEST_3);
-        createCodeValues(CodeNames.WRITE_OFF_REASON.getValue(), writeOffReasonNames);
-
-        // Add buy down fee transaction classification
-        List<String> buydownFeeTransactionClassificationName = new ArrayList<>();
-        buydownFeeTransactionClassificationName.add(BUYDOWN_FEE_TRANSACTION_CLASSIFICATION_VALUE);
-        createCodeValues(CodeNames.BUYDOWN_FEE_TRANSACTION_CLASSIFICATION.getValue(), buydownFeeTransactionClassificationName);
-
-        // Add capitalized income transaction classification
-        List<String> capitalizedIncomeTransactionClassificationName = new ArrayList<>();
-        capitalizedIncomeTransactionClassificationName.add(CAPITALIZED_INCOME_TRANSACTION_CLASSIFICATION_VALUE);
-        createCodeValues(CodeNames.CAPITALIZED_INCOME_TRANSACTION_CLASSIFICATION.getValue(),
-                capitalizedIncomeTransactionClassificationName);
+        List<Runnable> items = List.of(
+                () -> createCodeValues(CodeNames.ADDRESS_TYPE.getValue(),
+                        List.of(CODE_VALUE_ADDRESS_TYPE_RESIDENTIAL, CODE_VALUE_ADDRESS_TYPE_OFFICE)),
+                () -> createCodeValues(CodeNames.COUNTRY.getValue(), List.of(CODE_VALUE_COUNTRY_GERMANY)),
+                () -> createCodeValues(CodeNames.STATE.getValue(), List.of(CODE_VALUE_STATE_BERLIN)),
+                () -> createCodeValues(CodeNames.FINANCIAL_INSTRUMENT.getValue(),
+                        List.of(CODE_VALUE_FINANCIAL_INSTRUMENT_DEBIT, CODE_VALUE_FINANCIAL_INSTRUMENT_CREDIT)),
+                () -> createCodeValues(CodeNames.CHARGE_OFF.getValue(),
+                        List.of(CODE_VALUE_CHARGE_OFF_REASON_FRAUD, CODE_VALUE_CHARGE_OFF_REASON_DELINQUENT,
+                                CODE_VALUE_CHARGE_OFF_REASON_OTHER)),
+                () -> createCodeValues(CodeNames.TRANSACTION_TYPE.getValue(), List.of(CODE_VALUE_TRANSACTION_TYPE_SCHEDULED_PAYMENT)),
+                () -> createCodeValues(CodeNames.BANKRUPTCY_TAG.getValue(),
+                        List.of(CODE_VALUE_BANKRUPTCY_TAG_PENDING, CODE_VALUE_BANKRUPTCY_TAG_BANKRUPTCY)),
+                () -> createCodeValues(CodeNames.PENDING_FRAUD_TAG.getValue(),
+                        List.of(CODE_VALUE_PENDING_FRAUD_TAG_PENDING, CODE_VALUE_PENDING_FRAUD_TAG_FRAUD)),
+                () -> createCodeValues(CodeNames.PENDING_DECEASED_TAG.getValue(),
+                        List.of(CODE_VALUE_PENDING_DECEASED_TAG_PENDING, CODE_VALUE_PENDING_DECEASED_TAG_DECEASED)),
+                () -> createCodeValues(CodeNames.HARDSHIP_TAG.getValue(),
+                        List.of(CODE_VALUE_HARDSHIP_TAG_ACTIVE, CODE_VALUE_HARDSHIP_TAG_INACTIVE)),
+                () -> createCodeValues(CodeNames.ACTIVE_DUTY_TAG.getValue(),
+                        List.of(CODE_VALUE_ACTIVE_DUTY_TAG_ACTIVE, CODE_VALUE_ACTIVE_DUTY_TAG_INACTIVE)),
+                () -> {
+                    // customer identifiers: update pre-existing values, then create new ones (sequential on same code)
+                    updateCodeValues(CodeNames.CUSTOMER_IDENTIFIER.getValue(), List.of(CODE_VALUE_CUSTOMER_IDENTIFIERS_1,
+                            CODE_VALUE_CUSTOMER_IDENTIFIERS_2, CODE_VALUE_CUSTOMER_IDENTIFIERS_3, CODE_VALUE_CUSTOMER_IDENTIFIERS_4));
+                    createCodeValues(CodeNames.CUSTOMER_IDENTIFIER.getValue(), List.of(CODE_VALUE_CUSTOMER_IDENTIFIERS_5,
+                            CODE_VALUE_CUSTOMER_IDENTIFIERS_6, CODE_VALUE_CUSTOMER_IDENTIFIERS_7, CODE_VALUE_CUSTOMER_IDENTIFIERS_8));
+                }, () -> createCodeValues(CodeNames.GENDER.getValue(), List.of(CODE_VALUE_GENDER_FEMALE, CODE_VALUE_GENDER_MALE)),
+                () -> createCodeValues(CodeNames.CLIENT_TYPE.getValue(),
+                        List.of(CODE_VALUE_CLIENT_TYPE_CORPORATE, CODE_VALUE_CLIENT_TYPE_LEGAL, CODE_VALUE_CLIENT_TYPE_NON_LEGAL)),
+                () -> createCodeValues(CodeNames.CLIENT_CLASSIFICATION.getValue(),
+                        List.of(CODE_VALUE_CLIENT_CLASSIFICATION_LAWYER, CODE_VALUE_CLIENT_CLASSIFICATION_DIRECTOR,
+                                CODE_VALUE_CLIENT_CLASSIFICATION_NONE)),
+                () -> createCodeValues(CodeNames.FAMILY_MEMBER_RELATIONSHIP.getValue(),
+                        List.of(CODE_VALUE_FAMILY_MEMBER_RELATIONSHIP_SPOUSE, CODE_VALUE_FAMILY_MEMBER_RELATIONSHIP_FATHER,
+                                CODE_VALUE_FAMILY_MEMBER_RELATIONSHIP_MOTHER, CODE_VALUE_FAMILY_MEMBER_RELATIONSHIP_CHILD)),
+                () -> createCodeValues(CodeNames.FAMILY_MEMBER_PROFESSION.getValue(),
+                        List.of(CODE_VALUE_FAMILY_MEMBER_PROFESSION_EMPLOYEE, CODE_VALUE_FAMILY_MEMBER_PROFESSION_SELF_EMPLOYED)),
+                () -> createCodeValues(CodeNames.FAMILY_MARITAL_STATUS.getValue(),
+                        List.of(CODE_VALUE_FAMILY_MARITAL_STATUS_MARRIED, CODE_VALUE_FAMILY_MARITAL_STATUS_SINGLE,
+                                CODE_VALUE_FAMILY_MARITAL_STATUS_WIDOWED)),
+                () -> createCodeValues(CodeNames.CONSTITUTION.getValue(), List.of(CODE_VALUE_CONSTITUTION_TEST)),
+                () -> createCodeValues(CodeNames.LOAN_RESCHEDULE_REASON.getValue(), List.of(CODE_VALUE_RESCHEDULE_REASON_TEST)),
+                () -> createCodeValues(CodeNames.WRITE_OFF_REASON.getValue(),
+                        List.of(CODE_VALUE_WRITE_OFF_REASON_TEST_1, CODE_VALUE_WRITE_OFF_REASON_TEST_2,
+                                CODE_VALUE_WRITE_OFF_REASON_TEST_3)),
+                () -> createCodeValues(CodeNames.BUYDOWN_FEE_TRANSACTION_CLASSIFICATION.getValue(),
+                        List.of(BUYDOWN_FEE_TRANSACTION_CLASSIFICATION_VALUE)),
+                () -> createCodeValues(CodeNames.CAPITALIZED_INCOME_TRANSACTION_CLASSIFICATION.getValue(),
+                        List.of(CAPITALIZED_INCOME_TRANSACTION_CLASSIFICATION_VALUE)));
+        ParallelExecutionHelper.runInParallel(items);
     }
 
     public void createCodeValues(String codeName, List<String> codeValueNames) {
-        codeValueNames.forEach(name -> {
-            Integer position = codeValueNames.indexOf(name);
+
+        codeValueNames.forEach(codeValueName -> {
+            if (existingCodeAndCodeValues.get(codeName) != null && existingCodeAndCodeValues.get(codeName).contains(codeValueName)) {
+                log.debug("Code value '{}' already exists, skipping creation", codeValueName);
+                return;
+            }
+            Integer position = codeValueNames.indexOf(codeValueName);
             PostCodeValuesDataRequest postCodeValuesDataRequest = new PostCodeValuesDataRequest();
             postCodeValuesDataRequest.isActive(true);
-            postCodeValuesDataRequest.name(name);
+            postCodeValuesDataRequest.name(codeValueName);
             postCodeValuesDataRequest.position(position);
 
             try {
                 executeVoid(() -> fineractClient.codeValues().createCodeValueByCodeName(codeName, postCodeValuesDataRequest, Map.of()));
-                log.debug("Code value '{}' created successfully", name);
+                log.debug("Code value '{}' created successfully", codeValueName);
             } catch (CallFailedRuntimeException e) {
                 if (e.getStatus() == 403 && e.getDeveloperMessage() != null && e.getDeveloperMessage().contains("already exists")) {
-                    log.debug("Code value '{}' already exists, skipping creation", name);
+                    log.debug("Code value '{}' already exists, skipping creation", codeValueName);
                     return;
                 }
                 throw e;
@@ -286,24 +210,14 @@ public class CodeGlobalInitializerStep implements FineractGlobalInitializerStep 
     }
 
     private void createCodeNames() {
-        List<String> codesNameList = new ArrayList<>();
-        codesNameList.add(CodeNames.FINANCIAL_INSTRUMENT.getValue());
-        codesNameList.add(CodeNames.TRANSACTION_TYPE.getValue());
-        codesNameList.add(CodeNames.BANKRUPTCY_TAG.getValue());
-        codesNameList.add(CodeNames.PENDING_FRAUD_TAG.getValue());
-        codesNameList.add(CodeNames.PENDING_DECEASED_TAG.getValue());
-        codesNameList.add(CodeNames.HARDSHIP_TAG.getValue());
-        codesNameList.add(CodeNames.ACTIVE_DUTY_TAG.getValue());
-
-        codesNameList.forEach(codeName -> {
-            try {
-                fineractClient.codes().retrieveCodeByName(codeName);
-                // Code already exists, skip creation
-            } catch (Exception e) {
-                // Code doesn't exist, create it
-                PostCodesRequest postCodesRequest = new PostCodesRequest();
-                executeVoid(() -> fineractClient.codes().createCode(postCodesRequest.name(codeName), Map.of()));
-            }
-        });
+        List.of(CodeNames.FINANCIAL_INSTRUMENT.getValue(), CodeNames.TRANSACTION_TYPE.getValue(), CodeNames.BANKRUPTCY_TAG.getValue(),
+                CodeNames.PENDING_FRAUD_TAG.getValue(), CodeNames.PENDING_DECEASED_TAG.getValue(), CodeNames.HARDSHIP_TAG.getValue(),
+                CodeNames.ACTIVE_DUTY_TAG.getValue()).parallelStream().forEach(codeName -> {
+                    if (existingCodeAndCodeValues.get(codeName) == null) {
+                        executeVoid(() -> fineractClient.codes().createCode(new PostCodesRequest().name(codeName), Map.of()));
+                    } else {
+                        log.debug("Code '{}' already exists, skipping creation", codeName);
+                    }
+                });
     }
 }

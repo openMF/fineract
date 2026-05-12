@@ -52,13 +52,14 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
 
     private final EventAssertion eventAssertion;
     private final FineractFeignClient fineractClient;
+    private final LoanRequestFactory loanRequestFactory;
 
     @Then("Create an interest pause period with start date {string} and end date {string}")
     public void interestPauseCreate(final String startDate, final String endDate) throws IOException {
         PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         long loanId = loanResponse.getLoanId();
 
-        final InterestPauseRequestDto interestPauseRequest = LoanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
+        final InterestPauseRequestDto interestPauseRequest = loanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
                 .endDate(endDate);
         final CommandProcessingResult interestPauseResponse = ok(
                 () -> fineractClient.loanInterestPause().createLoanInterestPause(loanId, interestPauseRequest));
@@ -89,7 +90,7 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
         final Long variationId = testContext().get(TestContextKey.INTEREST_PAUSE_VARIATION_ID);
         Assertions.assertNotNull(variationId, "Interest pause variation ID must be set before update");
 
-        final InterestPauseRequestDto interestPauseRequest = LoanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
+        final InterestPauseRequestDto interestPauseRequest = loanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
                 .endDate(endDate);
         ok(() -> fineractClient.loanInterestPause().updateLoanInterestPause(loanId, variationId, interestPauseRequest));
     }
@@ -100,7 +101,7 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
         Assertions.assertNotNull(loanResponse);
         final Long loanId = loanResponse.getLoanId();
 
-        final InterestPauseRequestDto interestPauseRequest = LoanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
+        final InterestPauseRequestDto interestPauseRequest = loanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
                 .endDate(endDate);
 
         CallFailedRuntimeException exception = fail(
@@ -115,7 +116,7 @@ public class LoanInterestPauseStepDef extends AbstractStepDef {
         Assertions.assertNotNull(loanResponse);
         final Long loanId = loanResponse.getLoanId();
 
-        final InterestPauseRequestDto interestPauseRequest = LoanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
+        final InterestPauseRequestDto interestPauseRequest = loanRequestFactory.defaultInterestPauseRequest().startDate(startDate)
                 .endDate(endDate);
 
         CallFailedRuntimeException exception = fail(

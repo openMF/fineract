@@ -31,6 +31,7 @@ import org.apache.fineract.integrationtests.client.feign.modules.LoanTestData.In
 import org.apache.fineract.integrationtests.client.feign.modules.LoanTestData.InterestType;
 import org.apache.fineract.integrationtests.client.feign.modules.LoanTestData.RepaymentFrequencyType;
 import org.apache.fineract.integrationtests.client.feign.modules.LoanTestData.RescheduleStrategyMethod;
+import org.apache.fineract.integrationtests.client.feign.modules.LoanTestData.TransactionProcessingStrategyCode;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.common.loans.LoanProductTestBuilder;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.domain.LoanScheduleType;
@@ -137,6 +138,17 @@ public interface LoanProductTemplates {
     default PostLoanProductsRequest fourInstallmentsProgressive() {
         return fourInstallmentsCumulativeTemplate().loanScheduleType("PROGRESSIVE").loanScheduleProcessingType("HORIZONTAL")
                 .rescheduleStrategyMethod(RescheduleStrategyMethod.ADJUST_LAST_UNPAID_PERIOD);
+    }
+
+    /**
+     * Progressive loan product with advanced-payment-allocation-strategy and default payment allocation. Use this
+     * instead of {@link #fourInstallmentsProgressive()} when the product needs to actually create loans (PROGRESSIVE
+     * schedule type requires advanced-payment-allocation-strategy with explicit payment allocation configuration).
+     */
+    default PostLoanProductsRequest fourInstallmentsProgressiveWithAdvancedAllocation() {
+        return fourInstallmentsProgressive()//
+                .transactionProcessingStrategyCode(TransactionProcessingStrategyCode.ADVANCED_PAYMENT_ALLOCATION_STRATEGY)//
+                .paymentAllocation(List.of(LoanRequestBuilders.defaultPaymentAllocation()));
     }
 
     default PostLoanProductsRequest fourInstallmentsProgressiveWithCapitalizedIncome() {

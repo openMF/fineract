@@ -317,4 +317,8 @@ public class LoanRepositoryWrapper {
     public boolean isLoanInAllowedStatus(Long loanId, List<LoanStatus> allowedLoanStatuses) {
         return repository.isLoanInAllowedStatus(loanId, allowedLoanStatuses);
     }
+
+    public LocalDate findMaxTransactionDateOfActiveLoans() {
+        return repository.findMaxTransactionDateOfActiveLoans();
+    }
 }

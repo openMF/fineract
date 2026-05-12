@@ -31,6 +31,7 @@ import org.apache.fineract.client.models.PostGLAccountsRequest;
 import org.apache.fineract.test.data.GLAType;
 import org.apache.fineract.test.data.GLAUsage;
 import org.apache.fineract.test.factory.GLAccountRequestFactory;
+import org.apache.fineract.test.helper.ParallelExecutionHelper;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -49,7 +50,7 @@ public class GLGlobalInitializerStep implements FineractGlobalInitializerStep {
     public static final String GLA_NAME_1 = "Loans Receivable";
     public static final String GLA_NAME_2 = "Interest/Fee Receivable";
     public static final String GLA_NAME_3 = "Other Receivables";
-    public static final String GLA_NAME_4 = "UNC Receivable";
+    public static final String GLA_NAME_4 = "Other Credit Liability";
     public static final String GLA_NAME_5 = "AA Suspense Balance";
     public static final String GLA_NAME_6 = "Suspense/Clearing account";
     public static final String GLA_NAME_7 = "Deferred Interest Revenue";
@@ -108,30 +109,36 @@ public class GLGlobalInitializerStep implements FineractGlobalInitializerStep {
 
         final List<GetGLAccountsResponse> accounts = existingAccounts;
 
-        createGLAccountIfNotExists(accounts, GLA_NAME_1, GLA_GL_CODE_1, GLA_TYPE_ASSET);
-        createGLAccountIfNotExists(accounts, GLA_NAME_2, GLA_GL_CODE_2, GLA_TYPE_ASSET);
-        createGLAccountIfNotExists(accounts, GLA_NAME_3, GLA_GL_CODE_3, GLA_TYPE_ASSET);
-        createGLAccountIfNotExists(accounts, GLA_NAME_4, GLA_GL_CODE_4, GLA_TYPE_ASSET);
-        createGLAccountIfNotExists(accounts, GLA_NAME_5, GLA_GL_CODE_5, GLA_TYPE_LIABILITY);
-        createGLAccountIfNotExists(accounts, GLA_NAME_6, GLA_GL_CODE_6, GLA_TYPE_LIABILITY);
-        createGLAccountIfNotExists(accounts, GLA_NAME_7, GLA_GL_CODE_7, GLA_TYPE_INCOME);
-        createGLAccountIfNotExists(accounts, GLA_NAME_8, GLA_GL_CODE_8, GLA_TYPE_INCOME);
-        createGLAccountIfNotExists(accounts, GLA_NAME_9, GLA_GL_CODE_9, GLA_TYPE_INCOME);
-        createGLAccountIfNotExists(accounts, GLA_NAME_10, GLA_GL_CODE_10, GLA_TYPE_INCOME);
-        createGLAccountIfNotExists(accounts, GLA_NAME_11, GLA_GL_CODE_11, GLA_TYPE_INCOME);
-        createGLAccountIfNotExists(accounts, GLA_NAME_12, GLA_GL_CODE_12, GLA_TYPE_EXPENSE);
-        createGLAccountIfNotExists(accounts, GLA_NAME_13, GLA_GL_CODE_13, GLA_TYPE_EXPENSE);
-        createGLAccountIfNotExists(accounts, GLA_NAME_14, GLA_GL_CODE_14, GLA_TYPE_ASSET);
-        createGLAccountIfNotExists(accounts, GLA_NAME_15, GLA_GL_CODE_15, GLA_TYPE_INCOME);
-        createGLAccountIfNotExists(accounts, GLA_NAME_16, GLA_GL_CODE_16, GLA_TYPE_EXPENSE);
-        createGLAccountIfNotExists(accounts, GLA_NAME_17, GLA_GL_CODE_17, GLA_TYPE_LIABILITY);
-        createGLAccountIfNotExists(accounts, GLA_NAME_18, GLA_GL_CODE_18, GLA_TYPE_ASSET);
-        createGLAccountIfNotExists(accounts, GLA_NAME_19, GLA_GL_CODE_19, GLA_TYPE_EXPENSE);
-        createGLAccountIfNotExists(accounts, GLA_NAME_20, GLA_GL_CODE_20, GLA_TYPE_INCOME);
-        createGLAccountIfNotExists(accounts, GLA_NAME_21, GLA_GL_CODE_21, GLA_TYPE_ASSET);
-        createGLAccountIfNotExists(accounts, GLA_NAME_22, GLA_GL_CODE_22, GLA_TYPE_LIABILITY);
-        createGLAccountIfNotExists(accounts, GLA_NAME_23, GLA_GL_CODE_23, GLA_TYPE_EXPENSE);
-        createGLAccountIfNotExists(accounts, GLA_NAME_24, GLA_GL_CODE_24, GLA_TYPE_INCOME);
+        List<GLAccountDefinition> items = List.of(new GLAccountDefinition(GLA_NAME_1, GLA_GL_CODE_1, GLA_TYPE_ASSET),
+                new GLAccountDefinition(GLA_NAME_2, GLA_GL_CODE_2, GLA_TYPE_ASSET),
+                new GLAccountDefinition(GLA_NAME_3, GLA_GL_CODE_3, GLA_TYPE_ASSET),
+                new GLAccountDefinition(GLA_NAME_4, GLA_GL_CODE_4, GLA_TYPE_LIABILITY),
+                new GLAccountDefinition(GLA_NAME_5, GLA_GL_CODE_5, GLA_TYPE_LIABILITY),
+                new GLAccountDefinition(GLA_NAME_6, GLA_GL_CODE_6, GLA_TYPE_LIABILITY),
+                new GLAccountDefinition(GLA_NAME_7, GLA_GL_CODE_7, GLA_TYPE_INCOME),
+                new GLAccountDefinition(GLA_NAME_8, GLA_GL_CODE_8, GLA_TYPE_INCOME),
+                new GLAccountDefinition(GLA_NAME_9, GLA_GL_CODE_9, GLA_TYPE_INCOME),
+                new GLAccountDefinition(GLA_NAME_10, GLA_GL_CODE_10, GLA_TYPE_INCOME),
+                new GLAccountDefinition(GLA_NAME_11, GLA_GL_CODE_11, GLA_TYPE_INCOME),
+                new GLAccountDefinition(GLA_NAME_12, GLA_GL_CODE_12, GLA_TYPE_EXPENSE),
+                new GLAccountDefinition(GLA_NAME_13, GLA_GL_CODE_13, GLA_TYPE_EXPENSE),
+                new GLAccountDefinition(GLA_NAME_14, GLA_GL_CODE_14, GLA_TYPE_ASSET),
+                new GLAccountDefinition(GLA_NAME_15, GLA_GL_CODE_15, GLA_TYPE_INCOME),
+                new GLAccountDefinition(GLA_NAME_16, GLA_GL_CODE_16, GLA_TYPE_EXPENSE),
+                new GLAccountDefinition(GLA_NAME_17, GLA_GL_CODE_17, GLA_TYPE_LIABILITY),
+                new GLAccountDefinition(GLA_NAME_18, GLA_GL_CODE_18, GLA_TYPE_ASSET),
+                new GLAccountDefinition(GLA_NAME_19, GLA_GL_CODE_19, GLA_TYPE_EXPENSE),
+                new GLAccountDefinition(GLA_NAME_20, GLA_GL_CODE_20, GLA_TYPE_INCOME),
+                new GLAccountDefinition(GLA_NAME_21, GLA_GL_CODE_21, GLA_TYPE_ASSET),
+                new GLAccountDefinition(GLA_NAME_22, GLA_GL_CODE_22, GLA_TYPE_LIABILITY),
+                new GLAccountDefinition(GLA_NAME_23, GLA_GL_CODE_23, GLA_TYPE_EXPENSE),
+                new GLAccountDefinition(GLA_NAME_24, GLA_GL_CODE_24, GLA_TYPE_INCOME));
+
+        ParallelExecutionHelper.runInParallel(items,
+                (definition) -> createGLAccountIfNotExists(accounts, definition.name(), definition.glCode(), definition.type()));
+    }
+
+    private record GLAccountDefinition(String name, String glCode, Integer type) {
     }
 
     private void createGLAccountIfNotExists(List<GetGLAccountsResponse> existingAccounts, String name, String glCode, Integer type) {

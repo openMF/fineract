@@ -1553,50 +1553,42 @@ public class LoanInterestRefundTest extends BaseLoanIntegrationTest {
         });
 
         runAt("04 April 2025", () -> {
-            executeInlineCOB(loanIdRef.get());
             Long response = loanTransactionHelper.makeLoanRepayment(loanIdRef.get(), "Repayment", "04 April 2025", 48.91).getResourceId();
             Assertions.assertNotNull(response);
         });
 
         runAt("02 May 2025", () -> {
-            executeInlineCOB(loanIdRef.get());
             Long response = loanTransactionHelper.makeLoanRepayment(loanIdRef.get(), "Repayment", "02 May 2025", 48.91).getResourceId();
             Assertions.assertNotNull(response);
         });
 
         runAt("30 May 2025", () -> {
-            executeInlineCOB(loanIdRef.get());
             Long response = loanTransactionHelper.makeLoanRepayment(loanIdRef.get(), "Repayment", "30 May 2025", 48.91).getResourceId();
             Assertions.assertNotNull(response);
         });
 
         runAt("27 June 2025", () -> {
-            executeInlineCOB(loanIdRef.get());
             Long response = loanTransactionHelper.makeLoanRepayment(loanIdRef.get(), "Repayment", "27 June 2025", 48.91).getResourceId();
             Assertions.assertNotNull(response);
         });
 
         runAt("08 August 2025", () -> {
-            executeInlineCOB(loanIdRef.get());
             Long response = loanTransactionHelper.makeLoanRepayment(loanIdRef.get(), "Repayment", "08 August 2025", 48.91).getResourceId();
             Assertions.assertNotNull(response);
         });
 
         runAt("05 September 2025", () -> {
-            executeInlineCOB(loanIdRef.get());
             Long response = loanTransactionHelper.makeLoanRepayment(loanIdRef.get(), "Repayment", "05 September 2025", 48.91)
                     .getResourceId();
             Assertions.assertNotNull(response);
         });
 
         runAt("03 October 2025", () -> {
-            executeInlineCOB(loanIdRef.get());
             Long response = loanTransactionHelper.makeLoanRepayment(loanIdRef.get(), "Repayment", "03 October 2025", 48.91).getResourceId();
             Assertions.assertNotNull(response);
         });
 
         runAt("08 October 2025", () -> {
-            executeInlineCOB(loanIdRef.get());
             for (int i = 0; i < totalTransactions; i++) {
                 final String transactionExternalId = UUID.randomUUID().toString();
                 PostLoansLoanIdTransactionsResponse refundResponse = loanTransactionHelper.makeMerchantIssuedRefund(loanIdRef.get(),
@@ -1609,7 +1601,6 @@ public class LoanInterestRefundTest extends BaseLoanIntegrationTest {
         });
 
         runAt("09 October 2025", () -> {
-            executeInlineCOB(loanIdRef.get());
             loanTransactionHelper.makeCreditBalanceRefund(loanIdRef.get(), new PostLoansLoanIdTransactionsRequest()
                     .dateFormat(DATETIME_PATTERN).transactionDate("09 October 2025").locale(LOCALE).transactionAmount(225.15));
 

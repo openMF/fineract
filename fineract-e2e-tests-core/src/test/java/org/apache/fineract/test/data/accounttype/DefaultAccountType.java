@@ -24,7 +24,6 @@ public enum DefaultAccountType implements AccountType {
     LOANS_RECEIVABLE("Loans Receivable"), //
     INTEREST_FEE_RECEIVABLE("Interest/Fee Receivable"), //
     OTHER_RECEIVABLES("Other Receivables"), //
-    UNC_RECEIVABLE("UNC Receivable"), //
     FUND_RECEIVABLES("Fund Receivables"), //
     TRANSFER_IN_SUSPENSE_ACCOUNT("Transfer in suspense account"), //
     ASSET_TRANSFER("Asset transfer"), //
@@ -41,6 +40,7 @@ public enum DefaultAccountType implements AccountType {
     AA_SUSPENSE_BALANCE("AA Suspense Balance"), //
     SUSPENSE_CLEARING_ACCOUNT("Suspense/Clearing account"), //
     OVERPAYMENT_ACCOUNT("Overpayment account"), //
+    OTHER_CREDIT_LIABILITY("Other Credit Liability"), //
     DEFERRED_CAPITALIZED_INCOME("Deferred Capitalized Income"), //
     // Expense
     CREDIT_LOSS_BAD_DEBT("Credit Loss/Bad Debt"), //

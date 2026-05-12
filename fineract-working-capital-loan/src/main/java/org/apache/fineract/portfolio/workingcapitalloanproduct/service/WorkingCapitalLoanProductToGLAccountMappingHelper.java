@@ -61,6 +61,12 @@ public class WorkingCapitalLoanProductToGLAccountMappingHelper {
         saveAccountMapping(element, LoanProductAccountingParams.TRANSFERS_SUSPENSE.getValue(), productId,
                 CashAccountsForLoan.TRANSFERS_SUSPENSE.getValue(), GLAccountType.ASSET);
 
+        // assets (receivables)
+        saveAccountMapping(element, LoanProductAccountingParams.FEES_RECEIVABLE.getValue(), productId,
+                CashAccountsForLoan.FEES_RECEIVABLE.getValue(), GLAccountType.ASSET);
+        saveAccountMapping(element, LoanProductAccountingParams.PENALTIES_RECEIVABLE.getValue(), productId,
+                CashAccountsForLoan.PENALTIES_RECEIVABLE.getValue(), GLAccountType.ASSET);
+
         // income (required)
         saveAccountMapping(element, LoanProductAccountingParams.INCOME_FROM_DISCOUNT_FEE.getValue(), productId,
                 CashAccountsForLoan.INCOME_FROM_DISCOUNT_FEE.getValue(), GLAccountType.INCOME);
@@ -115,6 +121,12 @@ public class WorkingCapitalLoanProductToGLAccountMappingHelper {
         mergeAccountMappingChanges(element, LoanProductAccountingParams.TRANSFERS_SUSPENSE.getValue(), productId,
                 CashAccountsForLoan.TRANSFERS_SUSPENSE.getValue(), changes, GLAccountType.ASSET);
 
+        // assets (receivables)
+        mergeAccountMappingChanges(element, LoanProductAccountingParams.FEES_RECEIVABLE.getValue(), productId,
+                CashAccountsForLoan.FEES_RECEIVABLE.getValue(), changes, GLAccountType.ASSET);
+        mergeAccountMappingChanges(element, LoanProductAccountingParams.PENALTIES_RECEIVABLE.getValue(), productId,
+                CashAccountsForLoan.PENALTIES_RECEIVABLE.getValue(), changes, GLAccountType.ASSET);
+
         // income
         mergeAccountMappingChanges(element, LoanProductAccountingParams.INCOME_FROM_DISCOUNT_FEE.getValue(), productId,
                 CashAccountsForLoan.INCOME_FROM_DISCOUNT_FEE.getValue(), changes, GLAccountType.INCOME);
@@ -160,6 +172,8 @@ public class WorkingCapitalLoanProductToGLAccountMappingHelper {
         putChange(changes, element, LoanProductAccountingParams.FUND_SOURCE);
         putChange(changes, element, LoanProductAccountingParams.LOAN_PORTFOLIO);
         putChange(changes, element, LoanProductAccountingParams.TRANSFERS_SUSPENSE);
+        putChange(changes, element, LoanProductAccountingParams.FEES_RECEIVABLE);
+        putChange(changes, element, LoanProductAccountingParams.PENALTIES_RECEIVABLE);
         putChange(changes, element, LoanProductAccountingParams.INCOME_FROM_DISCOUNT_FEE);
         putChange(changes, element, LoanProductAccountingParams.INCOME_FROM_FEES);
         putChange(changes, element, LoanProductAccountingParams.INCOME_FROM_PENALTIES);

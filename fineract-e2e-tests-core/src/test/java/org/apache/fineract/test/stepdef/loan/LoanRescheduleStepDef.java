@@ -41,6 +41,9 @@ import org.apache.fineract.client.models.PostCreateRescheduleLoansResponse;
 import org.apache.fineract.client.models.PostLoansResponse;
 import org.apache.fineract.client.models.PostUpdateRescheduleLoansRequest;
 import org.apache.fineract.test.data.LoanRescheduleErrorMessage;
+import org.apache.fineract.test.data.codevalue.CodeNames;
+import org.apache.fineract.test.data.codevalue.CodeValueResolver;
+import org.apache.fineract.test.data.codevalue.DefaultCodeValue;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.messaging.event.EventCheckHelper;
 import org.apache.fineract.test.messaging.store.EventStore;
@@ -62,6 +65,8 @@ public class LoanRescheduleStepDef extends AbstractStepDef {
     private EventStore eventStore;
     @Autowired
     private EventCheckHelper eventCheckHelper;
+    @Autowired
+    private CodeValueResolver codeValueResolver;
 
     @When("Admin creates and approves Loan reschedule with the following data:")
     public void createAndApproveLoanReschedule(DataTable table) throws IOException {
@@ -92,7 +97,7 @@ public class LoanRescheduleStepDef extends AbstractStepDef {
                 .graceOnInterest(graceOnInterest)//
                 .extraTerms(extraTerms)//
                 .newInterestRate(newInterestRate)//
-                .rescheduleReasonId(54L)//
+                .rescheduleReasonId(codeValueResolver.resolve(CodeNames.LOAN_RESCHEDULE_REASON.getValue(), DefaultCodeValue.TEST.getName()))//
                 .rescheduleReasonComment("")//
                 .dateFormat("dd MMMM yyyy")//
                 .locale("en");//

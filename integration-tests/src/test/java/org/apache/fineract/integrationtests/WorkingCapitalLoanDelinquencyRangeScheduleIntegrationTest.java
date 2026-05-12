@@ -186,7 +186,8 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleIntegrationTest {
                     WorkingCapitalLoanApplicationTestBuilder.buildApproveJson(approvedDate, principal, discount));
 
             // Disburse
-            applicationHelper.disburseById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildDisburseJson(approvedDate, principal));
+            applicationHelper.disburseById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildDisburseJson(approvedDate, principal,
+                    discount, null, null, null, null, null, null, null));
 
             // Run WC COB to generate the range schedule
             ok(() -> FineractFeignClientHelper.getFineractFeignClient().inlineJob().executeInlineJob("WC_LOAN_COB",

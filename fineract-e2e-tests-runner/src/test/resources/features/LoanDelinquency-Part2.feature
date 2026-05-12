@@ -407,11 +407,11 @@ Feature: LoanDelinquency - Part2
       | classification | delinquentAmount | delinquentDate | delinquentDays | pastDueDays |
       | RANGE_60       | 875.0            | 31 May 2025    | 90             | 156         |
     And Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 1       | RANGE_1  | 125.00 |
-      | 3       | RANGE_30 | 125.00 |
-      | 4       | RANGE_60 | 375.00 |
-      | 5       | RANGE_90 | 250.00 |
+      | Range    | Amount |
+      | RANGE_1  | 125.00 |
+      | RANGE_30 | 125.00 |
+      | RANGE_60 | 375.00 |
+      | RANGE_90 | 250.00 |
 
   @TestRailId:C4140
   Scenario: Verify that loan delinquent days are correct when graceOnArrearsAgeing is set on loan product level (value=3)

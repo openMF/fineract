@@ -251,7 +251,7 @@ Feature: Working Capital Near Breach Evaluation
       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 500      |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and "500" discount amount and expected disbursement date on "01 January 2026"
-    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount and "500" discount amount
     And Admin runs inline COB job for Working Capital Loan by loanId
     When Admin sets the business date to "01 February 2026"
     And Admin runs inline COB job for Working Capital Loan by loanId

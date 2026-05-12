@@ -64,6 +64,7 @@ public class LoanReAgingStepDef extends AbstractStepDef {
 
     private final EventAssertion eventAssertion;
     private final FineractFeignClient fineractClient;
+    private final LoanRequestFactory loanRequestFactory;
 
     @When("Admin creates a Loan re-aging transaction with the following data:")
     public void createReAgingTransaction(DataTable table) throws IOException {
@@ -71,7 +72,7 @@ public class LoanReAgingStepDef extends AbstractStepDef {
         long loanId = loanResponse.getLoanId();
 
         PostLoansLoanIdTransactionsRequest reAgingRequest = setReAgeingRequestProperties(//
-                LoanRequestFactory.defaultReAgingRequest(), //
+                loanRequestFactory.defaultReAgingRequest(), //
                 table.row(0), //
                 table.row(1) //
         );
@@ -87,7 +88,7 @@ public class LoanReAgingStepDef extends AbstractStepDef {
         String loanExternalId = loanResponse.getResourceExternalId();
 
         PostLoansLoanIdTransactionsRequest reAgingRequest = setReAgeingRequestProperties(//
-                LoanRequestFactory.defaultReAgingRequest(), //
+                loanRequestFactory.defaultReAgingRequest(), //
                 table.row(0), //
                 table.row(1) //
         );
@@ -387,7 +388,7 @@ public class LoanReAgingStepDef extends AbstractStepDef {
         String loanExternalId = loanResponse.getResourceExternalId();
 
         PostLoansLoanIdTransactionsRequest reAgingRequest = setReAgeingRequestProperties(//
-                LoanRequestFactory.defaultReAgingRequest(), //
+                loanRequestFactory.defaultReAgingRequest(), //
                 table.row(0), //
                 table.row(1) //
         );
@@ -403,7 +404,7 @@ public class LoanReAgingStepDef extends AbstractStepDef {
         final long loanId = loanResponse.getLoanId();
 
         PostLoansLoanIdTransactionsRequest reAgingRequest = setReAgeingRequestProperties(//
-                LoanRequestFactory.defaultReAgingRequest(), //
+                loanRequestFactory.defaultReAgingRequest(), //
                 table.row(0), //
                 table.row(1) //
         );

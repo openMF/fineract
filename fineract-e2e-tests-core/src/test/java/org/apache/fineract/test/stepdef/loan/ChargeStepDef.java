@@ -24,6 +24,7 @@ import io.cucumber.java.en.When;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.ChargeRequest;
 import org.apache.fineract.test.data.ChargeCalculationType;
+import org.apache.fineract.test.data.ChargeProductResolver;
 import org.apache.fineract.test.data.ChargeProductType;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class ChargeStepDef extends AbstractStepDef {
     @Autowired
     private FineractFeignClient fineractClient;
 
+    @Autowired
+    private ChargeProductResolver chargeProductResolver;
+
     @When("Admin updates charge {string} with {string} calculation type and {double} % of transaction amount")
     public void updateCharge(String chargeType, String chargeCalculationType, double amount) {
         ChargeRequest disbursementChargeUpdateRequest = new ChargeRequest();
@@ -40,7 +44,7 @@ public class ChargeStepDef extends AbstractStepDef {
         disbursementChargeUpdateRequest.chargeCalculationType(chargeProductTypeValue.value).amount(amount).locale("en");
 
         ChargeProductType chargeProductType = ChargeProductType.valueOf(chargeType);
-        Long chargeId = chargeProductType.getValue();
+        Long chargeId = chargeProductResolver.resolve(chargeProductType);
 
         ok(() -> fineractClient.charges().updateCharge(chargeId, disbursementChargeUpdateRequest));
     }
@@ -52,7 +56,7 @@ public class ChargeStepDef extends AbstractStepDef {
         disbursementChargeUpdateRequest.chargeCalculationType(chargeProductTypeValue.value).amount(flatAmount).locale("en");
 
         ChargeProductType chargeProductType = ChargeProductType.valueOf(chargeType);
-        Long chargeId = chargeProductType.getValue();
+        Long chargeId = chargeProductResolver.resolve(chargeProductType);
 
         ok(() -> fineractClient.charges().updateCharge(chargeId, disbursementChargeUpdateRequest));
     }

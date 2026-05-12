@@ -26,6 +26,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.UriInfo;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -128,6 +129,20 @@ public class InternalLoanInformationApiResource implements InitializingBean {
 
         final Loan loan = loanRepositoryWrapper.findOneWithNotFoundDetection(loanId);
         return advancedPaymentDataMapper.mapLoanPaymentAllocationRule(loan.getPaymentAllocationRules());
+    }
+
+    @GET
+    @Path("maxTransactionDateOfActiveLoan")
+    @Produces({ MediaType.APPLICATION_JSON })
+    @SuppressFBWarnings("SLF4J_SIGN_ONLY_FORMAT")
+    public LocalDate getMaxTransactionDateOfActiveLoans() {
+        log.warn("------------------------------------------------------------");
+        log.warn("                                                            ");
+        log.warn("Fetching max transaction date of active loans");
+        log.warn("                                                            ");
+        log.warn("------------------------------------------------------------");
+
+        return loanRepositoryWrapper.findMaxTransactionDateOfActiveLoans();
     }
 
     private record AuditData(Long createdBy, OffsetDateTime createdDate, Long lastModifiedBy, OffsetDateTime lastModifiedDate) {

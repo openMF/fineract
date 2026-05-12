@@ -55,6 +55,7 @@ import org.apache.fineract.test.data.accounttype.AccountTypeResolver;
 import org.apache.fineract.test.data.accounttype.DefaultAccountType;
 import org.apache.fineract.test.data.codevalue.CodeValueResolver;
 import org.apache.fineract.test.data.codevalue.DefaultCodeValue;
+import org.apache.fineract.test.data.delinquency.DelinquencyBucketResolver;
 import org.apache.fineract.test.data.paymenttype.DefaultPaymentType;
 import org.apache.fineract.test.data.paymenttype.PaymentTypeResolver;
 import org.apache.fineract.test.helper.CodeHelper;
@@ -69,6 +70,7 @@ public class LoanProductsRequestFactory {
     private final PaymentTypeResolver paymentTypeResolver;
     private final AccountTypeResolver accountTypeResolver;
     private final CodeValueResolver codeValueResolver;
+    private final DelinquencyBucketResolver delinquencyBucketResolver;
 
     private final Set<String> productShortNameMap = new HashSet<>();
 
@@ -117,7 +119,6 @@ public class LoanProductsRequestFactory {
     public static final Integer CASH_ACCOUNTING_RULE = AccountingRule.CASH_BASED.value;
     public static final String OVER_APPLIED_CALCULATION_TYPE = OverAppliedCalculationType.PERCENTAGE.value;
     public static final Integer OVER_APPLIED_NUMBER = 50;
-    public static final Integer DELINQUENCY_BUCKET_ID = DelinquencyBucket.BASIC_DELINQUENCY_BUCKET.value;
     public static final Integer PRE_CLOSURE_INTEREST_CALCULATION_RULE_TILL_PRE_CLOSE_DATE = PreClosureInterestCalculationRule.TILL_PRE_CLOSE_DATE.value;
     public static final Integer ADVANCE_PAYMENT_ADJUSTMENT_TYPE_REDUCE_EMI_AMOUNT = AdvancePaymentsAdjustmentType.REDUCE_EMI_AMOUNT.value;
     public static final Integer INTEREST_RECALCULATION_COMPOUND_METHOD_INTEREST = InterestRecalculationCompoundingMethod.INTEREST.value;
@@ -223,7 +224,7 @@ public class LoanProductsRequestFactory {
                 .allowApprovedDisbursedAmountsOverApplied(true)//
                 .overAppliedCalculationType(OVER_APPLIED_CALCULATION_TYPE)//
                 .overAppliedNumber(OVER_APPLIED_NUMBER)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -331,7 +332,7 @@ public class LoanProductsRequestFactory {
                 .locale(LOCALE_EN)//
                 .disallowExpectedDisbursements(false)//
                 .allowApprovedDisbursedAmountsOverApplied(false)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -439,7 +440,7 @@ public class LoanProductsRequestFactory {
                 .locale(LOCALE_EN)//
                 .disallowExpectedDisbursements(false)//
                 .allowApprovedDisbursedAmountsOverApplied(false)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -543,7 +544,7 @@ public class LoanProductsRequestFactory {
                 .locale(LOCALE_EN)//
                 .disallowExpectedDisbursements(false)//
                 .allowApprovedDisbursedAmountsOverApplied(false)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -656,7 +657,7 @@ public class LoanProductsRequestFactory {
                 .locale(LOCALE_EN)//
                 .disallowExpectedDisbursements(false)//
                 .allowApprovedDisbursedAmountsOverApplied(false)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -716,7 +717,7 @@ public class LoanProductsRequestFactory {
                 .dateFormat(DATE_FORMAT)//
                 .daysInMonthType(DAYS_IN_MONTH_TYPE_30)//
                 .daysInYearType(DAYS_IN_YEAR_TYPE_360)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .digitsAfterDecimal(2)//
                 .disallowExpectedDisbursements(true)//
                 .dueDaysForRepaymentEvent(1)//
@@ -890,7 +891,7 @@ public class LoanProductsRequestFactory {
                 .allowApprovedDisbursedAmountsOverApplied(true)//
                 .overAppliedCalculationType(OVER_APPLIED_CALCULATION_TYPE)//
                 .overAppliedNumber(OVER_APPLIED_NUMBER)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -1001,7 +1002,7 @@ public class LoanProductsRequestFactory {
                 .locale(LOCALE_EN)//
                 .disallowExpectedDisbursements(false)//
                 .allowApprovedDisbursedAmountsOverApplied(false)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -1053,7 +1054,7 @@ public class LoanProductsRequestFactory {
                 .maxPrincipal(10000.0)//
                 .minNumberOfRepayments(1)//
                 .numberOfRepayments(4)//
-                .maxNumberOfRepayments(30)//
+                .maxNumberOfRepayments(100)//
                 .isLinkedToFloatingInterestRates(false)//
                 .minInterestRatePerPeriod((double) 0)//
                 .interestRatePerPeriod((double) 12)//
@@ -1111,7 +1112,7 @@ public class LoanProductsRequestFactory {
                 .dateFormat(DATE_FORMAT)//
                 .locale(LOCALE_EN)//
                 .disallowExpectedDisbursements(false)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -1241,7 +1242,7 @@ public class LoanProductsRequestFactory {
                 .dateFormat(DATE_FORMAT)//
                 .locale(LOCALE_EN)//
                 .disallowExpectedDisbursements(false)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -1362,7 +1363,7 @@ public class LoanProductsRequestFactory {
                 .allowApprovedDisbursedAmountsOverApplied(true)//
                 .overAppliedCalculationType(OVER_APPLIED_CALCULATION_TYPE)//
                 .overAppliedNumber(OVER_APPLIED_NUMBER)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -1490,7 +1491,7 @@ public class LoanProductsRequestFactory {
                 .dateFormat(DATE_FORMAT)//
                 .locale(LOCALE_EN)//
                 .disallowExpectedDisbursements(false)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -1601,7 +1602,7 @@ public class LoanProductsRequestFactory {
                 .allowApprovedDisbursedAmountsOverApplied(true)//
                 .overAppliedCalculationType(OVER_APPLIED_CALCULATION_TYPE)//
                 .overAppliedNumber(OVER_APPLIED_NUMBER)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -1747,7 +1748,7 @@ public class LoanProductsRequestFactory {
                 .dateFormat(DATE_FORMAT)//
                 .locale(LOCALE_EN)//
                 .disallowExpectedDisbursements(false)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .goodwillCreditAccountId(accountTypeResolver.resolve(DefaultAccountType.GOODWILL_EXPENSE_ACCOUNT))//
                 .incomeFromGoodwillCreditInterestAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_INCOME_CHARGE_OFF))//
                 .incomeFromGoodwillCreditFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
@@ -1871,7 +1872,7 @@ public class LoanProductsRequestFactory {
                         .graceOnPrincipalAndInterestPayment(true)//
                         .graceOnArrearsAgeing(true))//
                 .isEqualAmortization(false)//
-                .delinquencyBucketId(DELINQUENCY_BUCKET_ID.longValue())//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.BASIC_DELINQUENCY_BUCKET))//
                 .enableDownPayment(false)//
                 .enableInstallmentLevelDelinquency(true)//
                 .loanScheduleType("PROGRESSIVE") //

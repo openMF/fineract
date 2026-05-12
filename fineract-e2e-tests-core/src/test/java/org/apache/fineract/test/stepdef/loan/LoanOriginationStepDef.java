@@ -444,7 +444,7 @@ public class LoanOriginationStepDef extends AbstractStepDef {
         long loanId = getLoanId();
         eventStore.reset();
 
-        PostLoansLoanIdRequest approveRequest = LoanRequestFactory.defaultLoanApproveRequest().approvedOnDate(approveDate)
+        PostLoansLoanIdRequest approveRequest = loanRequestFactory.defaultLoanApproveRequest().approvedOnDate(approveDate)
                 .approvedLoanAmount(new BigDecimal(approvedAmount)).expectedDisbursementDate(expectedDisbursementDate);
 
         PostLoansLoanIdResponse loanApproveResponse = ok(
@@ -617,7 +617,7 @@ public class LoanOriginationStepDef extends AbstractStepDef {
         PostLoansLoanIdTransactionsResponse repaymentResponse = testContext().get(TestContextKey.LOAN_REPAYMENT_RESPONSE);
         Long originalTransactionId = repaymentResponse.getResourceId();
 
-        PostLoansLoanIdTransactionsTransactionIdRequest repaymentUndoRequest = LoanRequestFactory.defaultRepaymentUndoRequest()
+        PostLoansLoanIdTransactionsTransactionIdRequest repaymentUndoRequest = loanRequestFactory.defaultRepaymentUndoRequest()
                 .transactionDate(transactionDate).dateFormat(DATE_FORMAT).locale(DEFAULT_LOCALE);
 
         ok(() -> fineractClient.loanTransactions().adjustLoanTransaction(loanId, originalTransactionId, repaymentUndoRequest,
@@ -634,7 +634,7 @@ public class LoanOriginationStepDef extends AbstractStepDef {
         PostLoansLoanIdTransactionsResponse repaymentResponse = testContext().get(TestContextKey.LOAN_REPAYMENT_RESPONSE);
         Long originalTransactionId = repaymentResponse.getResourceId();
 
-        PostLoansLoanIdTransactionsTransactionIdRequest repaymentAdjustRequest = LoanRequestFactory
+        PostLoansLoanIdTransactionsTransactionIdRequest repaymentAdjustRequest = loanRequestFactory
                 .defaultRepaymentAdjustRequest(transactionAmount).transactionDate(transactionDate).dateFormat(DATE_FORMAT)
                 .locale(DEFAULT_LOCALE);
 
@@ -658,7 +658,7 @@ public class LoanOriginationStepDef extends AbstractStepDef {
                 .filter(t -> "loanTransactionType.waiveCharges".equals(t.getType().getCode())).map(GetLoansLoanIdTransactions::getId)
                 .findFirst().orElseThrow(() -> new IllegalStateException("Waiver transaction not found on loan " + loanId));
 
-        PostLoansLoanIdTransactionsTransactionIdRequest undoRequest = LoanRequestFactory.defaultRepaymentUndoRequest()
+        PostLoansLoanIdTransactionsTransactionIdRequest undoRequest = loanRequestFactory.defaultRepaymentUndoRequest()
                 .transactionDate(transactionDate).dateFormat(DATE_FORMAT).locale(DEFAULT_LOCALE);
 
         ok(() -> fineractClient.loanTransactions().adjustLoanTransaction(loanId, waiveTransactionId, undoRequest,

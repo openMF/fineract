@@ -25,14 +25,15 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.fineract.client.models.PutGlobalConfigurationsRequest;
 import org.apache.fineract.infrastructure.configuration.api.GlobalConfigurationConstants;
 import org.apache.fineract.infrastructure.jobs.service.JobName;
 import org.apache.fineract.integrationtests.common.GlobalConfigurationHelper;
+import org.apache.fineract.integrationtests.common.ParallelExecutionHelper;
 import org.apache.fineract.integrationtests.common.SchedulerJobHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.junit.jupiter.api.AfterEach;
@@ -43,7 +44,7 @@ import org.junit.jupiter.api.Test;
 @Order(1)
 public class SchedulerJobsTest {
 
-    private final Map<Integer, Boolean> originalJobStatus = new HashMap<>();
+    private final Map<Integer, Boolean> originalJobStatus = new ConcurrentHashMap<>();
     private RequestSpecification requestSpec;
     private SchedulerJobHelper schedulerJobHelper;
     private Boolean originalSchedulerStatus;
@@ -57,20 +58,19 @@ public class SchedulerJobsTest {
         requestSpec.header("Fineract-Platform-TenantId", "default");
         schedulerJobHelper = new SchedulerJobHelper(requestSpec);
         originalSchedulerStatus = schedulerJobHelper.getSchedulerStatus();
-        for (Integer jobId : schedulerJobHelper.getAllSchedulerJobIds()) {
+        ParallelExecutionHelper.runInParallel(schedulerJobHelper.getAllSchedulerJobIds(), (jobId) -> {
             Map<String, Object> schedulerJob = schedulerJobHelper.getSchedulerJobById(jobId);
             Boolean active = (Boolean) schedulerJob.get("active");
             originalJobStatus.put(jobId, active);
-        }
+        });
         globalConfigurationHelper = new GlobalConfigurationHelper();
     }
 
     @AfterEach
     public void tearDown() {
         schedulerJobHelper.updateSchedulerStatus(originalSchedulerStatus);
-        for (Integer jobId : schedulerJobHelper.getAllSchedulerJobIds()) {
-            schedulerJobHelper.updateSchedulerJob(jobId, originalJobStatus.get(jobId));
-        }
+        ParallelExecutionHelper.runInParallel(schedulerJobHelper.getAllSchedulerJobIds(),
+                (jobId) -> schedulerJobHelper.updateSchedulerJob(jobId, originalJobStatus.get(jobId)));
     }
 
     @Test // FINERACT-926
@@ -117,22 +117,24 @@ public class SchedulerJobsTest {
         schedulerJobHelper.updateSchedulerStatus(false);
 
         // For each retrieved scheduled job (by ID)...
-        for (Integer jobId : schedulerJobHelper.getAllSchedulerJobIds()) {
-            // Retrieving Scheduler Job by ID
-            Map<String, Object> schedulerJob = schedulerJobHelper.getSchedulerJobById(jobId);
+        ParallelExecutionHelper.runInParallel(schedulerJobHelper.getAllSchedulerJobIds(), this::updateJobStatus);
+    }
 
-            Boolean active = (Boolean) schedulerJob.get("active");
-            active = !active;
+    private void updateJobStatus(Integer jobId) {
+        // Retrieving Scheduler Job by ID
+        Map<String, Object> schedulerJob = schedulerJobHelper.getSchedulerJobById(jobId);
 
-            // Updating Scheduler Job
-            Map<String, Object> changes = schedulerJobHelper.updateSchedulerJob(jobId, active);
+        Boolean active = (Boolean) schedulerJob.get("active");
+        active = !active;
 
-            // Verifying Scheduler Job updates
-            assertEquals(active, changes.get("active"), "Verifying Scheduler Job Updates");
+        // Updating Scheduler Job
+        Map<String, Object> changes = schedulerJobHelper.updateSchedulerJob(jobId, active);
 
-            schedulerJob = schedulerJobHelper.getSchedulerJobById(jobId);
-            assertEquals(active, schedulerJob.get("active"), "Verifying Get Scheduler Job");
-        }
+        // Verifying Scheduler Job updates
+        assertEquals(active, changes.get("active"), "Verifying Scheduler Job Updates");
+
+        schedulerJob = schedulerJobHelper.getSchedulerJobById(jobId);
+        assertEquals(active, schedulerJob.get("active"), "Verifying Get Scheduler Job");
     }
 
     @Test
@@ -140,9 +142,8 @@ public class SchedulerJobsTest {
         try {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            for (String jobName : schedulerJobHelper.getAllSchedulerJobNames()) {
-                schedulerJobHelper.executeAndAwaitJob(jobName);
-            }
+
+            ParallelExecutionHelper.runInParallel(schedulerJobHelper.getAllSchedulerJobNames(), schedulerJobHelper::executeAndAwaitJob);
         } finally {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(false));

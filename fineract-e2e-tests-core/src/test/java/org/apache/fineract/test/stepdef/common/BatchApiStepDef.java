@@ -65,6 +65,7 @@ import org.apache.fineract.client.models.PostLoansRequest;
 import org.apache.fineract.client.models.PostLoansResponse;
 import org.apache.fineract.client.models.PostUpdateRescheduleLoansRequest;
 import org.apache.fineract.client.models.PostUsersResponse;
+import org.apache.fineract.test.data.ChargeProductResolver;
 import org.apache.fineract.test.data.ChargeProductType;
 import org.apache.fineract.test.data.LoanRescheduleErrorMessage;
 import org.apache.fineract.test.data.LoanStatus;
@@ -112,7 +113,6 @@ public class BatchApiStepDef extends AbstractStepDef {
     private static final Header HEADER = new Header().name("Content-type").value("text/html");
     private static final Header HEADER_JSON = new Header().name("Content-type").value("application/json");
     private static final String BODY_GET_REQUEST = "{}";
-    private static final Long CHARGE_ID_NFS_FEE = ChargeProductType.LOAN_NSF_FEE.value;
     private static final String ERROR_DEVELOPER_MESSAGE = "The requested resource is not available.";
     private static final Integer ERROR_HTTP_404 = 404;
     private static final String ERROR_DEVELOPER_MESSAGE_CLIENT = "Client with identifier {externalId} does not exist";
@@ -134,6 +134,9 @@ public class BatchApiStepDef extends AbstractStepDef {
 
     @Autowired
     private LoanRequestFactory loanRequestFactory;
+
+    @Autowired
+    private ChargeProductResolver chargeProductResolver;
 
     private BatchApiApi batchApiApi() {
         return fineractFeignClient.batch();
@@ -182,7 +185,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         String dateOfCharge = formatter.format(Utils.now().minusMonths(1L).plusDays(1L));
 
         PostLoansLoanIdChargesRequest loanIdChargesRequest = new PostLoansLoanIdChargesRequest();
-        loanIdChargesRequest.chargeId(CHARGE_ID_NFS_FEE);
+        loanIdChargesRequest.chargeId(chargeProductResolver.resolve(ChargeProductType.LOAN_NSF_FEE));
         loanIdChargesRequest.amount(25D);
         loanIdChargesRequest.dueDate(dateOfCharge);
         loanIdChargesRequest.dateFormat(DATE_FORMAT);
@@ -248,7 +251,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         batchRequest2.body(bodyLoansRequestMod);
 
         // request 3 - approve Loan
-        PostLoansLoanIdRequest loanApproveRequest = LoanRequestFactory.defaultLoanApproveRequest();
+        PostLoansLoanIdRequest loanApproveRequest = loanRequestFactory.defaultLoanApproveRequest();
         String bodyLoanApproveRequest = toJson(loanApproveRequest);
 
         BatchRequest batchRequest3 = new BatchRequest();
@@ -260,7 +263,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         batchRequest3.body(bodyLoanApproveRequest);
 
         // request 4 - disburse Loan
-        PostLoansLoanIdRequest loanDisburseRequest = LoanRequestFactory.defaultLoanDisburseRequest();
+        PostLoansLoanIdRequest loanDisburseRequest = loanRequestFactory.defaultLoanDisburseRequest();
         String bodyLoanDisburseRequest = toJson(loanDisburseRequest);
 
         BatchRequest batchRequest4 = new BatchRequest();
@@ -272,7 +275,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         batchRequest4.body(bodyLoanDisburseRequest);
 
         // request 5 - repayment with idempotency key
-        PostLoansLoanIdTransactionsRequest loanRepaymentRequest1 = LoanRequestFactory.defaultRepaymentRequest();
+        PostLoansLoanIdTransactionsRequest loanRepaymentRequest1 = loanRequestFactory.defaultRepaymentRequest();
         String bodyLoanRepaymentRequest1 = toJson(loanRepaymentRequest1);
 
         String idempotencyKey = UUID.randomUUID().toString();
@@ -287,7 +290,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         batchRequest5.body(bodyLoanRepaymentRequest1);
 
         // request 6 - repayment with same idempotency key
-        PostLoansLoanIdTransactionsRequest loanRepaymentRequest2 = LoanRequestFactory.defaultRepaymentRequest();
+        PostLoansLoanIdTransactionsRequest loanRepaymentRequest2 = loanRequestFactory.defaultRepaymentRequest();
         String bodyLoanRepaymentRequest2 = toJson(loanRepaymentRequest2);
 
         BatchRequest batchRequest6 = new BatchRequest();
@@ -624,7 +627,7 @@ public class BatchApiStepDef extends AbstractStepDef {
 
     private BatchRequest createLoanReschedule(Long requestId, Long loanId, String fromDateStr, String toDateStr, String submittedOnDate,
             String idempotencyKey, Long referenceId) {
-        PostCreateRescheduleLoansRequest rescheduleLoansRequest = LoanRequestFactory.defaultLoanRescheduleCreateRequest(loanId, fromDateStr,
+        PostCreateRescheduleLoansRequest rescheduleLoansRequest = loanRequestFactory.defaultLoanRescheduleCreateRequest(loanId, fromDateStr,
                 toDateStr);
         rescheduleLoansRequest.setSubmittedOnDate(submittedOnDate);
         String bodyLoanRescheduleRequest = toJson(rescheduleLoansRequest);
@@ -646,7 +649,7 @@ public class BatchApiStepDef extends AbstractStepDef {
     }
 
     private BatchRequest approveLoanReschedule(Long requestId, String idempotencyKey, String approvedOnDate, Long referenceId) {
-        PostUpdateRescheduleLoansRequest rescheduleLoansRequest = LoanRequestFactory.defaultLoanRescheduleUpdateRequest();
+        PostUpdateRescheduleLoansRequest rescheduleLoansRequest = loanRequestFactory.defaultLoanRescheduleUpdateRequest();
         rescheduleLoansRequest.setApprovedOnDate(approvedOnDate);
         String bodyLoanRescheduleRequest = toJson(rescheduleLoansRequest);
 
@@ -1017,7 +1020,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         requestList.add(approveLoanByExternalId(3L, 2L, idempotencyKey));
 
         // Disburse loan
-        PostLoansLoanIdRequest loanDisburseRequest = LoanRequestFactory.defaultLoanDisburseRequest();
+        PostLoansLoanIdRequest loanDisburseRequest = loanRequestFactory.defaultLoanDisburseRequest();
         String bodyLoanDisburseRequest = toJson(loanDisburseRequest);
         BatchRequest disburseRequest = new BatchRequest();
         disburseRequest.requestId(4L);
@@ -1072,7 +1075,7 @@ public class BatchApiStepDef extends AbstractStepDef {
         requestList.add(approveLoanByExternalId(3L, 2L, idempotencyKey));
 
         // Disburse loan
-        PostLoansLoanIdRequest loanDisburseRequest = LoanRequestFactory.defaultLoanDisburseRequest();
+        PostLoansLoanIdRequest loanDisburseRequest = loanRequestFactory.defaultLoanDisburseRequest();
         String bodyLoanDisburseRequest = toJson(loanDisburseRequest);
         BatchRequest disburseRequest = new BatchRequest();
         disburseRequest.requestId(4L);
@@ -1246,7 +1249,7 @@ public class BatchApiStepDef extends AbstractStepDef {
     }
 
     private BatchRequest approveLoanByExternalId(Long requestId, Long referenceId, String idempotencyKey) {
-        PostLoansLoanIdRequest loanApproveRequest = LoanRequestFactory.defaultLoanApproveRequest();
+        PostLoansLoanIdRequest loanApproveRequest = loanRequestFactory.defaultLoanApproveRequest();
         String bodyLoanApproveRequest = toJson(loanApproveRequest);
 
         BatchRequest batchRequest = new BatchRequest();
@@ -1261,7 +1264,7 @@ public class BatchApiStepDef extends AbstractStepDef {
     }
 
     private BatchRequest approveLoanByExternalIdFail(Long requestId, Long referenceId, String idempotencyKey, String loanExternalId) {
-        PostLoansLoanIdRequest loanApproveRequest = LoanRequestFactory.defaultLoanApproveRequest();
+        PostLoansLoanIdRequest loanApproveRequest = loanRequestFactory.defaultLoanApproveRequest();
         String bodyLoanApproveRequest = toJson(loanApproveRequest);
 
         BatchRequest batchRequest = new BatchRequest();

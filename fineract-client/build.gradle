@@ -103,6 +103,23 @@ task buildTypescriptAngularSdk(type: org.openapitools.generator.gradle.plugin.ta
     dependsOn(':fineract-provider:resolve')
 }
 
+task buildTypescriptFetchSdk(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+    generatorName = 'typescript-fetch'
+    verbose = false
+    validateSpec = false
+    skipValidateSpec = true
+    inputSpec = "file:///$swaggerFile"
+    outputDir = "$buildDir/generated/typescript-fetch".toString()
+    configOptions = [
+        npmName: '@apache/fineract-client-fetch',
+        npmVersion: '1.12.0-SNAPSHOT',
+        typescriptThreePlus: 'true',
+        supportsES6: 'true',
+        withInterfaces: 'true'
+    ]
+    dependsOn(':fineract-provider:resolve')
+}
+
 task buildAsciidoc(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask){
     generatorName = 'asciidoc'
     verbose = false

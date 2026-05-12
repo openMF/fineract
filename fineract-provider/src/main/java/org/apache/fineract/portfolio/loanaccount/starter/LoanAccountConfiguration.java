@@ -183,6 +183,7 @@ import org.apache.fineract.portfolio.repaymentwithpostdatedchecks.domain.PostDat
 import org.apache.fineract.portfolio.repaymentwithpostdatedchecks.service.RepaymentWithPostDatedChecksAssembler;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountRepositoryWrapper;
 import org.apache.fineract.portfolio.savings.service.GSIMReadPlatformService;
+import org.apache.fineract.portfolio.tax.service.ChargeTaxApplicationService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -508,9 +509,10 @@ public class LoanAccountConfiguration {
     public LoanChargeService loanChargeService(final LoanChargeValidator loanChargeValidator,
             final LoanTransactionProcessingService loanTransactionProcessingService,
             final LoanLifecycleStateMachine loanLifecycleStateMachine, final LoanBalanceService loanBalanceService,
-            final LoanScheduleGeneratorService loanScheduleGeneratorService) {
+            final LoanScheduleGeneratorService loanScheduleGeneratorService,
+            final ChargeTaxApplicationService chargeTaxApplicationService) {
         return new LoanChargeService(loanChargeValidator, loanTransactionProcessingService, loanLifecycleStateMachine, loanBalanceService,
-                loanScheduleGeneratorService);
+                loanScheduleGeneratorService, chargeTaxApplicationService);
     }
 
     @Bean

@@ -20,7 +20,6 @@ package org.apache.fineract.test.initializer.global;
 
 import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.PostColumnHeaderData;
 import org.apache.fineract.client.models.PostDataTablesRequest;
+import org.apache.fineract.test.helper.ParallelExecutionHelper;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -80,113 +80,37 @@ public class DatatablesGlobalInitializerStep implements FineractGlobalInitialize
 
     @Override
     public void initialize() {
-        // autopay
-        PostColumnHeaderData column1 = new PostColumnHeaderData();
-        column1.name(DATA_TABLE_1_COLUMN_1_NAME);
-        column1.type(DATA_TABLE_1_COLUMN_1_TYPE);
-        column1.code(DATA_TABLE_1_COLUMN_1_CODE);
-        column1.mandatory(false);
-
-        PostColumnHeaderData column2 = new PostColumnHeaderData();
-        column2.name(DATA_TABLE_1_COLUMN_2_NAME);
-        column2.type(DATA_TABLE_1_COLUMN_2_TYPE);
-        column2.mandatory(false);
-
-        List<PostColumnHeaderData> columns = new ArrayList<>();
-        columns.add(column1);
-        columns.add(column2);
-
-        PostDataTablesRequest postDataTablesRequest = new PostDataTablesRequest();
-        postDataTablesRequest.datatableName(DATA_TABLE_1_NAME);
-        postDataTablesRequest.apptableName(DATA_TABLE_1_APP_NAME);
-        postDataTablesRequest.multiRow(true);
-        postDataTablesRequest.columns(columns);
-
-        createDatatableIdempotent(postDataTablesRequest);
-
-        // scheduled payments
-        PostColumnHeaderData columnScheduled1 = new PostColumnHeaderData();
-        columnScheduled1.name(DATA_TABLE_2_COLUMN_1_NAME);
-        columnScheduled1.type(DATA_TABLE_2_COLUMN_1_TYPE);
-        columnScheduled1.length(DATA_TABLE_2_COLUMN_1_LENGTH);
-        columnScheduled1.mandatory(false);
-
-        PostColumnHeaderData columnScheduled2 = new PostColumnHeaderData();
-        columnScheduled2.name(DATA_TABLE_2_COLUMN_2_NAME);
-        columnScheduled2.type(DATA_TABLE_2_COLUMN_2_TYPE);
-        columnScheduled2.mandatory(false);
-
-        PostColumnHeaderData columnScheduled3 = new PostColumnHeaderData();
-        columnScheduled3.name(DATA_TABLE_2_COLUMN_3_NAME);
-        columnScheduled3.type(DATA_TABLE_2_COLUMN_3_TYPE);
-        columnScheduled3.mandatory(false);
-
-        PostColumnHeaderData columnScheduled4 = new PostColumnHeaderData();
-        columnScheduled4.name(DATA_TABLE_2_COLUMN_4_NAME);
-        columnScheduled4.type(DATA_TABLE_2_COLUMN_4_TYPE);
-        columnScheduled4.code(DATA_TABLE_2_COLUMN_4_CODE);
-        columnScheduled4.mandatory(false);
-
-        List<PostColumnHeaderData> columnsScheduled = new ArrayList<>();
-        columnsScheduled.add(columnScheduled1);
-        columnsScheduled.add(columnScheduled2);
-        columnsScheduled.add(columnScheduled3);
-        columnsScheduled.add(columnScheduled4);
-
-        PostDataTablesRequest postDataTablesRequestScheduled = new PostDataTablesRequest();
-        postDataTablesRequestScheduled.datatableName(DATA_TABLE_2_NAME);
-        postDataTablesRequestScheduled.apptableName(DATA_TABLE_2_APP_NAME);
-        postDataTablesRequestScheduled.multiRow(true);
-        postDataTablesRequestScheduled.columns(columnsScheduled);
-
-        createDatatableIdempotent(postDataTablesRequestScheduled);
-
-        // 3 tags
-        PostColumnHeaderData column3Tags1 = new PostColumnHeaderData();
-        column3Tags1.name(DATA_TABLE_3_COLUMN_1_NAME);
-        column3Tags1.type(DATA_TABLE_3_COLUMN_1_TYPE);
-        column3Tags1.code(DATA_TABLE_3_COLUMN_1_CODE);
-        column3Tags1.mandatory(false);
-
-        PostColumnHeaderData column3Tags2 = new PostColumnHeaderData();
-        column3Tags2.name(DATA_TABLE_3_COLUMN_2_NAME);
-        column3Tags2.type(DATA_TABLE_3_COLUMN_2_TYPE);
-        column3Tags2.code(DATA_TABLE_3_COLUMN_2_CODE);
-        column3Tags2.mandatory(false);
-
-        PostColumnHeaderData column3Tags3 = new PostColumnHeaderData();
-        column3Tags3.name(DATA_TABLE_3_COLUMN_3_NAME);
-        column3Tags3.type(DATA_TABLE_3_COLUMN_3_TYPE);
-        column3Tags3.code(DATA_TABLE_3_COLUMN_3_CODE);
-        column3Tags3.mandatory(false);
-
-        PostColumnHeaderData column3Tags4 = new PostColumnHeaderData();
-        column3Tags4.name(DATA_TABLE_3_COLUMN_4_NAME);
-        column3Tags4.type(DATA_TABLE_3_COLUMN_4_TYPE);
-        column3Tags4.code(DATA_TABLE_3_COLUMN_4_CODE);
-        column3Tags4.mandatory(false);
-
-        PostColumnHeaderData column3Tags5 = new PostColumnHeaderData();
-        column3Tags5.name(DATA_TABLE_3_COLUMN_5_NAME);
-        column3Tags5.type(DATA_TABLE_3_COLUMN_5_TYPE);
-        column3Tags5.code(DATA_TABLE_3_COLUMN_5_CODE);
-        column3Tags5.mandatory(false);
-
-        List<PostColumnHeaderData> columns3Tags = new ArrayList<>();
-        columns3Tags.add(column3Tags1);
-        columns3Tags.add(column3Tags2);
-        columns3Tags.add(column3Tags3);
-        columns3Tags.add(column3Tags4);
-        columns3Tags.add(column3Tags5);
-
-        PostDataTablesRequest postDataTablesRequest3Tags = new PostDataTablesRequest();
-        postDataTablesRequest3Tags.datatableName(DATA_TABLE_3_NAME);
-        postDataTablesRequest3Tags.apptableName(DATA_TABLE_3_APP_NAME);
-        postDataTablesRequest3Tags.entitySubType(DATA_TABLE_3_ENTITY_SUBTYPE);
-        postDataTablesRequest3Tags.multiRow(false);
-        postDataTablesRequest3Tags.columns(columns3Tags);
-
-        createDatatableIdempotent(postDataTablesRequest3Tags);
+        List<Runnable> items = List.of(() -> createDatatableIdempotent(new PostDataTablesRequest().datatableName(DATA_TABLE_1_NAME)
+                .apptableName(DATA_TABLE_1_APP_NAME).multiRow(true)
+                .columns(List.of(
+                        new PostColumnHeaderData().name(DATA_TABLE_1_COLUMN_1_NAME).type(DATA_TABLE_1_COLUMN_1_TYPE)
+                                .code(DATA_TABLE_1_COLUMN_1_CODE).mandatory(false),
+                        new PostColumnHeaderData().name(DATA_TABLE_1_COLUMN_2_NAME).type(DATA_TABLE_1_COLUMN_2_TYPE).mandatory(false)))),
+                () -> createDatatableIdempotent(
+                        new PostDataTablesRequest().datatableName(DATA_TABLE_2_NAME).apptableName(DATA_TABLE_2_APP_NAME).multiRow(true)
+                                .columns(List.of(
+                                        new PostColumnHeaderData().name(DATA_TABLE_2_COLUMN_1_NAME).type(DATA_TABLE_2_COLUMN_1_TYPE)
+                                                .length(DATA_TABLE_2_COLUMN_1_LENGTH).mandatory(false),
+                                        new PostColumnHeaderData().name(DATA_TABLE_2_COLUMN_2_NAME).type(DATA_TABLE_2_COLUMN_2_TYPE)
+                                                .mandatory(false),
+                                        new PostColumnHeaderData().name(DATA_TABLE_2_COLUMN_3_NAME).type(DATA_TABLE_2_COLUMN_3_TYPE)
+                                                .mandatory(false),
+                                        new PostColumnHeaderData().name(DATA_TABLE_2_COLUMN_4_NAME).type(DATA_TABLE_2_COLUMN_4_TYPE)
+                                                .code(DATA_TABLE_2_COLUMN_4_CODE).mandatory(false)))),
+                () -> createDatatableIdempotent(new PostDataTablesRequest().datatableName(DATA_TABLE_3_NAME)
+                        .apptableName(DATA_TABLE_3_APP_NAME).entitySubType(DATA_TABLE_3_ENTITY_SUBTYPE).multiRow(false)
+                        .columns(List.of(
+                                new PostColumnHeaderData().name(DATA_TABLE_3_COLUMN_1_NAME).type(DATA_TABLE_3_COLUMN_1_TYPE)
+                                        .code(DATA_TABLE_3_COLUMN_1_CODE).mandatory(false),
+                                new PostColumnHeaderData().name(DATA_TABLE_3_COLUMN_2_NAME).type(DATA_TABLE_3_COLUMN_2_TYPE)
+                                        .code(DATA_TABLE_3_COLUMN_2_CODE).mandatory(false),
+                                new PostColumnHeaderData().name(DATA_TABLE_3_COLUMN_3_NAME).type(DATA_TABLE_3_COLUMN_3_TYPE)
+                                        .code(DATA_TABLE_3_COLUMN_3_CODE).mandatory(false),
+                                new PostColumnHeaderData().name(DATA_TABLE_3_COLUMN_4_NAME).type(DATA_TABLE_3_COLUMN_4_TYPE)
+                                        .code(DATA_TABLE_3_COLUMN_4_CODE).mandatory(false),
+                                new PostColumnHeaderData().name(DATA_TABLE_3_COLUMN_5_NAME).type(DATA_TABLE_3_COLUMN_5_TYPE)
+                                        .code(DATA_TABLE_3_COLUMN_5_CODE).mandatory(false)))));
+        ParallelExecutionHelper.runInParallel(items);
     }
 
     private void createDatatableIdempotent(PostDataTablesRequest datatableRequest) {

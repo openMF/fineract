@@ -106,13 +106,19 @@ public class EventCheckHelper {
     @Autowired
     private org.apache.fineract.test.messaging.config.EventProperties eventProperties;
 
-    private void waitForTransactionCommit() {
-        if (eventProperties.isEventVerificationEnabled() && TRANSACTION_COMMIT_DELAY_MS > 0) {
+    public void waitForTransactionCommit() {
+        if (TRANSACTION_COMMIT_DELAY_MS > 0) {
+            sleepIfEventVerificationEnabled(TRANSACTION_COMMIT_DELAY_MS);
+        }
+    }
+
+    public void sleepIfEventVerificationEnabled(long sleepInMs) {
+        if (eventProperties.isEventVerificationEnabled()) {
             try {
-                Thread.sleep(TRANSACTION_COMMIT_DELAY_MS);
+                Thread.sleep(sleepInMs);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("Interrupted while waiting for transaction commit", e);
+                throw new RuntimeException("Thread interrupted while waiting...", e);
             }
         }
     }

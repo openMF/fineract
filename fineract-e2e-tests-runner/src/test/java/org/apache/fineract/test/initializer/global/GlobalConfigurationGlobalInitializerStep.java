@@ -18,8 +18,10 @@
  */
 package org.apache.fineract.test.initializer.global;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.test.helper.GlobalConfigurationHelper;
+import org.apache.fineract.test.helper.ParallelExecutionHelper;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -42,13 +44,14 @@ public class GlobalConfigurationGlobalInitializerStep implements FineractGlobalI
 
     @Override
     public void initialize() throws Exception {
-        globalConfigurationHelper.disableGlobalConfiguration(CONFIG_KEY_ENABLE_ADDRESS, 0L);
-        globalConfigurationHelper.enableGlobalConfiguration(CONFIG_KEY_ENABLE_INTEREST_CALCULATION, 0L);
-        globalConfigurationHelper.enableGlobalConfiguration(CONFIG_KEY_ENABLE_BUSINESS_DATE, 0L);
-        globalConfigurationHelper.enableGlobalConfiguration(CONFIG_KEY_ENABLE_RECALCULATE_COB_DATE, 0L);
-        globalConfigurationHelper.enableGlobalConfiguration(CONFIG_KEY_DAYS_BEFORE_REPAYMENT_IS_DUE, 1L);
-        globalConfigurationHelper.enableGlobalConfiguration(CONFIG_KEY_DAYS_AFTER_REPAYMENT_IS_OVERDUE, 2L);
-        globalConfigurationHelper.enableGlobalConfiguration(CONFIG_KEY_ENABLE_AUTO_GENERATED_EXTERNAL_ID, 0L);
-        globalConfigurationHelper.disableGlobalConfiguration(CONFIG_KEY_ALLOW_CASH_AND_NON_CASH_ACCRUAL, 0L);
+        List<Runnable> items = List.of(() -> globalConfigurationHelper.disableGlobalConfiguration(CONFIG_KEY_ENABLE_ADDRESS, 0L),
+                () -> globalConfigurationHelper.enableGlobalConfiguration(CONFIG_KEY_ENABLE_INTEREST_CALCULATION, 0L),
+                () -> globalConfigurationHelper.enableGlobalConfiguration(CONFIG_KEY_ENABLE_BUSINESS_DATE, 0L),
+                () -> globalConfigurationHelper.enableGlobalConfiguration(CONFIG_KEY_ENABLE_RECALCULATE_COB_DATE, 0L),
+                () -> globalConfigurationHelper.enableGlobalConfiguration(CONFIG_KEY_DAYS_BEFORE_REPAYMENT_IS_DUE, 1L),
+                () -> globalConfigurationHelper.enableGlobalConfiguration(CONFIG_KEY_DAYS_AFTER_REPAYMENT_IS_OVERDUE, 2L),
+                () -> globalConfigurationHelper.enableGlobalConfiguration(CONFIG_KEY_ENABLE_AUTO_GENERATED_EXTERNAL_ID, 0L),
+                () -> globalConfigurationHelper.disableGlobalConfiguration(CONFIG_KEY_ALLOW_CASH_AND_NON_CASH_ACCRUAL, 0L));
+        ParallelExecutionHelper.runInParallel(items);
     }
 }

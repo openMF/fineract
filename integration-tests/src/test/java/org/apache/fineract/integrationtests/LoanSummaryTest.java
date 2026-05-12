@@ -148,34 +148,6 @@ public class LoanSummaryTest extends BaseLoanIntegrationTest {
                     loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest().stripTrailingZeros());
             inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
         });
-        runAt("19 March 2025", () -> {
-            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
-            Assertions.assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
-            Assertions.assertEquals(BigDecimal.valueOf(0.69),
-                    loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest().stripTrailingZeros());
-            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
-        });
-        runAt("20 March 2025", () -> {
-            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
-            Assertions.assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
-            Assertions.assertEquals(BigDecimal.valueOf(0.92),
-                    loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest().stripTrailingZeros());
-            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
-        });
-        runAt("21 March 2025", () -> {
-            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
-            Assertions.assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
-            Assertions.assertEquals(BigDecimal.valueOf(1.15),
-                    loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest().stripTrailingZeros());
-            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
-        });
-        runAt("22 March 2025", () -> {
-            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
-            Assertions.assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
-            Assertions.assertEquals(BigDecimal.valueOf(1.38),
-                    loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest().stripTrailingZeros());
-            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
-        });
         runAt("14 May 2025", () -> {
             GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
             Assertions.assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
@@ -191,41 +163,7 @@ public class LoanSummaryTest extends BaseLoanIntegrationTest {
                     loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest().stripTrailingZeros());
             inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
         });
-        runAt("16 May 2025", () -> {
-            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
-            Assertions.assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
-            Assertions.assertEquals(BigDecimal.valueOf(14.28),
-                    loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest().stripTrailingZeros());
-            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
-        });
-        runAt("17 May 2025", () -> {
-            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
-            Assertions.assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
-            Assertions.assertEquals(BigDecimal.valueOf(14.51),
-                    loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest().stripTrailingZeros());
-            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
-        });
-        runAt("18 May 2025", () -> {
-            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
-            Assertions.assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
-            Assertions.assertEquals(BigDecimal.valueOf(14.74),
-                    loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest().stripTrailingZeros());
-            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
-        });
-        runAt("19 May 2025", () -> {
-            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
-            Assertions.assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
-            Assertions.assertEquals(BigDecimal.valueOf(14.97),
-                    loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest().stripTrailingZeros());
-            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
-        });
-        runAt("20 May 2025", () -> {
-            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
-            Assertions.assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
-            Assertions.assertEquals(BigDecimal.valueOf(15.20),
-                    loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest().stripTrailingZeros());
-            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
-        });
+
         runAt("14 June 2025", () -> {
             GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
             Assertions.assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());

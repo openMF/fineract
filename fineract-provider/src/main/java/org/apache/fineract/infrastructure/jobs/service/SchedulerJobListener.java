@@ -42,7 +42,6 @@ public class SchedulerJobListener implements JobListener {
 
     private final SchedularWritePlatformService schedularService;
     private final TenantDetailsService tenantDetailsService;
-    private int stackTraceLevel = 0;
 
     @Override
     public String getName() {
@@ -79,9 +78,7 @@ public class SchedulerJobListener implements JobListener {
             String errorLog = null;
             if (jobException != null) {
                 status = SchedulerServiceConstants.STATUS_FAILED;
-                this.stackTraceLevel = 0;
-                final Throwable throwable = getCauseFromException(jobException);
-                this.stackTraceLevel = 0;
+                final Throwable throwable = getCauseFromException(jobException, 0);
                 StackTraceElement[] stackTraceElements = null;
                 errorMessage = throwable.getMessage();
                 stackTraceElements = throwable.getStackTrace();
@@ -117,13 +114,12 @@ public class SchedulerJobListener implements JobListener {
         }
     }
 
-    private Throwable getCauseFromException(final Throwable exception) {
-        if (this.stackTraceLevel <= SchedulerServiceConstants.STACK_TRACE_LEVEL && exception.getCause() != null
+    private Throwable getCauseFromException(final Throwable exception, final int stackTraceLevel) {
+        if (stackTraceLevel <= SchedulerServiceConstants.STACK_TRACE_LEVEL && exception.getCause() != null
                 && (exception.getCause().toString().contains(SchedulerServiceConstants.SCHEDULER_EXCEPTION)
                         || exception.getCause().toString().contains(SchedulerServiceConstants.JOB_EXECUTION_EXCEPTION)
                         || exception.getCause().toString().contains(SchedulerServiceConstants.JOB_METHOD_INVOCATION_FAILED_EXCEPTION))) {
-            this.stackTraceLevel++;
-            return getCauseFromException(exception.getCause());
+            return getCauseFromException(exception.getCause(), stackTraceLevel + 1);
         } else if (exception.getCause() != null) {
             return exception.getCause();
         }

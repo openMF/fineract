@@ -49,6 +49,7 @@ import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.common.funds.FundsResourceHandler;
 import org.apache.fineract.integrationtests.common.products.DelinquencyBucketsHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanApplicationTestBuilder;
+import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanDisbursementTestBuilder;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloanbreach.WorkingCapitalBreachHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloannearbreach.WorkingCapitalNearBreachHelper;
@@ -137,7 +138,7 @@ public class WorkingCapitalLoanApplicationCRUDTest {
 
         assertEquals(productRepaymentEvery.intValue(), data.get("repaymentEvery").getAsInt(), "repaymentEvery should come from product");
         assertRepaymentFrequencyTypeEquals(productRepaymentFrequencyType, data.get("repaymentFrequencyType"));
-        assertEqualBigDecimal(productDiscount, data.get("discount"));
+        assertTrue(data.has("discountProposed") && data.get("discountProposed").isJsonNull());
         assertTrue(data.has("delinquencyBucket") && !data.get("delinquencyBucket").isJsonNull(),
                 "delinquencyBucket should come from product");
         assertEquals(delinquencyBucketId.longValue(), data.getAsJsonObject("delinquencyBucket").get("id").getAsLong(),
@@ -852,11 +853,92 @@ public class WorkingCapitalLoanApplicationCRUDTest {
         productHelper.deleteWorkingCapitalLoanProductById(productId);
     }
 
+    @Test
+    public void testWorkingCapitalDiscountAttributes() {
+        final Long productId = createProductWithAllOverridables();
+        final Long clientId = createClient();
+        BigDecimal discountProposed = BigDecimal.valueOf(100);
+        final Long loanId = applicationHelper.submit(new WorkingCapitalLoanApplicationTestBuilder() //
+                .withClientId(clientId) //
+                .withProductId(productId) //
+                .withPrincipal(BigDecimal.valueOf(5000)) //
+                .withPeriodPaymentRate(BigDecimal.ONE) //
+                .withTotalPayment(BigDecimal.valueOf(5500)) //
+                .withDiscount(discountProposed) //
+                .buildSubmitJson());
+
+        JsonObject loanData = applicationHelper.retrieveLoan(loanId);
+        assertEqualBigDecimal(discountProposed, loanData.get("discountProposed"));
+        final LocalDate operationDate = applicationHelper.extractDate(loanData.get("submittedOnDate"));
+
+        discountProposed = BigDecimal.valueOf(99);
+        final String modifyJson = new WorkingCapitalLoanApplicationTestBuilder().withDiscount(discountProposed) //
+                .buildModifyJson();
+
+        final Long modifiedId = applicationHelper.modifyById(loanId, modifyJson);
+        assertEquals(loanId, modifiedId);
+        loanData = applicationHelper.retrieveLoan(loanId);
+        assertEqualBigDecimal(discountProposed, loanData.get("discountProposed"));
+
+        // Approve the WC Loan with specific discount
+        BigDecimal discountApproved = BigDecimal.valueOf(97);
+        applicationHelper.approveById(loanId,
+                WorkingCapitalLoanApplicationTestBuilder.buildApproveJson(operationDate, null, discountApproved));
+        loanData = applicationHelper.retrieveLoan(loanId);
+        assertEqualBigDecimal(discountProposed, loanData.get("discountProposed"));
+        assertEqualBigDecimal(discountApproved, loanData.get("discountApproved"));
+
+        // Undo WC Loan Approval
+        applicationHelper.undoApprovalById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildUndoApproveJson());
+        loanData = applicationHelper.retrieveLoan(loanId);
+        assertEqualBigDecimal(discountProposed, loanData.get("discountProposed"));
+        // Null as reset of Approval amount
+        assertTrue(loanData.get("discountApproved").isJsonNull());
+
+        // ReApprove the WC Loan with specific discount
+        discountApproved = BigDecimal.valueOf(95);
+        applicationHelper.approveById(loanId,
+                WorkingCapitalLoanApplicationTestBuilder.buildApproveJson(operationDate, null, discountApproved));
+        loanData = applicationHelper.retrieveLoan(loanId);
+        assertEqualBigDecimal(discountProposed, loanData.get("discountProposed"));
+        assertEqualBigDecimal(discountApproved, loanData.get("discountApproved"));
+
+        // Disburse the WC Loan without specific discount then It will use discountApproved
+        applicationHelper.disburseById(loanId,
+                WorkingCapitalLoanDisbursementTestBuilder.buildDisburseJson(operationDate, BigDecimal.valueOf(5000)));
+        loanData = applicationHelper.retrieveLoan(loanId);
+        assertEqualBigDecimal(discountProposed, loanData.get("discountProposed"));
+        assertEqualBigDecimal(discountApproved, loanData.get("discountApproved"));
+        assertTrue(loanData.get("discount").isJsonNull());
+
+        // Undo Disburse the WC Loan
+        applicationHelper.undoDisbursalById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildUndoDisburseJson("Undo disbursal note"));
+        loanData = applicationHelper.retrieveLoan(loanId);
+        assertEqualBigDecimal(discountProposed, loanData.get("discountProposed"));
+        assertEqualBigDecimal(discountApproved, loanData.get("discountApproved"));
+        assertTrue(loanData.get("discount").isJsonNull());
+
+        // ReDisburse the WC Loan with specific discount
+        BigDecimal discountDisbursement = BigDecimal.valueOf(80);
+        applicationHelper.disburseById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildDisburseJson(operationDate,
+                BigDecimal.valueOf(5000), discountDisbursement, null, null, null, null, null, null, null));
+        loanData = applicationHelper.retrieveLoan(loanId);
+        assertEqualBigDecimal(discountProposed, loanData.get("discountProposed"));
+        assertEqualBigDecimal(discountApproved, loanData.get("discountApproved"));
+        assertEqualBigDecimal(discountDisbursement, loanData.get("discount"));
+
+        // Undo Disbursement for delete it
+        applicationHelper.undoDisbursalById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildUndoDisburseJson("Undo disbursal note"));
+        applicationHelper.undoApprovalById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildUndoApproveJson());
+        applicationHelper.deleteById(loanId);
+        productHelper.deleteWorkingCapitalLoanProductById(productId);
+    }
+
     private static void assertAllLoanFieldsInResponse(final JsonObject data, final long loanId, final long clientId, final long productId,
             final String accountNo, final String externalId, final Long fundId, final BigDecimal principal,
-            final BigDecimal periodPaymentRate, final BigDecimal totalPayment, final BigDecimal discount, final LocalDate submittedOnDate,
-            final LocalDate expectedDisbursementDate, final Integer repaymentEvery, final String repaymentFrequencyType,
-            final Integer delinquencyGraceDays, final String delinquencyStartType) {
+            final BigDecimal periodPaymentRate, final BigDecimal totalPayment, final BigDecimal discountProposed,
+            final LocalDate submittedOnDate, final LocalDate expectedDisbursementDate, final Integer repaymentEvery,
+            final String repaymentFrequencyType, final Integer delinquencyGraceDays, final String delinquencyStartType) {
         assertEquals(loanId, data.get("id").getAsLong());
         assertTrue(data.has("client") && !data.get("client").isJsonNull());
         assertEquals(clientId, data.getAsJsonObject("client").get("id").getAsLong());
@@ -871,7 +953,7 @@ public class WorkingCapitalLoanApplicationCRUDTest {
         assertEqualBigDecimal(principal, data.getAsJsonObject("balance").get("principalOutstanding"));
         assertEqualBigDecimal(totalPayment, data.getAsJsonObject("balance").get("totalPayment"));
         assertEqualBigDecimal(periodPaymentRate, data.get("periodPaymentRate"));
-        assertEqualBigDecimal(discount, data.get("discount"));
+        assertEqualBigDecimal(discountProposed, data.get("discountProposed"));
         assertDateEquals(submittedOnDate, data.get("submittedOnDate"));
         assertTrue(data.has("disbursementDetails") && !data.get("disbursementDetails").isJsonNull(),
                 "disbursementDetails should be present");

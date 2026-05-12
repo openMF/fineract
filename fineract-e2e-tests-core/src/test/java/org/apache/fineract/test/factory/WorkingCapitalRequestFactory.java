@@ -34,7 +34,6 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.DelinquencyBucketRequest;
-import org.apache.fineract.client.models.DelinquencyBucketResponse;
 import org.apache.fineract.client.models.MinimumPaymentPeriodAndRule;
 import org.apache.fineract.client.models.PaymentAllocationOrder;
 import org.apache.fineract.client.models.PostAllowAttributeOverrides;
@@ -47,8 +46,10 @@ import org.apache.fineract.client.models.WorkingCapitalBreachData;
 import org.apache.fineract.client.models.WorkingCapitalBreachRequest;
 import org.apache.fineract.client.models.WorkingCapitalNearBreachData;
 import org.apache.fineract.client.models.WorkingCapitalNearBreachRequest;
+import org.apache.fineract.test.data.DelinquencyBucket;
 import org.apache.fineract.test.data.accounttype.AccountTypeResolver;
 import org.apache.fineract.test.data.accounttype.DefaultAccountType;
+import org.apache.fineract.test.data.delinquency.DelinquencyBucketResolver;
 import org.apache.fineract.test.data.delinquency.DelinquencyBucketType;
 import org.apache.fineract.test.data.delinquency.DelinquencyFrequencyType;
 import org.apache.fineract.test.data.delinquency.DelinquencyMinimumPayment;
@@ -64,10 +65,10 @@ public class WorkingCapitalRequestFactory {
     private final LoanProductsRequestFactory loanProductsRequestFactory;
     private final FineractFeignClient fineractClient;
     private final AccountTypeResolver accountTypeResolver;
+    private final DelinquencyBucketResolver delinquencyBucketResolver;
 
     public static final String WCLP_NAME_PREFIX = "WCLP-";
     public static final String WCLP_DESCRIPTION = "Working Capital Loan Product";
-    public static final String DEFAULT_WC_DELINQUENCY_BUCKET_NAME = "Default Working Capital delinquency bucket";
     public static final String DEFAULT_WC_BREACH_NAME = "Default Working Capital breach";
     public static final String DEFAULT_WC_NEAR_BREACH_NAME = "Default Working Capital near breach";
     public static final String PENALTY = "PENALTY";
@@ -101,7 +102,9 @@ public class WorkingCapitalRequestFactory {
                 .incomeFromChargeOffFeesAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
                 .incomeFromChargeOffPenaltyAccountId(accountTypeResolver.resolve(DefaultAccountType.FEE_CHARGE_OFF))//
                 .chargeOffExpenseAccountId(accountTypeResolver.resolve(DefaultAccountType.CREDIT_LOSS_BAD_DEBT))//
-                .chargeOffFraudExpenseAccountId(accountTypeResolver.resolve(DefaultAccountType.CREDIT_LOSS_BAD_DEBT_FRAUD));//
+                .chargeOffFraudExpenseAccountId(accountTypeResolver.resolve(DefaultAccountType.CREDIT_LOSS_BAD_DEBT_FRAUD))//
+                .receivableFeeAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_FEE_RECEIVABLE))//
+                .receivablePenaltyAccountId(accountTypeResolver.resolve(DefaultAccountType.INTEREST_FEE_RECEIVABLE));//
     }
 
     /**
@@ -139,7 +142,7 @@ public class WorkingCapitalRequestFactory {
                 .maxPrincipal(new BigDecimal(100000))//
                 .amortizationType(PostWorkingCapitalLoanProductsRequest.AmortizationTypeEnum.EIR)//
                 .npvDayCount(DAYS_IN_YEAR_TYPE_360)//
-                .delinquencyBucketId(getWCDelinquencyBucketIdByName(DEFAULT_WC_DELINQUENCY_BUCKET_NAME))//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.WC_DELINQUENCY_BUCKET))//
                 .dateFormat(DATE_FORMAT)//
                 .locale(LOCALE_EN)//
                 .accountingRule(AccountingRuleEnum.NONE)//
@@ -208,7 +211,7 @@ public class WorkingCapitalRequestFactory {
                 .discount(new BigDecimal(50)) //
                 .amortizationType(PutWorkingCapitalLoanProductsProductIdRequest.AmortizationTypeEnum.EIR)//
                 .npvDayCount(DAYS365.value)//
-                .delinquencyBucketId(getWCDelinquencyBucketIdByName(DEFAULT_WC_DELINQUENCY_BUCKET_NAME))//
+                .delinquencyBucketId(delinquencyBucketResolver.resolve(DelinquencyBucket.WC_DELINQUENCY_BUCKET))//
                 .dateFormat(DATE_FORMAT)//
                 .locale(LOCALE_EN)//
                 .allowAttributeOverrides(allowAttributeOverrides)//
@@ -291,16 +294,6 @@ public class WorkingCapitalRequestFactory {
         return new PostWorkingCapitalLoanTransactionsRequest() //
                 .dateFormat(DATE_FORMAT) //
                 .locale(LOCALE_EN);
-    }
-
-    private Long getWCDelinquencyBucketIdByName(String bucketName) {
-        try {
-            List<DelinquencyBucketResponse> buckets = fineractClient.delinquencyRangeAndBucketsManagement().getBuckets(Map.of());
-            return buckets.stream().filter(b -> bucketName.equals(b.getName())).findFirst().map(DelinquencyBucketResponse::getId)
-                    .orElseThrow(() -> new RuntimeException("Working Capital delinquency bucket not found with name: " + bucketName));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to fetch Working Capital delinquency bucket by name: " + bucketName, e);
-        }
     }
 
     private Long getWCBreachIdByName(String breachName) {

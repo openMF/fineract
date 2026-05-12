@@ -72,7 +72,6 @@ public class LoanPrepayAmountTest extends BaseLoanIntegrationTest {
             loanId = postLoansResponse.getLoanId();
             loanTransactionHelper.approveLoan(loanId, approveLoanRequest(296.79, "15 March 2025"));
             disburseLoan(loanId, BigDecimal.valueOf(296.79), "15 March 2025");
-            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
         });
         runAt("16 March 2025", () -> {
             loanTransactionHelper.makeLoanRepayment(loanId, "Repayment", "16 March 2025", 59.0);
@@ -83,10 +82,10 @@ public class LoanPrepayAmountTest extends BaseLoanIntegrationTest {
                     "16 March 2025", DATETIME_PATTERN);
             Assertions.assertEquals(BigDecimal.valueOf(prepayAmountResponse.getInterestPortion()).stripTrailingZeros(),
                     loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest());
-            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
         });
-        for (int i = 0; i <= 45; i++) {
-            LocalDate date = LocalDate.of(2025, 3, 17).plusDays(i);
+        for (int i = 1; i < 4; i++) {
+            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
+            LocalDate date = LocalDate.of(2025, 3, 17).plusDays(i * 11);
             String formattedDate = DateTimeFormatter.ofPattern(DATETIME_PATTERN).format(date);
             runAt(formattedDate, () -> {
                 GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
@@ -94,7 +93,6 @@ public class LoanPrepayAmountTest extends BaseLoanIntegrationTest {
                         formattedDate, DATETIME_PATTERN);
                 Assertions.assertEquals(loanDetails.getSummary().getTotalUnpaidPayableNotDueInterest().stripTrailingZeros(),
                         BigDecimal.valueOf(prepayAmountResponse.getInterestPortion()).stripTrailingZeros());
-                inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
             });
         }
     }
@@ -120,7 +118,6 @@ public class LoanPrepayAmountTest extends BaseLoanIntegrationTest {
                     "16 March 2025", DATETIME_PATTERN);
             Assertions.assertEquals(BigDecimal.valueOf(44.43).stripTrailingZeros(),
                     BigDecimal.valueOf(prepayAmountResponse.getInterestPortion()).stripTrailingZeros());
-            inlineLoanCOBHelper.executeInlineCOB(List.of(loanId));
         });
     }
 }

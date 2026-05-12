@@ -19,6 +19,8 @@
 package org.apache.fineract.portfolio.loanaccount.data;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -33,5 +35,6 @@ public class LoanChargePaidByDTO {
     private Long loanChargeId;
     private BigDecimal amount;
     private Integer installmentNumber;
+    private List<ChargeTaxDetailDTO> taxDetails = new ArrayList<>();
 
 }

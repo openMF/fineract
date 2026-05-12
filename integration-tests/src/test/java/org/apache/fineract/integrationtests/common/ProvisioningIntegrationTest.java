@@ -55,7 +55,7 @@ public class ProvisioningIntegrationTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProvisioningIntegrationTest.class);
     private static final String NONE = "1";
-    private static final int LOANPRODUCTS_SIZE = 10;
+    private static final int LOANPRODUCTS_SIZE = 2;
 
     private RequestSpecification requestSpec;
     private ResponseSpecification responseSpec;

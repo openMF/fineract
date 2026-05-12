@@ -18,13 +18,17 @@
  */
 package org.apache.fineract.test.data;
 
+import org.apache.fineract.test.data.delinquency.DelinquencyBucketType;
+
 public enum DelinquencyBucket {
 
-    BASIC_DELINQUENCY_BUCKET(1);
+    BASIC_DELINQUENCY_BUCKET(DelinquencyBucketType.REGULAR), //
+    WC_DELINQUENCY_BUCKET(DelinquencyBucketType.WORKING_CAPITAL), //
+    ;
 
-    public final Integer value;
+    public final DelinquencyBucketType type;
 
-    DelinquencyBucket(Integer value) {
-        this.value = value;
+    DelinquencyBucket(DelinquencyBucketType type) {
+        this.type = type;
     }
 }

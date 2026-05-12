@@ -79,6 +79,20 @@ public class WorkingCapitalLoanProductTestBuilder {
     private AccountingRuleEnum accountingRule = DEFAULT_ACCOUNTING_RULE;
     private Long nearBreachId;
 
+    // GL account IDs for cash-based accounting
+    private Long fundSourceAccountId;
+    private Long loanPortfolioAccountId;
+    private Long transfersInSuspenseAccountId;
+    private Long incomeFromDiscountFeeAccountId;
+    private Long receivableFeeAccountId;
+    private Long receivablePenaltyAccountId;
+    private Long incomeFromFeeAccountId;
+    private Long incomeFromPenaltyAccountId;
+    private Long incomeFromRecoveryAccountId;
+    private Long writeOffAccountId;
+    private Long overpaymentLiabilityAccountId;
+    private Long deferredIncomeLiabilityAccountId;
+
     public WorkingCapitalLoanProductTestBuilder withName(final String name) {
         this.name = name;
         return this;
@@ -214,6 +228,66 @@ public class WorkingCapitalLoanProductTestBuilder {
         return this;
     }
 
+    public WorkingCapitalLoanProductTestBuilder withFundSourceAccountId(final Long fundSourceAccountId) {
+        this.fundSourceAccountId = fundSourceAccountId;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withLoanPortfolioAccountId(final Long loanPortfolioAccountId) {
+        this.loanPortfolioAccountId = loanPortfolioAccountId;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withTransfersInSuspenseAccountId(final Long transfersInSuspenseAccountId) {
+        this.transfersInSuspenseAccountId = transfersInSuspenseAccountId;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withIncomeFromDiscountFeeAccountId(final Long incomeFromDiscountFeeAccountId) {
+        this.incomeFromDiscountFeeAccountId = incomeFromDiscountFeeAccountId;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withReceivableFeeAccountId(final Long receivableFeeAccountId) {
+        this.receivableFeeAccountId = receivableFeeAccountId;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withReceivablePenaltyAccountId(final Long receivablePenaltyAccountId) {
+        this.receivablePenaltyAccountId = receivablePenaltyAccountId;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withIncomeFromFeeAccountId(final Long incomeFromFeeAccountId) {
+        this.incomeFromFeeAccountId = incomeFromFeeAccountId;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withIncomeFromPenaltyAccountId(final Long incomeFromPenaltyAccountId) {
+        this.incomeFromPenaltyAccountId = incomeFromPenaltyAccountId;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withIncomeFromRecoveryAccountId(final Long incomeFromRecoveryAccountId) {
+        this.incomeFromRecoveryAccountId = incomeFromRecoveryAccountId;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withWriteOffAccountId(final Long writeOffAccountId) {
+        this.writeOffAccountId = writeOffAccountId;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withOverpaymentLiabilityAccountId(final Long overpaymentLiabilityAccountId) {
+        this.overpaymentLiabilityAccountId = overpaymentLiabilityAccountId;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withDeferredIncomeLiabilityAccountId(final Long deferredIncomeLiabilityAccountId) {
+        this.deferredIncomeLiabilityAccountId = deferredIncomeLiabilityAccountId;
+        return this;
+    }
+
     public PostWorkingCapitalLoanProductsRequest build() {
         final PostWorkingCapitalLoanProductsRequest request = new PostWorkingCapitalLoanProductsRequest();
         populateCommonFields(request);
@@ -261,6 +335,18 @@ public class WorkingCapitalLoanProductTestBuilder {
         request.setBreachId(this.breachId);
         request.setAccountingRule(this.accountingRule);
         request.setNearBreachId(this.nearBreachId);
+        request.setFundSourceAccountId(this.fundSourceAccountId);
+        request.setLoanPortfolioAccountId(this.loanPortfolioAccountId);
+        request.setTransfersInSuspenseAccountId(this.transfersInSuspenseAccountId);
+        request.setIncomeFromDiscountFeeAccountId(this.incomeFromDiscountFeeAccountId);
+        request.setReceivableFeeAccountId(this.receivableFeeAccountId);
+        request.setReceivablePenaltyAccountId(this.receivablePenaltyAccountId);
+        request.setIncomeFromFeeAccountId(this.incomeFromFeeAccountId);
+        request.setIncomeFromPenaltyAccountId(this.incomeFromPenaltyAccountId);
+        request.setIncomeFromRecoveryAccountId(this.incomeFromRecoveryAccountId);
+        request.setWriteOffAccountId(this.writeOffAccountId);
+        request.setOverpaymentLiabilityAccountId(this.overpaymentLiabilityAccountId);
+        request.setDeferredIncomeLiabilityAccountId(this.deferredIncomeLiabilityAccountId);
         request.setLocale("en_US");
         request.setDateFormat("yyyy-MM-dd");
     }

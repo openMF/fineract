@@ -168,6 +168,10 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public Long chargeOffExpenseAccountId;
         @Schema(example = "18")
         public Long chargeOffFraudExpenseAccountId;
+        @Schema(example = "19")
+        public Long receivableFeeAccountId;
+        @Schema(example = "20")
+        public Long receivablePenaltyAccountId;
         public List<WorkingCapitalLoanPaymentChannelToFundSourceMappings> paymentChannelToFundSourceMappings;
         public List<WorkingCapitalLoanProductChargeToGLAccountMapper> feeToIncomeAccountMappings;
         public List<WorkingCapitalLoanProductChargeToGLAccountMapper> penaltyToIncomeAccountMappings;
@@ -628,6 +632,10 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public Long chargeOffExpenseAccountId;
         @Schema(example = "18")
         public Long chargeOffFraudExpenseAccountId;
+        @Schema(example = "19")
+        public Long receivableFeeAccountId;
+        @Schema(example = "20")
+        public Long receivablePenaltyAccountId;
         public List<PostWorkingCapitalLoanProductsRequest.WorkingCapitalLoanPaymentChannelToFundSourceMappings> paymentChannelToFundSourceMappings;
         public List<PostWorkingCapitalLoanProductsRequest.WorkingCapitalLoanProductChargeToGLAccountMapper> feeToIncomeAccountMappings;
         public List<PostWorkingCapitalLoanProductsRequest.WorkingCapitalLoanProductChargeToGLAccountMapper> penaltyToIncomeAccountMappings;

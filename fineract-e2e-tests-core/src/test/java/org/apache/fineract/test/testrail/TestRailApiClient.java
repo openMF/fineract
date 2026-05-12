@@ -18,15 +18,13 @@
  */
 package org.apache.fineract.test.testrail;
 
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.Headers;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
+import feign.Headers;
+import feign.Param;
+import feign.RequestLine;
 
 interface TestRailApiClient {
 
-    @Headers({ "Content-Type:application/json" })
-    @POST("/api/v2/add_result_for_case/{runId}/{caseId}")
-    Call<Void> addResultForCase(@Path("runId") int runId, @Path("caseId") int caseId, @Body AddResultForCaseRequest request);
+    @Headers({ "Content-Type: application/json" })
+    @RequestLine("POST /index.php?/api/v2/add_result_for_case/{runId}/{caseId}")
+    void addResultForCase(@Param("runId") int runId, @Param("caseId") int caseId, AddResultForCaseRequest request);
 }

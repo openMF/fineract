@@ -20,18 +20,17 @@ package org.apache.fineract.test.testrail;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import java.io.IOException;
-import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import org.apache.fineract.client.auth.HttpBasicAuth;
-import org.apache.fineract.client.util.JSON;
+import feign.Feign;
+import feign.Request;
+import feign.Retryer;
+import feign.jackson.JacksonEncoder;
+import java.util.concurrent.TimeUnit;
+import org.apache.fineract.client.feign.BasicAuthRequestInterceptor;
+import org.apache.fineract.client.feign.ObjectMapperFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import retrofit2.Retrofit;
 
 @Configuration
 @Conditional(TestRailEnabledCondition.class)
@@ -56,25 +55,9 @@ public class TestRailConfiguration {
             throw new IllegalStateException("TestRail password has not been set");
         }
 
-        HttpBasicAuth httpBasicAuth = new HttpBasicAuth();
-        httpBasicAuth.setCredentials(testRailUsername, testRailPassword);
-        OkHttpClient httpClient = new OkHttpClient.Builder().addInterceptor(httpBasicAuth).addInterceptor(new TestRailIndexPhpInterceptor())
-                .build();
-
-        Retrofit retrofit = new Retrofit.Builder().addConverterFactory(JSON.GsonCustomConverterFactory.create(new JSON().getGson()))
-                .client(httpClient).baseUrl(testRailBaseUrl).build();
-
-        return retrofit.create(TestRailApiClient.class);
-    }
-
-    // Needed otherwise Retrofit 2 will be mad on the URL query/path parameters
-    private static final class TestRailIndexPhpInterceptor implements Interceptor {
-
-        @Override
-        public Response intercept(Chain chain) throws IOException {
-            Request request = chain.request();
-            String finalUrl = request.url().toString().replace("api/v2", "index.php?/api/v2");
-            return chain.proceed(request.newBuilder().url(finalUrl).build());
-        }
+        return Feign.builder().encoder(new JacksonEncoder(ObjectMapperFactory.getShared()))
+                .options(new Request.Options(30, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true)).retryer(Retryer.NEVER_RETRY)
+                .requestInterceptor(new BasicAuthRequestInterceptor(testRailUsername, testRailPassword))
+                .target(TestRailApiClient.class, testRailBaseUrl);
     }
 }

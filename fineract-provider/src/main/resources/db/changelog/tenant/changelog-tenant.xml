@@ -251,4 +251,5 @@
     <include file="parts/0230_add_forgot_password.xml" relativeToChangelogFile="true" />
     <include file="parts/0231_remove_clientcharge_inactivate_permissions.xml" relativeToChangelogFile="true" />
     <include file="parts/0232_add_repayment_start_date_to_loan.xml" relativeToChangelogFile="true" />
+    <include file="parts/0233_backfill_repayment_start_date_type_on_loan.xml" relativeToChangelogFile="true" />
 </databaseChangeLog>

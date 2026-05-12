@@ -191,8 +191,12 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         @Schema(example = "30")
         public Integer repaymentEvery;
         public StringEnumOptionData repaymentFrequencyType;
-        @Schema(example = "0.0")
+        @Schema(example = "0.0", description = "Discount set during loan disbursement")
         public BigDecimal discount;
+        @Schema(example = "0.0", description = "Proposed discount at loan submission time")
+        public BigDecimal discountProposed;
+        @Schema(example = "0.0", description = "Approved discount set during loan approval")
+        public BigDecimal discountApproved;
         @Schema(description = "Working capital breach)")
         public WorkingCapitalLoanProductApiResourceSwagger.GetWorkingCapitalLoanProductsResponse.GetWorkingCapitalLoanBreach breach;
         public WorkingCapitalLoanProductApiResourceSwagger.GetWorkingCapitalLoanNearBreach nearBreach;

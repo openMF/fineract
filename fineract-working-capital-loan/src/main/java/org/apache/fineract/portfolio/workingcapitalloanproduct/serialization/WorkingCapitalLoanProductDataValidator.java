@@ -105,6 +105,8 @@ public class WorkingCapitalLoanProductDataValidator {
                     WorkingCapitalLoanProductConstants.transfersInSuspenseAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.deferredIncomeLiabilityAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.incomeFromDiscountFeeAccountIdParamName, //
+                    WorkingCapitalLoanProductConstants.receivableFeeAccountIdParamName, //
+                    WorkingCapitalLoanProductConstants.receivablePenaltyAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.incomeFromFeeAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.incomeFromPenaltyAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.incomeFromRecoveryAccountIdParamName, //
@@ -613,6 +615,16 @@ public class WorkingCapitalLoanProductDataValidator {
                         .extractLongNamed(WorkingCapitalLoanProductConstants.incomeFromDiscountFeeAccountIdParamName, element);
                 baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.incomeFromDiscountFeeAccountIdParamName)
                         .value(incomeFromDiscountFeeAccountId).notNull().integerGreaterThanZero();
+
+                final Long receivableFeeAccountId = this.fromApiJsonHelper
+                        .extractLongNamed(WorkingCapitalLoanProductConstants.receivableFeeAccountIdParamName, element);
+                baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.receivableFeeAccountIdParamName)
+                        .value(receivableFeeAccountId).notNull().integerGreaterThanZero();
+
+                final Long receivablePenaltyAccountId = this.fromApiJsonHelper
+                        .extractLongNamed(WorkingCapitalLoanProductConstants.receivablePenaltyAccountIdParamName, element);
+                baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.receivablePenaltyAccountIdParamName)
+                        .value(receivablePenaltyAccountId).notNull().integerGreaterThanZero();
 
                 final Long incomeFromFeeAccountId = this.fromApiJsonHelper
                         .extractLongNamed(WorkingCapitalLoanProductConstants.incomeFromFeeAccountIdParamName, element);

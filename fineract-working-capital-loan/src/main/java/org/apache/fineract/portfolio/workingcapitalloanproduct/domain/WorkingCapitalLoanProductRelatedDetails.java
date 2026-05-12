@@ -71,6 +71,12 @@ public class WorkingCapitalLoanProductRelatedDetails {
     @Column(name = "discount", scale = 6, precision = 19)
     private BigDecimal discount;
 
+    @Column(name = "discount_proposed", scale = 6, precision = 19)
+    private BigDecimal discountProposed;
+
+    @Column(name = "discount_approved", scale = 6, precision = 19)
+    private BigDecimal discountApproved;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "delinquency_bucket_classification_id")
     private DelinquencyBucket delinquencyBucket;

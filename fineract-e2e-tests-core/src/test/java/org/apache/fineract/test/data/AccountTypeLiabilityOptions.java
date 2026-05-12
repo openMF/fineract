@@ -22,6 +22,7 @@ public enum AccountTypeLiabilityOptions {
 
     AA_SUSPENSE_BALANCE(5), //
     SUSPENSE_CLEARING_ACCOUNT(6), //
+    OTHER_CREDIT_LIABILITY(4), //
     OVERPAYMENT_ACCOUNT(17); //
 
     public final Integer value;

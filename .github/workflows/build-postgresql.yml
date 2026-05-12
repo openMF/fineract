@@ -134,7 +134,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: test-results-${{ matrix.task }}
+          name: test-results-postgresql-${{ matrix.task }}-attempt-${{ github.run_attempt }}
           path: '**/build/reports/'
           retention-days: 5
 
@@ -142,6 +142,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: server-logs-${{ matrix.task }}
+          name: server-logs-postgresql-${{ matrix.task }}-attempt-${{ github.run_attempt }}
           path: '**/build/cargo/'
           retention-days: 5

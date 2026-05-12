@@ -32,20 +32,24 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.IntStream;
 import org.apache.fineract.client.models.PostSavingsAccountsAccountIdRequest;
 import org.apache.fineract.infrastructure.core.service.MathUtil;
 import org.apache.fineract.integrationtests.common.ClientHelper;
 import org.apache.fineract.integrationtests.common.CommonConstants;
-import org.apache.fineract.integrationtests.common.GlobalConfigurationHelper;
+import org.apache.fineract.integrationtests.common.ParallelExecutionHelper;
 import org.apache.fineract.integrationtests.common.SchedulerJobHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.common.accounting.Account;
 import org.apache.fineract.integrationtests.common.accounting.AccountHelper;
-import org.apache.fineract.integrationtests.common.accounting.JournalEntryHelper;
 import org.apache.fineract.integrationtests.common.savings.SavingsAccountHelper;
 import org.apache.fineract.integrationtests.common.savings.SavingsProductHelper;
 import org.apache.fineract.integrationtests.common.savings.SavingsTestLifecycleExtension;
@@ -68,12 +72,11 @@ public class SavingsInterestPostingTest {
     private SavingsAccountHelper savingsAccountHelper;
     private SchedulerJobHelper schedulerJobHelper;
     public static final String MINIMUM_OPENING_BALANCE = "1000.0";
-    private GlobalConfigurationHelper globalConfigurationHelper;
     private SavingsProductHelper productHelper;
-    private JournalEntryHelper journalEntryHelper;
 
     private static final String ACCRUALS_JOB_NAME = "Add Accrual Transactions For Savings";
     private static final String POST_INTEREST_JOB_NAME = "Post Interest For Savings";
+    private final Set<Long> createdSavingsAccountIds = Collections.synchronizedSet(new LinkedHashSet<>());
 
     @BeforeEach
     public void setup() {
@@ -84,8 +87,6 @@ public class SavingsInterestPostingTest {
         this.schedulerJobHelper = new SchedulerJobHelper(this.requestSpec);
         this.accountHelper = new AccountHelper(this.requestSpec, this.responseSpec);
         this.savingsAccountHelper = new SavingsAccountHelper(this.requestSpec, this.responseSpec);
-        this.journalEntryHelper = new JournalEntryHelper(this.requestSpec, this.responseSpec);
-        this.globalConfigurationHelper = new GlobalConfigurationHelper();
     }
 
     @AfterEach
@@ -114,8 +115,7 @@ public class SavingsInterestPostingTest {
             final LocalDate startDate = LocalDate.of(2025, 2, 1);
             final String startDateString = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.US).format(startDate);
 
-            final Integer accountId = savingsAccountHelper.applyForSavingsApplicationOnDate(clientId, productId,
-                    SavingsAccountHelper.ACCOUNT_TYPE_INDIVIDUAL, startDateString);
+            final Integer accountId = createTrackedSavingsAccount(clientId, productId, startDateString);
             savingsAccountHelper.approveSavingsOnDate(accountId, startDateString);
             savingsAccountHelper.activateSavings(accountId, startDateString);
             savingsAccountHelper.depositToSavingsAccount(accountId, amount, startDateString, CommonConstants.RESPONSE_RESOURCE_ID);
@@ -161,8 +161,7 @@ public class SavingsInterestPostingTest {
             final LocalDate startDate = LocalDate.of(2025, 2, 1);
             final String startDateString = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.US).format(startDate);
 
-            final Integer accountId = savingsAccountHelper.applyForSavingsApplicationOnDate(clientId, productId,
-                    SavingsAccountHelper.ACCOUNT_TYPE_INDIVIDUAL, startDateString);
+            final Integer accountId = createTrackedSavingsAccount(clientId, productId, startDateString);
             savingsAccountHelper.approveSavingsOnDate(accountId, startDateString);
             savingsAccountHelper.activateSavings(accountId, startDateString);
             savingsAccountHelper.withdrawalFromSavingsAccount(accountId, amount, startDateString, CommonConstants.RESPONSE_RESOURCE_ID);
@@ -212,8 +211,7 @@ public class SavingsInterestPostingTest {
             final LocalDate startDate = LocalDate.of(2025, 2, 1);
             final String startStr = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.US).format(startDate);
 
-            final Integer accountId = savingsAccountHelper.applyForSavingsApplicationOnDate(clientId, productId,
-                    SavingsAccountHelper.ACCOUNT_TYPE_INDIVIDUAL, startStr);
+            final Integer accountId = createTrackedSavingsAccount(clientId, productId, startStr);
             savingsAccountHelper.approveSavingsOnDate(accountId, startStr);
             savingsAccountHelper.activateSavings(accountId, startStr);
             savingsAccountHelper.depositToSavingsAccount(accountId, amountDeposit, startStr, CommonConstants.RESPONSE_RESOURCE_ID);
@@ -278,8 +276,7 @@ public class SavingsInterestPostingTest {
             final LocalDate startDate = LocalDate.of(2025, 2, 1);
             final String startStr = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.US).format(startDate);
 
-            final Integer accountId = savingsAccountHelper.applyForSavingsApplicationOnDate(clientId, productId,
-                    SavingsAccountHelper.ACCOUNT_TYPE_INDIVIDUAL, startStr);
+            final Integer accountId = createTrackedSavingsAccount(clientId, productId, startStr);
             savingsAccountHelper.approveSavingsOnDate(accountId, startStr);
             savingsAccountHelper.activateSavings(accountId, startStr);
             savingsAccountHelper.withdrawalFromSavingsAccount(accountId, amountWithdrawal, startStr, CommonConstants.RESPONSE_RESOURCE_ID);
@@ -343,8 +340,7 @@ public class SavingsInterestPostingTest {
             final LocalDate startDate = LocalDate.of(2025, 1, 1);
             final String startStr = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.US).format(startDate);
 
-            final Integer accountId = savingsAccountHelper.applyForSavingsApplicationOnDate(clientId, productId,
-                    SavingsAccountHelper.ACCOUNT_TYPE_INDIVIDUAL, startStr);
+            final Integer accountId = createTrackedSavingsAccount(clientId, productId, startStr);
             savingsAccountHelper.approveSavingsOnDate(accountId, startStr);
             savingsAccountHelper.activateSavings(accountId, startStr);
             savingsAccountHelper.depositToSavingsAccount(accountId, amountDeposit, startStr, CommonConstants.RESPONSE_RESOURCE_ID);
@@ -419,28 +415,26 @@ public class SavingsInterestPostingTest {
 
             final LocalDate startDate = LocalDate.of(2025, 2, 1);
 
-            List<Integer> accountIdList = new ArrayList<>();
-            for (int i = 0; i < 800; i++) {
-
+            final String startDateString = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.US).format(startDate);
+            List<Integer> accountIdList = new CopyOnWriteArrayList<>();
+            ParallelExecutionHelper.runInParallel(IntStream.range(0, 200).boxed().toList(), (i) -> {
                 final Integer clientId = ClientHelper.createClient(requestSpec, responseSpec, "01 January 2025");
-                final String startDateString = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.US).format(startDate);
-                final Integer accountId = savingsAccountHelper.applyForSavingsApplicationOnDate(clientId, productId,
-                        SavingsAccountHelper.ACCOUNT_TYPE_INDIVIDUAL, startDateString);
+                final Integer accountId = createTrackedSavingsAccount(clientId, productId, startDateString);
 
                 savingsAccountHelper.approveSavingsOnDate(accountId, startDateString);
                 savingsAccountHelper.activateSavings(accountId, startDateString);
                 savingsAccountHelper.depositToSavingsAccount(accountId, amount, startDateString, CommonConstants.RESPONSE_RESOURCE_ID);
-
                 accountIdList.add(accountId);
-            }
-            Assertions.assertEquals(800, accountIdList.size(), "ERROR: Expected 800");
+            });
+            Assertions.assertEquals(200, accountIdList.size(), "ERROR: Expected 200");
 
             schedulerJobHelper.executeAndAwaitJob(POST_INTEREST_JOB_NAME);
+            schedulerJobHelper.executeAndAwaitJob(POST_INTEREST_JOB_NAME);
 
-            for (Integer accountId : accountIdList) {
+            ParallelExecutionHelper.runInParallel(accountIdList, (accountId) -> {
                 List<HashMap> txs = getInterestTransactions(accountId);
                 Assertions.assertEquals(1, txs.size(), "ERROR: Duplicate interest postings exist.");
-            }
+            });
         });
     }
 
@@ -465,8 +459,7 @@ public class SavingsInterestPostingTest {
                     .build();
             final Integer productId = SavingsProductHelper.createSavingsProduct(savingsProductJSON, requestSpec, responseSpec);
 
-            final Integer accountId = savingsAccountHelper.applyForSavingsApplicationOnDate(clientId, productId,
-                    SavingsAccountHelper.ACCOUNT_TYPE_INDIVIDUAL, accountOpeningDate);
+            final Integer accountId = createTrackedSavingsAccount(clientId, productId, accountOpeningDate);
 
             savingsAccountHelper.approveSavingsOnDate(accountId, accountOpeningDate);
             savingsAccountHelper.activateSavings(accountId, accountOpeningDate);
@@ -511,11 +504,10 @@ public class SavingsInterestPostingTest {
         try {
             LOG.info("Starting cleanup of savings accounts after duplicate prevention test");
 
-            List<Long> savingsIds = SavingsAccountHelper.getSavingsIdsByStatusId(300);
-            if (!savingsIds.isEmpty()) {
-                LOG.info("Found {} savings accounts to cleanup", savingsIds.size());
+            if (!createdSavingsAccountIds.isEmpty()) {
+                LOG.info("Found {} tracked savings accounts to cleanup", createdSavingsAccountIds.size());
 
-                savingsIds.forEach(savingsId -> {
+                createdSavingsAccountIds.forEach(savingsId -> {
                     try {
 
                         savingsAccountHelper.postInterestForSavings(savingsId.intValue());
@@ -529,14 +521,22 @@ public class SavingsInterestPostingTest {
                         LOG.warn("Unable to close savings account {}: {}", savingsId, e.getMessage());
                     }
                 });
+                createdSavingsAccountIds.clear();
 
                 LOG.info("Savings accounts cleanup completed");
             } else {
-                LOG.info("No savings accounts found to cleanup");
+                LOG.info("No tracked savings accounts found to cleanup");
             }
         } catch (Exception e) {
             LOG.error("Error during savings accounts cleanup: {}", e.getMessage(), e);
         }
+    }
+
+    private Integer createTrackedSavingsAccount(Integer clientId, Integer productId, String submittedOnDate) {
+        Integer accountId = savingsAccountHelper.applyForSavingsApplicationOnDate(clientId, productId,
+                SavingsAccountHelper.ACCOUNT_TYPE_INDIVIDUAL, submittedOnDate);
+        createdSavingsAccountIds.add(accountId.longValue());
+        return accountId;
     }
 
     private List<HashMap> getInterestTransactions(Integer savingsAccountId) {

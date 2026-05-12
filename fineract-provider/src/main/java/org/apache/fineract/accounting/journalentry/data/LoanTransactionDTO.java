@@ -20,6 +20,7 @@ package org.apache.fineract.accounting.journalentry.data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -65,4 +66,8 @@ public class LoanTransactionDTO {
     private final BigDecimal principalPaid;
     private final BigDecimal feePaid;
     private final BigDecimal penaltyPaid;
+
+    /** Used by accounting processors to split the fee income credit into net income + tax liability entries */
+    @Setter
+    private List<ChargeTaxPaymentDTO> chargeTaxPayments = new ArrayList<>();
 }

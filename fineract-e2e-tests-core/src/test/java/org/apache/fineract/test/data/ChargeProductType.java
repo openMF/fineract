@@ -18,34 +18,34 @@
  */
 package org.apache.fineract.test.data;
 
+import lombok.Getter;
+
+@Getter
 public enum ChargeProductType {
 
-    LOAN_PERCENTAGE_LATE_FEE(1L), //
-    LOAN_PERCENTAGE_PROCESSING_FEE(2L), //
-    LOAN_FIXED_LATE_FEE(3L), //
-    LOAN_FIXED_RETURNED_PAYMENT_FEE(4L), //
-    LOAN_SNOOZE_FEE(5L), //
-    LOAN_NSF_FEE(6L), //
-    LOAN_DISBURSEMENT_PERCENTAGE_FEE(7L), //
-    LOAN_TRANCHE_DISBURSEMENT_PERCENTAGE_FEE(8L), //
-    LOAN_INSTALLMENT_FEE_PERCENTAGE_AMOUNT_PLUS_INTEREST(9L), //
-    LOAN_PERCENTAGE_LATE_FEE_AMOUNT_PLUS_INTEREST(10L), //
-    CLIENT_TEST_CHARGE_FEE(11L), //
-    LOAN_DISBURSEMENT_CHARGE(12L), //
-    CHARGE_LOAN_TRANCHE_DISBURSEMENT_CHARGE_AMOUNT(13L), //
-    CHARGE_LOAN_TRANCHE_DISBURSEMENT_CHARGE_PERCENT(14L), //
-    LOAN_INSTALLMENT_FEE_FLAT(15L), //
-    LOAN_INSTALLMENT_FEE_PERCENTAGE_AMOUNT(16L), //
-    LOAN_INSTALLMENT_FEE_PERCENTAGE_INTEREST(17L), //
-    LOAN_DISBURSEMENT_PERCENTAGE_AMOUNT_PLUS_INTEREST_FEE(18L); //
+    LOAN_PERCENTAGE_LATE_FEE("% Late fee"), //
+    LOAN_PERCENTAGE_PROCESSING_FEE("% Processing fee"), //
+    LOAN_FIXED_LATE_FEE("Fixed Late fee"), //
+    LOAN_FIXED_RETURNED_PAYMENT_FEE("Fixed Returned payment fee"), //
+    LOAN_SNOOZE_FEE("Snooze fee"), //
+    LOAN_NSF_FEE("NSF fee"), //
+    LOAN_DISBURSEMENT_PERCENTAGE_FEE("Disbursement percentage fee"), //
+    LOAN_TRANCHE_DISBURSEMENT_PERCENTAGE_FEE("Tranche Disbursement percentage fee"), //
+    LOAN_INSTALLMENT_FEE_PERCENTAGE_AMOUNT_PLUS_INTEREST("Installment percentage amount + interest fee"), //
+    LOAN_PERCENTAGE_LATE_FEE_AMOUNT_PLUS_INTEREST("% Late fee amount+interest"), //
+    CLIENT_TEST_CHARGE_FEE("Fixed fee for Client"), //
+    LOAN_DISBURSEMENT_CHARGE("Disbursement Charge"), //
+    CHARGE_LOAN_TRANCHE_DISBURSEMENT_CHARGE_AMOUNT("Tranche Disbursement Charge Amount"), //
+    CHARGE_LOAN_TRANCHE_DISBURSEMENT_CHARGE_PERCENT("Tranche Disbursement Charge Percent"), //
+    LOAN_INSTALLMENT_FEE_FLAT("Installment flat fee"), //
+    LOAN_INSTALLMENT_FEE_PERCENTAGE_AMOUNT("Installment percentage amount fee"), //
+    LOAN_INSTALLMENT_FEE_PERCENTAGE_INTEREST("Installment percentage interest fee"), //
+    LOAN_DISBURSEMENT_PERCENTAGE_AMOUNT_PLUS_INTEREST_FEE("Disbursement percentage amount + interest fee"); //
 
-    public final Long value;
+    public final String name;
 
-    ChargeProductType(Long value) {
-        this.value = value;
+    ChargeProductType(String name) {
+        this.name = name;
     }
 
-    public Long getValue() {
-        return value;
-    }
 }

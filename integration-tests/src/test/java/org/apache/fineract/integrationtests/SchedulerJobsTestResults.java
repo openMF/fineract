@@ -1375,9 +1375,9 @@ public class SchedulerJobsTestResults extends IntegrationTest {
                     .getSpecifiedDueDateChargesForLoanAsJSON(String.valueOf(penalty), penaltyCharge1AddedDate, "10", null));
 
             this.schedulerJobHelper.updateSchedulerStatus(true);
-            this.schedulerJobHelper.updateSchedulerJob(16L, new PutJobsJobIDRequest().active(true).cronExpression("0/5 * * * * ?"));
+            this.schedulerJobHelper.updateSchedulerJob(16L, new PutJobsJobIDRequest().active(true).cronExpression("0/1 * * * * ?"));
 
-            Thread.sleep(11000);
+            Thread.sleep(2000);
             GetLoansLoanIdResponse loanDetails = this.loanTransactionHelper.getLoanDetails((long) loanId);
             assertEquals(LocalDate.of(2022, 9, 5), loanDetails.getTransactions().get(1).getDate());
         } finally {

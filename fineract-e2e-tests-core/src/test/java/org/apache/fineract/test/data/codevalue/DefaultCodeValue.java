@@ -26,7 +26,9 @@ public enum DefaultCodeValue implements CodeValue {
     OTHER("Other"), //
     BAD_DEBT("Bad Debt"), //
     FORGIVEN("Forgiven"), //
-    TEST("Test"); //
+    // Reschedule reason
+    TEST("Test"), //
+    ; //
 
     private final String customName;
 

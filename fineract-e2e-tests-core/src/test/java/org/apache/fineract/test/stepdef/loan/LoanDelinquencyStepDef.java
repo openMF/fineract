@@ -561,14 +561,13 @@ public class LoanDelinquencyStepDef extends AbstractStepDef {
                 .as(ErrorMessageHelper.nrOfLinesWrongInInstallmentLevelDelinquencyData(installmentLevelDelinquency.size(), data.size() - 1))
                 .isEqualTo(data.size() - 1);
         for (int i = 1; i < data.size(); i++) {
-            DelinquencyRange expectedDelinquencyRange = DelinquencyRange.valueOf(data.get(i).get(1));
+            DelinquencyRange expectedDelinquencyRange = DelinquencyRange.valueOf(data.get(i).get(0));
             String expectedDelinquencyRangeValue = expectedDelinquencyRange.getValue();
 
             List<String> expectedValuesList = data.get(i);
-            expectedValuesList.set(1, expectedDelinquencyRangeValue);
+            expectedValuesList.set(0, expectedDelinquencyRangeValue);
 
-            List<String> actualValuesList = List.of(String.valueOf(installmentLevelDelinquency.get(i - 1).getRangeId()),
-                    installmentLevelDelinquency.get(i - 1).getClassification(),
+            List<String> actualValuesList = List.of(installmentLevelDelinquency.get(i - 1).getClassification(),
                     installmentLevelDelinquency.get(i - 1).getDelinquentAmount().setScale(2, RoundingMode.HALF_DOWN).toString());
             assertThat(actualValuesList)
                     .as(ErrorMessageHelper.wrongValueInLineInInstallmentLevelDelinquencyData(i, actualValuesList, expectedValuesList))

@@ -243,7 +243,7 @@ public class LoanImportHandlerTest {
         Assertions.assertNotNull(importDocumentId);
 
         // Wait for the creation of output excel
-        Thread.sleep(10000);
+        Thread.sleep(1000);
 
         // check status column of output excel
         String location = LocalContentStorageUtil.path(loanTransactionHelper.getOutputTemplateLocation(importDocumentId));

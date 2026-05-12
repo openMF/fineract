@@ -18,23 +18,20 @@
  */
 package org.apache.fineract.test.testrail;
 
+import feign.FeignException;
 import io.cucumber.java.Scenario;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.ResponseBody;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.apache.http.HttpStatus;
 import org.junit.runner.Result;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
-import retrofit2.Response;
 
 @Slf4j
 @Component
@@ -66,11 +63,8 @@ public class TestRailClient implements InitializingBean {
 
         if (caseId != null) {
             try {
-                Response<Void> response = apiClient.addResultForCase(testRailProperties.getRunId(), caseId, request).execute();
-                if (response.code() != HttpStatus.SC_OK) {
-                    handleApiError(response);
-                }
-            } catch (IOException e) {
+                apiClient.addResultForCase(testRailProperties.getRunId(), caseId, request);
+            } catch (FeignException e) {
                 throw new RuntimeException("Error while reporting to TestRail", e);
             }
         }
@@ -87,15 +81,6 @@ public class TestRailClient implements InitializingBean {
             }
         }
         return caseId;
-    }
-
-    private void handleApiError(Response<Void> response) throws IOException {
-        String exceptionMsg = "Error while reporting to TestRail";
-        ResponseBody errorBody = response.errorBody();
-        if (errorBody != null) {
-            exceptionMsg += " " + errorBody.string();
-        }
-        throw new RuntimeException(exceptionMsg);
     }
 
     private AddResultForCaseRequest createFailedRequest(Scenario scenario) {

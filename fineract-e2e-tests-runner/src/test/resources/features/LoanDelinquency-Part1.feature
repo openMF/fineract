@@ -277,9 +277,9 @@ Feature: LoanDelinquency - Part1
     When Admin sets the business date to "16 December 2023"
     When Admin runs inline COB job for Loan
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 3       | RANGE_30 | 500.00 |
-      | 4       | RANGE_60 | 500.00 |
+      | Range    | Amount |
+      | RANGE_30 | 500.00 |
+      | RANGE_60 | 500.00 |
     Then Installment level delinquency event has correct data
 
   @TestRailId:C2980
@@ -294,17 +294,17 @@ Feature: LoanDelinquency - Part1
     When Admin sets the business date to "16 November 2023"
     When Admin runs inline COB job for Loan
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 1       | RANGE_1  | 250.00 |
-      | 2       | RANGE_3  | 250.00 |
-      | 3       | RANGE_30 | 500.00 |
+      | Range    | Amount |
+      | RANGE_1  | 250.00 |
+      | RANGE_3  | 250.00 |
+      | RANGE_30 | 500.00 |
     Then Installment level delinquency event has correct data
     When Admin sets the business date to "16 December 2023"
     When Admin runs inline COB job for Loan
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 3       | RANGE_30 | 500.00 |
-      | 4       | RANGE_60 | 500.00 |
+      | Range    | Amount |
+      | RANGE_30 | 500.00 |
+      | RANGE_60 | 500.00 |
     Then Installment level delinquency event has correct data
 
   @TestRailId:C2981
@@ -319,9 +319,9 @@ Feature: LoanDelinquency - Part1
     When Admin sets the business date to "16 December 2023"
     When Admin runs inline COB job for Loan
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 3       | RANGE_30 | 500.00 |
-      | 4       | RANGE_60 | 500.00 |
+      | Range    | Amount |
+      | RANGE_30 | 500.00 |
+      | RANGE_60 | 500.00 |
     Then Installment level delinquency event has correct data
     When Admin sets the business date to "17 December 2023"
     And Customer makes "AUTOPAY" repayment on "17 December 2023" with 1000 EUR transaction amount
@@ -341,14 +341,14 @@ Feature: LoanDelinquency - Part1
     When Admin runs inline COB job for Loan
     Then Installment level delinquency event has correct data
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 500.00 |
+      | Range   | Amount |
+      | RANGE_3 | 500.00 |
     When Admin sets the business date to "26 October 2023"
     And Customer makes "AUTOPAY" repayment on "26 October 2023" with 250 EUR transaction amount
     Then Installment level delinquency event has correct data
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
 
   @TestRailId:C2983
   Scenario: Verify Installment level loan delinquency - loan goes out from delinquency by Goodwill credit transaction
@@ -362,9 +362,9 @@ Feature: LoanDelinquency - Part1
     When Admin sets the business date to "16 December 2023"
     When Admin runs inline COB job for Loan
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 3       | RANGE_30 | 500.00 |
-      | 4       | RANGE_60 | 500.00 |
+      | Range    | Amount |
+      | RANGE_30 | 500.00 |
+      | RANGE_60 | 500.00 |
     Then Installment level delinquency event has correct data
     When Admin sets the business date to "17 December 2023"
     When Customer makes "GOODWILL_CREDIT" transaction with "AUTOPAY" payment type on "17 December 2023" with 1000 EUR transaction amount and system-generated Idempotency key
@@ -384,14 +384,14 @@ Feature: LoanDelinquency - Part1
     When Admin runs inline COB job for Loan
     Then Installment level delinquency event has correct data
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 500.00 |
+      | Range   | Amount |
+      | RANGE_3 | 500.00 |
     When Admin sets the business date to "26 October 2023"
     When Customer makes "GOODWILL_CREDIT" transaction with "AUTOPAY" payment type on "26 October 2023" with 250 EUR transaction amount and system-generated Idempotency key
     Then Installment level delinquency event has correct data
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
 
   @TestRailId:C2985
   Scenario: Verify Installment level loan delinquency - loan with charges goes into delinquency bucket
@@ -408,9 +408,9 @@ Feature: LoanDelinquency - Part1
     When Admin sets the business date to "16 December 2023"
     When Admin runs inline COB job for Loan
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 3       | RANGE_30 | 520.00 |
-      | 4       | RANGE_60 | 520.00 |
+      | Range    | Amount |
+      | RANGE_30 | 520.00 |
+      | RANGE_60 | 520.00 |
     Then Installment level delinquency event has correct data
 
   @TestRailId:C2987
@@ -428,10 +428,10 @@ Feature: LoanDelinquency - Part1
     When Admin sets the business date to "16 November 2023"
     When Admin runs inline COB job for Loan
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 1       | RANGE_1  | 250.00 |
-      | 2       | RANGE_3  | 250.00 |
-      | 3       | RANGE_30 | 500.00 |
+      | Range    | Amount |
+      | RANGE_1  | 250.00 |
+      | RANGE_3  | 250.00 |
+      | RANGE_30 | 500.00 |
     Then Installment level delinquency event has correct data
     When Admin sets the business date to "17 November 2023"
     When Admin initiate a DELINQUENCY PAUSE with startDate: "17 November 2023" and endDate: "30 November 2023"
@@ -441,27 +441,27 @@ Feature: LoanDelinquency - Part1
     When Admin runs inline COB job for Loan
     Then Installment level delinquency event has correct data
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 1       | RANGE_1  | 250.00 |
-      | 2       | RANGE_3  | 250.00 |
-      | 3       | RANGE_30 | 500.00 |
+      | Range    | Amount |
+      | RANGE_1  | 250.00 |
+      | RANGE_3  | 250.00 |
+      | RANGE_30 | 500.00 |
     When Admin sets the business date to "30 November 2023"
     When Admin runs inline COB job for Loan
     Then Installment level delinquency event has correct data
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 1       | RANGE_1  | 250.00 |
-      | 2       | RANGE_3  | 250.00 |
-      | 3       | RANGE_30 | 500.00 |
+      | Range    | Amount |
+      | RANGE_1  | 250.00 |
+      | RANGE_3  | 250.00 |
+      | RANGE_30 | 500.00 |
     When Admin sets the business date to "20 December 2023"
     When Admin runs inline COB job for Loan
     When Admin sets the business date to "01 January 2024"
     When Admin runs inline COB job for Loan
     Then Installment level delinquency event has correct data
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 3       | RANGE_30 | 500.00 |
-      | 4       | RANGE_60 | 500.00 |
+      | Range    | Amount |
+      | RANGE_30 | 500.00 |
+      | RANGE_60 | 500.00 |
 
   @TestRailId:C2988
   Scenario: Verify Installment level loan delinquency - loan goes into delinquency pause then will be resumed
@@ -478,10 +478,10 @@ Feature: LoanDelinquency - Part1
     When Admin sets the business date to "16 November 2023"
     When Admin runs inline COB job for Loan
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 1       | RANGE_1  | 250.00 |
-      | 2       | RANGE_3  | 250.00 |
-      | 3       | RANGE_30 | 500.00 |
+      | Range    | Amount |
+      | RANGE_1  | 250.00 |
+      | RANGE_3  | 250.00 |
+      | RANGE_30 | 500.00 |
     Then Installment level delinquency event has correct data
     When Admin sets the business date to "17 November 2023"
     When Admin initiate a DELINQUENCY PAUSE with startDate: "17 November 2023" and endDate: "30 December 2023"
@@ -491,10 +491,10 @@ Feature: LoanDelinquency - Part1
     When Admin runs inline COB job for Loan
     Then Installment level delinquency event has correct data
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 1       | RANGE_1  | 250.00 |
-      | 2       | RANGE_3  | 250.00 |
-      | 3       | RANGE_30 | 500.00 |
+      | Range    | Amount |
+      | RANGE_1  | 250.00 |
+      | RANGE_3  | 250.00 |
+      | RANGE_30 | 500.00 |
     When Admin sets the business date to "01 December 2023"
     When Admin initiate a DELINQUENCY RESUME with startDate: "01 December 2023"
     Then Delinquency-actions have the following data:
@@ -504,10 +504,10 @@ Feature: LoanDelinquency - Part1
     When Admin runs inline COB job for Loan
     Then Installment level delinquency event has correct data
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 1       | RANGE_1  | 250.00 |
-      | 2       | RANGE_3  | 250.00 |
-      | 3       | RANGE_30 | 500.00 |
+      | Range    | Amount |
+      | RANGE_1  | 250.00 |
+      | RANGE_3  | 250.00 |
+      | RANGE_30 | 500.00 |
 
   @TestRailId:C2990
   Scenario: Verify that a non-super user with CREATE_DELINQUENCY_ACTION permission can initiate a DELINQUENCY PAUSE
@@ -569,8 +569,8 @@ Feature: LoanDelinquency - Part1
       | RANGE_1        | 250.0            | 04 October 2023 | 1              | 4           |
 #   --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     When Admin sets the business date to "06 October 2023"
     When Admin initiate a DELINQUENCY PAUSE with startDate: "06 October 2023" and endDate: "30 October 2023"
     Then Loan Delinquency pause periods has the following data:
@@ -585,8 +585,8 @@ Feature: LoanDelinquency - Part1
       | RANGE_1        | 250.0            | 04 October 2023 | 2              | 5           |
 #    --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     When Admin sets the business date to "30 October 2023"
     When Admin runs inline COB job for Loan
     Then Loan has the following LOAN level delinquency data:
@@ -597,8 +597,8 @@ Feature: LoanDelinquency - Part1
       | true   | 06 October 2023  | 30 October 2023 |
 #    --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     When Admin sets the business date to "31 October 2023"
     When Admin runs inline COB job for Loan
     Then Loan has the following LOAN level delinquency data:
@@ -609,9 +609,9 @@ Feature: LoanDelinquency - Part1
       | false  | 06 October 2023  | 30 October 2023 |
 #    --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 1       | RANGE_1 | 250.00 |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_1 | 250.00 |
+      | RANGE_3 | 250.00 |
 
   @TestRailId:C3000
   Scenario: Verify Loan delinquency pause E2E - PAUSE period with RESUME
@@ -637,8 +637,8 @@ Feature: LoanDelinquency - Part1
       | classification | delinquentAmount | delinquentDate  | delinquentDays | pastDueDays |
       | RANGE_3        | 250.0            | 04 October 2023 | 11             | 14          |
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     Then Installment level delinquency event has correct data
 #    --- Delinquency resume ---
     When Admin sets the business date to "25 October 2023"
@@ -659,8 +659,8 @@ Feature: LoanDelinquency - Part1
       | classification | delinquentAmount | delinquentDate  | delinquentDays | pastDueDays |
       | RANGE_3        | 500.0            | 04 October 2023 | 12             | 25          |
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     Then Installment level delinquency event has correct data
 
   @TestRailId:C3001
@@ -689,8 +689,8 @@ Feature: LoanDelinquency - Part1
       | classification | delinquentAmount | delinquentDate  | delinquentDays | pastDueDays |
       | RANGE_3        | 250.0            | 04 October 2023 | 11             | 15          |
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     Then Installment level delinquency event has correct data
 #    --- Delinquency resume ---
     When Admin sets the business date to "25 October 2023"
@@ -711,8 +711,8 @@ Feature: LoanDelinquency - Part1
       | classification | delinquentAmount | delinquentDate  | delinquentDays | pastDueDays |
       | RANGE_3        | 500.0            | 04 October 2023 | 12             | 25          |
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     Then Installment level delinquency event has correct data
 #   --- Delinquency runs ---
     When Admin sets the business date to "13 November 2023"
@@ -728,9 +728,9 @@ Feature: LoanDelinquency - Part1
       | classification | delinquentAmount | delinquentDate  | delinquentDays | pastDueDays |
       | RANGE_3        | 750.0            | 04 October 2023 | 30             | 43          |
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 2       | RANGE_3  | 500.00 |
-      | 3       | RANGE_30 | 250.00 |
+      | Range    | Amount |
+      | RANGE_3  | 500.00 |
+      | RANGE_30 | 250.00 |
 #    --- Second delinquency pause ---
     When Admin sets the business date to "14 November 2023"
     When Admin initiate a DELINQUENCY PAUSE with startDate: "14 November 2023" and endDate: "30 November 2023"
@@ -748,9 +748,9 @@ Feature: LoanDelinquency - Part1
       | classification | delinquentAmount | delinquentDate  | delinquentDays | pastDueDays |
       | RANGE_3        | 750.0            | 04 October 2023 | 31             | 44          |
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 2       | RANGE_3  | 500.00 |
-      | 3       | RANGE_30 | 250.00 |
+      | Range    | Amount |
+      | RANGE_3  | 500.00 |
+      | RANGE_30 | 250.00 |
     Then Installment level delinquency event has correct data
 #    --- Second delinquency ends ---
     When Admin sets the business date to "30 November 2023"
@@ -768,9 +768,9 @@ Feature: LoanDelinquency - Part1
       | classification | delinquentAmount | delinquentDate  | delinquentDays | pastDueDays |
       | RANGE_3       | 1000.0           | 04 October 2023 | 31             | 60          |
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 2       | RANGE_3  | 500.00 |
-      | 3       | RANGE_30 | 250.00 |
+      | Range    | Amount |
+      | RANGE_3  | 500.00 |
+      | RANGE_30 | 250.00 |
 #    --- Delinquency runs again ---
     When Admin sets the business date to "01 December 2023"
     When Admin runs inline COB job for Loan
@@ -787,10 +787,10 @@ Feature: LoanDelinquency - Part1
       | classification | delinquentAmount | delinquentDate  | delinquentDays | pastDueDays |
       | RANGE_30       | 1000.0           | 04 October 2023 | 32             | 61          |
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 1       | RANGE_1  | 250.00 |
-      | 2       | RANGE_3  | 500.00 |
-      | 3       | RANGE_30 | 250.00 |
+      | Range    | Amount |
+      | RANGE_1  | 250.00 |
+      | RANGE_3  | 500.00 |
+      | RANGE_30 | 250.00 |
     Then Installment level delinquency event has correct data
 
   @TestRailId:C3002
@@ -818,8 +818,8 @@ Feature: LoanDelinquency - Part1
       | RANGE_1        | 250.0            | 04 October 2023 | 2              | 5           |
 #    --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     Then Installment level delinquency event has correct data
 #    --- Full repayment for late/due date installments ---
     When Admin sets the business date to "16 October 2023"
@@ -834,8 +834,8 @@ Feature: LoanDelinquency - Part1
       | RANGE_1        | 250.0            | 04 October 2023 | 2              | 15          |
 #    --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     And Customer makes "AUTOPAY" repayment on "16 October 2023" with 500 EUR transaction amount
     When Admin runs inline COB job for Loan
     Then Loan Delinquency pause periods has the following data:
@@ -874,8 +874,8 @@ Feature: LoanDelinquency - Part1
       | RANGE_1        | 250.0            | 04 October 2023 | 2              | 5           |
 #    --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     Then Installment level delinquency event has correct data
 #    --- Full repayment for late/due date installments ---
     When Admin sets the business date to "16 October 2023"
@@ -890,8 +890,8 @@ Feature: LoanDelinquency - Part1
       | RANGE_1        | 250.0            | 04 October 2023 | 2              | 15          |
 #    --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     And Customer makes "AUTOPAY" repayment on "16 October 2023" with 150 EUR transaction amount
     When Admin runs inline COB job for Loan
     Then Loan Delinquency pause periods has the following data:
@@ -905,8 +905,8 @@ Feature: LoanDelinquency - Part1
       | RANGE_1        | 100.0            | 04 October 2023 | 2              | 15          |
 #    --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 100.00 |
+      | Range   | Amount |
+      | RANGE_3 | 100.00 |
 
   @TestRailId:C3004
   Scenario: Verify Loan delinquency pause E2E - full repayment (only late) during PAUSE period then RESUME
@@ -933,8 +933,8 @@ Feature: LoanDelinquency - Part1
       | RANGE_1        | 250.0            | 04 October 2023 | 2              | 5           |
 #    --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     Then Installment level delinquency event has correct data
 #    --- Full repayment for late/due date installments ---
     When Admin sets the business date to "16 October 2023"
@@ -949,8 +949,8 @@ Feature: LoanDelinquency - Part1
       | RANGE_1        | 250.0            | 04 October 2023 | 2              | 15          |
 #    --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     And Customer makes "AUTOPAY" repayment on "16 October 2023" with 250 EUR transaction amount
     When Admin runs inline COB job for Loan
     Then Loan Delinquency pause periods has the following data:
@@ -997,8 +997,8 @@ Feature: LoanDelinquency - Part1
       | RANGE_3        | 500.0            | 19 October 2023 | 18             | 30          |
 #    --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 500.00 |
+      | Range   | Amount |
+      | RANGE_3 | 500.00 |
     Then Installment level delinquency event has correct data
 
   @TestRailId:C3013
@@ -1052,8 +1052,8 @@ Feature: LoanDelinquency - Part1
       | classification | delinquentAmount | delinquentDate  | delinquentDays | pastDueDays |
       | RANGE_3        | 500.0            | 04 October 2023 | 21             | 29          |
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 500.00 |
+      | Range   | Amount |
+      | RANGE_3 | 500.00 |
     When Admin sets the business date to "31 October 2023"
     Then Loan Delinquency pause periods has the following data:
       | active | pausePeriodStart | pausePeriodEnd  |
@@ -1063,8 +1063,8 @@ Feature: LoanDelinquency - Part1
       | classification | delinquentAmount | delinquentDate  | delinquentDays | pastDueDays |
       | RANGE_3        | 500.0            | 04 October 2023 | 22             | 30          |
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 500.00 |
+      | Range   | Amount |
+      | RANGE_3 | 500.00 |
 
   @TestRailId:C3014
   Scenario: Verify that creating a loan with Advanced payment allocation with product no Advanced payment allocation set results an error
@@ -1089,8 +1089,8 @@ Feature: LoanDelinquency - Part1
       | classification | delinquentAmount | delinquentDate  | delinquentDays | pastDueDays |
       | RANGE_3        | 500.0            | 04 October 2023 | 21             | 24          |
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 500.00 |
+      | Range   | Amount |
+      | RANGE_3 | 500.00 |
     When Admin sets the business date to "27 October 2023"
 #    event checks included in next steps
     When Admin initiate a DELINQUENCY PAUSE with startDate: "25 October 2023" and endDate: "15 November 2023"
@@ -1106,8 +1106,8 @@ Feature: LoanDelinquency - Part1
       | classification | delinquentAmount | delinquentDate  | delinquentDays | pastDueDays |
       | RANGE_3        | 500.0            | 04 October 2023 | 21             | 26          |
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 500.00 |
+      | Range   | Amount |
+      | RANGE_3 | 500.00 |
 
   @TestRailId:C3016
   Scenario: Verify that for pause period calculations business date is being used instead of COB date
@@ -1154,8 +1154,8 @@ Feature: LoanDelinquency - Part1
       | RANGE_1        | 250.0            | 19 October 2023 | 1              | 13          |
 #    --- Grace period applied only on Loan level, not on installment level ---
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range   | Amount |
-      | 2       | RANGE_3 | 250.00 |
+      | Range   | Amount |
+      | RANGE_3 | 250.00 |
     Then Installment level delinquency event has correct data
     Then Loan Delinquency pause periods has the following data:
       | active | pausePeriodStart | pausePeriodEnd  |
@@ -1315,9 +1315,9 @@ Feature: LoanDelinquency - Part1
     When Admin sets the business date to "16 December 2023"
     When Admin runs inline COB job for Loan
     Then Loan has the following INSTALLMENT level delinquency data:
-      | rangeId | Range    | Amount |
-      | 3       | RANGE_30 | 500.00 |
-      | 4       | RANGE_60 | 500.00 |
+      | Range    | Amount |
+      | RANGE_30 | 500.00 |
+      | RANGE_60 | 500.00 |
     Then Installment level delinquency event has correct data
 
   @TestRailId:C3930

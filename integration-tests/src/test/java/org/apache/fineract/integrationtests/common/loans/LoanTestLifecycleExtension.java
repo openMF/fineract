@@ -33,6 +33,7 @@ import org.apache.fineract.client.util.Calls;
 import org.apache.fineract.infrastructure.core.service.MathUtil;
 import org.apache.fineract.integrationtests.common.BusinessDateHelper;
 import org.apache.fineract.integrationtests.common.FineractClientHelper;
+import org.apache.fineract.integrationtests.common.ParallelExecutionHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -60,66 +61,54 @@ public class LoanTestLifecycleExtension implements AfterEachCallback, BeforeEach
             this.loanTransactionHelper = new LoanTransactionHelper(null, null);
 
             List<Long> loanIds = LoanTransactionHelper.getLoanIdsByStatusId(300);
-            loanIds.forEach(loanId -> {
-                GetLoansLoanIdResponse loanResponse = Calls
-                        .ok(FineractClientHelper.getFineractClient().loans.retrieveLoan((long) loanId, null, "all", null, null));
-                if (MathUtil.isLessThan(loanResponse.getApprovedPrincipal(), loanResponse.getProposedPrincipal())) {
-                    PutLoansApprovedAmountRequest request = new PutLoansApprovedAmountRequest().amount(loanResponse.getProposedPrincipal())
-                            .locale("en");
-                    Calls.ok(FineractClientHelper.getFineractClient().loans.modifyLoanApprovedAmount(loanId, request));
-                }
-                loanResponse.getDisbursementDetails().forEach(disbursementDetail -> {
-                    if (disbursementDetail.getActualDisbursementDate() == null) {
-                        loanTransactionHelper.disburseLoan((long) loanId,
-                                new PostLoansLoanIdRequest()
-                                        .actualDisbursementDate(dateFormatter.format(disbursementDetail.getExpectedDisbursementDate()))
-                                        .dateFormat(DATE_FORMAT).locale("en").transactionAmount(disbursementDetail.getPrincipal()));
-                    }
-                });
-                loanResponse = Calls
-                        .ok(FineractClientHelper.getFineractClient().loans.retrieveLoan((long) loanId, null, "all", null, null));
-                GetLoansLoanIdTransactionsTemplateResponse prepayDetail = this.loanTransactionHelper.getPrepaymentAmount(loanId,
-                        dateFormatter.format(cleanupDate), DATE_FORMAT);
-                LocalDate transactionDate = prepayDetail.getDate();
-                Double amount = prepayDetail.getAmount();
-                Double netDisbursalAmount = prepayDetail.getNetDisbursalAmount();
-                Double repayAmount = Double.compare(amount, 0.0) > 0 ? amount : netDisbursalAmount;
-                loanTransactionHelper.makeLoanRepayment(loanId, new PostLoansLoanIdTransactionsRequest().dateFormat(DATE_FORMAT)
-                        .transactionDate(dateFormatter.format(transactionDate)).locale("en").transactionAmount(repayAmount));
-            });
+            ParallelExecutionHelper.runInParallel(loanIds, loanId -> closeActiveLoan(loanId, cleanupDate));
             loanIds = LoanTransactionHelper.getLoanIdsByStatusId(200);
-            loanIds.forEach(loanId -> {
-                loanTransactionHelper.undoApprovalForLoan(loanId, new PostLoansLoanIdRequest());
-            });
+            ParallelExecutionHelper.runInParallel(loanIds,
+                    loanId -> loanTransactionHelper.undoApprovalForLoan(loanId, new PostLoansLoanIdRequest()));
             loanIds = LoanTransactionHelper.getLoanIdsByStatusId(100);
-            loanIds.forEach(loanId -> {
-                GetLoansLoanIdResponse details = loanTransactionHelper.getLoanDetails((long) loanId);
-                loanTransactionHelper.rejectLoan(loanId,
-                        new PostLoansLoanIdRequest().rejectedOnDate(dateFormatter.format(details.getTimeline().getSubmittedOnDate()))
-                                .locale("en").dateFormat(DATE_FORMAT));
-            });
+            ParallelExecutionHelper.runInParallel(loanIds, this::rejectSubmittedLoan);
             loanIds = LoanTransactionHelper.getLoanIdsByStatusId(300);
             assertEquals(0, loanIds.size());
         });
     }
 
+    private void closeActiveLoan(Long loanId, LocalDate cleanupDate) {
+        GetLoansLoanIdResponse loanResponse = Calls
+                .ok(FineractClientHelper.getFineractClient().loans.retrieveLoan(loanId, null, "all", null, null));
+        if (MathUtil.isLessThan(loanResponse.getApprovedPrincipal(), loanResponse.getProposedPrincipal())) {
+            PutLoansApprovedAmountRequest request = new PutLoansApprovedAmountRequest().amount(loanResponse.getProposedPrincipal())
+                    .locale("en");
+            Calls.ok(FineractClientHelper.getFineractClient().loans.modifyLoanApprovedAmount(loanId, request));
+        }
+        loanResponse.getDisbursementDetails().forEach(disbursementDetail -> {
+            if (disbursementDetail.getActualDisbursementDate() == null) {
+                loanTransactionHelper.disburseLoan(loanId,
+                        new PostLoansLoanIdRequest()
+                                .actualDisbursementDate(dateFormatter.format(disbursementDetail.getExpectedDisbursementDate()))
+                                .dateFormat(DATE_FORMAT).locale("en").transactionAmount(disbursementDetail.getPrincipal()));
+            }
+        });
+        GetLoansLoanIdTransactionsTemplateResponse prepayDetail = this.loanTransactionHelper.getPrepaymentAmount(loanId,
+                dateFormatter.format(cleanupDate), DATE_FORMAT);
+        LocalDate transactionDate = prepayDetail.getDate();
+        Double amount = prepayDetail.getAmount();
+        Double netDisbursalAmount = prepayDetail.getNetDisbursalAmount();
+        Double repayAmount = Double.compare(amount, 0.0) > 0 ? amount : netDisbursalAmount;
+        loanTransactionHelper.makeLoanRepayment(loanId, new PostLoansLoanIdTransactionsRequest().dateFormat(DATE_FORMAT)
+                .transactionDate(dateFormatter.format(transactionDate)).locale("en").transactionAmount(repayAmount));
+    }
+
+    private void rejectSubmittedLoan(Long loanId) {
+        GetLoansLoanIdResponse details = loanTransactionHelper.getLoanDetails(loanId);
+        loanTransactionHelper.rejectLoan(loanId, new PostLoansLoanIdRequest()
+                .rejectedOnDate(dateFormatter.format(details.getTimeline().getSubmittedOnDate())).locale("en").dateFormat(DATE_FORMAT));
+    }
+
     private LocalDate determineCleanupDate() {
         LocalDate tenantDate = Utils.getLocalDateOfTenant();
         try {
-            List<Long> activeLoanIds = LoanTransactionHelper.getLoanIdsByStatusId(300);
-            LocalDate maxTxDate = tenantDate;
-            for (Long loanId : activeLoanIds) {
-                GetLoansLoanIdResponse loanResponse = Calls
-                        .ok(FineractClientHelper.getFineractClient().loans.retrieveLoan(loanId, null, "all", null, null));
-                if (loanResponse.getTransactions() != null) {
-                    for (var tx : loanResponse.getTransactions()) {
-                        if (tx.getDate() != null && tx.getDate().isAfter(maxTxDate)) {
-                            maxTxDate = tx.getDate();
-                        }
-                    }
-                }
-            }
-            return maxTxDate;
+            LocalDate maxTxnDate = LoanTransactionHelper.getMaxTransactionDateOfActiveLoans();
+            return maxTxnDate.isAfter(tenantDate) ? maxTxnDate : tenantDate;
         } catch (Exception e) {
             return tenantDate;
         }

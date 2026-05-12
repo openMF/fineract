@@ -19,6 +19,7 @@
 package org.apache.fineract.test.initializer.global;
 
 import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
+import static org.apache.fineract.test.data.accounttype.DefaultAccountType.ASSET_TRANSFER;
 
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.PostFinancialActivityAccountsRequest;
+import org.apache.fineract.test.data.accounttype.AccountTypeResolver;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -34,14 +36,15 @@ import org.springframework.stereotype.Component;
 public class FinancialActivityMappingGlobalInitializerStep implements FineractGlobalInitializerStep {
 
     public static final Long FINANCIAL_ACTIVITY_ID_ASSET_TRANSFER = 100L;
-    public static final Long GL_ACCOUNT_ID_ASSET_TRANSFER = 21L;
 
     private final FineractFeignClient fineractClient;
+    private final AccountTypeResolver accountTypeResolver;
 
     @Override
     public void initialize() {
+        Long assetTransferGlAccountId = accountTypeResolver.resolve(ASSET_TRANSFER);
         PostFinancialActivityAccountsRequest request = new PostFinancialActivityAccountsRequest()
-                .financialActivityId(FINANCIAL_ACTIVITY_ID_ASSET_TRANSFER).glAccountId(GL_ACCOUNT_ID_ASSET_TRANSFER);
+                .financialActivityId(FINANCIAL_ACTIVITY_ID_ASSET_TRANSFER).glAccountId(assetTransferGlAccountId);
 
         try {
             executeVoid(() -> fineractClient.mappingFinancialActivitiesToAccounts().createGLAccountMappingFinancialActivityAccount(request,

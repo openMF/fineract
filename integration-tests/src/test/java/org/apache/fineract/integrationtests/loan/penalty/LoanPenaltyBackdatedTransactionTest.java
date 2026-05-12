@@ -119,14 +119,11 @@ public class LoanPenaltyBackdatedTransactionTest extends BaseLoanIntegrationTest
             );
         });
 
-        runFromToInclusive("01 January 2023", "09 January 2023", () -> {
+        runAt("09 January 2023", () -> {
+            Long loanId = aLoanId.get();
             // run accrual posting
             schedulerJobHelper.executeAndAwaitJob("Apply penalty to overdue loans");
             schedulerJobHelper.executeAndAwaitJob("Add Accrual Transactions");
-        });
-
-        runAt("09 January 2023", () -> {
-            Long loanId = aLoanId.get();
 
             // verify transactions
             verifyTransactions(loanId, //
@@ -232,14 +229,12 @@ public class LoanPenaltyBackdatedTransactionTest extends BaseLoanIntegrationTest
             );
         });
 
-        runFromToInclusive("01 January 2023", "09 January 2023", () -> {
+        runAt("09 January 2023", () -> {
+            Long loanId = aLoanId.get();
+
             // run accrual posting
             schedulerJobHelper.executeAndAwaitJob("Apply penalty to overdue loans");
             schedulerJobHelper.executeAndAwaitJob("Add Accrual Transactions");
-        });
-
-        runAt("09 January 2023", () -> {
-            Long loanId = aLoanId.get();
 
             // verify transactions
             verifyTransactions(loanId, //
@@ -346,14 +341,12 @@ public class LoanPenaltyBackdatedTransactionTest extends BaseLoanIntegrationTest
             );
         });
 
-        runFromToInclusive("01 January 2023", "09 January 2023", () -> {
+        runAt("09 January 2023", () -> {
+            Long loanId = aLoanId.get();
+
             // run accrual posting
             schedulerJobHelper.executeAndAwaitJob("Apply penalty to overdue loans");
             schedulerJobHelper.executeAndAwaitJob("Add Accrual Transactions");
-        });
-
-        runAt("09 January 2023", () -> {
-            Long loanId = aLoanId.get();
 
             // verify transactions
             verifyTransactions(loanId, //

@@ -57,6 +57,8 @@ public final class AccountingConstants {
         CLASSIFICATION_INCOME(22), //
         DEFERRED_INCOME_LIABILITY(23), //
         INCOME_FROM_DISCOUNT_FEE(24), //
+        FEES_RECEIVABLE(25), //
+        PENALTIES_RECEIVABLE(26), //
         ;
 
         private final Integer value;

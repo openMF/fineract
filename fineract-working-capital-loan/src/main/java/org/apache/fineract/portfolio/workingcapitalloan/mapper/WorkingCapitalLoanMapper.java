@@ -64,6 +64,8 @@ public interface WorkingCapitalLoanMapper {
     @Mapping(target = "repaymentEvery", source = "loanProductRelatedDetails.repaymentEvery")
     @Mapping(target = "repaymentFrequencyType", source = "loanProductRelatedDetails", qualifiedByName = "repaymentFrequencyTypeData")
     @Mapping(target = "discount", source = "loanProductRelatedDetails.discount")
+    @Mapping(target = "discountProposed", source = "loanProductRelatedDetails.discountProposed")
+    @Mapping(target = "discountApproved", source = "loanProductRelatedDetails.discountApproved")
     @Mapping(target = "breach", source = "loanProductRelatedDetails.breach")
     @Mapping(target = "nearBreach", source = "loanProductRelatedDetails.nearBreach")
     @Mapping(target = "delinquencyBucket", source = "loanProductRelatedDetails.delinquencyBucket")

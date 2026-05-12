@@ -18,9 +18,16 @@
  */
 package org.apache.fineract.integrationtests.common.workingcapitalloan;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import java.time.LocalDate;
 import java.util.Map;
 import org.apache.fineract.client.feign.ObjectMapperFactory;
 import org.apache.fineract.client.feign.services.WorkingCapitalLoanTransactionsApi;
@@ -272,4 +279,25 @@ public class WorkingCapitalLoanHelper {
             throw new IllegalArgumentException("Failed to serialize response", e);
         }
     }
+
+    public JsonObject retrieveLoan(final Long loanId) {
+        final String response = retrieveById(loanId);
+        assertNotNull(response);
+        return new Gson().fromJson(response, JsonObject.class);
+    }
+
+    public LocalDate getSubmittedOnDate(final Long loanId) {
+        final JsonObject data = retrieveLoan(loanId);
+        return extractDate(data.get("submittedOnDate"));
+    }
+
+    public LocalDate extractDate(final JsonElement element) {
+        assertNotNull(element, "Expected date element");
+        if (element.isJsonArray()) {
+            final JsonArray arr = element.getAsJsonArray();
+            return LocalDate.of(arr.get(0).getAsInt(), arr.get(1).getAsInt(), arr.get(2).getAsInt());
+        }
+        return LocalDate.parse(element.getAsString());
+    }
+
 }

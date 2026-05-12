@@ -69,15 +69,6 @@ public class LoanTransactionTest extends BaseLoanIntegrationTest {
 
             disburseLoan(loanId, BigDecimal.valueOf(430), "20 December 2024");
         });
-        runAt("21 December 2024", () -> {
-            executeInlineCOB(loanIdRef.get());
-        });
-        runAt("20 January 2025", () -> {
-            Long loanId = loanIdRef.get();
-            executeInlineCOB(loanId);
-
-            loanTransactionHelper.makeLoanRepayment(loanId, "Repayment", "20 January 2025", 82.20);
-        });
         runAt("20 February 2025", () -> {
             Long loanId = loanIdRef.get();
             executeInlineCOB(loanId);
@@ -87,9 +78,9 @@ public class LoanTransactionTest extends BaseLoanIntegrationTest {
         runAt("23 February 2025", () -> {
             Long loanId = loanIdRef.get();
             executeInlineCOB(loanId);
-
+            loanTransactionHelper.makeLoanRepayment(loanId, "Repayment", "23 February 2025", 82.20);
             final GetLoansLoanIdTransactionsResponse allLoanTransactionsPage = loanTransactionHelper.getLoanTransactions(loanId);
-            Assertions.assertEquals(67L, allLoanTransactionsPage.getTotalElements());
+            Assertions.assertEquals(7L, allLoanTransactionsPage.getTotalElements());
 
             final GetLoansLoanIdTransactionsResponse nonAccrualLoanTransactionsPage = loanTransactionHelper.getLoanTransactions(loanId,
                     List.of(TransactionType.ACCRUAL));
@@ -97,7 +88,7 @@ public class LoanTransactionTest extends BaseLoanIntegrationTest {
 
             final GetLoansLoanIdTransactionsResponse allLoanTransactionsByExternalIdPage = loanTransactionHelper
                     .getLoanTransactionsByExternalId(loanExternalIdStr);
-            Assertions.assertEquals(67L, allLoanTransactionsByExternalIdPage.getTotalElements());
+            Assertions.assertEquals(7L, allLoanTransactionsByExternalIdPage.getTotalElements());
 
             final GetLoansLoanIdTransactionsResponse nonAccrualLoanTransactionsByExternalIdPage = loanTransactionHelper
                     .getLoanTransactionsByExternalId(loanExternalIdStr, List.of(TransactionType.ACCRUAL));

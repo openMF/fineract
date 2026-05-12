@@ -19,6 +19,7 @@
 package org.apache.fineract.accounting.journalentry.service;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -84,12 +85,14 @@ import org.apache.fineract.investor.domain.ExternalAssetOwnerTransfer;
 import org.apache.fineract.investor.exception.ExternalAssetOwnerNotFoundException;
 import org.apache.fineract.investor.service.AccountingService;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
+import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
 import org.apache.fineract.organisation.monetary.domain.OrganisationCurrencyRepositoryWrapper;
 import org.apache.fineract.organisation.office.domain.Office;
 import org.apache.fineract.organisation.office.domain.OfficeRepositoryWrapper;
 import org.apache.fineract.portfolio.PortfolioProductType;
 import org.apache.fineract.portfolio.loanaccount.data.AccountingBridgeDataDTO;
 import org.apache.fineract.portfolio.loanaccount.data.AccountingBridgeLoanTransactionDTO;
+import org.apache.fineract.portfolio.loanaccount.data.ChargeTaxDetailDTO;
 import org.apache.fineract.portfolio.loanaccount.data.LoanChargePaidByDTO;
 import org.apache.fineract.portfolio.loanaccount.domain.AmortizationType;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
@@ -97,6 +100,7 @@ import org.apache.fineract.portfolio.loanaccount.domain.LoanAmortizationAllocati
 import org.apache.fineract.portfolio.loanaccount.domain.LoanAmortizationAllocationMappingRepository;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanCharge;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanChargePaidBy;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanChargeTaxDetails;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransaction;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionRelation;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionRelationTypeEnum;
@@ -957,13 +961,29 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         // Populate loanChargesPaid from the transaction
         if (!loanTransaction.getLoanChargesPaid().isEmpty()) {
             List<LoanChargePaidByDTO> loanChargesPaidData = new ArrayList<>();
+            final MathContext mc = MoneyHelper.getMathContext();
             for (final LoanChargePaidBy chargePaidBy : loanTransaction.getLoanChargesPaid()) {
+                final LoanCharge lc = chargePaidBy.getLoanCharge();
                 final LoanChargePaidByDTO loanChargePaidData = new LoanChargePaidByDTO();
-                loanChargePaidData.setChargeId(chargePaidBy.getLoanCharge().getCharge().getId());
-                loanChargePaidData.setIsPenalty(chargePaidBy.getLoanCharge().isPenaltyCharge());
-                loanChargePaidData.setLoanChargeId(chargePaidBy.getLoanCharge().getId());
+                loanChargePaidData.setChargeId(lc.getCharge().getId());
+                loanChargePaidData.setIsPenalty(lc.isPenaltyCharge());
+                loanChargePaidData.setLoanChargeId(lc.getId());
                 loanChargePaidData.setAmount(chargePaidBy.getAmount());
                 loanChargePaidData.setInstallmentNumber(chargePaidBy.getInstallmentNumber());
+
+                // Pro-rate each TaxComponent's tax proportionally to the paid amount
+                final BigDecimal chargeAmount = lc.getAmount();
+                final BigDecimal paidAmount = chargePaidBy.getAmount();
+                if (chargeAmount != null && chargeAmount.compareTo(BigDecimal.ZERO) > 0 && !lc.getTaxDetails().isEmpty()) {
+                    final List<ChargeTaxDetailDTO> taxDetails = new ArrayList<>();
+                    for (LoanChargeTaxDetails taxDetail : lc.getTaxDetails()) {
+                        if (taxDetail.getTaxComponent().getCreditAccount() != null) {
+                            final BigDecimal proRatedTax = taxDetail.getAmount().multiply(paidAmount, mc).divide(chargeAmount, mc);
+                            taxDetails.add(new ChargeTaxDetailDTO(taxDetail.getTaxComponent().getCreditAccount().getId(), proRatedTax));
+                        }
+                    }
+                    loanChargePaidData.setTaxDetails(taxDetails);
+                }
 
                 loanChargesPaidData.add(loanChargePaidData);
             }

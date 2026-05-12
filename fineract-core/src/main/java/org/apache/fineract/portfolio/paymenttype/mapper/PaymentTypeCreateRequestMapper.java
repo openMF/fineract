@@ -28,5 +28,6 @@ import org.mapstruct.Mapping;
 public interface PaymentTypeCreateRequestMapper {
 
     @Mapping(ignore = true, target = "id")
+    @Mapping(target = "isSystemDefined", expression = "java(Boolean.TRUE.equals(source.getIsSystemDefined()))")
     PaymentType map(PaymentTypeCreateRequest source);
 }

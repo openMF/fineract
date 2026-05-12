@@ -865,6 +865,13 @@ public final class ErrorMessageHelper {
                 expectedToStr);
     }
 
+    public static String wrongRepaymentStartDateType(final Integer actual, final Integer expected) {
+        final String actualToStr = actual.toString();
+        final String expectedToStr = expected.toString();
+        return String.format("Wrong value in LoanDetails/repaymentStartDateType. %nActual value is: %s %nExpected Value is: %s",
+                actualToStr, expectedToStr);
+    }
+
     public static String downpaymentDisabledOnProductErrorCodeMsg() {
         return "The Loan can not override the downpayment properties because in the Loan Product the downpayment is disabled";
     }
@@ -1090,6 +1097,10 @@ public final class ErrorMessageHelper {
         return "Failed data validation due to: amount.cannot.exceed.created.discount.";
     }
 
+    public static String discountAmountExceedApprovedFailure() {
+        return "Failed data validation due to: amount.cannot.exceed.approved.discount.";
+    }
+
     public static String discountAlreadySetBeforeDisburseFailure() {
         return "Discount was already set before disbursement and cannot be added again";
     }
@@ -1104,6 +1115,10 @@ public final class ErrorMessageHelper {
 
     public static String discountExceedCreatedDiscountFailure() {
         return "Failed data validation due to: amount.cannot.exceed.created.discount.";
+    }
+
+    public static String discountExceedProductDiscountFailure() {
+        return "Failed data validation due to: amount.cannot.exceed.product.discount.";
     }
 
     public static String nearBreachCannotEnableWithoutBreachFailure() {

@@ -64,6 +64,8 @@ public class LoanChargeBackStepDef extends AbstractStepDef {
 
     @Autowired
     EventStore eventStore;
+    @Autowired
+    private LoanRequestFactory loanRequestFactory;
 
     @When("Admin makes {string} chargeback with {double} EUR transaction amount")
     public void makeLoanChargeback(String repaymentType, double transactionAmount) throws IOException {
@@ -145,7 +147,7 @@ public class LoanChargeBackStepDef extends AbstractStepDef {
         DefaultPaymentType paymentType = DefaultPaymentType.valueOf(repaymentType);
         Long paymentTypeValue = paymentTypeResolver.resolve(paymentType);
 
-        PostLoansLoanIdTransactionsTransactionIdRequest chargebackRequest = LoanRequestFactory.defaultChargebackRequest()
+        PostLoansLoanIdTransactionsTransactionIdRequest chargebackRequest = loanRequestFactory.defaultChargebackRequest()
                 .paymentTypeId(paymentTypeValue).transactionAmount(transactionAmount);
 
         PostLoansLoanIdTransactionsResponse chargebackResponse = ok(() -> fineractClient.loanTransactions().adjustLoanTransaction(loanId,

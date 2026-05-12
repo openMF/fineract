@@ -108,6 +108,9 @@ public class LoanCharge extends AbstractAuditableWithUTCDateTimeCustom<Long> {
     @Column(name = "amount_outstanding_derived", scale = 6, precision = 19, nullable = false)
     private BigDecimal amountOutstanding;
 
+    @Column(name = "tax_amount", scale = 6, precision = 19)
+    private BigDecimal taxAmount = BigDecimal.ZERO;
+
     @Column(name = "is_penalty", nullable = false)
     private boolean penaltyCharge = false;
 
@@ -142,6 +145,9 @@ public class LoanCharge extends AbstractAuditableWithUTCDateTimeCustom<Long> {
 
     @OneToMany(mappedBy = "loanCharge", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<LoanChargePaidBy> loanChargePaidBySet = new HashSet<>();
+
+    @OneToMany(mappedBy = "loanCharge", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<LoanChargeTaxDetails> taxDetails = new ArrayList<>();
 
     public void markAsFullyPaid() {
         this.amountPaid = this.amount;
@@ -410,6 +416,10 @@ public class LoanCharge extends AbstractAuditableWithUTCDateTimeCustom<Long> {
 
     public Money getAmountWrittenOff(final MonetaryCurrency currency) {
         return Money.of(currency, this.amountWrittenOff);
+    }
+
+    public Money getTaxAmount(final MonetaryCurrency currency) {
+        return Money.of(currency, getTaxAmount());
     }
 
     /**

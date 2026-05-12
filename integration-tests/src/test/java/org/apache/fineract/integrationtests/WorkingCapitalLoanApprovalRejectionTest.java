@@ -23,12 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -37,8 +36,6 @@ import java.util.UUID;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.integrationtests.common.ClientHelper;
 import org.apache.fineract.integrationtests.common.Utils;
-import org.apache.fineract.integrationtests.common.funds.FundsResourceHandler;
-import org.apache.fineract.integrationtests.common.products.DelinquencyBucketsHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanApplicationTestBuilder;
 import org.apache.fineract.integrationtests.common.workingcapitalloan.WorkingCapitalLoanHelper;
 import org.apache.fineract.integrationtests.common.workingcapitalloanproduct.WorkingCapitalLoanProductHelper;
@@ -49,9 +46,6 @@ import org.junit.jupiter.api.Test;
 public class WorkingCapitalLoanApprovalRejectionTest {
 
     private static RequestSpecification requestSpec;
-    private static ResponseSpecification responseSpec;
-    private static Long delinquencyBucketId;
-    private static Long fundId;
 
     private final WorkingCapitalLoanHelper applicationHelper = new WorkingCapitalLoanHelper();
     private final WorkingCapitalLoanProductHelper productHelper = new WorkingCapitalLoanProductHelper();
@@ -62,9 +56,6 @@ public class WorkingCapitalLoanApprovalRejectionTest {
         requestSpec = new RequestSpecBuilder().setContentType(ContentType.JSON).build();
         requestSpec.header("Authorization", "Basic " + Utils.loginIntoServerAndGetBase64EncodedAuthenticationKey());
         requestSpec.header("Fineract-Platform-TenantId", "default");
-        responseSpec = new ResponseSpecBuilder().expectStatusCode(200).build();
-        delinquencyBucketId = DelinquencyBucketsHelper.createDefaultBucket();
-        fundId = (long) FundsResourceHandler.createFund(requestSpec, responseSpec);
     }
 
     // ===== AC: User should be able to approve the created loan account (via API) =====
@@ -112,7 +103,9 @@ public class WorkingCapitalLoanApprovalRejectionTest {
         final JsonObject data = retrieveLoan(loanId);
         assertEquals("loanStatusType.approved", data.getAsJsonObject("status").get("code").getAsString());
         assertEqualBigDecimal(approvedAmount, data.get("approvedPrincipal"));
-        assertEqualBigDecimal(discountAmount, data.get("discount"));
+        assertEqualBigDecimal(BigDecimal.valueOf(100), data.get("discountProposed"));
+        assertEqualBigDecimal(discountAmount, data.get("discountApproved"));
+        assertEquals(JsonNull.INSTANCE, data.get("discount"));
     }
 
     @Test
@@ -169,7 +162,9 @@ public class WorkingCapitalLoanApprovalRejectionTest {
 
         final JsonObject approvedData = retrieveLoan(loanId);
         assertEqualBigDecimal(BigDecimal.valueOf(3000), approvedData.get("approvedPrincipal"));
-        assertEqualBigDecimal(BigDecimal.valueOf(50), approvedData.get("discount"));
+        assertEqualBigDecimal(BigDecimal.valueOf(100), approvedData.get("discountProposed"));
+        assertEqualBigDecimal(BigDecimal.valueOf(50), approvedData.get("discountApproved"));
+        assertEquals(JsonNull.INSTANCE, approvedData.get("discount"));
 
         // Undo approval
         applicationHelper.undoApprovalById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildUndoApproveJson());

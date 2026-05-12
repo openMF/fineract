@@ -77,6 +77,18 @@ public class FeignTransactionHelper {
         return response.getResourceId();
     }
 
+    public Long reAge(Long loanId, PostLoansLoanIdTransactionsRequest request) {
+        PostLoansLoanIdTransactionsResponse response = ok(
+                () -> fineractClient.loanTransactions().executeLoanTransaction(loanId, request, Map.of("command", "reAge")));
+        return response.getResourceId();
+    }
+
+    public Long undoReAge(Long loanId, PostLoansLoanIdTransactionsRequest request) {
+        PostLoansLoanIdTransactionsResponse response = ok(
+                () -> fineractClient.loanTransactions().executeLoanTransaction(loanId, request, Map.of("command", "undoReAge")));
+        return response.getResourceId();
+    }
+
     public void undoRepayment(Long loanId, Long transactionId, String transactionDate) {
         PostLoansLoanIdTransactionsTransactionIdRequest request = new PostLoansLoanIdTransactionsTransactionIdRequest();
         request.setTransactionDate(transactionDate);
