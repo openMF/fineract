@@ -331,9 +331,11 @@ public final class ProjectedAmortizationScheduleModel {
         final BigDecimal balanceAtSplit;
         if (rawSplitDayIndex >= originalPaymentNumber) {
             balanceAtSplit = netDisbursementAmount.getAmount().subtract(paymentsReceived, mc);
-        } else if (splitDayIndex > 0) {
-            final BalancesAndAmortizations ba = computeBaseBalancesUpTo(splitDayIndex);
-            balanceAtSplit = ba.balances().get(splitDayIndex - 1).getAmount();
+        } else if (splitDayIndex > 1) {
+            // Balance at the end of the LAST base period (splitDayIndex-1), not at splitDayIndex itself
+            final int lastBasePeriod = splitDayIndex - 1;
+            final BalancesAndAmortizations ba = computeBaseBalancesUpTo(lastBasePeriod);
+            balanceAtSplit = ba.balances().get(lastBasePeriod - 1).getAmount();
         } else {
             balanceAtSplit = netDisbursementAmount.getAmount();
         }
@@ -343,12 +345,21 @@ public final class ProjectedAmortizationScheduleModel {
         final BigDecimal tpv = totalPaymentValue.getAmount();
 
         final BigDecimal newNetDisb = balanceAtSplit;
-        final BigDecimal newDiscount = origDiscount.add(origNet, mc).subtract(balanceAtSplit, mc).subtract(paymentsReceived, mc);
+        final BigDecimal newDiscount;
+        if (rawSplitDayIndex >= originalPaymentNumber) {
+            newDiscount = origDiscount.add(origNet, mc).subtract(balanceAtSplit, mc).subtract(paymentsReceived, mc);
+        } else {
+            final BigDecimal baseExpectedPayment = expectedPaymentAmount.getAmount();
+            final BigDecimal consumedByBaseSchedule = baseExpectedPayment.multiply(BigDecimal.valueOf(splitDayIndex - 1L), mc);
+            final BigDecimal remainingTotal = origNet.add(origDiscount, mc).subtract(consumedByBaseSchedule, mc).subtract(paymentsReceived,
+                    mc);
+            newDiscount = remainingTotal.subtract(balanceAtSplit, mc);
+        }
         final int scale = currency.getDecimalPlaces();
         final BigDecimal newDailyPayment = tpv.multiply(newPeriodPaymentRate, mc).divide(BigDecimal.valueOf(npvDayCount), mc)
                 .setScale(scale, mc.getRoundingMode());
-        final BigDecimal fractionalTotalDays = origNet.add(origDiscount, mc).subtract(paymentsReceived, mc).divide(newDailyPayment, mc)
-                .setScale(scale, mc.getRoundingMode());
+        final BigDecimal fractionalTotalDays = newNetDisb.add(newDiscount, mc).divide(newDailyPayment, mc).setScale(scale,
+                mc.getRoundingMode());
         final int newTerm = fractionalTotalDays.intValue();
 
         // When daily payment exceeds remaining gross (e.g., very short-term loan with high TPV),
@@ -403,14 +414,15 @@ public final class ProjectedAmortizationScheduleModel {
 
         for (int i = 0; i < totalTerm; i++) {
             final int periodNo = i + 1;
-            final long paymentsLeft = (long) periodNo;
+            final RateSegment seg = segmentForDay(periodNo);
+            final long segRelativePeriod = seg != null ? periodNo - seg.startDayIndex() + 1 : periodNo;
             final BigDecimal periodExpectedPayment = MathUtil.negativeToZero(expectedPaymentForDay(periodNo));
-            final BigDecimal safeDf = safeDiscountFactor(paymentsLeft, periodNo);
+            final BigDecimal safeDf = safeDiscountFactor(segRelativePeriod, periodNo);
             final BigDecimal npvValue = MathUtil.negativeToZero(periodExpectedPayment.multiply(safeDf, mc));
             final BigDecimal safeExpectedAmort = ba.expectedAmortizations().get(i).getAmount().min(discountFee);
             final BigDecimal balance = ba.balances().get(i).getAmount();
 
-            result.add(new ProjectedPayment(periodNo, expectedDisbursementDate.plusDays(periodNo), paymentsLeft,
+            result.add(new ProjectedPayment(periodNo, expectedDisbursementDate.plusDays(periodNo), segRelativePeriod,
                     money(periodExpectedPayment), money(periodExpectedPayment), safeDf, money(npvValue), money(balance),
                     money(safeExpectedAmort), null, null, null, null, money(discountFee)));
         }
@@ -649,7 +661,9 @@ public final class ProjectedAmortizationScheduleModel {
     }
 
     private long paymentsLeft(final int periodNumber, final int appliedCount) {
-        return Math.max(0L, (long) periodNumber - appliedCount);
+        final RateSegment seg = segmentForDay(periodNumber);
+        final int segmentRelativePeriod = seg != null ? periodNumber - seg.startDayIndex() + 1 : periodNumber;
+        return Math.max(0L, (long) segmentRelativePeriod - appliedCount);
     }
 
     private RateSegment segmentForDay(final int dayIndex) {
