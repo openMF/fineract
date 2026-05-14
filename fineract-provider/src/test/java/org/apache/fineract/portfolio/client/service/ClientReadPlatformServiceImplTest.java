@@ -19,17 +19,23 @@
 package org.apache.fineract.portfolio.client.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.Collections;
 import org.apache.fineract.infrastructure.codes.service.CodeValueReadPlatformService;
+import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.core.service.PaginationHelper;
+import org.apache.fineract.infrastructure.core.service.SearchParameters;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.utils.ColumnValidator;
@@ -41,6 +47,7 @@ import org.apache.fineract.portfolio.client.mapper.ClientMapper;
 import org.apache.fineract.portfolio.collateralmanagement.domain.ClientCollateralManagementRepositoryWrapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -128,5 +135,48 @@ class ClientReadPlatformServiceImplTest {
         assertThrows(org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException.class, () -> {
             clientReadPlatformService.retrieveAll(searchParameters);
         });
+    }
+
+    @Test
+    void testRetrieveAll_WithStaffIdFilter_IncludesStaffIdConditionInSql() {
+        // Arrange
+        Long staffId = 42L;
+        SearchParameters searchParameters = SearchParameters.builder().staffId(staffId).build();
+
+        when(context.officeHierarchy()).thenReturn(".");
+        when(sqlGenerator.calcFoundRows()).thenReturn("");
+        Page<ClientData> emptyPage = new Page<>(Collections.emptyList(), 0);
+        when(paginationHelper.<ClientData>fetchPage(any(JdbcTemplate.class), anyString(), any(Object[].class), any()))
+                .thenReturn(emptyPage);
+
+        // Act
+        clientReadPlatformService.retrieveAll(searchParameters);
+
+        // Assert: the generated SQL must contain the staff_id predicate
+        ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Object[]> paramsCaptor = ArgumentCaptor.forClass(Object[].class);
+        verify(paginationHelper).fetchPage(any(JdbcTemplate.class), sqlCaptor.capture(), paramsCaptor.capture(), any());
+        assertTrue(sqlCaptor.getValue().contains("c.staff_id = ?"), "SQL should contain staff_id predicate");
+        assertTrue(Arrays.asList(paramsCaptor.getValue()).contains(staffId), "Parameter list should contain staffId value");
+    }
+
+    @Test
+    void testRetrieveAll_WithoutStaffIdFilter_ExcludesStaffIdConditionFromSql() {
+        // Arrange
+        SearchParameters searchParameters = SearchParameters.builder().build();
+
+        when(context.officeHierarchy()).thenReturn(".");
+        when(sqlGenerator.calcFoundRows()).thenReturn("");
+        Page<ClientData> emptyPage = new Page<>(Collections.emptyList(), 0);
+        when(paginationHelper.<ClientData>fetchPage(any(JdbcTemplate.class), anyString(), any(Object[].class), any()))
+                .thenReturn(emptyPage);
+
+        // Act
+        clientReadPlatformService.retrieveAll(searchParameters);
+
+        // Assert: the generated SQL must NOT contain the staff_id filter predicate
+        ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
+        verify(paginationHelper).fetchPage(any(JdbcTemplate.class), sqlCaptor.capture(), any(Object[].class), any());
+        assertFalse(sqlCaptor.getValue().contains("c.staff_id = ?"), "SQL should not contain staff_id predicate when staffId is absent");
     }
 }

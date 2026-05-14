@@ -328,9 +328,9 @@ public class ClientSearchTest extends IntegrationTest {
         PostClientsResponse secondEntityClientResponse = clientHelper.createClient(secondEntityClientRequest);
         // when
         GetClientsResponse individualClients = ok(fineractClient().clients.retrieveAllClients(newOffice.getOfficeId(), null, null, null,
-                null, null, null, null, null, null, null, null, 1));
+                null, null, null, null, null, null, null, null, 1, null));
         GetClientsResponse entityClients = ok(fineractClient().clients.retrieveAllClients(newOffice.getOfficeId(), null, null, null, null,
-                null, null, null, null, "id", null, null, 2));
+                null, null, null, null, "id", null, null, 2, null));
         // then
         assertThat(individualClients.getTotalFilteredRecords()).isEqualTo(1);
         assertThat(individualClients.getPageItems().get(0).getId()).isEqualTo(individualClientResponse.getClientId());
