@@ -25,7 +25,6 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -39,8 +38,9 @@ import org.apache.fineract.infrastructure.sms.domain.SmsMessageRepository;
 import org.apache.fineract.infrastructure.sms.scheduler.SmsMessageScheduledJobService;
 import org.apache.fineract.portfolio.client.domain.Client;
 import org.apache.fineract.portfolio.client.domain.ClientRepositoryWrapper;
-import org.apache.fineract.template.domain.Template;
-import org.apache.fineract.template.domain.TemplateRepository;
+import org.apache.fineract.template.data.TemplateData;
+import org.apache.fineract.template.mapper.TemplateMapper;
+import org.apache.fineract.template.service.TemplateDomainService;
 import org.apache.fineract.template.service.TemplateMergeService;
 import org.springframework.stereotype.Service;
 
@@ -50,8 +50,9 @@ import org.springframework.stereotype.Service;
 public class MessageGatewayHookProcessor implements HookProcessor {
 
     private final ClientRepositoryWrapper clientRepository;
-    private final TemplateRepository templateRepository;
+    private final TemplateDomainService templateDomainService;
     private final TemplateMergeService templateMergeService;
+    private final TemplateMapper templateMapper;
 
     private final SmsMessageRepository smsMessageRepository;
     private final SmsMessageScheduledJobService smsMessageScheduledJobService;
@@ -74,11 +75,11 @@ public class MessageGatewayHookProcessor implements HookProcessor {
         String templateName = entityName + "_" + actionName;
 
         // 1 : find template via mapper using entity and action
-        Template template;
-        List<Template> templates = this.templateRepository.findByTemplateMapper("SMS_template_Key", templateName);
+        TemplateData template;
+        var templates = templateDomainService.getTemplate("SMS_template_Key", templateName);
         if (templates.isEmpty()) {
             // load default template if set.
-            template = hook.getUgdTemplate();
+            template = templateMapper.map(hook.getUgdTemplate());
         } else {
             template = templates.get(0);
         }

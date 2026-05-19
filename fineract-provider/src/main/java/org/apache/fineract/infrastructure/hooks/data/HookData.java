@@ -18,19 +18,26 @@
  */
 package org.apache.fineract.infrastructure.hooks.data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+@Builder
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Accessors(chain = true)
 public final class HookData implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
+
     private Long id;
     private String name;
     private String displayName;
@@ -39,32 +46,8 @@ public final class HookData implements Serializable {
     private LocalDate updatedAt;
     private Long templateId;
     private String templateName;
-
-    // associations
-    private List<Event> events;
-    private List<Field> config;
-
-    // template data
+    private List<HookEventData> events;
+    private List<HookFieldData> config;
     private List<HookTemplateData> templates;
-    private List<Grouping> groupings;
-
-    public static HookData instance(final Long id, final String name, final String displayName, final boolean isActive,
-            final LocalDate createdAt, final LocalDate updatedAt, final Long templateId, final List<Event> registeredEvents,
-            final List<Field> config, final String templateName) {
-        return new HookData().setId(id).setName(name).setDisplayName(displayName).setIsActive(isActive).setCreatedAt(createdAt)
-                .setUpdatedAt(updatedAt).setTemplateId(templateId).setTemplateName(templateName).setEvents(registeredEvents)
-                .setConfig(config);
-    }
-
-    public static HookData template(final List<HookTemplateData> templates, final List<Grouping> groupings) {
-        return new HookData().setTemplates(templates).setGroupings(groupings);
-    }
-
-    public static HookData templateExisting(final HookData hookData, final List<HookTemplateData> templates,
-            final List<Grouping> groupings) {
-        return new HookData().setId(hookData.id).setName(hookData.name).setDisplayName(hookData.displayName).setIsActive(hookData.isActive)
-                .setCreatedAt(hookData.createdAt).setUpdatedAt(hookData.updatedAt).setTemplateId(hookData.templateId)
-                .setTemplateName(hookData.templateName).setEvents(hookData.events).setConfig(hookData.config).setTemplates(templates)
-                .setGroupings(groupings);
-    }
+    private List<HookGroupingData> groupings;
 }

@@ -20,6 +20,9 @@ package org.apache.fineract.portfolio.collateralmanagement.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -27,42 +30,46 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.commands.domain.CommandWrapper;
-import org.apache.fineract.commands.service.CommandWrapperBuilder;
-import org.apache.fineract.commands.service.PortfolioCommandSourceWritePlatformService;
+import org.apache.fineract.command.core.CommandDispatcher;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.portfolio.collateralmanagement.command.LoanCollateralDeleteCommand;
+import org.apache.fineract.portfolio.collateralmanagement.data.LoanCollateralDeleteRequest;
+import org.apache.fineract.portfolio.collateralmanagement.data.LoanCollateralDeleteResponse;
 import org.apache.fineract.portfolio.collateralmanagement.data.LoanCollateralResponseData;
-import org.apache.fineract.portfolio.collateralmanagement.service.LoanCollateralManagementReadPlatformService;
+import org.apache.fineract.portfolio.collateralmanagement.service.LoanCollateralManagementReadService;
 import org.springframework.stereotype.Component;
 
 @Path("/v1/loan-collateral-management")
 @Component
+@Produces({ MediaType.APPLICATION_JSON })
 @Tag(name = "Loan Collateral Management", description = "Loan Collateral Management is for managing collateral operations")
 @RequiredArgsConstructor
 public class LoanCollateralManagementApiResource {
 
-    private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
-    private final LoanCollateralManagementReadPlatformService loanCollateralManagementReadPlatformService;
+    private final LoanCollateralManagementReadService readService;
+    private final CommandDispatcher dispatcher;
 
     @DELETE
     @Path("{id}")
-    @Produces({ MediaType.APPLICATION_JSON })
     @Operation(description = "Delete Loan Collateral", summary = "Delete Loan Collateral")
-    public CommandProcessingResult deleteLoanCollateral(@PathParam("loanId") @Parameter(description = "loanId") final Long loanId,
+    @ApiResponse(responseCode = "default", content = @Content(schema = @Schema(implementation = CommandProcessingResult.class)))
+    public LoanCollateralDeleteResponse deleteLoanCollateral(@PathParam("loanId") @Parameter(description = "loanId") final Long loanId,
             @PathParam("id") @Parameter(description = "loan collateral id") final Long id) {
 
-        final CommandWrapper commandWrapper = new CommandWrapperBuilder().deleteLoanCollateral(loanId, id).build();
-        return this.commandsSourceWritePlatformService.logCommandSource(commandWrapper);
+        final var request = LoanCollateralDeleteRequest.builder().id(id).loanId(loanId).build();
+        final var command = new LoanCollateralDeleteCommand();
+        command.setPayload(request);
+        final Supplier<LoanCollateralDeleteResponse> response = dispatcher.dispatch(command);
+        return response.get();
     }
 
     @GET
     @Path("{collateralId}")
-    @Produces({ MediaType.APPLICATION_JSON })
     @Operation(description = "Get Loan Collateral Details", summary = "Get Loan Collateral Details")
     public LoanCollateralResponseData getLoanCollateral(
             @PathParam("collateralId") @Parameter(description = "collateralId") final Long collateralId) {
-        return this.loanCollateralManagementReadPlatformService.getLoanCollateralResponseData(collateralId);
+        return this.readService.getLoanCollateralResponseData(collateralId);
     }
-
 }

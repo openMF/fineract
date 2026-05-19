@@ -2,7 +2,7 @@
 
 Fineract is *secure by design*. It is designed and built from the ground up to accept, manage, and present data securely. This chapter will detail its various security-related features and settings, along with best practices for secure deployment.
 
-If you believe you have found a security vulnerability in Fineract itself, https://fineract.apache.org/#contribute[let us know privately].
+If you believe you have found a security vulnerability in Fineract itself, https://fineract.apache.org/#contribute[let us know privately]. Report security issues in third party code (for example, the https://github.com/openMF/web-app[Mifos X Web UI]) to the appropriate third party, not Fineract.
 
 Your task as bank CTO, sysadmin, vendor, or other entity responsible for hosting Fineract securely is to thoroughly consider these sections and thoughtfully apply them in your work. While a Fineract release _is_ secure by design, it is _not_ sufficient for a sysadmin to simply start it up and hope for the best. Careful steps must be taken to ensure a deployment is and remains secure despite software environment changes, attacks, staff transitions, and anything else that may arise.
 

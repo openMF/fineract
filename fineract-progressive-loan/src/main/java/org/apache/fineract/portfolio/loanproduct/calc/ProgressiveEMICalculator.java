@@ -1765,14 +1765,12 @@ public final class ProgressiveEMICalculator implements EMICalculator {
                 : equalMonthlyInstallment;
     }
 
-    /**
-     * Rounds the EMI to the nearest multiple of the given number. If the rounded EMI is zero, it adds one multiple of
-     * the given number to it.
-     */
-    private Money safeRoundingForEMI(Money unRoundedEMI, Integer multiplesOf) {
-        Money roundedEMI = Money.roundToMultiplesOf(unRoundedEMI, multiplesOf);
-        if (roundedEMI.isZero()) {
-            roundedEMI = roundedEMI.add(BigDecimal.ONE.multiply(BigDecimal.valueOf(multiplesOf)));
+    // Rounds EMI to multiplesOf; falls back to currency precision when that would zero a positive EMI,
+    // so a small principal stays spread across installments instead of piling onto a single one.
+    private Money safeRoundingForEMI(final Money unRoundedEMI, final Integer multiplesOf) {
+        final Money roundedEMI = Money.roundToMultiplesOf(unRoundedEMI, multiplesOf);
+        if (roundedEMI.isZero() && unRoundedEMI.isGreaterThanZero()) {
+            return unRoundedEMI;
         }
         return roundedEMI;
     }

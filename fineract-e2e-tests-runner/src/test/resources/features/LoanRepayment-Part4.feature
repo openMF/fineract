@@ -53,8 +53,8 @@ Feature: LoanRepayment - Part4
     Then Loan Repayment schedule has 2 periods, with the following data for periods:
       | Nr | Days | Date             | Paid date | Balance of loan | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
       |    |      | 26 October 2025  |           | 1.0             |               |          | 0.0  |           | 0.0 |      |            |      | 0.0         |
-      | 1  | 31   | 26 November 2025 |           | 0.0             | 1.0           | 0.0      | 0.0  | 0.0       | 1.0 | 0.0  | 0.0        | 0.0  | 1.0         |
-      | 2  | 30   | 26 December 2025 |           | 0.0             | 0.0           | 0.0      | 0.0  | 0.0       | 0.0 | 0.0  | 0.0        | 0.0  | 0.0         |
+      | 1  | 31   | 26 November 2025 |           | 0.5             | 0.5           | 0.0      | 0.0  | 0.0       | 0.5 | 0.0  | 0.0        | 0.0  | 0.5         |
+      | 2  | 30   | 26 December 2025 |           | 0.0             | 0.5           | 0.0      | 0.0  | 0.0       | 0.5 | 0.0  | 0.0        | 0.0  | 0.5         |
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
       | 1.0           | 0.0      | 0.0  | 0.0       | 1.0 | 0.0  | 0.0        | 0.0  | 1.0         |
@@ -62,8 +62,8 @@ Feature: LoanRepayment - Part4
     Then Loan Repayment schedule has 2 periods, with the following data for periods:
       | Nr | Days | Date             | Paid date       | Balance of loan | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
       |    |      | 26 October 2025  |                 | 0.4             |               |          | 0.0  |           | 0.0 | 0.0  |            |      |             |
-      | 1  | 31   | 26 November 2025 |                 | 0.0             | 0.4           | 0.0      | 0.0  | 0.0       | 0.4 | 0.0  | 0.0        | 0.0  | 0.4         |
-      | 2  | 30   | 26 December 2025 | 26 October 2025 | 0.0             | 0.0           | 0.0      | 0.0  | 0.0       | 0.0 | 0.0  | 0.0        | 0.0  | 0.0         |
+      | 1  | 31   | 26 November 2025 |                 | 0.2             | 0.2           | 0.0      | 0.0  | 0.0       | 0.2 | 0.0  | 0.0        | 0.0  | 0.2         |
+      | 2  | 30   | 26 December 2025 |                 | 0.0             | 0.2           | 0.0      | 0.0  | 0.0       | 0.2 | 0.0  | 0.0        | 0.0  | 0.2         |
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
       | 0.4           | 0.0      | 0.0  | 0.0       | 0.4 | 0.0  | 0.0        | 0.0  | 0.4         |
@@ -75,8 +75,8 @@ Feature: LoanRepayment - Part4
     Then Loan Repayment schedule has 2 periods, with the following data for periods:
       | Nr | Days | Date             | Paid date       | Balance of loan | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
       |    |      | 26 October 2025  |                 | 0.4             |               |          | 0.0  |           | 0.0 | 0.0  |            |      |             |
-      | 1  | 31   | 26 November 2025 | 27 October 2025 | 0.0             | 0.4           | 0.0      | 0.0  | 0.0       | 0.4 | 0.4  | 0.4        | 0.0  | 0.0         |
-      | 2  | 30   | 26 December 2025 | 26 October 2025 | 0.0             | 0.0           | 0.0      | 0.0  | 0.0       | 0.0 | 0.0  | 0.0        | 0.0  | 0.0         |
+      | 1  | 31   | 26 November 2025 | 27 October 2025 | 0.2             | 0.2           | 0.0      | 0.0  | 0.0       | 0.2 | 0.2  | 0.2        | 0.0  | 0.0         |
+      | 2  | 30   | 26 December 2025 | 27 October 2025 | 0.0             | 0.2           | 0.0      | 0.0  | 0.0       | 0.2 | 0.2  | 0.2        | 0.0  | 0.0         |
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
       | 0.4           | 0.0      | 0.0  | 0.0       | 0.4 | 0.4  | 0.4        | 0.0  | 0.0         |
@@ -597,3 +597,99 @@ Feature: LoanRepayment - Part4
       | 23 February 2026 | Accrual          | 28243.79  | 0.0       | 28243.79 | 0.0  | 0.0       | 0.0          |
     Then Loan is closed with zero outstanding balance and it's all installments have obligations met
     When Admin set "LP2_DOWNPAYMENT_ADV_PMT_ALLOC_PROGRESSIVE_LOAN_SCHEDULE_VERTICAL_INTEREST_RECALC" loan product "REPAYMENT" transaction type to "NEXT_INSTALLMENT" future installment allocation rule
+
+  @TestRailId:C80938
+  Scenario: Disbursement with EMI smaller than installmentAmountInMultiplesOf=10 distributes residual across installments instead of collapsing onto one
+    When Admin sets the business date to "26 October 2025"
+    When Admin creates a client with random data
+    When Admin creates a fully customized loan with loan product`s charges and following data:
+      | LoanProduct                            | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
+      | LP2_ADV_PYMNT_ZERO_INTEREST_MULT_OF_10 | 26 October 2025   | 30             | 0                      | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 3                 | MONTHS                | 1              | MONTHS                 | 3                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION |
+    And Admin successfully approves the loan on "26 October 2025" with "30" amount and expected disbursement date on "26 October 2025"
+    Then Loan Repayment schedule has 3 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date | Balance of loan | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
+      |    |      | 26 October 2025  |           | 30.0            |               |          | 0.0  |           | 0.0  |      |            |      | 0.0         |
+      | 1  | 31   | 26 November 2025 |           | 20.0            | 10.0          | 0.0      | 0.0  | 0.0       | 10.0 | 0.0  | 0.0        | 0.0  | 10.0        |
+      | 2  | 30   | 26 December 2025 |           | 10.0            | 10.0          | 0.0      | 0.0  | 0.0       | 10.0 | 0.0  | 0.0        | 0.0  | 10.0        |
+      | 3  | 31   | 26 January 2026  |           | 0.0             | 10.0          | 0.0      | 0.0  | 0.0       | 10.0 | 0.0  | 0.0        | 0.0  | 10.0        |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
+      | 30.0          | 0.0      | 0.0  | 0.0       | 30.0 | 0.0  | 0.0        | 0.0  | 30.0        |
+    When Admin successfully disburse the loan on "26 October 2025" with "4" EUR transaction amount
+    Then Loan Repayment schedule has 3 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date | Balance of loan | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
+      |    |      | 26 October 2025  |           | 4.0             |               |          | 0.0  |           | 0.0  | 0.0  |            |      |             |
+      | 1  | 31   | 26 November 2025 |           | 2.67            | 1.33          | 0.0      | 0.0  | 0.0       | 1.33 | 0.0  | 0.0        | 0.0  | 1.33        |
+      | 2  | 30   | 26 December 2025 |           | 1.34            | 1.33          | 0.0      | 0.0  | 0.0       | 1.33 | 0.0  | 0.0        | 0.0  | 1.33        |
+      | 3  | 31   | 26 January 2026  |           | 0.0             | 1.34          | 0.0      | 0.0  | 0.0       | 1.34 | 0.0  | 0.0        | 0.0  | 1.34        |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
+      | 4.0           | 0.0      | 0.0  | 0.0       | 4.0 | 0.0  | 0.0        | 0.0  | 4.0         |
+    Then Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 26 October 2025  | Disbursement     | 4.0    | 0.0       | 0.0      | 0.0  | 0.0       | 4.0          | false    | false    |
+    When Admin sets the business date to "27 October 2025"
+    When Loan Pay-off is made on "27 October 2025"
+    Then Loan Repayment schedule has 3 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date       | Balance of loan | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
+      |    |      | 26 October 2025  |                 | 4.0             |               |          | 0.0  |           | 0.0  | 0.0  |            |      |             |
+      | 1  | 31   | 26 November 2025 | 27 October 2025 | 2.67            | 1.33          | 0.0      | 0.0  | 0.0       | 1.33 | 1.33 | 1.33       | 0.0  | 0.0         |
+      | 2  | 30   | 26 December 2025 | 27 October 2025 | 1.34            | 1.33          | 0.0      | 0.0  | 0.0       | 1.33 | 1.33 | 1.33       | 0.0  | 0.0         |
+      | 3  | 31   | 26 January 2026  | 27 October 2025 | 0.0             | 1.34          | 0.0      | 0.0  | 0.0       | 1.34 | 1.34 | 1.34       | 0.0  | 0.0         |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
+      | 4.0           | 0.0      | 0.0  | 0.0       | 4.0 | 4.0  | 4.0        | 0.0  | 0.0         |
+    Then Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 26 October 2025  | Disbursement     | 4.0    | 0.0       | 0.0      | 0.0  | 0.0       | 4.0          | false    | false    |
+      | 27 October 2025  | Repayment        | 4.0    | 4.0       | 0.0      | 0.0  | 0.0       | 0.0          | false    | false    |
+    Then Loan is closed with zero outstanding balance and it's all installments have obligations met
+
+  @TestRailId:C80939
+  Scenario: Multi-tranche progressive disbursement with both sub-multiplesOf tranches distributes residual across all installments
+    When Admin sets the business date to "26 October 2025"
+    When Admin creates a client with random data
+    When Admin creates a fully customized loan with loan product`s charges and following data:
+      | LoanProduct                                      | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
+      | LP2_ADV_PYMNT_ZERO_INTEREST_CHARGE_OFF_BEHAVIOUR | 26 October 2025   | 3              | 0                      | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 3                 | MONTHS                | 1              | MONTHS                 | 3                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION |
+    And Admin successfully approves the loan on "26 October 2025" with "3" amount and expected disbursement date on "26 October 2025"
+    # First tranche - 0.5 EUR triggers sub-multiplesOf EMI branch
+    When Admin successfully disburse the loan on "26 October 2025" with "0.5" EUR transaction amount
+    Then Loan Repayment schedule has 3 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date | Balance of loan | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
+      |    |      | 26 October 2025  |           | 0.5             |               |          | 0.0  |           | 0.0  | 0.0  |            |      |             |
+      | 1  | 31   | 26 November 2025 |           | 0.33            | 0.17          | 0.0      | 0.0  | 0.0       | 0.17 | 0.0  | 0.0        | 0.0  | 0.17        |
+      | 2  | 30   | 26 December 2025 |           | 0.16            | 0.17          | 0.0      | 0.0  | 0.0       | 0.17 | 0.0  | 0.0        | 0.0  | 0.17        |
+      | 3  | 31   | 26 January 2026  |           | 0.0             | 0.16          | 0.0      | 0.0  | 0.0       | 0.16 | 0.0  | 0.0        | 0.0  | 0.16        |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
+      | 0.5           | 0.0      | 0.0  | 0.0       | 0.5 | 0.0  | 0.0        | 0.0  | 0.5         |
+    # Second tranche on the same day - additional 0.4 EUR, cumulative outstanding 0.9 EUR. New EMI = 0.30 across all installments.
+    When Admin successfully disburse the loan on "26 October 2025" with "0.4" EUR transaction amount
+    Then Loan Repayment schedule has 3 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date | Balance of loan | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
+      |    |      | 26 October 2025  |           | 0.5             |               |          | 0.0  |           | 0.0 | 0.0  |            |      |             |
+      |    |      | 26 October 2025  |           | 0.4             |               |          | 0.0  |           | 0.0 | 0.0  |            |      |             |
+      | 1  | 31   | 26 November 2025 |           | 0.6             | 0.3           | 0.0      | 0.0  | 0.0       | 0.3 | 0.0  | 0.0        | 0.0  | 0.3         |
+      | 2  | 30   | 26 December 2025 |           | 0.3             | 0.3           | 0.0      | 0.0  | 0.0       | 0.3 | 0.0  | 0.0        | 0.0  | 0.3         |
+      | 3  | 31   | 26 January 2026  |           | 0.0             | 0.3           | 0.0      | 0.0  | 0.0       | 0.3 | 0.0  | 0.0        | 0.0  | 0.3         |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
+      | 0.9           | 0.0      | 0.0  | 0.0       | 0.9 | 0.0  | 0.0        | 0.0  | 0.9         |
+    Then Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 26 October 2025  | Disbursement     | 0.5    | 0.0       | 0.0      | 0.0  | 0.0       | 0.5          | false    | false    |
+      | 26 October 2025  | Disbursement     | 0.4    | 0.0       | 0.0      | 0.0  | 0.0       | 0.9          | false    | false    |
+    When Admin sets the business date to "27 October 2025"
+    When Loan Pay-off is made on "27 October 2025"
+    Then Loan Repayment schedule has 3 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date       | Balance of loan | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
+      |    |      | 26 October 2025  |                 | 0.5             |               |          | 0.0  |           | 0.0 | 0.0  |            |      |             |
+      |    |      | 26 October 2025  |                 | 0.4             |               |          | 0.0  |           | 0.0 | 0.0  |            |      |             |
+      | 1  | 31   | 26 November 2025 | 27 October 2025 | 0.6             | 0.3           | 0.0      | 0.0  | 0.0       | 0.3 | 0.3  | 0.3        | 0.0  | 0.0         |
+      | 2  | 30   | 26 December 2025 | 27 October 2025 | 0.3             | 0.3           | 0.0      | 0.0  | 0.0       | 0.3 | 0.3  | 0.3        | 0.0  | 0.0         |
+      | 3  | 31   | 26 January 2026  | 27 October 2025 | 0.0             | 0.3           | 0.0      | 0.0  | 0.0       | 0.3 | 0.3  | 0.3        | 0.0  | 0.0         |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
+      | 0.9           | 0.0      | 0.0  | 0.0       | 0.9 | 0.9  | 0.9        | 0.0  | 0.0         |
+    Then Loan is closed with zero outstanding balance and it's all installments have obligations met

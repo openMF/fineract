@@ -241,7 +241,7 @@ public class LoanProductsApiResource {
             this.context.authenticatedUser().validateHasReadPermission(PRODUCTMIX);
 
             final Collection<LoanProductData> productOptions = this.loanProductReadPlatformService.retrieveAvailableLoanProductsForMix();
-            final ProductMixData productMixData = ProductMixData.template(productOptions);
+            final ProductMixData productMixData = ProductMixData.builder().productOptions(productOptions).build();
             return this.productMixDataApiJsonSerializer.serialize(settings, productMixData, PRODUCT_MIX_DATA_PARAMETERS);
         }
 

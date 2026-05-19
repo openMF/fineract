@@ -273,6 +273,19 @@ public class SecurityConfig {
                     .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "UPDATE_CLIENTIMAGE")
                     .requestMatchers(API_MATCHER.matcher(HttpMethod.DELETE, "/api/*/clients/*/images"))
                     .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "DELETE_CLIENTIMAGE")
+                    // collateral: clients
+                    // NOTE: the "_CLIENT_COLLATERAL_PRODUCT" suffix is the legacy permission naming kept for
+                    // backwards compatibility (entity_name = CLIENT_COLLATERAL_PRODUCT in the permission table)
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.GET, "/api/*/clients/*/collaterals"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_READ, "READ_CLIENT_COLLATERAL_PRODUCT")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.GET, "/api/*/clients/*/collaterals/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_READ, "READ_CLIENT_COLLATERAL_PRODUCT")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.POST, "/api/*/clients/*/collaterals"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "CREATE_CLIENT_COLLATERAL_PRODUCT")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.PUT, "/api/*/clients/*/collaterals/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "UPDATE_CLIENT_COLLATERAL_PRODUCT")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.DELETE, "/api/*/clients/*/collaterals/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "DELETE_CLIENT_COLLATERAL_PRODUCT")
                     // image: staff
                     .requestMatchers(API_MATCHER.matcher(HttpMethod.GET, "/api/*/staff/*/images"))
                     .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_READ, "READ_DOCUMENT")
@@ -365,6 +378,27 @@ public class SecurityConfig {
                     .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "UPDATE_MEETING")
                     .requestMatchers(API_MATCHER.matcher(HttpMethod.DELETE, "/api/*/*/*/meeting/*"))
                     .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "DELETE_MEETING")
+                    // hook
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.GET, "/api/*/hooks/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_READ, "READ_HOOK")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.POST, "/api/*/hooks/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "CREATE_HOOK")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.PUT, "/api/*/hooks/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "UPDATE_HOOK")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.DELETE, "/api/*/hooks/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "DELETE_HOOK")
+                    // template
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.GET, "/api/*/templates/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_READ, "READ_TEMPLATE")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.POST, "/api/*/templates/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "CREATE_TEMPLATE")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.PUT, "/api/*/templates/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "UPDATE_TEMPLATE")
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.DELETE, "/api/*/templates/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "DELETE_TEMPLATE")
+
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.DELETE, "/api/*/loan-collateral-management/*"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "DELETE_LOAN_COLLATERAL_PRODUCT")
 
                     .requestMatchers(API_MATCHER.matcher(HttpMethod.POST, "/api/*/twofactor/validate")).fullyAuthenticated()
                     .requestMatchers(API_MATCHER.matcher("/api/*/twofactor")).fullyAuthenticated()

@@ -20,7 +20,7 @@ package org.apache.fineract.infrastructure.hooks.processor;
 
 import com.google.gson.JsonObject;
 import java.util.Map;
-import org.apache.fineract.infrastructure.hooks.processor.data.SmsProviderData;
+import org.apache.fineract.infrastructure.hooks.data.HookSmsProviderData;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.FieldMap;
@@ -58,6 +58,6 @@ public interface WebHookService {
             @Header(TENANT_HEADER) String tenantHeader, @Header(API_KEY_HEADER) String apiKeyHeader, @Body JsonObject result);
 
     @POST("/configuration")
-    Call<String> sendSmsBridgeConfigRequest(@Body SmsProviderData config);
+    Call<String> sendSmsBridgeConfigRequest(@Body HookSmsProviderData config);
 
 }

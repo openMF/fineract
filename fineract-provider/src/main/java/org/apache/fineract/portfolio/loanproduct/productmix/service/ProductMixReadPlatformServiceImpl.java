@@ -106,7 +106,8 @@ public class ProductMixReadPlatformServiceImpl implements ProductMixReadPlatform
                         .retrieveRestrictedProductsForMix(this.productId);
                 final Collection<LoanProductData> allowedProducts = this.loanProductReadPlatformService
                         .retrieveAllowedProductsForMix(this.productId);
-                final ProductMixData productMixData = ProductMixData.withRestrictedOptions(restrictedProducts, allowedProducts);
+                final ProductMixData productMixData = ProductMixData.builder().restrictedProducts(restrictedProducts)
+                        .allowedProducts(allowedProducts).build();
                 extractedData.put(this.productId, productMixData);
                 return extractedData;
             }
@@ -117,7 +118,8 @@ public class ProductMixReadPlatformServiceImpl implements ProductMixReadPlatform
                         .retrieveRestrictedProductsForMix(productId);
                 final Collection<LoanProductData> allowedProducts = this.loanProductReadPlatformService
                         .retrieveAllowedProductsForMix(productId);
-                final ProductMixData productMixData = ProductMixData.withDetails(productId, name, restrictedProducts, allowedProducts);
+                final ProductMixData productMixData = ProductMixData.builder().productId(productId).productName(name)
+                        .restrictedProducts(restrictedProducts).allowedProducts(allowedProducts).build();
                 extractedData.put(productId, productMixData);
             } while (rs.next());
             return extractedData;

@@ -201,7 +201,7 @@
         <class>org.apache.fineract.infrastructure.hooks.domain.HookConfiguration</class>
         <class>org.apache.fineract.infrastructure.hooks.domain.HookResource</class>
         <class>org.apache.fineract.infrastructure.hooks.domain.HookTemplate</class>
-        <class>org.apache.fineract.infrastructure.hooks.domain.Schema</class>
+        <class>org.apache.fineract.infrastructure.hooks.domain.HookSchema</class>
         <class>org.apache.fineract.infrastructure.jobs.domain.JobParameter</class>
         <class>org.apache.fineract.infrastructure.jobs.domain.ScheduledJobDetail</class>
         <class>org.apache.fineract.infrastructure.jobs.domain.ScheduledJobRunHistory</class>

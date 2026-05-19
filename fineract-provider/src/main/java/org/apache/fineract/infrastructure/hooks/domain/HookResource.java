@@ -46,8 +46,4 @@ public class HookResource extends AbstractPersistableCustom<Long> {
 
     @Column(name = "action_name", nullable = false, length = 45)
     private String actionName;
-
-    public static HookResource createNewWithoutHook(final String entityName, final String actionName) {
-        return new HookResource().setEntityName(entityName).setActionName(actionName);
-    }
 }

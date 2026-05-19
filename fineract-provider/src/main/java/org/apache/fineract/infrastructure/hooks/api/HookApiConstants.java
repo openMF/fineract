@@ -18,21 +18,9 @@
  */
 package org.apache.fineract.infrastructure.hooks.api;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 public final class HookApiConstants {
 
     private HookApiConstants() {}
-
-    public static final String HOOK_RESOURCE_NAME = "HOOK";
-
-    public static final String nameParamName = "name";
-
-    public static final String displayNameParamName = "displayName";
-
-    public static final String isActiveParamName = "isActive";
 
     public static final String webTemplateName = "Web";
 
@@ -56,24 +44,5 @@ public final class HookApiConstants {
 
     public static final String apiKeyName = "Api Key";
 
-    public static final String configParamName = "config";
-
-    public static final String eventsParamName = "events";
-
-    public static final String entityNameParamName = "entityName";
-
-    public static final String actionNameParamName = "actionName";
-
-    public static final String templateIdParamName = "templateId";
-
-    public static final String templateNameParamName = "templateName";
-
     public static final String SMSProviderIdParamName = "SMS Provider Id";
-
-    public static final Set<String> RESPONSE_DATA_PARAMETERS = new HashSet<>(Arrays.asList(nameParamName, displayNameParamName,
-            templateIdParamName, isActiveParamName, configParamName, eventsParamName, templateNameParamName));
-
-    public static final Set<String> UPDATE_REQUEST_DATA_PARAMETERS = new HashSet<>(Arrays.asList(nameParamName, displayNameParamName,
-            templateIdParamName, isActiveParamName, configParamName, eventsParamName, templateNameParamName));
-
 }

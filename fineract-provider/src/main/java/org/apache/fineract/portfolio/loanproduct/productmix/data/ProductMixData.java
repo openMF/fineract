@@ -18,37 +18,27 @@
  */
 package org.apache.fineract.portfolio.loanproduct.productmix.data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.fineract.portfolio.loanproduct.data.LoanProductData;
 
+@Builder
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProductMixData implements Serializable {
 
-    private final Long productId;
-    private final String productName;
-    private final Collection<LoanProductData> restrictedProducts;
-    private final Collection<LoanProductData> allowedProducts;
-    private final Collection<LoanProductData> productOptions;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
-    public static ProductMixData template(final Collection<LoanProductData> productOptions) {
-        return new ProductMixData(null, null, null, null, productOptions);
-    }
-
-    public static ProductMixData withTemplateOptions(final ProductMixData productMixData,
-            final Collection<LoanProductData> productOptions) {
-        return new ProductMixData(productMixData.productId, productMixData.productName, productMixData.restrictedProducts,
-                productMixData.allowedProducts, productOptions);
-    }
-
-    public static ProductMixData withDetails(final Long productId, final String productName,
-            final Collection<LoanProductData> restrictedProducts, final Collection<LoanProductData> allowedProducts) {
-        return new ProductMixData(productId, productName, restrictedProducts, allowedProducts, null);
-    }
-
-    public static ProductMixData withRestrictedOptions(final Collection<LoanProductData> restrictedProducts,
-            final Collection<LoanProductData> allowedProducts) {
-        return new ProductMixData(null, null, restrictedProducts, allowedProducts, null);
-    }
+    private Long productId;
+    private String productName;
+    private Collection<LoanProductData> restrictedProducts;
+    private Collection<LoanProductData> allowedProducts;
+    private Collection<LoanProductData> productOptions;
 }

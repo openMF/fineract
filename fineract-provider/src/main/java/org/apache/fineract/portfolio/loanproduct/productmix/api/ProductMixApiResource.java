@@ -57,20 +57,22 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ProductMixApiResource {
 
-    private final CommandDispatcher commandDispatcher;
     private final ProductMixReadPlatformService productMixReadPlatformService;
     private final LoanProductReadPlatformService loanProductReadPlatformService;
+    private final CommandDispatcher commandDispatcher;
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve Product Mix Template", operationId = "retrieveTemplateProductMix")
     public ProductMixData retrieveTemplate(@PathParam("productId") final Long productId, @Context final UriInfo uriInfo) {
 
-        ProductMixData productMixData = this.productMixReadPlatformService.retrieveLoanProductMixDetails(productId);
+        var productMixData = productMixReadPlatformService.retrieveLoanProductMixDetails(productId);
 
         if (uriInfo.getQueryParameters().containsKey("template")) {
             final Collection<LoanProductData> productOptions = this.loanProductReadPlatformService.retrieveAvailableLoanProductsForMix();
-            productMixData = ProductMixData.withTemplateOptions(productMixData, productOptions);
+            productMixData = ProductMixData.builder().productId(productMixData.getProductId()).productName(productMixData.getProductName())
+                    .restrictedProducts(productMixData.getRestrictedProducts()).allowedProducts(productMixData.getAllowedProducts())
+                    .productOptions(productOptions).build();
         }
         return productMixData;
     }

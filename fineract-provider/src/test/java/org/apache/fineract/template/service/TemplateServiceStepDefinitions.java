@@ -25,15 +25,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import io.cucumber.java8.En;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
-import org.apache.fineract.template.domain.Template;
-import org.apache.fineract.template.domain.TemplateMapper;
+import org.apache.fineract.template.data.TemplateData;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class TemplateServiceStepDefinitions implements En {
@@ -69,10 +66,8 @@ public class TemplateServiceStepDefinitions implements En {
         });
     }
 
-    private String compile(String templateText, Map<String, Object> scope) throws IOException {
-        List<TemplateMapper> mappers = new ArrayList<>();
-        Template template = new Template("TemplateName", templateText, null, null, mappers);
-        return tms.compile(template, scope);
+    private String compile(String templateText, Map<String, Object> scope) {
+        return tms.compile(TemplateData.builder().name("TemplateName").text(templateText).mappers(List.of()).build(), scope);
     }
 
     private Map<String, Object> parse(String data) {

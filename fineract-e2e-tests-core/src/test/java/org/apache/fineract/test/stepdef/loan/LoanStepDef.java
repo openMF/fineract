@@ -3725,6 +3725,12 @@ public class LoanStepDef extends AbstractStepDef {
                     final RepaymentStartDateType repaymentStartDateType = RepaymentStartDateType.valueOf(value);
                     loansRequest.repaymentStartDateType(repaymentStartDateType.getValue());
                 }
+                case "withLinkedSavingsAccountId" -> {
+                    boolean withLinkedSavingsAccountId = Boolean.parseBoolean(value);
+                    if (withLinkedSavingsAccountId) {
+                        loansRequest.setLinkAccountId(testContext().get(TestContextKey.LAST_SAVINGS_ACCOUNT_ID));
+                    }
+                }
                 default -> throw new UnsupportedOperationException(loanData.getFirst().get(i) + " is not covered");
             }
         }

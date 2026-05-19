@@ -22,10 +22,15 @@ import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.PostClientsResponse;
 import org.apache.fineract.client.models.PostSavingsAccountTransactionsRequest;
@@ -36,9 +41,13 @@ import org.apache.fineract.client.models.PostSavingsAccountsRequest;
 import org.apache.fineract.client.models.PostSavingsAccountsResponse;
 import org.apache.fineract.client.models.PostSavingsProductsRequest;
 import org.apache.fineract.client.models.PostSavingsProductsResponse;
+import org.apache.fineract.client.models.SavingsAccountData;
+import org.apache.fineract.client.models.SavingsAccountTransactionData;
 import org.apache.fineract.test.factory.SavingsAccountRequestFactory;
 import org.apache.fineract.test.factory.SavingsProductRequestFactory;
+import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.helper.ErrorResponse;
+import org.apache.fineract.test.helper.Utils;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +56,9 @@ public class SavingsAccountStepDef extends AbstractStepDef {
 
     @Autowired
     private FineractFeignClient fineractClient;
+
+    public static final String DATE_FORMAT = "dd MMMM yyyy";
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
 
     @And("Admin creates a EUR savings product")
     public void createEurSavingsProduct() {
@@ -70,6 +82,7 @@ public class SavingsAccountStepDef extends AbstractStepDef {
         PostSavingsAccountsResponse createSavingsAccountResponse = ok(
                 () -> fineractClient.savingsAccount().submitSavingsApplication(createSavingsAccountRequest));
         testContext().set(TestContextKey.EUR_SAVINGS_ACCOUNT_CREATE_RESPONSE, createSavingsAccountResponse);
+        testContext().set(TestContextKey.LAST_SAVINGS_ACCOUNT_ID, createSavingsAccountResponse.getSavingsId());
     }
 
     @And("Client creates a new USD savings account with {string} submitted on date")
@@ -83,6 +96,7 @@ public class SavingsAccountStepDef extends AbstractStepDef {
         PostSavingsAccountsResponse createSavingsAccountResponse = ok(
                 () -> fineractClient.savingsAccount().submitSavingsApplication(createSavingsAccountRequest));
         testContext().set(TestContextKey.USD_SAVINGS_ACCOUNT_CREATE_RESPONSE, createSavingsAccountResponse);
+        testContext().set(TestContextKey.LAST_SAVINGS_ACCOUNT_ID, createSavingsAccountResponse.getSavingsId());
     }
 
     @And("Approve EUR savings account on {string} date")
@@ -226,5 +240,60 @@ public class SavingsAccountStepDef extends AbstractStepDef {
         assertThat(errorResponse).isNotNull();
         String developerMessage = errorResponse.getErrors().get(0).getDeveloperMessage();
         assertThat(developerMessage).contains(expectedMessage);
+    }
+
+    @And("Savings Transactions tab has the following data:")
+    public void savingsTransactionsTabCheck(DataTable table) {
+        Long savingsAccountId = testContext().get(TestContextKey.LAST_SAVINGS_ACCOUNT_ID);
+
+        SavingsAccountData savingsAccountData = ok(
+                () -> fineractClient.savingsAccount().retrieveSavingsAccount(savingsAccountId, Map.of("associations", "transactions")));
+        List<SavingsAccountTransactionData> transactions = savingsAccountData.getTransactions();
+        List<List<String>> data = table.asLists();
+        List<String> header = table.row(0);
+        String resourceId = String.valueOf(savingsAccountId);
+        checkSavingsTransactions(data, transactions, header, resourceId);
+    }
+
+    public void checkSavingsTransactions(List<List<String>> data, List<SavingsAccountTransactionData> transactions, List<String> header,
+            String resourceId) {
+        checkLoanTransaction(data, transactions, header, resourceId);
+        assertThat(transactions.size())
+                .as(ErrorMessageHelper.nrOfLinesWrongInTransactionsTab(String.valueOf(resourceId), transactions.size(), data.size() - 1))
+                .isEqualTo(data.size() - 1);
+    }
+
+    public void checkLoanTransaction(List<List<String>> data, List<SavingsAccountTransactionData> transactions, List<String> header,
+            String resourceId) {
+        for (int i = 1; i < data.size(); i++) {
+            List<String> expectedValues = data.get(i);
+            String transactionDateExpected = expectedValues.getFirst();
+            List<List<String>> actualValuesList = transactions.stream()//
+                    .filter(t -> transactionDateExpected.equals(FORMATTER.format(t.getDate())))//
+                    .map(t -> fetchValuesOfTransaction(header, t))//
+                    .collect(Collectors.toList());//
+            boolean containsExpectedValues = actualValuesList.stream()//
+                    .anyMatch(actualValues -> actualValues.equals(expectedValues));//
+            assertThat(containsExpectedValues)
+                    .as(ErrorMessageHelper.wrongValueInLineInTransactionsTab(resourceId, i, actualValuesList, expectedValues)).isTrue();
+        }
+    }
+
+    private List<String> fetchValuesOfTransaction(List<String> header, SavingsAccountTransactionData t) {
+        List<String> actualValues = new ArrayList<>();
+        for (String headerName : header) {
+            switch (headerName) {
+                case "Transaction date" -> actualValues.add(t.getDate() == null ? null : FORMATTER.format(t.getDate()));
+                case "Transaction Type" -> actualValues.add(t.getTransactionType() == null ? null : t.getTransactionType().getValue());
+                case "Amount" ->
+                    actualValues.add(t.getAmount() == null ? null : new Utils.DoubleFormatter(t.getAmount().doubleValue()).format());
+                case "Balance" -> actualValues.add(
+                        t.getRunningBalance() == null ? null : new Utils.DoubleFormatter(t.getRunningBalance().doubleValue()).format());
+                case "Reverted" -> actualValues.add(String.valueOf(t.getReversed()));
+
+                default -> throw new IllegalStateException(String.format("Header name %s cannot be found", headerName));
+            }
+        }
+        return actualValues;
     }
 }

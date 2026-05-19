@@ -3425,9 +3425,9 @@ Feature: LoanRepayment - Part3
     Then Loan Repayment schedule has 3 periods, with the following data for periods:
       | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid | In advance | Late | Outstanding |
       |    |      | 26 October 2025  |                  | 1.0             |               |          | 0.0  |           | 0.0   |      |            |      | 0.0         |
-      | 1  | 31   | 26 November 2025 |                  | 0.0             | 1.0           | 0.0      | 0.0  | 0.0       | 1.0   | 0.0  | 0.0        | 0.0  | 1.0         |
-      | 2  | 30   | 26 December 2025 |                  | 0.0             | 0.0           | 0.0      | 0.0  | 0.0       | 0.0   | 0.0  | 0.0        | 0.0  | 0.0         |
-      | 3  | 31   | 26 January 2026  |                  | 0.0             | 0.0           | 0.0      | 0.0  | 0.0       | 0.0   | 0.0  | 0.0        | 0.0  | 0.0         |
+      | 1  | 31   | 26 November 2025 |                  | 0.67            | 0.33          | 0.0      | 0.0  | 0.0       | 0.33  | 0.0  | 0.0        | 0.0  | 0.33        |
+      | 2  | 30   | 26 December 2025 |                  | 0.34            | 0.33          | 0.0      | 0.0  | 0.0       | 0.33  | 0.0  | 0.0        | 0.0  | 0.33        |
+      | 3  | 31   | 26 January 2026  |                  | 0.0             | 0.34          | 0.0      | 0.0  | 0.0       | 0.34  | 0.0  | 0.0        | 0.0  | 0.34        |
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due    | Paid | In advance | Late | Outstanding |
       | 1.0           | 0.0      | 0.0  | 0.0       | 1.0    | 0.0  | 0.0        | 0.0  | 1.0         |
@@ -3435,9 +3435,9 @@ Feature: LoanRepayment - Part3
     Then Loan Repayment schedule has 3 periods, with the following data for periods:
       | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid | In advance | Late | Outstanding |
       |    |      | 26 October 2025  |                  | 1.5             |               |          | 0.0  |           | 0.0   | 0.0  |            |      |             |
-      | 1  | 31   | 26 November 2025 |                  | 0.5             | 1.0           | 0.0      | 0.0  | 0.0       | 1.0   | 0.0  | 0.0        | 0.0  | 1.0         |
-      | 2  | 30   | 26 December 2025 |                  | 0.0             | 0.5           | 0.0      | 0.0  | 0.0       | 0.5   | 0.0  | 0.0        | 0.0  | 0.5         |
-      | 3  | 31   | 26 January 2026  | 26 October 2025  | 0.0             | 0.0           | 0.0      | 0.0  | 0.0       | 0.0   | 0.0  | 0.0        | 0.0  | 0.0         |
+      | 1  | 31   | 26 November 2025 |                  | 1.0             | 0.5           | 0.0      | 0.0  | 0.0       | 0.5   | 0.0  | 0.0        | 0.0  | 0.5         |
+      | 2  | 30   | 26 December 2025 |                  | 0.5             | 0.5           | 0.0      | 0.0  | 0.0       | 0.5   | 0.0  | 0.0        | 0.0  | 0.5         |
+      | 3  | 31   | 26 January 2026  |                  | 0.0             | 0.5           | 0.0      | 0.0  | 0.0       | 0.5   | 0.0  | 0.0        | 0.0  | 0.5         |
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due    | Paid | In advance | Late | Outstanding |
       | 1.5           | 0.0      | 0.0  | 0.0       | 1.5    | 0.0  | 0.0        | 0.0  | 1.5         |
@@ -3449,9 +3449,9 @@ Feature: LoanRepayment - Part3
     Then Loan Repayment schedule has 3 periods, with the following data for periods:
       | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due   | Paid | In advance | Late | Outstanding |
       |    |      | 26 October 2025  |                  | 1.5             |               |          | 0.0  |           | 0.0   | 0.0  |            |      |             |
-      | 1  | 31   | 26 November 2025 | 27 October 2025  | 0.5             | 1.0           | 0.0      | 0.0  | 0.0       | 1.0   | 1.0  | 1.0        | 0.0  | 0.0         |
-      | 2  | 30   | 26 December 2025 | 27 October 2025  | 0.0             | 0.5           | 0.0      | 0.0  | 0.0       | 0.5   | 0.5  | 0.5        | 0.0  | 0.0         |
-      | 3  | 31   | 26 January 2026  | 26 October 2025  | 0.0             | 0.0           | 0.0      | 0.0  | 0.0       | 0.0   | 0.0  | 0.0        | 0.0  | 0.0         |
+      | 1  | 31   | 26 November 2025 | 27 October 2025  | 1.0             | 0.5           | 0.0      | 0.0  | 0.0       | 0.5   | 0.5  | 0.5        | 0.0  | 0.0         |
+      | 2  | 30   | 26 December 2025 | 27 October 2025  | 0.5             | 0.5           | 0.0      | 0.0  | 0.0       | 0.5   | 0.5  | 0.5        | 0.0  | 0.0         |
+      | 3  | 31   | 26 January 2026  | 27 October 2025  | 0.0             | 0.5           | 0.0      | 0.0  | 0.0       | 0.5   | 0.5  | 0.5        | 0.0  | 0.0         |
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due    | Paid | In advance | Late | Outstanding |
       | 1.5           | 0.0      | 0.0  | 0.0       | 1.5    | 1.5  | 1.5        | 0.0  | 0.0         |

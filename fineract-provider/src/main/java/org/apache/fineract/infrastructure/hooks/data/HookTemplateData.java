@@ -18,27 +18,32 @@
  */
 package org.apache.fineract.infrastructure.hooks.data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-@SuppressWarnings("unused")
+@Builder
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Accessors(chain = true)
 public final class HookTemplateData implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private Long id;
     private String name;
 
     // associations
-    private List<Field> schema;
+    private List<HookFieldData> schema;
 
-    public static HookTemplateData instance(final Long id, final String name, final List<Field> schema) {
+    public static HookTemplateData instance(final Long id, final String name, final List<HookFieldData> schema) {
         return new HookTemplateData().setId(id).setName(name).setSchema(schema);
     }
 

@@ -43,7 +43,7 @@ import org.apache.fineract.portfolio.accountdetails.service.AccountDetailsReadPl
 import org.apache.fineract.portfolio.calendar.service.CalendarReadPlatformService;
 import org.apache.fineract.portfolio.charge.service.ChargeReadPlatformService;
 import org.apache.fineract.portfolio.client.service.ClientReadPlatformService;
-import org.apache.fineract.portfolio.collateralmanagement.service.LoanCollateralManagementReadPlatformService;
+import org.apache.fineract.portfolio.collateralmanagement.service.LoanCollateralManagementReadService;
 import org.apache.fineract.portfolio.delinquency.service.DelinquencyReadPlatformService;
 import org.apache.fineract.portfolio.fund.service.FundReadPlatformService;
 import org.apache.fineract.portfolio.group.service.GroupReadPlatformService;
@@ -136,7 +136,7 @@ class LoansApiResourceRetrieveApprovalTemplateTest {
                 mock(AccountDetailsReadPlatformService.class), mock(EntityDatatableChecksReadService.class),
                 mock(BulkImportWorkbookService.class), mock(BulkImportWorkbookPopulatorService.class), mock(RateReadService.class),
                 mock(ConfigurationDomainService.class), mock(DefaultToApiJsonSerializer.class),
-                mock(GLIMAccountInfoReadPlatformService.class), mock(LoanCollateralManagementReadPlatformService.class),
+                mock(GLIMAccountInfoReadPlatformService.class), mock(LoanCollateralManagementReadService.class),
                 mock(DefaultToApiJsonSerializer.class), mock(DelinquencyReadPlatformService.class), mock(SqlValidator.class),
                 mock(LoanSummaryBalancesRepository.class), mock(ClientReadPlatformService.class), mock(LoanTermVariationsRepository.class),
                 mock(LoanSummaryProviderDelegate.class), mock(LoanCapitalizedIncomeBalanceRepository.class),

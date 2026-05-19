@@ -18,15 +18,18 @@
  */
 package org.apache.fineract.infrastructure.hooks.service;
 
-import org.apache.fineract.infrastructure.core.api.JsonCommand;
-import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.infrastructure.hooks.data.HookCreateRequest;
+import org.apache.fineract.infrastructure.hooks.data.HookCreateResponse;
+import org.apache.fineract.infrastructure.hooks.data.HookDeleteRequest;
+import org.apache.fineract.infrastructure.hooks.data.HookDeleteResponse;
+import org.apache.fineract.infrastructure.hooks.data.HookUpdateRequest;
+import org.apache.fineract.infrastructure.hooks.data.HookUpdateResponse;
 
 public interface HookWritePlatformService {
 
-    CommandProcessingResult createHook(JsonCommand command);
+    HookCreateResponse createHook(HookCreateRequest request);
 
-    CommandProcessingResult updateHook(Long hookId, JsonCommand command);
+    HookUpdateResponse updateHook(HookUpdateRequest request);
 
-    CommandProcessingResult deleteHook(Long hookId);
-
+    HookDeleteResponse deleteHook(HookDeleteRequest request);
 }

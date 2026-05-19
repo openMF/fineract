@@ -19,25 +19,29 @@
 package org.apache.fineract.template.service;
 
 import java.util.List;
-import org.apache.fineract.infrastructure.core.api.JsonCommand;
-import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
-import org.apache.fineract.template.domain.Template;
+import org.apache.fineract.template.data.TemplateCreateRequest;
+import org.apache.fineract.template.data.TemplateCreateResponse;
+import org.apache.fineract.template.data.TemplateData;
+import org.apache.fineract.template.data.TemplateDeleteRequest;
+import org.apache.fineract.template.data.TemplateDeleteResponse;
+import org.apache.fineract.template.data.TemplateUpdateRequest;
+import org.apache.fineract.template.data.TemplateUpdateResponse;
 import org.apache.fineract.template.domain.TemplateEntity;
 import org.apache.fineract.template.domain.TemplateType;
 
 public interface TemplateDomainService {
 
-    List<Template> getAll();
+    List<TemplateData> getAll();
 
-    List<Template> getAllByEntityAndType(TemplateEntity entity, TemplateType type);
+    List<TemplateData> getAllByEntityAndType(TemplateEntity entity, TemplateType type);
 
-    Template findOneById(Long id);
+    List<TemplateData> getTemplate(String mapperkey, String mappervalue);
 
-    Template updateTemplate(Template template);
+    TemplateData findOneById(Long id);
 
-    CommandProcessingResult createTemplate(JsonCommand command);
+    TemplateCreateResponse createTemplate(TemplateCreateRequest request);
 
-    CommandProcessingResult updateTemplate(Long templateId, JsonCommand command);
+    TemplateUpdateResponse updateTemplate(TemplateUpdateRequest request);
 
-    CommandProcessingResult removeTemplate(Long templateId);
+    TemplateDeleteResponse removeTemplate(TemplateDeleteRequest request);
 }

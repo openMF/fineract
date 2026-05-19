@@ -18,8 +18,6 @@
  */
 package org.apache.fineract.infrastructure.hooks.domain;
 
-import static org.apache.fineract.infrastructure.hooks.api.HookApiConstants.nameParamName;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -32,8 +30,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
 
 @Entity
@@ -48,19 +44,5 @@ public final class HookTemplate extends AbstractPersistableCustom<Long> {
     private String name;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "template", orphanRemoval = true, fetch = FetchType.EAGER)
-    private Set<Schema> fields = new HashSet<>();
-
-    private HookTemplate(final String name) {
-
-        if (StringUtils.isNotBlank(name)) {
-            this.name = name.trim();
-        } else {
-            this.name = null;
-        }
-    }
-
-    public static HookTemplate fromJson(final JsonCommand command) {
-        final String name = command.stringValueOfParameterNamed(nameParamName);
-        return new HookTemplate(name);
-    }
+    private Set<HookSchema> fields = new HashSet<>();
 }

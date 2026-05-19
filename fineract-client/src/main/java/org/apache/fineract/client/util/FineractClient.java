@@ -144,7 +144,7 @@ import org.apache.fineract.client.services.StandingInstructionsHistoryApi;
 import org.apache.fineract.client.services.TaxComponentsApi;
 import org.apache.fineract.client.services.TaxGroupApi;
 import org.apache.fineract.client.services.TellerCashManagementApi;
-import org.apache.fineract.client.services.UserGeneratedDocumentsApi;
+import org.apache.fineract.client.services.TemplatesApi;
 import org.apache.fineract.client.services.UsersApi;
 import org.apache.fineract.client.services.WorkingDaysApi;
 import org.apache.fineract.client.util.JSON.GsonCustomConverterFactory;
@@ -275,7 +275,7 @@ public final class FineractClient {
     public final TaxComponentsApi taxComponents;
     public final TaxGroupApi taxGroups;
     public final TellerCashManagementApi tellers;
-    public final UserGeneratedDocumentsApi templates;
+    public final TemplatesApi templates;
     public final UsersApi users;
     public final WorkingDaysApi workingDays;
     public final LoanInterestPauseApi loanInterestPauseApi;
@@ -396,7 +396,7 @@ public final class FineractClient {
         taxComponents = retrofit.create(TaxComponentsApi.class);
         taxGroups = retrofit.create(TaxGroupApi.class);
         tellers = retrofit.create(TellerCashManagementApi.class);
-        templates = retrofit.create(UserGeneratedDocumentsApi.class);
+        templates = retrofit.create(TemplatesApi.class);
         users = retrofit.create(UsersApi.class);
         workingDays = retrofit.create(WorkingDaysApi.class);
         loanInterestPauseApi = retrofit.create(LoanInterestPauseApi.class);

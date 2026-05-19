@@ -22,13 +22,15 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.io.Serial;
 import java.io.Serializable;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.extern.jackson.Jacksonized;
+import lombok.NoArgsConstructor;
 
-@Data
 @Builder
-@Jacksonized
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProductMixDeleteRequest implements Serializable {
 
     @Serial

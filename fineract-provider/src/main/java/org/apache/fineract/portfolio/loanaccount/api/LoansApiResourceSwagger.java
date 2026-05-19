@@ -1429,6 +1429,8 @@ final class LoansApiResourceSwagger {
         public List<PostLoansDataTable> datatables;
 
         public List<PostLoansRequestChargeData> charges;
+        @Schema(example = "1")
+        public Long linkAccountId;
 
         @Schema(description = """
                 Optional array of originators to associate with this loan. \

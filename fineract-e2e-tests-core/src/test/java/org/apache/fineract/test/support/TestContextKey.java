@@ -143,6 +143,8 @@ public abstract class TestContextKey {
     public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_INTEREST_DAILY_INTEREST_RECALCULATION_ZERO_INTEREST_CHARGE_OFF_BEHAVIOUR = "loanProductCreateResponseLP2AdvancedPaymentInterestDailyInterestRecalculationZeroInterestChargeOffBehaviour";
     public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_INTEREST_DAILY_INTEREST_RECALCULATION_ZERO_INTEREST_CHARGE_OFF = "loanProductCreateResponseLP2AdvancedPaymentInterestDailyInterestRecalculationZeroInterestChargeOff";
     public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_ZERO_INTEREST_CHARGE_OFF_BEHAVIOUR = "loanProductCreateResponseLP2AdvancedPaymentZeroInterestChargeOffBehaviour";
+    public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_ZERO_INTEREST_MULT_OF_10 = "loanProductCreateResponseLP2AdvancedPaymentZeroInterestMultiplesOf10";
+    public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_INTEREST_DECLINING_CURRENCY_MULTIPLES_OF = "loanProductCreateResponseLP2AdvancedPaymentInterestDecliningCurrencyMultiplesOf";
     public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_ZERO_INTEREST_CHARGE_OFF = "loanProductCreateResponseLP2AdvancedPaymentZeroInterestChargeOff";
     public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_ZERO_INTEREST_CHARGE_OFF_DELINQUENT_REASON = "loanProductCreateResponseLP2AdvancedPaymentZeroInterestChargeOffDelinquentReason";
     public static final String DEFAULT_LOAN_PRODUCT_CREATE_RESPONSE_LP2_ADV_PYMNT_ZERO_INTEREST_CHARGE_OFF_DELINQUENT_REASON_INTEREST_RECALC = "loanProductCreateResponseLP2AdvancedPaymentZeroInterestChargeOffDelinquentReasonInterestRecalculation";
@@ -364,4 +366,5 @@ public abstract class TestContextKey {
     public static final String WORKING_CAPITAL_NEAR_BREACH_CREATE_REQUEST_FOR_UPDATE = "workingCapitalNearBreachCreateRequestForUpdate";
     public static final String WC_LOAN_ACTION_TEMPLATE_RESPONSE = "wcLoanActionTemplateResponse";
     public static final String WORKING_CAPITAL_LOAN_RATE_CHANGE_ID = "wcLoanRateChangeId";
+    public static final String LAST_SAVINGS_ACCOUNT_ID = "lastSavingsAccountId";
 }

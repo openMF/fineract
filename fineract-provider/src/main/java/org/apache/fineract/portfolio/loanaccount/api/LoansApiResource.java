@@ -111,7 +111,7 @@ import org.apache.fineract.portfolio.charge.service.ChargeReadPlatformService;
 import org.apache.fineract.portfolio.client.data.ClientData;
 import org.apache.fineract.portfolio.client.service.ClientReadPlatformService;
 import org.apache.fineract.portfolio.collateralmanagement.data.LoanCollateralResponseData;
-import org.apache.fineract.portfolio.collateralmanagement.service.LoanCollateralManagementReadPlatformService;
+import org.apache.fineract.portfolio.collateralmanagement.service.LoanCollateralManagementReadService;
 import org.apache.fineract.portfolio.common.domain.DaysInYearCustomStrategyType;
 import org.apache.fineract.portfolio.common.domain.PeriodFrequencyType;
 import org.apache.fineract.portfolio.delinquency.api.DelinquencyApiResourceSwagger;
@@ -303,7 +303,7 @@ public class LoansApiResource {
     private final ConfigurationDomainService configurationDomainService;
     private final DefaultToApiJsonSerializer<GlimRepaymentTemplate> glimTemplateToApiJsonSerializer;
     private final GLIMAccountInfoReadPlatformService glimAccountInfoReadPlatformService;
-    private final LoanCollateralManagementReadPlatformService loanCollateralManagementReadPlatformService;
+    private final LoanCollateralManagementReadService loanCollateralManagementReadService;
     private final DefaultToApiJsonSerializer<LoanDelinquencyTagHistoryData> jsonSerializerTagHistory;
     private final DelinquencyReadPlatformService delinquencyReadPlatformService;
     private final SqlValidator sqlValidator;
@@ -1127,8 +1127,7 @@ public class LoansApiResource {
 
             if (associationParameters.contains(DataTableApiConstant.collateralAssociateParamName)) {
                 mandatoryResponseParameters.add(DataTableApiConstant.collateralAssociateParamName);
-                loanCollateralManagements = this.loanCollateralManagementReadPlatformService
-                        .getLoanCollateralResponseDataList(resolvedLoanId);
+                loanCollateralManagements = this.loanCollateralManagementReadService.getLoanCollateralResponseDataList(resolvedLoanId);
                 for (LoanCollateralResponseData loanCollateralManagement : loanCollateralManagements) {
                     loanCollateralManagementData.add(loanCollateralManagement.toCommand());
                 }

@@ -478,11 +478,11 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | 08 April 2026    | Repayment        | 0.01   | 0.01      | 0.0      | 0.0  | 0.0       | 0.0          |
 
   @TestRailId:C76743
-  Scenario: Disbursement of 0.01 on progressive product distributes residual to first installment
+  Scenario: Disbursement of 0.01 on progressive product with installmentAmountInMultiplesOf distributes residual to last installment
     When Admin sets the business date to "18 February 2026"
     When Admin creates a client with random data
     When Admin creates a fully customized loan with the following data:
-      | LoanProduct                                  | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
+      | LoanProduct                                      | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
       | LP2_DOWNPAYMENT_AUTO_ADVANCED_PAYMENT_ALLOCATION | 18 February 2026  | 100            | 0                      | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 48                | DAYS                  | 16             | DAYS                   | 3                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION |
     And Admin successfully approves the loan on "18 February 2026" with "100" amount and expected disbursement date on "18 February 2026"
     When Admin successfully disburse the loan on "18 February 2026" with "0.01" EUR transaction amount
@@ -492,27 +492,27 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
       |    |      | 18 February 2026 |                  | 0.01            |               |          | 0.0  |           | 0.0  | 0.0  |            |      |             |
       | 1  | 0    | 18 February 2026 | 18 February 2026 | 0.01            | 0.0           | 0.0      | 0.0  | 0.0       | 0.0  | 0.0  | 0.0        | 0.0  | 0.0         |
-      | 2  | 16   | 06 March 2026    |                  | 0.0             | 0.01          | 0.0      | 0.0  | 0.0       | 0.01 | 0.0  | 0.0        | 0.0  | 0.01        |
-      | 3  | 16   | 22 March 2026    | 18 February 2026 | 0.0             | 0.0           | 0.0      | 0.0  | 0.0       | 0.0  | 0.0  | 0.0        | 0.0  | 0.0         |
-      | 4  | 16   | 07 April 2026    | 18 February 2026 | 0.0             | 0.0           | 0.0      | 0.0  | 0.0       | 0.0  | 0.0  | 0.0        | 0.0  | 0.0         |
+      | 2  | 16   | 06 March 2026    | 18 February 2026 | 0.01            | 0.0           | 0.0      | 0.0  | 0.0       | 0.0  | 0.0  | 0.0        | 0.0  | 0.0         |
+      | 3  | 16   | 22 March 2026    | 18 February 2026 | 0.01            | 0.0           | 0.0      | 0.0  | 0.0       | 0.0  | 0.0  | 0.0        | 0.0  | 0.0         |
+      | 4  | 16   | 07 April 2026    |                  | 0.0             | 0.01          | 0.0      | 0.0  | 0.0       | 0.01 | 0.0  | 0.0        | 0.0  | 0.01        |
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
       | 0.01          | 0.0      | 0.0  | 0.0       | 0.01 | 0.0  | 0.0        | 0.0  | 0.01        |
-    When Admin sets the business date to "06 March 2026"
-    And Customer makes "AUTOPAY" repayment on "06 March 2026" with 0.01 EUR transaction amount
+    When Admin sets the business date to "08 April 2026"
+    And Customer makes "AUTOPAY" repayment on "08 April 2026" with 0.01 EUR transaction amount
     Then Loan status will be "CLOSED_OBLIGATIONS_MET"
     Then Loan has 0.0 outstanding amount
     Then Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance |
       | 18 February 2026 | Disbursement     | 0.01   | 0.0       | 0.0      | 0.0  | 0.0       | 0.01         |
-      | 06 March 2026    | Repayment        | 0.01   | 0.01      | 0.0      | 0.0  | 0.0       | 0.0          |
+      | 08 April 2026    | Repayment        | 0.01   | 0.01      | 0.0      | 0.0  | 0.0       | 0.0          |
 
   @TestRailId:C76744
-  Scenario: Disbursement of 0.02 on progressive product distributes residual to first installment
+  Scenario: Disbursement of 0.02 on progressive product with installmentAmountInMultiplesOf distributes residual across remaining installments
     When Admin sets the business date to "18 February 2026"
     When Admin creates a client with random data
     When Admin creates a fully customized loan with the following data:
-      | LoanProduct                                  | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
+      | LoanProduct                                      | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
       | LP2_DOWNPAYMENT_AUTO_ADVANCED_PAYMENT_ALLOCATION | 18 February 2026  | 100            | 0                      | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 48                | DAYS                  | 16             | DAYS                   | 3                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION |
     And Admin successfully approves the loan on "18 February 2026" with "100" amount and expected disbursement date on "18 February 2026"
     When Admin successfully disburse the loan on "18 February 2026" with "0.02" EUR transaction amount
@@ -522,8 +522,8 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
       | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
       |    |      | 18 February 2026 |                  | 0.02            |               |          | 0.0  |           | 0.0  | 0.0  |            |      |             |
       | 1  | 0    | 18 February 2026 | 18 February 2026 | 0.02            | 0.0           | 0.0      | 0.0  | 0.0       | 0.0  | 0.0  | 0.0        | 0.0  | 0.0         |
-      | 2  | 16   | 06 March 2026    |                  | 0.0             | 0.02          | 0.0      | 0.0  | 0.0       | 0.02 | 0.0  | 0.0        | 0.0  | 0.02        |
-      | 3  | 16   | 22 March 2026    | 18 February 2026 | 0.0             | 0.0           | 0.0      | 0.0  | 0.0       | 0.0  | 0.0  | 0.0        | 0.0  | 0.0         |
+      | 2  | 16   | 06 March 2026    |                  | 0.01            | 0.01          | 0.0      | 0.0  | 0.0       | 0.01 | 0.0  | 0.0        | 0.0  | 0.01        |
+      | 3  | 16   | 22 March 2026    |                  | 0.0             | 0.01          | 0.0      | 0.0  | 0.0       | 0.01 | 0.0  | 0.0        | 0.0  | 0.01        |
       | 4  | 16   | 07 April 2026    | 18 February 2026 | 0.0             | 0.0           | 0.0      | 0.0  | 0.0       | 0.0  | 0.0  | 0.0        | 0.0  | 0.0         |
     Then Loan Repayment schedule has the following data in Total row:
       | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
@@ -532,6 +532,16 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Customer makes "AUTOPAY" repayment on "06 March 2026" with 0.02 EUR transaction amount
     Then Loan status will be "CLOSED_OBLIGATIONS_MET"
     Then Loan has 0.0 outstanding amount
+    Then Loan Repayment schedule has 4 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date        | Balance of loan | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
+      |    |      | 18 February 2026 |                  | 0.02            |               |          | 0.0  |           | 0.0  | 0.0  |            |      |             |
+      | 1  | 0    | 18 February 2026 | 18 February 2026 | 0.02            | 0.0           | 0.0      | 0.0  | 0.0       | 0.0  | 0.0  | 0.0        | 0.0  | 0.0         |
+      | 2  | 16   | 06 March 2026    | 06 March 2026    | 0.01            | 0.01          | 0.0      | 0.0  | 0.0       | 0.01 | 0.01 | 0.0        | 0.0  | 0.0         |
+      | 3  | 16   | 22 March 2026    | 06 March 2026    | 0.0             | 0.01          | 0.0      | 0.0  | 0.0       | 0.01 | 0.01 | 0.01       | 0.0  | 0.0         |
+      | 4  | 16   | 07 April 2026    | 18 February 2026 | 0.0             | 0.0           | 0.0      | 0.0  | 0.0       | 0.0  | 0.0  | 0.0        | 0.0  | 0.0         |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
+      | 0.02          | 0.0      | 0.0  | 0.0       | 0.02 | 0.02 | 0.01       | 0.0  | 0.0         |
     Then Loan Transactions tab has the following data:
       | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance |
       | 18 February 2026 | Disbursement     | 0.02   | 0.0       | 0.0      | 0.0  | 0.0       | 0.02         |
@@ -542,7 +552,7 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     When Admin sets the business date to "18 February 2026"
     When Admin creates a client with random data
     When Admin creates a fully customized loan with the following data:
-      | LoanProduct                                  | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
+      | LoanProduct                                      | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
       | LP2_DOWNPAYMENT_AUTO_ADVANCED_PAYMENT_ALLOCATION | 18 February 2026  | 100            | 0                      | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 48                | DAYS                  | 16             | DAYS                   | 3                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION |
     And Admin successfully approves the loan on "18 February 2026" with "100" amount and expected disbursement date on "18 February 2026"
     When Admin successfully disburse the loan on "18 February 2026" with "0.01" EUR transaction amount
@@ -557,7 +567,7 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     When Admin sets the business date to "18 February 2026"
     When Admin creates a client with random data
     When Admin creates a fully customized loan with the following data:
-      | LoanProduct                                  | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
+      | LoanProduct                                      | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
       | LP2_DOWNPAYMENT_AUTO_ADVANCED_PAYMENT_ALLOCATION | 18 February 2026  | 100            | 0                      | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 48                | DAYS                  | 16             | DAYS                   | 3                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION |
     And Admin successfully approves the loan on "18 February 2026" with "100" amount and expected disbursement date on "18 February 2026"
     # First tranche
@@ -574,3 +584,62 @@ Feature: EMI calculation and repayment schedule checks for interest bearing loan
     And Customer makes "AUTOPAY" repayment on "08 April 2026" with 75 EUR transaction amount
     Then Loan status will be "CLOSED_OBLIGATIONS_MET"
     Then Loan has 0.0 outstanding amount
+
+  @TestRailId:C80940
+  Scenario: Verify that disbursement on interest-bearing progressive product with sub-multiplesOf EMI distributes principal across all 3 monthly installments
+    When Admin sets the business date to "18 February 2026"
+    When Admin creates a client with random data
+    When Admin creates a fully customized loan with the following data:
+      | LoanProduct                                            | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
+      | LP2_ADV_PYMNT_INTEREST_DECLINING_CURRENCY_MULTIPLES_OF | 18 February 2026  | 1              | 6                      | DECLINING_BALANCE | SAME_AS_REPAYMENT_PERIOD    | EQUAL_INSTALLMENTS | 3                 | MONTHS                | 1              | MONTHS                 | 3                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION |
+    And Admin successfully approves the loan on "18 February 2026" with "1" amount and expected disbursement date on "18 February 2026"
+    When Admin successfully disburse the loan on "18 February 2026" with "1" EUR transaction amount
+    Then Loan status will be "ACTIVE"
+    Then Loan has 1.0 outstanding amount
+    Then Loan Repayment schedule has 3 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date | Balance of loan | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
+      |    |      | 18 February 2026 |           | 1.0             |               |          | 0.0  |           | 0.0  | 0.0  |            |      |             |
+      | 1  | 28   | 18 March 2026    |           | 0.67            | 0.33          | 0.0      | 0.0  | 0.0       | 0.33 | 0.0  | 0.0        | 0.0  | 0.33        |
+      | 2  | 31   | 18 April 2026    |           | 0.34            | 0.33          | 0.0      | 0.0  | 0.0       | 0.33 | 0.0  | 0.0        | 0.0  | 0.33        |
+      | 3  | 30   | 18 May 2026      |           | 0.0             | 0.34          | 0.0      | 0.0  | 0.0       | 0.34 | 0.0  | 0.0        | 0.0  | 0.34        |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due | Paid | In advance | Late | Outstanding |
+      | 1.0           | 0.0      | 0.0  | 0.0       | 1.0 | 0.0  | 0.0        | 0.0  | 1.0         |
+    When Admin sets the business date to "18 May 2026"
+    And Customer makes "AUTOPAY" repayment on "18 May 2026" with 1.0 EUR transaction amount
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
+    Then Loan has 0.0 outstanding amount
+    Then Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance |
+      | 18 February 2026 | Disbursement     | 1.0    | 0.0       | 0.0      | 0.0  | 0.0       | 1.0          |
+      | 18 May 2026      | Repayment        | 1.0    | 1.0       | 0.0      | 0.0  | 0.0       | 0.0          |
+
+  @TestRailId:C80941
+  Scenario: Verify that disbursement on interest-bearing progressive product with sub-multiplesOf EMI distributes both principal AND non-zero interest across all 3 monthly installments
+    When Admin sets the business date to "18 February 2026"
+    When Admin creates a client with random data
+    When Admin creates a fully customized loan with the following data:
+      | LoanProduct                                            | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
+      | LP2_ADV_PYMNT_INTEREST_DECLINING_CURRENCY_MULTIPLES_OF | 18 February 2026  | 1              | 24                     | DECLINING_BALANCE | SAME_AS_REPAYMENT_PERIOD    | EQUAL_INSTALLMENTS | 3                 | MONTHS                | 1              | MONTHS                 | 3                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION |
+    And Admin successfully approves the loan on "18 February 2026" with "1" amount and expected disbursement date on "18 February 2026"
+    When Admin successfully disburse the loan on "18 February 2026" with "1" EUR transaction amount
+    Then Loan status will be "ACTIVE"
+    Then Loan has 1.04 outstanding amount
+    Then Loan Repayment schedule has 3 periods, with the following data for periods:
+      | Nr | Days | Date             | Paid date | Balance of loan | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
+      |    |      | 18 February 2026 |           | 1.0             |               |          | 0.0  |           | 0.0  | 0.0  |            |      |             |
+      | 1  | 28   | 18 March 2026    |           | 0.67            | 0.33          | 0.02     | 0.0  | 0.0       | 0.35 | 0.0  | 0.0        | 0.0  | 0.35        |
+      | 2  | 31   | 18 April 2026    |           | 0.33            | 0.34          | 0.01     | 0.0  | 0.0       | 0.35 | 0.0  | 0.0        | 0.0  | 0.35        |
+      | 3  | 30   | 18 May 2026      |           | 0.0             | 0.33          | 0.01     | 0.0  | 0.0       | 0.34 | 0.0  | 0.0        | 0.0  | 0.34        |
+    Then Loan Repayment schedule has the following data in Total row:
+      | Principal due | Interest | Fees | Penalties | Due  | Paid | In advance | Late | Outstanding |
+      | 1.0           | 0.04     | 0.0  | 0.0       | 1.04 | 0.0  | 0.0        | 0.0  | 1.04        |
+    When Admin sets the business date to "18 May 2026"
+    And Customer makes "AUTOPAY" repayment on "18 May 2026" with 1.04 EUR transaction amount
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
+    Then Loan has 0.0 outstanding amount
+    Then Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance |
+      | 18 February 2026 | Disbursement     | 1.0    | 0.0       | 0.0      | 0.0  | 0.0       | 1.0          |
+      | 18 May 2026      | Repayment        | 1.04   | 1.0       | 0.04     | 0.0  | 0.0       | 0.0          |
+      | 18 May 2026      | Accrual          | 0.04   | 0.0       | 0.04     | 0.0  | 0.0       | 0.0          |
