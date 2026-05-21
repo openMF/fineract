@@ -225,4 +225,126 @@ Feature: COBFeature
     When Admin runs inline COB job for Loan
     Then LoanAccountCustomSnapshotBusinessEvent is created with business date "17 January 2022"
 
+  Scenario: COB removes an orphaned lock with no error on a loan already processed for that COB date
+    When Admin sets the business date to "01 January 2022"
+    When Admin creates a client with random data
+    When Admin creates a new default Loan with date: "01 January 2022"
+    And Admin successfully approves the loan on "01 January 2022" with "1000" amount and expected disbursement date on "01 January 2022"
+    When Admin successfully disburse the loan on "01 January 2022" with "1000" EUR transaction amount
+    When Admin sets the business date to "02 January 2022"
+    When Admin runs COB job
+    Then Admin checks that last closed business date of loan is "01 January 2022"
+    When Admin places a lock on loan account WITHOUT an error message
+    When Admin runs COB job
+    Then The loan account is not locked
+    And Customer makes "AUTOPAY" repayment on "02 January 2022" with 1000 EUR transaction amount
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
 
+  Scenario: COB keeps a lock that carries an error message
+    When Admin sets the business date to "01 January 2022"
+    When Admin creates a client with random data
+    When Admin creates a new default Loan with date: "01 January 2022"
+    And Admin successfully approves the loan on "01 January 2022" with "1000" amount and expected disbursement date on "01 January 2022"
+    When Admin successfully disburse the loan on "01 January 2022" with "1000" EUR transaction amount
+    When Admin sets the business date to "02 January 2022"
+    When Admin runs COB job
+    Then Admin checks that last closed business date of loan is "01 January 2022"
+    When Admin places a lock on loan account with an error message
+    When Admin runs COB job
+    Then The loan account is locked by chunk processing
+
+  Scenario: COB keeps a lock when the loan's last closed business date does not match the lock's COB date
+    When Admin sets the business date to "01 January 2022"
+    When Admin creates a client with random data
+    When Admin creates a new default Loan with date: "01 January 2022"
+    And Admin successfully approves the loan on "01 January 2022" with "1000" amount and expected disbursement date on "01 January 2022"
+    When Admin successfully disburse the loan on "01 January 2022" with "1000" EUR transaction amount
+    When Admin sets the business date to "02 January 2022"
+    When Admin runs COB job
+    Then Admin checks that last closed business date of loan is "01 January 2022"
+    # Skip a few days so the lock's cob_date will be far ahead of the loan's last_closed_business_date.
+    # Even if the next COB advances last_closed by one day, it still won't reach the lock's cob_date.
+    When Admin sets the business date to "05 January 2022"
+    When Admin places a lock on loan account WITHOUT an error message
+    When Admin runs COB job
+    Then The loan account is locked by chunk processing
+
+  Scenario: COB removes an orphaned inline-COB lock with no error on a loan already processed for that COB date
+    When Admin sets the business date to "01 January 2022"
+    When Admin creates a client with random data
+    When Admin creates a new default Loan with date: "01 January 2022"
+    And Admin successfully approves the loan on "01 January 2022" with "1000" amount and expected disbursement date on "01 January 2022"
+    When Admin successfully disburse the loan on "01 January 2022" with "1000" EUR transaction amount
+    When Admin sets the business date to "02 January 2022"
+    When Admin runs COB job
+    Then Admin checks that last closed business date of loan is "01 January 2022"
+    When Admin places an inline COB lock on loan account WITHOUT an error message
+    When Admin runs COB job
+    Then The loan account is not locked
+
+  Scenario: COB keeps an inline-COB lock that carries an error message
+    When Admin sets the business date to "01 January 2022"
+    When Admin creates a client with random data
+    When Admin creates a new default Loan with date: "01 January 2022"
+    And Admin successfully approves the loan on "01 January 2022" with "1000" amount and expected disbursement date on "01 January 2022"
+    When Admin successfully disburse the loan on "01 January 2022" with "1000" EUR transaction amount
+    When Admin sets the business date to "02 January 2022"
+    When Admin runs COB job
+    Then Admin checks that last closed business date of loan is "01 January 2022"
+    When Admin places an inline COB lock on loan account with an error message
+    When Admin runs COB job
+    Then The loan account is locked by chunk processing
+
+  Scenario: COB keeps a lock with NULL cob business date
+    # SQL filter requires `lock_placed_on_cob_business_date IS NOT NULL` — a lock with NULL date must never be removed
+    # (no proof exists that the loan was already processed for that date).
+    When Admin sets the business date to "01 January 2022"
+    When Admin creates a client with random data
+    When Admin creates a new default Loan with date: "01 January 2022"
+    And Admin successfully approves the loan on "01 January 2022" with "1000" amount and expected disbursement date on "01 January 2022"
+    When Admin successfully disburse the loan on "01 January 2022" with "1000" EUR transaction amount
+    When Admin sets the business date to "02 January 2022"
+    When Admin runs COB job
+    Then Admin checks that last closed business date of loan is "01 January 2022"
+    When Admin places a lock on loan account WITHOUT an error message and null cob business date
+    When Admin runs COB job
+    Then The loan account is locked by chunk processing
+
+  Scenario: COB keeps a lock when cob business date is in the past relative to last closed date
+    # SQL uses `last_closed_business_date = lock_placed_on_cob_business_date` (strict equality), so a stale lock
+    # whose cob date already lags behind the loan's last_closed must remain — the date proves a *different* run.
+    When Admin sets the business date to "01 January 2022"
+    When Admin creates a client with random data
+    When Admin creates a new default Loan with date: "01 January 2022"
+    And Admin successfully approves the loan on "01 January 2022" with "1000" amount and expected disbursement date on "01 January 2022"
+    When Admin successfully disburse the loan on "01 January 2022" with "1000" EUR transaction amount
+    When Admin sets the business date to "02 January 2022"
+    When Admin runs COB job
+    Then Admin checks that last closed business date of loan is "01 January 2022"
+    When Admin sets the business date to "03 January 2022"
+    When Admin runs COB job
+    Then Admin checks that last closed business date of loan is "02 January 2022"
+    # Loan's last_closed is now 02 Jan; place a lock that claims cob_date = 01 Jan (earlier) — must NOT be removed.
+    When Admin places a lock on loan account WITHOUT an error message and cob business date "01 January 2022"
+    When Admin runs COB job
+    Then The loan account is locked by chunk processing
+
+  Scenario: COB removes only orphaned locks among multiple loans in the same run
+    # Two loans share the same COB run: the first one carries an orphaned lock (no error) and must be unlocked;
+    # the second one carries a lock with an error message and must remain locked. Verifies DELETE selectivity.
+    When Admin sets the business date to "01 January 2022"
+    When Admin creates a client with random data
+    When Admin creates a new default Loan with date: "01 January 2022"
+    And Admin successfully approves the loan on "01 January 2022" with "1000" amount and expected disbursement date on "01 January 2022"
+    When Admin successfully disburse the loan on "01 January 2022" with "1000" EUR transaction amount
+    When Admin crates a second default loan with date: "01 January 2022"
+    And Admin successfully approves the second loan on "01 January 2022" with "1000" amount and expected disbursement date on "01 January 2022"
+    And Admin successfully disburse the second loan on "01 January 2022" with "1000" EUR transaction amount
+    When Admin sets the business date to "02 January 2022"
+    When Admin runs COB job
+    Then Admin checks that last closed business date of loan is "01 January 2022"
+    When Admin places a lock on loan account WITHOUT an error message
+    When Admin places a lock on second loan account with an error message
+    When Admin runs COB job
+    Then The loan account is not locked
+    Then The second loan account is locked by chunk processing

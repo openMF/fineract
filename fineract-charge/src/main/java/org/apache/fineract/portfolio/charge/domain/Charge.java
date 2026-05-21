@@ -174,7 +174,9 @@ public class Charge extends AbstractPersistableCustom<Long> {
                 .fromInt(command.integerValueOfParameterNamed(CHARGE_CALCULATION_TYPE_PARAM_NAME));
         final Integer chargePaymentMode = command.integerValueOfParameterNamed("chargePaymentMode");
 
-        final ChargePaymentMode paymentMode = chargePaymentMode == null ? null : ChargePaymentMode.fromInt(chargePaymentMode);
+        final ChargePaymentMode paymentMode = chargePaymentMode == null
+                ? (chargeAppliesTo.isWorkingCapitalLoanCharge() ? ChargePaymentMode.REGULAR : null)
+                : ChargePaymentMode.fromInt(chargePaymentMode);
 
         final boolean penalty = command.booleanPrimitiveValueOfParameterNamed("penalty");
         final boolean active = command.booleanPrimitiveValueOfParameterNamed("active");
@@ -423,6 +425,17 @@ public class Charge extends AbstractPersistableCustom<Long> {
                     baseDataValidator.reset().parameter(CHARGE_TIME_PARAM_NAME).value(this.chargeTimeType)
                             .failWithCodeNoParameterAddedToErrorCode("not.allowed.charge.time.for.loan");
                 }
+            } else if (ChargeAppliesTo.WORKING_CAPITAL_LOAN.getValue().equals(this.chargeAppliesTo)) {
+                baseDataValidator.reset().parameter(CHARGE_TIME_PARAM_NAME).value(chargeTimeType).notNull()
+                        .isOneOfTheseValues(ChargeTimeType.validWorkingCapitalLoanValues());
+
+                Object[] validCalculationTypeValues = new Object[] {};
+                if (ChargeTimeType.SPECIFIED_DUE_DATE.getValue().equals(chargeTimeType)) {
+                    validCalculationTypeValues = ChargeCalculationType.validValuesForWorkingCapitalLoanSpecifiedDueDate();
+                }
+                baseDataValidator.reset().parameter(CHARGE_CALCULATION_TYPE_PARAM_NAME).value(chargeCalculation).notNull()
+                        .isOneOfTheseValues(validCalculationTypeValues);
+
             } else if (isClientCharge() && !isAllowedLoanChargeTime()) {
                 baseDataValidator.reset().parameter(CHARGE_TIME_PARAM_NAME).value(this.chargeTimeType)
                         .failWithCodeNoParameterAddedToErrorCode("not.allowed.charge.time.for.client");

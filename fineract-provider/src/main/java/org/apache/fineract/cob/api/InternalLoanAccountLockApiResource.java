@@ -19,6 +19,7 @@
 package org.apache.fineract.cob.api;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -28,6 +29,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -45,6 +47,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Profile(FineractProfiles.TEST)
 @Component
 @Path("/v1/internal/loans")
+@Tag(name = "Loan Account Lock")
 @RequiredArgsConstructor
 @Slf4j
 public class InternalLoanAccountLockApiResource implements InitializingBean {
@@ -69,21 +72,31 @@ public class InternalLoanAccountLockApiResource implements InitializingBean {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @SuppressFBWarnings("SLF4J_SIGN_ONLY_FORMAT")
-    public Response placeLockOnLoanAccount(@Context final UriInfo uriInfo, @PathParam("loanId") Long loanId,
-            @PathParam("lockOwner") String lockOwner, @RequestBody(required = false) LockRequest request) {
+    public Response placeLockOnLoanAccount(@Context final UriInfo uriInfo, @PathParam("loanId") final Long loanId,
+            @PathParam("lockOwner") final String lockOwner, @RequestBody(required = false) final LockRequest request) {
         log.warn("------------------------------------------------------------");
         log.warn("                                                            ");
         log.warn("Placing lock on loan: {}", loanId);
         log.warn("                                                            ");
         log.warn("------------------------------------------------------------");
 
-        LoanAccountLock loanAccountLock = new LoanAccountLock(loanId, LockOwner.valueOf(lockOwner),
-                ThreadLocalContextUtil.getBusinessDateByType(BusinessDateType.COB_DATE));
+        final LocalDate cobBusinessDate = resolveCobBusinessDate(request);
+        final LoanAccountLock loanAccountLock = new LoanAccountLock(loanId, LockOwner.valueOf(lockOwner), cobBusinessDate);
 
-        if (StringUtils.isNotBlank(request.getError())) {
+        if (request != null && StringUtils.isNotBlank(request.getError())) {
             loanAccountLock.setError(request.getError(), request.getError());
         }
         loanAccountLockRepository.save(loanAccountLock);
         return Response.status(Response.Status.ACCEPTED).build();
+    }
+
+    private static LocalDate resolveCobBusinessDate(final LockRequest request) {
+        if (request != null && Boolean.TRUE.equals(request.getNullCobBusinessDate())) {
+            return null;
+        }
+        if (request != null && request.getCobBusinessDate() != null) {
+            return request.getCobBusinessDate();
+        }
+        return ThreadLocalContextUtil.getBusinessDateByType(BusinessDateType.COB_DATE);
     }
 }

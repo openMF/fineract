@@ -112,13 +112,33 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     }
 
     @Override
-    public ChargeData retrieveNewChargeDetails() {
+    public ChargeData retrieveNewChargeDetails(Long chargeAppliesTo, Long chargeTimeType) {
+        if (chargeAppliesTo != null && ChargeAppliesTo.WORKING_CAPITAL_LOAN.getValue().longValue() == chargeAppliesTo) {
+            final List<EnumOptionData> allowedChargeAppliesToOptions = this.chargeDropdownReadPlatformService.retrieveApplicableToTypes();
+            final Collection<CurrencyData> currencyOptions = this.currencyReadPlatformService.retrieveAllowedCurrencies();
+            final List<EnumOptionData> allowedChargeTimeOptions = this.chargeDropdownReadPlatformService
+                    .retrieveCollectionTimeTypes(ChargeAppliesTo.WORKING_CAPITAL_LOAN);
+            final List<EnumOptionData> allowedChargeCalculationTypeOptions = this.chargeDropdownReadPlatformService
+                    .retrieveCalculationTypes(ChargeAppliesTo.WORKING_CAPITAL_LOAN,
+                            chargeTimeType != null ? ChargeTimeType.fromInt(chargeTimeType.intValue()) : null);
+            final List<EnumOptionData> chargePaymentOptions = this.chargeDropdownReadPlatformService
+                    .retrievePaymentModes(ChargeAppliesTo.WORKING_CAPITAL_LOAN);
 
+            return ChargeData.builder().currencyOptions(currencyOptions).chargeCalculationTypeOptions(allowedChargeCalculationTypeOptions)
+                    .chargeAppliesToOptions(allowedChargeAppliesToOptions).chargeTimeTypeOptions(allowedChargeTimeOptions)
+                    .chargePaymetModeOptions(chargePaymentOptions).build();
+
+        }
+        return retrieveNewChargeDetails();
+    }
+
+    @Override
+    public ChargeData retrieveNewChargeDetails() {
         final Collection<CurrencyData> currencyOptions = this.currencyReadPlatformService.retrieveAllowedCurrencies();
         final List<EnumOptionData> allowedChargeCalculationTypeOptions = this.chargeDropdownReadPlatformService.retrieveCalculationTypes();
         final List<EnumOptionData> allowedChargeAppliesToOptions = this.chargeDropdownReadPlatformService.retrieveApplicableToTypes();
         final List<EnumOptionData> allowedChargeTimeOptions = this.chargeDropdownReadPlatformService.retrieveCollectionTimeTypes();
-        final List<EnumOptionData> chargePaymentOptions = this.chargeDropdownReadPlatformService.retrivePaymentModes();
+        final List<EnumOptionData> chargePaymentOptions = this.chargeDropdownReadPlatformService.retrievePaymentModes();
         final List<EnumOptionData> loansChargeCalculationTypeOptions = this.chargeDropdownReadPlatformService
                 .retrieveLoanCalculationTypes();
         final List<EnumOptionData> loansChargeTimeTypeOptions = this.chargeDropdownReadPlatformService.retrieveLoanCollectionTimeTypes();
@@ -207,8 +227,6 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     /**
      * @param excludeChargeTimes
      * @param excludeClause
-     * @param params
-     * @return
      */
     private void processChargeExclusionsForLoans(ChargeTimeType[] excludeChargeTimes, StringBuilder excludeClause) {
         if (excludeChargeTimes != null && excludeChargeTimes.length > 0) {

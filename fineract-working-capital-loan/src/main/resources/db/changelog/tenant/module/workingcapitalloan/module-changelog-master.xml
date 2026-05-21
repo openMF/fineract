@@ -58,4 +58,5 @@
   <include relativeToChangelogFile="true" file="parts/0034_wc_loan_discount_transaction.xml"/>
   <include relativeToChangelogFile="true" file="parts/0035_wc_loan_discount_proposed_approved.xml"/>
   <include relativeToChangelogFile="true" file="parts/0036_wc_loan_period_payment_rate_change.xml"/>
+  <include relativeToChangelogFile="true" file="parts/0037_wc_near_breach_evaluation.xml"/>
 </databaseChangeLog>

@@ -1,0 +1,44 @@
+= Working Capital Payment Allocation
+
+== Concept
+On legacy and merchant term loans (progressive loans), 3 timely modifier were defined:
+
+* PAST DUE
+* DUE
+* IN ADVANCE
+
+For (sales based) Working Capital type of loan products, PAST DUE is not applicable, but DUE and IN ADVANCE balances are providing enough flexibility and fine-grained configuration options to be widely accepted and used for business needs.
+
+* *DUE*:
+** *Principal*: Projected principal payment
+** *Fee* and *Penalty*: current or older charges (based on specific due date)
+* *IN ADVANCE*:
+** *Principal*: over projected principal payment
+** *Fee* and *Penalty*: Future charges (based on specific due date)
+
+== Validation
+
+Similarly to the progressive loan, Working Capital Loans accept as payment allocation the following values. When creating payment allocation the following values should be included.
+
+* DUE PRINCIPAL
+* DUE FEE
+* DUE PENALTY
+* IN ADVANCE PRINCIPAL
+* IN ADVANCE FEE
+* IN ADVANCE PENALTY
+
+During loan product creation at lest one "default" configuration are included and by transaction type there could be optional allocation provided. When payment allocation is provided all available options should be included.
+
+== Loan Product Creation & Update
+
+During loan product creation there is the paymentAllocation is a mandatory option therefore one allocation for "default" payment allocation should be provided.
+
+=== Template
+
+Template API for Loan Product related operations are providing the available payment allocation settings.
+
+== Loan Account Creation & Update
+
+During loan account creation there is the paymentAllocation is optional. When Payment Allocation is provided during loan account creation, it is used for the account. If Not provided, then the loan product's settings will be copied to the new loan account. This logic grants the loan account level payment allocation settings are not affected by later modifications of the loan product.
+
+

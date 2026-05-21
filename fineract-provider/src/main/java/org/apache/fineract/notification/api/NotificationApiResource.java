@@ -47,7 +47,7 @@ import org.springframework.stereotype.Component;
 
 @Path("/v1/notifications")
 @Component
-@Tag(name = "Notification", description = "")
+@Tag(name = "Notification", description = "Notification API resources")
 @RequiredArgsConstructor
 public class NotificationApiResource {
 
@@ -59,7 +59,8 @@ public class NotificationApiResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation
+    @Operation(summary = "Retrieve all Notifications", description = "Returns a paginated list of notifications for the authenticated user, with optional filtering by read status.", tags = {
+            "Notification" })
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = NotificationApiResourceSwagger.GetNotificationsResponse.class)))
     public String getAllNotifications(@Context final UriInfo uriInfo,
             @QueryParam("orderBy") @Parameter(description = "orderBy") final String orderBy,
@@ -86,6 +87,8 @@ public class NotificationApiResource {
     @PUT
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Update Notification Read Status", description = "Updates the read status of all notifications for the authenticated user.", tags = {
+            "Notification" })
     public void update() {
         this.context.authenticatedUser();
         this.notificationReadPlatformService.updateNotificationReadStatus();

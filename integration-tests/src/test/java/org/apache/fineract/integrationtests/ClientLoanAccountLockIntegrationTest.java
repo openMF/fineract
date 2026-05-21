@@ -52,7 +52,7 @@ public class ClientLoanAccountLockIntegrationTest extends BaseLoanIntegrationTes
         loanTransactionHelper.disburseLoan(loanId, "20 September 2011", 12000.0);
         verifyLoanStatus(loanId, LoanStatus.ACTIVE);
 
-        Calls.ok(FineractClientHelper.getFineractClient().legacy //
+        Calls.ok(FineractClientHelper.getFineractClient().loanAccountLockApi //
                 .placeLockOnLoanAccount(loanId, "LOAN_INLINE_COB_PROCESSING", new LockRequest().error("Sample error")));
 
         LoanAccountLockResponseDTO lockResponse = Calls

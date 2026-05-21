@@ -130,6 +130,10 @@ public final class ChargeEnumerations {
             case SHARES:
                 optionData = new EnumOptionData(ChargeAppliesTo.SHARES.getValue().longValue(), ChargeAppliesTo.SHARES.getCode(), "Shares");
             break;
+            case WORKING_CAPITAL_LOAN:
+                optionData = new EnumOptionData(ChargeAppliesTo.WORKING_CAPITAL_LOAN.getValue().longValue(),
+                        ChargeAppliesTo.WORKING_CAPITAL_LOAN.getCode(), "Working Capital Loan");
+            break;
             default:
                 optionData = new EnumOptionData(ChargeAppliesTo.INVALID.getValue().longValue(), ChargeAppliesTo.INVALID.getCode(),
                         "Invalid");

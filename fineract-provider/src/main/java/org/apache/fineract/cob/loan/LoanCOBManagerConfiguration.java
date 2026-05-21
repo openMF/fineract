@@ -23,7 +23,9 @@ import static org.apache.fineract.cob.loan.LoanCOBConstant.JOB_NAME;
 import org.apache.fineract.cob.COBBusinessStepService;
 import org.apache.fineract.cob.common.CustomJobParameterResolver;
 import org.apache.fineract.cob.conditions.BatchManagerCondition;
+import org.apache.fineract.cob.domain.LoanAccountLock;
 import org.apache.fineract.cob.listener.COBExecutionListenerRunner;
+import org.apache.fineract.cob.service.AccountLockService;
 import org.apache.fineract.cob.service.RetrieveLoanIdService;
 import org.apache.fineract.infrastructure.event.business.service.BusinessEventNotifierService;
 import org.apache.fineract.infrastructure.jobs.service.JobName;
@@ -77,6 +79,9 @@ public class LoanCOBManagerConfiguration {
     @Autowired
     private CustomJobParameterResolver customJobParameterResolver;
 
+    @Autowired
+    private AccountLockService<LoanAccountLock> loanAccountLockService;
+
     @Bean
     @StepScope
     public LoanCOBPartitioner partitioner(@Value("#{stepExecution}") StepExecution stepExecution) {
@@ -113,6 +118,17 @@ public class LoanCOBManagerConfiguration {
         return new StayedLockedLoansTasklet(businessEventNotifierService, retrieveIdService);
     }
 
+    @Bean
+    public Step unlockProcessedLoansStep() {
+        return new StepBuilder("Unlock processed loan accounts - Step", jobRepository)
+                .tasklet(unlockProcessedLoansTasklet(), transactionManager).build();
+    }
+
+    @Bean
+    public UnlockProcessedLoansTasklet unlockProcessedLoansTasklet() {
+        return new UnlockProcessedLoansTasklet(loanAccountLockService);
+    }
+
     @Bean(name = "loanCOBJob")
     public Job loanCOBJob(LoanCOBPartitioner partitioner) {
         return new JobBuilder(JobName.LOAN_COB.name(), jobRepository) //
@@ -120,6 +136,7 @@ public class LoanCOBManagerConfiguration {
                 .start(resolveCustomJobParametersStep()) //
                 .next(loanCOBStep(partitioner)) //
                 .next(stayedLockedStep()) //
+                .next(unlockProcessedLoansStep()) //
                 .incrementer(new RunIdIncrementer()) //
                 .build();
     }

@@ -166,7 +166,6 @@ import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_CODE;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_CODEVALUE;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_COLLATERAL;
-import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_COLLATERAL_PRODUCT;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_COLLECTIONSHEET;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_CONFIGURATION;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_CREDITBUREAU_CONFIGURATION;
@@ -674,14 +673,6 @@ public class CommandWrapperBuilder {
         this.entityName = ENTITY_CHARGE;
         this.entityId = null;
         this.href = "/charges/template";
-        return this;
-    }
-
-    public CommandWrapperBuilder createCollateral() {
-        this.actionName = ACTION_CREATE;
-        this.entityId = null;
-        this.entityName = ENTITY_COLLATERAL_PRODUCT;
-        this.href = "/collateral-product";
         return this;
     }
 
@@ -2285,14 +2276,6 @@ public class CommandWrapperBuilder {
         return this;
     }
 
-    public CommandWrapperBuilder updateCollateralProduct(final Long collateralId) {
-        this.actionName = ACTION_UPDATE;
-        this.entityName = ENTITY_COLLATERAL_PRODUCT;
-        this.entityId = collateralId;
-        this.href = "/collateral-management/" + collateralId;
-        return this;
-    }
-
     public CommandWrapperBuilder updateClientCollateralProduct(final Long clientId, final Long collateralId) {
         this.actionName = ACTION_UPDATE;
         this.entityName = ENTITY_CLIENT_COLLATERAL_PRODUCT;
@@ -2317,14 +2300,6 @@ public class CommandWrapperBuilder {
         this.entityId = collateralId;
         this.loanId = loanId;
         this.href = "/loans/" + loanId + "/collaterals/" + collateralId;
-        return this;
-    }
-
-    public CommandWrapperBuilder deleteCollateralProduct(final Long collateralId) {
-        this.actionName = ACTION_DELETE;
-        this.entityName = ENTITY_COLLATERAL_PRODUCT;
-        this.entityId = collateralId;
-        this.href = "/collateral-management/" + collateralId;
         return this;
     }
 

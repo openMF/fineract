@@ -30,4 +30,6 @@ public interface AccountLockService<T extends AccountLock> {
     boolean isLockOverrulable(Long loanId);
 
     void updateCobAndRemoveLocks();
+
+    int removeOrphanedLocksForProcessedAccounts();
 }

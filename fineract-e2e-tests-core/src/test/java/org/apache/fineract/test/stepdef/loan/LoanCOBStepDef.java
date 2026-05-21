@@ -24,10 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.LoanAccountLock;
@@ -38,19 +39,20 @@ import org.apache.fineract.client.models.PostLoansResponse;
 import org.apache.fineract.test.helper.ErrorMessageHelper;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.Assertions;
 
 @Slf4j
+@RequiredArgsConstructor
 public class LoanCOBStepDef extends AbstractStepDef {
 
-    @Autowired
-    private FineractFeignClient fineractClient;
+    private final FineractFeignClient fineractClient;
 
     @Then("The cobProcessedDate of the oldest loan processed by COB is more than 1 day earlier than cobBusinessDate")
-    public void checkOldestCOBProcessed() throws IOException {
+    public void checkOldestCOBProcessed() {
         OldestCOBProcessedLoanDTO response = ok(() -> fineractClient.loanCobCatchUp().getOldestCOBProcessedLoan());
 
         LocalDate cobDate = response.getCobBusinessDate();
+        Assertions.assertNotNull(cobDate);
         LocalDate cobDateMinusOne = cobDate.minusDays(1);
         LocalDate cobProcessedDate = response.getCobProcessedDate();
         log.debug("cobDateMinusOne: {}", cobDateMinusOne);
@@ -61,23 +63,26 @@ public class LoanCOBStepDef extends AbstractStepDef {
     }
 
     @Then("There are no locked loan accounts")
-    public void listOfLockedLoansEmpty() throws IOException {
+    public void listOfLockedLoansEmpty() {
         LoanAccountLockResponseDTO response = ok(
-                () -> fineractClient.loanAccountLock().retrieveLockedAccounts(Map.<String, Object>of("page", 0, "size", 1000)));
+                () -> fineractClient.loanAccountLock().retrieveLockedAccounts(Map.of("page", 0, "size", 1000)));
 
+        Assertions.assertNotNull(response.getContent());
         int size = response.getContent().size();
         assertThat(size).as(ErrorMessageHelper.listOfLockedLoansNotEmpty(response)).isEqualTo(0);
         log.debug("Size of List of the locked loans: {}", size);
     }
 
     @Then("The loan account is not locked")
-    public void loanIsNotInListOfLockedLoans() throws IOException {
+    public void loanIsNotInListOfLockedLoans() {
         PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         Long targetLoanId = loanResponse.getLoanId();
 
         LoanAccountLockResponseDTO response = ok(
-                () -> fineractClient.loanAccountLock().retrieveLockedAccounts(Map.<String, Object>of("page", 0, "size", 1000)));
+                () -> fineractClient.loanAccountLock().retrieveLockedAccounts(Map.of("page", 0, "size", 1000)));
 
+        Assertions.assertNotNull(response.getContent());
+        Assertions.assertNotNull(targetLoanId);
         List<LoanAccountLock> content = response.getContent();
         boolean contains = content.stream()//
                 .map(LoanAccountLock::getLoanId)//
@@ -86,20 +91,124 @@ public class LoanCOBStepDef extends AbstractStepDef {
         assertThat(contains).as(ErrorMessageHelper.listOfLockedLoansContainsLoan(targetLoanId, response)).isFalse();
     }
 
-    @When("Admin places a lock on loan account with an error message")
-    public void placeLockOnLoanAccountWithErrorMessage() throws IOException {
-        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        long loanId = loanResponse.getLoanId();
+    @Then("The loan account is locked by chunk processing")
+    public void loanIsLockedByChunkProcessing() {
+        final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        final Long targetLoanId = loanResponse.getLoanId();
 
-        executeVoid(() -> fineractClient.defaultApi().placeLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING",
+        final LoanAccountLockResponseDTO response = ok(
+                () -> fineractClient.loanAccountLock().retrieveLockedAccounts(Map.of("page", 0, "size", 1000)));
+
+        Assertions.assertNotNull(response.getContent());
+        Assertions.assertNotNull(targetLoanId);
+        final boolean stillLocked = response.getContent().stream()//
+                .map(LoanAccountLock::getLoanId)//
+                .anyMatch(targetLoanId::equals);//
+
+        assertThat(stillLocked).as(ErrorMessageHelper.expectedLoanToRemainLocked(targetLoanId, response)).isTrue();
+    }
+
+    @When("Admin places a lock on loan account with an error message")
+    public void placeLockOnLoanAccountWithErrorMessage() {
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        Long loanId = loanResponse.getLoanId();
+
+        executeVoid(() -> fineractClient.loanAccountLock().placeLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING",
                 new LockRequest().error("ERROR")));
     }
 
     @When("Admin places a lock on loan account WITHOUT an error message")
-    public void placeLockOnLoanAccountNoErrorMessage() throws IOException {
+    public void placeLockOnLoanAccountNoErrorMessage() {
         PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
-        long loanId = loanResponse.getLoanId();
+        Long loanId = loanResponse.getLoanId();
 
-        executeVoid(() -> fineractClient.defaultApi().placeLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING", new LockRequest()));
+        executeVoid(() -> fineractClient.loanAccountLock().placeLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING", new LockRequest()));
+    }
+
+    @When("Admin places an inline COB lock on loan account WITHOUT an error message")
+    public void placeInlineLockOnLoanAccountNoErrorMessage() {
+        final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        final Long loanId = loanResponse.getLoanId();
+
+        executeVoid(() -> fineractClient.loanAccountLock().placeLockOnLoanAccount(loanId, "LOAN_INLINE_COB_PROCESSING", new LockRequest()));
+    }
+
+    @When("Admin places an inline COB lock on loan account with an error message")
+    public void placeInlineLockOnLoanAccountWithErrorMessage() {
+        final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        final Long loanId = loanResponse.getLoanId();
+
+        executeVoid(() -> fineractClient.loanAccountLock().placeLockOnLoanAccount(loanId, "LOAN_INLINE_COB_PROCESSING",
+                new LockRequest().error("ERROR")));
+    }
+
+    @When("Admin places a lock on loan account WITHOUT an error message and null cob business date")
+    public void placeLockOnLoanAccountWithNullCobBusinessDate() {
+        final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        final Long loanId = loanResponse.getLoanId();
+
+        executeVoid(() -> fineractClient.loanAccountLock().placeLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING",
+                new LockRequest().nullCobBusinessDate(true)));
+    }
+
+    @When("Admin places a lock on loan account WITHOUT an error message and cob business date {string}")
+    public void placeLockOnLoanAccountWithExplicitCobBusinessDate(final String cobBusinessDate) {
+        final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        final Long loanId = loanResponse.getLoanId();
+        final LocalDate parsed = LocalDate.parse(cobBusinessDate, DateTimeFormatter.ofPattern("dd MMMM yyyy"));
+
+        executeVoid(() -> fineractClient.loanAccountLock().placeLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING",
+                new LockRequest().cobBusinessDate(parsed)));
+    }
+
+    @When("Admin places a lock on second loan account WITHOUT an error message")
+    public void placeLockOnSecondLoanAccountNoErrorMessage() {
+        final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_SECOND_LOAN_RESPONSE);
+        final Long loanId = loanResponse.getLoanId();
+
+        executeVoid(() -> fineractClient.loanAccountLock().placeLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING", new LockRequest()));
+    }
+
+    @When("Admin places a lock on second loan account with an error message")
+    public void placeLockOnSecondLoanAccountWithErrorMessage() {
+        final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_SECOND_LOAN_RESPONSE);
+        final Long loanId = loanResponse.getLoanId();
+
+        executeVoid(() -> fineractClient.loanAccountLock().placeLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING",
+                new LockRequest().error("ERROR")));
+    }
+
+    @Then("The second loan account is not locked")
+    public void secondLoanIsNotInListOfLockedLoans() {
+        final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_SECOND_LOAN_RESPONSE);
+        final Long targetLoanId = loanResponse.getLoanId();
+
+        final LoanAccountLockResponseDTO response = ok(
+                () -> fineractClient.loanAccountLock().retrieveLockedAccounts(Map.of("page", 0, "size", 1000)));
+
+        Assertions.assertNotNull(response.getContent());
+        Assertions.assertNotNull(targetLoanId);
+        final boolean contains = response.getContent().stream()//
+                .map(LoanAccountLock::getLoanId)//
+                .anyMatch(targetLoanId::equals);
+
+        assertThat(contains).as(ErrorMessageHelper.listOfLockedLoansContainsLoan(targetLoanId, response)).isFalse();
+    }
+
+    @Then("The second loan account is locked by chunk processing")
+    public void secondLoanIsLockedByChunkProcessing() {
+        final PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_SECOND_LOAN_RESPONSE);
+        final Long targetLoanId = loanResponse.getLoanId();
+
+        final LoanAccountLockResponseDTO response = ok(
+                () -> fineractClient.loanAccountLock().retrieveLockedAccounts(Map.of("page", 0, "size", 1000)));
+
+        Assertions.assertNotNull(response.getContent());
+        Assertions.assertNotNull(targetLoanId);
+        final boolean stillLocked = response.getContent().stream()//
+                .map(LoanAccountLock::getLoanId)//
+                .anyMatch(targetLoanId::equals);
+
+        assertThat(stillLocked).as(ErrorMessageHelper.expectedLoanToRemainLocked(targetLoanId, response)).isTrue();
     }
 }

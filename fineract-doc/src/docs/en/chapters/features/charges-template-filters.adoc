@@ -1,0 +1,51 @@
+== Template API Filtering
+
+The charge template API is enhanced to support filtered responses for charge creation.
+
+Previously, the template endpoint returned every possible configuration option regardless of applicability. This behavior remains unchanged when no filter parameters are provided.
+
+With this enhancement, the API supports hierarchical filtering of template options to reduce irrelevant configuration values for Working Capital Loan charge products.
+
+=== Filtering Levels
+
+Filtering is applied in the following order:
+
+1. `chargeAppliesTo`
+ - filters and returns only applicable `chargeTimeType`s
+2. `chargeTimeType`
+ - filters and returns only applicable `chargeCalculationType`s
+
+Each filtering level depends on the previous level being provided.
+
+=== chargeAppliesTo Filter
+
+A new query parameter is introduced:
+
+[source,http]
+----
+GET /charges/template?chargeAppliesTo=<value>
+----
+
+When `chargeAppliesTo` is specified, the API returns only the template fields and dropdown options applicable to the selected entity type.
+
+Supported values include:
+* `Working Capital Loan`
+
+=== chargeTimeType Filter
+
+An additional filtering level is available when `chargeAppliesTo` is also provided:
+
+[source,http]
+----
+GET /charges/template?chargeAppliesTo=<value>&chargeTimeType=<value>
+----
+
+Supported values for WCP Loans:
+
+* `Specified due date`
+
+The API response filters the available `chargeCalculationType` options based on the selected charge time type.
+
+== Backward Compatibility
+
+If no query parameters are provided, the template API continues to return all available options to preserve legacy behavior.

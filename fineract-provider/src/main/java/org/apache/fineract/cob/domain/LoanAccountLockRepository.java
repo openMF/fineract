@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -48,5 +51,20 @@ public interface LoanAccountLockRepository
 
     @Override
     void removeByLockOwnerInAndErrorIsNotNullAndLockPlacedOnCobBusinessDateIsNotNull(List<LockOwner> lockOwners);
+
+    @Override
+    @Modifying(clearAutomatically = true)
+    @Query("""
+            DELETE FROM LoanAccountLock lck
+            WHERE lck.error IS NULL
+              AND lck.lockPlacedOnCobBusinessDate IS NOT NULL
+              AND lck.lockOwner IN :lockOwners
+              AND EXISTS (
+                SELECT l FROM Loan l
+                WHERE l.id = lck.loanId
+                  AND l.lastClosedBusinessDate = lck.lockPlacedOnCobBusinessDate
+              )
+            """)
+    int deleteOrphanedLocksForProcessedAccounts(@Param("lockOwners") List<LockOwner> lockOwners);
 
 }

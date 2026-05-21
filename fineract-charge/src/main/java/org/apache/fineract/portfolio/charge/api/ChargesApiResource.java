@@ -33,6 +33,7 @@ import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.UriInfo;
@@ -101,7 +102,8 @@ public class ChargesApiResource {
 
         ChargeData charge = readPlatformService.retrieveCharge(chargeId);
         if (settings.isTemplate()) {
-            final ChargeData templateData = readPlatformService.retrieveNewChargeDetails();
+            final ChargeData templateData = readPlatformService.retrieveNewChargeDetails(charge.getChargeAppliesTo().getId(),
+                    charge.getChargeTimeType().getId());
             charge = ChargeData.withTemplate(charge, templateData);
         }
         return charge;
@@ -119,9 +121,10 @@ public class ChargesApiResource {
 
             charges/template
             """)
-    public ChargeData retrieveNewChargeDetails() {
+    public ChargeData retrieveNewChargeDetails(@QueryParam("chargeAppliesTo") Long chargeAppliesTo,
+            @QueryParam("chargeTimeType") Long chargeTimeType) {
         context.authenticatedUser().validateHasReadPermission(RESOURCE_NAME_FOR_PERMISSIONS);
-        return readPlatformService.retrieveNewChargeDetails();
+        return readPlatformService.retrieveNewChargeDetails(chargeAppliesTo, chargeTimeType);
     }
 
     @POST

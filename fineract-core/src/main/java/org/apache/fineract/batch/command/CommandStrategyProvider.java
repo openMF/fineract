@@ -201,6 +201,8 @@ public class CommandStrategyProvider {
                 "createLoanRescheduleRequestCommandStrategy");
         commandStrategies.put(CommandContext.resource("v1\\/rescheduleloans\\/" + NUMBER_REGEX + "\\?command=approve").method(POST).build(),
                 "approveLoanRescheduleCommandStrategy");
+        commandStrategies.put(CommandContext.resource("v1\\/rescheduleloans\\/" + NUMBER_REGEX + "\\?command=reject").method(POST).build(),
+                "rejectLoanRescheduleCommandStrategy");
         commandStrategies.put(
                 CommandContext.resource("v1\\/loans\\/" + NUMBER_REGEX + "\\/transactions\\/" + NUMBER_REGEX).method(GET).build(),
                 "getLoanTransactionByIdCommandStrategy");

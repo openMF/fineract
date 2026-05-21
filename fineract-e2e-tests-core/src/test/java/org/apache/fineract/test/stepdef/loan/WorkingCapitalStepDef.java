@@ -34,6 +34,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.feign.FineractFeignClient;
@@ -51,6 +52,7 @@ import org.apache.fineract.client.models.GetWorkingCapitalLoanProductsTemplateRe
 import org.apache.fineract.client.models.InternalWorkingCapitalLoanPaymentRequest;
 import org.apache.fineract.client.models.PaymentTypeToGLAccountMapper;
 import org.apache.fineract.client.models.PostAllowAttributeOverrides;
+import org.apache.fineract.client.models.PostPaymentAllocation;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsRequest.AccountingRuleEnum;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsResponse;
@@ -1852,6 +1854,94 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
         final GetWorkingCapitalLoanProductsTemplateResponse template = testContext()
                 .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_TEMPLATE_RESPONSE);
         WorkingCapitalLoanProductAdvancedAccountingTestHelper.assertTemplateHasOptions(template);
+    }
+
+    @Then("Working Capital Loan Product template advancedPaymentAllocationTypes contains:")
+    public void verifyTemplateAdvancedPaymentAllocationTypes(final DataTable table) {
+        final GetWorkingCapitalLoanProductsTemplateResponse template = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_TEMPLATE_RESPONSE);
+        assertThat(template.getAdvancedPaymentAllocationTypes()).isNotNull().isNotEmpty();
+        final Map<String, String> actualCodeToValue = template.getAdvancedPaymentAllocationTypes().stream()
+                .collect(Collectors.toMap(StringEnumOptionData::getCode, StringEnumOptionData::getValue));
+        final SoftAssertions assertions = new SoftAssertions();
+        assertions.assertThat(actualCodeToValue).hasSize(table.asLists().size());
+        for (final List<String> row : table.asLists()) {
+            final String code = row.get(0);
+            final String expectedValue = row.get(1);
+            assertions.assertThat(actualCodeToValue).as("template missing allocation type code %s", code).containsKey(code);
+            assertions.assertThat(actualCodeToValue.get(code)).as("human readable name for %s", code).isEqualTo(expectedValue);
+        }
+        assertions.assertAll();
+    }
+
+    @When("Admin creates a new Working Capital Loan Product with payment allocation order:")
+    public void createWorkingCapitalLoanProductWithPaymentAllocationOrder(final DataTable table) {
+        final List<String> rules = table.asList();
+        final String productName = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
+        final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory.defaultWorkingCapitalLoanProductRequest() //
+                .name(productName) //
+                .paymentAllocation(List.of(WorkingCapitalRequestFactory
+                        .createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(), rules)));
+        final PostWorkingCapitalLoanProductsResponse response = createWorkingCapitalLoanProduct(request);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_REQUEST, request);
+        checkWorkingCapitalLoanProductCreate();
+    }
+
+    @When("Admin updates Working Capital Loan Product payment allocation order:")
+    public void updateWorkingCapitalLoanProductPaymentAllocationOrder(final DataTable table) {
+        final List<String> rules = table.asList();
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long resourceId = createResponse.getResourceId();
+        final PutWorkingCapitalLoanProductsProductIdRequest updateRequest = new PutWorkingCapitalLoanProductsProductIdRequest() //
+                .locale(LoanProductsRequestFactory.LOCALE_EN) //
+                .paymentAllocation(List.of(WorkingCapitalRequestFactory
+                        .createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(), rules)));
+        final PutWorkingCapitalLoanProductsProductIdResponse response = ok(
+                () -> workingCapitalApi().updateWorkingCapitalLoanProduct(resourceId, updateRequest, Map.of()));
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_RESPONSE, response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_UPDATE_REQUEST, updateRequest);
+    }
+
+    @Then("Working Capital Loan Product payment allocation order is:")
+    public void verifyWorkingCapitalLoanProductPaymentAllocationOrder(final DataTable table) {
+        final PostWorkingCapitalLoanProductsResponse createResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
+        final Long resourceId = createResponse.getResourceId();
+        final GetWorkingCapitalLoanProductsProductIdResponse product = workingCapitalApi().retrieveOneWorkingCapitalLoanProduct(resourceId,
+                Map.of());
+        assertThat(product.getPaymentAllocation()).isNotNull().isNotEmpty();
+        final GetPaymentAllocation defaultAllocation = product.getPaymentAllocation().stream() //
+                .filter(pa -> PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue().equals(pa.getTransactionType())) //
+                .findFirst() //
+                .orElseThrow(() -> new RuntimeException("No DEFAULT payment allocation found on product"));
+        final List<List<String>> rows = table.asLists();
+        final SoftAssertions assertions = new SoftAssertions();
+        assertions.assertThat(defaultAllocation.getPaymentAllocationOrder()).hasSize(rows.size());
+        for (final List<String> row : rows) {
+            final String expectedRule = row.get(0);
+            final Integer expectedOrder = Integer.valueOf(row.get(1));
+            final boolean match = defaultAllocation.getPaymentAllocationOrder().stream() //
+                    .anyMatch(p -> expectedRule.equals(p.getPaymentAllocationRule()) && expectedOrder.equals(p.getOrder()));
+            assertions.assertThat(match).as("expected payment allocation rule %s at order %d", expectedRule, expectedOrder).isTrue();
+        }
+        assertions.assertAll();
+    }
+
+    @Then("Admin failed to create a new Working Capital Loan Product with duplicate payment allocation rules")
+    public void createWorkingCapitalLoanProductWithDuplicatePaymentAllocationRulesFailed() {
+        final String productName = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
+        final List<String> duplicateRules = List.of(//
+                WorkingCapitalRequestFactory.DUE_PENALTY, WorkingCapitalRequestFactory.DUE_PENALTY, WorkingCapitalRequestFactory.DUE_FEE,
+                WorkingCapitalRequestFactory.DUE_PRINCIPAL, WorkingCapitalRequestFactory.IN_ADVANCE_FEE,
+                WorkingCapitalRequestFactory.IN_ADVANCE_PRINCIPAL);
+        final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory.defaultWorkingCapitalLoanProductRequest() //
+                .name(productName) //
+                .paymentAllocation(List.of(WorkingCapitalRequestFactory
+                        .createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(), duplicateRules)));
+        final String errorMessage = ErrorMessageHelper.paymentAllocationRulesDuplicateFailure();
+        checkCreateWorkingCapitalLoanProductWithInvalidDataFailure(request, 400, errorMessage);
     }
 
     @Then("Working Capital Loan Product has advanced accounting mappings")

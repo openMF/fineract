@@ -16,15 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.collateralmanagement.service;
+package org.apache.fineract.cob.workingcapitalloan;
 
-import java.util.List;
-import org.apache.fineract.portfolio.collateralmanagement.data.CollateralManagementData;
+import org.apache.fineract.cob.domain.WorkingCapitalLoanAccountLock;
+import org.apache.fineract.cob.service.AccountLockService;
+import org.apache.fineract.cob.tasklet.UnlockProcessedAccountsTasklet;
 
-public interface CollateralManagementReadPlatformService {
+public class UnlockProcessedWorkingCapitalLoansTasklet extends UnlockProcessedAccountsTasklet<WorkingCapitalLoanAccountLock> {
 
-    CollateralManagementData getCollateralProduct(Long collateralId);
-
-    List<CollateralManagementData> getAllCollateralProducts();
-
+    public UnlockProcessedWorkingCapitalLoansTasklet(final AccountLockService<WorkingCapitalLoanAccountLock> accountLockService) {
+        super(accountLockService);
+    }
 }

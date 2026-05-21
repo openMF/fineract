@@ -71,9 +71,13 @@ public class WorkingCapitalRequestFactory {
     public static final String WCLP_DESCRIPTION = "Working Capital Loan Product";
     public static final String DEFAULT_WC_BREACH_NAME = "Default Working Capital breach";
     public static final String DEFAULT_WC_NEAR_BREACH_NAME = "Default Working Capital near breach";
-    public static final String PENALTY = "PENALTY";
-    public static final String FEE = "FEE";
-    public static final String PRINCIPAL = "PRINCIPAL";
+    public static final String DUE_PENALTY = "DUE_PENALTY";
+    public static final String DUE_FEE = "DUE_FEE";
+    public static final String DUE_PRINCIPAL = "DUE_PRINCIPAL";
+    public static final String IN_ADVANCE_PENALTY = "IN_ADVANCE_PENALTY";
+    public static final String IN_ADVANCE_FEE = "IN_ADVANCE_FEE";
+    public static final String IN_ADVANCE_PRINCIPAL = "IN_ADVANCE_PRINCIPAL";
+
     public static final Integer DEFAULT_WC_BREACH_FREQUENCY = 2;
     public static final String DEFAULT_WC_BREACH_FREQUENCY_TYPE = WorkingCapitalBreachFrequencyType.MONTHS.getCode();
     public static final String DEFAULT_WC_BREACH_AMOUNT_CALCULATION_TYPE = WorkingCapitalBreachCalculationType.PERCENTAGE.getCode();
@@ -148,7 +152,7 @@ public class WorkingCapitalRequestFactory {
                 .accountingRule(AccountingRuleEnum.NONE)//
                 .paymentAllocation(List.of(//
                         createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(),
-                                List.of(PENALTY, FEE, PRINCIPAL))));//
+                                List.of(DUE_PENALTY, DUE_FEE, DUE_PRINCIPAL, IN_ADVANCE_PENALTY, IN_ADVANCE_FEE, IN_ADVANCE_PRINCIPAL))));//
     }
 
     public PostWorkingCapitalLoanProductsRequest defaultWorkingCapitalLoanProductAllowAttributesOverrideRequest() {
@@ -217,31 +221,31 @@ public class WorkingCapitalRequestFactory {
                 .allowAttributeOverrides(allowAttributeOverrides)//
                 .paymentAllocation(List.of(//
                         createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(), //
-                                List.of(FEE, PRINCIPAL, PENALTY))));//
+                                List.of(DUE_FEE, DUE_PRINCIPAL, DUE_PENALTY, IN_ADVANCE_FEE, IN_ADVANCE_PRINCIPAL, IN_ADVANCE_PENALTY))));//
     }
 
     public List<PostPaymentAllocation> invalidNumberOfPaymentAllocationRulesForWorkingCapitalLoanProductCreateRequest() {
         return List.of(//
                 createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(), //
-                        List.of(FEE, PRINCIPAL, PENALTY, "INTEREST")));//
+                        List.of(DUE_FEE, DUE_PRINCIPAL, DUE_PENALTY, "INTEREST")));//
     }
 
     public List<PostPaymentAllocation> invalidPaymentAllocationRulesForWorkingCapitalLoanProductCreateRequest() {
         return List.of(//
                 createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(), //
-                        List.of(FEE, PRINCIPAL, "INTEREST")));//
+                        List.of(DUE_FEE, DUE_PRINCIPAL, "INTEREST", IN_ADVANCE_FEE, IN_ADVANCE_PRINCIPAL, IN_ADVANCE_PENALTY)));//
     }
 
     public List<PostPaymentAllocation> invalidNumberOfPaymentAllocationRulesForWorkingCapitalLoanProductUpdateRequest() {
         return List.of(//
                 createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(), //
-                        List.of(FEE, PRINCIPAL, PENALTY, "INTEREST")));//
+                        List.of(DUE_FEE, DUE_PRINCIPAL, DUE_PENALTY, "INTEREST")));//
     }
 
     public List<PostPaymentAllocation> invalidPaymentAllocationRulesForWorkingCapitalLoanProductUpdateRequest() {
         return List.of(//
                 createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(), //
-                        List.of(FEE, PRINCIPAL, "INTEREST")));//
+                        List.of(DUE_FEE, DUE_PRINCIPAL, "INTEREST", IN_ADVANCE_FEE, IN_ADVANCE_PRINCIPAL, IN_ADVANCE_PENALTY)));//
     }
 
     public static PostPaymentAllocation createPaymentAllocation(String transactionType, List<String> paymentAllocationRules) {

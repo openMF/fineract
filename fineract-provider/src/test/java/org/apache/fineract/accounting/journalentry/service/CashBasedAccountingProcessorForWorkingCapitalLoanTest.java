@@ -43,6 +43,7 @@ import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.office.domain.Office;
 import org.apache.fineract.portfolio.PortfolioProductType;
 import org.apache.fineract.portfolio.client.domain.Client;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 import org.apache.fineract.portfolio.paymenttype.domain.PaymentType;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
@@ -119,6 +120,7 @@ class CashBasedAccountingProcessorForWorkingCapitalLoanTest {
         lenient().when(loanProductRelatedDetails.getCurrency()).thenReturn(currency);
         lenient().when(currency.getCode()).thenReturn(CURRENCY_CODE);
         lenient().when(txn.getWcLoan()).thenReturn(loan);
+        lenient().when(txn.getTypeOf()).thenReturn(LoanTransactionType.REPAYMENT);
         lenient().when(loan.getId()).thenReturn(LOAN_ID);
         lenient().when(txn.getId()).thenReturn(TXN_ID);
         lenient().when(txn.getTransactionDate()).thenReturn(LocalDate.of(2026, 5, 1));
@@ -151,7 +153,7 @@ class CashBasedAccountingProcessorForWorkingCapitalLoanTest {
         when(allocation.getFeeChargesPortion()).thenReturn(new BigDecimal("300"));
         when(allocation.getPenaltyChargesPortion()).thenReturn(new BigDecimal("200"));
 
-        processor.postJournalEntriesForRepayment(loan, txn, allocation, false);
+        processor.postJournalEntries(loan, txn, allocation, false);
 
         verify(helper).createCreditJournalEntryForWorkingCapitalLoan(eq(office), eq(CURRENCY_CODE), eq(loanPortfolioGLAccount), eq(LOAN_ID), eq(TXN_ID),
                 any(), eq(new BigDecimal("1000")), isNull());
@@ -170,7 +172,7 @@ class CashBasedAccountingProcessorForWorkingCapitalLoanTest {
         when(allocation.getFeeChargesPortion()).thenReturn(BigDecimal.ZERO);
         when(allocation.getPenaltyChargesPortion()).thenReturn(BigDecimal.ZERO);
 
-        processor.postJournalEntriesForRepayment(loan, txn, allocation, false);
+        processor.postJournalEntries(loan, txn, allocation, false);
 
         verify(helper).createCreditJournalEntryForWorkingCapitalLoan(eq(office), eq(CURRENCY_CODE), eq(loanPortfolioGLAccount), eq(LOAN_ID), eq(TXN_ID),
                 any(), eq(new BigDecimal("5000")), isNull());
@@ -187,7 +189,7 @@ class CashBasedAccountingProcessorForWorkingCapitalLoanTest {
         when(allocation.getFeeChargesPortion()).thenReturn(new BigDecimal("300"));
         when(allocation.getPenaltyChargesPortion()).thenReturn(new BigDecimal("200"));
 
-        processor.postJournalEntriesForRepayment(loan, txn, allocation, true);
+        processor.postJournalEntries(loan, txn, allocation, true);
 
         // 3 separate credit entries to recovery income
         verify(helper).createCreditJournalEntryForWorkingCapitalLoan(eq(office), eq(CURRENCY_CODE), eq(incomeFromRecoveryGLAccount), eq(LOAN_ID),
@@ -207,7 +209,7 @@ class CashBasedAccountingProcessorForWorkingCapitalLoanTest {
         when(allocation.getFeeChargesPortion()).thenReturn(BigDecimal.ZERO);
         when(allocation.getPenaltyChargesPortion()).thenReturn(BigDecimal.ZERO);
 
-        processor.postJournalEntriesForRepayment(loan, txn, allocation, true);
+        processor.postJournalEntries(loan, txn, allocation, true);
 
         verify(helper).createCreditJournalEntryForWorkingCapitalLoan(eq(office), eq(CURRENCY_CODE), eq(incomeFromRecoveryGLAccount), eq(LOAN_ID),
                 eq(TXN_ID), any(), eq(new BigDecimal("5000")), isNull());
@@ -257,7 +259,7 @@ class CashBasedAccountingProcessorForWorkingCapitalLoanTest {
         when(helper.getLinkedGLAccountForWorkingCapitalLoanProduct(eq(PRODUCT_ID), eq(CashAccountsForLoan.FUND_SOURCE.getValue()), eq(5L)))
                 .thenReturn(paymentChannelFundSource);
 
-        processor.postJournalEntriesForRepayment(loan, txn, allocation, false);
+        processor.postJournalEntries(loan, txn, allocation, false);
 
         verify(helper).createDebitJournalEntryForWorkingCapitalLoan(eq(office), eq(CURRENCY_CODE), eq(paymentChannelFundSource),
                 eq(LOAN_ID), eq(TXN_ID), any(), eq(new BigDecimal("1000")), eq(paymentDetail));

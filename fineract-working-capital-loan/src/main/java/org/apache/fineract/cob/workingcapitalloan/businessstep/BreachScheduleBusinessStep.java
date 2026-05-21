@@ -58,7 +58,7 @@ public class BreachScheduleBusinessStep extends WorkingCapitalLoanCOBBusinessSte
         }
 
         breachScheduleService.generateNextPeriodIfNeeded(input, businessDate);
-        breachScheduleService.evaluateBreachAndNearBreach(input, businessDate.plusDays(1L));
+        breachScheduleService.evaluateBreach(input, businessDate);
 
         return input;
     }

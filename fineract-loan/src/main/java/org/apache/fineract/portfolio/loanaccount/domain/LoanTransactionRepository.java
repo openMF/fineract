@@ -84,9 +84,10 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
             """)
     BigDecimal findTotalUnrecognizedIncomeFromInterestWaiverByLoanAndDate(@Param("loan") Loan loan, @Param("toDate") LocalDate toDate);
 
+    // (0 - x) instead of -x: avoids EclipseLink concurrent unary-negation race in ArgumentListFunctionExpression
     @Query("""
             SELECT COALESCE(SUM(CASE WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.ACCRUAL THEN lt.interestPortion
-                 WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.ACCRUAL_ADJUSTMENT THEN -lt.interestPortion
+                 WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.ACCRUAL_ADJUSTMENT THEN (0 - lt.interestPortion)
                  ELSE 0 END), 0)
             FROM LoanTransaction lt
             WHERE lt.loan = :loan
@@ -271,9 +272,10 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
             """)
     CumulativeIncomeFromIncomePosting findCumulativeIncomeByLoanAndType(@Param("loan") Loan loan);
 
+    // (0 - x) instead of -x: avoids EclipseLink concurrent unary-negation race in ArgumentListFunctionExpression
     @Query("""
             SELECT COALESCE(SUM(CASE WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.ACCRUAL THEN lcpb.amount
-                 WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.ACCRUAL_ADJUSTMENT THEN -lcpb.amount
+                 WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.ACCRUAL_ADJUSTMENT THEN (0 - lcpb.amount)
                  ELSE 0 END), 0)
             FROM LoanChargePaidBy lcpb
             JOIN lcpb.loanTransaction lt
@@ -282,9 +284,10 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
             """)
     BigDecimal findChargeAccrualAmount(@Param("loanCharge") LoanCharge loanCharge);
 
+    // (0 - x) instead of -x: avoids EclipseLink concurrent unary-negation race in ArgumentListFunctionExpression
     @Query("""
             SELECT COALESCE(SUM(CASE WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.ACCRUAL THEN lcpb.amount
-                 WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.ACCRUAL_ADJUSTMENT THEN -lcpb.amount
+                 WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.ACCRUAL_ADJUSTMENT THEN (0 - lcpb.amount)
                  ELSE 0 END), 0)
             FROM LoanChargePaidBy lcpb
             JOIN lcpb.loanTransaction lt
@@ -347,9 +350,10 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
     List<LoanTransaction> findNonReversedByLoanAndType(@Param("loan") Loan loan, @Param("type") LoanTransactionType type,
             Pageable pageable);
 
+    // (0 - x) instead of -x: avoids EclipseLink concurrent unary-negation race in ArgumentListFunctionExpression
     @Query("""
             SELECT COALESCE(SUM(CASE WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.CAPITALIZED_INCOME_AMORTIZATION THEN lt.amount
-              WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.CAPITALIZED_INCOME_AMORTIZATION_ADJUSTMENT THEN -lt.amount
+              WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.CAPITALIZED_INCOME_AMORTIZATION_ADJUSTMENT THEN (0 - lt.amount)
               ELSE 0 END), 0) FROM LoanTransaction lt
             WHERE lt.loan = :loan
             AND lt.reversed = false
@@ -358,9 +362,10 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
             """)
     BigDecimal getAmortizedAmountCapitalizedIncome(@Param("loan") Loan loan);
 
+    // (0 - x) instead of -x: avoids EclipseLink concurrent unary-negation race in ArgumentListFunctionExpression
     @Query("""
             SELECT COALESCE(SUM(CASE WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.BUY_DOWN_FEE_AMORTIZATION THEN lt.amount
-              WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.BUY_DOWN_FEE_AMORTIZATION_ADJUSTMENT THEN -lt.amount
+              WHEN lt.typeOf = org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType.BUY_DOWN_FEE_AMORTIZATION_ADJUSTMENT THEN (0 - lt.amount)
               ELSE 0 END), 0) FROM LoanTransaction lt
             WHERE lt.loan = :loan
             AND lt.reversed = false

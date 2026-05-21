@@ -33,6 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public abstract class AbstractAccountLockService<T extends AccountLock> implements AccountLockService<T> {
 
+    protected static final List<LockOwner> COB_LOCK_OWNERS = List.of(LockOwner.LOAN_COB_CHUNK_PROCESSING,
+            LockOwner.LOAN_INLINE_COB_PROCESSING);
+
     private final AccountLockRepository<T> loanAccountLockRepository;
     private final CustomLoanAccountLockRepository<T> customLoanAccountLockRepository;
 
@@ -59,8 +62,12 @@ public abstract class AbstractAccountLockService<T extends AccountLock> implemen
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateCobAndRemoveLocks() {
         customLoanAccountLockRepository.updateLoanFromAccountLocks();
-        loanAccountLockRepository.removeByLockOwnerInAndErrorIsNotNullAndLockPlacedOnCobBusinessDateIsNotNull(
-                List.of(LockOwner.LOAN_COB_CHUNK_PROCESSING, LockOwner.LOAN_INLINE_COB_PROCESSING));
+        loanAccountLockRepository.removeByLockOwnerInAndErrorIsNotNullAndLockPlacedOnCobBusinessDateIsNotNull(COB_LOCK_OWNERS);
+    }
+
+    @Override
+    public int removeOrphanedLocksForProcessedAccounts() {
+        return loanAccountLockRepository.deleteOrphanedLocksForProcessedAccounts(COB_LOCK_OWNERS);
     }
 
 }

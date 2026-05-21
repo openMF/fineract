@@ -49,11 +49,12 @@ public interface LoanAmortizationAllocationMappingRepository
     List<AmortizationAllocationMappingDTO> findAmortizationMappingsByBaseTransactionAndLoan(
             @Param("baseLoanTransactionId") Long baseLoanTransactionId, @Param("loanId") Long loanId);
 
+    // (0 - x) instead of -x: avoids EclipseLink concurrent unary-negation race in ArgumentListFunctionExpression
     @Query("""
                     SELECT COALESCE(SUM(
                         CASE
                             WHEN laam.amortizationType = org.apache.fineract.portfolio.loanaccount.domain.AmortizationType.AM THEN laam.amount
-                            WHEN laam.amortizationType = org.apache.fineract.portfolio.loanaccount.domain.AmortizationType.AM_ADJ THEN -laam.amount
+                            WHEN laam.amortizationType = org.apache.fineract.portfolio.loanaccount.domain.AmortizationType.AM_ADJ THEN (0 - laam.amount)
                             ELSE 0
                         END
                     ), 0)

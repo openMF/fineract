@@ -18,10 +18,31 @@
  */
 package org.apache.fineract.cob.domain;
 
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface WorkingCapitalAccountLockRepository extends AccountLockRepository<WorkingCapitalLoanAccountLock>,
-        JpaRepository<WorkingCapitalLoanAccountLock, Long>, JpaSpecificationExecutor<WorkingCapitalLoanAccountLock> {}
+        JpaRepository<WorkingCapitalLoanAccountLock, Long>, JpaSpecificationExecutor<WorkingCapitalLoanAccountLock> {
+
+    @Override
+    @Modifying(clearAutomatically = true)
+    @Query("""
+            DELETE FROM WorkingCapitalLoanAccountLock lck
+            WHERE lck.error IS NULL
+              AND lck.lockPlacedOnCobBusinessDate IS NOT NULL
+              AND lck.lockOwner IN :lockOwners
+              AND EXISTS (
+                SELECT l FROM WorkingCapitalLoan l
+                WHERE l.id = lck.loanId
+                  AND l.lastClosedBusinessDate = lck.lockPlacedOnCobBusinessDate
+              )
+            """)
+    int deleteOrphanedLocksForProcessedAccounts(@Param("lockOwners") List<LockOwner> lockOwners);
+
+}

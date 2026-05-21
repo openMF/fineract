@@ -16,16 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.collateralmanagement.service;
+package org.apache.fineract.portfolio.workingcapitalloan.service;
 
-import org.apache.fineract.infrastructure.core.api.JsonCommand;
-import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import java.time.LocalDate;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 
-public interface CollateralManagementWritePlatformService {
+public interface WorkingCapitalLoanNearBreachEvaluationService {
 
-    CommandProcessingResult createCollateral(JsonCommand command);
+    void evaluateNearBreach(WorkingCapitalLoan loan, LocalDate effectiveDate);
 
-    CommandProcessingResult updateCollateral(Long collateralId, JsonCommand command);
-
-    CommandProcessingResult deleteCollateral(Long collateralId);
 }

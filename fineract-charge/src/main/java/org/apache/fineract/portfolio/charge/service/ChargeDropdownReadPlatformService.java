@@ -20,6 +20,8 @@ package org.apache.fineract.portfolio.charge.service;
 
 import java.util.List;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
+import org.apache.fineract.portfolio.charge.domain.ChargeAppliesTo;
+import org.apache.fineract.portfolio.charge.domain.ChargeTimeType;
 
 public interface ChargeDropdownReadPlatformService {
 
@@ -29,7 +31,7 @@ public interface ChargeDropdownReadPlatformService {
 
     List<EnumOptionData> retrieveCollectionTimeTypes();
 
-    List<EnumOptionData> retrivePaymentModes();
+    List<EnumOptionData> retrievePaymentModes();
 
     List<EnumOptionData> retrieveLoanCalculationTypes();
 
@@ -47,4 +49,9 @@ public interface ChargeDropdownReadPlatformService {
 
     List<EnumOptionData> retrieveSharesCollectionTimeTypes();
 
+    List<EnumOptionData> retrieveCalculationTypes(ChargeAppliesTo chargeAppliesTo, ChargeTimeType chargeTimeType);
+
+    List<EnumOptionData> retrieveCollectionTimeTypes(ChargeAppliesTo chargeAppliesTo);
+
+    List<EnumOptionData> retrievePaymentModes(ChargeAppliesTo chargeAppliesTo);
 }

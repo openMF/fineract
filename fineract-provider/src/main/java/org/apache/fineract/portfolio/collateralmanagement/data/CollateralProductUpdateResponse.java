@@ -18,13 +18,42 @@
  */
 package org.apache.fineract.portfolio.collateralmanagement.data;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import lombok.Builder;
+import lombok.Data;
 
-public record CollateralManagementProductRequest(String quality, BigDecimal basePrice, BigDecimal pctToBase, String unitType, String name,
-        String currency, String locale) implements Serializable {
+@Data
+@Builder
+public class CollateralProductUpdateResponse implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
+
+    private Long resourceId;
+
+    private Changes changes;
+
+    @Data
+    @Builder
+    @Schema(name = "CollateralProductUpdateChanges")
+    public static class Changes implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private String name;
+
+        private String quality;
+
+        private BigDecimal basePrice;
+
+        private String unitType;
+
+        private BigDecimal pctToBase;
+
+        private String currency;
+    }
 }

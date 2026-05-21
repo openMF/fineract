@@ -177,12 +177,13 @@ public class WorkingCapitalLoanProductCRUDTest {
         assertFalse(response.getAdvancedPaymentAllocationTransactionTypes().isEmpty(),
                 "Payment allocation transaction type options should not be empty");
         // Verify payment allocation types contain expected values
-        final List<String> expectedPaymentAllocationTypes = List.of("PENALTY", "FEE", "PRINCIPAL");
+        final List<String> expectedPaymentAllocationTypes = List.of("DUE_PENALTY", "DUE_FEE", "DUE_PRINCIPAL", "IN_ADVANCE_PENALTY",
+                "IN_ADVANCE_FEE", "IN_ADVANCE_PRINCIPAL");
         final List<String> actualPaymentAllocationTypes = response.getAdvancedPaymentAllocationTypes().stream()
                 .map(StringEnumOptionData::getCode).toList();
         assertTrue(actualPaymentAllocationTypes.containsAll(expectedPaymentAllocationTypes),
                 "Payment allocation types should contain all expected types");
-        assertEquals(3, actualPaymentAllocationTypes.size(), "Payment allocation types should have exactly 3 types");
+        assertEquals(6, actualPaymentAllocationTypes.size(), "Payment allocation types should have exactly 6 types");
     }
 
     @Test
@@ -275,7 +276,8 @@ public class WorkingCapitalLoanProductCRUDTest {
         // Given
         final String uniqueId = UUID.randomUUID().toString().substring(0, 8);
         final String externalId = UUID.randomUUID().toString();
-        final List<String> paymentAllocationTypes = List.of("PENALTY", "FEE", "PRINCIPAL");
+        final List<String> paymentAllocationTypes = List.of("DUE_PENALTY", "DUE_FEE", "DUE_PRINCIPAL", "IN_ADVANCE_PENALTY",
+                "IN_ADVANCE_FEE", "IN_ADVANCE_PRINCIPAL");
         final HashMap<String, Boolean> allowAttributeOverrides = new HashMap<>();
         allowAttributeOverrides.put("amortizationType", true);
         allowAttributeOverrides.put("interestType", false);
@@ -340,7 +342,8 @@ public class WorkingCapitalLoanProductCRUDTest {
         final String shortName = Utils.uniqueRandomStringGenerator("", 4);
         final String externalId = UUID.randomUUID().toString();
         final String description = "Comprehensive test product with all fields";
-        final List<String> paymentAllocationTypes = List.of("PENALTY", "FEE", "PRINCIPAL");
+        final List<String> paymentAllocationTypes = List.of("DUE_PENALTY", "DUE_FEE", "DUE_PRINCIPAL", "IN_ADVANCE_PENALTY",
+                "IN_ADVANCE_FEE", "IN_ADVANCE_PRINCIPAL");
 
         // Get fund and delinquency bucket from template
         final GetWorkingCapitalLoanProductsTemplateResponse template = wclProductHelper.retrieveTemplate();

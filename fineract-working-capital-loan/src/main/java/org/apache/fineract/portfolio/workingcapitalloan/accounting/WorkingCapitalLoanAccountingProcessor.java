@@ -24,8 +24,8 @@ import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoa
 
 public interface WorkingCapitalLoanAccountingProcessor {
 
-    void postJournalEntriesForRepayment(WorkingCapitalLoan loan, WorkingCapitalLoanTransaction txn,
-            WorkingCapitalLoanTransactionAllocation allocation, boolean isChargedOff);
+    void postJournalEntries(WorkingCapitalLoan loan, WorkingCapitalLoanTransaction txn, WorkingCapitalLoanTransactionAllocation allocation,
+            boolean isChargedOff);
 
     void postReversalJournalEntries(WorkingCapitalLoan loan, WorkingCapitalLoanTransaction txn);
 }

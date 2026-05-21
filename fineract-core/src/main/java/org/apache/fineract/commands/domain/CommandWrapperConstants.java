@@ -179,7 +179,6 @@ public final class CommandWrapperConstants {
     public static final String ENTITY_CODE = "CODE";
     public static final String ENTITY_HOOK = "HOOK";
     public static final String ENTITY_CHARGE = "CHARGE";
-    public static final String ENTITY_COLLATERAL_PRODUCT = "COLLATERAL_PRODUCT";
     public static final String ENTITY_LOANPRODUCT = "LOANPRODUCT";
     public static final String ENTITY_WORKINGCAPITALLOANPRODUCT = "WORKINGCAPITALLOANPRODUCT";
     public static final String ENTITY_WORKINGCAPITALLOAN = "WORKINGCAPITALLOAN";

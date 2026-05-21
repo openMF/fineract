@@ -21,15 +21,13 @@ package org.apache.fineract.portfolio.collateralmanagement.service;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.portfolio.collateralmanagement.data.CollateralManagementData;
 import org.apache.fineract.portfolio.collateralmanagement.domain.CollateralManagementDomain;
 import org.apache.fineract.portfolio.collateralmanagement.domain.CollateralManagementRepositoryWrapper;
 
 @RequiredArgsConstructor
-public class CollateralManagementReadPlatformServiceImpl implements CollateralManagementReadPlatformService {
+public class CollateralManagementReadServiceImpl implements CollateralManagementReadService {
 
-    private final PlatformSecurityContext context;
     private final CollateralManagementRepositoryWrapper collateralManagementRepositoryWrapper;
 
     @Override

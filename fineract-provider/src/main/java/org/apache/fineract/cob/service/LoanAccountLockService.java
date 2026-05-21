@@ -26,8 +26,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class LoanAccountLockService extends AbstractAccountLockService<LoanAccountLock> {
 
-    public LoanAccountLockService(AccountLockRepository<LoanAccountLock> loanAccountLockRepository,
-            CustomLoanAccountLockRepository<LoanAccountLock> customLoanAccountLockRepository) {
+    public LoanAccountLockService(final AccountLockRepository<LoanAccountLock> loanAccountLockRepository,
+            final CustomLoanAccountLockRepository<LoanAccountLock> customLoanAccountLockRepository) {
         super(loanAccountLockRepository, customLoanAccountLockRepository);
     }
 }

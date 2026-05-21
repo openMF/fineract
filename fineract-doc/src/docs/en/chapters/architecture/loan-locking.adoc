@@ -21,4 +21,16 @@ And when a loan account is locked, loan related write API calls will be either r
 
 Since the fixing might involve making changes to the loan account via API (for example doing a repayment to fix the loan account's inconsistent state), we need to allow those API calls. Hence, the lock table includes a `bypass_enabled` column which disables the lock checks on the loan write APIs.
 
+== Orphaned COB lock cleanup
+
+A separate failure mode exists where a loan account is fully processed by COB but its lock row stays in `m_loan_account_locks` (no `error` was recorded, yet the lock was never removed). Such locks are orphaned: the loan is in a consistent state, but real-time write APIs are still rejected.
+
+To remove these, the Loan COB job runs a final step `unlockProcessedLoansStep` (after `stayedLockedStep`) which executes `UnlockProcessedLoansTasklet`. The tasklet delegates to `AccountLockService#removeOrphanedLocksForProcessedAccounts`, which deletes lock rows that meet all of the following:
+
+* `lock_owner` is `LOAN_COB_CHUNK_PROCESSING` or `LOAN_INLINE_COB_PROCESSING`
+* `error IS NULL`
+* `lock_placed_on_cob_business_date IS NOT NULL`
+* the referenced loan's `last_closed_business_date` equals the lock's `lock_placed_on_cob_business_date` (i.e. all business steps for that COB date completed)
+
+The same mechanism is wired into the Working Capital Loan COB job via `UnlockProcessedWorkingCapitalLoansTasklet`. Locks that carry an `error` are intentionally left in place – they still represent a loan that needs manual fixing and `bypass_enabled` handling continues to apply.
 

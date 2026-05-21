@@ -1,0 +1,59 @@
+= Working Capital Loan Charges
+
+This documentation focuses on Working Capital Loan-related charge changes.
+
+== Create/Update Charge
+
+Creates or updates a charge product applicable to Working Capital Loans.
+
+=== Supported Fields
+
+==== Mandatory Fields
+
+* `chargeAppliesTo`
+** Must be set to `5`, as the `WorkingCapitalLoan` enum identifier is `5`.
+
+* `chargeTimeType`
+
+* `chargeCalculationType`
+
+* `name`
+** Must be unique across all charge products.
+
+* `amount`
+
+* `active`
+** Boolean value.
+
+* `currencyCode`
+** Refer to the template API for supported currency codes.
+
+* `locale`
+** Refer to the available platform locales.
+
+* `penalty`
+** Boolean value.
+
+==== Optional Fields
+
+* `chargePaymentMode`
+** Defaults to `regular` when not provided.
+
+=== Supported Values
+
+==== chargeAppliesTo
+
+* `WorkingCapitalLoan`
+
+[NOTE]
+====
+`Loan`, `Savings`, `Client`, and `Shares` charge entities are outside the scope of this documentation.
+====
+
+==== chargeTimeType
+
+* `specified due date`
+
+==== chargeCalculationType
+
+* `flat`

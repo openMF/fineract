@@ -32,6 +32,8 @@ public interface ChargeReadPlatformService {
 
     ChargeData retrieveNewChargeDetails();
 
+    ChargeData retrieveNewChargeDetails(Long chargeAppliesTo, Long chargeTimeType);
+
     /**
      * Returns all charges that can be applied to Cients
      *

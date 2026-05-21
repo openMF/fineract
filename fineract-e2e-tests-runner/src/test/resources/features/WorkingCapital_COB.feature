@@ -13,6 +13,7 @@ Feature: Working Capital COB Job
       | WC_DELINQUENCY_RANGE_SCHEDULE      | 2     |
       | WC_LOAN_DELINQUENCY_CLASSIFICATION | 3     |
       | WC_BREACH_SCHEDULE                 | 4     |
+      | WC_NEAR_BREACH_EVALUATION          | 5     |
     Then Admin verifies scheduler job "WC_COB" has display name "Working Capital Loan COB"
     Then Admin verifies scheduler job "WC_COB" has active status "false"
 
@@ -259,3 +260,102 @@ Feature: Working Capital COB Job
     When Admin runs Working Capital COB catch up
     Then Admin verifies all inserted WC loans have lastClosedBusinessDate "31 December 2023"
     Then Admin verifies all inserted WC loans have version 1
+
+  Scenario: WC COB removes an orphaned lock with no error on a loan already processed for that COB date
+    When Admin sets the business date to "01 January 2024"
+    When Admin creates a client with random data
+    When Admin creates a new Working Capital Loan Product
+    Given Admin inserts an active WC loan into the database
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have lastClosedBusinessDate "31 December 2023"
+    When Admin places a chunk-processing lock without an error message on the last inserted WC loan
+    Then Admin verifies all inserted WC loans have at least one account lock
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have no account locks
+
+  Scenario: WC COB keeps a lock that carries an error message
+    When Admin sets the business date to "01 January 2024"
+    When Admin creates a client with random data
+    When Admin creates a new Working Capital Loan Product
+    Given Admin inserts an active WC loan into the database
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have lastClosedBusinessDate "31 December 2023"
+    When Admin places a chunk-processing lock with error "ERROR" on the last inserted WC loan
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have at least one account lock
+
+  Scenario: WC COB keeps a lock when the loan's last closed business date does not match the lock's COB date
+    When Admin sets the business date to "01 January 2024"
+    When Admin creates a client with random data
+    When Admin creates a new Working Capital Loan Product
+    Given Admin inserts an active WC loan into the database
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have lastClosedBusinessDate "31 December 2023"
+    # Skip a few days so the lock's cob_date is far ahead of the loan's last_closed (31 Dec 2023).
+    # Even if WC COB advances last_closed by one day during the next run, it won't reach the lock's cob_date.
+    When Admin sets the business date to "05 January 2024"
+    When Admin places a chunk-processing lock without an error message on the last inserted WC loan
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have at least one account lock
+
+  Scenario: WC COB removes an orphaned inline-COB lock with no error on a processed loan
+    When Admin sets the business date to "01 January 2024"
+    When Admin creates a client with random data
+    When Admin creates a new Working Capital Loan Product
+    Given Admin inserts an active WC loan into the database
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have lastClosedBusinessDate "31 December 2023"
+    When Admin places an inline-COB lock without an error message on the last inserted WC loan
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have no account locks
+
+  Scenario: WC COB keeps an inline-COB lock that carries an error message
+    When Admin sets the business date to "01 January 2024"
+    When Admin creates a client with random data
+    When Admin creates a new Working Capital Loan Product
+    Given Admin inserts an active WC loan into the database
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have lastClosedBusinessDate "31 December 2023"
+    When Admin places an inline-COB lock with error "ERROR" on the last inserted WC loan
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have at least one account lock
+
+  Scenario: WC COB keeps a lock with NULL cob business date
+    # SQL filter requires `lock_placed_on_cob_business_date IS NOT NULL` — a lock with NULL date must never be removed.
+    When Admin sets the business date to "01 January 2024"
+    When Admin creates a client with random data
+    When Admin creates a new Working Capital Loan Product
+    Given Admin inserts an active WC loan into the database
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have lastClosedBusinessDate "31 December 2023"
+    When Admin places a chunk-processing lock without an error message and null cob business date on the last inserted WC loan
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have at least one account lock
+
+  Scenario: WC COB keeps a lock when cob business date is in the past relative to last closed date
+    # SQL uses strict equality on dates — a stale lock whose cob_date already lags behind last_closed must remain.
+    When Admin sets the business date to "02 January 2024"
+    When Admin creates a client with random data
+    When Admin creates a new Working Capital Loan Product
+    Given Admin inserts a WC loan with status "ACTIVE" and lastClosedBusinessDate "31 December 2023" into the database
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have lastClosedBusinessDate "01 January 2024"
+    # Place a lock claiming cob_date = 31 Dec 2023 — earlier than the loan's current last_closed (01 Jan 2024).
+    When Admin places a chunk-processing lock without an error message and cob business date "31 December 2023" on the last inserted WC loan
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have at least one account lock
+
+  Scenario: WC COB removes only orphaned locks among multiple loans in the same run
+    # Two loans share the same COB run: one carries an orphaned lock (no error) and must be unlocked;
+    # the other carries a lock with an error message and must remain locked. Verifies DELETE selectivity.
+    When Admin sets the business date to "01 January 2024"
+    When Admin creates a client with random data
+    When Admin creates a new Working Capital Loan Product
+    Given Admin inserts 2 active WC loans into the database
+    When Admin runs WC COB job
+    Then Admin verifies all inserted WC loans have lastClosedBusinessDate "31 December 2023"
+    When Admin places a chunk-processing lock without an error message on WC loan 1
+    When Admin places a chunk-processing lock with error "ERROR" on WC loan 2
+    When Admin runs WC COB job
+    Then Admin verifies inserted WC loan 1 has no account locks
+    Then Admin verifies inserted WC loan 2 has at least one account lock

@@ -39,5 +39,5 @@ public interface WorkingCapitalLoanBreachScheduleService {
 
     void applyRepayment(Long loanId, LocalDate transactionDate, BigDecimal amount);
 
-    void evaluateBreachAndNearBreach(WorkingCapitalLoan loan, LocalDate businessDate);
+    void evaluateBreach(WorkingCapitalLoan loan, LocalDate businessDate);
 }

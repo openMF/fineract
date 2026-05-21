@@ -569,7 +569,7 @@ public class WorkingCapitalLoanProductValidationTest {
         assertEquals(400, exception.getStatus());
         assertNotNull(exception.getDeveloperMessage());
         assertEquals(
-                "Validation errors: [id] Each provided payment allocation must contain exactly 3 allocation rules, but 1 were provided",
+                "Validation errors: [id] Each provided payment allocation must contain exactly 6 allocation rules, but 1 were provided",
                 exception.getDeveloperMessage());
     }
 

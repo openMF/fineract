@@ -24,7 +24,8 @@ public enum ChargeAppliesTo {
     LOAN(1, "chargeAppliesTo.loan"), //
     SAVINGS(2, "chargeAppliesTo.savings"), //
     CLIENT(3, "chargeAppliesTo.client"), //
-    SHARES(4, "chargeAppliesTo.shares"); //
+    SHARES(4, "chargeAppliesTo.shares"), //
+    WORKING_CAPITAL_LOAN(5, "chargeAppliesTo.workingCapitalLoan"); //
 
     private final Integer value;
     private final String code;
@@ -59,6 +60,9 @@ public enum ChargeAppliesTo {
                 case 4:
                     chargeAppliesToType = SHARES;
                 break;
+                case 5:
+                    chargeAppliesToType = WORKING_CAPITAL_LOAN;
+                break;
                 default:
                     chargeAppliesToType = INVALID;
                 break;
@@ -80,12 +84,16 @@ public enum ChargeAppliesTo {
         return this.value.equals(ChargeAppliesTo.CLIENT.getValue());
     }
 
+    public boolean isWorkingCapitalLoanCharge() {
+        return ChargeAppliesTo.WORKING_CAPITAL_LOAN.getValue().equals(value);
+    }
+
     public boolean isSharesCharge() {
         return this.value.equals(SHARES.getValue());
     }
 
     public static Object[] validValues() {
         return new Object[] { ChargeAppliesTo.LOAN.getValue(), ChargeAppliesTo.SAVINGS.getValue(), ChargeAppliesTo.CLIENT.getValue(),
-                ChargeAppliesTo.SHARES.getValue() };
+                ChargeAppliesTo.SHARES.getValue(), ChargeAppliesTo.WORKING_CAPITAL_LOAN.getValue() };
     }
 }

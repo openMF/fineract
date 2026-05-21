@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
 import org.apache.fineract.infrastructure.codes.domain.CodeValueRepository;
@@ -40,6 +41,7 @@ import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
 import org.apache.fineract.infrastructure.core.service.MathUtil;
+import org.apache.fineract.infrastructure.event.business.domain.BusinessEvent;
 import org.apache.fineract.infrastructure.event.business.domain.workingcapitalloan.transaction.WorkingCapitalLoanCreditBalanceRefundTransactionBusinessEvent;
 import org.apache.fineract.infrastructure.event.business.domain.workingcapitalloan.transaction.WorkingCapitalLoanDisbursalTransactionBusinessEvent;
 import org.apache.fineract.infrastructure.event.business.domain.workingcapitalloan.transaction.WorkingCapitalLoanDiscountFeeTransactionBusinessEvent;
@@ -498,9 +500,14 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
     @Override
     public CommandProcessingResult makeRepayment(final Long loanId, final JsonCommand command) {
+        return makeRepaymentLikeTransaction(loanId, command, LoanTransactionType.REPAYMENT);
+    }
+
+    private CommandProcessingResult makeRepaymentLikeTransaction(final Long loanId, final JsonCommand command,
+            final LoanTransactionType transactionType) {
         final WorkingCapitalLoan loan = this.loanRepository.findById(loanId)
                 .orElseThrow(() -> new WorkingCapitalLoanNotFoundException(loanId));
-        this.validator.validateRepayment(command.json(), loan, LoanTransactionType.REPAYMENT);
+        this.validator.validateRepayment(command.json(), loan, transactionType);
 
         final LocalDate transactionDate = command.localDateValueOfParameterNamed(WorkingCapitalLoanConstants.transactionDateParamName);
         final BigDecimal transactionAmount = this.fromApiJsonHelper
@@ -518,9 +525,9 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
         final ExternalId txnExternalId = this.externalIdFactory.createFromCommand(command,
                 WorkingCapitalLoanConstants.externalIdParameterName);
-        final WorkingCapitalLoanTransaction repaymentTransaction = WorkingCapitalLoanTransaction.repayment(loan, transactionAmount,
-                paymentDetail, transactionDate, classification, txnExternalId);
-        this.transactionRepository.saveAndFlush(repaymentTransaction);
+        final WorkingCapitalLoanTransaction transaction = resolveNewTransaction(transactionType, loan, transactionAmount, paymentDetail,
+                transactionDate, classification, txnExternalId);
+        this.transactionRepository.saveAndFlush(transaction);
 
         final WorkingCapitalLoanBalance currentBalance = this.balanceRepository.findByWcLoan_Id(loan.getId())
                 .orElseGet(() -> WorkingCapitalLoanBalance.createFor(loan));
@@ -528,7 +535,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         final BigDecimal amountAppliedToOutstanding = transactionAmount.min(outstandingBeforeRepayment);
 
         final WorkingCapitalLoanTransactionAllocation allocation = WorkingCapitalLoanTransactionAllocation
-                .forPrincipalAllocation(repaymentTransaction, amountAppliedToOutstanding);
+                .forPrincipalAllocation(transaction, amountAppliedToOutstanding);
         this.allocationRepository.saveAndFlush(allocation);
 
         final RepaymentAmortizationData amortizationData = amortizationScheduleWriteService.applyRepayment(loan, transactionDate,
@@ -542,16 +549,38 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         handleNote(loan, command, changes);
 
         if (loan.getLoanProduct().getAccountingRule().isCashBased()) {
-            accountingProcessor.postJournalEntriesForRepayment(loan, repaymentTransaction, allocation, false);
+            accountingProcessor.postJournalEntries(loan, transaction, allocation, false);
         }
 
-        businessEventNotifierService
-                .notifyPostBusinessEvent(new WorkingCapitalLoanRepaymentTransactionBusinessEvent(repaymentTransaction, loan.getId()));
+        notifyPostBusinessEvent(transactionType, transaction, loan);
 
         return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(loanId)
-                .withEntityExternalId(loan.getExternalId()).withSubEntityId(repaymentTransaction.getId())
-                .withSubEntityExternalId(repaymentTransaction.getExternalId()).withOfficeId(loan.getOfficeId())
-                .withClientId(loan.getClientId()).withLoanId(loanId).with(changes).build();
+                .withEntityExternalId(loan.getExternalId()).withSubEntityId(transaction.getId())
+                .withSubEntityExternalId(transaction.getExternalId()).withOfficeId(loan.getOfficeId()).withClientId(loan.getClientId())
+                .withLoanId(loanId).with(changes).build();
+
+    }
+
+    private void notifyPostBusinessEvent(LoanTransactionType transactionType, WorkingCapitalLoanTransaction transaction,
+            WorkingCapitalLoan loan) {
+        BusinessEvent<?> businessEvent = LoanTransactionType.REPAYMENT.equals(transactionType)
+                ? new WorkingCapitalLoanRepaymentTransactionBusinessEvent(transaction, loan.getId())
+                : null;
+        if (businessEvent != null) {
+            businessEventNotifierService.notifyPostBusinessEvent(businessEvent);
+        }
+    }
+
+    private WorkingCapitalLoanTransaction resolveNewTransaction(final LoanTransactionType transactionType, WorkingCapitalLoan loan,
+            BigDecimal transactionAmount, PaymentDetail paymentDetail, LocalDate transactionDate, CodeValue classification,
+            ExternalId txnExternalId) {
+        return switch (transactionType) {
+            case REPAYMENT -> WorkingCapitalLoanTransaction.repayment(loan, transactionAmount, paymentDetail, transactionDate,
+                    classification, txnExternalId);
+            case GOODWILL_CREDIT -> WorkingCapitalLoanTransaction.goodwillCredit(loan, transactionAmount, paymentDetail, transactionDate,
+                    classification, txnExternalId);
+            default -> throw new NotImplementedException("Missing implementation for : " + transactionType.getCode());
+        };
     }
 
     private void handleNote(WorkingCapitalLoan loan, JsonCommand command, Map<String, Object> changes) {
@@ -703,52 +732,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
     @Override
     public CommandProcessingResult makeGoodwillCredit(Long loanId, JsonCommand command) {
-        final WorkingCapitalLoan loan = this.loanRepository.findById(loanId)
-                .orElseThrow(() -> new WorkingCapitalLoanNotFoundException(loanId));
-        this.validator.validateRepayment(command.json(), loan, LoanTransactionType.GOODWILL_CREDIT);
-
-        final LocalDate transactionDate = command.localDateValueOfParameterNamed(WorkingCapitalLoanConstants.transactionDateParamName);
-        final BigDecimal transactionAmount = this.fromApiJsonHelper
-                .extractBigDecimalNamed(WorkingCapitalLoanConstants.transactionAmountParamName, command.parsedJson(), new HashSet<>());
-        final Map<String, Object> changes = new LinkedHashMap<>();
-        changes.put(WorkingCapitalLoanConstants.transactionDateParamName, transactionDate);
-        changes.put(WorkingCapitalLoanConstants.transactionAmountParamName, transactionAmount);
-        final PaymentDetail paymentDetail = createAndPersistPaymentDetailFromCommand(command, changes);
-
-        final Long classificationId = command.longValueOfParameterNamed(WorkingCapitalLoanConstants.classificationIdParamName);
-        final CodeValue classification = classificationId != null
-                ? codeValueRepository.findByCodeNameAndId(WorkingCapitalLoanConstants.REPAYMENT_CLASSIFICATION_CODE_NAME, classificationId)
-                : null;
-        changes.put(WorkingCapitalLoanConstants.classificationIdParamName, classificationId);
-
-        final ExternalId txnExternalId = this.externalIdFactory.createFromCommand(command,
-                WorkingCapitalLoanConstants.externalIdParameterName);
-        final WorkingCapitalLoanTransaction repaymentTransaction = WorkingCapitalLoanTransaction.goodwillCredit(loan, transactionAmount,
-                paymentDetail, transactionDate, classification, txnExternalId);
-        this.transactionRepository.saveAndFlush(repaymentTransaction);
-        final WorkingCapitalLoanBalance currentBalance = this.balanceRepository.findByWcLoan_Id(loan.getId())
-                .orElseGet(() -> WorkingCapitalLoanBalance.createFor(loan));
-        final BigDecimal outstandingBeforeRepayment = MathUtil.nullToZero(currentBalance.getPrincipalOutstanding());
-        final BigDecimal amountAppliedToOutstanding = transactionAmount.min(outstandingBeforeRepayment);
-
-        final WorkingCapitalLoanTransactionAllocation allocation = WorkingCapitalLoanTransactionAllocation
-                .forPrincipalAllocation(repaymentTransaction, amountAppliedToOutstanding);
-        this.allocationRepository.saveAndFlush(allocation);
-
-        final RepaymentAmortizationData amortizationData = amortizationScheduleWriteService.applyRepayment(loan, transactionDate,
-                amountAppliedToOutstanding);
-        updateBalanceOnRepayment(loan, transactionAmount, amortizationData);
-        internalWorkingCapitalLoanPaymentService.makePayment(loanId, amountAppliedToOutstanding, transactionDate);
-
-        handleStateChanges(loan, transactionDate);
-        changes.put("status", loan.getLoanStatus());
-
-        handleNote(loan, command, changes);
-
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withLoanId(loanId)
-                .withLoanExternalId(loan.getExternalId()).withEntityId(repaymentTransaction.getId())
-                .withEntityExternalId(repaymentTransaction.getExternalId()).withOfficeId(loan.getOfficeId())
-                .withClientId(loan.getClientId()).with(changes).build();
+        return makeRepaymentLikeTransaction(loanId, command, LoanTransactionType.GOODWILL_CREDIT);
     }
 
     private PaymentDetail createAndPersistPaymentDetailFromCommand(final JsonCommand command, final Map<String, Object> changes) {

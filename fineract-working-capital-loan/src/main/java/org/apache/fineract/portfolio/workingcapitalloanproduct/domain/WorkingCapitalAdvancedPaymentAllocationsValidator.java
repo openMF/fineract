@@ -53,10 +53,9 @@ public class WorkingCapitalAdvancedPaymentAllocationsValidator {
     }
 
     public void validatePairOfOrderAndPaymentAllocationType(final List<Pair<Integer, WorkingCapitalPaymentAllocationType>> rules) {
-        // WCL has 3 allocation types: PENALTY, FEE, PRINCIPAL (no INTEREST)
-        final int expectedCount = 3;
+        final int expectedCount = WorkingCapitalPaymentAllocationType.values().length;
         if (rules.size() != expectedCount) {
-            raiseValidationError("wc-payment-allocation-order.must.contain.3.entries",
+            raiseValidationError("wc-payment-allocation-order.must.contain." + expectedCount + ".entries",
                     "Each provided payment allocation must contain exactly " + expectedCount + " allocation rules, but " + rules.size()
                             + " were provided");
         }

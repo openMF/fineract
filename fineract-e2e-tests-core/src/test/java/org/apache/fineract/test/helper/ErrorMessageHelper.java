@@ -681,6 +681,11 @@ public final class ErrorMessageHelper {
         return String.format("List of locked loan accounts contains the loan with loanId %s. List of locked loans: %n%s", loanId, bodyStr);
     }
 
+    public static String expectedLoanToRemainLocked(Long loanId, LoanAccountLockResponseDTO response) {
+        String bodyStr = response.toString();
+        return String.format("Expected loan %s to remain locked after COB but it is not present in the lock list: %n%s", loanId, bodyStr);
+    }
+
     public static String wrongValueInLineDelinquencyActions(int line, List<String> actual, List<String> expected) {
         String lineStr = String.valueOf(line);
         String expectedStr = expected.toString();
@@ -1037,12 +1042,16 @@ public final class ErrorMessageHelper {
     }
 
     public static String paymentAllocationRulesInvalidNumberFailure(int actualNumberOfPaymentAllocationRules) {
-        return String.format("Each provided payment allocation must contain exactly 3 allocation rules, but %d were provided",
+        return String.format("Each provided payment allocation must contain exactly 6 allocation rules, but %d were provided",
                 actualNumberOfPaymentAllocationRules);
     }
 
     public static String paymentAllocationRulesInvalidValueFailure() {
         return "One or more payment allocation types are invalid or not recognized";
+    }
+
+    public static String paymentAllocationRulesDuplicateFailure() {
+        return "The list of provided payment allocation rules must not contain any duplicates";
     }
 
     public static String workingCapitalLoanProductIdentifiedDoesNotExistFailure(String identifierId) {

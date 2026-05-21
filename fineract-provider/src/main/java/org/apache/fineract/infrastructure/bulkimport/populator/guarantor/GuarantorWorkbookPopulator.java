@@ -71,7 +71,6 @@ public class GuarantorWorkbookPopulator extends AbstractWorkbookPopulator {
         populateSavingsTable(addGuarantorSheet, dateFormat);
         populateGuarantorRelationshipTypes(addGuarantorSheet, dateFormat);
         setRules(addGuarantorSheet);
-
     }
 
     private void setLayout(Sheet worksheet) {
@@ -155,8 +154,7 @@ public class GuarantorWorkbookPopulator extends AbstractWorkbookPopulator {
                 row = addGuarantorSheet.getRow(rowIndex++);
             }
             writeString(GuarantorConstants.LOOKUP_CLIENT_NAME_COL, row, loan.getClientName() + "(" + loan.getClientId() + ")");
-            writeString(GuarantorConstants.LOOKUP_ACCOUNT_NO_COL, row,
-                    Long.parseLong(loan.getAccountNo()) + "-" + loan.getStatus().getValue());
+            writeString(GuarantorConstants.LOOKUP_ACCOUNT_NO_COL, row, loan.getAccountNo() + "-" + loan.getStatus().getValue());
         }
     }
 

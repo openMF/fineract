@@ -18,6 +18,8 @@
  */
 package org.apache.fineract.portfolio.charge.domain;
 
+import java.util.List;
+
 public enum ChargeTimeType {
 
     INVALID(0, "chargeTimeType.invalid"), //
@@ -58,6 +60,14 @@ public enum ChargeTimeType {
         return new Integer[] { ChargeTimeType.DISBURSEMENT.getValue(), ChargeTimeType.SPECIFIED_DUE_DATE.getValue(),
                 ChargeTimeType.INSTALMENT_FEE.getValue(), ChargeTimeType.OVERDUE_INSTALLMENT.getValue(),
                 ChargeTimeType.TRANCHE_DISBURSEMENT.getValue() };
+    }
+
+    public static List<ChargeTimeType> validWorkingCapitalLoan() {
+        return List.of(ChargeTimeType.SPECIFIED_DUE_DATE);
+    }
+
+    public static Object[] validWorkingCapitalLoanValues() {
+        return validWorkingCapitalLoan().stream().map(ChargeTimeType::getValue).toArray();
     }
 
     public static Object[] validLoanChargeValues() {

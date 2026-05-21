@@ -255,6 +255,22 @@ public final class ChargeDefinitionCommandFromApiJsonDeserializer {
                 baseDataValidator.reset().parameter(CHARGE_CALCULATION_TYPE).value(chargeCalculationType)
                         .isOneOfTheseValues(ChargeCalculationType.validValuesForShareAccountActivation());
             }
+        } else if (appliesTo.isWorkingCapitalLoanCharge()) {
+            final Integer chargeTimeType = this.fromApiJsonHelper.extractIntegerSansLocaleNamed(CHARGE_TIME_TYPE, element);
+            baseDataValidator.reset().parameter(CHARGE_TIME_TYPE).value(chargeTimeType).notNull();
+
+            if (chargeTimeType != null) {
+                baseDataValidator.reset().parameter(CHARGE_TIME_TYPE).value(chargeTimeType)
+                        .isOneOfTheseValues(ChargeTimeType.validWorkingCapitalLoanValues());
+            }
+
+            if (chargeCalculationType != null) {
+                Object[] validValues = new Object[] {};
+                if (ChargeTimeType.SPECIFIED_DUE_DATE.getValue().equals(chargeTimeType)) {
+                    validValues = ChargeCalculationType.validValuesForWorkingCapitalLoanSpecifiedDueDate();
+                }
+                baseDataValidator.reset().parameter(CHARGE_CALCULATION_TYPE).value(chargeCalculationType).isOneOfTheseValues(validValues);
+            }
         }
 
         final String name = this.fromApiJsonHelper.extractStringNamed(NAME, element);

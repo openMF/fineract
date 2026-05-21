@@ -18,6 +18,8 @@
  */
 package org.apache.fineract.portfolio.charge.domain;
 
+import java.util.List;
+
 public enum ChargeCalculationType {
 
     INVALID(0, "chargeCalculationType.invalid"), //
@@ -33,6 +35,18 @@ public enum ChargeCalculationType {
     ChargeCalculationType(final Integer value, final String code) {
         this.value = value;
         this.code = code;
+    }
+
+    public static List<ChargeCalculationType> validEnumsForWorkingCapitalLoan() {
+        return List.of(ChargeCalculationType.FLAT);
+    }
+
+    public static List<ChargeCalculationType> validEnumsForWorkingCapitalLoanSpecifiedDueDate() {
+        return List.of(ChargeCalculationType.FLAT);
+    }
+
+    public static Object[] validValuesForWorkingCapitalLoanSpecifiedDueDate() {
+        return validEnumsForWorkingCapitalLoanSpecifiedDueDate().stream().map(ChargeCalculationType::getValue).toArray();
     }
 
     public Integer getValue() {

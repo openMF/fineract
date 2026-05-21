@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.cob.api;
+package org.apache.fineract.portfolio.collateralmanagement.command;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.apache.fineract.command.core.Command;
+import org.apache.fineract.portfolio.collateralmanagement.data.CollateralProductDeleteRequest;
 
 @Data
-public class LockRequest {
-
-    private String error;
-}
+@EqualsAndHashCode(callSuper = true)
+public class CollateralProductDeleteCommand extends Command<CollateralProductDeleteRequest> {}
