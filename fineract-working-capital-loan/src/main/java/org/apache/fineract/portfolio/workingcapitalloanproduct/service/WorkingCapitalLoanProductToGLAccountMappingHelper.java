@@ -78,14 +78,10 @@ public class WorkingCapitalLoanProductToGLAccountMappingHelper {
                 CashAccountsForLoan.INCOME_FROM_RECOVERY.getValue(), GLAccountType.INCOME);
 
         // income (optional)
-        saveOptionalAccountMapping(element, LoanProductAccountingParams.INCOME_FROM_CHARGE_OFF_INTEREST.getValue(), productId,
-                CashAccountsForLoan.INCOME_FROM_CHARGE_OFF_INTEREST.getValue(), GLAccountType.INCOME);
         saveOptionalAccountMapping(element, LoanProductAccountingParams.INCOME_FROM_CHARGE_OFF_FEES.getValue(), productId,
                 CashAccountsForLoan.INCOME_FROM_CHARGE_OFF_FEES.getValue(), GLAccountType.INCOME);
         saveOptionalAccountMapping(element, LoanProductAccountingParams.INCOME_FROM_CHARGE_OFF_PENALTY.getValue(), productId,
                 CashAccountsForLoan.INCOME_FROM_CHARGE_OFF_PENALTY.getValue(), GLAccountType.INCOME);
-        saveOptionalAccountMapping(element, LoanProductAccountingParams.INCOME_FROM_GOODWILL_CREDIT_INTEREST.getValue(), productId,
-                CashAccountsForLoan.INCOME_FROM_GOODWILL_CREDIT_INTEREST.getValue(), GLAccountType.INCOME);
         saveOptionalAccountMapping(element, LoanProductAccountingParams.INCOME_FROM_GOODWILL_CREDIT_FEES.getValue(), productId,
                 CashAccountsForLoan.INCOME_FROM_GOODWILL_CREDIT_FEES.getValue(), GLAccountType.INCOME);
         saveOptionalAccountMapping(element, LoanProductAccountingParams.INCOME_FROM_GOODWILL_CREDIT_PENALTY.getValue(), productId,
@@ -136,14 +132,10 @@ public class WorkingCapitalLoanProductToGLAccountMappingHelper {
                 CashAccountsForLoan.INCOME_FROM_PENALTIES.getValue(), changes, GLAccountType.INCOME);
         mergeAccountMappingChanges(element, LoanProductAccountingParams.INCOME_FROM_RECOVERY.getValue(), productId,
                 CashAccountsForLoan.INCOME_FROM_RECOVERY.getValue(), changes, GLAccountType.INCOME);
-        mergeAccountMappingChanges(element, LoanProductAccountingParams.INCOME_FROM_CHARGE_OFF_INTEREST.getValue(), productId,
-                CashAccountsForLoan.INCOME_FROM_CHARGE_OFF_INTEREST.getValue(), changes, GLAccountType.INCOME);
         mergeAccountMappingChanges(element, LoanProductAccountingParams.INCOME_FROM_CHARGE_OFF_FEES.getValue(), productId,
                 CashAccountsForLoan.INCOME_FROM_CHARGE_OFF_FEES.getValue(), changes, GLAccountType.INCOME);
         mergeAccountMappingChanges(element, LoanProductAccountingParams.INCOME_FROM_CHARGE_OFF_PENALTY.getValue(), productId,
                 CashAccountsForLoan.INCOME_FROM_CHARGE_OFF_PENALTY.getValue(), changes, GLAccountType.INCOME);
-        mergeAccountMappingChanges(element, LoanProductAccountingParams.INCOME_FROM_GOODWILL_CREDIT_INTEREST.getValue(), productId,
-                CashAccountsForLoan.INCOME_FROM_GOODWILL_CREDIT_INTEREST.getValue(), changes, GLAccountType.INCOME);
         mergeAccountMappingChanges(element, LoanProductAccountingParams.INCOME_FROM_GOODWILL_CREDIT_FEES.getValue(), productId,
                 CashAccountsForLoan.INCOME_FROM_GOODWILL_CREDIT_FEES.getValue(), changes, GLAccountType.INCOME);
         mergeAccountMappingChanges(element, LoanProductAccountingParams.INCOME_FROM_GOODWILL_CREDIT_PENALTY.getValue(), productId,
@@ -182,10 +174,8 @@ public class WorkingCapitalLoanProductToGLAccountMappingHelper {
         putChange(changes, element, LoanProductAccountingParams.OVERPAYMENT);
         putChange(changes, element, LoanProductAccountingParams.DEFERRED_INCOME_LIABILITY);
         // optional accounts
-        putChangeIfPresent(changes, element, LoanProductAccountingParams.INCOME_FROM_CHARGE_OFF_INTEREST);
         putChangeIfPresent(changes, element, LoanProductAccountingParams.INCOME_FROM_CHARGE_OFF_FEES);
         putChangeIfPresent(changes, element, LoanProductAccountingParams.INCOME_FROM_CHARGE_OFF_PENALTY);
-        putChangeIfPresent(changes, element, LoanProductAccountingParams.INCOME_FROM_GOODWILL_CREDIT_INTEREST);
         putChangeIfPresent(changes, element, LoanProductAccountingParams.INCOME_FROM_GOODWILL_CREDIT_FEES);
         putChangeIfPresent(changes, element, LoanProductAccountingParams.INCOME_FROM_GOODWILL_CREDIT_PENALTY);
         putChangeIfPresent(changes, element, LoanProductAccountingParams.GOODWILL_CREDIT);

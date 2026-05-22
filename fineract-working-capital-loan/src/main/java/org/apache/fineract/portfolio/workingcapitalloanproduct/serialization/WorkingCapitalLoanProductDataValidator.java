@@ -112,10 +112,8 @@ public class WorkingCapitalLoanProductDataValidator {
                     WorkingCapitalLoanProductConstants.incomeFromRecoveryAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.writeOffAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.overpaymentLiabilityAccountIdParamName, //
-                    WorkingCapitalLoanProductConstants.incomeFromChargeOffInterestAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.incomeFromChargeOffFeesAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.incomeFromChargeOffPenaltyAccountIdParamName, //
-                    WorkingCapitalLoanProductConstants.incomeFromGoodwillCreditInterestAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.incomeFromGoodwillCreditFeesAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.incomeFromGoodwillCreditPenaltyAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.goodwillCreditAccountIdParamName, //

@@ -53,14 +53,19 @@ public class AccountTransferStepDef extends AbstractStepDef {
                 .getSavingsId();
         long loanId = ((PostLoansResponse) testContext().get(TestContextKey.LOAN_CREATE_RESPONSE)).getLoanId();
 
-        AccountTransferRequest request = new AccountTransferRequest().fromClientId(String.valueOf(clientId))
-                .fromAccountId(String.valueOf(savingsId)).fromAccountType(SAVINGS_ACCOUNT_TYPE).fromOfficeId("1")
-                .toClientId(String.valueOf(clientId)).toAccountId(String.valueOf(loanId)).toAccountType(LOAN_ACCOUNT_TYPE).toOfficeId("1")
-                .transferDate(date).transferAmount(String.valueOf(amount)).transferDescription("Transfer").dateFormat(DATE_FORMAT)
-                .locale(DEFAULT_LOCALE);
+        createAccountTransfer(clientId, savingsId, SAVINGS_ACCOUNT_TYPE, loanId, LOAN_ACCOUNT_TYPE, date, amount);
+    }
 
-        PostAccountTransfersResponse response = ok(() -> fineractClient.accountTransfers().createAccountTransfer(request));
-        testContext().set("accountTransferResponse", response);
+    @When("Initiate account transfer from savings {string} to savings {string} on {string} for {double}")
+    public void initiateAccountTransferBetweenSavings(String fromAlias, String toAlias, String date, double amount) {
+        PostClientsResponse clientResponse = testContext().get(TestContextKey.CLIENT_CREATE_RESPONSE);
+        long clientId = clientResponse.getClientId();
+        long fromSavingsId = ((PostSavingsAccountsResponse) testContext().get("EUR_SAVINGS_ACCOUNT_CREATE_RESPONSE_" + fromAlias))
+                .getSavingsId();
+        long toSavingsId = ((PostSavingsAccountsResponse) testContext().get("EUR_SAVINGS_ACCOUNT_CREATE_RESPONSE_" + toAlias))
+                .getSavingsId();
+
+        createAccountTransfer(clientId, fromSavingsId, SAVINGS_ACCOUNT_TYPE, toSavingsId, SAVINGS_ACCOUNT_TYPE, date, amount);
     }
 
     @When("Undo the last account transfer")
@@ -76,5 +81,17 @@ public class AccountTransferStepDef extends AbstractStepDef {
                 () -> fineractClient.accountTransfers().accountTransferOperation(response.getResourceId(), "undo"));
         assertThat(exception.getStatus()).as(ErrorMessageHelper.dateFailureErrorCodeMsg()).isEqualTo(403);
         assertThat(exception.getMessage()).contains("error.msg.account.transfer.already.reversed");
+    }
+
+    private void createAccountTransfer(long clientId, long fromAccountId, String fromAccountType, long toAccountId, String toAccountType,
+            String date, double amount) {
+        AccountTransferRequest request = new AccountTransferRequest().fromClientId(String.valueOf(clientId))
+                .fromAccountId(String.valueOf(fromAccountId)).fromAccountType(fromAccountType).fromOfficeId("1")
+                .toClientId(String.valueOf(clientId)).toAccountId(String.valueOf(toAccountId)).toAccountType(toAccountType).toOfficeId("1")
+                .transferDate(date).transferAmount(String.valueOf(amount)).transferDescription("Transfer").dateFormat(DATE_FORMAT)
+                .locale(DEFAULT_LOCALE);
+
+        PostAccountTransfersResponse response = ok(() -> fineractClient.accountTransfers().createAccountTransfer(request));
+        testContext().set("accountTransferResponse", response);
     }
 }

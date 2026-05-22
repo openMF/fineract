@@ -517,7 +517,13 @@ public class AccountTransfersWritePlatformServiceImpl implements AccountTransfer
                 : accountTransferDetails.toSavingsAccount() != null ? PortfolioAccountType.SAVINGS : throwUnsupported();
 
         if (isSavingsToSavingsAccountTransfer(fromAccountType, toAccountType)) {
-            throw new UnsupportedOperationException("Undo Savings to Savings Account Transfer is not implemented");
+            accountTransferDetails.getAccountTransferTransactions().forEach(transaction -> {
+                this.savingsAccountWritePlatformService.undoTransaction(transaction.getFromSavingsTransaction().getSavingsAccount().getId(),
+                        transaction.getFromSavingsTransaction().getId(), true);
+                this.savingsAccountWritePlatformService.undoTransaction(transaction.getToSavingsTransaction().getSavingsAccount().getId(),
+                        transaction.getToSavingsTransaction().getId(), true);
+                transaction.reverse();
+            });
         } else if (isSavingsToLoanAccountTransfer(fromAccountType, toAccountType)) {
             accountTransferDetails.getAccountTransferTransactions().forEach(transaction -> {
                 this.savingsAccountWritePlatformService.undoTransaction(transaction.getFromSavingsTransaction().getSavingsAccount().getId(),
