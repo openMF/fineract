@@ -8,13 +8,16 @@ permissions:
 
 jobs:
   test:
+    name: PostgreSQL Tests (Shard ${{ matrix.shard_index }} of ${{ matrix.total_shards }})
     runs-on: ubuntu-24.04
     timeout-minutes: 60
 
     strategy:
       fail-fast: false
       matrix:
-        task: [test-core-1, test-core-2, test-core-3, test-core-4, test-core-5]
+        # Define the number of shards (1-based indexing)
+        shard_index: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ]
+        total_shards: [ 15 ]
 
     services:
       postgresql:
@@ -82,47 +85,40 @@ jobs:
           sleep 10
           docker exec localstack awslocal s3api create-bucket --bucket fineract-reports
 
-      - name: Generate test class list (only for test-core-X)
-        if: startsWith(matrix.task, 'test-core-')
+      - name: Generate test class list
         run: |
           chmod +x scripts/split-tests.sh
-          SHARD_INDEX=$(echo "${{ matrix.task }}" | awk -F'-' '{print $3}')
-          ./scripts/split-tests.sh 5 $SHARD_INDEX
-          cat "shard-tests_${SHARD_INDEX}.txt"
+          ./scripts/split-tests.sh ${{ matrix.total_shards }} ${{ matrix.shard_index }}
+          cat "shard-tests_${{ matrix.shard_index }}.txt"
 
       - name: Run Gradle Task
         run: |
           set -e  # Fail the script if any command fails
-          SHARD_INDEX=$(echo "${{ matrix.task }}" | awk -F'-' '{print $3}')
           FAILED=0
 
-          case "${{ matrix.task }}" in
-            test-core-*)
-              echo "Grouping test classes by module..."
-              declare -A module_tests
+          echo "Grouping test classes by module..."
+          declare -A module_tests
 
-              while IFS=, read -r module class; do
-                module_tests["$module"]+="$class "
-              done < "shard-tests_${SHARD_INDEX}.txt"
+          while IFS=, read -r module class; do
+            module_tests["$module"]+="$class "
+          done < "shard-tests_${{ matrix.shard_index }}.txt"
 
-              for module in "${!module_tests[@]}"; do
-                echo "::group::Running tests in $module"
-                for class in ${module_tests[$module]}; do
-                  echo "  - $class"
-                done
+          for module in "${!module_tests[@]}"; do
+            echo "::group::Running tests in $module"
+            for class in ${module_tests[$module]}; do
+              echo "  - $class"
+            done
 
-                # Build test args
-                test_args=$(for class in ${module_tests[$module]}; do echo --tests "$class"; done | xargs)
+            # Build test args
+            test_args=$(for class in ${module_tests[$module]}; do echo --tests "$class"; done | xargs)
 
-                # Run test task for this module
-                if ! ./gradlew --no-daemon "$module:test" $test_args -PdbType=postgresql -x checkstyleJmh -x checkstyleMain -x checkstyleTest -x spotlessCheck -x spotlessApply -x spotbugsMain -x spotbugsTest -x javadoc -x javadocJar -x modernizer -x buildJavaSdk ; then
-                  echo "::error::Tests failed in module $module"
-                  FAILED=1
-                fi
-                echo "::endgroup::"
-              done
-              ;;
-          esac
+            # Run test task for this module
+            if ! ./gradlew --no-daemon "$module:test" $test_args -PdbType=postgresql -x checkstyleJmh -x checkstyleMain -x checkstyleTest -x spotlessCheck -x spotlessApply -x spotbugsMain -x spotbugsTest -x javadoc -x javadocJar -x modernizer -x buildJavaSdk ; then
+              echo "::error::Tests failed in module $module"
+              FAILED=1
+            fi
+            echo "::endgroup::"
+          done
 
           # Exit with failure status if any test failed
           if [ "$FAILED" -eq 1 ]; then
@@ -134,7 +130,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: test-results-postgresql-${{ matrix.task }}-attempt-${{ github.run_attempt }}
+          name: test-results-postgresql-shard-${{ matrix.shard_index }}-attempt-${{ github.run_attempt }}
           path: '**/build/reports/'
           retention-days: 5
 
@@ -142,6 +138,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: server-logs-postgresql-${{ matrix.task }}-attempt-${{ github.run_attempt }}
+          name: server-logs-postgresql-shard-${{ matrix.shard_index }}-attempt-${{ github.run_attempt }}
           path: '**/build/cargo/'
           retention-days: 5

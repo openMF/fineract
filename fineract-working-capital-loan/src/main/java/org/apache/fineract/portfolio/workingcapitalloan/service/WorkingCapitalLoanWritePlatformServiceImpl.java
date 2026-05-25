@@ -104,6 +104,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
     private final WorkingCapitalLoanAccountingProcessor accountingProcessor;
     private final WorkingCapitalLoanTransactionRelationRepository relationRepository;
     private final WorkingCapitalLoanPeriodPaymentRateChangeRepository rateChangeRepository;
+    private final WorkingCapitalLoanDiscountFeeAmortizationService discountFeeAmortizationService;
 
     @Override
     public CommandProcessingResult approveApplication(final Long loanId, final JsonCommand command) {
@@ -544,6 +545,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         internalWorkingCapitalLoanPaymentService.makePayment(loanId, amountAppliedToOutstanding, transactionDate);
 
         handleStateChanges(loan, transactionDate);
+        triggerInlineAmortizationIfLoanClosed(loan, transactionDate);
         changes.put("status", loan.getLoanStatus());
 
         handleNote(loan, command, changes);
@@ -589,6 +591,17 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
             changes.put(WorkingCapitalLoanConstants.noteParamName, noteText);
         }
         createNote(noteText, loan);
+    }
+
+    private void triggerInlineAmortizationIfLoanClosed(final WorkingCapitalLoan loan, final LocalDate transactionDate) {
+        if ((loan.getLoanStatus().isClosed() || loan.getLoanStatus().isOverpaid())
+                && loan.getLoanProduct().getAccountingRule().isCashBased()) {
+            final BigDecimal discount = loan.getLoanProductRelatedDetails() != null ? loan.getLoanProductRelatedDetails().getDiscount()
+                    : null;
+            if (MathUtil.isGreaterThanZero(discount)) {
+                discountFeeAmortizationService.processDiscountFeeAmortization(loan, transactionDate);
+            }
+        }
     }
 
     private void handleStateChanges(WorkingCapitalLoan loan, LocalDate transactionDate) {
@@ -864,7 +877,8 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
             if (txn.isReversed()) {
                 continue;
             }
-            if (txn.getTypeOf() != LoanTransactionType.DISBURSEMENT && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE) {
+            if (txn.getTypeOf() != LoanTransactionType.DISBURSEMENT && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE
+                    && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE_AMORTIZATION) {
                 throw new PlatformApiDataValidationException("validation.msg.wc.loan.undo.disbursal.not.allowed",
                         "Undo disbursal is not allowed when there are other monetary transactions on the loan", "loanId");
             }

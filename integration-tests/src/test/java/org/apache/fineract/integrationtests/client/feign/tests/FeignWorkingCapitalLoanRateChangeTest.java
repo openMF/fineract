@@ -64,26 +64,7 @@ public class FeignWorkingCapitalLoanRateChangeTest extends FeignIntegrationTest 
 
     @AfterAll
     void cleanupEntities() {
-        for (final Long loanId : createdLoanIds) {
-            if (loanId == null) {
-                continue;
-            }
-            try {
-                wcLoanHelper.undoDisbursal(loanId, WorkingCapitalLoanRequestBuilders.undoDisbursal());
-            } catch (final CallFailedRuntimeException ignored) {
-                // best-effort cleanup: loan may not be in disbursed state
-            }
-            try {
-                wcLoanHelper.undoApproval(loanId, WorkingCapitalLoanRequestBuilders.emptyCommand());
-            } catch (final CallFailedRuntimeException ignored) {
-                // best-effort cleanup: loan may not be in approved state
-            }
-            try {
-                wcLoanHelper.delete(loanId);
-            } catch (final CallFailedRuntimeException ignored) {
-                // best-effort cleanup: loan may already be deleted or in non-deletable state
-            }
-        }
+        createdLoanIds.forEach(wcLoanHelper::cleanupLoan);
         createdLoanIds.clear();
         createdProductIds.clear();
     }

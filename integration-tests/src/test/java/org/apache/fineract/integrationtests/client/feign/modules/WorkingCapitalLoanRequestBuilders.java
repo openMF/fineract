@@ -19,6 +19,7 @@
 package org.apache.fineract.integrationtests.client.feign.modules;
 
 import java.math.BigDecimal;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRateRequest;
@@ -43,9 +44,21 @@ public final class WorkingCapitalLoanRequestBuilders {
                 .expectedDisbursementDate(expectedDisbursementDate).locale(LOCALE).dateFormat(DATE_FORMAT);
     }
 
+    public static PostWorkingCapitalLoansLoanIdRequest approveWithDiscount(String approvedOnDate, BigDecimal approvedAmount,
+            String expectedDisbursementDate, BigDecimal discountAmount) {
+        return new PostWorkingCapitalLoansLoanIdRequest().approvedOnDate(approvedOnDate).approvedLoanAmount(approvedAmount)
+                .expectedDisbursementDate(expectedDisbursementDate).discountAmount(discountAmount).locale(LOCALE).dateFormat(DATE_FORMAT);
+    }
+
     public static PostWorkingCapitalLoansLoanIdRequest disburse(String actualDisbursementDate, BigDecimal transactionAmount) {
         return new PostWorkingCapitalLoansLoanIdRequest().actualDisbursementDate(actualDisbursementDate)
                 .transactionAmount(transactionAmount).locale(LOCALE).dateFormat(DATE_FORMAT);
+    }
+
+    public static PostWorkingCapitalLoansLoanIdRequest disburseWithDiscount(String actualDisbursementDate, BigDecimal transactionAmount,
+            BigDecimal discountAmount) {
+        return new PostWorkingCapitalLoansLoanIdRequest().actualDisbursementDate(actualDisbursementDate)
+                .transactionAmount(transactionAmount).discountAmount(discountAmount).locale(LOCALE).dateFormat(DATE_FORMAT);
     }
 
     public static PostWorkingCapitalLoansLoanIdRequest undoDisbursal() {
@@ -58,5 +71,10 @@ public final class WorkingCapitalLoanRequestBuilders {
 
     public static PutWorkingCapitalLoansLoanIdRateRequest updateRate(BigDecimal newRate) {
         return new PutWorkingCapitalLoansLoanIdRateRequest().periodPaymentRate(newRate).locale(LOCALE);
+    }
+
+    public static PostWorkingCapitalLoanTransactionsRequest repayment(BigDecimal amount, String transactionDate) {
+        return new PostWorkingCapitalLoanTransactionsRequest().transactionAmount(amount).transactionDate(transactionDate).locale(LOCALE)
+                .dateFormat(DATE_FORMAT);
     }
 }

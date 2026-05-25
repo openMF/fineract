@@ -28,4 +28,6 @@ public interface WorkingCapitalLoanAccountingProcessor {
             boolean isChargedOff);
 
     void postReversalJournalEntries(WorkingCapitalLoan loan, WorkingCapitalLoanTransaction txn);
+
+    void postJournalEntriesForDiscountFeeAmortization(WorkingCapitalLoan loan, WorkingCapitalLoanTransaction txn, boolean isChargedOff);
 }

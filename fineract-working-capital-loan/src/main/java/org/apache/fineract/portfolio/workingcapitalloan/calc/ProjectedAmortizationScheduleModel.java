@@ -154,6 +154,15 @@ public final class ProjectedAmortizationScheduleModel {
         return rateSegments != null ? List.copyOf(rateSegments) : List.of();
     }
 
+    /** Sum of {@code actualAmortizationAmount} across all applied payment periods (paymentNo &gt; 0). */
+    public BigDecimal totalActualAmortization() {
+        if (projectedPayments == null) {
+            return BigDecimal.ZERO;
+        }
+        return projectedPayments.stream().filter(p -> p.paymentNo() > 0 && p.actualAmortizationAmount() != null)
+                .map(p -> p.actualAmortizationAmount().getAmount()).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     public int effectiveTotalTerm() {
         if (rateSegments == null || rateSegments.isEmpty()) {
             return originalPaymentNumber;

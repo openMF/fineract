@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import lombok.Getter;
@@ -1014,8 +1015,24 @@ public class LoanTransaction extends AbstractAuditableWithUTCDateTimeCustom<Long
         this.amount = bigDecimal;
     }
 
-    // TODO missing hashCode(), equals(Object obj), but probably OK as long as
-    // this is never stored in a Collection.
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof LoanTransaction other)) {
+            return false;
+        }
+        if (getId() == null || other.getId() == null) {
+            return false;
+        }
+        return Objects.equals(getId(), other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId());
+    }
 
     public void updateTransactionDate(final LocalDate transactionDate) {
         this.dateOf = transactionDate;

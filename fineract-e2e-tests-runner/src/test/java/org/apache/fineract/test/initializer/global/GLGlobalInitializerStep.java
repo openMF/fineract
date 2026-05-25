@@ -115,7 +115,7 @@ public class GLGlobalInitializerStep implements FineractGlobalInitializerStep {
                 new GLAccountDefinition(GLA_NAME_4, GLA_GL_CODE_4, GLA_TYPE_LIABILITY),
                 new GLAccountDefinition(GLA_NAME_5, GLA_GL_CODE_5, GLA_TYPE_LIABILITY),
                 new GLAccountDefinition(GLA_NAME_6, GLA_GL_CODE_6, GLA_TYPE_LIABILITY),
-                new GLAccountDefinition(GLA_NAME_7, GLA_GL_CODE_7, GLA_TYPE_INCOME),
+                new GLAccountDefinition(GLA_NAME_7, GLA_GL_CODE_7, GLA_TYPE_LIABILITY),
                 new GLAccountDefinition(GLA_NAME_8, GLA_GL_CODE_8, GLA_TYPE_INCOME),
                 new GLAccountDefinition(GLA_NAME_9, GLA_GL_CODE_9, GLA_TYPE_INCOME),
                 new GLAccountDefinition(GLA_NAME_10, GLA_GL_CODE_10, GLA_TYPE_INCOME),

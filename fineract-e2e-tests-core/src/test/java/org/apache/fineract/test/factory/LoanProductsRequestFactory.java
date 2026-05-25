@@ -23,9 +23,9 @@ import static org.apache.fineract.test.data.TransactionProcessingStrategyCode.AD
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.client.models.AllowAttributeOverrides;
 import org.apache.fineract.client.models.GetLoanPaymentChannelToFundSourceMappings;
@@ -72,7 +72,7 @@ public class LoanProductsRequestFactory {
     private final CodeValueResolver codeValueResolver;
     private final DelinquencyBucketResolver delinquencyBucketResolver;
 
-    private final Set<String> productShortNameMap = new HashSet<>();
+    private final Set<String> productShortNameMap = ConcurrentHashMap.newKeySet();
 
     @Autowired
     private CodeHelper codeHelper;
@@ -1903,16 +1903,12 @@ public class LoanProductsRequestFactory {
     }
 
     public String generateShortNameSafely() {
-        String generatedShortName;
-        int counter = 0;
-        do {
-            counter++;
-            generatedShortName = Utils.randomStringGenerator("", 4);
-            if (counter > 999) {
-                throw new RuntimeException("Unable to generate unique short name");
+        for (int counter = 0; counter < 999; counter++) {
+            String generatedShortName = Utils.randomStringGenerator("", 4);
+            if (productShortNameMap.add(generatedShortName)) {
+                return generatedShortName;
             }
-        } while (productShortNameMap.contains(generatedShortName));
-        productShortNameMap.add(generatedShortName);
-        return generatedShortName;
+        }
+        throw new RuntimeException("Unable to generate unique short name");
     }
 }

@@ -1564,6 +1564,9 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
                 case "totalPaidPrincipal" ->
                     actualValues.add(response.getBalance() == null || response.getBalance().getTotalPaidPrincipal() == null ? null
                             : new Utils.DoubleFormatter(response.getBalance().getTotalPaidPrincipal().doubleValue()).format());
+                case "overpaymentAmount" ->
+                    actualValues.add(response.getBalance() == null || response.getBalance().getOverpaymentAmount() == null ? null
+                            : new Utils.DoubleFormatter(response.getBalance().getOverpaymentAmount().doubleValue()).format());
                 case "realizedIncome" ->
                     actualValues.add(response.getBalance() == null || response.getBalance().getRealizedIncome() == null ? null
                             : new Utils.DoubleFormatter(response.getBalance().getRealizedIncome().doubleValue()).format());
@@ -2714,7 +2717,7 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
 
     @Then("Working Capital Loan Transactions tab has {int} {string} transactions with date {string} which have the following Journal entries:")
     public void verifyMultipleWorkingCapitalLoanTransactionsJournalEntries(int expectedCount, String transactionType,
-            String transactionDate, DataTable table) throws IOException {
+            String transactionDate, DataTable table) {
         Long loanId = getCreatedLoanId();
         TransactionType resolvedTransactionType = resolveTransactionType(transactionType);
         List<GetWorkingCapitalLoanTransactionIdResponse> transactionsMatch = findMatchingTransactions(loanId, resolvedTransactionType,
@@ -2727,8 +2730,7 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
     }
 
     @Then("Working Capital Loan Transactions tab has a reversed {string} transaction with date {string} which has the following Journal entries:")
-    public void verifyReversedWorkingCapitalLoanTransactionJournalEntries(String transactionType, String transactionDate, DataTable table)
-            throws IOException {
+    public void verifyReversedWorkingCapitalLoanTransactionJournalEntries(String transactionType, String transactionDate, DataTable table) {
         Long loanId = getCreatedLoanId();
         TransactionType resolvedTransactionType = resolveTransactionType(transactionType);
         List<GetWorkingCapitalLoanTransactionIdResponse> transactionsMatch = findMatchingTransactions(loanId, resolvedTransactionType,

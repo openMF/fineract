@@ -24,7 +24,12 @@ import java.util.List;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.CommandProcessingResult;
+import org.apache.fineract.client.models.GetWorkingCapitalLoanTransactionIdResponse;
+import org.apache.fineract.client.models.GetWorkingCapitalLoanTransactionsResponse;
 import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
+import org.apache.fineract.client.models.InlineJobRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
@@ -96,5 +101,44 @@ public class FeignWorkingCapitalLoanHelper {
 
     public List<WorkingCapitalLoanPeriodPaymentRateChangeData> getRateChangeHistory(Long loanId) {
         return ok(() -> fineractClient.workingCapitalLoans().getWorkingCapitalLoanRateChangeHistoryById(loanId));
+    }
+
+    public Long makeRepayment(Long loanId, PostWorkingCapitalLoanTransactionsRequest request) {
+        PostWorkingCapitalLoanTransactionsResponse response = ok(() -> fineractClient.workingCapitalLoanTransactions()
+                .executeWorkingCapitalLoanTransactionById(loanId, "repayment", request));
+        return response.getResourceId();
+    }
+
+    public List<GetWorkingCapitalLoanTransactionIdResponse> getTransactions(Long loanId) {
+        GetWorkingCapitalLoanTransactionsResponse response = ok(
+                () -> fineractClient.workingCapitalLoanTransactions().retrieveWorkingCapitalLoanTransactionsById(loanId));
+        return response.getContent() != null ? response.getContent() : List.of();
+    }
+
+    public void executeInlineWCCOB(Long loanId) {
+        ok(() -> fineractClient.inlineJob().executeInlineJob("WC_LOAN_COB", new InlineJobRequest().addLoanIdsItem(loanId)));
+    }
+
+    /**
+     * Best-effort cleanup: attempts undo disbursal, undo approval, and delete in sequence. Each step is independent —
+     * failures are silently ignored so the remaining steps still run.
+     */
+    public void cleanupLoan(Long loanId) {
+        if (loanId == null) {
+            return;
+        }
+        final PostWorkingCapitalLoansLoanIdRequest emptyRequest = new PostWorkingCapitalLoansLoanIdRequest().locale("en")
+                .dateFormat("dd MMMM yyyy");
+        tryQuietly(() -> undoDisbursal(loanId, emptyRequest));
+        tryQuietly(() -> undoApproval(loanId, emptyRequest));
+        tryQuietly(() -> delete(loanId));
+    }
+
+    private static void tryQuietly(Runnable action) {
+        try {
+            action.run();
+        } catch (final CallFailedRuntimeException ignored) {
+            // best-effort cleanup
+        }
     }
 }

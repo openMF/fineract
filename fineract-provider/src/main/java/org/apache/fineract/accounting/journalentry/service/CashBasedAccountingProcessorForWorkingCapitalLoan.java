@@ -197,6 +197,34 @@ public class CashBasedAccountingProcessorForWorkingCapitalLoan implements Workin
         }
     }
 
+    @Override
+    public void postJournalEntriesForDiscountFeeAmortization(final WorkingCapitalLoan loan, final WorkingCapitalLoanTransaction txn,
+            final boolean isChargedOff) {
+        final Office office = loan.getClient().getOffice();
+        final Long productId = loan.getLoanProduct().getId();
+        final String currencyCode = loan.getLoanProductRelatedDetails().getCurrency().getCode();
+        final LocalDate transactionDate = txn.getTransactionDate();
+        final Long loanId = loan.getId();
+        final Long txnId = txn.getId();
+        final BigDecimal amount = txn.getTransactionAmount();
+
+        helper.checkForBranchClosures(helper.getLatestClosureByBranch(office.getId()), transactionDate);
+
+        if (MathUtil.isGreaterThanZero(amount)) {
+            final GLAccount deferredIncomeAccount = helper.getLinkedGLAccountForWorkingCapitalLoanProduct(productId,
+                    CashAccountsForLoan.DEFERRED_INCOME_LIABILITY.getValue(), null);
+            helper.createDebitJournalEntryForWorkingCapitalLoan(office, currencyCode, deferredIncomeAccount, loanId, txnId, transactionDate,
+                    amount, null);
+
+            final CashAccountsForLoan creditAccountType = isChargedOff ? CashAccountsForLoan.CHARGE_OFF_EXPENSE
+                    : CashAccountsForLoan.INCOME_FROM_DISCOUNT_FEE;
+            final GLAccount creditAccount = helper.getLinkedGLAccountForWorkingCapitalLoanProduct(productId, creditAccountType.getValue(),
+                    null);
+            helper.createCreditJournalEntryForWorkingCapitalLoan(office, currencyCode, creditAccount, loanId, txnId, transactionDate,
+                    amount, null);
+        }
+    }
+
     private Long extractPaymentTypeId(final WorkingCapitalLoanTransaction txn) {
         if (txn.getPaymentDetail() != null && txn.getPaymentDetail().getPaymentType() != null) {
             return txn.getPaymentDetail().getPaymentType().getId();
