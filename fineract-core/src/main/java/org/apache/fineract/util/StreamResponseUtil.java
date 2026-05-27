@@ -33,7 +33,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
@@ -51,7 +50,7 @@ public final class StreamResponseUtil {
 
             @Override
             public void write(OutputStream out) throws IOException {
-                IOUtils.copy(content.getStream(), out);
+                content.getStream().transferTo(out);
             }
         };
 

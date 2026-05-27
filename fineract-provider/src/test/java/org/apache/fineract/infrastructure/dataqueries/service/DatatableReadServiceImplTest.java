@@ -29,7 +29,6 @@ import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
 
 import com.google.gson.JsonObject;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.fineract.TestConfiguration;
@@ -53,7 +52,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
 @ContextConfiguration(classes = TestConfiguration.class)
-@SuppressFBWarnings(value = "RV_EXCEPTION_NOT_THROWN", justification = "False positive")
+
 public class DatatableReadServiceImplTest {
 
     @Autowired

@@ -176,7 +176,7 @@ public class EmailCampaignApiResource {
 
     }
 
-    @GET()
+    @GET
     @Path("template")
     @Operation(summary = "Retrieve email campaign template", operationId = "retrieveAllTemplatesEmailCampaign")
     public String template(@Context final UriInfo uriInfo) {

@@ -386,6 +386,22 @@ public final class SavingsEnumerations {
                 optionData = new EnumOptionData(SavingsPostingInterestPeriodType.ANNUAL.getValue().longValue(),
                         codePrefix + SavingsPostingInterestPeriodType.ANNUAL.getCode(), "Annually");
             break;
+            case ANNIVERSARY_MONTHLY:
+                optionData = new EnumOptionData(SavingsPostingInterestPeriodType.ANNIVERSARY_MONTHLY.getValue().longValue(),
+                        codePrefix + SavingsPostingInterestPeriodType.ANNIVERSARY_MONTHLY.getCode(), "Anniversary Monthly");
+            break;
+            case ANNIVERSARY_QUARTERLY:
+                optionData = new EnumOptionData(SavingsPostingInterestPeriodType.ANNIVERSARY_QUARTERLY.getValue().longValue(),
+                        codePrefix + SavingsPostingInterestPeriodType.ANNIVERSARY_QUARTERLY.getCode(), "Anniversary Quarterly");
+            break;
+            case ANNIVERSARY_BIANNUAL:
+                optionData = new EnumOptionData(SavingsPostingInterestPeriodType.ANNIVERSARY_BIANNUAL.getValue().longValue(),
+                        codePrefix + SavingsPostingInterestPeriodType.ANNIVERSARY_BIANNUAL.getCode(), "Anniversary BiAnnual");
+            break;
+            case ANNIVERSARY_ANNUAL:
+                optionData = new EnumOptionData(SavingsPostingInterestPeriodType.ANNIVERSARY_ANNUAL.getValue().longValue(),
+                        codePrefix + SavingsPostingInterestPeriodType.ANNIVERSARY_ANNUAL.getCode(), "Anniversary Annually");
+            break;
         }
 
         return optionData;

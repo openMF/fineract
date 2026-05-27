@@ -49,10 +49,12 @@ dependencies {
             'org.apache.httpcomponents:httpcore',
 
             'org.apache.tika:tika-core',
-            'org.apache.tika:tika-parser-microsoft-module',
             'org.apache.tika:tika-parser-miscoffice-module',
             'org.apache.tika:tika-parser-image-module',
             )
+    implementation('org.apache.tika:tika-parser-microsoft-module') {
+        exclude group: 'org.apache.poi', module: 'poi-ooxml-full'
+    }
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.mapstruct:mapstruct-processor'

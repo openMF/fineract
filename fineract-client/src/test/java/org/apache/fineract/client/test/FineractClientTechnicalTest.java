@@ -20,7 +20,6 @@ package org.apache.fineract.client.test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.fineract.client.util.FineractClient;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +28,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author Michael Vorburger.ch
  */
-@SuppressFBWarnings(value = "RV_EXCEPTION_NOT_THROWN", justification = "False positive")
+
 public class FineractClientTechnicalTest {
 
     @Test

@@ -63,10 +63,11 @@ public final class SavingsHelper {
         LocalDate periodStartDate = startInterestCalculationLocalDate;
         LocalDate periodEndDate = periodStartDate;
         LocalDate actualPeriodStartDate = periodStartDate;
+        final int anniversaryDayOfMonth = startInterestCalculationLocalDate.getDayOfMonth();
 
         while (!DateUtils.isAfter(periodStartDate, interestPostingUpToDate) && !DateUtils.isAfter(periodEndDate, interestPostingUpToDate)) {
             final LocalDate interestPostingLocalDate = determineInterestPostingPeriodEndDateFrom(periodStartDate, postingPeriodType,
-                    interestPostingUpToDate, financialYearBeginningMonth);
+                    interestPostingUpToDate, financialYearBeginningMonth, anniversaryDayOfMonth);
 
             periodEndDate = interestPostingLocalDate.minusDays(1);
 
@@ -96,9 +97,10 @@ public final class SavingsHelper {
 
     private LocalDate determineInterestPostingPeriodEndDateFrom(final LocalDate periodStartDate,
             final SavingsPostingInterestPeriodType interestPostingPeriodType, final LocalDate interestPostingUpToDate,
-            Integer financialYearBeginningMonth) {
+            Integer financialYearBeginningMonth, final int anniversaryDayOfMonth) {
 
-        LocalDate periodEndDate = interestPostingUpToDate;
+        // interest posting always occurs on the next day after the period end date.
+        LocalDate periodEndDate = interestPostingUpToDate.plusDays(1);
         final Integer monthOfYear = periodStartDate.getMonthValue();
         financialYearBeginningMonth--;
         if (financialYearBeginningMonth == 0) {
@@ -126,37 +128,42 @@ public final class SavingsHelper {
             case INVALID:
             break;
             case DAILY:
-                // produce period end date on current day
-                periodEndDate = periodStartDate;
+                // interest posting always occurs on the next day after the period end date.
+                periodEndDate = periodStartDate.plusDays(1);
             break;
             case MONTHLY:
-                // produce period end date on last day of current month
-                periodEndDate = periodStartDate.with(TemporalAdjusters.lastDayOfMonth());
+                // interest posting occurs on the first day of the next month and on the next day after the period end
+                // date.
+                periodEndDate = periodStartDate.with(TemporalAdjusters.lastDayOfMonth()).plusDays(1);
             break;
             case QUATERLY:
                 for (LocalDate quarterlyDate : quarterlyDates) {
                     if (DateUtils.isAfter(quarterlyDate, periodStartDate)) {
-                        periodEndDate = quarterlyDate;
+                        // interest posting always occurs on the next day after the period end date.
+                        periodEndDate = quarterlyDate.plusDays(1);
                         isEndDateSet = true;
                         break;
                     }
                 }
 
                 if (!isEndDateSet) {
-                    periodEndDate = quarterlyDates.get(0).plusYears(1).with(TemporalAdjusters.lastDayOfMonth());
+                    // interest posting always occurs on the next day after the period end date.
+                    periodEndDate = quarterlyDates.getFirst().plusYears(1).with(TemporalAdjusters.lastDayOfMonth()).plusDays(1);
                 }
             break;
             case BIANNUAL:
                 for (LocalDate biannualDate : biannualDates) {
                     if (DateUtils.isAfter(biannualDate, periodStartDate)) {
-                        periodEndDate = biannualDate;
+                        // interest posting always occurs on the next day after the period end date.
+                        periodEndDate = biannualDate.plusDays(1);
                         isEndDateSet = true;
                         break;
                     }
                 }
 
                 if (!isEndDateSet) {
-                    periodEndDate = biannualDates.get(0).plusYears(1).with(TemporalAdjusters.lastDayOfMonth());
+                    // interest posting always occurs on the next day after the period end date.
+                    periodEndDate = biannualDates.getFirst().plusYears(1).with(TemporalAdjusters.lastDayOfMonth()).plusDays(1);
                 }
             break;
             case ANNUAL:
@@ -166,12 +173,27 @@ public final class SavingsHelper {
                 } else {
                     periodEndDate = periodStartDate.withMonth(financialYearBeginningMonth);
                 }
-                periodEndDate = periodEndDate.with(TemporalAdjusters.lastDayOfMonth());
+                // interest posting always occurs on the next day after the period end date.
+                periodEndDate = periodEndDate.with(TemporalAdjusters.lastDayOfMonth()).plusDays(1);
+            break;
+            case ANNIVERSARY_MONTHLY:
+                periodEndDate = adjustToAnniversaryDay(periodStartDate.plusMonths(1), anniversaryDayOfMonth);
+            break;
+            case ANNIVERSARY_QUARTERLY:
+                periodEndDate = adjustToAnniversaryDay(periodStartDate.plusMonths(3), anniversaryDayOfMonth);
+            break;
+            case ANNIVERSARY_BIANNUAL:
+                periodEndDate = adjustToAnniversaryDay(periodStartDate.plusMonths(6), anniversaryDayOfMonth);
+            break;
+            case ANNIVERSARY_ANNUAL:
+                periodEndDate = adjustToAnniversaryDay(periodStartDate.plusMonths(12), anniversaryDayOfMonth);
             break;
         }
-        // interest posting always occurs on next day after the period end date.
-        periodEndDate = periodEndDate.plusDays(1);
         return periodEndDate;
+    }
+
+    private LocalDate adjustToAnniversaryDay(final LocalDate date, final int anniversaryDay) {
+        return date.withDayOfMonth(Math.min(anniversaryDay, date.lengthOfMonth()));
     }
 
     public Money calculateInterestForAllPostingPeriods(final MonetaryCurrency currency, final List<PostingPeriod> allPeriods,

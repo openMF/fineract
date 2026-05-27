@@ -23,14 +23,12 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.LocalDate;
 import java.util.List;
 import org.apache.fineract.infrastructure.core.jersey.converter.LocalDateJsonConverter;
 import org.apache.fineract.infrastructure.core.jersey.serializer.legacy.JacksonLocalDateArraySerializer;
 import org.apache.fineract.infrastructure.core.jersey.serializer.legacy.JsonLocalDateArrayFormat;
 
-@SuppressFBWarnings({ "SE_BAD_FIELD", "SE_BAD_FIELD_STORE" })
 public class JacksonLocalDateBeanSerializerModifier extends BeanSerializerModifier {
 
     private final JsonSerializer<?> localDateSerializer = new JacksonSerializerAdapter<>(new LocalDateJsonConverter());

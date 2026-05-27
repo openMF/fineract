@@ -21,7 +21,6 @@ package org.apache.fineract.infrastructure.contentstore.service;
 import static java.util.Objects.requireNonNull;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -30,7 +29,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.contentstore.data.ContentStoreType;
 import org.apache.fineract.infrastructure.contentstore.detector.ContentDetectorContext;
@@ -95,8 +93,8 @@ public class FileContentStoreService implements ContentStoreService {
 
         final var target = Files.exists(getPath(safePath, false)) ? getPath(safePath, false) : getPath(safePath, true);
 
-        try (var in = is) {
-            IOUtils.copy(in, new FileOutputStream(target.toString()));
+        try (var in = is; var out = Files.newOutputStream(target)) {
+            in.transferTo(out);
         } catch (Exception e) {
             throw new ContentStoreException(e);
         }

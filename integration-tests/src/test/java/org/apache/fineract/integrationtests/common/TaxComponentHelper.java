@@ -18,72 +18,21 @@
  */
 package org.apache.fineract.integrationtests.common;
 
-import com.google.gson.Gson;
-import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
-import java.util.HashMap;
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
+
 import org.apache.fineract.client.models.GetTaxesComponentsResponse;
 import org.apache.fineract.client.models.PostTaxesComponentsRequest;
 import org.apache.fineract.client.models.PostTaxesComponentsResponse;
-import org.apache.fineract.client.util.Calls;
-import org.apache.fineract.integrationtests.common.accounting.Account;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class TaxComponentHelper {
 
-    private TaxComponentHelper() {
-
-    }
-
-    private static final Logger LOG = LoggerFactory.getLogger(TaxComponentHelper.class);
-    private static final String CREATE_TAX_COMPONENT_URL = "/fineract-provider/api/v1/taxes/component?" + Utils.TENANT_IDENTIFIER;
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static Integer createTaxComponent(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
-            final String percentage, final Integer liabilityAccountId) {
-        LOG.info("---------------------------------CREATING A TAX COMPONENT---------------------------------------------");
-        return Utils.performServerPost(requestSpec, responseSpec, CREATE_TAX_COMPONENT_URL,
-                getTaxComponentAsJSON(percentage, liabilityAccountId), "resourceId");
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static String getTaxComponentAsJSON(final String percentage, final Integer creditAccountId) {
-        final HashMap<String, String> map = getBasicTaxComponentMap(percentage);
-        if (creditAccountId != null) {
-            map.put("creditAccountType", Account.AccountType.LIABILITY.toString());
-            map.put("creditAccountId", String.valueOf(creditAccountId));
-        }
-        LOG.info("map :  {}", map);
-        return new Gson().toJson(map);
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static HashMap<String, String> getBasicTaxComponentMap(final String percentage) {
-        final HashMap<String, String> map = new HashMap<>();
-        map.put("name", Utils.randomStringGenerator("Tax_component_Name_", 5));
-        map.put("dateFormat", "dd MMMM yyyy");
-        map.put("locale", "en");
-        map.put("percentage", percentage);
-        map.put("startDate", "01 January 2013");
-        return map;
-    }
+    private TaxComponentHelper() {}
 
     public static PostTaxesComponentsResponse createTaxComponent(PostTaxesComponentsRequest request) {
-        return Calls.ok(FineractClientHelper.getFineractClient().taxComponents.createTaxComponent(request));
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().taxComponents().createTaxComponent(request));
     }
 
     public static GetTaxesComponentsResponse retrieveTaxComponent(Long taxComponentId) {
-        return Calls.ok(FineractClientHelper.getFineractClient().taxComponents.retrieveOneTaxComponent(taxComponentId));
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().taxComponents().retrieveOneTaxComponent(taxComponentId));
     }
-
 }

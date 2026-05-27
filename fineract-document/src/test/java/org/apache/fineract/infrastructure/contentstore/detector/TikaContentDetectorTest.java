@@ -25,12 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.github.romankh3.image.comparison.ImageComparison;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.fineract.infrastructure.TestConfiguration;
 import org.apache.fineract.infrastructure.contentstore.exception.ContentDetectorException;
 import org.junit.jupiter.api.Test;
@@ -97,10 +95,12 @@ class TikaContentDetectorTest {
 
         assertEquals("image/png", ctx.getMimeType());
 
-        IOUtils.copy(ctx.getInputStream(), new FileOutputStream("build/test.png"));
+        try (var out = Files.newOutputStream(java.nio.file.Path.of("build/test.png"))) {
+            ctx.getInputStream().transferTo(out);
+        }
 
         try (var expectedIs = TikaContentDetectorTest.class.getClassLoader().getResourceAsStream("test.png");
-                var actualIs = new FileInputStream("build/test.png")) {
+                var actualIs = Files.newInputStream(java.nio.file.Path.of("build/test.png"))) {
             requireNonNull(expectedIs);
 
             var expectedImage = ImageIO.read(expectedIs);
@@ -125,8 +125,8 @@ class TikaContentDetectorTest {
     }
 
     private void write(ContentDetectorContext ctx) {
-        try (var is = ctx.getInputStream()) {
-            IOUtils.copy(is, new FileOutputStream("build/detector" + ctx.getExtension()));
+        try (var is = ctx.getInputStream(); var out = Files.newOutputStream(java.nio.file.Path.of("build/detector" + ctx.getExtension()))) {
+            is.transferTo(out);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

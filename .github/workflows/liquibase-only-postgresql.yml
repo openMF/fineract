@@ -19,7 +19,7 @@ jobs:
         env:
           POSTGRES_USER: root
           POSTGRES_PASSWORD: postgres
-        options: --health-cmd="pg_isready -q -d postgres -U root" --health-interval=5s --health-timeout=2s --health-retries=3
+        options: --health-cmd="pg_isready -q -d postgres -U root" --health-interval=5s --health-timeout=2s --health-retries=12
 
     env:
       TZ: Asia/Kolkata

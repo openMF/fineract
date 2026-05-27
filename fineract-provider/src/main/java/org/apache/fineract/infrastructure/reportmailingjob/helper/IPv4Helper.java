@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This utility provides methods to either convert an IPv4 address to its long format or a 32bit dotted format.
  *
- * @see http://hawkee.com/snippet/9731/
+ * @see <a href="http://hawkee.com/snippet/9731/">hawkee snippet</a>
  */
 public final class IPv4Helper {
 

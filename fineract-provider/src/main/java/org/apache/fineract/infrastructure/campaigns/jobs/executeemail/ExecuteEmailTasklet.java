@@ -22,8 +22,9 @@ import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -208,19 +209,20 @@ public class ExecuteEmailTasklet implements Tasklet {
         try {
             final ByteArrayOutputStream byteArrayOutputStream = readReportingService.generatePentahoReportAsOutputStream(reportName,
                     emailAttachmentFileFormat.getValue(), reportParams, null, emailCampaign.getApprovedBy(), errorLog);
-            final String fileLocation = fineractProperties.getContent().getFilesystem().getRootFolder() + File.separator + "";
-            final String fileNameWithoutExtension = fileLocation + File.separator + reportName;
-            if (!new File(fileLocation).isDirectory()) {
-                new File(fileLocation).mkdirs();
+            final Path fileLocation = Path.of(fineractProperties.getContent().getFilesystem().getRootFolder());
+            final Path fileNameWithoutExtension = fileLocation.resolve(reportName);
+            if (!Files.isDirectory(fileLocation)) {
+                Files.createDirectories(fileLocation);
             }
             if (byteArrayOutputStream.size() == 0) {
                 errorLog.append("Pentaho report processing failed, empty output stream created");
             } else if (errorLog.length() == 0 && (byteArrayOutputStream.size() > 0)) {
-                final String fileName = fileNameWithoutExtension + "." + emailAttachmentFileFormat.getValue();
+                final Path fileName = fileNameWithoutExtension.resolveSibling(reportName + "." + emailAttachmentFileFormat.getValue());
 
-                final File file = new File(fileName);
-                final FileOutputStream outputStream = new FileOutputStream(file);
-                byteArrayOutputStream.writeTo(outputStream);
+                final File file = fileName.toFile();
+                try (var outputStream = Files.newOutputStream(fileName)) {
+                    byteArrayOutputStream.writeTo(outputStream);
+                }
                 return file;
             }
         } catch (IOException | PlatformDataIntegrityException e) {

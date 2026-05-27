@@ -28,6 +28,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
+import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanTransactionEnumData;
 import org.apache.fineract.portfolio.paymentdetail.data.PaymentDetailData;
 
@@ -40,6 +41,7 @@ public class WorkingCapitalLoanTransactionData implements Serializable {
 
     private Long id;
     private Long wcLoanId;
+    private CurrencyData currency;
     private LoanTransactionEnumData type;
     private LocalDate transactionDate;
     private LocalDate submittedOnDate;

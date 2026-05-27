@@ -22,11 +22,12 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
+import java.io.Serializable;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.core.jersey.converter.JsonConverter;
 
 @RequiredArgsConstructor
-public class JacksonSerializerAdapter<T> extends JsonSerializer<T> {
+public class JacksonSerializerAdapter<T> extends JsonSerializer<T> implements Serializable {
 
     private final JsonConverter<T> converter;
 

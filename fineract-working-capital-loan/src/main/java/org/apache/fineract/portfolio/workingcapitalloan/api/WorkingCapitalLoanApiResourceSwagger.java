@@ -197,6 +197,14 @@ public final class WorkingCapitalLoanApiResourceSwagger {
         public BigDecimal discountProposed;
         @Schema(example = "0.0", description = "Approved discount set during loan approval")
         public BigDecimal discountApproved;
+        @Schema(example = "90", description = "Loan term in days (originalPaymentNumber from amortization schedule); null if schedule not yet generated")
+        public Integer totalNoPayments;
+        @Schema(example = "116.67", description = "Daily expected payment amount from the amortization schedule; null if schedule not yet generated")
+        public BigDecimal periodPaymentAmount;
+        @Schema(example = "0.000435", description = "Periodic (daily) effective interest rate computed via RATE(); null if schedule not yet generated")
+        public BigDecimal dailyEir;
+        @Schema(example = "0.1691", description = "Annualized EIR: (1 + dailyEir)^365 − 1; null if schedule not yet generated")
+        public BigDecimal calculatedAnnualEir;
         @Schema(description = "Working capital breach)")
         public WorkingCapitalLoanProductApiResourceSwagger.GetWorkingCapitalLoanProductsResponse.GetWorkingCapitalLoanBreach breach;
         public WorkingCapitalLoanProductApiResourceSwagger.GetWorkingCapitalLoanNearBreach nearBreach;

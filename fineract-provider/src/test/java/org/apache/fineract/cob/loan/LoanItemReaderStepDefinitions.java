@@ -26,7 +26,6 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 
 import com.google.common.base.Splitter;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.cucumber.java8.En;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -51,7 +50,6 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
 
-@SuppressFBWarnings(value = "RV_EXCEPTION_NOT_THROWN", justification = "False positive")
 public class LoanItemReaderStepDefinitions implements En {
 
     private LoanRepository loanRepository = mock(LoanRepository.class);

@@ -61,7 +61,7 @@ class ImagesApiIntegrationTest {
         config = FineractFeignClientConfig.builder().baseUrl("http://localhost:" + wireMockServer.port()).credentials("test", "test")
                 .connectTimeout(5, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build();
 
-        testImageFile = new File(tempDir, "test-image.jpg");
+        testImageFile = tempDir.toPath().resolve("test-image.jpg").toFile();
         Files.write(testImageFile.toPath(), new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x01, 0x02, 0x03 });
     }
 

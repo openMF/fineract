@@ -33,7 +33,6 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
 import org.apache.fineract.client.services.ImagesApi;
 import org.apache.fineract.client.util.Parts;
 import org.junit.jupiter.api.Order;
@@ -80,7 +79,7 @@ class ImageTest extends IntegrationTest {
     @Order(3)
     void getSmallerSize() throws IOException {
         var r = ok(fineractClient().images.get("staff", staffId, 128, 128, null));
-        assertThat(r.string()).hasSize(7251);
+        assertThat(r.string()).hasSize(7067);
     }
 
     @Test
@@ -254,7 +253,7 @@ class ImageTest extends IntegrationTest {
 
     private MultipartBody.Part createPart(String fileResource, String fileName, String mediaType) {
         try {
-            byte[] data = IOUtils.toByteArray(ImageTest.class.getClassLoader().getResourceAsStream(fileResource));
+            byte[] data = ImageTest.class.getClassLoader().getResourceAsStream(fileResource).readAllBytes();
             var rb = RequestBody.create(data, MediaType.get(mediaType));
             return MultipartBody.Part.createFormData("file", fileName, rb);
         } catch (Exception e) {

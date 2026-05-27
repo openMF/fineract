@@ -355,8 +355,13 @@ public class LoanTransaction extends AbstractAuditableWithUTCDateTimeCustom<Long
 
     public static LoanTransaction buyDownFeeAdjustment(final Loan loan, final Money amount, final PaymentDetail paymentDetail,
             final LocalDate transactionDate, final ExternalId externalId) {
-        return new LoanTransaction(loan, loan.getOffice(), LoanTransactionType.BUY_DOWN_FEE_ADJUSTMENT, transactionDate, amount.getAmount(),
-                null, null, null, null, null, false, paymentDetail, externalId);
+        final BigDecimal buyDownFeeAdjustmentAmount = amount.getAmount();
+        return switch (loan.getLoanProductRelatedDetail().getBuyDownFeeIncomeType()) {
+            case FEE -> new LoanTransaction(loan, loan.getOffice(), LoanTransactionType.BUY_DOWN_FEE_ADJUSTMENT, transactionDate,
+                    buyDownFeeAdjustmentAmount, null, null, buyDownFeeAdjustmentAmount, null, null, false, paymentDetail, externalId);
+            case INTEREST -> new LoanTransaction(loan, loan.getOffice(), LoanTransactionType.BUY_DOWN_FEE_ADJUSTMENT, transactionDate,
+                    buyDownFeeAdjustmentAmount, null, buyDownFeeAdjustmentAmount, null, null, null, false, paymentDetail, externalId);
+        };
     }
 
     public static LoanTransaction capitalizedIncomeAmortizationAdjustment(final Loan loan, final Money amount,
@@ -1040,8 +1045,13 @@ public class LoanTransaction extends AbstractAuditableWithUTCDateTimeCustom<Long
 
     public static LoanTransaction buyDownFee(final Loan loan, final Money amount, final PaymentDetail paymentDetail,
             final LocalDate transactionDate, final ExternalId externalId) {
-        return new LoanTransaction(loan, loan.getOffice(), LoanTransactionType.BUY_DOWN_FEE, paymentDetail, amount.getAmount(),
-                transactionDate, externalId);
+        final BigDecimal buyDownFeeAmount = amount.getAmount();
+        return switch (loan.getLoanProductRelatedDetail().getBuyDownFeeIncomeType()) {
+            case FEE -> new LoanTransaction(loan, loan.getOffice(), LoanTransactionType.BUY_DOWN_FEE, transactionDate, buyDownFeeAmount,
+                    null, null, buyDownFeeAmount, null, null, false, paymentDetail, externalId);
+            case INTEREST -> new LoanTransaction(loan, loan.getOffice(), LoanTransactionType.BUY_DOWN_FEE, transactionDate,
+                    buyDownFeeAmount, null, buyDownFeeAmount, null, null, null, false, paymentDetail, externalId);
+        };
     }
 
     public boolean isBuyDownFee() {

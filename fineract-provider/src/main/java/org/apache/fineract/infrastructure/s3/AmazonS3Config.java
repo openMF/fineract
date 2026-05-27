@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
 import software.amazon.awssdk.regions.providers.AwsRegionProvider;
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -50,7 +51,8 @@ public class AmazonS3Config {
     @Bean("s3Client")
     public S3Client s3Client(DefaultCredentialsProvider awsCredentialsProvider, AwsRegionProvider awsRegionProvider,
             List<S3ClientCustomizer> customizers) {
-        S3ClientBuilder builder = S3Client.builder().credentialsProvider(awsCredentialsProvider).region(awsRegionProvider.getRegion());
+        S3ClientBuilder builder = S3Client.builder().credentialsProvider(awsCredentialsProvider).region(awsRegionProvider.getRegion())
+                .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED);
         customizers.forEach(customizer -> customizer.customize(builder));
         return builder.build();
     }

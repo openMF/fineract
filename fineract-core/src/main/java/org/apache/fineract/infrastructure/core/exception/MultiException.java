@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  * </p>
  * .
  *
- * @author Michael Vorburger.ch <mike@vorburger.ch>
+ * @author Michael Vorburger.ch (mike at vorburger.ch)
  */
 @Slf4j
 public class MultiException extends Exception {

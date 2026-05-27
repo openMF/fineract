@@ -26,7 +26,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import com.google.common.base.Splitter;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.cucumber.java8.En;
 import java.util.Collections;
 import java.util.List;
@@ -48,7 +47,6 @@ import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 
-@SuppressFBWarnings(value = "RV_EXCEPTION_NOT_THROWN", justification = "False positive")
 public class COBBusinessStepServiceStepDefinitions implements En {
 
     private ApplicationContext applicationContext = mock(ApplicationContext.class);
@@ -72,7 +70,6 @@ public class COBBusinessStepServiceStepDefinitions implements En {
     private BatchBusinessStep batchBusinessStep = mock(BatchBusinessStep.class);
     private Set<BusinessStepNameAndOrder> resultSet;
 
-    @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW")
     public COBBusinessStepServiceStepDefinitions() throws Exception {
         businessStepService = new COBBusinessStepServiceImpl(batchBusinessStepRepository, applicationContext, beanFactory,
                 businessEventNotifierService, configurationDomainService, reloaderService);

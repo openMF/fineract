@@ -31,7 +31,7 @@ import lombok.Getter;
  * instead of manually assembling SQL queries, then SqlValidator should not be required anymore. (Correctly using this
  * means only ever passing completely fixed String literals to .)
  *
- * @author Michael Vorburger <mike@vorburger.ch>
+ * @author Michael Vorburger (mike at vorburger.ch)
  */
 public class SQLBuilder {
 

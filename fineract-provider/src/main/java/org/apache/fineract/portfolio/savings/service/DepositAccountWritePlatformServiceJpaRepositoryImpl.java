@@ -208,8 +208,8 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 depositAccountOnHoldTransactions = this.depositAccountOnHoldTransactionRepository
                         .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
             }
-            account.validateAccountBalanceDoesNotBecomeNegative(SavingsAccountTransactionType.PAY_CHARGE.name(),
-                    depositAccountOnHoldTransactions, false);
+            account.validateAccountBalanceConstraints(SavingsAccountTransactionType.PAY_CHARGE.name(), depositAccountOnHoldTransactions,
+                    false);
             this.savingAccountRepositoryWrapper.saveAndFlush(account);
         }
         postJournalEntries(account, existingTransactionIds, existingReversedTransactionIds);
@@ -326,8 +326,8 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                         .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
             }
 
-            account.validateAccountBalanceDoesNotBecomeNegative(SavingsAccountTransactionType.PAY_CHARGE.name(),
-                    depositAccountOnHoldTransactions, false);
+            account.validateAccountBalanceConstraints(SavingsAccountTransactionType.PAY_CHARGE.name(), depositAccountOnHoldTransactions,
+                    false);
 
             this.savingAccountRepositoryWrapper.saveAndFlush(account);
         }
@@ -599,8 +599,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
 
-        account.validateAccountBalanceDoesNotBecomeNegative(SavingsApiConstants.undoTransactionAction, depositAccountOnHoldTransactions,
-                false);
+        account.validateAccountBalanceConstraints(SavingsApiConstants.undoTransactionAction, depositAccountOnHoldTransactions, false);
         final boolean isPreMatureClosure = false;
         account.updateMaturityDateAndAmount(mc, isPreMatureClosure, isSavingsInterestPostingAtCurrentPeriodEnd,
                 financialYearBeginningMonth);
@@ -664,8 +663,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
 
-        account.validateAccountBalanceDoesNotBecomeNegative(SavingsApiConstants.undoTransactionAction, depositAccountOnHoldTransactions,
-                false);
+        account.validateAccountBalanceConstraints(SavingsApiConstants.undoTransactionAction, depositAccountOnHoldTransactions, false);
         // account.activateAccountBasedOnBalance();
         final boolean isPreMatureClosure = false;
         account.updateMaturityDateAndAmount(mc, isPreMatureClosure, isSavingsInterestPostingAtCurrentPeriodEnd,
@@ -770,8 +768,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
             depositAccountOnHoldTransactions = this.depositAccountOnHoldTransactionRepository
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
-        account.validateAccountBalanceDoesNotBecomeNegative(SavingsApiConstants.adjustTransactionAction, depositAccountOnHoldTransactions,
-                false);
+        account.validateAccountBalanceConstraints(SavingsApiConstants.adjustTransactionAction, depositAccountOnHoldTransactions, false);
         final boolean isPreMatureClosure = false;
         account.updateMaturityDateAndAmount(mc, isPreMatureClosure, isSavingsInterestPostingAtCurrentPeriodEnd,
                 financialYearBeginningMonth);
@@ -866,8 +863,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
 
-        account.validateAccountBalanceDoesNotBecomeNegative(SavingsApiConstants.adjustTransactionAction, depositAccountOnHoldTransactions,
-                false);
+        account.validateAccountBalanceConstraints(SavingsApiConstants.adjustTransactionAction, depositAccountOnHoldTransactions, false);
         account.activateAccountBasedOnBalance();
 
         if (savingsAccountTransaction.isDeposit()) {
@@ -1319,8 +1315,8 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
 
-        account.validateAccountBalanceDoesNotBecomeNegative(SavingsApiConstants.waiveChargeTransactionAction,
-                depositAccountOnHoldTransactions, false);
+        account.validateAccountBalanceConstraints(SavingsApiConstants.waiveChargeTransactionAction, depositAccountOnHoldTransactions,
+                false);
 
         this.savingAccountRepositoryWrapper.saveAndFlush(account);
 
@@ -1457,7 +1453,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
 
-        account.validateAccountBalanceDoesNotBecomeNegative("." + SavingsAccountTransactionType.PAY_CHARGE.getCode(),
+        account.validateAccountBalanceConstraints("." + SavingsAccountTransactionType.PAY_CHARGE.getCode(),
                 depositAccountOnHoldTransactions, false);
 
         this.savingAccountRepositoryWrapper.saveAndFlush(account);

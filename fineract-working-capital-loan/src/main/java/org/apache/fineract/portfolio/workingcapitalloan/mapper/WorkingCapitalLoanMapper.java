@@ -49,12 +49,13 @@ import org.mapstruct.factory.Mappers;
 
 @Mapper(config = MapstructMapperConfig.class, uses = { DelinquencyBucketMapper.class, WorkingCapitalLoanProductMapper.class,
         WorkingCapitalLoanBalanceMapper.class, WorkingCapitalLoanDisbursementDetailMapper.class, WorkingCapitalLoanTransactionMapper.class,
-        WorkingCapitalBreachMapper.class, WorkingCapitalNearBreachMapper.class })
+        WorkingCapitalBreachMapper.class, WorkingCapitalNearBreachMapper.class, WorkingCapitalLoanSummaryDataMapper.class })
 public interface WorkingCapitalLoanMapper {
 
     @Mapping(target = "accountNo", source = "accountNumber")
     @Mapping(target = "client", source = "client", qualifiedByName = "clientToData")
     @Mapping(target = "officeId", source = "client.office.id")
+    @Mapping(target = "officeName", source = "client.office.name")
     @Mapping(target = "fundId", source = "fund.id")
     @Mapping(target = "fundName", source = "fund.name")
     @Mapping(target = "product", source = "loanProduct")
@@ -77,6 +78,11 @@ public interface WorkingCapitalLoanMapper {
     @Mapping(target = "delinquencyGraceDays", source = "loanProductRelatedDetails.delinquencyGraceDays")
     @Mapping(target = "delinquencyStartType", source = "loanProductRelatedDetails", qualifiedByName = "delinquencyStartTypeData")
     @Mapping(target = "collectionData", ignore = true)
+    @Mapping(target = "totalNoPayments", ignore = true)
+    @Mapping(target = "periodPaymentAmount", ignore = true)
+    @Mapping(target = "dailyEir", ignore = true)
+    @Mapping(target = "calculatedAnnualEir", ignore = true)
+    @Mapping(target = "summary", source = ".", qualifiedByName = "toSummaryData")
     WorkingCapitalLoanData toData(WorkingCapitalLoan loan);
 
     List<WorkingCapitalLoanData> toDataList(List<WorkingCapitalLoan> loans);

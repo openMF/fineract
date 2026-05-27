@@ -21,12 +21,14 @@ package org.apache.fineract.portfolio.workingcapitalloan.mapper;
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
 import org.apache.fineract.infrastructure.core.config.MapstructMapperConfig;
+import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanTransactionEnumData;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.apache.fineract.portfolio.loanproduct.service.LoanEnumerations;
 import org.apache.fineract.portfolio.paymentdetail.data.PaymentDetailData;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanTransactionData;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransaction;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -43,6 +45,7 @@ public interface WorkingCapitalLoanTransactionMapper {
     @Mapping(target = "principalPortion", source = "allocation.principalPortion")
     @Mapping(target = "feeChargesPortion", source = "allocation.feeChargesPortion")
     @Mapping(target = "penaltyChargesPortion", source = "allocation.penaltyChargesPortion")
+    @Mapping(target = "currency", source = "wcLoan", qualifiedByName = "currencyData")
     WorkingCapitalLoanTransactionData toData(WorkingCapitalLoanTransaction transaction);
 
     @Named("loanTransactionTypeToEnumData")
@@ -63,5 +66,10 @@ public interface WorkingCapitalLoanTransactionMapper {
     @Named("codeValueToData")
     default CodeValueData codeValueToData(final CodeValue codeValue) {
         return codeValue == null ? null : CodeValueData.instance(codeValue.getId(), codeValue.getLabel());
+    }
+
+    @Named("currencyData")
+    default CurrencyData currencyData(final WorkingCapitalLoan wcLoan) {
+        return wcLoan.getLoanProduct().getCurrency().toData();
     }
 }

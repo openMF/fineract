@@ -27,17 +27,17 @@ apply from: 'dependencies.gradle'
 openApiMeta {
     generatorName = 'Fineract'
     packageName = 'org.apache.fineract.client'
-    outputFolder = "$buildDir/meta".toString()
+    outputFolder = file("$buildDir/meta")
     // trick to make sure fineract.json is generated first
 }
 
 openApiValidate {
-    inputSpec = "file:///$swaggerFile"
+    inputSpec = file(swaggerFile)
     recommend = true
 }
 
 openApiGenerate {
-    outputDir = "$buildDir/generated/temp-java".toString()
+    outputDir = file("$buildDir/generated/temp-java")
 }
 
 idea {
@@ -62,9 +62,9 @@ task buildJavaSdk(type: org.openapitools.generator.gradle.plugin.tasks.GenerateT
     verbose = false
     validateSpec = false
     skipValidateSpec = true
-    inputSpec = "file:///$swaggerFile"
-    outputDir = "$buildDir/generated/temp-java".toString()
-    templateDir = "$projectDir/src/main/resources/templates/java"
+    inputSpec = file(swaggerFile)
+    outputDir = file("$buildDir/generated/temp-java")
+    templateDir = file("$projectDir/src/main/resources/templates/java")
     groupId = 'org.apache.fineract'
     apiPackage = 'org.apache.fineract.client.services'
     invokerPackage = 'org.apache.fineract.client'
@@ -79,7 +79,7 @@ task buildJavaSdk(type: org.openapitools.generator.gradle.plugin.tasks.GenerateT
     ]
     generateModelTests = false
     generateApiTests = false
-    ignoreFileOverride = "$projectDir/.openapi-generator-ignore"
+    ignoreFileOverride = file("$projectDir/.openapi-generator-ignore")
     dependsOn(':fineract-provider:resolve')
 }
 
@@ -88,8 +88,8 @@ task buildTypescriptAngularSdk(type: org.openapitools.generator.gradle.plugin.ta
     verbose = false
     validateSpec = false
     skipValidateSpec = true
-    inputSpec = "file:///$swaggerFile"
-    outputDir = "$buildDir/generated/typescript".toString()
+    inputSpec = file(swaggerFile)
+    outputDir = file("$buildDir/generated/typescript")
     apiPackage = 'apache-fineract-client/services'
     invokerPackage = 'apache-fineract-client/invoker'
     modelPackage = 'apache-fineract-client/models'
@@ -108,8 +108,8 @@ task buildTypescriptFetchSdk(type: org.openapitools.generator.gradle.plugin.task
     verbose = false
     validateSpec = false
     skipValidateSpec = true
-    inputSpec = "file:///$swaggerFile"
-    outputDir = "$buildDir/generated/typescript-fetch".toString()
+    inputSpec = file(swaggerFile)
+    outputDir = file("$buildDir/generated/typescript-fetch")
     configOptions = [
         npmName: '@apache/fineract-client-fetch',
         npmVersion: '1.12.0-SNAPSHOT',
@@ -125,8 +125,8 @@ task buildAsciidoc(type: org.openapitools.generator.gradle.plugin.tasks.Generate
     verbose = false
     validateSpec = false
     skipValidateSpec = true
-    inputSpec = "file:///$swaggerFile"
-    outputDir = "$buildDir/generated/asciidoc".toString()
+    inputSpec = file(swaggerFile)
+    outputDir = file("$buildDir/generated/asciidoc")
     apiPackage = 'org.apache.fineract.client.services'
     invokerPackage = 'org.apache.fineract.client'
     modelPackage = 'org.apache.fineract.client.models'

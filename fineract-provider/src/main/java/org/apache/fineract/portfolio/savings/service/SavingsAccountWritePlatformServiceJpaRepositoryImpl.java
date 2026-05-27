@@ -259,8 +259,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
 
-        account.validateAccountBalanceDoesNotBecomeNegative(SavingsAccountTransactionType.PAY_CHARGE.name(),
-                depositAccountOnHoldTransactions, false);
+        account.validateAccountBalanceConstraints(SavingsAccountTransactionType.PAY_CHARGE.name(), depositAccountOnHoldTransactions, false);
     }
 
     @Transactional
@@ -845,8 +844,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
             depositAccountOnHoldTransactions = this.depositAccountOnHoldTransactionRepository
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
-        account.validateAccountBalanceDoesNotBecomeNegative(SavingsApiConstants.undoTransactionAction, depositAccountOnHoldTransactions,
-                false);
+        account.validateAccountBalanceConstraints(SavingsApiConstants.undoTransactionAction, depositAccountOnHoldTransactions, false);
         account.activateAccountBasedOnBalance();
         this.savingAccountRepositoryWrapper.saveAndFlush(account);
         postJournalEntries(account, existingTransactionIds, existingReversedTransactionIds, false);
@@ -949,8 +947,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
 
-        account.validateAccountBalanceDoesNotBecomeNegative(SavingsApiConstants.adjustTransactionAction, depositAccountOnHoldTransactions,
-                false);
+        account.validateAccountBalanceConstraints(SavingsApiConstants.adjustTransactionAction, depositAccountOnHoldTransactions, false);
         account.activateAccountBasedOnBalance();
 
         this.savingAccountRepositoryWrapper.saveAndFlush(account);
@@ -1381,8 +1378,8 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
 
-        account.validateAccountBalanceDoesNotBecomeNegative(SavingsApiConstants.waiveChargeTransactionAction,
-                depositAccountOnHoldTransactions, backdatedTxnsAllowedTill);
+        account.validateAccountBalanceConstraints(SavingsApiConstants.waiveChargeTransactionAction, depositAccountOnHoldTransactions,
+                backdatedTxnsAllowedTill);
 
         if (backdatedTxnsAllowedTill) {
             this.savingsAccountTransactionRepository.saveAll(account.getSavingsAccountTransactionsWithPivotConfig());
@@ -1546,7 +1543,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
 
-        account.validateAccountBalanceDoesNotBecomeNegative("." + SavingsAccountTransactionType.PAY_CHARGE.getCode(),
+        account.validateAccountBalanceConstraints("." + SavingsAccountTransactionType.PAY_CHARGE.getCode(),
                 depositAccountOnHoldTransactions, backdatedTxnsAllowedTill);
 
         saveTransactionToGenerateTransactionId(chargeTransaction);

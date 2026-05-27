@@ -262,7 +262,7 @@ public class ShareAccountReadPlatformServiceImpl implements ShareAccountReadPlat
                 left join m_appuser sbu on sbu.id = sa.submitted_userid
                 left join m_appuser rbu on rbu.id = sa.rejected_userid
                 left join m_appuser abu on abu.id = sa.approved_userid
-                left join m_appuser avbu on rbu.id = sa.activated_userid
+                left join m_appuser avbu on avbu.id = sa.activated_userid
                 left join m_appuser cbu on cbu.id = sa.closed_userid
                 left join m_savings_account msa on sa.savings_account_id = msa.id\s""";
 

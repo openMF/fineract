@@ -1,0 +1,113 @@
+= Savings Interest Posting
+
+== Overview
+
+Apache Fineract supports several *interest posting period types* for savings and fixed-deposit accounts.
+The period type determines the calendar interval at the end of which accrued interest is credited (posted) to the account.
+
+=== Standard Posting Period Types
+
+[cols="1,1,3", options="header"]
+|===
+|Code |Name |Description
+
+|1 |Daily |Interest is posted every day.
+|4 |Monthly |Interest is posted on the first day of each calendar month.
+|5 |Quarterly |Interest is posted on the first day of each calendar quarter, aligned to the configured financial-year beginning month.
+|6 |Bi-Annual |Interest is posted twice a year, aligned to the configured financial-year beginning month.
+|7 |Annual |Interest is posted once a year on the first day of the month that begins the configured financial year.
+|===
+
+=== Anniversary-Based Posting Period Types
+
+Anniversary posting periods differ from standard ones in that the posting schedule is anchored to the *day of the month on which the account was activated*, rather than to a fixed calendar boundary (e.g., end of month or end of quarter).
+
+[cols="1,1,3", options="header"]
+|===
+|Code |Name |Description
+
+|8 |Anniversary Monthly |Interest is posted every month on the same day-of-month as the account activation date.
+|9 |Anniversary Quarterly |Interest is posted every three months on the same day-of-month as the account activation date.
+|10 |Anniversary Bi-Annual |Interest is posted every six months on the same day-of-month as the account activation date.
+|11 |Anniversary Annual |Interest is posted every twelve months on the same day-of-month as the account activation date.
+|===
+
+== How Anniversary Posting Works
+
+For all anniversary period types:
+
+* The *anchor day* is the day-of-month of the account's activation (start interest calculation) date.
+* Each subsequent posting date is computed by adding the configured interval (1, 3, 6, or 12 months) to the start of the current period and adjusting the result to the anchor day.
+* If the target month has fewer days than the anchor day, the posting date is adjusted to the *last day of that month*.
+
+=== Posting Date Examples
+
+**Account opened on January 15 — Anniversary Monthly**
+
+[cols="1,1,1", options="header"]
+|===
+|Period Start |Period End |Posting Date
+
+|Jan 15 |Feb 14 |Feb 15
+|Feb 15 |Mar 14 |Mar 15
+|Mar 15 |Apr 14 |Apr 15
+|===
+
+**Account opened on January 31 — Anniversary Monthly (short-month adjustment)**
+
+[cols="1,1,1", options="header"]
+|===
+|Period Start |Period End |Posting Date
+
+|Jan 31 |Feb 27 |Feb 28 _(last day of Feb)_
+|Feb 28 |Mar 30 |Mar 31
+|Mar 31 |Apr 29 |Apr 30 _(last day of Apr)_
+|Apr 30 |May 30 |May 31
+|===
+
+**Account opened on February 29 (leap year) — Anniversary Annual**
+
+[cols="1,1,1", options="header"]
+|===
+|Period Start |Period End |Posting Date
+
+|Feb 29, 2024 |Feb 27, 2025 |Feb 28, 2025 _(2025 is not a leap year)_
+|Feb 28, 2025 |Feb 27, 2026 |Feb 28, 2026
+|Feb 28, 2026 |Feb 27, 2027 |Feb 28, 2027
+|===
+
+== Configuration
+
+Anniversary posting period types are configured at the product level and apply to both *Savings Products* and *Fixed Deposit Products*.
+
+=== API — Create / Update Savings Product
+
+Pass the numeric code in the `interestPostingPeriodType` field:
+
+[source,json]
+----
+{
+  "interestPostingPeriodType": 8
+}
+----
+
+=== API — Create / Update Fixed Deposit Product
+
+The same `interestPostingPeriodType` field is used for fixed deposit products.
+
+[source,json]
+----
+{
+  "interestPostingPeriodType": 9
+}
+----
+
+[NOTE]
+====
+The financial-year beginning month (`financialYearBeginningMonth`) is not used for anniversary period types. Posting periods are determined solely by the account activation date.
+====
+
+== Behaviour at Period Boundaries
+
+* The last posting period of a calculation run may extend *beyond* the `interestPostingUpToDate`. Truncation to the actual balance date is handled downstream by `PostingPeriod`, not by the period-boundary calculation itself.
+* When a manual "post interest as on" date falls within a period, that period is split at the manual date, consistent with the behaviour of all other posting period types.

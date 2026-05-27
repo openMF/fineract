@@ -28,10 +28,9 @@ import static org.apache.fineract.infrastructure.contentstore.processor.ImageRes
 import static org.apache.fineract.infrastructure.contentstore.processor.SizeContentProcessor.SIZE_RESULT_VALUE;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
+import java.nio.file.Files;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.fineract.infrastructure.TestConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -161,8 +160,8 @@ class ContentProcessorTest {
     }
 
     private void write(ContentProcessorContext ctx, String fileName) {
-        try (var is = ctx.getInputStream()) {
-            IOUtils.copy(is, new FileOutputStream("build/" + fileName));
+        try (var is = ctx.getInputStream(); var out = Files.newOutputStream(java.nio.file.Path.of("build/" + fileName))) {
+            is.transferTo(out);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

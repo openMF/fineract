@@ -19,7 +19,6 @@
 package org.apache.fineract.infrastructure.contentstore.detector;
 
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -34,7 +33,7 @@ public final class FileContentDetector implements ContentDetector {
     @Override
     public ContentDetectorContext detect(ContentDetectorContext ctx) {
         try {
-            final var mimeType = Files.probeContentType(Paths.get(ctx.getFileName()));
+            final var mimeType = Files.probeContentType(java.nio.file.Path.of(ctx.getFileName()));
             final var format = FilenameUtils.getExtension(ctx.getFileName());
 
             return ctx.clone(mimeType, "." + format, format);

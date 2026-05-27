@@ -29,7 +29,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.fineract.infrastructure.bulkimport.data.BulkImportEvent;
 import org.apache.fineract.infrastructure.bulkimport.data.GlobalEntityType;
 import org.apache.fineract.infrastructure.bulkimport.data.ImportData;
@@ -75,7 +74,7 @@ public class BulkImportWorkbookServiceImpl implements BulkImportWorkbookService 
         try {
             if (entity != null && inputStream != null && fileDetail != null && locale != null && dateFormat != null) {
                 final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                IOUtils.copy(inputStream, baos);
+                inputStream.transferTo(baos);
                 final byte[] bytes = baos.toByteArray();
                 InputStream clonedInputStream = new ByteArrayInputStream(bytes);
                 final BufferedInputStream bis = new BufferedInputStream(new ByteArrayInputStream(bytes));

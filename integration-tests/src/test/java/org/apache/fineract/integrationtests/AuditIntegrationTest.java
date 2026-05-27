@@ -80,6 +80,21 @@ public class AuditIntegrationTest {
         assertNotNull(auditSearchTemplate);
         assertEquals(4, auditSearchTemplate.size()); // appUsers, actionNames, entityNames, processingResults
         assertTrue(((List) auditSearchTemplate.get("actionNames")).size() > 0);
+
+        // verify all command processing status enum values are present and use enum_value (not enum_message_property)
+        List<LinkedHashMap> statuses = (List<LinkedHashMap>) auditSearchTemplate.get("statuses");
+        assertNotNull(statuses);
+        assertEquals(6, statuses.size());
+
+        List<String> statusValues = statuses.stream().map(r -> (String) r.get("processingResult"))
+                .collect(java.util.stream.Collectors.toList());
+
+        assertTrue(statusValues.contains("Invalid"));
+        assertTrue(statusValues.contains("Processed"));
+        assertTrue(statusValues.contains("Awaiting Approval"));
+        assertTrue(statusValues.contains("Rejected"));
+        assertTrue(statusValues.contains("Under Processing"));
+        assertTrue(statusValues.contains("Error"));
     }
 
     /**

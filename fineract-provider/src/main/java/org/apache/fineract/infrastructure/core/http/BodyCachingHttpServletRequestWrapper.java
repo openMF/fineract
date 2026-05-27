@@ -20,7 +20,6 @@ package org.apache.fineract.infrastructure.core.http;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,17 +29,15 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import org.apache.commons.io.IOUtils;
 
-public class BodyCachingHttpServletRequestWrapper extends HttpServletRequestWrapper {
+public final class BodyCachingHttpServletRequestWrapper extends HttpServletRequestWrapper {
 
     private final byte[] cachedBody;
     private ByteArrayInputStream inputStream;
 
-    @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW")
     public BodyCachingHttpServletRequestWrapper(HttpServletRequest request) throws IOException {
         super(request);
-        this.cachedBody = IOUtils.toByteArray(request.getInputStream());
+        this.cachedBody = request.getInputStream().readAllBytes();
         this.inputStream = new ByteArrayInputStream(cachedBody);
     }
 

@@ -18,86 +18,26 @@
  */
 package org.apache.fineract.integrationtests.common;
 
-import com.google.gson.Gson;
-import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
+
 import java.util.List;
 import org.apache.fineract.client.models.GetTaxesGroupResponse;
 import org.apache.fineract.client.models.PostTaxesGroupRequest;
 import org.apache.fineract.client.models.PostTaxesGroupResponse;
-import org.apache.fineract.client.util.Calls;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class TaxGroupHelper {
 
-    private TaxGroupHelper() {
-
-    }
-
-    private static final Logger LOG = LoggerFactory.getLogger(TaxGroupHelper.class);
-    private static final String CREATE_TAX_COMPONENT_URL = "/fineract-provider/api/v1/taxes/group?" + Utils.TENANT_IDENTIFIER;
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static Integer createTaxGroup(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
-            final Collection<Integer> taxComponentIds) {
-        LOG.info("---------------------------------CREATING A TAX GROUP---------------------------------------------");
-        return Utils.performServerPost(requestSpec, responseSpec, CREATE_TAX_COMPONENT_URL, getTaxGroupAsJSON(taxComponentIds),
-                "resourceId");
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static String getTaxGroupAsJSON(final Collection<Integer> taxComponentIds) {
-        final HashMap<String, Object> map = new HashMap<>();
-        map.put("name", Utils.randomStringGenerator("Tax_group_Name_", 5));
-        map.put("dateFormat", "dd MMMM yyyy");
-        map.put("locale", "en");
-        map.put("taxComponents", getTaxGroupComponents(taxComponentIds));
-        return new Gson().toJson(map);
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static List<HashMap<String, String>> getTaxGroupComponents(final Collection<Integer> taxComponentIds) {
-        List<HashMap<String, String>> taxGroupComponents = new ArrayList<>();
-        for (Integer taxComponentId : taxComponentIds) {
-            taxGroupComponents.add(getTaxComponentMap(taxComponentId));
-        }
-        return taxGroupComponents;
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static HashMap<String, String> getTaxComponentMap(final Integer taxComponentId) {
-        final HashMap<String, String> map = new HashMap<>();
-        map.put("taxComponentId", String.valueOf(taxComponentId));
-        map.put("startDate", "01 January 2013");
-        return map;
-    }
+    private TaxGroupHelper() {}
 
     public static PostTaxesGroupResponse createTaxGroup(PostTaxesGroupRequest request) {
-        return Calls.ok(FineractClientHelper.getFineractClient().taxGroups.createTaxGroup(request));
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().taxGroup().createTaxGroup(request));
     }
 
     public static GetTaxesGroupResponse retrieveTaxGroup(Long taxGroupId) {
-        return Calls.ok(FineractClientHelper.getFineractClient().taxGroups.retrieveOneTaxGroup(taxGroupId));
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().taxGroup().retrieveOneTaxGroup(taxGroupId));
     }
 
     public static List<GetTaxesGroupResponse> retrieveAllTaxGroups() {
-        return Calls.ok(FineractClientHelper.getFineractClient().taxGroups.retrieveAllTaxGroups());
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().taxGroup().retrieveAllTaxGroups());
     }
-
 }

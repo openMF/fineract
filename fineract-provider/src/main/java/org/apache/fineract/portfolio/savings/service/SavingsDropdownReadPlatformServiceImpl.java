@@ -65,16 +65,17 @@ public class SavingsDropdownReadPlatformServiceImpl implements SavingsDropdownRe
     }
 
     @Override
-    public Collection<EnumOptionData> retrieveInterestPostingPeriodTypeOptions() {
-        final List<EnumOptionData> allowedOptions = Arrays.asList(
-                SavingsEnumerations.interestPostingPeriodType(SavingsPostingInterestPeriodType.DAILY), //
+    public List<EnumOptionData> retrieveInterestPostingPeriodTypeOptions() {
+        return Arrays.asList(SavingsEnumerations.interestPostingPeriodType(SavingsPostingInterestPeriodType.DAILY), //
                 SavingsEnumerations.interestPostingPeriodType(SavingsPostingInterestPeriodType.MONTHLY), //
                 SavingsEnumerations.interestPostingPeriodType(SavingsPostingInterestPeriodType.QUATERLY), //
                 SavingsEnumerations.interestPostingPeriodType(SavingsPostingInterestPeriodType.BIANNUAL), //
-                SavingsEnumerations.interestPostingPeriodType(SavingsPostingInterestPeriodType.ANNUAL) //
+                SavingsEnumerations.interestPostingPeriodType(SavingsPostingInterestPeriodType.ANNUAL), //
+                SavingsEnumerations.interestPostingPeriodType(SavingsPostingInterestPeriodType.ANNIVERSARY_MONTHLY), //
+                SavingsEnumerations.interestPostingPeriodType(SavingsPostingInterestPeriodType.ANNIVERSARY_QUARTERLY), //
+                SavingsEnumerations.interestPostingPeriodType(SavingsPostingInterestPeriodType.ANNIVERSARY_BIANNUAL), //
+                SavingsEnumerations.interestPostingPeriodType(SavingsPostingInterestPeriodType.ANNIVERSARY_ANNUAL) //
         );
-
-        return allowedOptions;
     }
 
     @Override

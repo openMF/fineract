@@ -20,7 +20,6 @@ package org.apache.fineract.integrationtests.bulkimport.importhandler;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -55,7 +54,8 @@ public final class LocalContentStorageUtil {
         }
 
         // local docker volumes
-        final var dockerPath = Path.of("").toAbsolutePath().getParent().resolve("build/fineract/tmp/DefaultDemoTenant").resolve(path);
+        final var dockerPath = Path.of("").toAbsolutePath().getParent().resolve("build").resolve("fineract").resolve("tmp")
+                .resolve("DefaultDemoTenant").resolve(path);
 
         if (Files.exists(dockerPath)) {
             return dockerPath.toString();
@@ -66,7 +66,7 @@ public final class LocalContentStorageUtil {
 
     @SuppressWarnings("UnusedMethod")
     public static void waitFor(String path) throws InterruptedException {
-        Path file = Paths.get(path);
+        Path file = Path.of(path);
         long maxWaitMillis = 10000;
         long start = System.currentTimeMillis();
         boolean exists = false;

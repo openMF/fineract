@@ -1367,7 +1367,7 @@ final class LoansApiResourceSwagger {
         public String expectedDisbursementDate;
         @Schema(example = "mifos-standard-strategy")
         public String transactionProcessingStrategyCode;
-        @Schema(example = "360", allowableValues = "1, 360, 364, 36")
+        @Schema(examples = "1, 360, 364, 365")
         public Integer daysInYearType;
         @Schema(example = "FULL_LEAP_YEAR", allowableValues = "FULL_LEAP_YEAR, FEB_29_PERIOD_ONLY")
         public String daysInYearCustomStrategy;

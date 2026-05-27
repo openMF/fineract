@@ -26,10 +26,13 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
+import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanTransactionData;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransaction;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransactionAllocation;
+import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
@@ -46,6 +49,14 @@ class WorkingCapitalLoanTransactionMapperTest {
 
     @Mock
     private WorkingCapitalLoanTransactionAllocation allocation;
+
+    @Mock
+    private WorkingCapitalLoan wcLoan;
+
+    @Mock
+    private WorkingCapitalLoanProduct wcProduct;
+
+    private final MonetaryCurrency currency = new MonetaryCurrency("USD", 2, null);
 
     @Test
     void toData_mapsAllFieldsIncludingAllocationPortions() {
@@ -65,11 +76,16 @@ class WorkingCapitalLoanTransactionMapperTest {
         when(allocation.getFeeChargesPortion()).thenReturn(null);
         when(allocation.getPenaltyChargesPortion()).thenReturn(null);
 
+        when(transaction.getWcLoan()).thenReturn(wcLoan);
+        when(wcLoan.getLoanProduct()).thenReturn(wcProduct);
+        when(wcProduct.getCurrency()).thenReturn(currency);
+
         final WorkingCapitalLoanTransactionData data = mapper.toData(transaction);
 
         assertNotNull(data);
         assertEquals(1L, data.getId());
         assertNotNull(data.getType());
+        assertNotNull(data.getCurrency());
         assertEquals(LoanTransactionType.DISBURSEMENT.getValue().longValue(), data.getType().getId());
         assertEquals(LoanTransactionType.DISBURSEMENT.getCode(), data.getType().getCode());
         assertEquals(txnDate, data.getTransactionDate());
@@ -94,10 +110,15 @@ class WorkingCapitalLoanTransactionMapperTest {
         when(transaction.getReversedOnDate()).thenReturn(null);
         when(transaction.getAllocation()).thenReturn(null);
 
+        when(transaction.getWcLoan()).thenReturn(wcLoan);
+        when(wcLoan.getLoanProduct()).thenReturn(wcProduct);
+        when(wcProduct.getCurrency()).thenReturn(currency);
+
         final WorkingCapitalLoanTransactionData data = mapper.toData(transaction);
 
         assertNotNull(data);
         assertNotNull(data.getType());
+        assertNotNull(data.getCurrency());
         assertEquals(LoanTransactionType.DISBURSEMENT.getCode(), data.getType().getCode());
         assertNull(data.getPrincipalPortion());
         assertNull(data.getFeeChargesPortion());

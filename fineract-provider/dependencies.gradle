@@ -100,7 +100,6 @@ dependencies {
             'org.apache.commons:commons-lang3',
             'commons-io:commons-io',
             'org.apache.poi:poi',
-            'org.apache.poi:poi-ooxml',
             'org.apache.tika:tika-core',
             'org.apache.tika:tika-parser-microsoft-module',
             'org.apache.tika:tika-parser-miscoffice-module',
@@ -163,6 +162,9 @@ dependencies {
         exclude group: 'com.zaxxer', module: 'HikariCP-java7'
     }
     implementation('org.apache.commons:commons-csv'){}
+    implementation('org.apache.poi:poi-ooxml') {
+        exclude group: 'org.apache.poi', module: 'poi-ooxml-lite'
+    }
     implementation ('software.amazon.awssdk:s3') {
     }
     implementation ('software.amazon.awssdk:auth') {

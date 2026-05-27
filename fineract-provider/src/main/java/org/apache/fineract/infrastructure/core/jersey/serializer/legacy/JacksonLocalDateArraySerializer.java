@@ -22,9 +22,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
+import java.io.Serializable;
 import java.time.LocalDate;
 
-public class JacksonLocalDateArraySerializer extends JsonSerializer<LocalDate> {
+public class JacksonLocalDateArraySerializer extends JsonSerializer<LocalDate> implements Serializable {
 
     @Override
     public void serialize(LocalDate value, JsonGenerator gen, SerializerProvider serializerProvider) throws IOException {

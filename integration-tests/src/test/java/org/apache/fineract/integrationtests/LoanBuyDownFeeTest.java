@@ -756,7 +756,7 @@ public class LoanBuyDownFeeTest extends BaseLoanIntegrationTest {
             executeInlineCOB(loanId);
             verifyTransactions(loanId, //
                     transaction(1000.000000, "Disbursement", "01 September 2024", 1000.000000, 0, 0, 0, 0, 0, 0, false), //
-                    transaction(400.000000, "Buy Down Fee", "02 September 2024", 0, 0, 0, 0, 0, 0, 0, true), //
+                    transaction(400.000000, "Buy Down Fee", "02 September 2024", 0, 0, 0, 400.000000, 0, 0, 0, true), //
                     transaction(2.220000, "Accrual", "09 September 2024", 0, 0, 2.220000, 0, 0, 0, 0, false), //
                     transaction(8.790000, "Buy Down Fee Amortization", "09 September 2024", 0, 0, 0, 8.790000, 0, 0, 0, false), //
                     transaction(0.28, "Accrual", "10 September 2024", 0, 0, 0.28, 0, 0, 0, 0, false), //
@@ -794,7 +794,7 @@ public class LoanBuyDownFeeTest extends BaseLoanIntegrationTest {
 
             verifyTransactions(loanId, //
                     transaction(1000.000000, "Disbursement", "01 September 2024", 1000.000000, 0, 0, 0, 0, 0, 0, false), //
-                    transaction(400.000000, "Buy Down Fee", "10 September 2024", 0, 0, 0, 0, 0, 0, 0, true) //
+                    transaction(400.000000, "Buy Down Fee", "10 September 2024", 0, 0, 0, 400.000000, 0, 0, 0, true) //
             );
         });
     }
@@ -848,7 +848,7 @@ public class LoanBuyDownFeeTest extends BaseLoanIntegrationTest {
 
             verifyTransactions(loanId, //
                     transaction(1000.000000, "Disbursement", "01 September 2024", 1000.000000, 0, 0, 0, 0, 0, 0, false), //
-                    transaction(400.000000, "Buy Down Fee", "10 September 2024", 0, 0, 0, 0, 0, 0, 0, true), //
+                    transaction(400.000000, "Buy Down Fee", "10 September 2024", 0, 0, 0, 400.000000, 0, 0, 0, true), //
                     transaction(5.830000, "Accrual", "22 September 2024", 0, 0, 5.830000, 0, 0, 0, 0, false), //
                     transaction(14.610000, "Buy Down Fee Amortization", "22 September 2024", 0, 0, 0, 14.610000, 0, 0, 0, false) //
             );

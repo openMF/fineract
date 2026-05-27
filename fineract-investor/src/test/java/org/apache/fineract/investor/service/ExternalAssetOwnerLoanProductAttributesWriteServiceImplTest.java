@@ -377,7 +377,6 @@ public class ExternalAssetOwnerLoanProductAttributesWriteServiceImplTest {
                 }
                 """, attributeKey, attributeValue);
 
-        @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
         TestContext() {
             MockitoAnnotations.openMocks(this);
             stubFromApiJsonHelper();

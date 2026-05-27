@@ -54,6 +54,7 @@ public class WorkingCapitalLoanData implements Serializable {
     private ExternalId externalId;
     private ClientData client;
     private Long officeId;
+    private String officeName;
     private Long fundId;
     private String fundName;
     private WorkingCapitalLoanProductData product;
@@ -71,6 +72,10 @@ public class WorkingCapitalLoanData implements Serializable {
     private BigDecimal discount;
     private BigDecimal discountProposed;
     private BigDecimal discountApproved;
+    private Integer totalNoPayments;
+    private BigDecimal periodPaymentAmount;
+    private BigDecimal dailyEir;
+    private BigDecimal calculatedAnnualEir;
     private DelinquencyBucketData delinquencyBucket;
     private WorkingCapitalBreachData breach;
     private WorkingCapitalNearBreachData nearBreach;
@@ -84,4 +89,5 @@ public class WorkingCapitalLoanData implements Serializable {
     private StringEnumOptionData delinquencyStartType;
 
     private WorkingCapitalLoanCollectionData collectionData;
+    private WorkingCapitalLoanSummaryData summary;
 }

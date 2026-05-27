@@ -124,7 +124,16 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.14.4'
+    testImplementation 'org.junit.platform:junit-platform-commons:1.14.4'
+    testImplementation 'org.junit.platform:junit-platform-engine:1.14.4'
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.14.4'
+    testImplementation 'org.junit.platform:junit-platform-suite-api:1.14.4'
+    testImplementation 'org.junit.platform:junit-platform-suite-commons:1.14.4'
+    testImplementation 'org.junit.platform:junit-platform-suite-engine:1.14.4'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.14.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-suite:1.14.4'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.liquibase:liquibase-core'
 }
@@ -242,6 +251,22 @@ tasks.register('setBlankPassword') {
     }
 }
 
+tasks.named('sourcesJar') {
+    dependsOn(processResources, generateGitProperties, resolve)
+    mustRunAfter(processResources, generateGitProperties, resolve)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from(sourceSets.main.java.srcDirs) {
+        include "**/*.java"
+    }
+}
+
+tasks.named('licenseMain') {
+    dependsOn(processResources, generateGitProperties)
+    mustRunAfter(processResources, generateGitProperties)
+    source = sourceSets.main.java.srcDirs
+}
+
 bootRun {
     jvmArgs = [
             "-Dspring.output.ansi.enabled=ALWAYS"
@@ -263,7 +288,7 @@ bootJar {
         attributes('Main-Class': 'org.springframework.boot.loader.launch.PropertiesLauncher', 'Implementation-Title': 'Apache Fineract', 'Implementation-Version': project.version)
     }
     archiveClassifier = ''
-    dependsOn resolve
+    dependsOn resolve, generateGitProperties
 }
 
 jib {
@@ -346,22 +371,28 @@ tasks.jibDockerBuild.dependsOn(bootJar, resolve, generateGitProperties)
 // Configuration for git properties gradle plugin
 // https://github.com/n0mer/gradle-git-properties
 gitProperties {
-    gitPropertiesResourceDir = file("$buildDir/resources/main")
+    gitPropertiesResourceDir = file("$buildDir/generated-resources/git")
     dateFormat = "yyyy-MM-dd'T'HH:mmZ"
     dateFormatTimeZone = "GMT"
     failOnNoGitDirectory = false
 }
 
+sourceSets.main.output.dir("$buildDir/generated-resources/git", builtBy: generateGitProperties)
+
 processResources.dependsOn generateGitProperties
 
 // NOTE: Gradle suggested these dependencies
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
 jar.dependsOn resolve
 test.dependsOn resolve
 checkstyleMain.dependsOn resolve
 checkstyleTest.dependsOn resolve
 rat.dependsOn prepareInputYaml
 spotbugsTest.dependsOn resolve
-compileTestJava.dependsOn ':fineract-client:processResources', ':fineract-avro-schemas:processResources'
+spotbugsMain.dependsOn resolve
+compileTestJava.dependsOn ':fineract-client:processResources', ':fineract-avro-schemas:processResources', resolve
 resolveMainClassName.dependsOn resolve
 
 javadoc {

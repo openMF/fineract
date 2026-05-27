@@ -130,7 +130,7 @@ public class SavingsAccountDomainServiceJpa implements SavingsAccountDomainServi
                     .findBySavingsAccountAndReversedFalseOrderByCreatedDateAsc(account);
         }
 
-        account.validateAccountBalanceDoesNotBecomeNegative(transactionAmount, transactionBooleanValues.isExceptionForBalanceCheck(),
+        account.validateAccountBalanceConstraints(transactionAmount, transactionBooleanValues.isExceptionForBalanceCheck(),
                 depositAccountOnHoldTransactions, backdatedTxnsAllowedTill, transactionBooleanValues.isForceWithdrawal());
 
         saveTransactionToGenerateTransactionId(withdrawal);
@@ -325,7 +325,7 @@ public class SavingsAccountDomainServiceJpa implements SavingsAccountDomainServi
             }
             account.validatePivotDateTransaction(savingsAccountTransaction.getTransactionDate(), backdatedTxnsAllowedTill,
                     relaxingDaysConfigForPivotDate, "savingsaccount");
-            account.validateAccountBalanceDoesNotBecomeNegativeMinimal(savingsAccountTransaction.getAmount(), false);
+            account.validateAccountBalanceConstraintsMinimal(savingsAccountTransaction.getAmount(), false);
             account.activateAccountBasedOnBalance();
         }
         this.savingsAccountRepository.save(account);

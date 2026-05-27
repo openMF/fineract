@@ -25,6 +25,7 @@ import feign.Response;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class FeignImageTest extends FeignIntegrationTest {
 
-    final File testImage = new File(getClass().getResource("/michael.vorburger-crepes.jpg").getFile());
+    final File testImage = Path.of(getClass().getResource("/michael.vorburger-crepes.jpg").getFile()).toFile();
 
     Long staffId;
 

@@ -1,0 +1,313 @@
+= Working Capital Loan Discount Fee
+
+== Overview
+
+Working Capital Loans support an upfront discount fee — a fixed amount deducted from the gross disbursement that is used as the basis for EIR amortization. The discount is defined at product level as a default, and can optionally be customized per loan at submission, approval, and disbursement stages. When applied, the discount fee is recorded as a `DISCOUNT_FEE` transaction linked to the associated disbursement transaction. A `WorkingCapitalLoanDiscountFeeTransactionBusinessEvent` is emitted on each discount fee creation.
+
+=== Purpose
+
+The discount fee mechanism enables lenders to price revolving Working Capital credit by collecting a structuring fee at disbursement time, which is then amortized over the loan term as income. The staged override model (product → proposed → approved → disbursed) gives both borrowers and approvers controlled flexibility over the final fee amount while ensuring it never exceeds the value agreed at origination.
+
+=== Scope
+
+The scope of this document includes:
+
+* Product-level discount default and overridability configuration
+* Discount lifecycle across loan submission, approval, disbursement, and post-disbursement stages
+* `DISCOUNT_FEE` transaction creation and its link to the disbursement transaction
+* Validation rules enforced at each stage
+* Business events emitted on discount fee transactions
+
+=== Applicability
+
+* All Working Capital Loans — discount is applicable regardless of `amortizationType` (EIR or FLAT)
+* Discount fee is only applied after disbursement; it is not applicable to loans in SUBMITTED or APPROVED status
+
+=== Definitions and Key Concepts
+
+*Discount (product default):* The default discount fee amount defined on `m_wc_loan_product`. Copied to the loan instance when the loan is created.
+
+*Discount Proposed (`discount_proposed`):* The discount amount proposed at loan submission time, if the product allows overrides. Stored on `m_wc_loan`.
+
+*Discount Approved (`discount_approved`):* The discount amount set during approval. Cannot exceed `discount_proposed`. Stored on `m_wc_loan`. Cleared when approval is undone.
+
+*Discount (active, `discount`):* The discount amount actually applied at disbursement. Drives the `DISCOUNT_FEE` transaction amount and is the `discountFeeAmount` used in EIR schedule computation.
+
+*Discount Fee Transaction:* A `WorkingCapitalLoanTransaction` of type `DISCOUNT_FEE` created when a non-zero discount is applied. Linked to the disbursement transaction via `m_wc_loan_transaction_relation`.
+
+*Discount Default Overridable (`discountDefault`):* A product-level configurable attribute. When `true`, the product discount is fixed and cannot be changed at loan level. When `false`, the loan officer may propose a custom discount at submission.
+
+== Design Decisions and Considerations
+
+=== Staged Discount Override
+
+The discount flows through three stages: proposed (submission) → approved (approval) → disbursed (disbursement). Each stage can only reduce, not increase, the discount from the prior stage. This design prevents scope creep on the fee while giving the approval workflow full control over the final value.
+
+=== One Discount Per Disbursement
+
+The system enforces a single discount fee per disbursement transaction via `m_wc_loan_transaction_relation`. If a discount was already applied at disbursement time, the post-disbursement `discountfee` command is blocked. This prevents double-charging.
+
+=== Post-Disbursement Discount Window
+
+The `discountfee` command is restricted to the disbursement date (business date must equal actual disbursement date). This ensures the discount is recorded in the same accounting period as the disbursement.
+
+== Database Design
+
+=== Overview
+
+The discount is tracked across three columns on `m_wc_loan` (embedded from `WorkingCapitalLoanProductRelatedDetails`) and a separate transaction relation table that enforces the one-discount-per-disbursement constraint.
+
+=== Existing Tables
+
+*`m_wc_loan_product`*: Defines `discount` (the product default amount) and `discount_default_overridable` via the configurable attributes table.
+
+*`m_wc_loan_transaction`*: Stores `DISCOUNT_FEE` transactions as regular Working Capital Loan transactions.
+
+=== Changes to Existing Tables
+
+==== m_wc_loan
+
+New columns tracking the discount through the loan lifecycle:
+
+[cols="1,2,1,3",options="header"]
+|===
+| Column Name | Type | Constraints | Description
+| discount | DECIMAL(19,6) | nullable | Active discount amount; set at disbursement; used as `discountFeeAmount` in EIR schedule
+| discount_proposed | DECIMAL(19,6) | nullable | Discount proposed at loan submission; upper bound for approval
+| discount_approved | DECIMAL(19,6) | nullable | Discount set during approval; upper bound for disbursement; cleared on undo-approval
+|===
+
+=== Table: m_wc_loan_transaction_relation
+
+The `m_wc_loan_transaction_relation` table links a discount fee transaction to its associated disbursement transaction, enabling the one-discount-per-disbursement enforcement.
+
+[cols="1,2,1,3",options="header"]
+|===
+| Column Name | Type | Constraints | Description
+| id | BIGINT | PK, not null | Primary key
+| from_loan_transaction_id | BIGINT | FK to m_wc_loan_transaction, not null | The discount fee transaction
+| to_loan_transaction_id | BIGINT | FK to m_wc_loan_transaction, nullable | The associated disbursement transaction
+| relation_type_enum | SMALLINT | not null | Relation type (e.g., `RELATED`)
+| created_by | BIGINT | not null | Audit field
+| created_on_utc | DATETIME(6) / TIMESTAMP WITH TIME ZONE | not null | Audit field
+| last_modified_by | BIGINT | not null | Audit field
+| last_modified_on_utc | DATETIME(6) / TIMESTAMP WITH TIME ZONE | not null | Audit field
+|===
+
+== Configuration
+
+=== Loan Product Configuration
+
+Configure the discount at product level. The `allowOverrides` block controls whether the loan-level stages can override the product default.
+
+[source,json]
+----
+{
+    "discount": 5000.00,                   // optional — product default discount fee amount
+    "allowOverrides": {
+        "discountDefault": true            // true = discount is fixed (no override allowed); false = override allowed
+    }
+}
+----
+
+[NOTE]
+====
+When `discountDefault = false`, loan officers may propose a different discount at submission. The proposed amount still serves as the ceiling for any approval-time adjustment.
+====
+
+== API Design
+
+=== Endpoints
+
+==== Apply Discount Fee (Post-Disbursement)
+
+Creates a `DISCOUNT_FEE` transaction for an active loan where no discount was applied at disbursement time. Can only be executed on the disbursement date.
+
+[source]
+----
+POST /v1/working-capital-loans/{loanId}?command=discountfee
+POST /v1/working-capital-loans/external-id/{loanExternalId}?command=discountfee
+----
+
+**Request Body:**
+
+[source,json]
+----
+{
+  "transactionAmount": 5000.00,        // optional — defaults to loan's current discount if omitted
+  "relatedResourceId": 123,            // mandatory — ID of the associated disbursement transaction
+  "classificationId": 1,               // optional — code value under working_capital_loan_disbursement_classification
+  "externalId": "discount-001",        // optional — external ID for the transaction
+  "note": "Discount applied",          // optional
+  "paymentDetails": {                  // optional
+    "accountNumber": "ACC-001",
+    "routingCode": "RTG-001",
+    "receiptNumber": "RCP-001",
+    "bankNumber": "BNK-001",
+    "checkNumber": "CHQ-001"
+  },
+  "locale": "en",
+  "dateFormat": "yyyy-MM-dd"
+}
+----
+
+**Response:**
+
+[source,json]
+----
+{
+  "officeId": 1,
+  "clientId": 1,
+  "loanId": 42,
+  "resourceId": 87,
+  "subResourceId": 91
+}
+----
+
+==== Set Discount at Submission
+
+The `discount` field is optional when submitting a loan application. Allowed only when `discountDefault = false` on the loan product.
+
+[source]
+----
+POST /v1/working-capital-loans
+----
+
+**Relevant Request Fields:**
+
+[source,json]
+----
+{
+  "discount": 4500.00   // optional — proposed discount; cannot exceed product default if product default is set
+}
+----
+
+==== Set Discount at Approval
+
+The `discountAmount` field is optional during approval. It sets `discount_approved` and cannot exceed `discount_proposed`.
+
+[source]
+----
+POST /v1/working-capital-loans/{loanId}?command=approve
+POST /v1/working-capital-loans/external-id/{loanExternalId}?command=approve
+----
+
+**Relevant Request Fields:**
+
+[source,json]
+----
+{
+  "discountAmount": 4000.00   // optional — approved discount; must be <= proposed discount
+}
+----
+
+==== Set Discount at Disbursement
+
+The `discountAmount` field at disbursement triggers automatic `DISCOUNT_FEE` transaction creation if > 0.
+
+[source]
+----
+POST /v1/working-capital-loans/{loanId}?command=disburse
+POST /v1/working-capital-loans/external-id/{loanExternalId}?command=disburse
+----
+
+**Relevant Request Fields:**
+
+[source,json]
+----
+{
+  "discountAmount": 4000.00   // optional — discount applied at disbursement; creates DISCOUNT_FEE transaction automatically
+}
+----
+
+== Validation Rules
+
+=== Discount at Submission
+
+* `discount` must be zero or positive when provided.
+* If `discountDefault = true`, providing `discount` fails with `override.not.allowed.by.product`.
+* If `discountDefault = false`, `discount` may be provided and must not exceed the product default discount.
+
+=== Discount at Approval
+
+* `discountAmount` must be zero or positive when provided.
+* If `discountDefault = true`, providing `discountAmount` fails with `override.not.allowed.by.product`.
+* `discountAmount` cannot exceed `discount_proposed`. If no proposed override exists, it cannot exceed the product default discount.
+
+=== Discount Fee Transaction (`discountfee` command)
+
+* Loan must be in ACTIVE (disbursed) status.
+* `relatedResourceId` (the disbursement transaction ID) is mandatory.
+* The referenced disbursement transaction must exist.
+* A discount fee transaction must not already exist for that disbursement (checked via `m_wc_loan_transaction_relation`). Fails with `validation.msg.wc.loan.discount.already.set.before.disbursement`.
+* Business date must equal the loan's actual disbursement date. Fails with `transaction.date.must.be.equal.disbursement.date`.
+* `transactionAmount` must be zero or positive when provided.
+
+== Business Rules
+
+=== Discount Lifecycle
+
+* At loan creation, the product default `discount` is copied to the loan's embedded product related details.
+* At submission, if the product allows overrides (`discountDefault = false`), the borrower can propose a lower discount. The proposed value is stored as `discount_proposed`.
+* At approval, the approver may set `discountAmount`. The approved amount is stored as `discount_approved` and cannot exceed the proposed amount.
+* When approval is undone (`undoapproval`), `discount_approved` is cleared to null. The loan returns to SUBMITTED state.
+* At disbursement, if `discountAmount > 0` is provided, a `DISCOUNT_FEE` transaction is automatically created and linked to the disbursement transaction. The `discount` field on the loan is updated to the disbursement-time value.
+* If no discount is applied at disbursement, the `discountfee` command allows a one-time post-disbursement application.
+* If `discount` on the loan is null when `discountfee` is called, the amount falls back to the product default.
+
+=== Effective Discount Amount
+
+The discount used in EIR schedule computation (`discountFeeAmount`) is the resolved value of the `discount` column on `m_wc_loan` at schedule generation time. This reflects whichever stage last set the discount (disbursement override, or product default if no override was applied).
+
+== Business Events
+
+=== Events
+
+**`WorkingCapitalLoanDiscountFeeTransactionBusinessEvent`** is emitted when a `DISCOUNT_FEE` transaction is successfully created — both at disbursement time (automatic) and via the post-disbursement `discountfee` command. The event carries the `WorkingCapitalLoanTransaction` instance. It must be enabled in `m_external_event_configuration` (type: `WorkingCapitalLoanDiscountFeeTransactionBusinessEvent`; default: disabled).
+
+== Example Scenarios
+
+=== Scenario #1: Discount Applied Automatically at Disbursement
+
+**Setup:**
+* Loan product with `discount = 5000.00` and `discountDefault = false` (overridable).
+* Borrower submits with `discount = 4500.00` (proposed).
+* Approver sets `discountAmount = 4000.00` (approved).
+
+**Action:**
+Loan is disbursed with `discountAmount = 4000.00`. The service creates a `DISCOUNT_FEE` transaction for 4,000, links it to the disbursement transaction in `m_wc_loan_transaction_relation`, and sets `loan.discount = 4000.00`. A `WorkingCapitalLoanDiscountFeeTransactionBusinessEvent` is emitted.
+
+**Expected Behavior:**
+
+* `discount_proposed = 4500.00`, `discount_approved = 4000.00`, `discount = 4000.00` on `m_wc_loan`.
+* The amortization schedule uses `discountFeeAmount = 4000.00` for EIR computation.
+* `netDisbursementAmount = disbursedAmount − 4000.00`.
+* Any subsequent `discountfee` command for the same disbursement transaction fails with `discount.already.set.before.disbursement`.
+
+=== Scenario #2: Post-Disbursement Discount Fee on Disbursement Date
+
+**Setup:**
+* Loan disbursed without a `discountAmount` (discount was not applied at disbursement time).
+* Product discount: 3000.00.
+* Business date equals the actual disbursement date.
+
+**Action:**
+`POST /v1/working-capital-loans/{loanId}?command=discountfee` is called with `relatedResourceId = <disbursementTxnId>` and no `transactionAmount` (defaults to loan's current `discount` = 3000.00 or product default).
+
+**Expected Behavior:**
+
+* A `DISCOUNT_FEE` transaction for 3,000 is created and linked to the disbursement transaction.
+* `loan.discount = 3000.00` is set.
+* Amortization schedule is recalculated with `discountFeeAmount = 3000.00`.
+* `WorkingCapitalLoanDiscountFeeTransactionBusinessEvent` is emitted.
+
+== Summary
+
+Working Capital Loan Discount Fee provides a structured mechanism for applying an upfront fee at disbursement time, with staged override controls across the loan lifecycle. Key aspects include:
+
+* The product defines the default discount; overridability is controlled by the `discountDefault` configurable attribute.
+* Three loan-level fields — `discount_proposed`, `discount_approved`, `discount` — track the fee as it progresses through submission, approval, and disbursement.
+* Each stage can only reduce the discount from the prior stage, never increase it.
+* A `DISCOUNT_FEE` transaction is created automatically at disbursement if discount > 0, or on-demand via `POST ?command=discountfee` (one time, on the disbursement date).
+* The applied discount drives `discountFeeAmount` in the amortization schedule and EIR computation.
+* `WorkingCapitalLoanDiscountFeeTransactionBusinessEvent` is emitted on every discount fee transaction creation.

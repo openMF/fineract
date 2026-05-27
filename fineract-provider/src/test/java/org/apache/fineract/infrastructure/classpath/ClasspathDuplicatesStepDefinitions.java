@@ -18,7 +18,6 @@
  */
 package org.apache.fineract.infrastructure.classpath;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.cucumber.java8.En;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ResourceList;
@@ -39,7 +38,6 @@ public class ClasspathDuplicatesStepDefinitions implements En {
 
     private ClassGraph classGraph;
 
-    @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW")
     public ClasspathDuplicatesStepDefinitions() {
         // tag::given[]
         Given("A class graph", () -> {
@@ -115,8 +113,10 @@ public class ClasspathDuplicatesStepDefinitions implements En {
                 || resourcePath.startsWith("META-INF/services") //
                 || resourcePath.equals("META-INF/DEPENDENCIES") //
                 || resourcePath.equals("META-INF/git.properties") //
+                || resourcePath.equals("git.properties") //
                 || resourcePath.equals("META-INF/io.netty.versions.properties") //
                 || resourcePath.equals("META-INF/jersey-module-version") //
+                || resourcePath.equals("messages.properties") //
                 || resourcePath.startsWith("OSGI-INF/blueprint/") //
                 // in Akka's JARs
                 || resourcePath.startsWith("org/opendaylight/blueprint/") //
@@ -134,6 +134,8 @@ public class ClasspathDuplicatesStepDefinitions implements En {
                 || resourcePath.equals("META-INF/BC1024KE.DSA") //
                 || resourcePath.equals("META-INF/BC2048KE.SF") //
                 || resourcePath.equals("META-INF/BC1024KE.SF") //
+                || resourcePath.equals("META-INF/BCRSA204.SF") //
+                || resourcePath.equals("META-INF/BCRSA204.RSA") //
                 || resourcePath.equals("OSGI-INF/bundle.info") //
                 || resourcePath.equals("META-INF/DUMMY.SF") //
                 || resourcePath.equals("META-INF/DUMMY.DSA") //

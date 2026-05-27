@@ -59,7 +59,7 @@ class DocumentsApiFixedIntegrationTest {
         config = FineractFeignClientConfig.builder().baseUrl("http://localhost:" + wireMockServer.port()).credentials("test", "test")
                 .connectTimeout(5, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build();
 
-        testDocumentFile = new File(tempDir, "test-doc.pdf");
+        testDocumentFile = tempDir.toPath().resolve("test-doc.pdf").toFile();
         Files.write(testDocumentFile.toPath(), "%PDF-1.4 test content".getBytes(StandardCharsets.UTF_8));
     }
 

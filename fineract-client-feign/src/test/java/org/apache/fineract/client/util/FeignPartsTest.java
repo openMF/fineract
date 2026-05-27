@@ -229,7 +229,7 @@ class FeignPartsTest {
 
     @Test
     void testProbeContentTypeForJpegFile() throws IOException {
-        File jpegFile = new File(tempDir, "test.jpg");
+        File jpegFile = tempDir.toPath().resolve("test.jpg").toFile();
         Files.write(jpegFile.toPath(), new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF });
 
         String contentType = FeignParts.probeContentType(jpegFile);
@@ -239,7 +239,7 @@ class FeignPartsTest {
 
     @Test
     void testProbeContentTypeForPdfFile() throws IOException {
-        File pdfFile = new File(tempDir, "test.pdf");
+        File pdfFile = tempDir.toPath().resolve("test.pdf").toFile();
         Files.write(pdfFile.toPath(), "%PDF-1.4".getBytes(StandardCharsets.UTF_8));
 
         String contentType = FeignParts.probeContentType(pdfFile);
@@ -249,7 +249,7 @@ class FeignPartsTest {
 
     @Test
     void testProbeContentTypeFallsBackToMediaType() throws IOException {
-        File unknownFile = new File(tempDir, "test.docx");
+        File unknownFile = tempDir.toPath().resolve("test.docx").toFile();
         Files.write(unknownFile.toPath(), "test content".getBytes(StandardCharsets.UTF_8));
 
         String contentType = FeignParts.probeContentType(unknownFile);
@@ -260,7 +260,7 @@ class FeignPartsTest {
 
     @Test
     void testProbeContentTypeForUnknownFile() throws IOException {
-        File unknownFile = new File(tempDir, "test.xyz");
+        File unknownFile = tempDir.toPath().resolve("test.xyz").toFile();
         Files.write(unknownFile.toPath(), "unknown content".getBytes(StandardCharsets.UTF_8));
 
         String contentType = FeignParts.probeContentType(unknownFile);

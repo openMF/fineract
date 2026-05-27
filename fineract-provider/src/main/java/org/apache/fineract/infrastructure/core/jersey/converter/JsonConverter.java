@@ -21,8 +21,9 @@ package org.apache.fineract.infrastructure.core.jersey.converter;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import java.io.IOException;
+import java.io.Serializable;
 
-public interface JsonConverter<T> {
+public interface JsonConverter<T> extends Serializable {
 
     T convertToObject(JsonParser parser) throws IOException;
 

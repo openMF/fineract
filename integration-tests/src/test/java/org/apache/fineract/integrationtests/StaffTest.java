@@ -19,7 +19,6 @@
 package org.apache.fineract.integrationtests;
 
 import com.google.gson.Gson;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.http.ContentType;
@@ -36,7 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @Deprecated // TODO move this into new org.apache.fineract.integrationtests.client.StaffTest
-@SuppressFBWarnings(value = "RV_EXCEPTION_NOT_THROWN", justification = "False positive")
+
 public class StaffTest {
 
     private RequestSpecification requestSpec;

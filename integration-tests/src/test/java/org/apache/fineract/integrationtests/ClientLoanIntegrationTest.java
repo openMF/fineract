@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.http.ContentType;
@@ -125,7 +124,7 @@ import org.slf4j.LoggerFactory;
  * repayments and verifying accounting transactions
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-@SuppressFBWarnings(value = "RV_EXCEPTION_NOT_THROWN", justification = "False positive")
+
 public class ClientLoanIntegrationTest extends BaseLoanIntegrationTest {
 
     static {

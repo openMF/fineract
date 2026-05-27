@@ -29,6 +29,7 @@ dependencies {
             'com.squareup.retrofit2:converter-scalars',
             'com.squareup.retrofit2:converter-gson',
             'io.gsonfire:gson-fire',
+            'org.openapitools:jackson-databind-nullable:0.2.6',
             'com.google.code.findbugs:jsr305',
             'com.github.spotbugs:spotbugs-annotations',
             'com.squareup.okhttp3:okhttp',

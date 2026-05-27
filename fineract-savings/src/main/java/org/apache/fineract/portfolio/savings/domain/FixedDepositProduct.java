@@ -302,6 +302,24 @@ public class FixedDepositProduct extends SavingsProduct {
                         SavingsCompoundingInterestPeriodType.MONTHLY, SavingsCompoundingInterestPeriodType.QUATERLY,
                         SavingsCompoundingInterestPeriodType.BI_ANNUAL, SavingsCompoundingInterestPeriodType.ANNUAL }));
 
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.ANNIVERSARY_MONTHLY,
+                Arrays.asList(new SavingsCompoundingInterestPeriodType[] { SavingsCompoundingInterestPeriodType.DAILY,
+                        SavingsCompoundingInterestPeriodType.MONTHLY }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.ANNIVERSARY_QUARTERLY,
+                Arrays.asList(new SavingsCompoundingInterestPeriodType[] { SavingsCompoundingInterestPeriodType.DAILY,
+                        SavingsCompoundingInterestPeriodType.MONTHLY, SavingsCompoundingInterestPeriodType.QUATERLY }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.ANNIVERSARY_BIANNUAL,
+                Arrays.asList(new SavingsCompoundingInterestPeriodType[] { SavingsCompoundingInterestPeriodType.DAILY,
+                        SavingsCompoundingInterestPeriodType.MONTHLY, SavingsCompoundingInterestPeriodType.QUATERLY,
+                        SavingsCompoundingInterestPeriodType.BI_ANNUAL }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.ANNIVERSARY_ANNUAL,
+                Arrays.asList(new SavingsCompoundingInterestPeriodType[] { SavingsCompoundingInterestPeriodType.DAILY,
+                        SavingsCompoundingInterestPeriodType.MONTHLY, SavingsCompoundingInterestPeriodType.QUATERLY,
+                        SavingsCompoundingInterestPeriodType.BI_ANNUAL, SavingsCompoundingInterestPeriodType.ANNUAL }));
+
         SavingsPostingInterestPeriodType savingsPostingInterestPeriodType = SavingsPostingInterestPeriodType
                 .fromInt(interestPostingPeriodType);
         SavingsCompoundingInterestPeriodType savingsCompoundingInterestPeriodType = SavingsCompoundingInterestPeriodType

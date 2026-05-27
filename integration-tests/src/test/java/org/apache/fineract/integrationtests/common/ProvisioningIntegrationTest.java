@@ -27,11 +27,12 @@ import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 import java.math.BigDecimal;
 import java.text.ParseException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.fineract.client.models.PageProvisioningEntryData;
+import org.apache.fineract.client.models.ProvisioningEntryData;
 import org.apache.fineract.integrationtests.common.accounting.Account;
 import org.apache.fineract.integrationtests.common.accounting.AccountHelper;
 import org.apache.fineract.integrationtests.common.loans.LoanApplicationTestBuilder;
@@ -251,20 +252,17 @@ public class ProvisioningIntegrationTest {
 
     private boolean isAlreadyProvisioningEntriesCreated() throws ParseException {
         ProvisioningTransactionHelper transactionHelper = new ProvisioningTransactionHelper(requestSpec, responseSpec);
-        Map entries = transactionHelper.retrieveAllProvisioningEntries();
-        ArrayList<Map> pageItems = (ArrayList) entries.get("pageItems");
-        boolean provisioningetryAlreadyCreated = false;
-        if (pageItems != null) {
-            for (Map item : pageItems) {
-                List<Integer> date = (ArrayList) item.get("createdDate");
-                LocalDate localDate = LocalDate.of(date.get(0), date.get(1), date.get(2));
+        PageProvisioningEntryData entries = transactionHelper.retrieveAllProvisioningEntries();
 
-                if (localDate.equals(Utils.getLocalDateOfTenant())) {
-                    provisioningetryAlreadyCreated = true;
-                    break;
-                }
+        boolean provisioningetryAlreadyCreated = false;
+
+        for (ProvisioningEntryData item : entries.getPageItems()) {
+            if (item.getCreatedDate().equals(Utils.getLocalDateOfTenant())) {
+                provisioningetryAlreadyCreated = true;
+                break;
             }
         }
+
         return provisioningetryAlreadyCreated;
     }
 }

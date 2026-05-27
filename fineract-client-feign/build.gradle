@@ -25,11 +25,11 @@ apply from: 'dependencies.gradle'
 openApiMeta {
     generatorName = 'Fineract-Feign'
     packageName = 'org.apache.fineract.client.feign'
-    outputFolder = "$buildDir/meta".toString()
+    outputFolder = file("$buildDir/meta")
 }
 
 openApiValidate {
-    inputSpec = "file:///$swaggerFile"
+    inputSpec = file(swaggerFile)
     recommend = true
 }
 
@@ -39,16 +39,16 @@ tasks.register('buildJavaSdk', org.openapitools.generator.gradle.plugin.tasks.Ge
     verbose = false
     validateSpec = false
     skipValidateSpec = true
-    inputSpec = "file:///$swaggerFile"
-    outputDir = "$buildDir/generated/temp-java".toString()
-    templateDir = "$projectDir/src/main/resources/templates/java"
+    inputSpec = file(swaggerFile)
+    outputDir = file("$buildDir/generated/temp-java")
+    templateDir = file("$projectDir/src/main/resources/templates/java")
     groupId = 'org.apache.fineract'
     apiPackage = 'org.apache.fineract.client.feign.services'
     invokerPackage = 'org.apache.fineract.client.feign'
     modelPackage = 'org.apache.fineract.client.models'
     generateModelTests = false
     generateApiTests = false
-    ignoreFileOverride = "$projectDir/.openapi-generator-ignore"
+    ignoreFileOverride = file("$projectDir/.openapi-generator-ignore")
     configOptions = [
             dateLibrary                : 'java8',
             library                    : 'feign',
@@ -170,7 +170,7 @@ spotbugsTest {
 }
 
 jacoco {
-    toolVersion = "0.8.11"
+    toolVersion = "0.8.14"
 }
 
 jacocoTestReport {

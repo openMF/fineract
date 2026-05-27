@@ -19,7 +19,7 @@
 // TODO: this is work in progress, please follow FINERACT-1171
 buildscript {
     ext {
-        jacocoVersion = '0.8.12'
+        jacocoVersion = '0.8.14'
         retrofitVersion = '2.9.0'
         okhttpVersion = '4.9.3'
         fineractCustomProjects = []
@@ -99,40 +99,40 @@ buildscript {
 
     dependencies {
         classpath 'com.bmuschko:gradle-cargo-plugin:2.9.0'
-        classpath 'org.eclipse.persistence:eclipselink:4.0.6'
+        classpath 'org.eclipse.persistence:eclipselink:4.0.9'
         classpath 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'
         classpath 'com.google.cloud.tools:jib-layer-filter-extension-gradle:0.3.0'
-        classpath 'org.apache.commons:commons-lang3:3.18.0'
-        classpath 'io.swagger.core.v3:swagger-jaxrs2-jakarta:2.2.22'
+        classpath 'org.apache.commons:commons-lang3:3.20.0'
+        classpath 'io.swagger.core.v3:swagger-jaxrs2-jakarta:2.2.49'
         classpath 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     }
 }
 
 plugins {
     id 'me.qoomon.git-versioning' version '6.4.4'
-    id "org.barfuin.gradle.taskinfo" version "2.2.0"
+    id "org.barfuin.gradle.taskinfo" version "2.2.1"
     id 'com.adarshr.test-logger' version '4.0.0'
     id 'com.diffplug.spotless' version '6.25.0' apply false
     id 'org.nosphere.apache.rat' version '0.8.1' apply false
     id 'com.github.hierynomus.license' version '0.16.1' apply false
     id 'com.github.jk1.dependency-license-report' version '2.9' apply false
-    id 'org.zeroturnaround.gradle.jrebel' version '1.2.0' apply false
-    id 'org.springframework.boot' version '3.5.13' apply false
-    id 'net.ltgt.errorprone' version '4.1.0' apply false
-    id 'io.swagger.core.v3.swagger-gradle-plugin' version '2.2.23' apply false
-    id 'com.gorylenko.gradle-git-properties' version '2.4.2' apply false
+    id 'org.zeroturnaround.gradle.jrebel' version '1.2.2' apply false
+    id 'org.springframework.boot' version '3.5.14' apply false
+    id 'net.ltgt.errorprone' version '4.4.0' apply false
+    id 'io.swagger.core.v3.swagger-gradle-plugin' version '2.2.49' apply false
+    id 'com.gorylenko.gradle-git-properties' version '2.5.7' apply false
     id 'org.asciidoctor.jvm.convert' version '4.0.5' apply false
     id 'org.asciidoctor.jvm.pdf' version '4.0.5' apply false
-    id 'com.google.cloud.tools.jib' version '3.4.5' apply false
-    id 'org.sonarqube' version '6.0.1.5171'
-    id 'com.github.andygoossens.modernizer' version '1.10.0' apply false
-    id 'com.github.spotbugs' version '6.0.26' apply false
-    id 'se.thinkcode.cucumber-runner' version '0.0.11' apply false
+    id 'com.google.cloud.tools.jib' version '3.5.3' apply false
+    id 'org.sonarqube' version '6.3.1.5724'
+    id 'com.github.andygoossens.modernizer' version '1.13.0' apply false
+    id 'com.github.spotbugs' version '6.5.4' apply false
+    id 'se.thinkcode.cucumber-runner' version '0.0.14' apply false
     id "com.github.davidmc24.gradle.plugin.avro-base" version "1.9.1" apply false
-    id 'org.openapi.generator' version '7.8.0' apply false
-    id 'com.gradleup.shadow' version '9.3.2' apply false
-    id 'me.champeau.jmh' version '0.7.1' apply false
-    id 'org.cyclonedx.bom' version '3.1.0' apply false
+    id 'org.openapi.generator' version '7.22.0' apply false
+    id 'com.gradleup.shadow' version '9.4.1' apply false
+    id 'me.champeau.jmh' version '0.7.3' apply false
+    id 'org.cyclonedx.bom' version '3.2.4' apply false
     id 'com.docktape.swagger-brake' version '2.7.0' apply false
 }
 
@@ -184,7 +184,7 @@ allprojects  {
         resolutionStrategy {
             dependencySubstitution {
                 // Substitution is to resolve CVE-2025-12183
-                substitute module('org.lz4:lz4-java') using module('at.yawk.lz4:lz4-java:1.10.1')
+                substitute module('org.lz4:lz4-java') using module('at.yawk.lz4:lz4-java:1.11.0')
             }
         }
     }
@@ -212,6 +212,7 @@ allprojects  {
                     "SameNameButDifferent", // Until errorprone recognizes Lombok
                     "MultiVariableDeclaration", // Until errorprone recognizes Lombok
                     "UnnecessaryDefaultInEnumSwitch", // FINERACT-1911
+                    "StringConcatToTextBlock", // Error Prone 2.49.0 crashes on JDK 21, raised issue: https://github.com/google/error-prone/issues/5815
                     "AssertEqualsArgumentOrderChecker",
                     "RemoveUnusedImports"  // For generated code
             )
@@ -459,6 +460,7 @@ configure(project.fineractJavaProjects) {
     }
     tasks.withType(JavaCompile).configureEach {
         options.compilerArgs += [
+                "-XDaddTypeAnnotationsToSymbol=true",
                 "-Xlint:cast",
                 "-Xlint:auxiliaryclass",
                 "-Xlint:dep-ann",
@@ -554,7 +556,7 @@ configure(project.fineractJavaProjects) {
     // Configuration for the Checkstyle plugin
     // https://docs.gradle.org/current/userguide/checkstyle_plugin.html
     dependencies {
-        checkstyle 'com.puppycrawl.tools:checkstyle:11.0.0'
+        checkstyle 'com.puppycrawl.tools:checkstyle:13.4.2'
         checkstyle 'com.github.sevntu-checkstyle:sevntu-checks:1.44.1'
     }
 
@@ -584,7 +586,7 @@ configure(project.fineractJavaProjects) {
     // Configuration for the errorprone plugin
     // https://github.com/tbroyer/gradle-errorprone-plugin
     dependencies {
-        errorprone "com.google.errorprone:error_prone_core:2.35.1"
+        errorprone "com.google.errorprone:error_prone_core:2.49.0"
     }
 
     tasks.withType(JavaCompile).configureEach {
@@ -838,10 +840,10 @@ configure(project.fineractCustomProjects) {
                 'org.awaitility:awaitility',
                 'io.github.classgraph:classgraph',
                 'io.cucumber:cucumber-core',
-                'io.cucumber:cucumber-java:7.20.1',
-                'io.cucumber:cucumber-java8:7.20.1',
-                'io.cucumber:cucumber-junit-platform-engine:7.20.1',
-                'io.cucumber:cucumber-spring:7.20.1',
+                'io.cucumber:cucumber-java:7.34.3',
+                'io.cucumber:cucumber-java8:7.34.3',
+                'io.cucumber:cucumber-junit-platform-engine:7.34.3',
+                'io.cucumber:cucumber-spring:7.34.3',
                 )
 
         testCompileOnly('org.projectlombok:lombok')

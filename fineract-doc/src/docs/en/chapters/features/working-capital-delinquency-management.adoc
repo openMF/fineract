@@ -1,0 +1,513 @@
+= Working Capital Product Delinquency Management
+
+== Overview
+
+Delinquency management for Working Capital Loans provides a dedicated, schedule-based framework to track minimum payment compliance, classify loans into configurable delinquency ranges, and apply corrective actions such as pauses and reschedules. Unlike the standard loan delinquency model — which is installment-driven — the Working Capital model operates on rolling time *periods*, each with its own expected minimum payment that must be met before the period's end date is reached.
+
+The feature is implemented in the `fineract-working-capital-loan` module and is activated through the Working Capital COB (Close of Business) pipeline.
+
+=== Purpose
+
+This feature enables credit operations teams to:
+
+* Automatically detect and classify overdue minimum payment obligations per time period.
+* Assign delinquency range tags (e.g., 5–15 days, 15–30 days) per period, independently of other periods.
+* Temporarily pause delinquency evaluation during agreed grace windows.
+* Reschedule the minimum payment amount and/or frequency on active loans.
+
+=== Scope
+
+The scope of this document includes:
+
+* Product-level delinquency configuration (grace days, start type)
+* Delinquency bucket and minimum payment rule configuration (`m_wc_delinquency_configuration`)
+* Delinquency range schedule — generation and lifecycle (`m_wc_loan_delinquency_range_schedule`)
+* Per-period delinquency range tagging (`m_wc_loan_range_delinquency_tag`)
+* Delinquency actions: PAUSE and RESCHEDULE (`m_wc_loan_delinquency_action`)
+* COB business steps that drive the delinquency pipeline
+* API endpoints for actions and schedule retrieval
+
+=== Applicability
+
+* Active Working Capital Loan accounts only.
+* Loans whose product has a delinquency bucket configured.
+* Loans that have at least one actual disbursement recorded.
+
+=== Definitions and Key Concepts
+
+*Delinquency Range Schedule Period:* A time window (identified by a sequential `periodNumber`) over which the system tracks whether the loan met its minimum payment obligation. Each period has `fromDate`, `toDate`, `expectedAmount`, `paidAmount`, and `outstandingAmount`.
+
+*Minimum Payment Criteria Met (`minPaymentCriteriaMet`):* A boolean flag set when a period is evaluated after its `toDate`. It is `true` if `paidAmount >= expectedAmount`, `false` otherwise, and `null` while the period is open (not yet expired).
+
+*Delinquency Range Tag:* A tag derived from the bucket's configured ranges (e.g., `5–15 days overdue`) applied per period. The system records a history of tag additions and lifts in `m_wc_loan_range_delinquency_tag`.
+
+*Delinquency Start Type:* Determines from which event the first period's `fromDate` is anchored — either loan creation (`LOAN_CREATION`) or the actual disbursement date (`DISBURSEMENT`).
+
+*Delinquency Grace Days:* A product-level integer that is copied to the loan at origination. The COB classification step adds this number of days when determining whether a period is overdue relative to the business date.
+
+*PAUSE Action:* A loan-level action that extends all open and future schedule periods by the duration of the pause, effectively freezing the delinquency clock during the pause window.
+
+*RESCHEDULE Action:* A loan-level action that modifies the minimum payment amount and/or frequency for the current open period and all future unevaluated periods.
+
+== Design Decisions and Considerations
+
+=== Period-Level Delinquency, Not Loan-Level
+
+Working Capital loans use a period-based delinquency model rather than the standard installment-based model. Each period is an independently evaluated unit. A loan can have some periods marked delinquent while other periods remain current, which reflects the revolving, cash-flow-oriented nature of working capital credit.
+
+=== PAUSE Extends Periods, Not Skips Them
+
+When a PAUSE action is recorded, all open and future schedule periods are extended by the exact number of days of the pause (`ChronoUnit.DAYS.between(pauseStart, pauseEnd)`). This preserves the expected minimum payment schedule while giving the borrower extra time. The pause is applied immediately when the action is created via API — it does not wait for the next COB run.
+
+=== RESCHEDULE Applies Forward-Only
+
+A RESCHEDULE action modifies only the current open period and future unevaluated periods. Periods already evaluated (`minPaymentCriteriaMet != null`) are never modified. This ensures historical accuracy of delinquency reporting.
+
+=== Classification Uses Business Date + 1
+
+The `WorkingCapitalLoanDelinquencyClassificationBusinessStep` classifies delinquency using `businessDate + 1` to evaluate periods whose `toDate` is strictly before the adjusted date, aligning with the convention that a period ending on day D is evaluated on day D+1.
+
+== Database Design
+
+=== Overview
+
+The delinquency subsystem for Working Capital loans introduces three dedicated tables, and extends the product and loan entities with configuration columns. It reuses the standard `m_delinquency_bucket` and `m_delinquency_range` tables from the core loan module.
+
+=== Existing Tables (Referenced)
+
+*m_delinquency_bucket*: The delinquency bucket assigned to the Working Capital loan product. Defines which ranges are applicable.
+
+*m_delinquency_range*: The individual delinquency ranges inside a bucket (e.g., 5–15 days, 15–30 days). Used for tagging periods.
+
+=== Changes to Existing Tables
+
+==== m_wc_loan_product and m_wc_loan
+
+New columns added by migrations `0013_add_delinquency_grace_days_to_wc_loan.xml`:
+
+[cols="1,2,1,3",options="header"]
+|===
+| Column Name | Type | Constraints | Description
+| `delinquency_grace_days` | INT | nullable | Number of days after a period's `toDate` before the period is considered delinquent
+| `delinquency_start_type` | VARCHAR(20) | nullable | Enum: `LOAN_CREATION` or `DISBURSEMENT` — determines the anchor date for the first period
+|===
+
+=== Table: m_wc_delinquency_configuration
+
+The `m_wc_delinquency_configuration` table stores the minimum payment rule associated with a delinquency bucket. There is exactly one configuration per bucket (unique constraint on `bucket_id`).
+
+[cols="1,2,1,3",options="header"]
+|===
+| Column Name | Type | Constraints | Description
+| `id` | BIGINT | PK, not null | Primary key
+| `bucket_id` | BIGINT | FK to `m_delinquency_bucket`, unique, not null | The delinquency bucket this configuration applies to
+| `frequency` | INT | not null | Numeric frequency value for the period duration
+| `frequency_type` | VARCHAR(50) | not null | Enum: `DAYS`, `WEEKS`, `MONTHS`, `YEARS`
+| `minimum_payment` | DECIMAL(19,6) | not null | Minimum payment amount or percentage
+| `minimum_payment_type` | VARCHAR(50) | not null | Enum: `PERCENTAGE`, `FLAT`
+| `created_by` | BIGINT | not null | Audit field
+| `created_on_utc` | DATETIME(6) / TIMESTAMP WITH TIME ZONE | not null | Audit field
+| `last_modified_by` | BIGINT | not null | Audit field
+| `last_modified_on_utc` | DATETIME(6) / TIMESTAMP WITH TIME ZONE | not null | Audit field
+|===
+
+=== Table: m_wc_loan_delinquency_range_schedule
+
+The `m_wc_loan_delinquency_range_schedule` table stores one row per rolling period per loan. Periods are generated dynamically during COB processing.
+
+[cols="1,2,1,3",options="header"]
+|===
+| Column Name | Type | Constraints | Description
+| `id` | BIGINT | PK, not null | Primary key
+| `wc_loan_id` | BIGINT | FK to `m_wc_loan`, not null | Associated Working Capital loan
+| `period_number` | INT | not null | Sequential period number (1-based); unique with `wc_loan_id`
+| `version` | INT | not null, default 0 | Optimistic locking version
+| `from_date` | DATE | not null | Start date of the period (inclusive)
+| `to_date` | DATE | not null | End date of the period (inclusive). Extended by pause actions.
+| `expected_amount` | DECIMAL(19,6) | nullable | Minimum payment required for this period
+| `paid_amount` | DECIMAL(19,6) | nullable | Total amount paid toward this period
+| `outstanding_amount` | DECIMAL(19,6) | nullable | Remaining unpaid amount (`expected_amount - paid_amount`)
+| `min_payment_criteria_met` | BOOLEAN | nullable | `null` = open; `true` = criteria met; `false` = criteria not met (delinquent)
+| `delinquent_days` | BIGINT | nullable | Number of days past due for this period, as calculated at last COB run
+| `delinquent_amount` | DECIMAL(19,6) | nullable | Outstanding amount classified as delinquent for this period
+| `created_by` | BIGINT | not null | Audit field
+| `created_on_utc` | DATETIME(6) / TIMESTAMP WITH TIME ZONE | not null | Audit field
+| `last_modified_by` | BIGINT | not null | Audit field
+| `last_modified_on_utc` | DATETIME(6) / TIMESTAMP WITH TIME ZONE | not null | Audit field
+|===
+
+=== Table: m_wc_loan_range_delinquency_tag
+
+The `m_wc_loan_range_delinquency_tag` table records the history of delinquency range assignments per period. A new row is inserted when a period enters a range, and `liftedon_date` is set when the period exits the range.
+
+[cols="1,2,1,3",options="header"]
+|===
+| Column Name | Type | Constraints | Description
+| `id` | BIGINT | PK, not null | Primary key
+| `loan_id` | BIGINT | FK to `m_wc_loan`, not null | Associated Working Capital loan
+| `range_id` | BIGINT | FK to `m_wc_loan_delinquency_range_schedule`, not null | The range schedule period this tag belongs to
+| `delinquency_range_id` | BIGINT | FK to `m_delinquency_range`, not null | The delinquency range classification (e.g., 5–15 days)
+| `addedon_date` | DATE | not null | Business date when this tag was applied
+| `liftedon_date` | DATE | nullable | Business date when this tag was lifted (null = still active)
+| `outstanding_amount` | DECIMAL(19,6) | nullable | Outstanding amount at time of tagging
+| `version` | BIGINT | nullable | Optimistic locking version
+| `created_by` | BIGINT | not null | Audit field
+| `created_on_utc` | DATETIME(6) / TIMESTAMP WITH TIME ZONE | not null | Audit field
+| `last_modified_by` | BIGINT | not null | Audit field
+| `last_modified_on_utc` | DATETIME(6) / TIMESTAMP WITH TIME ZONE | not null | Audit field
+|===
+
+=== Table: m_wc_loan_delinquency_action
+
+The `m_wc_loan_delinquency_action` table stores loan-level delinquency control actions: PAUSE and RESCHEDULE.
+
+[cols="1,2,1,3",options="header"]
+|===
+| Column Name | Type | Constraints | Description
+| `id` | BIGINT | PK, not null | Primary key
+| `wc_loan_id` | BIGINT | FK to `m_wc_loan`, not null | Associated Working Capital loan
+| `action` | VARCHAR(128) | not null | Enum: `PAUSE` or `RESCHEDULE`
+| `start_date` | DATE | not null | Effective start date of the action
+| `end_date` | DATE | nullable | Required only for PAUSE; end date of the pause window
+| `minimum_payment` | DECIMAL(19,6) | nullable | New minimum payment value (RESCHEDULE only)
+| `minimum_payment_type` | VARCHAR(50) | nullable | Enum: `PERCENTAGE`, `FLAT` (RESCHEDULE only)
+| `frequency` | INT | nullable | New period frequency value (RESCHEDULE only)
+| `frequency_type` | VARCHAR(50) | nullable | Enum: `DAYS`, `WEEKS`, `MONTHS`, `YEARS` (RESCHEDULE only)
+| `created_by` | BIGINT | not null | Audit field
+| `created_on_utc` | DATETIME(6) / TIMESTAMP WITH TIME ZONE | not null | Audit field
+| `last_modified_by` | BIGINT | not null | Audit field
+| `last_modified_on_utc` | DATETIME(6) / TIMESTAMP WITH TIME ZONE | not null | Audit field
+|===
+
+== Configuration
+
+=== Product-Level Delinquency Configuration
+
+Working Capital loan products support two delinquency configuration fields:
+
+[cols="1,2,3",options="header"]
+|===
+| Field | Type | Description
+| `delinquencyGraceDays` | Integer | Number of days after a period's end before delinquency is triggered. Default: 0.
+| `delinquencyStartType` | Enum | Determines the anchor date for the first period: `LOAN_CREATION` or `DISBURSEMENT`.
+|===
+
+The product must also reference a *Delinquency Bucket* (`m_delinquency_bucket`). Without a bucket, COB steps skip delinquency processing for the loan.
+
+=== Delinquency Bucket Minimum Payment Rule
+
+Each delinquency bucket used with Working Capital loans must have an entry in `m_wc_delinquency_configuration` specifying the default minimum payment rule:
+
+[source,json]
+----
+{
+  "frequency": 30,                // period length
+  "frequencyType": "DAYS",        // DAYS | WEEKS | MONTHS | YEARS
+  "minimumPayment": 5.0,          // percentage or flat amount
+  "minimumPaymentType": "PERCENTAGE"  // PERCENTAGE | FLAT
+}
+----
+
+[NOTE]
+====
+The minimum payment is calculated against the loan's `approvedPrincipal`. When `minimumPaymentType` is `PERCENTAGE`, the base amount is `principal + discount` (if a discount is configured on the loan). When `FLAT`, the `minimumPayment` value is used directly.
+====
+
+=== System Configuration
+
+The global configuration flag `enable-instant-delinquency-calculation` (table `c_configuration`) controls whether delinquency evaluation runs immediately after monetary transactions in addition to the scheduled COB run. When enabled, repayment events trigger real-time recalculation of the period's delinquency status.
+
+== COB Pipeline
+
+Delinquency processing for Working Capital loans is part of the `WORKING_CAPITAL_LOAN_CLOSE_OF_BUSINESS` batch job, executed in two sequential business steps:
+
+[cols="1,2,3",options="header"]
+|===
+| Step Order | Step Name | Description
+| 2 | `WC_DELINQUENCY_RANGE_SCHEDULE` | Generates the initial period on first run, advances to the next period when needed, and evaluates all expired periods (sets `minPaymentCriteriaMet`).
+| 3 | `WC_LOAN_DELINQUENCY_CLASSIFICATION` | Iterates over all periods whose `toDate < businessDate + 1` and assigns or lifts delinquency range tags based on the configured bucket ranges.
+|===
+
+Step 2 (`DelinquencyRangeScheduleBusinessStep`) is skipped for loans that have not yet been disbursed. Step 3 (`WorkingCapitalLoanDelinquencyClassificationBusinessStep`) is skipped when no delinquency bucket is configured on the product.
+
+== API Design
+
+=== Delinquency Actions
+
+==== Create Delinquency Action
+
+Creates a delinquency action — either a PAUSE or a RESCHEDULE — for an active Working Capital loan.
+
+[source]
+----
+POST /v1/working-capital-loans/{loanId}/delinquency-actions
+POST /v1/working-capital-loans/external-id/{loanExternalId}/delinquency-actions
+----
+
+**Required permission**: `CREATE_WC_DELINQUENCY_ACTION`
+
+**Request Body — PAUSE:**
+
+[source,json]
+----
+{
+  "action": "pause",
+  "startDate": "2024-03-01",      // mandatory — must be after first disbursement date
+  "endDate": "2024-03-15",        // mandatory — must be after startDate
+  "dateFormat": "yyyy-MM-dd",
+  "locale": "en"
+}
+----
+
+**Request Body — RESCHEDULE:**
+
+[source,json]
+----
+{
+  "action": "reschedule",
+  "minimumPayment": 3.5,              // optional — new minimum payment value (> 0)
+  "minimumPaymentType": "PERCENTAGE", // mandatory if minimumPayment is provided: PERCENTAGE | FLAT
+  "frequency": 14,                    // optional — new period frequency (> 0)
+  "frequencyType": "DAYS",            // mandatory if frequency is provided: DAYS | WEEKS | MONTHS | YEARS
+  "locale": "en"
+}
+----
+
+[NOTE]
+====
+For RESCHEDULE, at least one of the payment group (`minimumPayment` + `minimumPaymentType`) or frequency group (`frequency` + `frequencyType`) must be provided. Both groups can be supplied in the same request.
+====
+
+**Response:**
+
+[source,json]
+----
+{
+  "officeId": 1,
+  "clientId": 42,
+  "loanId": 100,
+  "resourceId": 15
+}
+----
+
+The `resourceId` contains the ID of the created `m_wc_loan_delinquency_action` record.
+
+==== Retrieve Delinquency Actions
+
+Retrieves all delinquency actions recorded for a Working Capital loan, ordered by creation.
+
+[source]
+----
+GET /v1/working-capital-loans/{loanId}/delinquency-actions
+GET /v1/working-capital-loans/external-id/{loanExternalId}/delinquency-actions
+----
+
+**Required permission**: `READ_WC_DELINQUENCY_ACTION`
+
+**Response:**
+
+[source,json]
+----
+[
+  {
+    "id": 10,
+    "action": "PAUSE",
+    "startDate": "2024-03-01",
+    "endDate": "2024-03-15",
+    "minimumPayment": null,
+    "minimumPaymentType": null,
+    "frequency": null,
+    "frequencyType": null
+  },
+  {
+    "id": 11,
+    "action": "RESCHEDULE",
+    "startDate": "2024-04-01",
+    "endDate": null,
+    "minimumPayment": 3.5,
+    "minimumPaymentType": "PERCENTAGE",
+    "frequency": 14,
+    "frequencyType": "DAYS"
+  }
+]
+----
+
+=== Delinquency Range Schedule
+
+==== Retrieve Delinquency Range Schedule
+
+Retrieves all range schedule periods for a Working Capital loan, ordered by `periodNumber`.
+
+[source]
+----
+GET /v1/working-capital-loans/{loanId}/delinquency-range-schedule
+----
+
+**Required permission**: `READ_WORKINGCAPITALLOAN`
+
+**Response:**
+
+[source,json]
+----
+[
+  {
+    "id": 1,
+    "loanId": 100,
+    "periodNumber": 1,
+    "fromDate": "2024-01-15",
+    "toDate": "2024-02-14",
+    "expectedAmount": 500.00,
+    "paidAmount": 500.00,
+    "outstandingAmount": 0.00,
+    "minPaymentCriteriaMet": true,
+    "delinquentDays": 0,
+    "delinquentAmount": 0.00
+  },
+  {
+    "id": 2,
+    "loanId": 100,
+    "periodNumber": 2,
+    "fromDate": "2024-02-15",
+    "toDate": "2024-03-15",
+    "expectedAmount": 500.00,
+    "paidAmount": 0.00,
+    "outstandingAmount": 500.00,
+    "minPaymentCriteriaMet": false,
+    "delinquentDays": 10,
+    "delinquentAmount": 500.00
+  }
+]
+----
+
+== Validation Rules
+
+=== General Rules
+
+* Delinquency actions can only be created for **active** Working Capital loan accounts.
+* `action` is mandatory; supported values are `pause` and `reschedule` (case-insensitive).
+
+=== Validation Rules for PAUSE
+
+* Both `startDate` and `endDate` are mandatory.
+* `startDate` must be strictly before `endDate` (pause must span at least one day).
+* `startDate` must be on or after the first actual disbursement date of the loan.
+* `startDate` must not fall within or before a period that has already been evaluated (`minPaymentCriteriaMet != null`).
+* The pause period must not overlap with any existing PAUSE action for the same loan.
+
+=== Validation Rules for RESCHEDULE
+
+* The loan must have at least one actual disbursement recorded.
+* An existing delinquency range schedule must exist for the loan.
+* At least one of the payment group or the frequency group must be provided.
+* If `minimumPayment` is provided, it must be greater than 0 and `minimumPaymentType` is mandatory.
+* If `frequency` is provided, it must be greater than 0 and `frequencyType` is mandatory.
+
+== Business Rules
+
+=== Period Generation
+
+* The initial period is generated by `DelinquencyRangeScheduleBusinessStep` on the first COB run after disbursement, using the bucket's minimum payment rule (`m_wc_delinquency_configuration`) to calculate `expectedAmount` and `toDate`.
+* Subsequent periods are generated automatically when the previous period's `toDate` is no longer in the future. Periods are generated with a while-loop until the latest period's `toDate` is ahead of the business date.
+* If a RESCHEDULE action has been recorded, the effective frequency and minimum payment for new periods are taken from the most recent RESCHEDULE action, overriding the bucket's configuration.
+
+=== Period Evaluation and Expiration
+
+* At each COB run, all periods whose `toDate <= businessDate` and `minPaymentCriteriaMet IS NULL` are evaluated.
+* Evaluation checks: `paidAmount >= expectedAmount`. If true, `minPaymentCriteriaMet = true`; otherwise `minPaymentCriteriaMet = false`.
+
+=== Repayment Allocation
+
+* Repayment amounts are allocated first to the oldest open past-due periods, then to the current period.
+* For each eligible past-due period, the allocation is `min(repaymentAmount, outstandingAmount)`.
+* When a period's `outstandingAmount` reaches zero, `minPaymentCriteriaMet` is immediately set to `true` and `delinquentAmount`/`delinquentDays` are cleared.
+
+=== Delinquency Classification
+
+* The classification step iterates over periods where `toDate < businessDate + 1`.
+* Delinquent days for a period are calculated as `businessDate - period.toDate` (only if `outstandingAmount > 0`).
+* The applicable delinquency range is resolved from the bucket by finding the range where `minimumAgeDays <= delinquentDays <= maximumAgeDays`.
+* If no range matches (e.g., the period is not overdue), any previously applied tags for that period are lifted.
+
+=== Effect of PAUSE on Schedule
+
+* When a PAUSE action is created, `extendPeriodsForPause` extends all open and future periods.
+* For periods that have not yet started when the pause begins, both `fromDate` and `toDate` are shifted forward by the pause duration.
+* For the period currently active when the pause begins (if the pause starts mid-period), only `toDate` is extended.
+* Periods already evaluated are never modified.
+
+=== Effect of RESCHEDULE on Schedule
+
+* `rescheduleMinimumPayment` modifies the current open period (not yet evaluated) and all future unevaluated periods.
+* The current period's `expectedAmount` is updated; `outstandingAmount` is recalculated as `max(0, expectedAmount - paidAmount)`.
+* Future periods are recalculated from the day after the current period ends, applying the new frequency to determine new `fromDate`/`toDate` and the new `expectedAmount`.
+* The most recent RESCHEDULE action (by ID) is always the effective override for future period calculations.
+
+=== Independence from EIR Amortization
+
+Delinquency management and EIR amortization are fully independent systems at the code level. `WorkingCapitalLoanDelinquencyRangeScheduleServiceImpl` has no dependency on `WorkingCapitalLoanAmortizationScheduleWriteService` and makes no call to `applyRateChange()`.
+
+* A RESCHEDULE action updates only the delinquency period schedule; the amortization model retains its original EIR and payment amounts unchanged.
+* EIR recalculation is triggered exclusively via `PUT /payment-rate`, which is a separate, manually initiated operation.
+* A loan can therefore have its delinquency terms renegotiated (via RESCHEDULE) without altering how discount fee income is recognized, and vice-versa.
+
+== Example Scenarios
+
+=== Scenario #1: Normal Delinquency Lifecycle
+
+**Setup:**
+
+* Loan disbursed on 2024-01-15, approved principal: 10,000
+* Bucket configuration: 30-day periods, 5% minimum payment = 500 per period
+
+**Period 1:** 2024-01-15 → 2024-02-14, expected: 500
+
+* On 2024-02-01: borrower pays 500 → `paidAmount = 500`, `outstandingAmount = 0`, `minPaymentCriteriaMet = true` on period close.
+
+**Period 2:** 2024-02-15 → 2024-03-16, expected: 500
+
+* On 2024-03-17 (COB): period expires, `paidAmount = 0`, `minPaymentCriteriaMet = false`.
+* Classification step: `delinquentDays = 1`, tag with range 1–5 days.
+* On 2024-03-25 (COB): `delinquentDays = 9`, tag moves to range 5–15 days.
+
+=== Scenario #2: PAUSE Extends Periods
+
+**Setup:** Same loan as Scenario #1. Period 2 is active (2024-02-15 → 2024-03-16).
+
+**PAUSE created:** startDate = 2024-03-01, endDate = 2024-03-15 (14 days).
+
+**Effect:**
+
+* Period 2 `toDate` extends from 2024-03-16 to 2024-03-30 (+ 14 days).
+* Period 3 (if already generated) also shifts forward by 14 days.
+
+The borrower now has until 2024-03-30 to meet the minimum payment before the period is evaluated.
+
+=== Scenario #3: RESCHEDULE Action Without Affecting EIR
+
+**Setup:**
+
+* Loan has daily payments; delinquency bucket configured with monthly periods and a PERCENTAGE minimum payment.
+* At business date 2024-03-01, Period 2 (Feb 2024) is delinquent: `paidAmount = 3,000`, minimum was `8,750`.
+* The officer applies a RESCHEDULE reducing `minimumPayment` to FLAT 150.00 with monthly frequency.
+
+**Action:**
+
+`WorkingCapitalLoanDelinquencyActionWriteServiceImpl` records the action in `m_wc_loan_delinquency_action` and calls `rangeScheduleService.rescheduleMinimumPayment()`. The current open period's `expectedAmount` is updated to 150.00, and all future periods are regenerated with the new frequency and expected amount. No call is made to the amortization model.
+
+**Expected Behavior:**
+
+* `m_wc_loan_delinquency_range_schedule` rows from the current open period onward have `expectedAmount = 150.00`.
+* Future COB runs evaluate compliance against the new 150.00 threshold.
+* `m_wc_loan_amortization_model` is unchanged — EIR, discount factors, and expected payment amounts remain as originally computed.
+* To also adjust the amortization model (e.g., because the lender renegotiates the contractual rate), a separate `PUT /payment-rate` call must be made explicitly.
+
+== Summary
+
+Working Capital Product Delinquency Management provides a purpose-built, period-based framework for tracking minimum payment compliance on revolving Working Capital loans. Key aspects include:
+
+* A dedicated COB pipeline with two ordered steps: range schedule generation and delinquency classification.
+* Per-period tracking of expected vs. paid minimum payments, with independent delinquency tags per period.
+* A PAUSE action that extends all open and future periods proportionally, freezing the delinquency clock.
+* A RESCHEDULE action that modifies minimum payment terms for the current and all future periods.
+* A configurable minimum payment rule per delinquency bucket, expressed as either a flat amount or a percentage of principal.
+* Product-level controls for grace days and the delinquency start type.

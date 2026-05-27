@@ -24,7 +24,7 @@ jobs:
           --health-cmd="pg_isready -q -d postgres -U root"
           --health-interval=5s
           --health-timeout=2s
-          --health-retries=5
+          --health-retries=12
 
     env:
       DB_USER: root

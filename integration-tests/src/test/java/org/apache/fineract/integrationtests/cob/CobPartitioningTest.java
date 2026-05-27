@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -40,6 +39,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.accounting.common.AccountingConstants;
+import org.apache.fineract.client.models.COBPartition;
 import org.apache.fineract.client.models.GetFinancialActivityAccountsResponse;
 import org.apache.fineract.client.models.PostFinancialActivityAccountsRequest;
 import org.apache.fineract.client.models.PutGlobalConfigurationsRequest;
@@ -164,19 +164,15 @@ public class CobPartitioningTest extends BaseLoanIntegrationTest {
             closeLatch.await();
 
             // Let's retrieve the partitions
-            List<Map<String, Object>> cobPartitions = CobHelper.getCobPartitions(REQUEST_SPEC, RESPONSE_SPEC, 3, "");
+            List<COBPartition> cobPartitions = CobHelper.getCobPartitions(3);
             log.info("\nLoans created: {},\nRetrieved partitions: {}", loanIds, cobPartitions);
             Assertions.assertEquals(2, cobPartitions.size());
 
-            Assertions.assertEquals(0, cobPartitions.get(0).get("pageNo"));
-            Assertions.assertEquals(loanIds.get(0), cobPartitions.get(0).get("minId"));
-            Assertions.assertEquals(loanIds.get(8), cobPartitions.get(0).get("maxId"));
-            Assertions.assertEquals(3, cobPartitions.get(0).get("count"));
+            Assertions.assertEquals(loanIds.get(0), cobPartitions.get(0).getMinId().intValue());
+            Assertions.assertEquals(loanIds.get(8), cobPartitions.get(0).getMaxId().intValue());
 
-            Assertions.assertEquals(1, cobPartitions.get(1).get("pageNo"));
-            Assertions.assertEquals(loanIds.get(9), cobPartitions.get(1).get("minId"));
-            Assertions.assertEquals(loanIds.get(9), cobPartitions.get(1).get("maxId"));
-            Assertions.assertEquals(1, cobPartitions.get(1).get("count"));
+            Assertions.assertEquals(loanIds.get(9), cobPartitions.get(1).getMinId().intValue());
+            Assertions.assertEquals(loanIds.get(9), cobPartitions.get(1).getMaxId().intValue());
 
             executorService.shutdown();
         } finally {

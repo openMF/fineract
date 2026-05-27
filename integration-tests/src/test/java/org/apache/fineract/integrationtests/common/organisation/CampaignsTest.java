@@ -66,7 +66,11 @@ public class CampaignsTest {
 
     public CampaignsTest(ClientAndServer client) {
         this.client = client;
+    }
 
+    @BeforeEach
+    public void setup() {
+        Utils.initializeRESTAssured();
         // Set up mock server for message-gateway
         this.client.when(request().withMethod("GET").withPath("/smsbridges"))
                 .respond(response().withContentType(MediaType.APPLICATION_JSON).withBody("[\n" //
@@ -79,11 +83,6 @@ public class CampaignsTest {
                         + "     }\n" //
                         + "]") //
                 );
-    }
-
-    @BeforeEach
-    public void setup() {
-        Utils.initializeRESTAssured();
         this.requestSpec = new RequestSpecBuilder().setContentType(ContentType.JSON).build();
         this.requestSpec.header("Authorization", "Basic " + Utils.loginIntoServerAndGetBase64EncodedAuthenticationKey());
         this.requestSpec.header("Fineract-Platform-TenantId", "default");

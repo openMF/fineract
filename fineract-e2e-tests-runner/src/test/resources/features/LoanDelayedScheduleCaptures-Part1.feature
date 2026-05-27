@@ -1207,7 +1207,7 @@ Feature: Full Term Tranche - Schedule handling and Calculations - Part1
       | 01 January 2024  | Disbursement     | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
       | 01 February 2024 | Repayment        | 17.13  | 16.34     | 0.79     | 0.0  | 0.0       | 83.66        | false    | false    |
       | 01 February 2024 | Disbursement     | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 183.66       | false    | false    |
-      | 01 February 2024 | Buy Down Fee     | 50.0   | 0.0       | 0.0      | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 01 February 2024 | Buy Down Fee     | 50.0   | 0.0       | 50.0     | 0.0  | 0.0       | 0.0          | false    | false    |
     When Loan Pay-off is made on "01 February 2024"
     Then Loan is closed with zero outstanding balance and it's all installments have obligations met
 

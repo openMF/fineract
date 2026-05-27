@@ -1462,17 +1462,12 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
         return transactionBeforeLastInterestPosting;
     }
 
-    public void validateAccountBalanceDoesNotBecomeNegative(final BigDecimal transactionAmount, final boolean isException,
+    public void validateAccountBalanceConstraints(final BigDecimal transactionAmount, final boolean isException,
             final List<DepositAccountOnHoldTransaction> depositAccountOnHoldTransactions, final boolean backdatedTxnsAllowedTill,
             final boolean isForceWithdrawal) {
 
-        List<SavingsAccountTransaction> transactionsSortedByDate = null;
-
-        if (backdatedTxnsAllowedTill) {
-            transactionsSortedByDate = retrieveSortedTransactions();
-        } else {
-            transactionsSortedByDate = retrieveListOfTransactions();
-        }
+        List<SavingsAccountTransaction> transactionsSortedByDate = backdatedTxnsAllowedTill ? retrieveSortedTransactions()
+                : retrieveListOfTransactions();
 
         Money runningBalance = Money.zero(this.currency);
         if (backdatedTxnsAllowedTill) {
@@ -1491,28 +1486,13 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
                 continue;
             }
 
-            /*
-             * Loop through the onHold funds and see if we need to deduct or add to minimum required balance and the
-             * point in time the transaction was made:
-             */
-            if (depositAccountOnHoldTransactions != null) {
-                for (final DepositAccountOnHoldTransaction onHoldTransaction : depositAccountOnHoldTransactions) {
-                    // Compare the balance of the on hold:
-                    if (!DateUtils.isAfter(onHoldTransaction.getTransactionDate(), transaction.getTransactionDate())
-                            && (lastSavingsDate == null || DateUtils.isAfter(onHoldTransaction.getTransactionDate(), lastSavingsDate))) {
-                        if (onHoldTransaction.getTransactionType().isHold()) {
-                            minRequiredBalance = minRequiredBalance.plus(onHoldTransaction.getAmount(this.currency));
-                        } else {
-                            minRequiredBalance = minRequiredBalance.minus(onHoldTransaction.getAmount(this.currency));
-                        }
-                    }
-                }
-            }
+            minRequiredBalance = applyOnHoldAdjustments(minRequiredBalance, depositAccountOnHoldTransactions, lastSavingsDate,
+                    transaction.getTransactionDate());
 
             // deal with potential minRequiredBalance and
             // enforceMinRequiredBalance
             if (!isException && transaction.canProcessBalanceCheck() && !isOverdraft()) {
-                if (runningBalance.minus(minRequiredBalance).isLessThanZero()
+                if (violatesMinRequiredBalance(runningBalance, minRequiredBalance)
                         && !isForceWithdrawalAllowed(isForceWithdrawal, runningBalance)) {
                     throw new InsufficientAccountBalanceException("transactionAmount", getAccountBalance(), withdrawalFee,
                             transactionAmount);
@@ -1526,24 +1506,56 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
         // interest posting
         // and should be checked after processing all transactions
         if (isOverdraft()) {
-            if (runningBalance.minus(minRequiredBalance).isLessThanZero() && !isForceWithdrawalAllowed(isForceWithdrawal, runningBalance)) {
+            if (violatesMinRequiredBalance(runningBalance, minRequiredBalance)
+                    && !isForceWithdrawalAllowed(isForceWithdrawal, runningBalance)) {
                 throw new InsufficientAccountBalanceException("transactionAmount", getAccountBalance(), withdrawalFee, transactionAmount);
             }
         }
 
-        if (this.getSavingsHoldAmount().compareTo(BigDecimal.ZERO) > 0) {
-            if (this.enforceMinRequiredBalance) {
-                if (runningBalance.minus(minRequiredBalance.plus(this.getSavingsHoldAmount())).isLessThanZero()) {
-                    throw new InsufficientAccountBalanceException("transactionAmount", getAccountBalance(), withdrawalFee,
-                            transactionAmount);
-                }
-            } else {
-                if (runningBalance.minus(this.getSavingsHoldAmount()).isLessThanZero()) {
-                    throw new InsufficientAccountBalanceException("transactionAmount", getAccountBalance(), withdrawalFee,
-                            transactionAmount);
+        if (violatesMinBalanceWithHold(runningBalance, minRequiredBalance, this.getSavingsHoldAmount(), this.enforceMinRequiredBalance)) {
+            throw new InsufficientAccountBalanceException("transactionAmount", getAccountBalance(), withdrawalFee, transactionAmount);
+        }
+
+    }
+
+    private boolean violatesMinRequiredBalance(Money runningBalance, Money minRequiredBalance) {
+        return runningBalance.minus(minRequiredBalance).isLessThanZero();
+    }
+
+    private Money applyOnHoldAdjustments(Money minRequiredBalance, List<DepositAccountOnHoldTransaction> depositAccountOnHoldTransactions,
+            LocalDate lastSavingsDate, LocalDate transactionDate) {
+        /*
+         * Loop through the onHold funds and see if we need to deduct or add to minimum required balance and the point
+         * in time the transaction was made:
+         */
+        if (depositAccountOnHoldTransactions != null) {
+            for (final DepositAccountOnHoldTransaction onHoldTransaction : depositAccountOnHoldTransactions) {
+                // Compare the balance of the on hold:
+                if (!DateUtils.isAfter(onHoldTransaction.getTransactionDate(), transactionDate)
+                        && (lastSavingsDate == null || DateUtils.isAfter(onHoldTransaction.getTransactionDate(), lastSavingsDate))) {
+                    if (onHoldTransaction.getTransactionType().isHold()) {
+                        minRequiredBalance = minRequiredBalance.plus(onHoldTransaction.getAmount(this.currency));
+                    } else {
+                        minRequiredBalance = minRequiredBalance.minus(onHoldTransaction.getAmount(this.currency));
+                    }
                 }
             }
         }
+        return minRequiredBalance;
+    }
+
+    private boolean violatesMinBalanceWithHold(Money runningBalance, Money minRequiredBalance, BigDecimal savingsHoldAmount,
+            boolean enforceMinRequiredBalance) {
+        // do not move or add logic before this !
+        if (savingsHoldAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+
+        if (enforceMinRequiredBalance) {
+            return runningBalance.minus(minRequiredBalance.plus(savingsHoldAmount)).isLessThanZero();
+        }
+
+        return runningBalance.minus(savingsHoldAmount).isLessThanZero();
     }
 
     /**
@@ -1571,16 +1583,13 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
         return runningBalance.getAmount().compareTo(limitBd) >= 0;
     }
 
-    public void validateAccountBalanceDoesNotBecomeNegative(final String transactionAction,
+    public void validateAccountBalanceConstraints(final String transactionAction,
             final List<DepositAccountOnHoldTransaction> depositAccountOnHoldTransactions, final boolean backdatedTxnsAllowedTill) {
 
-        List<SavingsAccountTransaction> transactionsSortedByDate = null;
+        List<SavingsAccountTransaction> transactionsSortedByDate = backdatedTxnsAllowedTill ? retrieveSortedTransactions()
+                : retrieveListOfTransactions();
         BigDecimal transactionAmount = null;
-        if (backdatedTxnsAllowedTill) {
-            transactionsSortedByDate = retrieveSortedTransactions();
-        } else {
-            transactionsSortedByDate = retrieveListOfTransactions();
-        }
+
         Money runningBalance = Money.zero(this.currency);
 
         if (backdatedTxnsAllowedTill) {
@@ -1599,27 +1608,12 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
                 runningBalance = runningBalance.minus(transaction.getAmount(this.currency));
             }
 
-            /*
-             * Loop through the onHold funds and see if we need to deduct or add to minimum required balance and the
-             * point in time the transaction was made:
-             */
-            if (depositAccountOnHoldTransactions != null) {
-                for (final DepositAccountOnHoldTransaction onHoldTransaction : depositAccountOnHoldTransactions) {
-                    // Compare the balance of the on hold:
-                    if (!DateUtils.isAfter(onHoldTransaction.getTransactionDate(), transaction.getTransactionDate())
-                            && (lastSavingsDate == null || DateUtils.isAfter(onHoldTransaction.getTransactionDate(), lastSavingsDate))) {
-                        if (onHoldTransaction.getTransactionType().isHold()) {
-                            minRequiredBalance = minRequiredBalance.plus(onHoldTransaction.getAmount(this.currency));
-                        } else {
-                            minRequiredBalance = minRequiredBalance.minus(onHoldTransaction.getAmount(this.currency));
-                        }
-                    }
-                }
-            }
+            minRequiredBalance = applyOnHoldAdjustments(minRequiredBalance, depositAccountOnHoldTransactions, lastSavingsDate,
+                    transaction.getTransactionDate());
 
             // enforceMinRequiredBalance
             if (transaction.canProcessBalanceCheck()) {
-                if (runningBalance.minus(minRequiredBalance).isLessThanZero()) {
+                if (violatesMinRequiredBalance(runningBalance, minRequiredBalance)) {
                     final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
                     final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
                             .resource(depositAccountType().resourceName() + transactionAction);
@@ -1636,7 +1630,7 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
 
         BigDecimal withdrawalFee = null;
         if (isOverdraft()) {
-            if (runningBalance.minus(minRequiredBalance).isLessThanZero()) {
+            if (violatesMinRequiredBalance(runningBalance, minRequiredBalance)) {
                 throw new InsufficientAccountBalanceException("transactionAmount", getAccountBalance(), withdrawalFee, transactionAmount);
             }
         }
@@ -2499,7 +2493,7 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
         return nextDueDate;
     }
 
-    public void validateAccountBalanceDoesNotBecomeNegativeMinimal(final BigDecimal transactionAmount, final boolean isException) {
+    public void validateAccountBalanceConstraintsMinimal(final BigDecimal transactionAmount, final boolean isException) {
         // final List<SavingsAccountTransaction> transactionsSortedByDate =
         // retrieveListOfTransactions();
         Money runningBalance = this.summary.getAccountBalance(getCurrency());
@@ -2512,16 +2506,15 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
         // posting
         // and should be checked after processing all transactions
         if (!isOverdraft()) {
-            if (runningBalance.minus(minRequiredBalance).isLessThanZero()) {
+            if (violatesMinRequiredBalance(runningBalance, minRequiredBalance)) {
                 throw new InsufficientAccountBalanceException("transactionAmount", getAccountBalance(), withdrawalFee, transactionAmount);
             }
         }
 
-        if (this.getSavingsHoldAmount().compareTo(BigDecimal.ZERO) > 0) {
-            if (runningBalance.minus(this.getSavingsHoldAmount()).minus(minRequiredBalance).isLessThanZero()) {
-                throw new InsufficientAccountBalanceException("transactionAmount", getAccountBalance(), withdrawalFee, transactionAmount);
-            }
+        if (violatesMinBalanceWithHold(runningBalance, minRequiredBalance, this.getSavingsHoldAmount(), this.enforceMinRequiredBalance)) {
+            throw new InsufficientAccountBalanceException("transactionAmount", getAccountBalance(), withdrawalFee, transactionAmount);
         }
+
     }
 
     public Map<String, Object> rejectApplication(final AppUser currentUser, final JsonCommand command) {
@@ -3337,6 +3330,22 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
                         SavingsCompoundingInterestPeriodType.QUATERLY, SavingsCompoundingInterestPeriodType.BI_ANNUAL,
                         SavingsCompoundingInterestPeriodType.ANNUAL));
 
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.ANNIVERSARY_MONTHLY,
+                Arrays.asList(SavingsCompoundingInterestPeriodType.DAILY, SavingsCompoundingInterestPeriodType.MONTHLY));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.ANNIVERSARY_QUARTERLY,
+                Arrays.asList(SavingsCompoundingInterestPeriodType.DAILY, SavingsCompoundingInterestPeriodType.MONTHLY,
+                        SavingsCompoundingInterestPeriodType.QUATERLY));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.ANNIVERSARY_BIANNUAL,
+                Arrays.asList(SavingsCompoundingInterestPeriodType.DAILY, SavingsCompoundingInterestPeriodType.MONTHLY,
+                        SavingsCompoundingInterestPeriodType.QUATERLY, SavingsCompoundingInterestPeriodType.BI_ANNUAL));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.ANNIVERSARY_ANNUAL,
+                Arrays.asList(SavingsCompoundingInterestPeriodType.DAILY, SavingsCompoundingInterestPeriodType.MONTHLY,
+                        SavingsCompoundingInterestPeriodType.QUATERLY, SavingsCompoundingInterestPeriodType.BI_ANNUAL,
+                        SavingsCompoundingInterestPeriodType.ANNUAL));
+
         SavingsPostingInterestPeriodType savingsPostingInterestPeriodType = SavingsPostingInterestPeriodType
                 .fromInt(interestPostingPeriodType);
         SavingsCompoundingInterestPeriodType savingsCompoundingInterestPeriodType = SavingsCompoundingInterestPeriodType
@@ -3345,7 +3354,6 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
         if (postingtoCompoundMap.get(savingsPostingInterestPeriodType) == null) {
             baseDataValidator.failWithCodeNoParameterAddedToErrorCode("posting.period.type.is.less.than.compound.period.type",
                     savingsPostingInterestPeriodType.name(), savingsCompoundingInterestPeriodType.name());
-
         }
     }
 

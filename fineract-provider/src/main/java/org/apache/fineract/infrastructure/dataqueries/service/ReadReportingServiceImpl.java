@@ -20,14 +20,13 @@ package org.apache.fineract.infrastructure.dataqueries.service;
 
 import jakarta.ws.rs.core.StreamingOutput;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -226,12 +225,16 @@ public class ReadReportingServiceImpl implements ReadReportingService {
     @Override
     public String retrieveReportPDF(final String reportName, final String type, final Map<String, String> queryParams) {
 
-        final String fileLocation = fineractProperties.getContent().getFilesystem().getRootFolder() + File.separator + "";
-        if (!new File(fileLocation).isDirectory()) {
-            new File(fileLocation).mkdirs();
+        final Path fileLocation = Path.of(fineractProperties.getContent().getFilesystem().getRootFolder());
+        if (!Files.isDirectory(fileLocation)) {
+            try {
+                Files.createDirectories(fileLocation);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
 
-        final String genaratePdf = fileLocation + File.separator + reportName + ".pdf";
+        final Path generatePdf = fileLocation.resolve(reportName + ".pdf");
 
         try {
             final GenericResultsetData result = retrieveGenericResultset(reportName, type, queryParams);
@@ -249,11 +252,11 @@ public class ReadReportingServiceImpl implements ReadReportingService {
             if (!reportName.matches("^[a-zA-Z0-9_.-]+$")) {
                 throw new IllegalArgumentException("Invalid report name format");
             }
-            Path validatedPath = Paths.get(fileLocation, reportName + ".pdf").normalize();
-            if (!validatedPath.startsWith(Paths.get(fileLocation))) {
+            Path validatedPath = Path.of(fileLocation.toString(), reportName + ".pdf").normalize();
+            if (!validatedPath.startsWith(fileLocation)) {
                 throw new IllegalArgumentException("Path traversal attempt detected");
             }
-            PdfWriter.getInstance(document, new FileOutputStream(validatedPath.toString()));
+            PdfWriter.getInstance(document, Files.newOutputStream(validatedPath));
             document.open();
 
             final PdfPTable table = new PdfPTable(chSize);
@@ -283,7 +286,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
             table.completeRow();
             document.add(table);
             document.close();
-            return genaratePdf;
+            return generatePdf.toString();
         } catch (final Exception e) {
             log.error("error.msg.reporting.error:", e);
             throw ErrorHandler.getMappable(e);

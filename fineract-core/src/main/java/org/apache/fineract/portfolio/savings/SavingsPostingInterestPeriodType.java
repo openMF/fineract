@@ -31,7 +31,11 @@ public enum SavingsPostingInterestPeriodType {
     MONTHLY(4, "savingsPostingInterestPeriodType.monthly"), //
     QUATERLY(5, "savingsPostingInterestPeriodType.quarterly"), //
     BIANNUAL(6, "savingsPostingInterestPeriodType.biannual"), //
-    ANNUAL(7, "savingsPostingInterestPeriodType.annual"); //
+    ANNUAL(7, "savingsPostingInterestPeriodType.annual"), //
+    ANNIVERSARY_MONTHLY(8, "savingsPostingInterestPeriodType.anniversaryMonthly"), //
+    ANNIVERSARY_QUARTERLY(9, "savingsPostingInterestPeriodType.anniversaryQuarterly"), //
+    ANNIVERSARY_BIANNUAL(10, "savingsPostingInterestPeriodType.anniversaryBiAnnual"), //
+    ANNIVERSARY_ANNUAL(11, "savingsPostingInterestPeriodType.anniversaryAnnual"); //
 
     private final Integer value;
     private final String code;
@@ -70,6 +74,14 @@ public enum SavingsPostingInterestPeriodType {
                 return BIANNUAL;
             case 7:
                 return ANNUAL;
+            case 8:
+                return ANNIVERSARY_MONTHLY;
+            case 9:
+                return ANNIVERSARY_QUARTERLY;
+            case 10:
+                return ANNIVERSARY_BIANNUAL;
+            case 11:
+                return ANNIVERSARY_ANNUAL;
             default:
                 return INVALID;
         }

@@ -51,7 +51,7 @@ public class CustomAuditingHandler extends AuditingHandler {
      * @param mappingContext
      *            must not be {@literal null}.
      * @since 1.8
-     * @deprecated use {@link AuditingHandler(PersistentEntities)} instead.
+     * @deprecated use AuditingHandler with PersistentEntities instead.
      */
     public CustomAuditingHandler(MappingContext<? extends PersistentEntity<?, ?>, ? extends PersistentProperty<?>> mappingContext,
             AuditorAware<?> auditorAware) {
