@@ -22,7 +22,7 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
-    <changeSet author="fineract" id="0234-buydown-fee-allocation-asset-owner" context="postgresql">
+    <changeSet author="fineract" id="0235-buydown-fee-allocation-asset-owner" context="postgresql">
         <update tableName="stretchy_report">
             <column name="report_sql"><![CDATA[
 WITH loan_originators AS (SELECT mlom.loan_id,
@@ -1334,7 +1334,7 @@ ORDER BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
             <where>report_name='Transaction Summary Report with Asset Owner'</where>
         </update>
     </changeSet>
-    <changeSet author="fineract" id="0234-buydown-fee-allocation-asset-owner-mysql" context="mysql">
+    <changeSet author="fineract" id="0235-buydown-fee-allocation-asset-owner-mysql" context="mysql">
         <update tableName="stretchy_report">
             <column name="report_sql"><![CDATA[
 
@@ -2649,7 +2649,7 @@ ORDER BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
     </changeSet>
 
     <!-- Transaction Summary Report -->
-    <changeSet author="fineract" id="0234-buydown-fee-allocation-transaction-summary">
+    <changeSet author="fineract" id="0235-buydown-fee-allocation-transaction-summary">
         <update tableName="stretchy_report">
             <column name="report_sql" value="SELECT
             '${endDate}' AS TransactionDate,
