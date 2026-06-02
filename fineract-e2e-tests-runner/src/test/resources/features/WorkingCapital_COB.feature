@@ -1,4 +1,5 @@
-@WCCOBFeature @WC
+@WorkingCapital
+@WCCOBFeature
 Feature: Working Capital COB Job
 
   Background:

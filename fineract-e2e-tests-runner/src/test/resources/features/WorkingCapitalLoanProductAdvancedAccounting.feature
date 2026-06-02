@@ -1,3 +1,4 @@
+@WorkingCapital
 @WorkingCapitalLoanProductAdvancedAccountingFeature
 Feature: WorkingCapitalLoanProductAdvancedAccounting
 

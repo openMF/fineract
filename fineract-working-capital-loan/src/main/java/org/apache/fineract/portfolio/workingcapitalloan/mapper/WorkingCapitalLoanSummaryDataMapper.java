@@ -19,17 +19,11 @@
 package org.apache.fineract.portfolio.workingcapitalloan.mapper;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Function;
 import org.apache.fineract.infrastructure.core.config.MapstructMapperConfig;
 import org.apache.fineract.infrastructure.core.service.MathUtil;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanSummaryData;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
-import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransaction;
-import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransactionAllocation;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -40,26 +34,29 @@ public interface WorkingCapitalLoanSummaryDataMapper {
     @Named("toSummaryData")
     @Mapping(target = "currency", source = ".", qualifiedByName = "toCurrency")
     // Principal
-    @Mapping(target = "principalDisbursed", source = "transactions", qualifiedByName = "toPrincipalDisbursed")
-    @Mapping(target = "principalPaid", source = "balance.totalPaidPrincipal", qualifiedByName = "nullToZero")
+    @Mapping(target = "principal", source = "balance.principal", qualifiedByName = "nullToZero")
+    @Mapping(target = "principalPaid", source = "balance.principalPaid", qualifiedByName = "nullToZero")
     @Mapping(target = "principalOutstanding", source = "balance.principalOutstanding", qualifiedByName = "nullToZero")
-    // Discount fee
-    @Mapping(target = "discountCharged", source = "transactions", qualifiedByName = "toDiscountCharged")
-    @Mapping(target = "discountPaid", source = "transactions", qualifiedByName = "toDiscountPaid")
-    @Mapping(target = "discountOutstanding", source = "transactions", qualifiedByName = "toDiscountOutstanding")
+    // Fee
+    @Mapping(target = "fee", source = "balance.fee", qualifiedByName = "nullToZero")
+    @Mapping(target = "feePaid", source = "balance.feePaid", qualifiedByName = "nullToZero")
+    @Mapping(target = "feeOutstanding", source = "balance.feeOutstanding", qualifiedByName = "nullToZero")
+    // Penalty
+    @Mapping(target = "penalty", source = "balance.penalty", qualifiedByName = "nullToZero")
+    @Mapping(target = "penaltyPaid", source = "balance.penaltyPaid", qualifiedByName = "nullToZero")
+    @Mapping(target = "penaltyOutstanding", source = "balance.penaltyOutstanding", qualifiedByName = "nullToZero")
     // Income recognition
-    @Mapping(target = "realizedIncome", source = "balance.realizedIncome", qualifiedByName = "nullToZero")
-    @Mapping(target = "unrealizedIncome", source = "balance.unrealizedIncome", qualifiedByName = "nullToZero")
+    @Mapping(target = "realizedIncomeFromDiscountFee", source = "balance.realizedIncomeFromDiscountFee", qualifiedByName = "nullToZero")
+    @Mapping(target = "unrealizedIncomeFromDiscountFee", source = "balance.unrealizedIncomeFromDiscountFee", qualifiedByName = "nullToZero")
     // Overpayment
-    @Mapping(target = "overpaymentAmount", source = "balance.overpaymentAmount", qualifiedByName = "nullToZero")
+    @Mapping(target = "overpayment", source = "balance.overpaymentAmount", qualifiedByName = "nullToZero")
     // Aggregates
-    @Mapping(target = "totalExpectedRepayment", source = "transactions", qualifiedByName = "toTotalExpectedRepayment")
-    @Mapping(target = "totalRepayment", source = "balance.totalPayment", qualifiedByName = "nullToZero")
-    @Mapping(target = "totalOutstanding", source = ".", qualifiedByName = "toTotalOutstanding")
-    // Transaction summaries
-    @Mapping(target = "totalDisbursement", source = "transactions", qualifiedByName = "toPrincipalDisbursed")
-    @Mapping(target = "totalRepaymentTransaction", source = "transactions", qualifiedByName = "toTotalRepaymentTransaction")
-    @Mapping(target = "totalDiscountFee", source = "transactions", qualifiedByName = "toDiscountCharged")
+    @Mapping(target = "totalExpectedRepayment", source = "balance.totalExpectedRepayment", qualifiedByName = "nullToZero")
+    @Mapping(target = "totalRepayment", source = "balance.totalRepayment", qualifiedByName = "nullToZero")
+    @Mapping(target = "totalOutstanding", source = "balance.totalOutstanding", qualifiedByName = "nullToZero")
+    @Mapping(target = "totalDisbursement", source = "balance.totalDisbursement", qualifiedByName = "nullToZero")
+    @Mapping(target = "totalDiscountFee", source = "balance.totalDiscountFee", qualifiedByName = "nullToZero")
+    @Mapping(target = "totalDiscountFeeAdjustment", source = "balance.totalDiscountFeeAdjustment", qualifiedByName = "nullToZero")
     WorkingCapitalLoanSummaryData toData(WorkingCapitalLoan loan);
 
     @Named("toCurrency")
@@ -70,52 +67,5 @@ public interface WorkingCapitalLoanSummaryDataMapper {
     @Named("nullToZero")
     default BigDecimal nullToZero(final BigDecimal value) {
         return MathUtil.nullToZero(value);
-    }
-
-    @Named("toPrincipalDisbursed")
-    default BigDecimal toPrincipalDisbursed(final List<WorkingCapitalLoanTransaction> transactions) {
-        return sumActive(transactions, LoanTransactionType.DISBURSEMENT);
-    }
-
-    @Named("toDiscountCharged")
-    default BigDecimal toDiscountCharged(final List<WorkingCapitalLoanTransaction> transactions) {
-        return sumActive(transactions, LoanTransactionType.DISCOUNT_FEE);
-    }
-
-    @Named("toDiscountPaid")
-    default BigDecimal toDiscountPaid(final List<WorkingCapitalLoanTransaction> transactions) {
-        return sumActiveAllocationField(transactions, WorkingCapitalLoanTransactionAllocation::getFeeChargesPortion);
-    }
-
-    @Named("toDiscountOutstanding")
-    default BigDecimal toDiscountOutstanding(final List<WorkingCapitalLoanTransaction> transactions) {
-        return toDiscountCharged(transactions).subtract(toDiscountPaid(transactions));
-    }
-
-    @Named("toTotalExpectedRepayment")
-    default BigDecimal toTotalExpectedRepayment(final List<WorkingCapitalLoanTransaction> transactions) {
-        return toPrincipalDisbursed(transactions).add(toDiscountCharged(transactions));
-    }
-
-    @Named("toTotalOutstanding")
-    default BigDecimal toTotalOutstanding(final WorkingCapitalLoan loan) {
-        return nullToZero(loan.getBalance() != null ? loan.getBalance().getPrincipalOutstanding() : null)
-                .add(toDiscountOutstanding(loan.getTransactions()));
-    }
-
-    @Named("toTotalRepaymentTransaction")
-    default BigDecimal toTotalRepaymentTransaction(final List<WorkingCapitalLoanTransaction> transactions) {
-        return sumActive(transactions, LoanTransactionType.REPAYMENT);
-    }
-
-    private BigDecimal sumActive(final List<WorkingCapitalLoanTransaction> transactions, final LoanTransactionType type) {
-        return transactions.stream().filter(t -> t.getTypeOf() == type && !t.isReversed())
-                .map(WorkingCapitalLoanTransaction::getTransactionAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    private BigDecimal sumActiveAllocationField(final List<WorkingCapitalLoanTransaction> transactions,
-            final Function<WorkingCapitalLoanTransactionAllocation, BigDecimal> extractor) {
-        return transactions.stream().filter(t -> !t.isReversed() && t.getAllocation() != null).map(t -> extractor.apply(t.getAllocation()))
-                .filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

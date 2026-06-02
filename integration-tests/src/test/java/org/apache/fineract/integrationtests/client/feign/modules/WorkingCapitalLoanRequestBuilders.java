@@ -35,7 +35,7 @@ public final class WorkingCapitalLoanRequestBuilders {
             BigDecimal periodPaymentRate, String submittedOnDate, String expectedDisbursementDate) {
         return new PostWorkingCapitalLoansRequest().clientId(clientId).productId(productId).principalAmount(principal)
                 .periodPaymentRate(periodPaymentRate).submittedOnDate(submittedOnDate).expectedDisbursementDate(expectedDisbursementDate)
-                .totalPayment(BigDecimal.valueOf(100000)).locale(LOCALE).dateFormat(DATE_FORMAT);
+                .totalPaymentVolume(BigDecimal.valueOf(100000)).locale(LOCALE).dateFormat(DATE_FORMAT);
     }
 
     public static PostWorkingCapitalLoansLoanIdRequest approve(String approvedOnDate, BigDecimal approvedAmount,

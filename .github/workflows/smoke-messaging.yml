@@ -23,6 +23,7 @@ jobs:
     env:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
       IMAGE_NAME: fineract
+      DOCKER_LOG_DIR: ci-logs/smoke-${{ matrix.messaging }}
 
     steps:
       - name: Set up JDK 21
@@ -78,3 +79,33 @@ jobs:
 
       - name: Run Smoke Test with Remote COB
         run: ./gradlew --no-daemon --console=plain :integration-tests:cleanTest :integration-tests:test --tests "org.apache.fineract.integrationtests.investor.externalassetowner.InitiateExternalAssetOwnerTransferTest.saleActiveLoanToExternalAssetOwnerAndBuybackADayLater" -PcargoDisabled -x buildJavaSdk
+
+      - name: Collect Docker logs
+        if: always()
+        run: |
+          mkdir -p "$DOCKER_LOG_DIR"
+          docker ps -a > "$DOCKER_LOG_DIR/docker-ps.txt" 2>&1 || true
+          docker compose -f ${{ matrix.compose_file }} ps --all > "$DOCKER_LOG_DIR/docker-compose-ps.txt" 2>&1 || true
+          docker compose -f ${{ matrix.compose_file }} logs --no-color --timestamps > "$DOCKER_LOG_DIR/docker-compose.log" 2>&1 || true
+          docker stats --no-stream > "$DOCKER_LOG_DIR/docker-stats.txt" 2>&1 || true
+
+          docker compose -f ${{ matrix.compose_file }} ps -q | while read -r container_id; do
+            [ -n "$container_id" ] || continue
+            container_name="$(docker inspect --format '{{.Name}}' "$container_id" 2>/dev/null | sed 's#^/##; s#[^A-Za-z0-9_.-]#_#g')"
+            [ -n "$container_name" ] || container_name="$container_id"
+            docker logs --timestamps "$container_id" > "$DOCKER_LOG_DIR/${container_name}.log" 2>&1 || true
+            docker inspect "$container_id" > "$DOCKER_LOG_DIR/${container_name}.inspect.json" 2>&1 || true
+          done
+
+      - name: Upload Docker logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: docker-logs-${{ matrix.messaging }}-attempt-${{ github.run_attempt }}
+          path: ci-logs/
+          if-no-files-found: ignore
+          retention-days: 5
+
+      - name: Clean up
+        if: always()
+        run: docker compose -f ${{ matrix.compose_file }} down -v

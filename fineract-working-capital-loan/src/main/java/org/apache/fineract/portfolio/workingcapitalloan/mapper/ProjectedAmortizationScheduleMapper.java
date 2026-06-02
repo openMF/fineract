@@ -41,7 +41,7 @@ public class ProjectedAmortizationScheduleMapper {
         return ProjectedAmortizationScheduleData.builder() //
                 .discountFeeAmount(roundMoney(model.discountFeeAmount())) //
                 .netDisbursementAmount(roundMoney(model.netDisbursementAmount())) //
-                .totalPaymentValue(roundMoney(model.totalPaymentValue())) //
+                .totalPaymentVolume(roundMoney(model.totalPaymentVolume())) //
                 .periodPaymentRate(model.periodPaymentRate()) //
                 .npvDayCount(model.npvDayCount()) //
                 .expectedDisbursementDate(model.expectedDisbursementDate()) //

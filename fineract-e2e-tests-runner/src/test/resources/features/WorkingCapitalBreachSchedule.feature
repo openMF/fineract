@@ -1,3 +1,4 @@
+@WorkingCapital
 @WorkingCapitalBreachScheduleFeature
 Feature: Working Capital Breach Schedule
 
@@ -7,7 +8,7 @@ Feature: Working Capital Breach Schedule
     And Admin creates a client with random data
     And Admin creates a new Working Capital Loan Product with breachId and overrides enabled
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     When Admin runs inline COB job for Working Capital Loan by loanId
     Then Working Capital loan breach schedule has no data
@@ -18,7 +19,7 @@ Feature: Working Capital Breach Schedule
     And Admin creates a client with random data
     And Admin creates a new Working Capital Loan Product with breachId and overrides enabled
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin runs inline COB job for Working Capital Loan by loanId
@@ -30,7 +31,7 @@ Feature: Working Capital Breach Schedule
     And Admin creates a client with random data
     And Admin creates a new Working Capital Loan Product with breachId and overrides enabled
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
@@ -45,7 +46,7 @@ Feature: Working Capital Breach Schedule
     And Admin creates a client with random data
     And Admin creates a new Working Capital Loan Product with breachId and overrides enabled
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
@@ -65,7 +66,7 @@ Feature: Working Capital Breach Schedule
     And Admin creates a client with random data
     And Admin creates a new Working Capital Loan Product with breachId and overrides enabled
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
@@ -83,7 +84,7 @@ Feature: Working Capital Breach Schedule
     And Admin creates a client with random data
     And Admin creates a new Working Capital Loan Product with breachId and overrides enabled
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
@@ -103,7 +104,7 @@ Feature: Working Capital Breach Schedule
     And Admin creates a client with random data
     And Admin creates a new Working Capital Loan Product with breachId and overrides enabled
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 1000     |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount and "1000" discount amount
@@ -120,7 +121,7 @@ Feature: Working Capital Breach Schedule
       | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays |
       | 7               | DAYS                | PERCENTAGE                  | 9            | 3                    |
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 1000     |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount and "1000" discount amount
@@ -148,7 +149,7 @@ Feature: Working Capital Breach Schedule
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | WCLP        | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
@@ -163,7 +164,7 @@ Feature: Working Capital Breach Schedule
       | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays |
       | 1               | WEEKS               | PERCENTAGE                  | 10           |                      |
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
@@ -180,7 +181,7 @@ Feature: Working Capital Breach Schedule
       | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays |
       | 2               | WEEKS               | PERCENTAGE                  | 10           |                      |
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
@@ -201,7 +202,7 @@ Feature: Working Capital Breach Schedule
       | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays |
       | 1               | YEARS               | FLAT                        | 500          |                      |
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 1000     |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
@@ -219,7 +220,7 @@ Feature: Working Capital Breach Schedule
       | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays |
       | 1               | MONTHS              | PERCENTAGE                  | 2            |                      |
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
@@ -241,7 +242,7 @@ Feature: Working Capital Breach Schedule
       | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays |
       | 1               | MONTHS              | FLAT                        | 100          |                      |
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 31 January 2026 | 31 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "31 January 2026" with "9000" amount and expected disbursement date on "31 January 2026"
     When Admin successfully disburse the Working Capital loan on "31 January 2026" with "9000" EUR transaction amount
@@ -265,7 +266,7 @@ Feature: Working Capital Breach Schedule
       | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays |
       | 1               | YEARS               | FLAT                        | 100          |                      |
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate  | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate  | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 29 February 2024 | 29 February 2024         | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "29 February 2024" with "9000" amount and expected disbursement date on "29 February 2024"
     When Admin successfully disburse the Working Capital loan on "29 February 2024" with "9000" EUR transaction amount
@@ -282,7 +283,7 @@ Feature: Working Capital Breach Schedule
       | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays |
       | 1               | MONTHS              | PERCENTAGE                  | 10           |                      |
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
@@ -304,7 +305,7 @@ Feature: Working Capital Breach Schedule
     And Admin creates a client with random data
     And Admin creates a new Working Capital Loan Product with breachId and overrides enabled
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
@@ -332,7 +333,7 @@ Feature: Working Capital Breach Schedule
     And Admin creates a client with random data
     And Admin creates a new Working Capital Loan Product with breachId and overrides enabled
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin rejects the working capital loan on "01 January 2026"
     When Admin runs inline COB job for Working Capital Loan by loanId
@@ -344,7 +345,7 @@ Feature: Working Capital Breach Schedule
     And Admin creates a client with random data
     And Admin creates a new Working Capital Loan Product with breachId and overrides enabled
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     And Admin makes undo approval on the working capital loan
@@ -359,7 +360,7 @@ Feature: Working Capital Breach Schedule
       | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays |
       | 7               | DAYS                | PERCENTAGE                  | 10           | 45                   |
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
@@ -376,7 +377,7 @@ Feature: Working Capital Breach Schedule
       | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays |
       | 1               | MONTHS              | FLAT                        | 0            |                      |
     And Admin creates a working capital loan using created product with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount

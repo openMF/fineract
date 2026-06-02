@@ -86,7 +86,7 @@ public class WorkingCapitalLoanApplicationDataValidator {
             WorkingCapitalLoanConstants.clientIdParameterName, WorkingCapitalLoanConstants.productIdParameterName,
             WorkingCapitalLoanConstants.fundIdParameterName, WorkingCapitalLoanConstants.accountNoParameterName,
             WorkingCapitalLoanConstants.externalIdParameterName, WorkingCapitalLoanConstants.principalAmountParamName,
-            WorkingCapitalLoanProductConstants.periodPaymentRateParamName, WorkingCapitalLoanConstants.totalPaymentParamName,
+            WorkingCapitalLoanProductConstants.periodPaymentRateParamName, WorkingCapitalLoanConstants.totalPaymentVolumeParamName,
             WorkingCapitalLoanProductConstants.discountParamName, WorkingCapitalLoanConstants.submittedOnDateParameterName,
             WorkingCapitalLoanConstants.expectedDisbursementDateParameterName,
             WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName, WorkingCapitalLoanProductConstants.repaymentEveryParamName,
@@ -105,8 +105,8 @@ public class WorkingCapitalLoanApplicationDataValidator {
 
     /**
      * Validates the create loan application request. Mandatory: clientId, productId, principal (disbursement amount),
-     * periodPaymentRate, totalPayment, expectedDisbursementDate. Optional: discount, submittedOnDate. Principal and
-     * periodPaymentRate must be within product min/max when defined. LP overrides validated when product allows.
+     * periodPaymentRate, totalPaymentVolume, expectedDisbursementDate. Optional: discount, submittedOnDate. Principal
+     * and periodPaymentRate must be within product min/max when defined. LP overrides validated when product allows.
      */
     public void validateForCreate(final JsonCommand command) {
         final String json = command.json();
@@ -165,11 +165,13 @@ public class WorkingCapitalLoanApplicationDataValidator {
         baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.periodPaymentRateParamName).value(periodPaymentRate)
                 .notNull().zeroOrPositiveAmount();
 
-        // Mandatory: totalPayment
-        final BigDecimal totalPayment = this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanConstants.totalPaymentParamName, element)
-                ? this.fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanConstants.totalPaymentParamName, element, new HashSet<>())
-                : null;
-        baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.totalPaymentParamName).value(totalPayment).notNull()
+        // Mandatory: totalPaymentVolume
+        final BigDecimal totalPaymentVolume = this.fromApiJsonHelper
+                .parameterExists(WorkingCapitalLoanConstants.totalPaymentVolumeParamName, element)
+                        ? this.fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanConstants.totalPaymentVolumeParamName, element,
+                                new HashSet<>())
+                        : null;
+        baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.totalPaymentVolumeParamName).value(totalPaymentVolume).notNull()
                 .zeroOrPositiveAmount();
 
         // Optional: discount
@@ -377,11 +379,11 @@ public class WorkingCapitalLoanApplicationDataValidator {
             validatePeriodPaymentRateMinMax(periodPaymentRate, product, baseDataValidator);
         }
 
-        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanConstants.totalPaymentParamName, element)) {
+        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanConstants.totalPaymentVolumeParamName, element)) {
             atLeastOneParameterPassedForUpdate = true;
-            final BigDecimal totalPayment = this.fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanConstants.totalPaymentParamName,
-                    element, new HashSet<>());
-            baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.totalPaymentParamName).value(totalPayment).notNull()
+            final BigDecimal totalPaymentVolume = this.fromApiJsonHelper
+                    .extractBigDecimalNamed(WorkingCapitalLoanConstants.totalPaymentVolumeParamName, element, new HashSet<>());
+            baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.totalPaymentVolumeParamName).value(totalPaymentVolume).notNull()
                     .zeroOrPositiveAmount();
         }
 

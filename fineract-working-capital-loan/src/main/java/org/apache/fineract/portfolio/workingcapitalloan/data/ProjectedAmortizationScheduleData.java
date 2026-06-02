@@ -32,7 +32,7 @@ public class ProjectedAmortizationScheduleData {
 
     private final BigDecimal discountFeeAmount;
     private final BigDecimal netDisbursementAmount;
-    private final BigDecimal totalPaymentValue;
+    private final BigDecimal totalPaymentVolume;
     private final BigDecimal periodPaymentRate;
     private final int npvDayCount;
     private final LocalDate expectedDisbursementDate;

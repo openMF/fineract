@@ -49,16 +49,16 @@ public class WorkingCapitalAmortizationScheduleStepDef extends AbstractStepDef {
 
     private final FineractFeignClient fineractFeignClient;
 
-    @When("Admin generates a projected amortization schedule with discountFeeAmount {double}, netDisbursementAmount {double}, totalPaymentValue {double}, periodPaymentRate {double}, npvDayCount {int}, expectedDisbursementDate {string}")
+    @When("Admin generates a projected amortization schedule with discountFeeAmount {double}, netDisbursementAmount {double}, totalPaymentVolume {double}, periodPaymentRate {double}, npvDayCount {int}, expectedDisbursementDate {string}")
     public void generateAmortizationSchedule(final double discountFeeAmount, final double netDisbursementAmount,
-            final double totalPaymentValue, final double periodPaymentRate, final int npvDayCount, final String expectedDisbursementDate) {
+            final double totalPaymentVolume, final double periodPaymentRate, final int npvDayCount, final String expectedDisbursementDate) {
         final Long loanId = extractLoanId();
         final WorkingCapitalLoansApi api = fineractFeignClient.create(WorkingCapitalLoansApi.class);
 
         final ProjectedAmortizationScheduleGenerateRequest request = new ProjectedAmortizationScheduleGenerateRequest();
         request.setDiscountFeeAmount(BigDecimal.valueOf(discountFeeAmount));
         request.setNetDisbursementAmount(BigDecimal.valueOf(netDisbursementAmount));
-        request.setTotalPaymentValue(BigDecimal.valueOf(totalPaymentValue));
+        request.setTotalPaymentVolume(BigDecimal.valueOf(totalPaymentVolume));
         request.setPeriodPaymentRate(BigDecimal.valueOf(periodPaymentRate));
         request.setNpvDayCount(npvDayCount);
         request.setExpectedDisbursementDate(LocalDate.parse(expectedDisbursementDate));
@@ -96,7 +96,7 @@ public class WorkingCapitalAmortizationScheduleStepDef extends AbstractStepDef {
 
         assertDecimal(assertions, "discountFeeAmount", response.getDiscountFeeAmount(), expected.get("discountFeeAmount"));
         assertDecimal(assertions, "netDisbursementAmount", response.getNetDisbursementAmount(), expected.get("netDisbursementAmount"));
-        assertDecimal(assertions, "totalPaymentValue", response.getTotalPaymentValue(), expected.get("totalPaymentValue"));
+        assertDecimal(assertions, "totalPaymentVolume", response.getTotalPaymentVolume(), expected.get("totalPaymentVolume"));
         assertDecimal(assertions, "periodPaymentRate", response.getPeriodPaymentRate(), expected.get("periodPaymentRate"));
         assertInt(assertions, "npvDayCount", response.getNpvDayCount(), expected.get("npvDayCount"));
         assertDecimal(assertions, "expectedPaymentAmount", response.getExpectedPaymentAmount(), expected.get("expectedPaymentAmount"));

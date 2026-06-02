@@ -18,16 +18,20 @@
  */
 package org.apache.fineract.integrationtests.common.workingcapitalloan;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import org.apache.fineract.client.models.PostPaymentAllocationOrder;
+import org.apache.fineract.client.models.PostPaymentAllocationRule;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
+import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRequest;
 
 /**
- * Builds JSON request bodies for Working Capital Loan application API (submit, modify).
+ * Builds request bodies for Working Capital Loan application API (submit, modify).
  */
 public class WorkingCapitalLoanApplicationTestBuilder {
 
@@ -41,7 +45,7 @@ public class WorkingCapitalLoanApplicationTestBuilder {
     private String externalId;
     private BigDecimal principal;
     private BigDecimal periodPaymentRate;
-    private BigDecimal totalPayment;
+    private BigDecimal totalPaymentVolume;
     private BigDecimal discount;
     private LocalDate submittedOnDate;
     private LocalDate expectedDisbursementDate;
@@ -90,8 +94,8 @@ public class WorkingCapitalLoanApplicationTestBuilder {
         return this;
     }
 
-    public WorkingCapitalLoanApplicationTestBuilder withTotalPayment(final BigDecimal totalPayment) {
-        this.totalPayment = totalPayment;
+    public WorkingCapitalLoanApplicationTestBuilder withTotalPaymentVolume(final BigDecimal totalPaymentVolume) {
+        this.totalPaymentVolume = totalPaymentVolume;
         return this;
     }
 
@@ -155,193 +159,173 @@ public class WorkingCapitalLoanApplicationTestBuilder {
         return this;
     }
 
-    /**
-     * Builds JSON for submit (create) request.
-     */
-    public String buildSubmitJson() {
-        final JsonObject json = buildBaseJson();
-        return json.toString();
+    public PostWorkingCapitalLoansRequest buildSubmitRequest() {
+        return populateSubmitRequest(new PostWorkingCapitalLoansRequest())
+                .totalPaymentVolume(totalPaymentVolume != null ? totalPaymentVolume : principal)
+                .expectedDisbursementDate(expectedDisbursementDate != null ? format(expectedDisbursementDate)
+                        : format(LocalDate.now(ZoneId.systemDefault()).plusDays(7)));
     }
 
-    /**
-     * Builds JSON for modify (update) request. Only includes fields that are set.
-     */
-    public String buildModifyJson() {
-        final JsonObject json = new JsonObject();
-        json.addProperty("locale", DEFAULT_LOCALE);
-        json.addProperty("dateFormat", DEFAULT_DATE_FORMAT);
-        if (clientId != null) {
-            json.addProperty("clientId", clientId);
-        }
-        if (productId != null) {
-            json.addProperty("productId", productId);
-        }
-        if (fundId != null) {
-            json.addProperty("fundId", fundId);
-        }
-        if (accountNo != null) {
-            json.addProperty("accountNo", accountNo);
-        }
-        if (externalId != null) {
-            json.addProperty("externalId", externalId);
-        }
-        if (principal != null) {
-            json.addProperty("principalAmount", principal);
-        }
-        if (periodPaymentRate != null) {
-            json.addProperty("periodPaymentRate", periodPaymentRate);
-        }
-        if (totalPayment != null) {
-            json.addProperty("totalPayment", totalPayment);
-        }
-        if (discount != null) {
-            json.addProperty("discount", discount);
-        }
-        if (submittedOnDate != null) {
-            json.addProperty("submittedOnDate", submittedOnDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
-        }
-        if (expectedDisbursementDate != null) {
-            json.addProperty("expectedDisbursementDate", expectedDisbursementDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
-        }
-        if (submittedOnNote != null) {
-            json.addProperty("submittedOnNote", submittedOnNote);
-        }
-        if (repaymentEvery != null) {
-            json.addProperty("repaymentEvery", repaymentEvery);
-        }
-        if (repaymentFrequencyType != null) {
-            json.addProperty("repaymentFrequencyType", repaymentFrequencyType);
-        }
-        if (delinquencyBucketId != null) {
-            json.addProperty("delinquencyBucketId", delinquencyBucketId);
-        }
-        json.addProperty("delinquencyGraceDays", delinquencyGraceDays);
-        json.addProperty("delinquencyStartType", delinquencyStartType);
-        if (breachId != null) {
-            json.addProperty("breachId", breachId);
-        }
-        if (nearBreachId != null) {
-            json.addProperty("nearBreachId", nearBreachId);
-        }
-        if (paymentAllocationTypes != null && !paymentAllocationTypes.isEmpty()) {
-            json.add("paymentAllocation", buildPaymentAllocationJson());
-        }
-        return json.toString();
+    public PutWorkingCapitalLoansLoanIdRequest buildModifyRequest() {
+        return populateModifyRequest(new PutWorkingCapitalLoansLoanIdRequest());
     }
 
-    private JsonObject buildBaseJson() {
-        final JsonObject json = new JsonObject();
-        json.addProperty("locale", DEFAULT_LOCALE);
-        json.addProperty("dateFormat", DEFAULT_DATE_FORMAT);
-        json.addProperty("clientId", clientId);
-        json.addProperty("productId", productId);
+    private PostWorkingCapitalLoansRequest populateSubmitRequest(final PostWorkingCapitalLoansRequest request) {
+        request.locale(DEFAULT_LOCALE).dateFormat(DEFAULT_DATE_FORMAT).clientId(clientId).productId(productId).principalAmount(principal)
+                .periodPaymentRate(periodPaymentRate);
         if (fundId != null) {
-            json.addProperty("fundId", fundId);
+            request.fundId(fundId);
         }
         if (accountNo != null) {
-            json.addProperty("accountNo", accountNo);
+            request.accountNo(accountNo);
         }
         if (externalId != null) {
-            json.addProperty("externalId", externalId);
+            request.externalId(externalId);
         }
-        json.addProperty("principalAmount", principal);
-        json.addProperty("periodPaymentRate", periodPaymentRate);
-        json.addProperty("totalPayment", totalPayment != null ? totalPayment : principal);
         if (discount != null) {
-            json.addProperty("discount", discount);
+            request.discount(discount);
         }
         if (submittedOnDate != null) {
-            json.addProperty("submittedOnDate", submittedOnDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+            request.submittedOnDate(format(submittedOnDate));
         }
-        json.addProperty("expectedDisbursementDate",
-                expectedDisbursementDate != null ? expectedDisbursementDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
-                        : LocalDate.now(ZoneId.systemDefault()).plusDays(7).format(DateTimeFormatter.ISO_LOCAL_DATE));
         if (submittedOnNote != null) {
-            json.addProperty("submittedOnNote", submittedOnNote);
+            request.submittedOnNote(submittedOnNote);
         }
         if (repaymentEvery != null) {
-            json.addProperty("repaymentEvery", repaymentEvery);
+            request.repaymentEvery(repaymentEvery);
         }
         if (repaymentFrequencyType != null) {
-            json.addProperty("repaymentFrequencyType", repaymentFrequencyType);
+            request.repaymentFrequencyType(PostWorkingCapitalLoansRequest.RepaymentFrequencyTypeEnum.fromValue(repaymentFrequencyType));
         }
         if (delinquencyBucketId != null) {
-            json.addProperty("delinquencyBucketId", delinquencyBucketId);
+            request.delinquencyBucketId(delinquencyBucketId);
         }
         if (delinquencyGraceDays != null) {
-            json.addProperty("delinquencyGraceDays", delinquencyGraceDays);
+            request.delinquencyGraceDays(delinquencyGraceDays);
         }
         if (delinquencyStartType != null) {
-            json.addProperty("delinquencyStartType", delinquencyStartType);
+            request.delinquencyStartType(delinquencyStartType);
         }
         if (breachId != null) {
-            json.addProperty("breachId", breachId);
+            request.breachId(breachId);
         }
         if (nearBreachId != null) {
-            json.addProperty("nearBreachId", nearBreachId);
+            request.nearBreachId(nearBreachId);
         }
         if (paymentAllocationTypes != null && !paymentAllocationTypes.isEmpty()) {
-            json.add("paymentAllocation", buildPaymentAllocationJson());
+            request.paymentAllocation(buildPaymentAllocationRules());
         }
-        return json;
+        return request;
     }
 
-    public static String buildApproveJson(final LocalDate approvedOnDate, final BigDecimal approvedLoanAmount,
-            final BigDecimal discountAmount) {
-        final JsonObject json = new JsonObject();
-        json.addProperty("locale", DEFAULT_LOCALE);
-        json.addProperty("dateFormat", DEFAULT_DATE_FORMAT);
-        if (approvedOnDate != null) {
-            json.addProperty("approvedOnDate", approvedOnDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+    private PutWorkingCapitalLoansLoanIdRequest populateModifyRequest(final PutWorkingCapitalLoansLoanIdRequest request) {
+        request.locale(DEFAULT_LOCALE).dateFormat(DEFAULT_DATE_FORMAT);
+        if (clientId != null) {
+            request.clientId(clientId);
         }
-        // expectedDisbursementDate is mandatory — default to 7 days after approval
+        if (productId != null) {
+            request.productId(productId);
+        }
+        if (fundId != null) {
+            request.fundId(fundId);
+        }
+        if (accountNo != null) {
+            request.accountNo(accountNo);
+        }
+        if (externalId != null) {
+            request.externalId(externalId);
+        }
+        if (principal != null) {
+            request.principalAmount(principal);
+        }
+        if (periodPaymentRate != null) {
+            request.periodPaymentRate(periodPaymentRate);
+        }
+        if (totalPaymentVolume != null) {
+            request.totalPaymentVolume(totalPaymentVolume);
+        }
+        if (discount != null) {
+            request.discount(discount);
+        }
+        if (submittedOnDate != null) {
+            request.submittedOnDate(format(submittedOnDate));
+        }
+        if (expectedDisbursementDate != null) {
+            request.expectedDisbursementDate(format(expectedDisbursementDate));
+        }
+        if (submittedOnNote != null) {
+            request.submittedOnNote(submittedOnNote);
+        }
+        if (repaymentEvery != null) {
+            request.repaymentEvery(repaymentEvery);
+        }
+        if (repaymentFrequencyType != null) {
+            request.repaymentFrequencyType(
+                    PutWorkingCapitalLoansLoanIdRequest.RepaymentFrequencyTypeEnum.fromValue(repaymentFrequencyType));
+        }
+        if (delinquencyBucketId != null) {
+            request.delinquencyBucketId(delinquencyBucketId);
+        }
+        request.delinquencyGraceDays(delinquencyGraceDays);
+        request.delinquencyStartType(delinquencyStartType);
+        if (breachId != null) {
+            request.breachId(breachId);
+        }
+        if (nearBreachId != null) {
+            request.nearBreachId(nearBreachId);
+        }
+        if (paymentAllocationTypes != null && !paymentAllocationTypes.isEmpty()) {
+            request.paymentAllocation(buildPaymentAllocationRules());
+        }
+        return request;
+    }
+
+    public static PostWorkingCapitalLoansLoanIdRequest buildApproveRequest(final LocalDate approvedOnDate,
+            final BigDecimal approvedLoanAmount, final BigDecimal discountAmount) {
+        final PostWorkingCapitalLoansLoanIdRequest request = new PostWorkingCapitalLoansLoanIdRequest().locale(DEFAULT_LOCALE)
+                .dateFormat(DEFAULT_DATE_FORMAT);
+        if (approvedOnDate != null) {
+            request.approvedOnDate(format(approvedOnDate));
+        }
         final LocalDate disbursementDate = approvedOnDate != null ? approvedOnDate.plusDays(7)
                 : LocalDate.now(ZoneId.systemDefault()).plusDays(7);
-        json.addProperty("expectedDisbursementDate", disbursementDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+        request.expectedDisbursementDate(format(disbursementDate));
         if (approvedLoanAmount != null) {
-            json.addProperty("approvedLoanAmount", approvedLoanAmount);
+            request.approvedLoanAmount(approvedLoanAmount);
         }
         if (discountAmount != null) {
-            json.addProperty("discountAmount", discountAmount);
+            request.discountAmount(discountAmount);
         }
-        return json.toString();
+        return request;
     }
 
-    public static String buildApproveJson(final LocalDate approvedOnDate) {
-        return buildApproveJson(approvedOnDate, null, null);
+    public static PostWorkingCapitalLoansLoanIdRequest buildApproveRequest(final LocalDate approvedOnDate) {
+        return buildApproveRequest(approvedOnDate, null, null);
     }
 
-    public static String buildRejectJson(final LocalDate rejectedOnDate) {
-        final JsonObject json = new JsonObject();
-        json.addProperty("locale", DEFAULT_LOCALE);
-        json.addProperty("dateFormat", DEFAULT_DATE_FORMAT);
+    public static PostWorkingCapitalLoansLoanIdRequest buildRejectRequest(final LocalDate rejectedOnDate) {
+        final PostWorkingCapitalLoansLoanIdRequest request = new PostWorkingCapitalLoansLoanIdRequest().locale(DEFAULT_LOCALE)
+                .dateFormat(DEFAULT_DATE_FORMAT);
         if (rejectedOnDate != null) {
-            json.addProperty("rejectedOnDate", rejectedOnDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+            request.rejectedOnDate(format(rejectedOnDate));
         }
-        return json.toString();
+        return request;
     }
 
-    public static String buildUndoApproveJson() {
-        final JsonObject json = new JsonObject();
-        json.addProperty("locale", DEFAULT_LOCALE);
-        json.addProperty("dateFormat", DEFAULT_DATE_FORMAT);
-        return json.toString();
+    public static PostWorkingCapitalLoansLoanIdRequest buildUndoApproveRequest() {
+        return new PostWorkingCapitalLoansLoanIdRequest().locale(DEFAULT_LOCALE).dateFormat(DEFAULT_DATE_FORMAT);
     }
 
-    private JsonArray buildPaymentAllocationJson() {
-        final JsonArray paymentAllocation = new JsonArray();
-        final JsonObject rule = new JsonObject();
-        rule.addProperty("transactionType", "DEFAULT");
-        final JsonArray order = new JsonArray();
+    private List<PostPaymentAllocationRule> buildPaymentAllocationRules() {
+        final List<PostPaymentAllocationOrder> order = new ArrayList<>();
         int ord = 1;
         for (final String type : paymentAllocationTypes) {
-            final JsonObject item = new JsonObject();
-            item.addProperty("paymentAllocationRule", type);
-            item.addProperty("order", ord++);
-            order.add(item);
+            order.add(new PostPaymentAllocationOrder().paymentAllocationRule(type).order(ord++));
         }
-        rule.add("paymentAllocationOrder", order);
-        paymentAllocation.add(rule);
-        return paymentAllocation;
+        return List.of(new PostPaymentAllocationRule().transactionType("DEFAULT").paymentAllocationOrder(order));
+    }
+
+    private static String format(final LocalDate date) {
+        return date.format(DateTimeFormatter.ISO_LOCAL_DATE);
     }
 }

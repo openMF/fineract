@@ -129,9 +129,9 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleIntegrationTest {
                 .withClientId(clientId) //
                 .withProductId(productId) //
                 .withPrincipal(BigDecimal.valueOf(10000)) //
-                .withPeriodPaymentRate(BigDecimal.ONE) //
-                .withTotalPayment(BigDecimal.valueOf(11000)) //
-                .buildSubmitJson());
+                .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
+                .withTotalPaymentVolume(BigDecimal.valueOf(11000)) //
+                .buildSubmitRequest());
         assertNotNull(loanId);
         log.info("Created WC loan with id: {}", loanId);
 
@@ -176,17 +176,17 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleIntegrationTest {
                     .withClientId(clientId) //
                     .withProductId(productId) //
                     .withPrincipal(principal) //
-                    .withPeriodPaymentRate(BigDecimal.ONE) //
-                    .withTotalPayment(BigDecimal.valueOf(10000)) //
-                    .buildSubmitJson());
+                    .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
+                    .withTotalPaymentVolume(BigDecimal.valueOf(10000)) //
+                    .buildSubmitRequest());
 
             // Approve with discount
             final LocalDate approvedDate = LocalDate.of(2026, 1, 1);
             applicationHelper.approveById(loanId,
-                    WorkingCapitalLoanApplicationTestBuilder.buildApproveJson(approvedDate, principal, discount));
+                    WorkingCapitalLoanApplicationTestBuilder.buildApproveRequest(approvedDate, principal, discount));
 
             // Disburse
-            applicationHelper.disburseById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildDisburseJson(approvedDate, principal,
+            applicationHelper.disburseById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildDisburseRequest(approvedDate, principal,
                     discount, null, null, null, null, null, null, null));
 
             // Run WC COB to generate the range schedule

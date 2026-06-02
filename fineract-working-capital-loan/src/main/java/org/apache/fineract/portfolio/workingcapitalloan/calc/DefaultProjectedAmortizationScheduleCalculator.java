@@ -21,6 +21,7 @@ package org.apache.fineract.portfolio.workingcapitalloan.calc;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.LocalDate;
+import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -35,18 +36,18 @@ public final class DefaultProjectedAmortizationScheduleCalculator implements Pro
     @Override
     @NonNull
     public ProjectedAmortizationScheduleModel generateModel(@NonNull final BigDecimal discountFeeAmount,
-            @NonNull final BigDecimal netDisbursementAmount, @NonNull final BigDecimal totalPaymentValue,
+            @NonNull final BigDecimal netDisbursementAmount, @NonNull final BigDecimal totalPaymentVolume,
             @NonNull final BigDecimal periodPaymentRate, final int npvDayCount, @NonNull final LocalDate expectedDisbursementDate,
             @NonNull final MathContext mc, @NonNull final CurrencyData currency) {
-        return ProjectedAmortizationScheduleModel.generate(discountFeeAmount, netDisbursementAmount, totalPaymentValue, periodPaymentRate,
-                npvDayCount, expectedDisbursementDate, mc, currency);
+        return ProjectedAmortizationScheduleModel.generate(discountFeeAmount, netDisbursementAmount, totalPaymentVolume, periodPaymentRate,
+                npvDayCount, expectedDisbursementDate, mc, currency, DateUtils.getBusinessLocalDate());
     }
 
     @Override
     @NonNull
     public ProjectedAmortizationScheduleModel addDisbursement(@NonNull final ProjectedAmortizationScheduleModel model,
             @NonNull final BigDecimal newDiscountAmount, @NonNull final BigDecimal newNetAmount, @NonNull final LocalDate newStartDate) {
-        return model.regenerate(newDiscountAmount, newNetAmount, newStartDate);
+        return model.regenerate(newDiscountAmount, newNetAmount, newStartDate, DateUtils.getBusinessLocalDate());
     }
 
     @Override

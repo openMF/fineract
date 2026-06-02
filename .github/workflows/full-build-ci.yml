@@ -4,7 +4,6 @@ on: [push, pull_request]
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   build-core:

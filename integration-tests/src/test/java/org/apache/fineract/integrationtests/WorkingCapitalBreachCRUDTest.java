@@ -23,10 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Objects;
+import org.apache.fineract.client.models.WorkingCapitalBreachData;
+import org.apache.fineract.client.models.WorkingCapitalBreachRequest;
+import org.apache.fineract.client.models.WorkingCapitalBreachTemplateResponse;
 import org.apache.fineract.integrationtests.common.workingcapitalloanbreach.WorkingCapitalBreachHelper;
 import org.junit.jupiter.api.Test;
 
@@ -36,48 +38,53 @@ public class WorkingCapitalBreachCRUDTest {
 
     @Test
     public void testTemplateEndpoint() {
-        final String json = breachHelper.retrieveTemplateRaw();
-        final JsonObject template = JsonParser.parseString(json).getAsJsonObject();
-        assertTrue(template.has("breachFrequencyTypeOptions"));
-        assertTrue(template.has("breachAmountCalculationTypeOptions"));
-        assertFalse(template.getAsJsonArray("breachFrequencyTypeOptions").isEmpty());
-        assertFalse(template.getAsJsonArray("breachAmountCalculationTypeOptions").isEmpty());
+        final WorkingCapitalBreachTemplateResponse template = breachHelper.retrieveTemplate();
+        assertNotNull(template.getBreachFrequencyTypeOptions());
+        assertNotNull(template.getBreachAmountCalculationTypeOptions());
+        assertFalse(template.getBreachFrequencyTypeOptions().isEmpty());
+        assertFalse(template.getBreachAmountCalculationTypeOptions().isEmpty());
     }
 
     @Test
     public void testCreateRetrieveUpdateDeleteAndListEndpoints() {
-        final JsonObject createBody = breachHelper.breachJson("Default WCL Breach", 15, "DAYS", "PERCENTAGE", BigDecimal.valueOf(7.5));
+        final WorkingCapitalBreachRequest createBody = breachHelper.createBreachRequest("Default WCL Breach", 15, "DAYS", "PERCENTAGE",
+                BigDecimal.valueOf(7.5));
         final Long breachId = breachHelper.create(createBody);
         assertNotNull(breachId);
 
-        final JsonObject created = JsonParser.parseString(breachHelper.retrieveOneRaw(breachId)).getAsJsonObject();
-        assertEquals("Default WCL Breach", created.get("name").getAsString());
-        assertEquals(15, created.get("breachFrequency").getAsInt());
-        assertEquals("DAYS", created.getAsJsonObject("breachFrequencyType").get("id").getAsString());
-        assertEquals("PERCENTAGE", created.getAsJsonObject("breachAmountCalculationType").get("id").getAsString());
-        assertEquals(0, BigDecimal.valueOf(7.5).compareTo(created.get("breachAmount").getAsBigDecimal()));
+        final WorkingCapitalBreachData created = breachHelper.retrieveOne(breachId);
+        assertEquals("Default WCL Breach", created.getName());
+        assertEquals(15, created.getBreachFrequency());
+        assert created.getBreachFrequencyType() != null;
+        assertEquals("DAYS", created.getBreachFrequencyType().getId());
+        assert created.getBreachAmountCalculationType() != null;
+        assertEquals("PERCENTAGE", created.getBreachAmountCalculationType().getId());
+        assertEquals(0, BigDecimal.valueOf(7.5).compareTo(created.getBreachAmount()));
 
-        final JsonArray all = JsonParser.parseString(breachHelper.retrieveAllRaw()).getAsJsonArray();
+        final List<WorkingCapitalBreachData> all = breachHelper.retrieveAll();
         boolean found = false;
-        for (int i = 0; i < all.size(); i++) {
-            if (all.get(i).getAsJsonObject().get("id").getAsLong() == breachId) {
-                assertEquals("Default WCL Breach", all.get(i).getAsJsonObject().get("name").getAsString());
+        for (WorkingCapitalBreachData workingCapitalBreachData : all) {
+            if (Objects.equals(workingCapitalBreachData.getId(), breachId)) {
+                assertEquals("Default WCL Breach", workingCapitalBreachData.getName());
                 found = true;
                 break;
             }
         }
         assertTrue(found);
 
-        final JsonObject updateBody = breachHelper.breachJson("Updated WCL Breach", 20, "MONTHS", "FLAT", BigDecimal.valueOf(111));
+        final WorkingCapitalBreachRequest updateBody = breachHelper.createBreachRequest("Updated WCL Breach", 20, "MONTHS", "FLAT",
+                BigDecimal.valueOf(111));
         final Long updatedId = breachHelper.update(breachId, updateBody);
         assertEquals(breachId, updatedId);
 
-        final JsonObject updated = JsonParser.parseString(breachHelper.retrieveOneRaw(breachId)).getAsJsonObject();
-        assertEquals("Updated WCL Breach", updated.get("name").getAsString());
-        assertEquals(20, updated.get("breachFrequency").getAsInt());
-        assertEquals("MONTHS", updated.getAsJsonObject("breachFrequencyType").get("id").getAsString());
-        assertEquals("FLAT", updated.getAsJsonObject("breachAmountCalculationType").get("id").getAsString());
-        assertEquals(0, BigDecimal.valueOf(111).compareTo(updated.get("breachAmount").getAsBigDecimal()));
+        final WorkingCapitalBreachData updated = breachHelper.retrieveOne(breachId);
+        assertEquals("Updated WCL Breach", updated.getName());
+        assertEquals(20, updated.getBreachFrequency());
+        assert updated.getBreachFrequencyType() != null;
+        assertEquals("MONTHS", updated.getBreachFrequencyType().getId());
+        assert updated.getBreachAmountCalculationType() != null;
+        assertEquals("FLAT", updated.getBreachAmountCalculationType().getId());
+        assertEquals(0, BigDecimal.valueOf(111).compareTo(updated.getBreachAmount()));
 
         final Long deletedId = breachHelper.delete(breachId);
         assertEquals(breachId, deletedId);

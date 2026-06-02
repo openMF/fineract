@@ -37,10 +37,22 @@ import lombok.Setter;
 public class WorkingCapitalLoanBalanceData implements Serializable {
 
     private Long id;
+    private BigDecimal principal;
+    private BigDecimal principalPaid;
     private BigDecimal principalOutstanding;
-    private BigDecimal totalPaidPrincipal;
-    private BigDecimal totalPayment;
-    private BigDecimal realizedIncome;
-    private BigDecimal unrealizedIncome;
+    private BigDecimal fee;
+    private BigDecimal feePaid;
+    private BigDecimal feeOutstanding;
+    private BigDecimal penalty;
+    private BigDecimal penaltyPaid;
+    private BigDecimal penaltyOutstanding;
+    private BigDecimal realizedIncomeFromDiscountFee;
+    private BigDecimal unrealizedIncomeFromDiscountFee;
     private BigDecimal overpaymentAmount;
+    private BigDecimal totalExpectedRepayment;
+    private BigDecimal totalRepayment;
+    private BigDecimal totalOutstanding;
+    private BigDecimal totalDisbursement;
+    private BigDecimal totalDiscountFee;
+    private BigDecimal totalDiscountFeeAdjustment;
 }

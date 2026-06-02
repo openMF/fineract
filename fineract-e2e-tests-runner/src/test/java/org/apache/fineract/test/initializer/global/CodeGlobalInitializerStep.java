@@ -96,6 +96,7 @@ public class CodeGlobalInitializerStep implements FineractGlobalInitializerStep 
     public static final String CODE_VALUE_WRITE_OFF_REASON_TEST_3 = "Test";
     public static final String BUYDOWN_FEE_TRANSACTION_CLASSIFICATION_VALUE = "buydown_fee_transaction_classification_value";
     public static final String CAPITALIZED_INCOME_TRANSACTION_CLASSIFICATION_VALUE = "capitalized_income_transaction_classification_value";
+    public static final String WORKING_CAPITAL_DISCOUNT_FEE_CLASSIFICATION_VALUE = "working_capital_loan_discount_fee_classification_value";
 
     private final FineractFeignClient fineractClient;
     private Map<String, List<String>> existingCodeAndCodeValues = new HashMap<>();
@@ -166,7 +167,9 @@ public class CodeGlobalInitializerStep implements FineractGlobalInitializerStep 
                 () -> createCodeValues(CodeNames.BUYDOWN_FEE_TRANSACTION_CLASSIFICATION.getValue(),
                         List.of(BUYDOWN_FEE_TRANSACTION_CLASSIFICATION_VALUE)),
                 () -> createCodeValues(CodeNames.CAPITALIZED_INCOME_TRANSACTION_CLASSIFICATION.getValue(),
-                        List.of(CAPITALIZED_INCOME_TRANSACTION_CLASSIFICATION_VALUE)));
+                        List.of(CAPITALIZED_INCOME_TRANSACTION_CLASSIFICATION_VALUE)),
+                () -> createCodeValues(CodeNames.WORKING_CAPITAL_DISCOUNT_FEE_CLASSIFICATION.getValue(),
+                        List.of(WORKING_CAPITAL_DISCOUNT_FEE_CLASSIFICATION_VALUE)));
         ParallelExecutionHelper.runInParallel(items);
     }
 
@@ -212,7 +215,8 @@ public class CodeGlobalInitializerStep implements FineractGlobalInitializerStep 
     private void createCodeNames() {
         List.of(CodeNames.FINANCIAL_INSTRUMENT.getValue(), CodeNames.TRANSACTION_TYPE.getValue(), CodeNames.BANKRUPTCY_TAG.getValue(),
                 CodeNames.PENDING_FRAUD_TAG.getValue(), CodeNames.PENDING_DECEASED_TAG.getValue(), CodeNames.HARDSHIP_TAG.getValue(),
-                CodeNames.ACTIVE_DUTY_TAG.getValue()).parallelStream().forEach(codeName -> {
+                CodeNames.ACTIVE_DUTY_TAG.getValue(), CodeNames.WORKING_CAPITAL_DISCOUNT_FEE_CLASSIFICATION.getValue()).parallelStream()
+                .forEach(codeName -> {
                     if (existingCodeAndCodeValues.get(codeName) == null) {
                         executeVoid(() -> fineractClient.codes().createCode(new PostCodesRequest().name(codeName), Map.of()));
                     } else {

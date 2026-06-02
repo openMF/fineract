@@ -39,17 +39,16 @@ public interface WorkingCapitalLoanSummaryMapper {
 
     @Mapping(target = "accountNo", source = "accountNumber")
     @Mapping(target = "externalId", source = "externalId", qualifiedByName = "externalIdToString")
-    @Mapping(target = "productId", source = "loan", qualifiedByName = "productIdFromLoan")
-    @Mapping(target = "productName", source = "loan", qualifiedByName = "productNameFromLoan")
-    @Mapping(target = "shortProductName", source = "loan", qualifiedByName = "shortProductNameFromLoan")
+    @Mapping(target = "productId", source = "loanProduct.id")
+    @Mapping(target = "productName", source = "loanProduct.name")
+    @Mapping(target = "shortProductName", source = "loanProduct.shortName")
     @Mapping(target = "status", source = "loanStatus", qualifiedByName = "loanStatusToEnumData")
     @Mapping(target = "currency", source = "loanProductRelatedDetails", qualifiedByName = "monetaryCurrencyToCurrencyData")
-    @Mapping(target = "loanType", expression = "java((org.apache.fineract.infrastructure.core.data.EnumOptionData) null)")
     @Mapping(target = "loanCycle", source = "loanProductCounter")
     @Mapping(target = "timeline", source = "loan", qualifiedByName = "buildTimeline")
-    @Mapping(target = "inArrears", expression = "java(Boolean.FALSE)")
-    @Mapping(target = "loanBalance", expression = "java(loan.getBalance() != null ? loan.getBalance().getPrincipalOutstanding() : null)")
-    @Mapping(target = "amountPaid", expression = "java(java.math.BigDecimal.ZERO)")
+    @Mapping(target = "loanBalance", source = "balance.totalOutstanding")
+    @Mapping(target = "amountPaid", source = "balance.totalRepayment")
+    @Mapping(target = "inArrears", ignore = true)
     WorkingCapitalLoanAccountSummaryData toData(WorkingCapitalLoan loan);
 
     List<WorkingCapitalLoanAccountSummaryData> toDataList(List<WorkingCapitalLoan> loans);
@@ -83,20 +82,5 @@ public interface WorkingCapitalLoanSummaryMapper {
         timeline.setExpectedMaturityDate(loan.getExpectedMaturityDate());
         timeline.setActualMaturityDate(loan.getMaturedOnDate());
         return timeline;
-    }
-
-    @Named("productIdFromLoan")
-    default Long productIdFromLoan(final WorkingCapitalLoan loan) {
-        return (loan != null && loan.getLoanProduct() != null) ? loan.getLoanProduct().getId() : null;
-    }
-
-    @Named("productNameFromLoan")
-    default String productNameFromLoan(final WorkingCapitalLoan loan) {
-        return (loan != null && loan.getLoanProduct() != null) ? loan.getLoanProduct().getName() : null;
-    }
-
-    @Named("shortProductNameFromLoan")
-    default String shortProductNameFromLoan(final WorkingCapitalLoan loan) {
-        return (loan != null && loan.getLoanProduct() != null) ? loan.getLoanProduct().getShortName() : null;
     }
 }

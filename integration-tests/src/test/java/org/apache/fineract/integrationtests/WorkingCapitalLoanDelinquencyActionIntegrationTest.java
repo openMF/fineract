@@ -447,17 +447,18 @@ public class WorkingCapitalLoanDelinquencyActionIntegrationTest {
 
     private Long submitAndApproveLoanWithExternalId(final Long clientId, final Long productId, final String externalId) {
         final WorkingCapitalLoanApplicationTestBuilder builder = new WorkingCapitalLoanApplicationTestBuilder().withClientId(clientId)
-                .withProductId(productId).withPrincipal(BigDecimal.valueOf(10000)).withPeriodPaymentRate(BigDecimal.ONE)
-                .withTotalPayment(BigDecimal.valueOf(10000));
+                .withProductId(productId).withPrincipal(BigDecimal.valueOf(10000))
+                .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT)
+                .withTotalPaymentVolume(BigDecimal.valueOf(10000));
         if (externalId != null) {
             builder.withExternalId(externalId);
         }
-        final Long loanId = applicationHelper.submit(builder.buildSubmitJson());
+        final Long loanId = applicationHelper.submit(builder.buildSubmitRequest());
 
         final LocalDate submittedOnDate = FeignCalls
                 .ok(() -> FineractFeignClientHelper.getFineractFeignClient().workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId))
                 .getSubmittedOnDate();
-        applicationHelper.approveById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildApproveJson(submittedOnDate));
+        applicationHelper.approveById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildApproveRequest(submittedOnDate));
         return loanId;
     }
 

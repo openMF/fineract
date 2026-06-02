@@ -22,9 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.gson.JsonObject;
 import java.math.BigDecimal;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
+import org.apache.fineract.client.models.WorkingCapitalBreachRequest;
+import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.common.workingcapitalloanbreach.WorkingCapitalBreachHelper;
 import org.junit.jupiter.api.Test;
 
@@ -34,10 +35,9 @@ public class WorkingCapitalBreachValidationTest {
 
     @Test
     public void testCreateFailsWhenBreachFrequencyIsMissing() {
-        final JsonObject body = validBreachJson();
-        body.remove("breachFrequency");
-
-        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        final WorkingCapitalBreachRequest request = validBreachRequest();
+        request.breachFrequency(null);
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(request);
         assertEquals(400, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
         assertTrue(ex.getDeveloperMessage().contains("breachFrequency"));
@@ -45,10 +45,9 @@ public class WorkingCapitalBreachValidationTest {
 
     @Test
     public void testCreateFailsWhenNameIsMissing() {
-        final JsonObject body = validBreachJson();
-        body.remove("name");
-
-        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        final WorkingCapitalBreachRequest request = validBreachRequest();
+        request.name(null);
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(request);
         assertEquals(400, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
         assertTrue(ex.getDeveloperMessage().contains("name"));
@@ -56,10 +55,9 @@ public class WorkingCapitalBreachValidationTest {
 
     @Test
     public void testCreateFailsWhenNameIsBlank() {
-        final JsonObject body = validBreachJson();
-        body.addProperty("name", "   ");
-
-        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        final WorkingCapitalBreachRequest request = validBreachRequest();
+        request.name("     ");
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(request);
         assertEquals(400, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
         assertTrue(ex.getDeveloperMessage().contains("name"));
@@ -67,10 +65,9 @@ public class WorkingCapitalBreachValidationTest {
 
     @Test
     public void testCreateFailsWhenNameTooLong() {
-        final JsonObject body = validBreachJson();
-        body.addProperty("name", "x".repeat(101));
-
-        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        final WorkingCapitalBreachRequest request = validBreachRequest();
+        request.name("x".repeat(101));
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(request);
         assertEquals(400, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
         assertTrue(ex.getDeveloperMessage().contains("name"));
@@ -78,10 +75,9 @@ public class WorkingCapitalBreachValidationTest {
 
     @Test
     public void testCreateFailsWhenBreachFrequencyTypeIsMissing() {
-        final JsonObject body = validBreachJson();
-        body.remove("breachFrequencyType");
-
-        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        final WorkingCapitalBreachRequest request = validBreachRequest();
+        request.breachFrequencyType(null);
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(request);
         assertEquals(400, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
         assertTrue(ex.getDeveloperMessage().contains("breachFrequencyType"));
@@ -89,10 +85,9 @@ public class WorkingCapitalBreachValidationTest {
 
     @Test
     public void testCreateFailsWhenBreachAmountCalculationTypeIsMissing() {
-        final JsonObject body = validBreachJson();
-        body.remove("breachAmountCalculationType");
-
-        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        final WorkingCapitalBreachRequest request = validBreachRequest();
+        request.breachAmountCalculationType(null);
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(request);
         assertEquals(400, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
         assertTrue(ex.getDeveloperMessage().contains("breachAmountCalculationType"));
@@ -100,10 +95,9 @@ public class WorkingCapitalBreachValidationTest {
 
     @Test
     public void testCreateFailsWhenBreachAmountIsMissing() {
-        final JsonObject body = validBreachJson();
-        body.remove("breachAmount");
-
-        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        final WorkingCapitalBreachRequest request = validBreachRequest();
+        request.breachAmount(null);
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(request);
         assertEquals(400, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
         assertTrue(ex.getDeveloperMessage().contains("breachAmount"));
@@ -111,10 +105,9 @@ public class WorkingCapitalBreachValidationTest {
 
     @Test
     public void testCreateFailsWhenBreachFrequencyIsZero() {
-        final JsonObject body = validBreachJson();
-        body.addProperty("breachFrequency", 0);
-
-        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        final WorkingCapitalBreachRequest request = validBreachRequest();
+        request.breachFrequency(0);
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(request);
         assertEquals(400, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
         assertTrue(ex.getDeveloperMessage().contains("breachFrequency"));
@@ -122,10 +115,9 @@ public class WorkingCapitalBreachValidationTest {
 
     @Test
     public void testCreateFailsWhenBreachFrequencyTypeIsInvalid() {
-        final JsonObject body = validBreachJson();
-        body.addProperty("breachFrequencyType", "HOURS");
-
-        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        final WorkingCapitalBreachRequest request = validBreachRequest();
+        request.breachFrequencyType("HOUR");
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(request);
         assertEquals(400, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
         assertTrue(ex.getDeveloperMessage().contains("breachFrequencyType"));
@@ -133,10 +125,9 @@ public class WorkingCapitalBreachValidationTest {
 
     @Test
     public void testCreateFailsWhenBreachAmountCalculationTypeIsInvalid() {
-        final JsonObject body = validBreachJson();
-        body.addProperty("breachAmountCalculationType", "UNKNOWN");
-
-        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        final WorkingCapitalBreachRequest request = validBreachRequest();
+        request.breachAmountCalculationType("UNKNOWN");
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(request);
         assertEquals(400, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
         assertTrue(ex.getDeveloperMessage().contains("breachAmountCalculationType"));
@@ -144,10 +135,9 @@ public class WorkingCapitalBreachValidationTest {
 
     @Test
     public void testCreateFailsWhenBreachAmountIsNegative() {
-        final JsonObject body = validBreachJson();
-        body.addProperty("breachAmount", BigDecimal.valueOf(-1));
-
-        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(body);
+        final WorkingCapitalBreachRequest request = validBreachRequest();
+        request.breachAmount(BigDecimal.valueOf(-1));
+        final CallFailedRuntimeException ex = breachHelper.runCreateExpectingFailure(request);
         assertEquals(400, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
         assertTrue(ex.getDeveloperMessage().contains("breachAmount"));
@@ -155,11 +145,13 @@ public class WorkingCapitalBreachValidationTest {
 
     @Test
     public void testUpdateFailsWhenBreachFrequencyTypeIsInvalid() {
-        final Long breachId = breachHelper.create(validBreachJson());
-        final JsonObject invalidUpdate = validBreachJson();
-        invalidUpdate.addProperty("breachFrequencyType", "INVALID");
+        final WorkingCapitalBreachRequest createBody = breachHelper.createBreachRequest(Utils.randomStringGenerator("Breach", 20), 20,
+                "DAYS", "PERCENTAGE", BigDecimal.valueOf(7.5));
+        final Long breachId = breachHelper.create(createBody);
+        final WorkingCapitalBreachRequest request = validBreachRequest();
+        request.breachFrequencyType("INVALID");
 
-        final CallFailedRuntimeException ex = breachHelper.runUpdateExpectingFailure(breachId, invalidUpdate);
+        final CallFailedRuntimeException ex = breachHelper.runUpdateExpectingFailure(breachId, request);
         assertEquals(400, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
         assertTrue(ex.getDeveloperMessage().contains("breachFrequencyType"));
@@ -178,7 +170,7 @@ public class WorkingCapitalBreachValidationTest {
     @Test
     public void testUpdateFailsWhenBreachNotFound() {
         final Long nonExistingId = 9_999_999_998L;
-        final CallFailedRuntimeException ex = breachHelper.runUpdateExpectingFailure(nonExistingId, validBreachJson());
+        final CallFailedRuntimeException ex = breachHelper.runUpdateExpectingFailure(nonExistingId, validBreachRequest());
         assertEquals(404, ex.getStatus());
         assertNotNull(ex.getDeveloperMessage());
     }
@@ -191,13 +183,12 @@ public class WorkingCapitalBreachValidationTest {
         assertNotNull(ex.getDeveloperMessage());
     }
 
-    private static JsonObject validBreachJson() {
-        final JsonObject json = new JsonObject();
-        json.addProperty("name", "Default WCL Breach");
-        json.addProperty("breachFrequency", 30);
-        json.addProperty("breachFrequencyType", "DAYS");
-        json.addProperty("breachAmountCalculationType", "PERCENTAGE");
-        json.addProperty("breachAmount", BigDecimal.TEN);
-        return json;
+    private static WorkingCapitalBreachRequest validBreachRequest() {
+        return new WorkingCapitalBreachRequest() //
+                .name("Default WCL Breach") //
+                .breachFrequency(30) //
+                .breachFrequencyType("DAYS") //
+                .breachAmountCalculationType("PERCENTAGE") //
+                .breachAmount(BigDecimal.TEN); //
     }
 }

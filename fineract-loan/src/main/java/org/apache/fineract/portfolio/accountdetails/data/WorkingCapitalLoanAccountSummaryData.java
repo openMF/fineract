@@ -21,7 +21,6 @@ package org.apache.fineract.portfolio.accountdetails.data;
 import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanApplicationTimelineData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanStatusEnumData;
@@ -41,7 +40,6 @@ public class WorkingCapitalLoanAccountSummaryData {
     private final String shortProductName;
     private final LoanStatusEnumData status;
     private final CurrencyData currency;
-    private final EnumOptionData loanType;
     private final Integer loanCycle;
     private final LoanApplicationTimelineData timeline;
     private final Boolean inArrears;

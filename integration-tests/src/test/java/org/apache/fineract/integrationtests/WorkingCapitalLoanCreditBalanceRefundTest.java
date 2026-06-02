@@ -21,12 +21,7 @@ package org.apache.fineract.integrationtests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -34,7 +29,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
+import org.apache.fineract.client.models.GetBalance;
+import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignExternalEventHelper;
 import org.apache.fineract.integrationtests.common.BusinessDateHelper;
 import org.apache.fineract.integrationtests.common.ClientHelper;
@@ -50,7 +50,8 @@ import org.junit.jupiter.api.Test;
 public class WorkingCapitalLoanCreditBalanceRefundTest {
 
     private static final String WC_CBR_TXN_EVENT = "WorkingCapitalLoanCreditBalanceRefundTransactionBusinessEvent";
-    private static final String CLEANUP_EMPTY_COMMAND_JSON = "{\"locale\":\"en\",\"dateFormat\":\"yyyy-MM-dd\"}";
+    private static final PostWorkingCapitalLoansLoanIdRequest CLEANUP_EMPTY_COMMAND_REQUEST = WorkingCapitalLoanApplicationTestBuilder
+            .buildUndoApproveRequest();
 
     private final WorkingCapitalLoanHelper loanHelper = new WorkingCapitalLoanHelper();
     private final WorkingCapitalLoanProductHelper productHelper = new WorkingCapitalLoanProductHelper();
@@ -67,12 +68,12 @@ public class WorkingCapitalLoanCreditBalanceRefundTest {
                 continue;
             }
             try {
-                loanHelper.undoDisbursalById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildUndoDisburseJson());
+                loanHelper.undoDisbursalById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildUndoDisburseRequest());
             } catch (final CallFailedRuntimeException ignored) {
                 // best-effort cleanup
             }
             try {
-                loanHelper.undoApprovalById(loanId, CLEANUP_EMPTY_COMMAND_JSON);
+                loanHelper.undoApprovalById(loanId, CLEANUP_EMPTY_COMMAND_REQUEST);
             } catch (final CallFailedRuntimeException ignored) {
                 // best-effort cleanup
             }
@@ -100,56 +101,52 @@ public class WorkingCapitalLoanCreditBalanceRefundTest {
     public void testCreditBalanceRefundUpdatesBalanceAndTransaction() {
         final LocalDate disbursementDate = LocalDate.now(ZoneId.systemDefault());
         final Long loanId = createOverpaidLoan(BigDecimal.valueOf(200), disbursementDate);
-        final JsonObject balanceBeforeRefund = JsonParser.parseString(loanHelper.retrieveById(loanId)).getAsJsonObject()
-                .getAsJsonObject("balance");
+        final GetBalance balanceBeforeRefund = loanHelper.retrieveById(loanId).getBalance();
         final LocalDate refundDate = disbursementDate.plusDays(2);
         BusinessDateHelper.runAt(refundDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")),
                 () -> loanHelper.makeCreditBalanceRefundByLoanId(loanId, WorkingCapitalLoanDisbursementTestBuilder
-                        .buildCreditBalanceRefundJson(refundDate, BigDecimal.valueOf(150), null, "cbr", 1, "cbr-account")));
+                        .buildCreditBalanceRefundRequest(refundDate, BigDecimal.valueOf(150), null, "cbr", 1, "cbr-account")));
 
-        final JsonObject loanData = JsonParser.parseString(loanHelper.retrieveById(loanId)).getAsJsonObject();
+        final GetWorkingCapitalLoansLoanIdResponse loanData = loanHelper.retrieveById(loanId);
 
-        assertTrue(loanData.has("status") && !loanData.get("status").isJsonNull());
-        assertEquals("loanStatusType.overpaid", loanData.getAsJsonObject("status").get("code").getAsString());
+        assertNotNull(loanData.getStatus());
+        assertEquals("loanStatusType.overpaid", loanData.getStatus().getCode());
 
-        final JsonObject balance = loanData.getAsJsonObject("balance");
+        final GetBalance balance = loanData.getBalance();
         assertNotNull(balance);
-        assertEqualBigDecimal(balanceBeforeRefund.get("principalOutstanding").getAsBigDecimal(), balance.get("principalOutstanding"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("totalPaidPrincipal").getAsBigDecimal(), balance.get("totalPaidPrincipal"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("totalPayment").getAsBigDecimal(), balance.get("totalPayment"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("realizedIncome").getAsBigDecimal(), balance.get("realizedIncome"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("unrealizedIncome").getAsBigDecimal(), balance.get("unrealizedIncome"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("overpaymentAmount").getAsBigDecimal().subtract(BigDecimal.valueOf(150)),
-                balance.get("overpaymentAmount"));
-        final JsonArray content = JsonParser.parseString(loanHelper.retrieveTransactionsByLoanIdRaw(loanId)).getAsJsonObject()
-                .getAsJsonArray("content");
-        assertEquals(3, content.size());
+        assertNotNull(balanceBeforeRefund);
+        assertEqualBigDecimal(balanceBeforeRefund.getPrincipalOutstanding(), balance.getPrincipalOutstanding());
+        assertEqualBigDecimal(balanceBeforeRefund.getPrincipalPaid(), balance.getPrincipalPaid());
+        assertEqualBigDecimal(balanceBeforeRefund.getRealizedIncomeFromDiscountFee(), balance.getRealizedIncomeFromDiscountFee());
+        assertEqualBigDecimal(balanceBeforeRefund.getUnrealizedIncomeFromDiscountFee(), balance.getUnrealizedIncomeFromDiscountFee());
+        assert balanceBeforeRefund.getOverpaymentAmount() != null;
+        assertEqualBigDecimal(balanceBeforeRefund.getOverpaymentAmount().subtract(BigDecimal.valueOf(150)), balance.getOverpaymentAmount());
+        assertEquals(3, loanHelper.retrieveTransactionsByLoanId(loanId).getContent().size());
     }
 
     @Test
     public void testCreditBalanceRefundCanCloseLoanWhenRefundedFully() {
         final LocalDate disbursementDate = LocalDate.now(ZoneId.systemDefault());
         final Long loanId = createOverpaidLoan(BigDecimal.valueOf(100), disbursementDate);
-        final JsonObject balanceBeforeRefund = JsonParser.parseString(loanHelper.retrieveById(loanId)).getAsJsonObject()
-                .getAsJsonObject("balance");
+        final GetBalance balanceBeforeRefund = loanHelper.retrieveById(loanId).getBalance();
         final LocalDate refundDate = disbursementDate.plusDays(2);
         BusinessDateHelper.runAt(refundDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")),
                 () -> loanHelper.makeCreditBalanceRefundByLoanId(loanId, WorkingCapitalLoanDisbursementTestBuilder
-                        .buildCreditBalanceRefundJson(refundDate, BigDecimal.valueOf(100), null, "cbr-close", 1, "cbr-account")));
+                        .buildCreditBalanceRefundRequest(refundDate, BigDecimal.valueOf(100), null, "cbr-close", 1, "cbr-account")));
 
-        final JsonObject loanData = JsonParser.parseString(loanHelper.retrieveById(loanId)).getAsJsonObject();
+        final GetWorkingCapitalLoansLoanIdResponse loanData = loanHelper.retrieveById(loanId);
 
-        assertTrue(loanData.has("status") && !loanData.get("status").isJsonNull());
-        assertEquals("loanStatusType.closed.obligations.met", loanData.getAsJsonObject("status").get("code").getAsString());
+        assertNotNull(loanData.getStatus());
+        assertEquals("loanStatusType.closed.obligations.met", loanData.getStatus().getCode());
 
-        final JsonObject balance = loanData.getAsJsonObject("balance");
+        final GetBalance balance = loanData.getBalance();
         assertNotNull(balance);
-        assertEqualBigDecimal(balanceBeforeRefund.get("principalOutstanding").getAsBigDecimal(), balance.get("principalOutstanding"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("totalPaidPrincipal").getAsBigDecimal(), balance.get("totalPaidPrincipal"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("totalPayment").getAsBigDecimal(), balance.get("totalPayment"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("realizedIncome").getAsBigDecimal(), balance.get("realizedIncome"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("unrealizedIncome").getAsBigDecimal(), balance.get("unrealizedIncome"));
-        assertEqualBigDecimal(BigDecimal.ZERO, balance.get("overpaymentAmount"));
+        assertNotNull(balanceBeforeRefund);
+        assertEqualBigDecimal(balanceBeforeRefund.getPrincipalOutstanding(), balance.getPrincipalOutstanding());
+        assertEqualBigDecimal(balanceBeforeRefund.getPrincipalPaid(), balance.getPrincipalPaid());
+        assertEqualBigDecimal(balanceBeforeRefund.getRealizedIncomeFromDiscountFee(), balance.getRealizedIncomeFromDiscountFee());
+        assertEqualBigDecimal(balanceBeforeRefund.getUnrealizedIncomeFromDiscountFee(), balance.getUnrealizedIncomeFromDiscountFee());
+        assertEqualBigDecimal(BigDecimal.ZERO, balance.getOverpaymentAmount());
     }
 
     @Test
@@ -158,8 +155,8 @@ public class WorkingCapitalLoanCreditBalanceRefundTest {
         final Long loanId = createApprovedAndDisbursedLoan(createProduct(), BigDecimal.valueOf(5000), BigDecimal.valueOf(5000),
                 approvedOnDate);
         final CallFailedRuntimeException ex = loanHelper.runCreditBalanceRefundByLoanIdExpectingFailure(loanId,
-                WorkingCapitalLoanDisbursementTestBuilder.buildCreditBalanceRefundJson(approvedOnDate.plusDays(1), BigDecimal.valueOf(50),
-                        null, null, null, null));
+                WorkingCapitalLoanDisbursementTestBuilder.buildCreditBalanceRefundRequest(approvedOnDate.plusDays(1),
+                        BigDecimal.valueOf(50), null, null, null, null));
         assertEquals(400, ex.getStatus());
     }
 
@@ -168,7 +165,7 @@ public class WorkingCapitalLoanCreditBalanceRefundTest {
         final LocalDate disbursementDate = LocalDate.now(ZoneId.systemDefault());
         final Long loanId = createOverpaidLoan(BigDecimal.valueOf(100), disbursementDate);
         final CallFailedRuntimeException ex = loanHelper.runCreditBalanceRefundByLoanIdExpectingFailure(loanId,
-                WorkingCapitalLoanDisbursementTestBuilder.buildCreditBalanceRefundJson(disbursementDate.plusDays(2),
+                WorkingCapitalLoanDisbursementTestBuilder.buildCreditBalanceRefundRequest(disbursementDate.plusDays(2),
                         BigDecimal.valueOf(101), null, null, null, null));
         assertEquals(400, ex.getStatus());
     }
@@ -183,7 +180,7 @@ public class WorkingCapitalLoanCreditBalanceRefundTest {
         BusinessDateHelper.runAt(refundDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")), () -> {
             externalEventHelper.deleteAllExternalEvents();
             loanHelper.makeCreditBalanceRefundByLoanId(loanId, WorkingCapitalLoanDisbursementTestBuilder
-                    .buildCreditBalanceRefundJson(refundDate, BigDecimal.valueOf(100), null, "cbr-events", 1, "cbr-account"));
+                    .buildCreditBalanceRefundRequest(refundDate, BigDecimal.valueOf(100), null, "cbr-events", 1, "cbr-account"));
         });
 
         assertFalse(externalEventHelper.getExternalEventsByType(WC_CBR_TXN_EVENT).isEmpty());
@@ -195,31 +192,27 @@ public class WorkingCapitalLoanCreditBalanceRefundTest {
     public void testCreditBalanceRefundWithNullPaymentDetailsDoesNotFailWith500() {
         final LocalDate disbursementDate = LocalDate.now(ZoneId.systemDefault());
         final Long loanId = createOverpaidLoan(BigDecimal.valueOf(100), disbursementDate);
-        final JsonObject balanceBeforeRefund = JsonParser.parseString(loanHelper.retrieveById(loanId)).getAsJsonObject()
-                .getAsJsonObject("balance");
-        final JsonObject payload = JsonParser
-                .parseString(WorkingCapitalLoanDisbursementTestBuilder.buildCreditBalanceRefundJson(disbursementDate.plusDays(2),
-                        BigDecimal.valueOf(50), null, "cbr-null-payment-details", null, null))
-                .getAsJsonObject();
-        payload.add("paymentDetails", null);
+        final GetBalance balanceBeforeRefund = loanHelper.retrieveById(loanId).getBalance();
+        final var request = WorkingCapitalLoanDisbursementTestBuilder.buildCreditBalanceRefundRequest(disbursementDate.plusDays(2),
+                BigDecimal.valueOf(50), null, "cbr-null-payment-details", null, null).paymentDetails(null);
 
         BusinessDateHelper.runAt(disbursementDate.plusDays(2).format(DateTimeFormatter.ofPattern("dd MMMM yyyy")),
-                () -> loanHelper.makeCreditBalanceRefundByLoanId(loanId, payload.toString()));
+                () -> loanHelper.makeCreditBalanceRefundByLoanId(loanId, request));
 
-        final JsonObject loanData = JsonParser.parseString(loanHelper.retrieveById(loanId)).getAsJsonObject();
+        final GetWorkingCapitalLoansLoanIdResponse loanData = loanHelper.retrieveById(loanId);
 
-        assertTrue(loanData.has("status") && !loanData.get("status").isJsonNull());
-        assertEquals("loanStatusType.overpaid", loanData.getAsJsonObject("status").get("code").getAsString());
+        assertNotNull(loanData.getStatus());
+        assertEquals("loanStatusType.overpaid", loanData.getStatus().getCode());
 
-        final JsonObject balance = loanData.getAsJsonObject("balance");
+        final GetBalance balance = loanData.getBalance();
         assertNotNull(balance);
-        assertEqualBigDecimal(balanceBeforeRefund.get("principalOutstanding").getAsBigDecimal(), balance.get("principalOutstanding"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("totalPaidPrincipal").getAsBigDecimal(), balance.get("totalPaidPrincipal"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("totalPayment").getAsBigDecimal(), balance.get("totalPayment"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("realizedIncome").getAsBigDecimal(), balance.get("realizedIncome"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("unrealizedIncome").getAsBigDecimal(), balance.get("unrealizedIncome"));
-        assertEqualBigDecimal(balanceBeforeRefund.get("overpaymentAmount").getAsBigDecimal().subtract(BigDecimal.valueOf(50)),
-                balance.get("overpaymentAmount"));
+        assertNotNull(balanceBeforeRefund);
+        assertEqualBigDecimal(balanceBeforeRefund.getPrincipalOutstanding(), balance.getPrincipalOutstanding());
+        assertEqualBigDecimal(balanceBeforeRefund.getPrincipalPaid(), balance.getPrincipalPaid());
+        assertEqualBigDecimal(balanceBeforeRefund.getRealizedIncomeFromDiscountFee(), balance.getRealizedIncomeFromDiscountFee());
+        assertEqualBigDecimal(balanceBeforeRefund.getUnrealizedIncomeFromDiscountFee(), balance.getUnrealizedIncomeFromDiscountFee());
+        assert balanceBeforeRefund.getOverpaymentAmount() != null;
+        assertEqualBigDecimal(balanceBeforeRefund.getOverpaymentAmount().subtract(BigDecimal.valueOf(50)), balance.getOverpaymentAmount());
     }
 
     @Test
@@ -233,31 +226,39 @@ public class WorkingCapitalLoanCreditBalanceRefundTest {
         BusinessDateHelper
                 .runAt(refundDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")),
                         () -> loanHelper.makeCreditBalanceRefundByLoanId(loanId1,
-                                WorkingCapitalLoanDisbursementTestBuilder.buildTransactionJson(refundDate, BigDecimal.valueOf(50), null,
+                                WorkingCapitalLoanDisbursementTestBuilder.buildTransactionRequest(refundDate, BigDecimal.valueOf(50), null,
                                         "cbr-ext-1", 1, "cbr-account-1", sharedExternalId)));
         final CallFailedRuntimeException ex = loanHelper.runCreditBalanceRefundByLoanIdExpectingFailure(loanId2,
-                WorkingCapitalLoanDisbursementTestBuilder.buildTransactionJson(refundDate, BigDecimal.valueOf(50), null, "cbr-ext-2", 1,
+                WorkingCapitalLoanDisbursementTestBuilder.buildTransactionRequest(refundDate, BigDecimal.valueOf(50), null, "cbr-ext-2", 1,
                         "cbr-account-2", sharedExternalId));
         assertEquals(400, ex.getStatus());
     }
 
     private Long createOverpaidLoan(final BigDecimal overpaymentAmount, final LocalDate disbursementDate) {
-        final Long loanId = createApprovedAndDisbursedLoan(createProduct(), BigDecimal.valueOf(5000), BigDecimal.valueOf(5000),
-                disbursementDate);
+        AtomicLong loanId = new AtomicLong();
+        BusinessDateHelper.runAt(disbursementDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")), () -> loanId.set(
+                createApprovedAndDisbursedLoan(createProduct(), BigDecimal.valueOf(5000), BigDecimal.valueOf(5000), disbursementDate)));
         final LocalDate repaymentDate = disbursementDate.plusDays(1);
         BusinessDateHelper.runAt(repaymentDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")),
-                () -> loanHelper.makeRepaymentByLoanId(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildRepaymentJson(repaymentDate,
-                        BigDecimal.valueOf(5000).add(overpaymentAmount), null, "repayment-for-cbr", 1, "repayment-account")));
-        return loanId;
+                () -> loanHelper.makeRepaymentByLoanId(loanId.get(),
+                        WorkingCapitalLoanDisbursementTestBuilder.buildRepaymentRequest(repaymentDate,
+                                BigDecimal.valueOf(5000).add(overpaymentAmount), null, "repayment-for-cbr", 1, "repayment-account")));
+        return loanId.get();
     }
 
     private Long createApprovedAndDisbursedLoan(final Long productId, final BigDecimal principal, final BigDecimal disburseAmount,
             final LocalDate approvedOnDate) {
-        final Long loanId = submitAndTrackLoan(new WorkingCapitalLoanApplicationTestBuilder().withClientId(createdClientId)
-                .withProductId(productId).withPrincipal(principal).withPeriodPaymentRate(BigDecimal.ONE).buildSubmitJson());
-        loanHelper.approveById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildApproveJson(approvedOnDate, principal, null));
-        loanHelper.disburseById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildDisburseJson(approvedOnDate, disburseAmount));
-        return loanId;
+        AtomicLong loanId = new AtomicLong();
+        BusinessDateHelper.runAt(approvedOnDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")), () -> {
+            loanId.set(submitAndTrackLoan(new WorkingCapitalLoanApplicationTestBuilder().withClientId(createdClientId)
+                    .withProductId(productId).withPrincipal(principal)
+                    .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT).buildSubmitRequest()));
+            loanHelper.approveById(loanId.get(),
+                    WorkingCapitalLoanApplicationTestBuilder.buildApproveRequest(approvedOnDate, principal, null));
+            loanHelper.disburseById(loanId.get(),
+                    WorkingCapitalLoanDisbursementTestBuilder.buildDisburseRequest(approvedOnDate, disburseAmount));
+        });
+        return loanId.get();
     }
 
     private Long createProduct() {
@@ -275,15 +276,15 @@ public class WorkingCapitalLoanCreditBalanceRefundTest {
         return ClientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
     }
 
-    private Long submitAndTrackLoan(final String submitJson) {
+    private Long submitAndTrackLoan(final PostWorkingCapitalLoansRequest submitJson) {
         final Long loanId = loanHelper.submit(submitJson);
         createdLoanIds.add(loanId);
         return loanId;
     }
 
-    private static void assertEqualBigDecimal(final BigDecimal expected, final JsonElement actual) {
+    private static void assertEqualBigDecimal(final BigDecimal expected, final BigDecimal actual) {
         assertNotNull(actual);
-        assertFalse(actual.isJsonNull());
-        assertEquals(0, expected.compareTo(actual.getAsJsonPrimitive().getAsBigDecimal()));
+        assertNotNull(expected);
+        assertEquals(0, expected.compareTo(actual));
     }
 }

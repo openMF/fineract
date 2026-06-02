@@ -161,8 +161,8 @@ class WorkingCapitalLoanApplicationDataValidatorTest {
     }
 
     @Test
-    void testValidateForCreate_WithMissingTotalPayment_ShouldThrowException() {
-        final JsonCommand command = jsonCommand(createJsonWithoutField(WorkingCapitalLoanConstants.totalPaymentParamName));
+    void testValidateForCreate_WithMissingtotalPaymentVolume_ShouldThrowException() {
+        final JsonCommand command = jsonCommand(createJsonWithoutField(WorkingCapitalLoanConstants.totalPaymentVolumeParamName));
         assertThrows(PlatformApiDataValidationException.class, () -> validator.validateForCreate(command));
     }
 
@@ -258,7 +258,7 @@ class WorkingCapitalLoanApplicationDataValidatorTest {
         json.addProperty(WorkingCapitalLoanConstants.productIdParameterName, PRODUCT_ID);
         json.addProperty(WorkingCapitalLoanConstants.principalAmountParamName, 5000);
         json.addProperty(WorkingCapitalLoanProductConstants.periodPaymentRateParamName, 1.0);
-        json.addProperty(WorkingCapitalLoanConstants.totalPaymentParamName, 5500);
+        json.addProperty(WorkingCapitalLoanConstants.totalPaymentVolumeParamName, 5500);
         json.addProperty(WorkingCapitalLoanConstants.expectedDisbursementDateParameterName, expectedDate.toString());
         return json;
     }

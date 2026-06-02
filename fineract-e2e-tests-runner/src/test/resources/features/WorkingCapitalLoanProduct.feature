@@ -1,3 +1,4 @@
+@WorkingCapital
 @WorkingCapitalLoanProductFeature
 Feature: WorkingCapitalLoanProduct
 

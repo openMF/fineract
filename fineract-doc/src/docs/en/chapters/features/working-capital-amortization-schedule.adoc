@@ -233,7 +233,7 @@ The amortization schedule model is calculated from these loan-level parameters:
 
 | `originationFeeAmount` | Money | Upfront discount/fee. Amortized over lifecycle.
 | `netDisbursementAmount` | Money | Principal disbursed. Must be positive.
-| `totalPaymentValue` | Money | Merchant's TPV.
+| `totalPaymentVolume` | Money | Merchant's TPV.
 | `periodPaymentRate` | BigDecimal | Rate applied to TPV (e.g., 0.18 = 18%).
 | `npvDayCount` | Integer | Day-count convention (e.g., 360). Must be positive.
 | `expectedDisbursementDate` | Date | Loan start date.
@@ -539,7 +539,7 @@ Creates a new Working Capital loan product with EIR amortization configuration.
 
 === POST /v1/working-capital-loans
 
-Creates a new Working Capital loan application. Required fields include: `productId`, `clientId`, `principal`, `totalPayment`, `periodPaymentRate`, `submittedOnDate`, `expectedDisbursementDate`.
+Creates a new Working Capital loan application. Required fields include: `productId`, `clientId`, `principal`, `totalPaymentVolume`, `periodPaymentRate`, `submittedOnDate`, `expectedDisbursementDate`.
 
 === POST /v1/working-capital-loans/{loanId}?command=approve
 
@@ -573,7 +573,7 @@ Example Response (first 3 payments shown):
 {
   "originationFeeAmount": 1000.00,
   "netDisbursementAmount": 9000.00,
-  "totalPaymentValue": 100000.00,
+  "totalPaymentVolume": 100000.00,
   "periodPaymentRate": 0.18,
   "npvDayCount": 360,
   "expectedDisbursementDate": "2019-01-01",

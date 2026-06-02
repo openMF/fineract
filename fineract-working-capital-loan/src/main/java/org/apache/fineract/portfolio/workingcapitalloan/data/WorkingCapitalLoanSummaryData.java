@@ -37,29 +37,32 @@ public class WorkingCapitalLoanSummaryData implements Serializable {
     private CurrencyData currency;
 
     // Principal
-    private BigDecimal principalDisbursed;
+    private BigDecimal principal;
     private BigDecimal principalPaid;
     private BigDecimal principalOutstanding;
 
-    // Discount fee
-    private BigDecimal discountCharged;
-    private BigDecimal discountPaid;
-    private BigDecimal discountOutstanding;
+    // Fee
+    private BigDecimal fee;
+    private BigDecimal feePaid;
+    private BigDecimal feeOutstanding;
+
+    // Penalty
+    private BigDecimal penalty;
+    private BigDecimal penaltyPaid;
+    private BigDecimal penaltyOutstanding;
 
     // Income recognition
-    private BigDecimal realizedIncome;
-    private BigDecimal unrealizedIncome;
+    private BigDecimal realizedIncomeFromDiscountFee;
+    private BigDecimal unrealizedIncomeFromDiscountFee;
 
     // Overpayment
-    private BigDecimal overpaymentAmount;
+    private BigDecimal overpayment;
 
     // Aggregates
+    private BigDecimal totalDisbursement;
+    private BigDecimal totalDiscountFee;
+    private BigDecimal totalDiscountFeeAdjustment;
     private BigDecimal totalExpectedRepayment;
     private BigDecimal totalRepayment;
     private BigDecimal totalOutstanding;
-
-    // Transaction summaries
-    private BigDecimal totalDisbursement;
-    private BigDecimal totalRepaymentTransaction;
-    private BigDecimal totalDiscountFee;
 }

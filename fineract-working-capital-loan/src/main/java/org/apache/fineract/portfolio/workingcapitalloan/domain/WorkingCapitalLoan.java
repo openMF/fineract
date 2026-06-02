@@ -28,7 +28,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
@@ -163,13 +162,13 @@ public class WorkingCapitalLoan extends AbstractAuditableWithUTCDateTimeCustom<L
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "wcLoan", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<WorkingCapitalLoanDisbursementDetails> disbursementDetails = new ArrayList<>();
 
-    @OrderBy(value = "transactionDate, createdDate, id")
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "wcLoan", orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<WorkingCapitalLoanTransaction> transactions = new ArrayList<>();
-
     @Setter
     @Embedded
     private WorkingCapitalLoanProductRelatedDetails loanProductRelatedDetails;
+
+    @Setter
+    @Column(name = "total_payment_volume", scale = 6, precision = 19, nullable = false)
+    private BigDecimal totalPaymentVolume;
 
     public Long getOfficeId() {
         return client != null && client.getOffice() != null ? client.getOffice().getId() : null;

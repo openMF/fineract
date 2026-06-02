@@ -1102,12 +1102,8 @@ public final class ErrorMessageHelper {
         return String.format("Transition LOAN_DISBURSAL_UNDO is not allowed from status %s", status);
     }
 
-    public static String discountAmountExceedFailure() {
-        return "Failed data validation due to: amount.cannot.exceed.created.discount.";
-    }
-
-    public static String discountAmountExceedApprovedFailure() {
-        return "Failed data validation due to: amount.cannot.exceed.approved.discount.";
+    public static String overrideDisallowedByProductFailure() {
+        return "Failed data validation due to: override.not.allowed.by.product.";
     }
 
     public static String discountAlreadySetBeforeDisburseFailure() {
@@ -1118,20 +1114,36 @@ public final class ErrorMessageHelper {
         return "Failed data validation due to: transaction.date.must.be.equal.disbursement.date.";
     }
 
-    public static String overrideDisallowedByProductFailure() {
-        return "Failed data validation due to: override.not.allowed.by.product.";
+    public static String discountAdjustmentExceedFailure() {
+        return "Failed data validation due to: cannot.be.more.than.discount.fee.";
     }
 
-    public static String discountExceedCreatedDiscountFailure() {
-        return "Failed data validation due to: amount.cannot.exceed.created.discount.";
+    public static String discountAdjustmentBackdatedFailure() {
+        return "Failed data validation due to: backdated.not.allowed.";
     }
 
-    public static String discountExceedProductDiscountFailure() {
-        return "Failed data validation due to: amount.cannot.exceed.product.discount.";
+    public static String discountAdjustmentBeforeDiscountDateFailure() {
+        return "Failed data validation due to: cannot.be.before.discount.fee.date.";
+    }
+
+    public static String discountAdjustmentFutureDateFailure() {
+        return "Failed data validation due to: cannot.be.a.future.date.";
+    }
+
+    public static String discountAdjustmentZeroAmountFailure() {
+        return "The parameter `transactionAmount` must be greater than 0.";
+    }
+
+    public static String discountAdjustmentNotActiveLoanFailure() {
+        return "Failed data validation due to: adjustment.only.allowed.for.active.loan.";
     }
 
     public static String nearBreachCannotEnableWithoutBreachFailure() {
         return "Failed data validation due to: cannot.enable.near.breach.without.breach.";
+    }
+
+    public static String discountExceedProductDiscountFailure() {
+        return "Failed data validation due to: amount.cannot.exceed.product.discount.";
     }
 
     public static String nearBreachMustBeLowerThenBreachFailure() {

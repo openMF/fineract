@@ -5,7 +5,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   api-compatibility-check:
@@ -35,14 +34,23 @@ jobs:
 
       - name: Merge PR into current base
         working-directory: current
+        env:
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          git fetch "https://github.com/${{ github.event.pull_request.head.repo.full_name }}.git" \
-            "${{ github.event.pull_request.head.ref }}:refs/remotes/pr-head" --no-tags
+          case "$PR_HEAD_SHA" in
+            ""|*[!0-9a-fA-F]*)
+              echo "::error::Invalid pull request head SHA: $PR_HEAD_SHA"
+              exit 1
+              ;;
+          esac
 
-          git merge --no-commit --no-ff refs/remotes/pr-head
+          git fetch "https://github.com/${PR_HEAD_REPO}.git" "$PR_HEAD_SHA" --no-tags
+
+          git merge --no-commit --no-ff FETCH_HEAD
 
       - name: Set up JDK 21
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
@@ -189,32 +197,6 @@ jobs:
               f.write(body)
               f.write('\n\n> **Note:** This check is informational only and does not block the PR.\n')
           "
-
-      - name: Comment on PR
-        if: always()
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          MARKER="<!-- swagger-brake-report -->"
-
-          COMMENT_ID=$(gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
-            --jq ".[] | select(.body | contains(\"${MARKER}\")) | .id" | head -1)
-
-          if [ "${{ steps.breaking-check.outcome }}" == "failure" ] && [ -f "${GITHUB_WORKSPACE}/breaking-changes-report.md" ]; then
-            BODY="${MARKER}
-          $(cat ${GITHUB_WORKSPACE}/breaking-changes-report.md)"
-
-            if [ -n "$COMMENT_ID" ]; then
-              gh api "repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" \
-                -X PATCH -f body="${BODY}"
-            else
-              gh pr comment "${PR_NUMBER}" --repo ${{ github.repository }} --body "${BODY}"
-            fi
-          elif [ -n "$COMMENT_ID" ]; then
-            gh api "repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" -X DELETE
-          fi
 
       - name: Report no breaking changes
         if: steps.breaking-check.outcome == 'success'

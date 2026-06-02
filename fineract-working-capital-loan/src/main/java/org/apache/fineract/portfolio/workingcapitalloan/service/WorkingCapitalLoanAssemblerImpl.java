@@ -48,18 +48,21 @@ import org.apache.fineract.portfolio.fund.domain.Fund;
 import org.apache.fineract.portfolio.fund.domain.FundRepository;
 import org.apache.fineract.portfolio.fund.exception.FundNotFoundException;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
+import org.apache.fineract.portfolio.loanproduct.domain.PaymentAllocationTransactionType;
 import org.apache.fineract.portfolio.workingcapitalloan.WorkingCapitalLoanConstants;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanBalance;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDisbursementDetails;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPaymentAllocationRule;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPeriodFrequencyType;
+import org.apache.fineract.portfolio.workingcapitalloan.mapper.WorkingCapitalLoanPaymentAllocationMapper;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanRepository;
 import org.apache.fineract.portfolio.workingcapitalloanbreach.domain.WorkingCapitalBreach;
 import org.apache.fineract.portfolio.workingcapitalloanbreach.repository.WorkingCapitalBreachRepository;
 import org.apache.fineract.portfolio.workingcapitalloannearbreach.domain.WorkingCapitalNearBreach;
 import org.apache.fineract.portfolio.workingcapitalloannearbreach.repository.WorkingCapitalNearBreachRepository;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.WorkingCapitalLoanProductConstants;
+import org.apache.fineract.portfolio.workingcapitalloanproduct.data.WorkingCapitalPaymentAllocationData;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalAdvancedPaymentAllocationsJsonParser;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct;
@@ -86,6 +89,7 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
     private final WorkingCapitalLoanRepository workingCapitalLoanRepository;
     private final WorkingCapitalBreachRepository breachRepository;
     private final WorkingCapitalNearBreachRepository nearBreachRepository;
+    private final WorkingCapitalLoanPaymentAllocationMapper workingCapitalLoanPaymentAllocationMapper;
 
     @Override
     public WorkingCapitalLoan assembleFrom(final JsonCommand command) {
@@ -107,8 +111,8 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
 
         final BigDecimal principal = fromApiJsonHelper
                 .extractBigDecimalWithLocaleNamed(WorkingCapitalLoanConstants.principalAmountParamName, element);
-        final BigDecimal totalPayment = fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanConstants.totalPaymentParamName, element,
-                new HashSet<>());
+        final BigDecimal totalPaymentVolume = fromApiJsonHelper
+                .extractBigDecimalNamed(WorkingCapitalLoanConstants.totalPaymentVolumeParamName, element, new HashSet<>());
 
         final LocalDate submittedOnDate = fromApiJsonHelper.parameterExists(WorkingCapitalLoanConstants.submittedOnDateParameterName,
                 element) ? fromApiJsonHelper.extractLocalDateNamed(WorkingCapitalLoanConstants.submittedOnDateParameterName, element)
@@ -141,9 +145,7 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
         loan.setProposedPrincipal(principal);
         loan.setApprovedPrincipal(BigDecimal.ZERO);
         final WorkingCapitalLoanBalance balance = WorkingCapitalLoanBalance.createFor(loan);
-        balance.setPrincipalOutstanding(principal != null ? principal : BigDecimal.ZERO);
-        balance.setTotalPayment(totalPayment != null ? totalPayment : BigDecimal.ZERO);
-        balance.setOverpaymentAmount(BigDecimal.ZERO);
+        loan.setTotalPaymentVolume(totalPaymentVolume != null ? totalPaymentVolume : BigDecimal.ZERO);
         loan.setBalance(balance);
         loan.setLoanProductRelatedDetails(loanProductRelatedDetails);
 
@@ -222,22 +224,38 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
         return detail;
     }
 
-    private void copyPaymentAllocationRules(final WorkingCapitalLoan loan, final JsonCommand command,
+    private List<WorkingCapitalPaymentAllocationData> copyPaymentAllocationRules(final WorkingCapitalLoan loan, final JsonCommand command,
             final WorkingCapitalLoanProduct product) {
-        final List<WorkingCapitalLoanPaymentAllocationRule> rules;
+        final List<WorkingCapitalLoanProductPaymentAllocationRule> rules;
         if (command.arrayOfParameterNamed(WorkingCapitalLoanProductConstants.paymentAllocationParamName) != null) {
-            final List<WorkingCapitalLoanProductPaymentAllocationRule> productRules = paymentAllocationParser
-                    .assembleWCPaymentAllocationRules(command);
-            rules = productRules.stream()
-                    .map(pr -> new WorkingCapitalLoanPaymentAllocationRule(loan, pr.getTransactionType(), pr.getAllocationTypes()))
-                    .toList();
+            rules = paymentAllocationParser.assembleWCPaymentAllocationRules(command);
         } else {
-            rules = product.getPaymentAllocationRules().stream()
-                    .map(pr -> new WorkingCapitalLoanPaymentAllocationRule(loan, pr.getTransactionType(), pr.getAllocationTypes()))
-                    .toList();
+            rules = product.getPaymentAllocationRules().stream().toList();
         }
-        loan.getPaymentAllocationRules().clear();
-        loan.getPaymentAllocationRules().addAll(rules);
+
+        final Map<PaymentAllocationTransactionType, WorkingCapitalLoanPaymentAllocationRule> existingRulesByTransactionType = new HashMap<>();
+        final HashSet<PaymentAllocationTransactionType> incomingTransactionTypes = new HashSet<>(
+                rules.stream().map(WorkingCapitalLoanProductPaymentAllocationRule::getTransactionType).toList());
+
+        loan.getPaymentAllocationRules().removeIf(existingRule -> {
+            if (!incomingTransactionTypes.contains(existingRule.getTransactionType())) {
+                return true;
+            }
+            return existingRulesByTransactionType.putIfAbsent(existingRule.getTransactionType(), existingRule) != null;
+        });
+
+        for (final WorkingCapitalLoanProductPaymentAllocationRule rule : rules) {
+            final WorkingCapitalLoanPaymentAllocationRule existingRule = existingRulesByTransactionType.get(rule.getTransactionType());
+            if (existingRule != null) {
+                existingRule.setAllocationTypes(rule.getAllocationTypes());
+            } else {
+                final WorkingCapitalLoanPaymentAllocationRule newRule = new WorkingCapitalLoanPaymentAllocationRule(loan,
+                        rule.getTransactionType(), rule.getAllocationTypes());
+                loan.getPaymentAllocationRules().add(newRule);
+                existingRulesByTransactionType.put(rule.getTransactionType(), newRule);
+            }
+        }
+        return workingCapitalLoanPaymentAllocationMapper.paymentAllocationRulesToData(loan.getPaymentAllocationRules());
     }
 
     @Override
@@ -290,15 +308,15 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
                     .extractBigDecimalWithLocaleNamed(WorkingCapitalLoanConstants.principalAmountParamName, element);
             loan.setProposedPrincipal(principal);
             loan.setApprovedPrincipal(BigDecimal.ZERO);
-            ensureBalance(loan).setPrincipalOutstanding(principal != null ? principal : BigDecimal.ZERO);
             changes.put(WorkingCapitalLoanConstants.principalAmountParamName, principal);
         }
-        final BigDecimal currentTotalPayment = loan.getBalance() != null ? loan.getBalance().getTotalPayment() : null;
-        if (command.isChangeInBigDecimalParameterNamed(WorkingCapitalLoanConstants.totalPaymentParamName, currentTotalPayment)) {
-            final BigDecimal totalPayment = fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanConstants.totalPaymentParamName,
-                    element, new HashSet<>());
-            ensureBalance(loan).setTotalPayment(totalPayment != null ? totalPayment : BigDecimal.ZERO);
-            changes.put(WorkingCapitalLoanConstants.totalPaymentParamName, totalPayment);
+        final BigDecimal currenttotalPaymentVolumeVolume = loan.getTotalPaymentVolume();
+        if (command.isChangeInBigDecimalParameterNamed(WorkingCapitalLoanConstants.totalPaymentVolumeParamName,
+                currenttotalPaymentVolumeVolume)) {
+            final BigDecimal totalPaymentVolume = fromApiJsonHelper
+                    .extractBigDecimalNamed(WorkingCapitalLoanConstants.totalPaymentVolumeParamName, element, new HashSet<>());
+            loan.setTotalPaymentVolume(totalPaymentVolume);
+            changes.put(WorkingCapitalLoanConstants.totalPaymentVolumeParamName, totalPaymentVolume);
         }
         if (command.isChangeInLocalDateParameterNamed(WorkingCapitalLoanConstants.submittedOnDateParameterName,
                 loan.getSubmittedOnDate())) {
@@ -413,9 +431,9 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
         }
 
         if (command.arrayOfParameterNamed(WorkingCapitalLoanProductConstants.paymentAllocationParamName) != null) {
-            copyPaymentAllocationRules(loan, command, loan.getLoanProduct());
-            changes.put(WorkingCapitalLoanProductConstants.paymentAllocationParamName,
-                    command.arrayOfParameterNamed(WorkingCapitalLoanProductConstants.paymentAllocationParamName));
+            List<WorkingCapitalPaymentAllocationData> newPaymentAllocationRules = copyPaymentAllocationRules(loan, command,
+                    loan.getLoanProduct());
+            changes.put(WorkingCapitalLoanProductConstants.paymentAllocationParamName, newPaymentAllocationRules);
         }
 
         return changes;
@@ -435,17 +453,6 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
         final AccountNumberFormat format = accountNumberFormatLookup.findByAccountType(EntityAccountType.WORKING_CAPITAL_LOAN);
         final String generated = accountNumberGeneratorService.generate(EntityAccountType.WORKING_CAPITAL_LOAN, loan, format);
         loan.setAccountNumber(generated);
-    }
-
-    private WorkingCapitalLoanBalance ensureBalance(final WorkingCapitalLoan loan) {
-        if (loan.getBalance() == null) {
-            final WorkingCapitalLoanBalance balance = WorkingCapitalLoanBalance.createFor(loan);
-            balance.setPrincipalOutstanding(BigDecimal.ZERO);
-            balance.setTotalPayment(BigDecimal.ZERO);
-            balance.setOverpaymentAmount(BigDecimal.ZERO);
-            loan.setBalance(balance);
-        }
-        return loan.getBalance();
     }
 
     private WorkingCapitalBreach findBreachById(final Long breachId) {

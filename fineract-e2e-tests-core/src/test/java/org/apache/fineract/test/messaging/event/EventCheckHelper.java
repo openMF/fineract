@@ -45,7 +45,7 @@ import org.apache.fineract.client.models.GetLoansLoanIdDelinquencyPausePeriod;
 import org.apache.fineract.client.models.GetLoansLoanIdResponse;
 import org.apache.fineract.client.models.GetLoansLoanIdTransactions;
 import org.apache.fineract.client.models.GetWorkingCapitalLoanTransactionIdResponse;
-import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
+import org.apache.fineract.client.models.GetWorkingCapitalLoanTransactionsResponse;
 import org.apache.fineract.client.models.GlobalConfigurationPropertyData;
 import org.apache.fineract.client.models.PageExternalTransferData;
 import org.apache.fineract.client.models.PostClientsResponse;
@@ -85,6 +85,8 @@ import org.apache.fineract.test.messaging.event.loan.transaction.LoanTransaction
 import org.apache.fineract.test.messaging.event.loan.transaction.LoanUndoContractTerminationBusinessEvent;
 import org.apache.fineract.test.messaging.event.workingcapitalloan.transaction.WorkingCapitalLoanCreditBalanceRefundTransactionBusinessEvent;
 import org.apache.fineract.test.messaging.event.workingcapitalloan.transaction.WorkingCapitalLoanDisbursalTransactionBusinessEvent;
+import org.apache.fineract.test.messaging.event.workingcapitalloan.transaction.WorkingCapitalLoanDiscountFeeAdjustmentTransactionBusinessEvent;
+import org.apache.fineract.test.messaging.event.workingcapitalloan.transaction.WorkingCapitalLoanDiscountFeeTransactionBusinessEvent;
 import org.apache.fineract.test.messaging.event.workingcapitalloan.transaction.WorkingCapitalLoanUndoDisbursalTransactionBusinessEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -95,6 +97,7 @@ import org.springframework.stereotype.Component;
 public class EventCheckHelper {
 
     private static final DateTimeFormatter FORMATTER_EVENTS = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
     private static final long TRANSACTION_COMMIT_DELAY_MS = 100L;
 
     @Autowired
@@ -307,13 +310,13 @@ public class EventCheckHelper {
 
     public void workingCapitalLoanDisbursalTransactionEventCheck(final Long loanId, final BigDecimal expectedAmount) {
         waitForTransactionCommit();
-        final GetWorkingCapitalLoansLoanIdResponse body = ok(
-                () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
-        if (body.getTransactions() == null || body.getTransactions().isEmpty()) {
+        final GetWorkingCapitalLoanTransactionsResponse body = ok(
+                () -> fineractClient.workingCapitalLoanTransactions().retrieveWorkingCapitalLoanTransactionsById(loanId));
+        if (body.getContent() == null || body.getContent().isEmpty()) {
             throw new IllegalStateException("No Working Capital Loan transactions found");
         }
 
-        final GetWorkingCapitalLoanTransactionIdResponse disbursementTransaction = body.getTransactions().stream()
+        final GetWorkingCapitalLoanTransactionIdResponse disbursementTransaction = body.getContent().stream()
                 .filter(t -> t.getType() != null && "loanTransactionType.disbursement".equals(t.getType().getCode())
                         && !Boolean.TRUE.equals(t.getReversed()))
                 .reduce((first, second) -> second).orElseThrow(() -> new IllegalStateException("Disbursement transaction not found"));
@@ -327,13 +330,13 @@ public class EventCheckHelper {
 
     public void workingCapitalLoanCreditBalanceRefundTransactionEventCheck(final Long loanId, final BigDecimal expectedAmount) {
         waitForTransactionCommit();
-        final GetWorkingCapitalLoansLoanIdResponse body = ok(
-                () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
-        if (body.getTransactions() == null || body.getTransactions().isEmpty()) {
+        final GetWorkingCapitalLoanTransactionsResponse body = ok(
+                () -> fineractClient.workingCapitalLoanTransactions().retrieveWorkingCapitalLoanTransactionsById(loanId));
+        if (body.getContent() == null || body.getContent().isEmpty()) {
             throw new IllegalStateException("No Working Capital Loan transactions found");
         }
 
-        final GetWorkingCapitalLoanTransactionIdResponse cbrTransaction = body.getTransactions().stream()
+        final GetWorkingCapitalLoanTransactionIdResponse cbrTransaction = body.getContent().stream()
                 .filter(t -> t.getType() != null && "loanTransactionType.creditBalanceRefund".equals(t.getType().getCode())
                         && !Boolean.TRUE.equals(t.getReversed()))
                 .reduce((first, second) -> second)
@@ -352,13 +355,13 @@ public class EventCheckHelper {
 
     public void workingCapitalLoanUndoDisbursalTransactionEventCheck(final Long loanId, final BigDecimal expectedAmount) {
         waitForTransactionCommit();
-        final GetWorkingCapitalLoansLoanIdResponse body = ok(
-                () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
-        if (body.getTransactions() == null || body.getTransactions().isEmpty()) {
+        final GetWorkingCapitalLoanTransactionsResponse body = ok(
+                () -> fineractClient.workingCapitalLoanTransactions().retrieveWorkingCapitalLoanTransactionsById(loanId));
+        if (body.getContent() == null || body.getContent().isEmpty()) {
             throw new IllegalStateException("No Working Capital Loan transactions found");
         }
 
-        final GetWorkingCapitalLoanTransactionIdResponse reversedDisbursementTransaction = body.getTransactions().stream()
+        final GetWorkingCapitalLoanTransactionIdResponse reversedDisbursementTransaction = body.getContent().stream()
                 .filter(t -> t.getType() != null && "loanTransactionType.disbursement".equals(t.getType().getCode())
                         && Boolean.TRUE.equals(t.getReversed()))
                 .reduce((first, second) -> second)
@@ -369,6 +372,52 @@ public class EventCheckHelper {
                 .extractingBigDecimal(WorkingCapitalLoanTransactionDataV1::getTransactionAmount)
                 .isEqualTo(expectedAmount == null ? reversedDisbursementTransaction.getTransactionAmount() : expectedAmount)//
                 .extractingData(WorkingCapitalLoanTransactionDataV1::getReversed).isEqualTo(Boolean.TRUE);
+    }
+
+    public void workingCapitalLoanDiscountFeeTransactionEventCheck(final Long loanId, String transactionType,
+            final BigDecimal expectedAmount, String transactionDate) {
+        final GetWorkingCapitalLoanTransactionIdResponse discountFeeTransaction = workingCapitalLoanTransactionDetails(loanId,
+                transactionType, transactionDate);
+
+        eventAssertion.assertEvent(WorkingCapitalLoanDiscountFeeTransactionBusinessEvent.class, discountFeeTransaction.getId())//
+                .extractingData(WorkingCapitalLoanTransactionDataV1::getWcLoanId).isEqualTo(loanId)//
+                .extractingBigDecimal(WorkingCapitalLoanTransactionDataV1::getTransactionAmount)
+                .isEqualTo(expectedAmount == null ? discountFeeTransaction.getTransactionAmount() : expectedAmount)//
+                .extractingData(WorkingCapitalLoanTransactionDataV1::getReversed).isEqualTo(Boolean.FALSE);
+    }
+
+    public void workingCapitalLoanDiscountFeeAdjustmentTransactionEventCheck(final Long loanId, String transactionType,
+            final BigDecimal expectedAmount, String transactionDate) {
+        final GetWorkingCapitalLoanTransactionIdResponse discountFeeTransaction = workingCapitalLoanTransactionDetails(loanId,
+                transactionType, transactionDate);
+
+        eventAssertion.assertEvent(WorkingCapitalLoanDiscountFeeAdjustmentTransactionBusinessEvent.class, discountFeeTransaction.getId())//
+                .extractingData(WorkingCapitalLoanTransactionDataV1::getWcLoanId).isEqualTo(loanId)//
+                .extractingBigDecimal(WorkingCapitalLoanTransactionDataV1::getTransactionAmount)
+                .isEqualTo(expectedAmount == null ? discountFeeTransaction.getTransactionAmount() : expectedAmount)//
+                .extractingData(WorkingCapitalLoanTransactionDataV1::getReversed).isEqualTo(Boolean.FALSE);
+    }
+
+    public GetWorkingCapitalLoanTransactionIdResponse workingCapitalLoanTransactionDetails(final Long loanId, String transactionType,
+            String transactionDate) {
+        waitForTransactionCommit();
+        final GetWorkingCapitalLoanTransactionsResponse body = ok(
+                () -> fineractClient.workingCapitalLoanTransactions().retrieveWorkingCapitalLoanTransactionsById(loanId));
+        if (body.getContent() == null || body.getContent().isEmpty()) {
+            throw new IllegalStateException("No Working Capital Loan transactions found");
+        }
+
+        String expectedCode = "loanTransactionType." + transactionType;
+
+        return body.getContent().stream().filter(t -> {
+            if (t.getType() == null) {
+                return false;
+            }
+            assert t.getTransactionDate() != null;
+            return transactionDate.equals(DATE_FORMATTER.format(t.getTransactionDate())) && expectedCode.equals(t.getType().getCode())
+                    && !Boolean.TRUE.equals(t.getReversed());
+        }).reduce((first, second) -> second)
+                .orElseThrow(() -> new IllegalStateException(String.format("%s transaction not found", transactionType)));
     }
 
     public EventAssertion.EventAssertionBuilder<LoanTransactionDataV1> transactionEventCheck(

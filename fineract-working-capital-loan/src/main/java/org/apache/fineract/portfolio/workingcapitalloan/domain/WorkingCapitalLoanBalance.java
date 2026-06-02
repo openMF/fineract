@@ -30,6 +30,7 @@ import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.fineract.infrastructure.core.domain.AbstractAuditableWithUTCDateTimeCustom;
+import org.apache.fineract.infrastructure.core.service.MathUtil;
 
 /**
  * Stores all balances of a working capital loan (one row per loan). Updated from allocations; accounting depends on
@@ -45,29 +46,49 @@ public class WorkingCapitalLoanBalance extends AbstractAuditableWithUTCDateTimeC
     @JoinColumn(name = "wc_loan_id", nullable = false, unique = true)
     private WorkingCapitalLoan wcLoan;
 
-    @Column(name = "principal_outstanding", scale = 6, precision = 19, nullable = false)
+    @Column(name = "principal", scale = 6, precision = 19, nullable = false)
     @Setter
-    private BigDecimal principalOutstanding = BigDecimal.ZERO;
+    private BigDecimal principal = BigDecimal.ZERO;
 
-    @Column(name = "total_paid_principal", scale = 6, precision = 19, nullable = false)
+    @Column(name = "principal_paid", scale = 6, precision = 19, nullable = false)
     @Setter
-    private BigDecimal totalPaidPrincipal = BigDecimal.ZERO;
+    private BigDecimal principalPaid = BigDecimal.ZERO;
 
-    @Column(name = "total_payment", scale = 6, precision = 19, nullable = false)
+    @Column(name = "fee", scale = 6, precision = 19, nullable = false)
     @Setter
-    private BigDecimal totalPayment = BigDecimal.ZERO;
+    private BigDecimal fee = BigDecimal.ZERO;
 
-    @Column(name = "realized_income", scale = 6, precision = 19, nullable = false)
+    @Column(name = "fee_paid", scale = 6, precision = 19, nullable = false)
     @Setter
-    private BigDecimal realizedIncome = BigDecimal.ZERO;
+    private BigDecimal feePaid = BigDecimal.ZERO;
 
-    @Column(name = "unrealized_income", scale = 6, precision = 19, nullable = false)
+    @Column(name = "penalty", scale = 6, precision = 19, nullable = false)
     @Setter
-    private BigDecimal unrealizedIncome = BigDecimal.ZERO;
+    private BigDecimal penalty = BigDecimal.ZERO;
+
+    @Column(name = "penalty_paid", scale = 6, precision = 19, nullable = false)
+    @Setter
+    private BigDecimal penaltyPaid = BigDecimal.ZERO;
+
+    @Column(name = "realized_income_from_discount_fee", scale = 6, precision = 19, nullable = false)
+    @Setter
+    private BigDecimal realizedIncomeFromDiscountFee = BigDecimal.ZERO;
 
     @Column(name = "overpayment_amount", scale = 6, precision = 19, nullable = false)
     @Setter
     private BigDecimal overpaymentAmount = BigDecimal.ZERO;
+
+    @Column(name = "total_disbursement", scale = 6, precision = 19, nullable = false)
+    @Setter
+    private BigDecimal totalDisbursement = BigDecimal.ZERO;
+
+    @Column(name = "total_discount_fee", scale = 6, precision = 19, nullable = false)
+    @Setter
+    private BigDecimal totalDiscountFee = BigDecimal.ZERO;
+
+    @Column(name = "total_discount_fee_adjustment", scale = 6, precision = 19, nullable = false)
+    @Setter
+    private BigDecimal totalDiscountFeeAdjustment = BigDecimal.ZERO;
 
     @Version
     @Column(name = "version")
@@ -79,5 +100,33 @@ public class WorkingCapitalLoanBalance extends AbstractAuditableWithUTCDateTimeC
         final WorkingCapitalLoanBalance balance = new WorkingCapitalLoanBalance();
         balance.wcLoan = loan;
         return balance;
+    }
+
+    public BigDecimal getPrincipalOutstanding() {
+        return MathUtil.subtract(getPrincipal(), getPrincipalPaid());
+    }
+
+    public BigDecimal getFeeOutstanding() {
+        return MathUtil.subtract(getFee(), getFeePaid());
+    }
+
+    public BigDecimal getPenaltyOutstanding() {
+        return MathUtil.subtract(getPenalty(), getPenaltyPaid());
+    }
+
+    public BigDecimal getTotalOutstanding() {
+        return MathUtil.add(getPrincipalOutstanding()).add(getFeeOutstanding()).add(getPenaltyOutstanding());
+    }
+
+    public BigDecimal getTotalExpectedRepayment() {
+        return MathUtil.add(getPrincipal()).add(getPenalty()).add(getFee());
+    }
+
+    public BigDecimal getTotalRepayment() {
+        return MathUtil.add(getPrincipalPaid()).add(getFeePaid()).add(getPenaltyPaid());
+    }
+
+    public BigDecimal getUnrealizedIncomeFromDiscountFee() {
+        return MathUtil.subtract(getTotalDiscountFee(), getRealizedIncomeFromDiscountFee());
     }
 }

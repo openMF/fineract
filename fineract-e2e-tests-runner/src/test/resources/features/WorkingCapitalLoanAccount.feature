@@ -1,3 +1,4 @@
+@WorkingCapital
 @WorkingCapitalLoanAccountFeature
 Feature: WorkingCapitalLoanAccount
 
@@ -6,166 +7,166 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
 
   @TestRailId:C70251
   Scenario: Create Working Capital Loan account - UC2: Create loan with mandatory fields only
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               |          |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               |          |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | null     |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | null     |
 
   @TestRailId:C70252
   Scenario: Create Working Capital Loan account - UC3: Create loan with non-default values
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 500.0           | 1000.0       | 2.0               | 5.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 500.0           | 1000.0             | 2.0               | 5.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 500.0     | 0.0               | 1000.0       | 2.0               | 5.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 500.0             | 0.0               | 1000.0             | 2.0               | 5.0              |
 
   @TestRailId:C70253
   Scenario: Create Working Capital Loan account - UC4: With LP overridables disabled/disallowed, loan creation will result an error when trying override values (Negative)
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     Then Creating a working capital loan with LP overridables disabled and with the following data will result an error:
-      | LoanProduct                       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount | delinquencyBucketId | repaymentEvery | repaymentFrequencyType |
-      | WCLP_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      | 1                   | 30             | DAYS                   |
+      | LoanProduct                       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount | delinquencyBucketId | repaymentEvery | repaymentFrequencyType |
+      | WCLP_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      | 1                   | 30             | DAYS                   |
 
   @TestRailId:C74453
   Scenario: Create Working Capital Loan account - UC4.1: With LP overridables enabled/allowed, loan creation will override discount value
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct   | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount | delinquencyBucketId | repaymentEvery | repaymentFrequencyType |
-      | WCLP_DISCOUNT | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 2.0               | 60.0     | 1                   | 1              | MONTHS                 |
+      | LoanProduct   | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount | delinquencyBucketId | repaymentEvery | repaymentFrequencyType |
+      | WCLP_DISCOUNT | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 2.0               | 60.0     | 1                   | 1              | MONTHS                 |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name  | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP_DISCOUNT | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 2.0               | 60.0             |
+      | product.name  | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP_DISCOUNT | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 2.0               | 60.0             |
 
   @TestRailId:C74479
   Scenario: Create Working Capital Loan account - UC4.2: With LP overridables disabled/disallowed, loan created with discount amount from loan product level
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct                                | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount | delinquencyBucketId | repaymentEvery | repaymentFrequencyType |
-      | WCLP_DISCOUNT_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               |          | 1                   | 30             | DAYS                   |
+      | LoanProduct                                | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount | delinquencyBucketId | repaymentEvery | repaymentFrequencyType |
+      | WCLP_DISCOUNT_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               |          | 1                   | 30             | DAYS                   |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name                               | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP_DISCOUNT_DISALLOW_ATTRIBUTES_OVERRIDE | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | null             |
+      | product.name                               | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP_DISCOUNT_DISALLOW_ATTRIBUTES_OVERRIDE | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | null             |
 
   @TestRailId:C70254
   Scenario: Create Working Capital Loan account - UC5: Create with principal amount greater than WCLP max (Negative)
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     Then Creating a working capital loan with principal amount greater than Working Capital Loan Product max will result an error:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 1000000.0       | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 1000000.0       | 100.0              | 1.0               | 0.0      |
 
   @TestRailId:C70255
   Scenario: Create Working Capital Loan account - UC6: Create with principal amount smaller than WCLP min (Negative)
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     Then Creating a working capital loan with principal amount smaller than Working Capital Loan Product min will result an error:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 1.0             | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 1.0             | 100.0              | 1.0               | 0.0      |
 
   @TestRailId:C70256
   Scenario: Create Working Capital Loan account - UC7: Create loan with mandatory field missing (Negative)
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     Then Creating a working capital loan with missing mandatory fields will result an error:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          |                 | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          |                 | 100.0              | 1.0               | 0.0      |
 
   @TestRailId:C70257
   Scenario: Create Working Capital Loan account - UC8: Create loan with multiple mandatory field missing (Negative)
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     Then Creating a working capital loan with missing mandatory fields will result an error:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        |                 |                          |                 |              |                   | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        |                 |                          |                 |                    |                   | 0.0      |
 
   @TestRailId:C70258
   Scenario: Modify Working Capital Loan account in Submitted and pending approval state - UC1: Change principal amount (lower)
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 |                          | 80.0            |              |                   |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 |                          | 80.0            |                    |                   |          |
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 80.0      | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 80.0              | 0.0               | 100.0              | 1.0               | 0.0              |
 
   @TestRailId:C70259
   Scenario: Modify Working Capital Loan account in Submitted and pending approval state - UC2: Change principal amount (higher)
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 |                          | 500.0           |              |                   |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 |                          | 500.0           |                    |                   |          |
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 500.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 500.0             | 0.0               | 100.0              | 1.0               | 0.0              |
 
   @TestRailId:C70260
   Scenario: Modify Working Capital Loan account in Submitted and pending approval state - UC3: Change submittedOnDate
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 20 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 20 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-20               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-20               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate  | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | 15 December 2025 |                          |                 |              |                   |          |
+      | submittedOnDate  | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 15 December 2025 |                          |                 |                    |                   |          |
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2025-12-15      | 2026-01-20               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2025-12-15      | 2026-01-20               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
 
   @TestRailId:C70279
   Scenario: Modify Working Capital Loan account in Submitted and pending approval state - UC3.1: Change submittedOnDate after business date results an error (Negative)
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 20 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 20 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-20               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-20               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     And Changing submittedOnDate after business date results an error:
       | submittedOnDate | expectedDisbursementDate |
       | 05 January 2026 |                          |
@@ -175,12 +176,12 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 20 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 20 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-20               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-20               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     And Changing submittedOnDate after business date results an error:
       | submittedOnDate | expectedDisbursementDate |
       | 05 January 2026 | 25 January 2026          |
@@ -190,12 +191,12 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "10 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     And Changing submittedOnDate after expectedDisbursementDate results an error:
       | submittedOnDate |
       | 05 January 2026 |
@@ -205,87 +206,87 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "10 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 20 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 20 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-20               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-20               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 | 25 January 2026          |                 |              |                   |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 | 25 January 2026          |                 |                    |                   |          |
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | 05 January 2026 |                          |                 |              |                   |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 05 January 2026 |                          |                 |                    |                   |          |
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-05      | 2026-01-25               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-05      | 2026-01-25               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
 
   @TestRailId:C70263
   Scenario: Modify Working Capital Loan account in Submitted and pending approval state - UC6: Change submittedOnDate and expectedDisbursementDate in one call
     When Admin sets the business date to "10 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 20 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 20 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-20               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-20               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | 05 January 2026 | 25 January 2026          |                 |              |                   |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 05 January 2026 | 25 January 2026          |                 |                    |                   |          |
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-05      | 2026-01-25               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-05      | 2026-01-25               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
 
   @TestRailId:C70264
   Scenario: Modify Working Capital Loan account in Submitted and pending approval state - UC7: Change multiple parameters
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 | 15 January 2026          | 500.0           | 500.0        | 2.0               | 5.0      |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 | 15 January 2026          | 500.0           | 500.0              | 2.0               | 5.0      |
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-15               | Submitted and pending approval | 500.0     | 0.0               | 500.0        | 2.0               | 5.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-15               | Submitted and pending approval | 500.0             | 0.0               | 500.0              | 2.0               | 5.0              |
 
   @TestRailId:C70265
   Scenario: Modify Working Capital Loan account in Submitted and pending approval state - UC8: Modify by externalId
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin modifies the working capital loan by externalId with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 | 15 January 2026          | 500.0           | 500.0        | 2.0               | 5.0      |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 | 15 January 2026          | 500.0           | 500.0              | 2.0               | 5.0      |
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-15               | Submitted and pending approval | 500.0     | 0.0               | 500.0        | 2.0               | 5.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-15               | Submitted and pending approval | 500.0             | 0.0               | 500.0              | 2.0               | 5.0              |
 
   @TestRailId:C70266
   Scenario: Delete Working Capital Loan account in Submitted and pending approval state - UC1: Delete loan account by loanId
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin deletes the working capital loan account
     Then Working capital loan account deletion was successful
 
@@ -294,12 +295,12 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin deletes the working capital loan account by externalId
     Then Working capital loan account deletion was successful
 
@@ -308,92 +309,92 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 20 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 20 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 | 25 January 2026          |                 |              |                   |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 | 25 January 2026          |                 |                    |                   |          |
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-25               | Submitted and pending approval | 100.0     | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-25               | Submitted and pending approval | 100.0             | 100.0              | 1.0               | 0.0              |
 
   @TestRailId:C70269
-  Scenario: Modify Working Capital Loan account - UC10: Change totalPayment only
+  Scenario: Modify Working Capital Loan account - UC10: Change totalPaymentVolume only
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 |                          |                 | 500.0        |                   |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 |                          |                 | 500.0              |                   |          |
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 500.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 500.0              | 1.0               | 0.0              |
 
   @TestRailId:C70270
   Scenario: Modify Working Capital Loan account - UC11: Change periodPaymentRate only
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 |                          |                 |              | 3.0               |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 |                          |                 |                    | 3.0               |          |
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 100.0        | 3.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 100.0              | 3.0               | 0.0              |
 
   @TestRailId:C70271
   Scenario: Modify Working Capital Loan account - UC12: Change discount only
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 |                          |                 |              |                   | 10.0     |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 |                          |                 |                    |                   | 10.0     |
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 100.0        | 1.0               | 10.0             |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 100.0              | 1.0               | 10.0             |
 
   @TestRailId:C70272
   Scenario: Modify Working Capital Loan account - UC13: Principal exceeds product max results in an error
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     Then Modifying the working capital loan with principal exceeding product max results in an error:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 |                          | 1000000.0       |              |                   |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 |                          | 1000000.0       |                    |                   |          |
 
   @TestRailId:C70273
   Scenario: Modify Working Capital Loan account - UC14: Principal below product min results in an error
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     Then Modifying the working capital loan with principal below product min results in an error:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 |                          | 1.0             |              |                   |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 |                          | 1.0             |                    |                   |          |
 
   @TestRailId:C70274
   Scenario: Modify Working Capital Loan account - UC15: Empty modification request results in an error
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     Then Modifying the working capital loan with empty request results in an error
 
@@ -402,8 +403,8 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     Then Modifying the working capital loan with future submittedOnDate results in an error:
       | submittedOnDate | expectedDisbursementDate |
@@ -419,62 +420,62 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 |                          | 500.0           |              |                   |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 |                          | 500.0           |                    |                   |          |
     Then Working capital loan modification response contains changes for "principalAmount"
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 500.0     | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 500.0             | 100.0              | 1.0               | 0.0              |
 
   @TestRailId:C72337
   Scenario: Approve Working Capital Loan account - UC1: Approve loan in SUBMITTED AND PENDING APPROVAL state with default values
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Working capital loan approval was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed | discountApproved |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | 0.0              | null             |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed | discountApproved |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0             | 100.0             | 100.0              | 1.0               | 0.0              | null             |
 
   @TestRailId:C72338
   Scenario: Approve Working Capital Loan account - UC2: Approve with modified principal lower than created
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin successfully approves the working capital loan on "01 January 2026" with "80" amount and expected disbursement date on "01 January 2026"
     Then Working capital loan approval was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed | discountApproved |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 80.0              | 100.0        | 1.0               | 0.0              | null             |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed | discountApproved |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0             | 80.0              | 100.0              | 1.0               | 0.0              | null             |
 
   @TestRailId:C72339
   Scenario: Approve Working Capital Loan account - UC3: Approve with principal greater than created amount results an error (negative)
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     And Approval of working capital loan on "01 January 2026" with "150" amount and expected disbursement date on "01 January 2026" results an error with the following data:
       | httpErrorCode | errorMessage                            |
       | 400           | amount.cannot.exceed.proposed.principal |
@@ -484,29 +485,29 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "15 January 2026"
     Then Working capital loan approval was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed | discountApproved |
-      | WCLP         | 2026-01-01      | 2026-01-15               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | 0.0              | null             |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed | discountApproved |
+      | WCLP         | 2026-01-01      | 2026-01-15               | Approved | 100.0             | 100.0             | 100.0              | 1.0               | 0.0              | null             |
 
   @TestRailId:C72341
   Scenario: Approve Working Capital Loan account - UC5: Approve with past approval date results an error (negative)
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     And Approval of working capital loan on "31 December 2025" with "100" amount and expected disbursement date on "01 January 2026" results an error with the following data:
       | httpErrorCode | errorMessage                    |
       | 400           | cannot.be.before.submittal.date |
@@ -516,83 +517,83 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin rejects the working capital loan on "01 January 2026"
     Then Working capital loan rejection was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Rejected | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Rejected | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
 
   @TestRailId:C72343
   Scenario: Approve Working Capital Loan account - UC7: Undo approval returns loan from APPROVED to SUBMITTED AND PENDING APPROVAL
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Working capital loan approval was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed | discountApproved |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | 0.0              | null             |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed | discountApproved |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0             | 100.0             | 100.0              | 1.0               | 0.0              | null             |
     When Admin makes undo approval on the working capital loan
     Then Working capital loan undo approval was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | null     |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | null     |
 
   @TestRailId:C72344
   Scenario: Approve Working Capital Loan account - UC8: Re-approve after undo approval
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Working capital loan approval was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed | discountApproved |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | 0.0              | null              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed | discountApproved |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0             | 100.0             | 100.0              | 1.0               | 0.0              | null             |
     When Admin makes undo approval on the working capital loan
     Then Working capital loan undo approval was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Working capital loan approval was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed | discountApproved |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | 0.0              | null             |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed | discountApproved |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0             | 100.0             | 100.0              | 1.0               | 0.0              | null             |
 
   @TestRailId:C72345
   Scenario: Approve Working Capital Loan account - UC9: Approve on working capital loan in APPROVED state results an error (negative)
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Working capital loan approval was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed | discountApproved |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | 0.0              | null             |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed | discountApproved |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0             | 100.0             | 100.0              | 1.0               | 0.0              | null             |
     And Approval of working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026" results an error with the following data:
       | httpErrorCode | errorMessage                                                 |
       | 400           | Transition LOAN_APPROVED is not allowed from status APPROVED |
@@ -602,17 +603,17 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin rejects the working capital loan on "01 January 2026"
     Then Working capital loan rejection was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Rejected | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Rejected | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     And Approval of working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026" results an error with the following data:
       | httpErrorCode | errorMessage                                                 |
       | 400           | Transition LOAN_APPROVED is not allowed from status REJECTED |
@@ -622,29 +623,29 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin successfully approves the working capital loan by externalId on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Working capital loan approval was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed | discountApproved |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | 0.0              | null             |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed | discountApproved |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0             | 100.0             | 100.0              | 1.0               | 0.0              | null             |
 
   @TestRailId:C72367
   Scenario: Approve Working Capital Loan account - UC8: Undo approval on already-disbursed loan
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Working capital loan approval was successful
     Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
@@ -659,8 +660,8 @@ Feature: WorkingCapitalLoanAccount
     And Admin creates a client with random data
     And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION" for loan test
     And Admin creates a working capital loan with the grace days product and the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2027 | 01 January 2027          | 100             | 100                | 1                 |          |
     Then Working capital loan creation was successful
     And Working capital loan account has delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION"
 
@@ -670,8 +671,8 @@ Feature: WorkingCapitalLoanAccount
     And Admin creates a client with random data
     And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION" for loan test
     And Admin creates a working capital loan with grace days override and the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount | delinquencyGraceDays | delinquencyStartType |
-      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          | 7                    | DISBURSEMENT         |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount | delinquencyGraceDays | delinquencyStartType |
+      | 01 January 2027 | 01 January 2027          | 100             | 100                | 1                 |          | 7                    | DISBURSEMENT         |
     Then Working capital loan creation was successful
     And Working capital loan account has delinquencyGraceDays 7 and delinquencyStartType "DISBURSEMENT"
 
@@ -681,8 +682,8 @@ Feature: WorkingCapitalLoanAccount
     And Admin creates a client with random data
     And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "DISBURSEMENT" for loan test
     And Admin creates a working capital loan with grace days override and the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount | delinquencyGraceDays | delinquencyStartType |
-      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          | 0                    | LOAN_CREATION        |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount | delinquencyGraceDays | delinquencyStartType |
+      | 01 January 2027 | 01 January 2027          | 100             | 100                | 1                 |          | 0                    | LOAN_CREATION        |
     Then Working capital loan creation was successful
     And Working capital loan account has delinquencyGraceDays 0 and delinquencyStartType "LOAN_CREATION"
 
@@ -692,8 +693,8 @@ Feature: WorkingCapitalLoanAccount
     And Admin creates a client with random data
     And Admin creates a Working Capital Loan Product with delinquencyGraceDays 3 and delinquencyStartType "LOAN_CREATION" for loan test
     And Admin creates a working capital loan with the grace days product and the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2027 | 01 January 2027          | 100             | 100                | 1                 |          |
     Then Working capital loan creation was successful
     When Admin modifies the working capital loan with grace days:
       | delinquencyGraceDays | delinquencyStartType |
@@ -706,8 +707,8 @@ Feature: WorkingCapitalLoanAccount
     And Admin creates a client with random data
     And Admin creates a Working Capital Loan Product with delinquencyGraceDays 5 and delinquencyStartType "DISBURSEMENT" for loan test
     And Admin creates a working capital loan with the grace days product and the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2027 | 01 January 2027          | 100             | 100                | 1                 |          |
     Then Working capital loan creation was successful
     When Admin approves the working capital loan on "01 January 2027"
     Then Working capital loan account has delinquencyGraceDays 5 and delinquencyStartType "DISBURSEMENT"
@@ -731,12 +732,12 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Working capital loan approval was successful
     Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
@@ -748,12 +749,12 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 | 0        |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal| totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0              | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     Then Admin fails to disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount because of not approved
 
   @TestRailId:C72372
@@ -761,27 +762,27 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 | 0        |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
     Then Working Capital loan status will be "ACTIVE"
     Then Verify Working Capital loan disbursement was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Active | 100.0     | 100.0             | 100.0        | 1.0               | null     |
+      | product.name | submittedOnDate | expectedDisbursementDate | status | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Active | 100.0             | 100.0             | 100.0              | 1.0               | null     |
 
   @TestRailId:C74514
   Scenario: Disburse WCL loan account with classification use case - UC2.1
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 | 0        |
     Then Working capital loan creation was successful
     Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount and valid classification
@@ -793,8 +794,8 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 | 0        |
     Then Working capital loan creation was successful
     Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
@@ -806,68 +807,68 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 10 January 2026          | 100             | 100          | 1                 | 0        |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 10 January 2026          | 100             | 100                | 1                 | 0        |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-10               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-10               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     When Admin sets the business date to "05 January 2026"
     Then Admin successfully approves the working capital loan on "05 January 2026" with "100" amount and expected disbursement date on "10 January 2026"
     Then Admin fails to disburse the Working Capital loan on "<wcp_disburse_date>" with "<wcp_disburse_amount>" EUR transaction amount with invalid data outcomes with error message <wcp_error_message>
 
     Examples:
-      | wcp_disburse_date        | wcp_disburse_amount  | wcp_error_message                                |
-      | 05 January 2027          | 100                  | "cannot.be.a.future.date."                       |
-      | 05 January 2025          | 100                  | "cannot.be.before.submitted.date."               |
-      | 02 January 2026          | 100                  | "cannot.be.before.approval.date."                |
-      | 10 January 2026          | 1000                 | "amount.cannot.exceed.approved.principal."       |
+      | wcp_disburse_date | wcp_disburse_amount | wcp_error_message                          |
+      | 05 January 2027   | 100                 | "cannot.be.a.future.date."                 |
+      | 05 January 2025   | 100                 | "cannot.be.before.submitted.date."         |
+      | 02 January 2026   | 100                 | "cannot.be.before.approval.date."          |
+      | 10 January 2026   | 1000                | "amount.cannot.exceed.approved.principal." |
 
   @TestRailId:C72374
   Scenario Outline: Disburse WCL loan account without mandatory data outcomes with an error - UC4
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 10 January 2026          | 100             | 100          | 1                 |          |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 10 January 2026          | 100             | 100                | 1                 |          |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
-      | WCLP         | 2026-01-01      | 2026-01-10               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | null     |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-10               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | null     |
     When Admin sets the business date to "05 January 2026"
     Then Admin successfully approves the working capital loan on "05 January 2026" with "100" amount and expected disbursement date on "10 January 2026"
     Then Admin fails to disburse the Working Capital loan on <wcp_disburse_date> with "<wcp_disburse_amount>" EUR transaction amount without mandatory data outcomes with error message <wcp_error_message>
 
     Examples:
-      | wcp_disburse_date        | wcp_disburse_amount  | wcp_error_message                                            |
-      | ""                       | 100                  | "The parameter `actualDisbursementDate` is mandatory."       |
-      | "05 January 2025"        | 0                    | "The parameter `transactionAmount` must be greater than 0."  |
+      | wcp_disburse_date | wcp_disburse_amount | wcp_error_message                                           |
+      | ""                | 100                 | "The parameter `actualDisbursementDate` is mandatory."      |
+      | "05 January 2025" | 0                   | "The parameter `transactionAmount` must be greater than 0." |
 
   @TestRailId:C72375
   Scenario: Undo Disbursal of WCL account successful use case - UC5
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 | 0        |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
     Then Admin successfully undo Working Capital disbursal
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed | discountApproved |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | 0.0              | null             |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed | discountApproved |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0             | 100.0             | 100.0              | 1.0               | 0.0              | null             |
 
   @TestRailId:C74516
   Scenario: Verify that undo disbursal of WCL account reverts all balance fields - UC5.1
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 | 0        |
     Then Working capital loan creation was successful
     Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
@@ -875,20 +876,20 @@ Feature: WorkingCapitalLoanAccount
     Then Admin successfully undo Working Capital disbursal
     Then Working Capital loan status will be "APPROVED"
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount | totalPaidPrincipal | realizedIncome | unrealizedIncome |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | null     | 0.0                | 0.0            | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discount | totalPaidPrincipal | realizedIncome | unrealizedIncome |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0             | 100.0             | 100.0              | 1.0               | null     | 0.0                | 0.0            | 0.0              |
 
   @TestRailId:C72376
   Scenario: Undo disbursal of WCL account that is submitted or approved is failed - UC6
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 | 0        |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     Then Admin fails to undo disbursal the Working Capital loan due to loan status "SUBMITTED_AND_PENDING_APPROVAL"
     Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Admin fails to undo disbursal the Working Capital loan due to loan status "APPROVED"
@@ -898,33 +899,33 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 | 0        |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Admin successfully disburse the Working Capital loan by externalId on "01 January 2026" with "100" EUR transaction amount
     Then Working Capital disbursal transaction business event is raised with "100" amount and reversed "false"
     Then Working Capital loan status will be "ACTIVE"
     Then Verify Working Capital loan disbursement was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Active | 100.0     | 100.0             | 100.0        | 1.0               | null     |
+      | product.name | submittedOnDate | expectedDisbursementDate | status | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Active | 100.0             | 100.0             | 100.0              | 1.0               | null     |
     Then Admin successfully undo Working Capital disbursal by externalId
     Then Working Capital undo disbursal transaction business event is raised with "100" amount and reversed "true"
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | null     |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0             | 100.0             | 100.0              | 1.0               | null     |
 
   @TestRailId:C74517
   Scenario: Verify that WCL disbursement with classification triggers correct events on disburse and undo - UC7.1
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 | 0        |
     Then Working capital loan creation was successful
     Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount and valid classification
@@ -932,14 +933,14 @@ Feature: WorkingCapitalLoanAccount
     Then Working Capital disbursal transaction business event is raised with "100" amount and reversed "false"
     Then Working Capital loan status will be "ACTIVE"
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Active | 100.0     | 100.0             | 100.0        | 1.0               | null     |
+      | product.name | submittedOnDate | expectedDisbursementDate | status | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Active | 100.0             | 100.0             | 100.0              | 1.0               | null     |
     Then Admin successfully undo Working Capital disbursal
     Then Working Capital undo disbursal transaction business event is raised with "100" amount and reversed "true"
     Then Working Capital loan status will be "APPROVED"
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status   | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount | totalPaidPrincipal | realizedIncome | unrealizedIncome |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0     | 100.0             | 100.0        | 1.0               | null     | 0.0                | 0.0            | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discount | totalPaidPrincipal | realizedIncome | unrealizedIncome |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 100.0             | 100.0             | 100.0              | 1.0               | null     | 0.0                | 0.0            | 0.0              |
 
   @TestRailId:C74471
   Scenario Outline: Verify WC Loan creation with invalid breachId results in error - UC1
@@ -966,8 +967,8 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates working capital loan with 2 "YEARS" breach override and the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate |
-      | WCLP_BREACH | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate |
+      | WCLP_BREACH | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 |
     Then Verify working capital loan account has been created with correct breach override data
 
   @TestRailId:C76688
@@ -975,8 +976,8 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct                              | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
+      | LoanProduct                              | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100                | 1                 |          |
     Then Verify working capital loan account has been created with correct breach data inherited from WCLP level
 
   @TestRailId:C76689
@@ -993,29 +994,29 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates working capital loan with breach from WCLP while override is allowed and the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate |
-      | WCLP_BREACH | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate |
+      | WCLP_BREACH | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 |
     Then Verify working capital loan account has been created with correct breach data
     And Admin modifies the working capital loan with 3 "WEEKS" breach override data
     Then Verify working capital loan account has been created with correct breach override data
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP_BREACH  | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP_BREACH  | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
 
   @TestRailId:C76748
   Scenario: Verify WC Loan account modify with breach value from WCLP is successful - UC7
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct                              | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
+      | LoanProduct                              | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100                | 1                 |          |
     Then Verify working capital loan account has been created with correct breach data inherited from WCLP level
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 |                          | 80.0            |              |                   |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 |                          | 80.0            |                    |                   |          |
     And Admin creates a working capital loan with the following data:
-      | LoanProduct                              | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
+      | LoanProduct                              | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100                | 1                 |          |
     Then Verify working capital loan account has been created with correct breach data inherited from WCLP level
 
   @TestRailId:C76749
@@ -1023,8 +1024,8 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct                              | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
+      | LoanProduct                              | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100                | 1                 |          |
     Then Verify working capital loan account has been created with correct breach data inherited from WCLP level
     And Admin failed to modify working capital loan while breach override disallowed with breach override
     When Admin deletes WC Breach override
@@ -1034,12 +1035,12 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     Then Modify a working capital loan with breachId <breach_id> will result with <response_status_code> and <response_message> error message
 
     Examples:
@@ -1052,8 +1053,8 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates working capital loan with 2 "MONTHS" breach and 1 "MONTHS" near breach override and the following data:
-      | LoanProduct             | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate |
-      | WCLP_BREACH_NEAR_BREACH | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 |
+      | LoanProduct             | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate |
+      | WCLP_BREACH_NEAR_BREACH | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 |
     Then Verify working capital loan account has been created with correct breach and near breach override data
 
   @TestRailId:C76691
@@ -1061,8 +1062,8 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates working capital loan with breach override allowed with 2 "YEARS" breach and 10 "DAYS" near breach and the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 |
     Then Verify working capital loan account has been created with correct breach and near breach data
 
   @TestRailId:C76692
@@ -1070,8 +1071,8 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct                                          | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP_BREACH_NEAR_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
+      | LoanProduct                                          | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP_BREACH_NEAR_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100                | 1                 |          |
     Then Verify working capital loan account has been created with correct breach and near breach data inherited from WCLP level
 
   @TestRailId:C76693
@@ -1124,51 +1125,51 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     And Admin modifies the working capital loan with 70 "DAYS" breach and 4 "WEEKS" near breach override data
     Then Verify working capital loan account has been created with correct breach and near breach override data
     Then Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
 
   @TestRailId:C76752
   Scenario: Verify WC Loan account modify with breach and near breach values successful - UC9
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates working capital loan with breach and near breach from WCLP while override is allowed and the following data:
-      | LoanProduct             | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate |
-      | WCLP_BREACH_NEAR_BREACH | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 |
+      | LoanProduct             | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate |
+      | WCLP_BREACH_NEAR_BREACH | 01 January 2026 | 01 January 2026          | 100             | 100                | 1                 |
     Then Verify working capital loan account has been created with correct breach and near breach data
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name            | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP_BREACH_NEAR_BREACH | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name            | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP_BREACH_NEAR_BREACH | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     And Admin modifies the working capital loan with 1 "YEARS" breach and 10 "MONTHS" near breach override data
     Then Verify working capital loan account has been created with correct breach and near breach override data
     Then Working capital loan account has the correct data:
-      | product.name            | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP_BREACH_NEAR_BREACH | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name            | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP_BREACH_NEAR_BREACH | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
 
   @TestRailId:C76753
   Scenario: Verify WC Loan account modify with nearBreach value from WCLP level is successful - UC10
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct                                          | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP_BREACH_NEAR_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
+      | LoanProduct                                          | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP_BREACH_NEAR_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100                | 1                 |          |
     Then Verify working capital loan account has been created with correct breach and near breach data inherited from WCLP level
 
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      |                 |                          | 80.0            |              |                   |          |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      |                 |                          | 80.0            |                    |                   |          |
     Then Working capital loan account has the correct data:
-      | product.name                                         | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discount |
-      | WCLP_BREACH_NEAR_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 2027-01-01      | 2027-01-01               | Submitted and pending approval | 80.0      | 0.0               | 100.0        | 1.0               | null     |
+      | product.name                                         | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP_BREACH_NEAR_BREACH_DISALLOW_ATTRIBUTES_OVERRIDE | 2027-01-01      | 2027-01-01               | Submitted and pending approval | 80.0              | 0.0               | 100.0              | 1.0               | null     |
     Then Verify working capital loan account has been created with correct breach and near breach data inherited from WCLP level
 
   @TestRailId:C76754
@@ -1176,8 +1177,8 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct                       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100          | 1                 |          |
+      | LoanProduct                       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP_DISALLOW_ATTRIBUTES_OVERRIDE | 01 January 2027 | 01 January 2027          | 100             | 100                | 1                 |          |
     Then Verify working capital loan account has been created with none breach nor near breach data
     And Admin failed to modify working capital loan while breach override disallowed with breach and near breach override
     When Admin deletes WC Breach override
@@ -1188,12 +1189,12 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     And Admin failed to modify WC loan account with breach <breachFrequency> "<breachFrequencyType>" frequency lower then near breach <nearBreachFrequency> "<nearBreachFrequencyType>" frequency
     When Admin deletes WC Breach With Values
     When Admin deletes WC Near Breach With Values
@@ -1214,12 +1215,12 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0              |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     And Admin failed to modify WC loan account without breach, but with near breach
 
   @TestRailId:C76757
@@ -1227,12 +1228,12 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2027"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0        | 1.0               | 0.0      |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100.0           | 100.0              | 1.0               | 0.0      |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 1.0               | 0.0      |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 0.0              |
     Then Modify a working capital loan with near breachId <near_breach_id> will result with an error
 
     Examples:
@@ -1261,20 +1262,20 @@ Feature: WorkingCapitalLoanAccount
     And Admin failed to create Working Capital on "01 January 2026" with period payment rate "<rate_change_value>" value and outcomes with <rate_change_error_message> error message
 
     Examples:
-      | rate_change_value | rate_change_error_message                                            |
-      | -1               | The parameter `periodPaymentRate` must be greater than or equal to 0. |
+      | rate_change_value | rate_change_error_message                                             |
+      | -1                | The parameter `periodPaymentRate` must be greater than or equal to 0. |
 
   @TestRailId:C78815
   Scenario Outline: Period payment rate on modify of WCL account failed with with outranged from loan product level rate change value - UC3
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct              | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP_PERIOD_PAYMENT_RATE | 01 January 2026 | 01 January 2026          | 100             | 100          | 12.5              | 15       |
+      | LoanProduct              | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP_PERIOD_PAYMENT_RATE | 01 January 2026 | 01 January 2026          | 100             | 100                | 12.5              | 15       |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name             | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP_PERIOD_PAYMENT_RATE | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 12.5              | 15.0             |
+      | product.name             | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP_PERIOD_PAYMENT_RATE | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 12.5              | 15.0             |
     Then Admin failed to modify WC loan account with period payment rate "<rate_change_value>" value and outcomes with "<rate_change_error_message>" error message
 
     Examples:
@@ -1287,12 +1288,12 @@ Feature: WorkingCapitalLoanAccount
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 12.5              | 15       |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100                | 12.5              | 15       |
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
-      | product.name | submittedOnDate | expectedDisbursementDate | status                         | principal | approvedPrincipal | totalPayment | periodPaymentRate | discountProposed |
-      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0     | 0.0               | 100.0        | 12.5              | 15.0             |
+      | product.name | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
+      | WCLP         | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 12.5              | 15.0             |
     Then Admin failed to modify WC loan account with period payment rate "<rate_change_value>" value and outcomes with "<rate_change_error_message>" error message
 
     Examples:

@@ -1,3 +1,4 @@
+@WorkingCapital
 @WorkingCapitalNearBreachManagementFeature
 Feature: Working Capital Near Breach Configuration
 

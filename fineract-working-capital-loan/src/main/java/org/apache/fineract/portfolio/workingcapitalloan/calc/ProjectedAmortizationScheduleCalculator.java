@@ -37,7 +37,7 @@ public interface ProjectedAmortizationScheduleCalculator {
      */
     @NonNull
     ProjectedAmortizationScheduleModel generateModel(@NonNull BigDecimal discountFeeAmount, @NonNull BigDecimal netDisbursementAmount,
-            @NonNull BigDecimal totalPaymentValue, @NonNull BigDecimal periodPaymentRate, int npvDayCount,
+            @NonNull BigDecimal totalPaymentVolume, @NonNull BigDecimal periodPaymentRate, int npvDayCount,
             @NonNull LocalDate expectedDisbursementDate, @NonNull MathContext mc, @NonNull CurrencyData currency);
 
     /**

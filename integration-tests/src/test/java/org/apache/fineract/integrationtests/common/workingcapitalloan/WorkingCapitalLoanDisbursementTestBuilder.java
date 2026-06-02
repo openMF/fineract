@@ -18,13 +18,16 @@
  */
 package org.apache.fineract.integrationtests.common.workingcapitalloan;
 
-import com.google.gson.JsonObject;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsPaymentDetailRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdDisbursementPaymentDetails;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
 
 /**
- * Builds JSON request bodies for Working Capital Loan Disbursement API.
+ * Builds request bodies for Working Capital Loan Disbursement API.
  */
 public final class WorkingCapitalLoanDisbursementTestBuilder {
 
@@ -33,150 +36,130 @@ public final class WorkingCapitalLoanDisbursementTestBuilder {
 
     private WorkingCapitalLoanDisbursementTestBuilder() {}
 
-    public static String buildDisburseJson(final LocalDate actualDisbursementDate, final BigDecimal transactionAmount,
-            final BigDecimal discountAmount, final String note, final Integer paymentTypeId, final String accountNumber,
-            final String checkNumber, final String routingCode, final String receiptNumber, final String bankNumber,
-            final String externalId) {
-        final JsonObject json = new JsonObject();
-        json.addProperty("locale", DEFAULT_LOCALE);
-        json.addProperty("dateFormat", DEFAULT_DATE_FORMAT);
+    public static PostWorkingCapitalLoansLoanIdRequest buildDisburseRequest(final LocalDate actualDisbursementDate,
+            final BigDecimal transactionAmount, final BigDecimal discountAmount, final String note, final Integer paymentTypeId,
+            final String accountNumber, final String checkNumber, final String routingCode, final String receiptNumber,
+            final String bankNumber, final String externalId) {
+        final PostWorkingCapitalLoansLoanIdRequest request = baseLoanIdRequest();
         if (actualDisbursementDate != null) {
-            json.addProperty("actualDisbursementDate", actualDisbursementDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+            request.actualDisbursementDate(format(actualDisbursementDate));
         }
         if (transactionAmount != null) {
-            json.addProperty("transactionAmount", transactionAmount);
+            request.transactionAmount(transactionAmount);
         }
         if (discountAmount != null) {
-            json.addProperty("discountAmount", discountAmount);
+            request.discountAmount(discountAmount);
         }
         if (note != null) {
-            json.addProperty("note", note);
+            request.note(note);
         }
         if (paymentTypeId != null || accountNumber != null || checkNumber != null || routingCode != null || receiptNumber != null
                 || bankNumber != null) {
-            final JsonObject paymentDetails = new JsonObject();
-            if (paymentTypeId != null) {
-                paymentDetails.addProperty("paymentTypeId", paymentTypeId);
-            }
-            if (accountNumber != null) {
-                paymentDetails.addProperty("accountNumber", accountNumber);
-            }
-            if (checkNumber != null) {
-                paymentDetails.addProperty("checkNumber", checkNumber);
-            }
-            if (routingCode != null) {
-                paymentDetails.addProperty("routingCode", routingCode);
-            }
-            if (receiptNumber != null) {
-                paymentDetails.addProperty("receiptNumber", receiptNumber);
-            }
-            if (bankNumber != null) {
-                paymentDetails.addProperty("bankNumber", bankNumber);
-            }
-            json.add("paymentDetails", paymentDetails);
+            request.paymentDetails(
+                    new PostWorkingCapitalLoansLoanIdDisbursementPaymentDetails().paymentTypeId(paymentTypeId).accountNumber(accountNumber)
+                            .checkNumber(checkNumber).routingCode(routingCode).receiptNumber(receiptNumber).bankNumber(bankNumber));
         }
         if (externalId != null) {
-            json.addProperty("externalId", externalId);
+            request.externalId(externalId);
         }
-        return json.toString();
+        return request;
     }
 
-    public static String buildDisburseJson(final LocalDate actualDisbursementDate, final BigDecimal transactionAmount,
-            final BigDecimal discountAmount, final String note, final Integer paymentTypeId, final String accountNumber,
-            final String checkNumber, final String routingCode, final String receiptNumber, final String bankNumber) {
-        return buildDisburseJson(actualDisbursementDate, transactionAmount, discountAmount, note, paymentTypeId, accountNumber, checkNumber,
-                routingCode, receiptNumber, bankNumber, null);
+    public static PostWorkingCapitalLoansLoanIdRequest buildDisburseRequest(final LocalDate actualDisbursementDate,
+            final BigDecimal transactionAmount, final BigDecimal discountAmount, final String note, final Integer paymentTypeId,
+            final String accountNumber, final String checkNumber, final String routingCode, final String receiptNumber,
+            final String bankNumber) {
+        return buildDisburseRequest(actualDisbursementDate, transactionAmount, discountAmount, note, paymentTypeId, accountNumber,
+                checkNumber, routingCode, receiptNumber, bankNumber, null);
     }
 
-    public static String buildDisburseJson(final LocalDate actualDisbursementDate, final BigDecimal transactionAmount) {
-        return buildDisburseJson(actualDisbursementDate, transactionAmount, null, null, null, null, null, null, null, null);
+    public static PostWorkingCapitalLoansLoanIdRequest buildDisburseRequest(final LocalDate actualDisbursementDate,
+            final BigDecimal transactionAmount) {
+        return buildDisburseRequest(actualDisbursementDate, transactionAmount, null, null, null, null, null, null, null, null);
     }
 
-    public static String buildDisburseJson(final LocalDate actualDisbursementDate, final BigDecimal transactionAmount,
-            final Long classificationId) {
-        final JsonObject json = new JsonObject();
-        json.addProperty("locale", DEFAULT_LOCALE);
-        json.addProperty("dateFormat", DEFAULT_DATE_FORMAT);
+    public static PostWorkingCapitalLoansLoanIdRequest buildDisburseRequest(final LocalDate actualDisbursementDate,
+            final BigDecimal transactionAmount, final Long classificationId) {
+        final PostWorkingCapitalLoansLoanIdRequest request = baseLoanIdRequest();
         if (actualDisbursementDate != null) {
-            json.addProperty("actualDisbursementDate", actualDisbursementDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+            request.actualDisbursementDate(format(actualDisbursementDate));
         }
         if (transactionAmount != null) {
-            json.addProperty("transactionAmount", transactionAmount);
+            request.transactionAmount(transactionAmount);
         }
         if (classificationId != null) {
-            json.addProperty("classificationId", classificationId);
+            request.classificationId(classificationId);
         }
-        return json.toString();
+        return request;
     }
 
-    public static String buildUndoDisburseJson() {
-        return buildUndoDisburseJson(null);
+    public static PostWorkingCapitalLoansLoanIdRequest buildUndoDisburseRequest() {
+        return buildUndoDisburseRequest(null);
     }
 
-    public static String buildUndoDisburseJson(final String note) {
-        final JsonObject json = new JsonObject();
-        json.addProperty("locale", DEFAULT_LOCALE);
-        json.addProperty("dateFormat", DEFAULT_DATE_FORMAT);
+    public static PostWorkingCapitalLoansLoanIdRequest buildUndoDisburseRequest(final String note) {
+        final PostWorkingCapitalLoansLoanIdRequest request = baseLoanIdRequest();
         if (note != null) {
-            json.addProperty("note", note);
+            request.note(note);
         }
-        return json.toString();
+        return request;
     }
 
-    public static String buildUpdateDiscountJson(final BigDecimal discountAmount, final String note) {
-        final JsonObject json = new JsonObject();
-        json.addProperty("locale", DEFAULT_LOCALE);
-        json.addProperty("dateFormat", DEFAULT_DATE_FORMAT);
+    public static PostWorkingCapitalLoansLoanIdRequest buildUpdateDiscountRequest(final BigDecimal discountAmount, final String note) {
+        final PostWorkingCapitalLoansLoanIdRequest request = baseLoanIdRequest();
         if (discountAmount != null) {
-            json.addProperty("discountAmount", discountAmount);
+            request.discountAmount(discountAmount);
         }
         if (note != null) {
-            json.addProperty("note", note);
+            request.note(note);
         }
-        return json.toString();
+        return request;
     }
 
-    public static String buildRepaymentJson(final LocalDate transactionDate, final BigDecimal transactionAmount,
-            final Long classificationId, final String note, final Integer paymentTypeId, final String accountNumber) {
-        return buildTransactionJson(transactionDate, transactionAmount, classificationId, note, paymentTypeId, accountNumber, null);
+    public static PostWorkingCapitalLoanTransactionsRequest buildRepaymentRequest(final LocalDate transactionDate,
+            final BigDecimal transactionAmount, final Long classificationId, final String note, final Integer paymentTypeId,
+            final String accountNumber) {
+        return buildTransactionRequest(transactionDate, transactionAmount, classificationId, note, paymentTypeId, accountNumber, null);
     }
 
-    public static String buildTransactionJson(final LocalDate transactionDate, final BigDecimal transactionAmount,
-            final Long classificationId, final String note, final Integer paymentTypeId, final String accountNumber,
-            final String externalId) {
-        final JsonObject json = new JsonObject();
-        json.addProperty("locale", DEFAULT_LOCALE);
-        json.addProperty("dateFormat", DEFAULT_DATE_FORMAT);
+    public static PostWorkingCapitalLoanTransactionsRequest buildTransactionRequest(final LocalDate transactionDate,
+            final BigDecimal transactionAmount, final Long classificationId, final String note, final Integer paymentTypeId,
+            final String accountNumber, final String externalId) {
+        final PostWorkingCapitalLoanTransactionsRequest request = new PostWorkingCapitalLoanTransactionsRequest().locale(DEFAULT_LOCALE)
+                .dateFormat(DEFAULT_DATE_FORMAT);
         if (transactionDate != null) {
-            json.addProperty("transactionDate", transactionDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+            request.transactionDate(format(transactionDate));
         }
         if (transactionAmount != null) {
-            json.addProperty("transactionAmount", transactionAmount);
+            request.transactionAmount(transactionAmount);
         }
         if (classificationId != null) {
-            json.addProperty("classificationId", classificationId);
+            request.classificationId(classificationId);
         }
         if (note != null) {
-            json.addProperty("note", note);
+            request.note(note);
         }
         if (paymentTypeId != null || accountNumber != null) {
-            final JsonObject paymentDetails = new JsonObject();
-            if (paymentTypeId != null) {
-                paymentDetails.addProperty("paymentTypeId", paymentTypeId);
-            }
-            if (accountNumber != null) {
-                paymentDetails.addProperty("accountNumber", accountNumber);
-            }
-            json.add("paymentDetails", paymentDetails);
+            request.paymentDetails(new PostWorkingCapitalLoanTransactionsPaymentDetailRequest()
+                    .paymentTypeId(paymentTypeId != null ? paymentTypeId.longValue() : null).accountNumber(accountNumber));
         }
         if (externalId != null) {
-            json.addProperty("externalId", externalId);
+            request.externalId(externalId);
         }
-        return json.toString();
+        return request;
     }
 
-    public static String buildCreditBalanceRefundJson(final LocalDate transactionDate, final BigDecimal transactionAmount,
-            final Long classificationId, final String note, final Integer paymentTypeId, final String accountNumber) {
-        return buildTransactionJson(transactionDate, transactionAmount, classificationId, note, paymentTypeId, accountNumber, null);
+    public static PostWorkingCapitalLoanTransactionsRequest buildCreditBalanceRefundRequest(final LocalDate transactionDate,
+            final BigDecimal transactionAmount, final Long classificationId, final String note, final Integer paymentTypeId,
+            final String accountNumber) {
+        return buildTransactionRequest(transactionDate, transactionAmount, classificationId, note, paymentTypeId, accountNumber, null);
+    }
+
+    private static PostWorkingCapitalLoansLoanIdRequest baseLoanIdRequest() {
+        return new PostWorkingCapitalLoansLoanIdRequest().locale(DEFAULT_LOCALE).dateFormat(DEFAULT_DATE_FORMAT);
+    }
+
+    private static String format(final LocalDate date) {
+        return date.format(DateTimeFormatter.ISO_LOCAL_DATE);
     }
 }

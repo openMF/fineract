@@ -16,9 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.workingcapitalloan.data;
+package org.apache.fineract.test.messaging.event.workingcapitalloan.transaction;
 
-import java.math.BigDecimal;
+public class WorkingCapitalLoanDiscountFeeTransactionBusinessEvent extends AbstractWorkingCapitalLoanTransactionEvent {
 
-public record RepaymentAmortizationData(BigDecimal currentDayAmortizedAmount, BigDecimal totalAmortizedAmount) {
+    @Override
+    public String getEventName() {
+        return "WorkingCapitalLoanDiscountFeeTransactionBusinessEvent";
+    }
 }

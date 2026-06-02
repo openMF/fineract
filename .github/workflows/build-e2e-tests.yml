@@ -22,6 +22,8 @@ jobs:
     env:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
       IMAGE_NAME: fineract
+      COMPOSE_FILE: docker-compose-postgresql-test-activemq.yml
+      DOCKER_LOG_DIR: ci-logs/e2e-shard-${{ matrix.shard_index }}
       BASE_URL: https://localhost:8443
       TEST_USERNAME: mifos
       TEST_PASSWORD: password
@@ -65,7 +67,7 @@ jobs:
         run: ./gradlew --no-daemon --console=plain :fineract-provider:jibDockerBuild -Djib.to.image=$IMAGE_NAME -x test -x cucumber -x buildJavaSdk
 
       - name: Start the Fineract stack
-        run: docker compose -f docker-compose-postgresql-test-activemq.yml up -d
+        run: docker compose -f "$COMPOSE_FILE" up -d
 
       - name: Check the stack
         run: docker ps
@@ -153,40 +155,61 @@ jobs:
             exit 1
           fi
 
+      - name: Collect Docker logs
+        if: always()
+        run: |
+          mkdir -p "$DOCKER_LOG_DIR"
+          docker ps -a > "$DOCKER_LOG_DIR/docker-ps.txt" 2>&1 || true
+          docker compose -f "$COMPOSE_FILE" ps --all > "$DOCKER_LOG_DIR/docker-compose-ps.txt" 2>&1 || true
+          docker compose -f "$COMPOSE_FILE" logs --no-color --timestamps > "$DOCKER_LOG_DIR/docker-compose.log" 2>&1 || true
+          docker stats --no-stream > "$DOCKER_LOG_DIR/docker-stats.txt" 2>&1 || true
+
+          docker compose -f "$COMPOSE_FILE" ps -q | while read -r container_id; do
+            [ -n "$container_id" ] || continue
+            container_name="$(docker inspect --format '{{.Name}}' "$container_id" 2>/dev/null | sed 's#^/##; s#[^A-Za-z0-9_.-]#_#g')"
+            [ -n "$container_name" ] || container_name="$container_id"
+            docker logs --timestamps "$container_id" > "$DOCKER_LOG_DIR/${container_name}.log" 2>&1 || true
+            docker inspect "$container_id" > "$DOCKER_LOG_DIR/${container_name}.inspect.json" 2>&1 || true
+          done
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: allure-results-shard-${{ matrix.shard_index }}
+          name: allure-results-shard-${{ matrix.shard_index }}-attempt-${{ github.run_attempt }}
           path: |
             allure-results-shard-${{ matrix.shard_index }}
             allure-results-merged
             **/build/allure-results
             **/build/reports/tests/test
             **/build/test-results/test
+          if-no-files-found: ignore
           retention-days: 5
 
       - name: Upload Allure Report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: allure-report-shard-${{ matrix.shard_index }}
+          name: allure-report-shard-${{ matrix.shard_index }}-attempt-${{ github.run_attempt }}
           path: allure-report-shard-${{ matrix.shard_index }}
+          if-no-files-found: ignore
           retention-days: 5
 
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: logs-shard-${{ matrix.shard_index }}
+          name: logs-shard-${{ matrix.shard_index }}-attempt-${{ github.run_attempt }}
           path: |
+            ci-logs/
             **/build/reports/tests/
             **/logs/
             **/out/
+          if-no-files-found: ignore
           retention-days: 5
 
       - name: Clean up
         if: always()
         run: |
-          docker compose -f docker-compose-postgresql-test-activemq.yml down -v
+          docker compose -f "$COMPOSE_FILE" down -v
           docker system prune -f

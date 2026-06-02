@@ -24,11 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import java.math.BigDecimal;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
+import org.apache.fineract.client.models.WorkingCapitalNearBreachData;
+import org.apache.fineract.client.models.WorkingCapitalNearBreachRequest;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.common.workingcapitalloannearbreach.WorkingCapitalNearBreachHelper;
 import org.junit.jupiter.api.Test;
@@ -40,38 +39,39 @@ public class WorkingCapitalNearBreachCRUDTest {
     @Test
     public void testCreateRetrieveUpdateDeleteAndListEndpoints() {
         String nearBreachName = Utils.randomStringGenerator("NearBreach", 20);
-        final JsonObject createBody = nearBreachHelper.nearBreachJson(nearBreachName, 15, "DAYS", BigDecimal.valueOf(7.5));
-        final Long nearBreachId = nearBreachHelper.create(createBody);
+        final WorkingCapitalNearBreachRequest request = new WorkingCapitalNearBreachRequest() //
+                .nearBreachName(nearBreachName) //
+                .nearBreachFrequency(15) //
+                .nearBreachFrequencyType("DAYS") //
+                .nearBreachThreshold(BigDecimal.valueOf(7.5)); //
+        final Long nearBreachId = nearBreachHelper.create(request).getResourceId();
         assertNotNull(nearBreachId);
 
-        final JsonObject created = JsonParser.parseString(nearBreachHelper.retrieveOneRaw(nearBreachId)).getAsJsonObject();
-        assertEquals(nearBreachName, created.get("name").getAsString());
-        assertEquals(15, created.get("frequency").getAsInt());
-        assertEquals("DAYS", created.getAsJsonObject("frequencyType").get("id").getAsString());
-        assertEquals(0, BigDecimal.valueOf(7.5).compareTo(created.get("threshold").getAsBigDecimal()));
+        final WorkingCapitalNearBreachData created = nearBreachHelper.retrieveOne(nearBreachId);
+        assertEquals(nearBreachName, created.getName());
+        assertEquals(15, created.getFrequency());
+        assertEquals("DAYS", created.getFrequencyType().getId());
+        assertEquals(0, BigDecimal.valueOf(7.5).compareTo(created.getThreshold()));
 
-        final JsonArray all = JsonParser.parseString(nearBreachHelper.retrieveAllRaw()).getAsJsonArray();
-        boolean found = false;
-        for (int i = 0; i < all.size(); i++) {
-            if (all.get(i).getAsJsonObject().get("id").getAsLong() == nearBreachId) {
-                found = true;
-                break;
-            }
-        }
+        final boolean found = nearBreachHelper.retrieveAll().stream().anyMatch(nearBreach -> nearBreachId.equals(nearBreach.getId()));
         assertTrue(found);
 
         nearBreachName = Utils.randomStringGenerator("NearBreach", 20);
-        final JsonObject updateBody = nearBreachHelper.nearBreachJson(nearBreachName, 20, "MONTHS", BigDecimal.valueOf(80));
-        final Long updatedId = nearBreachHelper.update(nearBreachId, updateBody);
+        final WorkingCapitalNearBreachRequest request2 = new WorkingCapitalNearBreachRequest() //
+                .nearBreachName(nearBreachName) //
+                .nearBreachFrequency(20) //
+                .nearBreachFrequencyType("MONTHS") //
+                .nearBreachThreshold(BigDecimal.valueOf(80)); //
+        final Long updatedId = nearBreachHelper.update(nearBreachId, request2).getResourceId();
         assertEquals(nearBreachId, updatedId);
 
-        final JsonObject updated = JsonParser.parseString(nearBreachHelper.retrieveOneRaw(nearBreachId)).getAsJsonObject();
-        assertEquals(nearBreachName, updated.get("name").getAsString());
-        assertEquals(20, updated.get("frequency").getAsInt());
-        assertEquals("MONTHS", updated.getAsJsonObject("frequencyType").get("id").getAsString());
-        assertEquals(0, BigDecimal.valueOf(80).compareTo(updated.get("threshold").getAsBigDecimal()));
+        final WorkingCapitalNearBreachData updated = nearBreachHelper.retrieveOne(nearBreachId);
+        assertEquals(nearBreachName, updated.getName());
+        assertEquals(20, updated.getFrequency());
+        assertEquals("MONTHS", updated.getFrequencyType().getId());
+        assertEquals(0, BigDecimal.valueOf(80).compareTo(updated.getThreshold()));
 
-        final Long deletedId = nearBreachHelper.delete(nearBreachId);
+        final Long deletedId = nearBreachHelper.delete(nearBreachId).getResourceId();
         assertEquals(nearBreachId, deletedId);
     }
 
@@ -79,14 +79,16 @@ public class WorkingCapitalNearBreachCRUDTest {
     public void testNegativeCreateNearBreachWithSameName() {
         // Given
         final String nearBreachName = Utils.randomStringGenerator("NearBreach", 20);
-        final JsonObject createBody = nearBreachHelper.nearBreachJson(nearBreachName, 15, "DAYS", BigDecimal.valueOf(7.5));
-        final Long nearBreachId = nearBreachHelper.create(createBody);
+        final WorkingCapitalNearBreachRequest request = new WorkingCapitalNearBreachRequest() //
+                .nearBreachName(nearBreachName) //
+                .nearBreachFrequency(15) //
+                .nearBreachFrequencyType("DAYS") //
+                .nearBreachThreshold(BigDecimal.valueOf(7.5)); //
+        final Long nearBreachId = nearBreachHelper.create(request).getResourceId();
         assertNotNull(nearBreachId);
-        final JsonObject createBodyDuplicated = nearBreachHelper.nearBreachJson(nearBreachName, 20, "DAYS", BigDecimal.valueOf(9.5));
 
         // When
-        CallFailedRuntimeException exception = assertThrows(CallFailedRuntimeException.class,
-                () -> nearBreachHelper.create(createBodyDuplicated));
+        CallFailedRuntimeException exception = assertThrows(CallFailedRuntimeException.class, () -> nearBreachHelper.create(request));
 
         // Then
         assertThat(exception.getStatus()).isEqualTo(403);

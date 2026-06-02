@@ -1,3 +1,4 @@
+@WorkingCapital
 @WorkingCapitalDelinquencyManagementFeature
 Feature: Working Capital Delinquency Configuration
 

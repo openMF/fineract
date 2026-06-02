@@ -14,8 +14,10 @@ jobs:
     timeout-minutes: 1
     steps:
       - name: Verify Title Format
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          title="${{ github.event.pull_request.title }}"
+          title="$PR_TITLE"
           regex="^FINERACT-[0-9]+: "
 
           if [[ ! "$title" =~ $regex ]]; then

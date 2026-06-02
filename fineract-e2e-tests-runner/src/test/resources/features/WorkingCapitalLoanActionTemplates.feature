@@ -1,3 +1,4 @@
+@WorkingCapital
 @WorkingCapitalLoanActionTemplatesFeature
 Feature: Working Capital Loan Action Templates
 
@@ -6,7 +7,7 @@ Feature: Working Capital Loan Action Templates
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | WCLP        | 01 January 2026 | 15 January 2026          | 500             | 500          | 1                 | 0        |
     Then Working capital loan creation was successful
     When Admin retrieves the working capital loan action template with templateType "approve"
@@ -19,11 +20,11 @@ Feature: Working Capital Loan Action Templates
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | WCLP        | 01 January 2026 | 15 January 2026          | 500             | 500          | 1                 | 0        |
     Then Working capital loan creation was successful
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       |                 | 25 January 2026          | 300             |              |                   |          |
     When Admin retrieves the working capital loan action template with templateType "approve"
     Then The working capital loan approve template has the following data:
@@ -35,11 +36,11 @@ Feature: Working Capital Loan Action Templates
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | WCLP        | 01 January 2026 | 15 January 2026          | 500             | 500          | 1                 | 0        |
     Then Working capital loan creation was successful
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       |                 |                          | 200             |              |                   |          |
     When Admin retrieves the working capital loan action template with templateType "approve"
     Then The working capital loan approve template has the following data:
@@ -51,11 +52,11 @@ Feature: Working Capital Loan Action Templates
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | WCLP        | 01 January 2026 | 15 January 2026          | 500             | 500          | 1                 | 0        |
     Then Working capital loan creation was successful
     When Admin modifies the working capital loan with the following data:
-      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       |                 | 25 January 2026          |                 |              |                   |          |
     When Admin retrieves the working capital loan action template with templateType "approve"
     Then The working capital loan approve template has the following data:
@@ -67,7 +68,7 @@ Feature: Working Capital Loan Action Templates
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
     Then Working capital loan creation was successful
     When Admin retrieves the working capital loan action template with templateType "approve"
@@ -80,7 +81,7 @@ Feature: Working Capital Loan Action Templates
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | WCLP        | 01 January 2026 | 15 January 2026          | 500             | 500          | 1                 | 0        |
     Then Working capital loan creation was successful
     When Admin successfully approves the working capital loan on "01 January 2026" with "500" amount and expected disbursement date on "15 January 2026"
@@ -94,7 +95,7 @@ Feature: Working Capital Loan Action Templates
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | WCLP        | 01 January 2026 | 15 January 2026          | 500             | 500          | 1                 | 0        |
     Then Working capital loan creation was successful
     When Admin successfully approves the working capital loan on "01 January 2026" with "300" amount and expected disbursement date on "15 January 2026"
@@ -108,7 +109,7 @@ Feature: Working Capital Loan Action Templates
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
     Then Working capital loan creation was successful
     Then Retrieving WC loan action template with invalid templateType "invalid" results in an error
@@ -118,7 +119,7 @@ Feature: Working Capital Loan Action Templates
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 | 0        |
     Then Working capital loan creation was successful
     Then Retrieving WC loan action template without templateType results in an error

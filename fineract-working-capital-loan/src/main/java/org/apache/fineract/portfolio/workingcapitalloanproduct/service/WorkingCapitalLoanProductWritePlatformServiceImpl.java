@@ -22,8 +22,10 @@ import com.google.gson.JsonObject;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.ApiParameterError;
@@ -40,6 +42,7 @@ import org.apache.fineract.portfolio.delinquency.exception.DelinquencyBucketNotF
 import org.apache.fineract.portfolio.fund.domain.Fund;
 import org.apache.fineract.portfolio.fund.domain.FundRepository;
 import org.apache.fineract.portfolio.fund.exception.FundNotFoundException;
+import org.apache.fineract.portfolio.loanproduct.domain.PaymentAllocationTransactionType;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPeriodFrequencyType;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanRepository;
 import org.apache.fineract.portfolio.workingcapitalloanbreach.domain.WorkingCapitalBreach;
@@ -61,7 +64,6 @@ import org.apache.fineract.portfolio.workingcapitalloanproduct.exception.Working
 import org.apache.fineract.portfolio.workingcapitalloanproduct.exception.WorkingCapitalLoanProductDuplicateNameException;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.exception.WorkingCapitalLoanProductDuplicateShortNameException;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.exception.WorkingCapitalLoanProductNotFoundException;
-import org.apache.fineract.portfolio.workingcapitalloanproduct.repository.WorkingCapitalLoanProductPaymentAllocationRuleRepository;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.repository.WorkingCapitalLoanProductRepository;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.serialization.WorkingCapitalLoanProductDataValidator;
 import org.springframework.stereotype.Service;
@@ -74,7 +76,6 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
     private final WorkingCapitalLoanProductDataValidator validator;
     private final WorkingCapitalLoanProductRepository repository;
     private final WorkingCapitalLoanRepository workingCapitalLoanRepository;
-    private final WorkingCapitalLoanProductPaymentAllocationRuleRepository paymentAllocationRuleRepository;
     private final WorkingCapitalLoanProductUpdateUtil updateUtil;
     private final FundRepository fundRepository;
     private final DelinquencyBucketRepository delinquencyBucketRepository;
@@ -302,9 +303,7 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
             final List<WorkingCapitalLoanProductPaymentAllocationRule> newRules = this.advancedPaymentAllocationsJsonParser
                     .assembleWCPaymentAllocationRules(command);
             if (newRules != null) {
-                newRules.forEach(rule -> rule.setWcProduct(product));
-                paymentAllocationRuleRepository.deleteAll(product.getPaymentAllocationRules());
-                product.updatePaymentAllocationRules(newRules);
+                updatePaymentAllocationRules(product, newRules);
                 changes.put(WorkingCapitalLoanProductConstants.paymentAllocationParamName,
                         command.jsonFragment(WorkingCapitalLoanProductConstants.paymentAllocationParamName));
             }
@@ -332,6 +331,32 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
         }
 
         return changes;
+    }
+
+    private void updatePaymentAllocationRules(final WorkingCapitalLoanProduct product,
+            final List<WorkingCapitalLoanProductPaymentAllocationRule> newRules) {
+        final Map<PaymentAllocationTransactionType, WorkingCapitalLoanProductPaymentAllocationRule> existingRulesByTransactionType = new HashMap<>();
+        final Set<PaymentAllocationTransactionType> incomingTransactionTypes = new HashSet<>(
+                newRules.stream().map(WorkingCapitalLoanProductPaymentAllocationRule::getTransactionType).toList());
+
+        product.getPaymentAllocationRules().removeIf(existingRule -> {
+            if (!incomingTransactionTypes.contains(existingRule.getTransactionType())) {
+                return true;
+            }
+            return existingRulesByTransactionType.putIfAbsent(existingRule.getTransactionType(), existingRule) != null;
+        });
+
+        for (final WorkingCapitalLoanProductPaymentAllocationRule newRule : newRules) {
+            final WorkingCapitalLoanProductPaymentAllocationRule existingRule = existingRulesByTransactionType
+                    .get(newRule.getTransactionType());
+            if (existingRule != null) {
+                existingRule.setAllocationTypes(newRule.getAllocationTypes());
+            } else {
+                newRule.setWcProduct(product);
+                product.getPaymentAllocationRules().add(newRule);
+                existingRulesByTransactionType.put(newRule.getTransactionType(), newRule);
+            }
+        }
     }
 
     private WorkingCapitalLoanProduct createProductFromCommand(final Fund fund, final DelinquencyBucket delinquencyBucket,

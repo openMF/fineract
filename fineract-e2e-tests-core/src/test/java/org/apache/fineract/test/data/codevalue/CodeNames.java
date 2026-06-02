@@ -47,7 +47,8 @@ public enum CodeNames {
     LOAN_RESCHEDULE_REASON("LoanRescheduleReason"), //
     WRITE_OFF_REASON("WriteOffReasons"), //
     BUYDOWN_FEE_TRANSACTION_CLASSIFICATION("buydown_fee_transaction_classification"), //
-    CAPITALIZED_INCOME_TRANSACTION_CLASSIFICATION("capitalized_income_transaction_classification"); //
+    CAPITALIZED_INCOME_TRANSACTION_CLASSIFICATION("capitalized_income_transaction_classification"), //
+    WORKING_CAPITAL_DISCOUNT_FEE_CLASSIFICATION("working_capital_loan_discount_fee_classification"); //
 
     private final String value;
 

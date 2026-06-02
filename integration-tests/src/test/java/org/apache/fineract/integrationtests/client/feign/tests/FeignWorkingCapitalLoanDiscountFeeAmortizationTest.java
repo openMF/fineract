@@ -70,8 +70,6 @@ public class FeignWorkingCapitalLoanDiscountFeeAmortizationTest extends FeignInt
     private FeignJournalEntryHelper journalHelper;
     private WorkingCapitalLoanProductHelper productHelper;
 
-    private Long clientId;
-
     // GL accounts
     private Account fundSourceAccount;
     private Account loanPortfolioAccount;
@@ -97,7 +95,6 @@ public class FeignWorkingCapitalLoanDiscountFeeAmortizationTest extends FeignInt
         businessDateHelper = new FeignBusinessDateHelper(feignClient);
         journalHelper = new FeignJournalEntryHelper(feignClient);
         productHelper = new WorkingCapitalLoanProductHelper();
-        clientId = clientHelper.createClient();
 
         final FeignAccountHelper accountHelper = new FeignAccountHelper(feignClient);
         fundSourceAccount = accountHelper.createLiabilityAccount("wcAmortFundSrc");
