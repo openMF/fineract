@@ -236,7 +236,7 @@ allprojects  {
     spotless {
         format 'misc', {
             target '**/*.md', '**/*.properties', '**/.gitignore', '**/.openapi-generator-ignore', '**/*.yml', '**/*.xml', '**/**.json', '**/*.sql'
-            targetExclude '**/build/**', '**/bin/**', '**/.settings/**', '**/.idea/**', '**/.gradle/**', '**/gradlew.bat', '**/licenses/**', '**/banner.txt', '.vscode/**', '.profileconfig.json'
+            targetExclude '**/build/**', '**/bin/**', '**/.settings/**', '**/.idea/**', '**/.gradle/**', '**/gradlew.bat', '**/licenses/**', '**/banner.txt', '.vscode/**', '.profileconfig.json', '**/*.md'
             indentWithSpaces(4)
             endWithNewline()
             trimTrailingWhitespace()

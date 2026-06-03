@@ -173,16 +173,7 @@ public class WorkingCapitalLoanApplicationReadPlatformServiceImpl implements Wor
 
     @Override
     public WorkingCapitalLoanData retrieveOne(final ExternalId externalId) {
-        final WorkingCapitalLoan loan = this.repository.findByExternalIdWithDetails(externalId)
-                .orElseThrow(() -> new WorkingCapitalLoanNotFoundException(externalId));
-        final WorkingCapitalLoan loanWithDetails = this.repository.findByIdWithFullDetails(loan.getId())
-                .orElseThrow(() -> new WorkingCapitalLoanNotFoundException(loan.getId()));
-        WorkingCapitalLoanData data = this.mapper.toData(loanWithDetails);
-        WorkingCapitalLoanCollectionData collectionData = workingCapitalLoanDelinquencyReadPlatformService.getCollectionData(loan.getId(),
-                ThreadLocalContextUtil.getBusinessDate());
-        data.setCollectionData(collectionData);
-        enrichWithRateAndTerm(loanWithDetails, data);
-        return data;
+        return retrieveOne(repository.findIdByExternalId(externalId));
     }
 
     private void enrichWithRateAndTerm(final WorkingCapitalLoan loan, final WorkingCapitalLoanData data) {

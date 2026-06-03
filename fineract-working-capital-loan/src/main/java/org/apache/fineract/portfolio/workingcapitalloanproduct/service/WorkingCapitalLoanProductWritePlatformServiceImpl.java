@@ -494,7 +494,7 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
         final WorkingCapitalLoanProductConfigurableAttributes configurableAttributes = new WorkingCapitalLoanProductConfigurableAttributes();
         configurableAttributes.setDelinquencyBucketClassification(delinquencyBucketClassification);
         configurableAttributes.setBreach(breach);
-        configurableAttributes.setDiscountDefault(discountDefault);
+        configurableAttributes.setDiscountDefaultOverridable(discountDefault);
         configurableAttributes.setPeriodPaymentFrequency(periodPaymentFrequency);
         configurableAttributes.setPeriodPaymentFrequencyType(periodPaymentFrequencyType);
         return configurableAttributes;

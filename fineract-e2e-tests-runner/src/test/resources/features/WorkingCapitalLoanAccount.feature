@@ -68,7 +68,7 @@ Feature: WorkingCapitalLoanAccount
     Then Working capital loan creation was successful
     And Working capital loan account has the correct data:
       | product.name                               | submittedOnDate | expectedDisbursementDate | status                         | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountProposed |
-      | WCLP_DISCOUNT_DISALLOW_ATTRIBUTES_OVERRIDE | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | null             |
+      | WCLP_DISCOUNT_DISALLOW_ATTRIBUTES_OVERRIDE | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 100.0             | 0.0               | 100.0              | 1.0               | 50.0             |
 
   @TestRailId:C70254
   Scenario: Create Working Capital Loan account - UC5: Create with principal amount greater than WCLP max (Negative)

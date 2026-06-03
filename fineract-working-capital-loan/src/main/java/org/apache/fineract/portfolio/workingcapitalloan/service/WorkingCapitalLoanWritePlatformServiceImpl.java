@@ -147,6 +147,8 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
             final BigDecimal discount = this.fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanConstants.discountAmountParamName,
                     command.parsedJson(), new HashSet<>());
             loan.getLoanProductRelatedDetails().setDiscountApproved(discount);
+        } else if (!loan.getLoanProduct().getConfigurableAttributes().isDiscountDefaultOverridable()) {
+            loan.getLoanProductRelatedDetails().setDiscountApproved(loan.getLoanProductRelatedDetails().getDiscountProposed());
         }
 
         // Keep first tranche expected amount aligned with approved principal (submit stores proposed principal only).
@@ -294,7 +296,12 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
         // Discount amount (optional, can only be reduced per requirement)
         BigDecimal discount = null;
-        if (command.parameterExists(WorkingCapitalLoanConstants.discountAmountParamName)) {
+        if (!loan.getLoanProduct().getConfigurableAttributes().isDiscountDefaultOverridable()) {
+            // if default discount is NOT overridable, then we set the approved discount value as default.
+            if (loan.getLoanProductRelatedDetails().getDiscountApproved() != null) {
+                discount = loan.getLoanProductRelatedDetails().getDiscountApproved();
+            }
+        } else if (command.parameterExists(WorkingCapitalLoanConstants.discountAmountParamName)) {
             discount = this.fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanConstants.discountAmountParamName,
                     command.parsedJson(), new HashSet<>());
             if (discount != null) {

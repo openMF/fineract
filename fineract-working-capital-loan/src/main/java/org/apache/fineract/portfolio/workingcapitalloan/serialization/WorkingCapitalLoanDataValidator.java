@@ -127,15 +127,16 @@ public class WorkingCapitalLoanDataValidator {
 
         final JsonElement element = this.fromApiJsonHelper.parse(json);
 
-        if (isDiscountOverrideAllowed(loan)) {
-            baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName)
-                    .failWithCode("override.not.allowed.by.product");
-        }
         baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName).value(discountAmount).ignoreIfNull()
                 .zeroOrPositiveAmount();
 
-        final BigDecimal currentDiscount = loan.getLoanProductRelatedDetails() != null ? loan.getLoanProductRelatedDetails().getDiscount()
+        final BigDecimal currentDiscount = loan.getLoanProductRelatedDetails() != null
+                ? loan.getLoanProductRelatedDetails().getDiscountApproved()
                 : null;
+        if (isDiscountOverrideDisallowed(loan) && (currentDiscount == null || discountAmount.compareTo(currentDiscount) != 0)) {
+            baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName)
+                    .failWithCode("override.not.allowed.by.product");
+        }
         if (currentDiscount == null) {
             validateDiscountAmountWithProductDiscount(discountAmount, loan.getLoanProduct().getRelatedDetail(), baseDataValidator);
         }
@@ -305,10 +306,6 @@ public class WorkingCapitalLoanDataValidator {
 
         // discountAmount must be >= 0 and <= proposed discount (creation-time) discount
         if (this.fromApiJsonHelper.parameterHasValue(WorkingCapitalLoanConstants.discountAmountParamName, element)) {
-            if (isDiscountOverrideAllowed(loan)) {
-                baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName)
-                        .failWithCode("override.not.allowed.by.product");
-            }
             final BigDecimal discountAmount = this.fromApiJsonHelper
                     .extractBigDecimalNamed(WorkingCapitalLoanConstants.discountAmountParamName, element, new HashSet<>());
             baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName).value(discountAmount).ignoreIfNull()
@@ -316,6 +313,10 @@ public class WorkingCapitalLoanDataValidator {
             final BigDecimal currentDiscount = loan.getLoanProductRelatedDetails() != null
                     ? loan.getLoanProductRelatedDetails().getDiscountProposed()
                     : null;
+            if (isDiscountOverrideDisallowed(loan) && (currentDiscount == null || discountAmount.compareTo(currentDiscount) != 0)) {
+                baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName)
+                        .failWithCode("override.not.allowed.by.product");
+            }
             if (currentDiscount != null) {
                 if (discountAmount.compareTo(currentDiscount) > 0) {
                     baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName)
@@ -448,10 +449,6 @@ public class WorkingCapitalLoanDataValidator {
         }
 
         if (this.fromApiJsonHelper.parameterHasValue(WorkingCapitalLoanConstants.discountAmountParamName, element)) {
-            if (isDiscountOverrideAllowed(loan)) {
-                baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName)
-                        .failWithCode("override.not.allowed.by.product");
-            }
             final BigDecimal discountAmount = this.fromApiJsonHelper
                     .extractBigDecimalNamed(WorkingCapitalLoanConstants.discountAmountParamName, element, new HashSet<>());
             baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName).value(discountAmount).ignoreIfNull()
@@ -461,6 +458,10 @@ public class WorkingCapitalLoanDataValidator {
             final BigDecimal currentDiscount = loan.getLoanProductRelatedDetails() != null
                     ? loan.getLoanProductRelatedDetails().getDiscountApproved()
                     : null;
+            if (isDiscountOverrideDisallowed(loan) && (currentDiscount == null || currentDiscount.compareTo(discountAmount) != 0)) {
+                baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.discountAmountParamName)
+                        .failWithCode("override.not.allowed.by.product");
+            }
             if (discountAmount != null) {
                 if (currentDiscount != null) {
                     if (discountAmount.compareTo(currentDiscount) > 0) {
@@ -806,8 +807,8 @@ public class WorkingCapitalLoanDataValidator {
         }
     }
 
-    private boolean isDiscountOverrideAllowed(final WorkingCapitalLoan loan) {
+    private boolean isDiscountOverrideDisallowed(final WorkingCapitalLoan loan) {
         return loan.getLoanProduct() == null || loan.getLoanProduct().getConfigurableAttributes() == null
-                || !loan.getLoanProduct().getConfigurableAttributes().isDiscountDefault();
+                || !loan.getLoanProduct().getConfigurableAttributes().isDiscountDefaultOverridable();
     }
 }

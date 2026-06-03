@@ -189,7 +189,7 @@ public class WorkingCapitalLoanProductUpdateUtil {
                 updateBooleanField(allowOverrides, WorkingCapitalLoanProductConstants.breachOverridableParamName, config::setBreach,
                         config::isBreach, changes);
                 updateBooleanField(allowOverrides, WorkingCapitalLoanProductConstants.discountDefaultOverridableParamName,
-                        config::setDiscountDefault, config::isDiscountDefault, changes);
+                        config::setDiscountDefaultOverridable, config::isDiscountDefaultOverridable, changes);
                 updateBooleanField(allowOverrides, WorkingCapitalLoanProductConstants.periodPaymentFrequencyOverridableParamName,
                         config::setPeriodPaymentFrequency, config::isPeriodPaymentFrequency, changes);
                 updateBooleanField(allowOverrides, WorkingCapitalLoanProductConstants.periodPaymentFrequencyTypeOverridableParamName,

@@ -598,7 +598,7 @@ public class WorkingCapitalLoanApplicationDataValidator {
             }
         }
         if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.discountParamName, element)) {
-            if (config.isDiscountDefault()) {
+            if (config.isDiscountDefaultOverridable()) {
                 final BigDecimal discount = this.fromApiJsonHelper
                         .extractBigDecimalNamed(WorkingCapitalLoanProductConstants.discountParamName, element, new java.util.HashSet<>());
                 baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.discountParamName).value(discount).ignoreIfNull()

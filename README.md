@@ -44,6 +44,11 @@ If you believe you have found a new vulnerability, [let us know privately](https
 
 For details about security during development and deployment, see the documentation [here](https://fineract.apache.org/docs/current/#_security).
 
+PRIVATE FORKS
+============
+
+If you’re running Apache Fineract on a private fork, you might want to consider **disabling GitHub Actions CI**. 
+This is because the usage minutes and artifact costs (including the built workspace and logs generated during execution) could incur additional expenses, that you should be aware!
 
 INSTRUCTIONS
 ============

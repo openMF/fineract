@@ -142,6 +142,7 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
             detail.setExpectedAmount(principal);
             loan.getDisbursementDetails().add(detail);
         }
+
         loan.setProposedPrincipal(principal);
         loan.setApprovedPrincipal(BigDecimal.ZERO);
         final WorkingCapitalLoanBalance balance = WorkingCapitalLoanBalance.createFor(loan);
@@ -182,6 +183,11 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
         detail.setDiscountProposed(fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.discountParamName, element)
                 ? fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanProductConstants.discountParamName, element, new HashSet<>())
                 : null);
+        if (detail.getDiscountProposed() == null && productDetail.getDiscount() != null
+                && productDetail.getDiscount().compareTo(BigDecimal.ZERO) > 0
+                && !product.getConfigurableAttributes().isDiscountDefaultOverridable()) {
+            detail.setDiscountProposed(productDetail.getDiscount());
+        }
         final Long breachId = fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.breachIdParamName, element)
                 ? fromApiJsonHelper.extractLongNamed(WorkingCapitalLoanProductConstants.breachIdParamName, element)
                 : null;

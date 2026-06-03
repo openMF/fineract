@@ -60,10 +60,14 @@ public class WorkingCapitalLoanTransactionReadPlatformServiceImpl implements Wor
         if (WorkingCapitalLoanConstants.APPROVE_LOAN_COMMAND.equals(command)) {
             return WorkingCapitalLoanCommandTemplateData.builder().approvalAmount(wcLoan.getProposedPrincipal())
                     .approvalDate(expectedDisbursementDate).expectedDisbursementDate(expectedDisbursementDate)
+                    .discountAmount(wcLoan.getLoanProductRelatedDetails().getDiscountProposed())
+                    .overrideDiscountDisabled(!wcLoan.getLoanProduct().getConfigurableAttributes().isDiscountDefaultOverridable())
                     .currency(wcLoan.getLoanProduct().getCurrency().toData()).build();
         } else if (WorkingCapitalLoanConstants.DISBURSE_LOAN_COMMAND.equals(command)) {
             return WorkingCapitalLoanCommandTemplateData.builder().expectedAmount(wcLoan.getApprovedPrincipal())
                     .expectedDisbursementDate(expectedDisbursementDate).currency(wcLoan.getLoanProduct().getCurrency().toData())
+                    .discountAmount(wcLoan.getLoanProductRelatedDetails().getDiscountApproved())
+                    .overrideDiscountDisabled(!wcLoan.getLoanProduct().getConfigurableAttributes().isDiscountDefaultOverridable())
                     .paymentTypeOptions(paymentTypeReadPlatformService.retrieveAllPaymentTypes())
                     .classificationOptions(codeValueReadPlatformService
                             .retrieveCodeValuesByCode(WorkingCapitalLoanConstants.DISBURSEMENT_CLASSIFICATION_CODE_NAME))

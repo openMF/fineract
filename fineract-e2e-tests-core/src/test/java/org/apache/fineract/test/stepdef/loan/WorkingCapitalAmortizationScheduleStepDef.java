@@ -125,17 +125,18 @@ public class WorkingCapitalAmortizationScheduleStepDef extends AbstractStepDef {
             assertDate(assertions, p + "date", actual.getPaymentDate(), expected.get("date"));
             assertNullableDecimal(assertions, p + "expectedPaymentAmount", actual.getExpectedPaymentAmount(),
                     expected.get("expectedPaymentAmount"));
-            assertOptionalDecimal(assertions, p + "discountFactor", actual.getDiscountFactor(), expected.get("discountFactor"));
-            assertNullableDecimal(assertions, p + "npvValue", actual.getNpvValue(), expected.get("npvValue"));
-            assertNullableDecimal(assertions, p + "balance", actual.getBalance(), expected.get("balance"));
+            assertNullableDecimal(assertions, p + "expectedBalance", actual.getExpectedBalance(), expected.get("expectedBalance"));
+            assertNullableDecimal(assertions, p + "actualBalance", actual.getActualBalance(), expected.get("actualBalance"));
             assertNullableDecimal(assertions, p + "expectedAmortizationAmount", actual.getExpectedAmortizationAmount(),
                     expected.get("expectedAmortizationAmount"));
             assertNullableDecimal(assertions, p + "actualPaymentAmount", actual.getActualPaymentAmount(),
                     expected.get("actualPaymentAmount"));
             assertNullableDecimal(assertions, p + "actualAmortizationAmount", actual.getActualAmortizationAmount(),
                     expected.get("actualAmortizationAmount"));
-            assertNullableDecimal(assertions, p + "incomeModification", actual.getIncomeModification(), expected.get("incomeModification"));
-            assertNullableDecimal(assertions, p + "deferredBalance", actual.getDeferredBalance(), expected.get("deferredBalance"));
+            assertNullableDecimal(assertions, p + "expectedDiscountFeeBalance", actual.getExpectedDiscountFeeBalance(),
+                    expected.get("expectedDiscountFeeBalance"));
+            assertNullableDecimal(assertions, p + "actualDiscountFeeBalance", actual.getActualDiscountFeeBalance(),
+                    expected.get("actualDiscountFeeBalance"));
         }
 
         assertions.assertAll();
@@ -171,15 +172,6 @@ public class WorkingCapitalAmortizationScheduleStepDef extends AbstractStepDef {
             return;
         }
         assertions.assertThat(WorkingCapitalScheduleMatcher.matchesDate(actual, expectedStr)).as(field).isTrue();
-    }
-
-    private static void assertOptionalDecimal(final SoftAssertions assertions, final String field, final BigDecimal actual,
-            final String expectedStr) {
-        if (WorkingCapitalScheduleMatcher.isBlank(expectedStr)) {
-            assertions.assertThat(actual).as(field + " should not be null").isNotNull();
-            return;
-        }
-        assertDecimal(assertions, field, actual, expectedStr);
     }
 
     private Long extractLoanId() {

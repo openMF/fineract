@@ -49,9 +49,9 @@ public class WorkingCapitalLoanAmortizationScheduleApiResource {
     @Operation(summary = "Retrieve Projected Amortization Schedule", description = """
             Returns the projected amortization schedule for a Working Capital Loan.
 
-            The schedule contains per-payment details including expected payments, \
-            discount factors, NPV values, balances, expected and actual amortization amounts, \
-            income modifications, and deferred balance.
+            The schedule contains per-payment details including expected and actual payments, \
+            expected and actual balances, expected and actual amortization amounts, \
+            and expected and actual discount fee balances.
 
             Example Request:
 

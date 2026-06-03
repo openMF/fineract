@@ -2491,9 +2491,7 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
             final String expected = expectedValues.get(idx);
             final String actual = extractWcScheduleCellValue(header, period);
             final boolean matches = "paymentDate".equals(header) ? WorkingCapitalScheduleMatcher.matchesFormattedDate(actual, expected)
-                    : "discountFactor".equals(header)
-                            ? WorkingCapitalScheduleMatcher.matchesDecimalWithScale(parseDecimal(actual), expected, 10)
-                            : WorkingCapitalScheduleMatcher.matchesDecimal(parseDecimal(actual), expected);
+                    : WorkingCapitalScheduleMatcher.matchesDecimal(parseDecimal(actual), expected);
             if (!matches) {
                 return false;
             }
@@ -2515,14 +2513,13 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
             case "paymentNo" -> period.getPaymentNo() == null ? null : period.getPaymentNo().toString();
             case "paymentDate" -> period.getPaymentDate() == null ? null : FORMATTER.format(period.getPaymentDate());
             case "expectedPaymentAmount" -> asText(period.getExpectedPaymentAmount());
-            case "discountFactor" -> asText(period.getDiscountFactor());
-            case "npvValue" -> asText(period.getNpvValue());
-            case "balance" -> asText(period.getBalance());
+            case "expectedBalance" -> asText(period.getExpectedBalance());
+            case "actualBalance" -> asText(period.getActualBalance());
             case "expectedAmortizationAmount" -> asText(period.getExpectedAmortizationAmount());
             case "actualPaymentAmount" -> asText(period.getActualPaymentAmount());
             case "actualAmortizationAmount" -> asText(period.getActualAmortizationAmount());
-            case "incomeModification" -> asText(period.getIncomeModification());
-            case "deferredBalance" -> asText(period.getDeferredBalance());
+            case "expectedDiscountFeeBalance" -> asText(period.getExpectedDiscountFeeBalance());
+            case "actualDiscountFeeBalance" -> asText(period.getActualDiscountFeeBalance());
             default -> throw new IllegalStateException(String.format("Header name %s cannot be found", headerName));
         };
     }

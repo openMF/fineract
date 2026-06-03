@@ -51,7 +51,7 @@ public class WorkingCapitalLoanProductConfigurableAttributes extends AbstractPer
     private boolean breach;
 
     @Column(name = "discount_default_overridable")
-    private boolean discountDefault;
+    private boolean discountDefaultOverridable;
 
     @Column(name = "period_payment_frequency_overridable")
     private boolean periodPaymentFrequency;

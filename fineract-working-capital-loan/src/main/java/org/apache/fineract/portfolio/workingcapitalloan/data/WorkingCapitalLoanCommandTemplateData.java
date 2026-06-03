@@ -44,6 +44,8 @@ public class WorkingCapitalLoanCommandTemplateData implements Serializable {
     private Long loanId;
     private LocalDate approvalDate;
     private BigDecimal approvalAmount;
+    private BigDecimal discountAmount;
+    private Boolean overrideDiscountDisabled;
 
     private LocalDate expectedDisbursementDate;
     private BigDecimal expectedAmount;

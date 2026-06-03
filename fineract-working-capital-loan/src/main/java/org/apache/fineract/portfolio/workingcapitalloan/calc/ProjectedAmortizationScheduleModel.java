@@ -185,6 +185,12 @@ public final class ProjectedAmortizationScheduleModel {
         return last.startDayIndex() + last.segmentTerm() - overlap;
     }
 
+    private static BigDecimal computeDailyPayment(final BigDecimal totalPaymentValue, final BigDecimal periodPaymentRate,
+            final int npvDayCount, final MathContext mc) {
+        return totalPaymentValue.multiply(periodPaymentRate, mc).divide(BigDecimal.valueOf(npvDayCount), mc).divide(BigDecimal.valueOf(100),
+                mc);
+    }
+
     public static ProjectedAmortizationScheduleModel generate(final BigDecimal discountFeeAmount, final BigDecimal netDisbursementAmount,
             final BigDecimal totalPaymentVolume, final BigDecimal periodPaymentRate, final int npvDayCount,
             final LocalDate expectedDisbursementDate, final MathContext mc, final CurrencyData currency, final LocalDate currentDate) {
@@ -202,8 +208,7 @@ public final class ProjectedAmortizationScheduleModel {
             throw new IllegalArgumentException("npvDayCount must be positive");
         }
 
-        final BigDecimal expectedPayment = totalPaymentVolume.multiply(periodPaymentRate, mc).divide(BigDecimal.valueOf(npvDayCount), mc)
-                .divide(BigDecimal.valueOf(100), mc);
+        final BigDecimal expectedPayment = computeDailyPayment(totalPaymentVolume, periodPaymentRate, npvDayCount, mc);
         if (expectedPayment.signum() <= 0) {
             throw new IllegalArgumentException("expectedPaymentAmount must be positive (check totalPaymentVolume and periodPaymentRate)");
         }
@@ -221,14 +226,30 @@ public final class ProjectedAmortizationScheduleModel {
                 expectedDisbursementDate, Money.of(currency, expectedPayment, mc), originalPaymentNumber, eir, mc, currency, currentDate);
     }
 
-    private LocalDate calculateAllocationDate(final LocalDate paymentDate) {
+    public LocalDate normalizePaymentDateForSchedule(final LocalDate paymentDate) {
+        Objects.requireNonNull(paymentDate, "paymentDate");
         final LocalDate firstInstallmentDate = expectedDisbursementDate.plusDays(1);
         final LocalDate lastInstallmentDate = expectedDisbursementDate.plusDays(effectiveTotalTerm());
         if (paymentDate.isBefore(firstInstallmentDate) || paymentDate.equals(expectedDisbursementDate)) {
             return firstInstallmentDate;
         }
-        if (paymentDate.isAfter(lastInstallmentDate)) {
-            return lastInstallmentDate;
+
+        if (projectedPayments == null || projectedPayments.isEmpty()) {
+            if (paymentDate.isAfter(lastInstallmentDate)) {
+                return lastInstallmentDate;
+            }
+            return paymentDate;
+        }
+        final ProjectedPayment nearestUnpaid = projectedPayments.stream().filter(p -> p.paymentNo() > 0)
+                .filter(p -> p.actualPaymentAmount() == null).findFirst().orElse(null);
+        if (nearestUnpaid != null && nearestUnpaid.date() != null) {
+            if (nearestUnpaid.date().isBefore(firstInstallmentDate)) {
+                return firstInstallmentDate;
+            }
+            if (nearestUnpaid.date().isAfter(lastInstallmentDate)) {
+                return lastInstallmentDate;
+            }
+            return nearestUnpaid.date();
         }
         return paymentDate;
     }
@@ -236,14 +257,14 @@ public final class ProjectedAmortizationScheduleModel {
     public void applyPayment(final LocalDate paymentDate, final BigDecimal amount) {
         Objects.requireNonNull(paymentDate, "paymentDate");
         Objects.requireNonNull(amount, "amount");
-        updateCalculatedTillDate(paymentDate);
-        final LocalDate allocationDate = calculateAllocationDate(paymentDate);
-        final int index = resolvePaymentIndex(allocationDate);
+        final LocalDate scheduleDate = normalizePaymentDateForSchedule(paymentDate);
+        final int index = resolvePaymentIndex(scheduleDate);
         if (index < 0 || index >= effectiveTotalTerm()) {
             throw new IllegalArgumentException("paymentDate " + paymentDate + " is outside the valid range ["
                     + expectedDisbursementDate.plusDays(1) + " .. " + expectedDisbursementDate.plusDays(effectiveTotalTerm()) + "]");
         }
-        actualPayments.add(new ActualPayment(allocationDate, money(amount)));
+        updateCalculatedTillDate(paymentDate);
+        actualPayments.add(new ActualPayment(scheduleDate, money(amount)));
         rebuildPayments();
     }
 
@@ -278,20 +299,20 @@ public final class ProjectedAmortizationScheduleModel {
 
         int fromIndex = projectedPayments.indexOf(lastRepayment);
 
-        BigDecimal runningNetAmortization = amountOrZero(projectedPayments.get(fromIndex).totalAmortizedAmount());
-        BigDecimal runningDeferredBalance = amountOrZero(projectedPayments.get(fromIndex).deferredBalance());
+        BigDecimal runningActualDiscountFeeBalance = amountOrZero(projectedPayments.get(fromIndex).actualDiscountFeeBalance());
 
         final List<ProjectedPayment> adjusted = new ArrayList<>(projectedPayments.subList(0, fromIndex + 1));
         for (int i = fromIndex + 1; i < projectedPayments.size(); i++) {
             final ProjectedPayment current = projectedPayments.get(i);
             final BigDecimal actualTotalAmortization = amountOrZero(current.actualAmortizationAmount());
-            runningNetAmortization = runningNetAmortization.subtract(actualTotalAmortization, mc);
-            runningDeferredBalance = runningDeferredBalance.subtract(actualTotalAmortization, mc);
+            runningActualDiscountFeeBalance = runningActualDiscountFeeBalance.subtract(actualTotalAmortization, mc);
 
+            final boolean hasPayment = current.actualPaymentAmount() != null;
             adjusted.add(new ProjectedPayment(current.paymentNo(), current.date(), current.paymentsLeft(), current.expectedPaymentAmount(),
-                    current.forecastPaymentAmount(), current.discountFactor(), current.npvValue(), current.balance(),
-                    current.expectedAmortizationAmount(), money(runningNetAmortization), current.actualPaymentAmount(),
-                    current.actualAmortizationAmount(), current.incomeModification(), money(runningDeferredBalance)));
+                    current.discountFactor(), current.npvValue(), current.expectedBalance(), current.actualBalance(),
+                    current.expectedAmortizationAmount(), current.actualPaymentAmount(), current.actualAmortizationAmount(),
+                    current.incomeModification(), current.expectedDiscountFeeBalance(),
+                    hasPayment ? money(runningActualDiscountFeeBalance) : null));
         }
         this.projectedPayments = List.copyOf(adjusted);
     }
@@ -311,7 +332,6 @@ public final class ProjectedAmortizationScheduleModel {
     public void applyRateChange(final BigDecimal newPeriodPaymentRate, final LocalDate rateChangeDate) {
         Objects.requireNonNull(newPeriodPaymentRate, "newPeriodPaymentRate");
         Objects.requireNonNull(rateChangeDate, "rateChangeDate");
-
         updateCalculatedTillDate(rateChangeDate);
         final int rawSplitDayIndex = (int) ChronoUnit.DAYS.between(expectedDisbursementDate, rateChangeDate);
         if (rawSplitDayIndex < 0) {
@@ -370,8 +390,8 @@ public final class ProjectedAmortizationScheduleModel {
             newDiscount = remainingTotal.subtract(balanceAtSplit, mc);
         }
         final int scale = currency.getDecimalPlaces();
-        final BigDecimal newDailyPayment = tpv.multiply(newPeriodPaymentRate, mc).divide(BigDecimal.valueOf(npvDayCount), mc)
-                .divide(BigDecimal.valueOf(100), mc).setScale(scale, mc.getRoundingMode());
+        final BigDecimal newDailyPayment = computeDailyPayment(tpv, newPeriodPaymentRate, npvDayCount, mc).setScale(scale,
+                mc.getRoundingMode());
         final BigDecimal fractionalTotalDays = newNetDisb.add(newDiscount, mc).divide(newDailyPayment, mc).setScale(scale,
                 mc.getRoundingMode());
         final int newTerm = fractionalTotalDays.intValue();
@@ -416,6 +436,7 @@ public final class ProjectedAmortizationScheduleModel {
 
         result.add(createDisbursementPayment());
 
+        BigDecimal cumulativeExpectedAmort = BigDecimal.ZERO;
         for (int i = 0; i < totalTerm; i++) {
             final int periodNo = i + 1;
             final RateSegment seg = segmentForDay(periodNo);
@@ -425,10 +446,12 @@ public final class ProjectedAmortizationScheduleModel {
             final BigDecimal npvValue = MathUtil.negativeToZero(periodExpectedPayment.multiply(safeDf, mc));
             final BigDecimal safeExpectedAmort = ba.expectedAmortizations().get(i).getAmount().min(discountFee);
             final BigDecimal balance = ba.balances().get(i).getAmount();
+            cumulativeExpectedAmort = cumulativeExpectedAmort.add(safeExpectedAmort, mc);
+            final BigDecimal expectedDiscFeeBalance = discountFee.subtract(cumulativeExpectedAmort, mc);
 
             result.add(new ProjectedPayment(periodNo, expectedDisbursementDate.plusDays(periodNo), segRelativePeriod,
-                    money(periodExpectedPayment), money(periodExpectedPayment), safeDf, money(npvValue), money(balance),
-                    money(safeExpectedAmort), null, null, null, null, money(discountFee)));
+                    money(periodExpectedPayment), safeDf, money(npvValue), money(balance), null, money(safeExpectedAmort), null, null, null,
+                    money(expectedDiscFeeBalance), null));
         }
 
         this.originalProjectedPayments = List.copyOf(result);
@@ -436,14 +459,6 @@ public final class ProjectedAmortizationScheduleModel {
 
     private Map<LocalDate, BigDecimal> aggregatePaymentsByDate() {
         final Map<LocalDate, BigDecimal> result = new LinkedHashMap<>();
-        if (!actualPayments.isEmpty() && calculatedTillDate != null) {
-            final LocalDate firstInstallmentDate = expectedDisbursementDate.plusDays(1);
-            final LocalDate lastInstallmentDate = expectedDisbursementDate.plusDays(effectiveTotalTerm());
-            if (!calculatedTillDate.isBefore(firstInstallmentDate)) {
-                final LocalDate mapEnd = calculatedTillDate.isAfter(lastInstallmentDate) ? lastInstallmentDate : calculatedTillDate;
-                result.putAll(generateDateMap(firstInstallmentDate, mapEnd));
-            }
-        }
         for (final ActualPayment payment : actualPayments) {
             result.merge(payment.date(), payment.amount().getAmount(), BigDecimal::add);
         }
@@ -487,56 +502,60 @@ public final class ProjectedAmortizationScheduleModel {
         final BigDecimal shortfallForTail = amountToAdjustTail.min(BigDecimal.ZERO).negate();
         final List<BigDecimal> runningExpected = computeRunningExpectedPayments(excessForRunning);
         final List<ProjectedPayment> tailPayments = new ArrayList<>();
-        final BigDecimal tailNpv = buildTailPeriodsAndComputeNpv(tailPayments, shortfallForTail, appliedCount);
-        final BigDecimal totalNetAmortization = computeTotalNetAmortization(payments, runningExpected, appliedCount, tailNpv);
+        buildTailPeriodsAndComputeNpv(tailPayments, shortfallForTail, appliedCount);
 
         final BigDecimal discountFee = discountFeeAmount.getAmount();
+        final BigDecimal netDisb = netDisbursementAmount.getAmount();
 
         final List<ProjectedPayment> result = new ArrayList<>(effectiveTotalTerm() + 2 + tailPayments.size());
         result.add(createDisbursementPayment());
 
         BigDecimal cumulativeActualAmort = BigDecimal.ZERO;
+        BigDecimal cumulativeExpectedAmort = BigDecimal.ZERO;
+        BigDecimal runningActualBalance = netDisb;
         for (int i = 0; i < effectiveTotalTerm(); i++) {
             final int periodNo = i + 1;
             final LocalDate periodDate = expectedDisbursementDate.plusDays(periodNo);
             final BigDecimal periodPayment = payments.get(i);
-            final boolean hasPositivePayment = periodPayment != null && periodPayment.signum() > 0;
+            final boolean hasAppliedAmount = periodPayment != null;
             final long paymentsLeft = paymentsLeft(periodNo, appliedCount);
             final BigDecimal safeDf = safeDiscountFactor(paymentsLeft, periodNo);
             final BigDecimal periodExpectedPayment = MathUtil.negativeToZero(expectedPaymentForDay(periodNo));
             final BigDecimal safeRunningExpected = MathUtil.negativeToZero(runningExpected.get(i));
-            final BigDecimal npvSource = resolveNpvSource(hasPositivePayment, periodPayment, periodDate, safeRunningExpected);
+            final BigDecimal npvSource = hasAppliedAmount ? periodPayment : safeRunningExpected;
             final BigDecimal npvValue = MathUtil.negativeToZero(npvSource.multiply(safeDf, mc));
             final BigDecimal safeExpectedAmort = ba.expectedAmortizations().get(i).getAmount().min(discountFee);
 
-            final BigDecimal netAmortization;
             final BigDecimal actualAmortization;
             final BigDecimal incomeModification;
 
-            if (hasPositivePayment) {
+            if (hasAppliedAmount) {
                 actualAmortization = actualAmortizations.get(i);
-                netAmortization = totalNetAmortization.subtract(cumulativeActualAmort, mc).min(discountFee);
                 cumulativeActualAmort = cumulativeActualAmort.add(actualAmortization, mc).min(discountFee);
-                incomeModification = actualAmortization.subtract(safeExpectedAmort, mc);
+                runningActualBalance = runningActualBalance.subtract(periodPayment, mc);
+                final boolean hasPositivePayment = periodPayment.signum() > 0;
+                incomeModification = hasPositivePayment ? actualAmortization.subtract(safeExpectedAmort, mc) : null;
             } else {
-                netAmortization = BigDecimal.ZERO;
                 actualAmortization = null;
                 incomeModification = null;
             }
 
-            final BigDecimal deferredBalance = discountFee.subtract(cumulativeActualAmort, mc);
+            cumulativeExpectedAmort = cumulativeExpectedAmort.add(safeExpectedAmort, mc);
+            final BigDecimal expectedDiscountFeeBalance = discountFee.subtract(cumulativeExpectedAmort, mc);
+            final BigDecimal actualDiscountFeeBalance = discountFee.subtract(cumulativeActualAmort, mc);
             final BigDecimal balance = ba.balances().get(i).getAmount();
-            result.add(new ProjectedPayment(periodNo, periodDate, paymentsLeft, money(periodExpectedPayment), money(safeRunningExpected),
-                    safeDf, money(npvValue), money(balance), money(safeExpectedAmort), money(netAmortization),
-                    hasPositivePayment ? money(periodPayment) : null, actualAmortization != null ? money(actualAmortization) : null,
-                    incomeModification != null ? money(incomeModification) : null, money(deferredBalance)));
+            result.add(new ProjectedPayment(periodNo, periodDate, paymentsLeft, money(periodExpectedPayment), safeDf, money(npvValue),
+                    money(balance), hasAppliedAmount ? money(runningActualBalance) : null, money(safeExpectedAmort),
+                    hasAppliedAmount ? money(periodPayment) : null, actualAmortization != null ? money(actualAmortization) : null,
+                    incomeModification != null ? money(incomeModification) : null, money(expectedDiscountFeeBalance),
+                    hasAppliedAmount ? money(actualDiscountFeeBalance) : null));
         }
 
         result.addAll(tailPayments);
 
         while (result.size() > 1) {
             final ProjectedPayment last = result.getLast();
-            if (last.forecastPaymentAmount() != null && last.forecastPaymentAmount().isZero()) {
+            if (last.npvValue() != null && last.npvValue().isZero()) {
                 result.removeLast();
             } else {
                 break;
@@ -546,25 +565,14 @@ public final class ProjectedAmortizationScheduleModel {
         return result;
     }
 
-    private BigDecimal resolveNpvSource(final boolean hasPositivePayment, final BigDecimal periodPayment, final LocalDate periodDate,
-            final BigDecimal safeRunningExpected) {
-        if (hasPositivePayment) {
-            return periodPayment;
-        }
-        if (calculatedTillDate != null && periodDate.isBefore(calculatedTillDate)) {
-            return BigDecimal.ZERO;
-        }
-        return safeRunningExpected;
-    }
-
     private static BigDecimal amountOrZero(final Money value) {
         return value != null && value.getAmount() != null ? value.getAmount() : BigDecimal.ZERO;
     }
 
     private ProjectedPayment createDisbursementPayment() {
         final Money negDisbursement = netDisbursementAmount.negated(mc);
-        return new ProjectedPayment(0, expectedDisbursementDate, 0L, negDisbursement, null, BigDecimal.ONE, negDisbursement,
-                netDisbursementAmount, null, null, null, null, null, discountFeeAmount);
+        return new ProjectedPayment(0, expectedDisbursementDate, 0L, negDisbursement, BigDecimal.ONE, negDisbursement,
+                netDisbursementAmount, netDisbursementAmount, null, null, null, null, discountFeeAmount, discountFeeAmount);
     }
 
     /**
@@ -665,10 +673,9 @@ public final class ProjectedAmortizationScheduleModel {
         return running;
     }
 
-    private BigDecimal buildTailPeriodsAndComputeNpv(final List<ProjectedPayment> tailPayments, final BigDecimal shortfall,
+    private void buildTailPeriodsAndComputeNpv(final List<ProjectedPayment> tailPayments, final BigDecimal shortfall,
             final int appliedCount) {
         final int totalTerm = effectiveTotalTerm();
-        BigDecimal tailNpv = BigDecimal.ZERO;
         BigDecimal remaining = shortfall;
         int tailIndex = 0;
         while (remaining.signum() > 0) {
@@ -678,26 +685,11 @@ public final class ProjectedAmortizationScheduleModel {
             final BigDecimal df = safeDiscountFactor(dl, totalTerm);
             final BigDecimal forecast = remaining.min(tailExpectedPayment);
             final BigDecimal npv = MathUtil.negativeToZero(forecast.multiply(df, mc));
-            tailNpv = tailNpv.add(npv, mc);
-            tailPayments.add(new ProjectedPayment(periodNo, expectedDisbursementDate.plusDays(periodNo), dl, null, money(forecast), df,
-                    money(npv), null, null, money(BigDecimal.ZERO), null, null, null, null));
+            tailPayments.add(new ProjectedPayment(periodNo, expectedDisbursementDate.plusDays(periodNo), dl, null, df, money(npv), null,
+                    null, null, null, null, null, null, null));
             remaining = remaining.subtract(forecast, mc);
             tailIndex++;
         }
-        return tailNpv;
-    }
-
-    /** {@code totalNetAmortization = -netDisbursementAmount + sum(npvSource × DF) + tailNpv} */
-    private BigDecimal computeTotalNetAmortization(final List<BigDecimal> payments, final List<BigDecimal> runningExpected,
-            final int appliedCount, final BigDecimal tailNpv) {
-        final int totalTerm = effectiveTotalTerm();
-        BigDecimal total = netDisbursementAmount.getAmount().negate();
-        for (int i = 0; i < totalTerm; i++) {
-            final BigDecimal npvSource = payments.get(i) != null ? payments.get(i) : runningExpected.get(i);
-            final BigDecimal df = safeDiscountFactor(paymentsLeft(i + 1, appliedCount), i + 1);
-            total = total.add(npvSource.multiply(df, mc), mc);
-        }
-        return total.add(tailNpv, mc);
     }
 
     private BigDecimal safeDiscountFactor(final long paymentsLeft, final int dayIndex) {

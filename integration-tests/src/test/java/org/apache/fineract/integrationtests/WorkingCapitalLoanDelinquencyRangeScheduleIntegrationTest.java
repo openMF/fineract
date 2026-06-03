@@ -129,8 +129,8 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleIntegrationTest {
                 .withClientId(clientId) //
                 .withProductId(productId) //
                 .withPrincipal(BigDecimal.valueOf(10000)) //
-                .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
-                .withTotalPaymentVolume(BigDecimal.valueOf(11000)) //
+                .withPeriodPaymentRate(new BigDecimal("18")) //
+                .withTotalPaymentVolume(BigDecimal.valueOf(100000)) //
                 .buildSubmitRequest());
         assertNotNull(loanId);
         log.info("Created WC loan with id: {}", loanId);
@@ -176,8 +176,8 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleIntegrationTest {
                     .withClientId(clientId) //
                     .withProductId(productId) //
                     .withPrincipal(principal) //
-                    .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
-                    .withTotalPaymentVolume(BigDecimal.valueOf(10000)) //
+                    .withPeriodPaymentRate(new BigDecimal("18")) //
+                    .withTotalPaymentVolume(BigDecimal.valueOf(100000)) //
                     .buildSubmitRequest());
 
             // Approve with discount

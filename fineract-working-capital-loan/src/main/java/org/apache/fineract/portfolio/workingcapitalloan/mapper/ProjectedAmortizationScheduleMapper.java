@@ -57,14 +57,13 @@ public class ProjectedAmortizationScheduleMapper {
                 .paymentNo(payment.paymentNo()) //
                 .paymentDate(payment.date()) //
                 .expectedPaymentAmount(roundMoney(payment.expectedPaymentAmount())) //
-                .discountFactor(payment.discountFactor()) //
-                .npvValue(roundMoney(payment.npvValue())) //
-                .balance(roundMoney(payment.balance())) //
+                .expectedBalance(roundMoney(payment.expectedBalance())) //
+                .actualBalance(roundMoney(payment.actualBalance())) //
                 .expectedAmortizationAmount(roundMoney(payment.expectedAmortizationAmount())) //
                 .actualPaymentAmount(roundMoney(payment.actualPaymentAmount())) //
                 .actualAmortizationAmount(roundMoney(payment.actualAmortizationAmount())) //
-                .incomeModification(roundMoney(payment.incomeModification())) //
-                .deferredBalance(roundMoney(payment.deferredBalance())) //
+                .expectedDiscountFeeBalance(roundMoney(payment.expectedDiscountFeeBalance())) //
+                .actualDiscountFeeBalance(roundMoney(payment.actualDiscountFeeBalance())) //
                 .build();
     }
 

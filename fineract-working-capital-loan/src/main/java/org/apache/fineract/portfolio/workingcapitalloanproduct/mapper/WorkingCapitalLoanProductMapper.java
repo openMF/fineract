@@ -172,7 +172,7 @@ public interface WorkingCapitalLoanProductMapper {
         return WorkingCapitalLoanProductConfigurableAttributesData.builder() //
                 .delinquencyBucketClassification(configurableAttributes.isDelinquencyBucketClassification()) //
                 .breach(configurableAttributes.isBreach()) //
-                .discountDefault(configurableAttributes.isDiscountDefault()) //
+                .discountDefault(configurableAttributes.isDiscountDefaultOverridable()) //
                 .periodPaymentFrequency(configurableAttributes.isPeriodPaymentFrequency()) //
                 .periodPaymentFrequencyType(configurableAttributes.isPeriodPaymentFrequencyType()) //
                 .build();
