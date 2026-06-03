@@ -1,6 +1,17 @@
 name: Fineract Sonarqube
 on:
   workflow_call:
+    secrets:
+      SONAR_ORGANIZATION:
+        required: false
+      SONAR_PROJECT_KEY:
+        required: false
+      SONAR_HOST_URL:
+        required: false
+      SONARCLOUD_TOKEN:
+        required: false
+      DEVELOCITY_ACCESS_KEY:
+        required: false
 permissions:
   contents: read
 jobs:

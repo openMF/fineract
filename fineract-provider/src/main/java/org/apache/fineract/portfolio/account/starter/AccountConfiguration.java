@@ -42,8 +42,8 @@ import org.apache.fineract.portfolio.account.service.AccountTransfersWritePlatfo
 import org.apache.fineract.portfolio.account.service.AccountTransfersWritePlatformServiceImpl;
 import org.apache.fineract.portfolio.account.service.PortfolioAccountReadPlatformService;
 import org.apache.fineract.portfolio.account.service.PortfolioAccountReadPlatformServiceImpl;
-import org.apache.fineract.portfolio.account.service.StandingInstructionHistoryReadPlatformService;
-import org.apache.fineract.portfolio.account.service.StandingInstructionHistoryReadPlatformServiceImpl;
+import org.apache.fineract.portfolio.account.service.StandingInstructionHistoryReadService;
+import org.apache.fineract.portfolio.account.service.StandingInstructionHistoryReadServiceImpl;
 import org.apache.fineract.portfolio.account.service.StandingInstructionReadPlatformService;
 import org.apache.fineract.portfolio.account.service.StandingInstructionReadPlatformServiceImpl;
 import org.apache.fineract.portfolio.account.service.StandingInstructionWritePlatformService;
@@ -107,10 +107,10 @@ public class AccountConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(StandingInstructionHistoryReadPlatformService.class)
-    public StandingInstructionHistoryReadPlatformService standingInstructionHistoryReadPlatformService(JdbcTemplate jdbcTemplate,
+    @ConditionalOnMissingBean(StandingInstructionHistoryReadService.class)
+    public StandingInstructionHistoryReadService standingInstructionHistoryReadService(JdbcTemplate jdbcTemplate,
             ColumnValidator columnValidator, DatabaseSpecificSQLGenerator sqlGenerator, PaginationHelper paginationHelper) {
-        return new StandingInstructionHistoryReadPlatformServiceImpl(jdbcTemplate, columnValidator, sqlGenerator, paginationHelper);
+        return new StandingInstructionHistoryReadServiceImpl(jdbcTemplate, columnValidator, sqlGenerator, paginationHelper);
     }
 
     @Bean

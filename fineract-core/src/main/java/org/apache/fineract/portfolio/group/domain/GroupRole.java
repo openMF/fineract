@@ -48,7 +48,7 @@ public class GroupRole extends AbstractPersistableCustom<Long> {
     private CodeValue role;
 
     public GroupRole() {
-        // TODO Auto-generated constructor stub
+
     }
 
     public static final GroupRole createGroupRole(final Group group, final Client client, final CodeValue role) {

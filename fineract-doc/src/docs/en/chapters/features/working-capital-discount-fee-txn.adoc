@@ -1,150 +1,179 @@
-== Working Capital Loan — Discount Fee
+= Working Capital Loan — Discount Fee Transactions
 
-=== 1. Overview
+== Overview
 
-The **Discount Fee** is applicable for **Working Capital Loan** products and represents an upfront charge applied on the disbursed amount.
+Discount Fee transactions record the applied Working Capital Loan discount as a monetary transaction. The transaction is linked to the related disbursement and updates the loan balance and projected amortization schedule.
 
-Instead of collecting interest over time, the loan applies a **discounting mechanism**, where:
-* The borrower receives a **net disbursed amount** (principal minus discount fee)
-* The **full principal amount** remains repayable
+Discount product configuration and staged loan-level override rules are documented separately in `working-capital-discount.adoc`.
 
-=== 2. Applicability
+=== Purpose
 
-| Condition | Status |
-|----------|--------|
-| Loan Type: Working Capital Loan | ✔ Supported |
-| Loan Type: Progressive Loan | ✘ Not supported |
-| Loan Type: Cumulative Loan | ✘ Not supported |
+The transaction layer ensures that the applied discount is represented as a loan transaction, linked to the disbursement that created it, and available for balance, amortization, accounting, and event processing.
 
-* Discount Fee functionality is **exclusively available** for Working Capital Loan products.
-* It is not applicable for Progressive or Cumulative loan types.
+=== Scope
 
+The scope of this document includes:
 
-=== 3. Core Concept
+* `DISCOUNT_FEE` transaction creation at disbursement and post-disbursement
+* `DISCOUNT_FEE_ADJUSTMENT` transaction behavior
+* Transaction relations and allocations
+* Balance, schedule, accounting, reversal, and business event behavior
+* API endpoints and validation rules
 
-The Discount Fee represents an upfront charge applied on the loan and affects the **net disbursed amount**, while the **full principal remains repayable**.
+== Discount Fee Transaction
 
-The Discount Fee can be configured and applied at multiple stages of the loan lifecycle:
+=== Applicability
 
-* At **Loan Application**
-* At **Loan Approval**
-* At **Disbursement**
-* **After Disbursement**, only if it is the **first monetary transaction following disbursement**
+* Working Capital Loan only
+* Loan must be ACTIVE for post-disbursement `discountFee`
+* The related disbursement must not already have an active Discount Fee transaction
+* Post-disbursement `discountFee` can only be run when the business date equals the actual disbursement date
 
-This flexibility allows financial institutions to align discounting behavior with their operational and approval workflows.
+=== Transaction Creation
 
-=== 4. Accounting & GL Handling
+A `DISCOUNT_FEE` transaction can be created in two ways:
 
-⚠ Accounting integration for Discount Fee is **not implemented yet**.
+* Automatically during disbursement when the resolved discount amount is greater than zero.
+* Explicitly after disbursement using `POST /transactions?command=discountFee`, if no Discount Fee was created for the related disbursement.
 
-=== 5. Transaction Handling
+Each Discount Fee transaction is linked to its disbursement transaction through `m_wc_loan_transaction_relation` with relation type `RELATED`.
 
-* A **Discount Fee Transaction** is created:
-- During **disbursement**, if discount fee is already defined OR provided in disbursement request
-* The transaction is created as a **separate transaction**
-* Each **disbursement** can have **only one associated Discount Fee transaction**
+=== Allocation
 
-Relationship rules:
-* Discount Fee transaction is always **linked to a disbursement transaction**
-* Link is maintained via `relatedResourceId`
+An allocation row is stored in `m_wc_loan_transaction_allocation`. The Discount Fee amount is allocated to the principal portion.
 
-Schedule & balance updates:
-* Loan balances are updated **immediately** after transaction creation
-* Amortization Schedule is updated **immediately**
-* Allocation for Discount Fee transaction is applied to **principal**
+=== Balance and Schedule Impact
 
-=== 6. Reversal Behavior
+On Discount Fee creation:
 
-* Disbursement reversal is allowed only if:
-- No other monetary transactions exist on the loan
-- No additional disbursements exist
+* `loanProductRelatedDetails.discount` is set to the transaction amount.
+* `totalDiscountFee` and principal balance are increased by the discount amount.
+* Overpayment is reset to zero.
+* The projected amortization schedule is regenerated using the updated discount and disbursement data.
 
-* When a disbursement is reversed:
-- Its associated Discount Fee transaction must also be **reversed**
-- Reversal maintains consistency between:
-- Loan balance
-- Amortization Schedule
+=== Business Event
 
-* Discount Fee transaction cannot exist without its related disbursement
+`WorkingCapitalLoanDiscountFeeTransactionBusinessEvent` is emitted after a successful `DISCOUNT_FEE` transaction is created. The event is emitted both for automatic disbursement-time Discount Fee creation and explicit post-disbursement `discountFee`.
 
-=== 7. Discount Fee Adjustment
+== Discount Fee Adjustment
 
-A **Discount Fee Adjustment** reduces the loan-level discount that was established by an existing, non-reversed **Discount Fee** transaction. Behaviour is aligned with other *adjustment* transaction types: linked parent transaction, allocation row, schedule restate, and business event.
+A `DISCOUNT_FEE_ADJUSTMENT` transaction reduces the loan-level discount that was established by an existing, non-reversed `DISCOUNT_FEE` transaction.
 
-==== Purpose
+=== Applicability
 
-* Correct a discount fee amount
-* Recalculate EIR and amortisation schedule
+* Loan must be ACTIVE.
+* `relatedResourceId` must reference an active, non-reversed `DISCOUNT_FEE` transaction.
+* Multiple adjustments are allowed against the same Discount Fee transaction until the remaining adjustable amount reaches zero.
 
-==== Applicability
+=== Transaction Behavior
 
-* **Working Capital Loan** only (same as Discount Fee)
-* Loan must be **Active**
-* Parent transaction must be an active (non-reversed) **Discount Fee** transaction
+On Discount Fee Adjustment:
 
-==== Transaction behaviour
+* A separate `DISCOUNT_FEE_ADJUSTMENT` transaction is created.
+* The adjustment is linked to the original Discount Fee transaction through a `RELATED` transaction relation.
+* `loanProductRelatedDetails.discount` is reduced by the adjustment amount, with a floor of zero.
+* `totalDiscountFeeAdjustment` is increased and principal balance is reduced by the adjustment amount.
+* The projected amortization schedule is regenerated and prior actual repayments are re-applied.
 
-* Creates a separate transaction of type `DISCOUNT_FEE_ADJUSTMENT`
-* Linked to the original Discount Fee transaction via `relatedResourceId` (in the request body) and a `RELATED` loan transaction relation
-* **Multiple adjustments** are allowed against the same Discount Fee transaction until the remaining adjustable amount is zero
-* Reduces `loanProductRelatedDetails.discount` by the adjustment amount
-
-==== Validation rules
+=== Validation Rules
 
 [cols="2,3"]
 |===
 | Rule | Detail
 
 | Amount
-| Mandatory; must be **> 0**
+| Mandatory; must be greater than zero
 
 | Maximum amount
-| Must not exceed *remaining discount* = original discount fee amount minus sum of prior non-reversed adjustments
+| Must not exceed remaining discount, calculated as original Discount Fee amount minus prior non-reversed adjustments
 
 | Transaction date
-| Optional in request; defaults to the parent Discount Fee date if omitted
+| Optional; defaults to the parent Discount Fee transaction date if omitted
 
-| Date vs discount fee
-| Must **not** be before the parent Discount Fee transaction date
+| Date vs Discount Fee
+| Must not be before the parent Discount Fee transaction date
 
 | Backdating
-| **Not allowed** — transaction date must be on or after the current business date
+| Not allowed; transaction date must be on or after the current business date
 
 | Loan status
-| Adjustment allowed only for **Active** loans
+| Adjustment is allowed only for ACTIVE loans
 
 | Parent transaction
-| `relatedResourceId` must reference a non-reversed **Discount Fee** transaction
+| `relatedResourceId` must reference a non-reversed Discount Fee transaction
 |===
 
-==== Allocation
+=== Allocation
 
-* An allocation row is stored in `m_wc_loan_transaction_allocation`
-* Adjustment amount is allocated entirely to **principal portion** (same pattern as Discount Fee)
+An allocation row is stored in `m_wc_loan_transaction_allocation`. The adjustment amount is allocated entirely to the principal portion.
 
-==== Schedule impact
+=== Business Event
 
-On adjustment the system:
+`WorkingCapitalLoanDiscountFeeAdjustmentTransactionBusinessEvent` is emitted after a successful `DISCOUNT_FEE_ADJUSTMENT` transaction.
 
-. Regenerates the projected amortization schedule using the updated loan discount and disbursement data
-. Re-applies all recorded **actual repayments** (preserved from the previous model)
-. Updates loan balances
+== Accounting
 
-==== Business event
+The Discount Fee transaction updates the Working Capital Loan balance immediately. Income recognition is handled through Discount Fee Amortization transactions. For cash-based accounting products, Discount Fee Amortization debits Deferred Income Liability and credits Income from Discount Fee.
 
-* `WorkingCapitalLoanDiscountFeeAdjustmentTransactionBusinessEvent` — posted after a successful adjustment
+== Reversal Behavior
 
-== API Endpoints
+Discount Fee transactions are reversed through disbursement reversal. Disbursement reversal permits the related Discount Fee, Discount Fee Amortization, and Discount Fee Adjustment transactions to be handled with the disbursement as long as no disallowed active transaction exists after the disbursement.
 
-* *Endpoint*: `POST /v1/working-capital-loans/{loanId}/transactions?command=discountFeeAdjustment`
-* *Alternative*: `POST /v1/working-capital-loans/external-id/{loanExternalId}/transactions?command=discountFeeAdjustment`
+When disbursement is reversed:
+
+* The associated Discount Fee transaction is reversed.
+* Related Discount Fee Amortization and Adjustment transactions are handled with the reversal flow.
+* Loan balance and amortization schedule are reset consistently with the disbursement undo.
+
+== API Design
+
+=== Create Discount Fee
+
+[source]
+----
+POST /v1/working-capital-loans/{loanId}/transactions?command=discountFee
+POST /v1/working-capital-loans/external-id/{loanExternalId}/transactions?command=discountFee
+----
 
 [source,json]
 ----
 {
-  "transactionAmount": 50.0,
+  "transactionAmount": 5000.00,
+  "relatedResourceId": 123,
+  "classificationId": 1,
+  "externalId": "WC-DISC-001",
+  "note": "Discount applied",
+  "paymentDetails": {
+    "accountNumber": "ACC-001",
+    "routingCode": "RTG-001",
+    "receiptNumber": "RCP-001",
+    "bankNumber": "BNK-001",
+    "checkNumber": "CHQ-001"
+  },
+  "locale": "en",
+  "dateFormat": "yyyy-MM-dd"
+}
+----
+
+* `transactionAmount` is optional. If omitted, the service defaults to the loan's current discount.
+* `relatedResourceId` is mandatory and must be the related disbursement transaction ID.
+* `classificationId` is optional and must reference `working_capital_loan_discount_fee_classification` when provided.
+
+=== Create Discount Fee Adjustment
+
+[source]
+----
+POST /v1/working-capital-loans/{loanId}/transactions?command=discountFeeAdjustment
+POST /v1/working-capital-loans/external-id/{loanExternalId}/transactions?command=discountFeeAdjustment
+----
+
+[source,json]
+----
+{
+  "transactionAmount": 50.00,
   "relatedResourceId": 99,
   "transactionDate": "10 January 2026",
+  "classificationId": 1,
   "dateFormat": "dd MMMM yyyy",
   "locale": "en",
   "note": "Reduce discount fee",
@@ -152,5 +181,10 @@ On adjustment the system:
 }
 ----
 
-* `relatedResourceId` — **Discount Fee** transaction id (not disbursement id)
-* `transactionAmount` — amount to reduce from the current loan discount (capped by remaining adjustable discount)
+* `relatedResourceId` is mandatory and must be the Discount Fee transaction ID.
+* `transactionAmount` is mandatory and capped by the remaining adjustable discount.
+* `classificationId` is optional and must reference `working_capital_loan_discount_fee_classification` when provided.
+
+== Summary
+
+Working Capital Loan Discount Fee Transactions document the monetary transaction behavior for applied discounts. Discount configuration determines the amount; this transaction layer records it, links it to disbursement, updates balances and schedules, supports reductions through adjustments, and emits the relevant transaction business events.

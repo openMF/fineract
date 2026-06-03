@@ -2,6 +2,9 @@ name: Verify API Backward Compatibility
 
 on:
   workflow_call:
+    secrets:
+      DEVELOCITY_ACCESS_KEY:
+        required: false
 
 permissions:
   contents: read
@@ -19,6 +22,7 @@ jobs:
       - name: Checkout base branch for baseline
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          persist-credentials: false
           repository: ${{ github.event.pull_request.base.repo.full_name }}
           ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 0
@@ -27,6 +31,7 @@ jobs:
       - name: Checkout base branch for merged PR
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          persist-credentials: false
           repository: ${{ github.event.pull_request.base.repo.full_name }}
           ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 0
@@ -214,7 +219,11 @@ jobs:
           retention-days: 30
 
       - name: Fail if breaking changes detected
-        if: steps.breaking-check.outcome == 'failure'
+        if: always()
+        env:
+          BREAKING_CHECK_OUTCOME: ${{ steps.breaking-check.outcome }}
         run: |
-          echo "::error::Breaking API changes detected. See the report above for details."
-          exit 1
+          if [ "$BREAKING_CHECK_OUTCOME" == "failure" ]; then
+            echo "::error::Breaking API changes detected. See the report above for details."
+            exit 1
+          fi

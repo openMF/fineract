@@ -2,6 +2,9 @@ name: Verify Liquibase Backward Compatibility
 
 on:
   workflow_call:
+    secrets:
+      DEVELOCITY_ACCESS_KEY:
+        required: false
 
 permissions:
   contents: read
@@ -36,6 +39,7 @@ jobs:
       - name: Checkout base commit
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          persist-credentials: false
           repository: ${{ github.event.pull_request.base.repo.full_name }}
           ref: ${{ github.event.pull_request.base.sha }}
           fetch-depth: 0
@@ -70,14 +74,19 @@ jobs:
           ./gradlew --no-daemon createPGDB -PdbName=$DB_NAME
 
       - name: Print checked out revisions
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          echo "Base branch ref: ${{ github.event.pull_request.base.ref }}"
+          echo "Base branch ref: $BASE_REF"
           echo "Base branch event SHA:"
-          echo "${{ github.event.pull_request.base.sha }}"
+          echo "$BASE_SHA"
           echo "PR head SHA:"
-          echo "${{ github.event.pull_request.head.sha }}"
+          echo "$HEAD_SHA"
           echo "GitHub PR merge ref:"
-          echo "refs/pull/${{ github.event.pull_request.number }}/merge"
+          echo "refs/pull/$PR_NUMBER/merge"
           echo "Baseline revision:"
           git -C baseline rev-parse HEAD
           git -C baseline log -1 --oneline

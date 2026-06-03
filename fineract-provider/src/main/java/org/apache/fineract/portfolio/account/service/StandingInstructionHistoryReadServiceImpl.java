@@ -43,7 +43,7 @@ import org.apache.fineract.portfolio.client.data.ClientData;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
-public class StandingInstructionHistoryReadPlatformServiceImpl implements StandingInstructionHistoryReadPlatformService {
+public class StandingInstructionHistoryReadServiceImpl implements StandingInstructionHistoryReadService {
 
     private final JdbcTemplate jdbcTemplate;
     private final DatabaseSpecificSQLGenerator sqlGenerator;
@@ -55,7 +55,7 @@ public class StandingInstructionHistoryReadPlatformServiceImpl implements Standi
     // pagination
     private final PaginationHelper paginationHelper;
 
-    public StandingInstructionHistoryReadPlatformServiceImpl(final JdbcTemplate jdbcTemplate, final ColumnValidator columnValidator,
+    public StandingInstructionHistoryReadServiceImpl(final JdbcTemplate jdbcTemplate, final ColumnValidator columnValidator,
             DatabaseSpecificSQLGenerator sqlGenerator, PaginationHelper paginationHelper) {
         this.jdbcTemplate = jdbcTemplate;
         this.sqlGenerator = sqlGenerator;

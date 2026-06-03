@@ -224,7 +224,6 @@ public class ClientFamilyMembersWritePlatformServiceImpl implements ClientFamily
                     date = LocalDate.parse(member.get("dateOfBirth").getAsString(), formatter);
                     dateOfBirth = date;
                 } catch (DateTimeParseException e) {
-                    // TODO Auto-generated catch block
                     LOG.error("Problem occurred in addClientFamilyMember function", e);
                 }
 

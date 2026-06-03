@@ -10,6 +10,8 @@ updates:
     commit-message:
       # Prefix all commit messages with "FINERACT-2421: "
       prefix: "FINERACT-2421: "
+    cooldown:
+      default-days: 7
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
@@ -17,3 +19,5 @@ updates:
     commit-message:
       # Prefix all commit messages with "FINERACT-2421: "
       prefix: "FINERACT-2421: "
+    cooldown:
+      default-days: 7

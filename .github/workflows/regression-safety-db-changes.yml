@@ -2,6 +2,9 @@ name: Regression Safety - Database Changes
 
 on:
   workflow_call:
+    secrets:
+      DEVELOCITY_ACCESS_KEY:
+        required: false
 
 permissions:
   contents: read
@@ -24,15 +27,18 @@ jobs:
 
       - name: Detect Liquibase changes
         id: check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
+          if [ "$EVENT_NAME" != "pull_request" ]; then
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
             echo "Not a pull request event."
             exit 0
           fi
 
-          git fetch origin "${{ github.event.pull_request.base.ref }}" --no-tags
-          MERGE_BASE=$(git merge-base "origin/${{ github.event.pull_request.base.ref }}" HEAD)
+          git fetch origin "$BASE_REF" --no-tags
+          MERGE_BASE=$(git merge-base "origin/$BASE_REF" HEAD)
           CHANGES=$(git diff --name-only "$MERGE_BASE"..HEAD -- '**/db/changelog/**/*.xml' || true)
 
           if [ -n "$CHANGES" ]; then
@@ -96,6 +102,7 @@ jobs:
       - name: Checkout base commit (baseline)
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          persist-credentials: false
           repository: ${{ github.event.pull_request.base.repo.full_name }}
           ref: ${{ github.event.pull_request.base.sha }}
           fetch-depth: 0
@@ -352,25 +359,29 @@ jobs:
       # ============================================================
       - name: Generate results summary
         if: always()
+        env:
+          INSTANCE1_OUTCOME: ${{ steps.instance1.outcome }}
+          INSTANCE2_OUTCOME: ${{ steps.instance2.outcome }}
+          INSTANCE3_OUTCOME: ${{ steps.instance3.outcome }}
         run: |
           echo "## Regression Safety - Database Changes" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Instance | Description | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|----------|-------------|--------|" >> $GITHUB_STEP_SUMMARY
 
-          if [ "${{ steps.instance1.outcome }}" == "success" ]; then
+          if [ "$INSTANCE1_OUTCOME" == "success" ]; then
             echo "| #1 Baseline | develop code + fresh DB | PASSED |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| #1 Baseline | develop code + fresh DB | FAILED |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [ "${{ steps.instance2.outcome }}" == "success" ]; then
+          if [ "$INSTANCE2_OUTCOME" == "success" ]; then
             echo "| #2 Hybrid | develop code + PR schema | PASSED |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| #2 Hybrid | develop code + PR schema | **FAILED** — PR schema breaks old code |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [ "${{ steps.instance3.outcome }}" == "success" ]; then
+          if [ "$INSTANCE3_OUTCOME" == "success" ]; then
             echo "| #3 Full PR | PR code + PR schema | PASSED |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| #3 Full PR | PR code + PR schema | FAILED |" >> $GITHUB_STEP_SUMMARY
@@ -387,17 +398,21 @@ jobs:
 
       - name: Fail if any instance failed
         if: always()
+        env:
+          INSTANCE1_OUTCOME: ${{ steps.instance1.outcome }}
+          INSTANCE2_OUTCOME: ${{ steps.instance2.outcome }}
+          INSTANCE3_OUTCOME: ${{ steps.instance3.outcome }}
         run: |
           FAILED=0
-          if [ "${{ steps.instance1.outcome }}" != "success" ]; then
+          if [ "$INSTANCE1_OUTCOME" != "success" ]; then
             echo "::error::Instance #1 (baseline) FAILED — golden path broken on develop"
             FAILED=1
           fi
-          if [ "${{ steps.instance2.outcome }}" != "success" ]; then
+          if [ "$INSTANCE2_OUTCOME" != "success" ]; then
             echo "::error::Instance #2 (hybrid) FAILED — PR's Liquibase changes break backward compatibility!"
             FAILED=1
           fi
-          if [ "${{ steps.instance3.outcome }}" != "success" ]; then
+          if [ "$INSTANCE3_OUTCOME" != "success" ]; then
             echo "::error::Instance #3 (full PR) FAILED — functional regression in the PR"
             FAILED=1
           fi

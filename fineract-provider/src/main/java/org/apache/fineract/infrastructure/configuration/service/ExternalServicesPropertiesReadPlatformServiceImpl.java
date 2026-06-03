@@ -158,7 +158,6 @@ public class ExternalServicesPropertiesReadPlatformServiceImpl implements Extern
 
     @Override
     public SMTPCredentialsData getSMTPCredentials() {
-        // TODO Auto-generated method stub
         final ResultSetExtractor<SMTPCredentialsData> resultSetExtractor = new SMTPCredentialsDataExtractor();
         final String sql = "SELECT esp.name, esp.value FROM c_external_service_properties esp inner join c_external_service es on esp.external_service_id = es.id where es.name = '"
                 + ExternalServicesConstants.SMTP_SERVICE_NAME + "'";

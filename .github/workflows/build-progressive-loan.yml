@@ -2,6 +2,9 @@ name: Fineract Progressive Loan build
 
 on:
   workflow_call:
+    secrets:
+      DEVELOCITY_ACCESS_KEY:
+        required: false
 
 permissions:
   contents: read

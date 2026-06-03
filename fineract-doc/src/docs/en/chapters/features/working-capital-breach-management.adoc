@@ -20,7 +20,7 @@ The scope of this document includes:
 
 * System-level breach configuration (`m_wc_breach_configuration`) — defines period frequency and minimum payment rule.
 * System-level near-breach configuration (`m_wc_near_breach`) — defines evaluation checkpoints and threshold percentage.
-* Loan product configuration — association of a breach and near-breach configuration to a product, with overridable flag.
+* Loan product configuration — association of breach and near-breach configurations to a product, controlled by the breach overridable flag.
 * Per-loan breach schedule (`m_wc_loan_breach_schedule`) — generated and maintained by the COB pipeline.
 * COB business steps: `WC_BREACH_SCHEDULE` (step 4) and `WC_NEAR_BREACH_EVALUATION` (step 5).
 * API endpoints for managing breach and near-breach configurations and retrieving a loan's breach schedule.
@@ -28,9 +28,9 @@ The scope of this document includes:
 
 === Applicability
 
-* Active Working Capital Loan accounts with at least one actual disbursement recorded.
-* Loans whose product (or individual loan) has a breach configuration assigned.
-* Near-breach evaluation applies only when the loan also has a near-breach configuration assigned.
+* Breach schedule generation applies to Working Capital Loan accounts with at least one actual disbursement recorded.
+* Breach evaluation applies to loans whose product, or individual loan, has a breach configuration assigned.
+* Near-breach evaluation applies only to active loans that also have a near-breach configuration assigned.
 
 === Definitions and Key Concepts
 
@@ -38,23 +38,23 @@ The scope of this document includes:
 
 *Near-Breach Configuration:* A named, reusable set of rules — stored in `m_wc_near_breach` — that defines evaluation checkpoints within a breach period and the cumulative-payment threshold (as a percentage). When the cumulative paid amount at a checkpoint falls below `(checkpointIndex + 1) × threshold% × minPaymentAmount`, the period is flagged near-breached.
 
-*Breach Schedule Period:* A contiguous time window (identified by a sequential `periodNumber`) that starts after the loan disbursement (offset by delinquency grace days) and repeats at the configured frequency. Each period records `fromDate`, `toDate`, `minPaymentAmount`, `paidAmount`, `outstandingAmount`, a `nearBreach` boolean, and a `breach` boolean.
+*Breach Schedule Period:* A contiguous time window (identified by a sequential `periodNumber`) that starts on the actual disbursement date offset by delinquency grace days and repeats at the configured frequency. Each period records `fromDate`, `toDate`, `minPaymentAmount`, `paidAmount`, `outstandingAmount`, a `nearBreach` boolean, and a `breach` boolean.
 
 *Breach Amount Calculation Type:* Determines how `minPaymentAmount` is derived per period. `FLAT` uses the configured `breachAmount` directly. `PERCENTAGE` computes it as `breachAmount%` of `approvedPrincipal + discount`.
 
 *Near-Breach Threshold:* A percentage value (0–100). On each evaluation checkpoint inside a breach period, the system computes `requiredCumulative = (checkpointIndex + 1) × (threshold / 100) × minPaymentAmount`. If `paidAmount < requiredCumulative`, the period is marked as near-breached.
 
-*Breach Overridable:* A flag on the loan product's configurable attributes (`breach_overridable`) that controls whether the breach configuration can be replaced at the individual loan application level.
+*Breach Overridable:* A flag on the loan product's configurable attributes (`breach_overridable`, exposed as `allowAttributeOverrides.breach`) that controls whether the breach and near-breach configurations can be replaced at the individual loan application level.
 
 == Design Decisions and Considerations
 
 === Separate Configuration Tables for Breach and Near Breach
 
-Breach and near-breach configurations are maintained as independent, named, reusable entities rather than being embedded in the loan product. This allows multiple loan products — or even individual loans — to share the same configuration, and allows configurations to be updated centrally. The constraint that a near-breach configuration can only be used together with a breach configuration is enforced at the loan product level.
+Breach and near-breach configurations are maintained as independent, named, reusable entities rather than being embedded in the loan product. This allows multiple loan products — or even individual loans — to share the same configuration, and allows configurations to be updated centrally. The constraint that a near-breach configuration can only be used together with a breach configuration is enforced at loan product and loan application level.
 
 === Near-Breach Frequency Is Always Shorter Than Breach Frequency
 
-The near-breach configuration defines checkpoints *within* a breach period. The system enforces that the near-breach frequency (i.e., the interval between checkpoints) is strictly less than the breach period frequency. This is validated at product save time via `WorkingCapitalNearBreachParseAndValidator.validateNearBreachAgainstBreach`.
+The near-breach configuration defines checkpoints *within* a breach period. The system enforces that the near-breach frequency (i.e., the interval between checkpoints) is strictly less than the breach period frequency. This is validated through `WorkingCapitalNearBreachParseAndValidator.validateNearBreachAgainstBreach` when product or loan application breach settings are validated.
 
 === Breach Evaluation Is Idempotent
 
@@ -78,9 +78,9 @@ The breach subsystem introduces two configuration tables (`m_wc_breach_configura
 
 *`m_wc_loan_product`*: Gains `breach_id` (FK to `m_wc_breach_configuration`) and `near_breach_id` (FK to `m_wc_near_breach`) to associate configurations at the product level.
 
-*`m_wc_loan`*: Gains `breach_id` and `near_breach_id` columns, copied from the product at loan origination unless overridden by the borrower's application.
+*`m_wc_loan`*: Gains `breach_id` and `near_breach_id` columns, copied from the product at loan origination unless overridden by the loan application.
 
-*`m_wc_loan_product_configurable_attributes`*: Gains `breach_overridable` (BOOLEAN, default `false`) to control whether borrowers may specify a different breach configuration.
+*`m_wc_loan_product_configurable_attributes`*: Gains `breach_overridable` (BOOLEAN, default `false`) to control whether loan applications may specify different breach and near-breach configurations.
 
 === Table: m_wc_breach_configuration
 
@@ -156,7 +156,7 @@ New columns:
 |===
 | Column Name | Type | Constraints | Description
 | `breach_id` | BIGINT | FK to `m_wc_breach_configuration`, nullable | Per-loan breach configuration (copied from product or overridden)
-| `near_breach_id` | BIGINT | FK to `m_wc_near_breach`, nullable | Per-loan near-breach configuration (copied from product)
+| `near_breach_id` | BIGINT | FK to `m_wc_near_breach`, nullable | Per-loan near-breach configuration (copied from product or overridden together with breach)
 |===
 
 ==== m_wc_loan_product_configurable_attributes
@@ -166,7 +166,7 @@ New column:
 [cols="1,2,1,3",options="header"]
 |===
 | Column Name | Type | Constraints | Description
-| `breach_overridable` | BOOLEAN | not null, default `false` | If `true`, the borrower application may specify a different `breach_id` than the product default
+| `breach_overridable` | BOOLEAN | default `false` | If `true`, the loan application may specify different `breach_id` and `near_breach_id` values than the product defaults
 |===
 
 == Configuration
@@ -179,9 +179,9 @@ To activate breach management on a Working Capital loan product, include a `brea
 ----
 {
     "breachId": 1,              // mandatory to activate breach schedule generation
-    "nearBreachId": 2,          // optional — requires breachId; near-breach evaluation only runs if set
+    "nearBreachId": 2,          // optional; requires breachId; near-breach evaluation only runs if set
     "allowAttributeOverrides": {
-        "breach": true          // optional — allows per-loan override of breachId
+        "breach": true          // optional; allows per-loan override of breachId and nearBreachId
     }
 }
 ----
@@ -348,8 +348,8 @@ GET /v1/working-capital-loans/{loanId}/breach-schedule
 === Breach Schedule Generation
 
 * The first breach period starts on `actualDisbursementDate + delinquencyGraceDays`. If no actual disbursement has been recorded, generation is deferred to the next COB run.
-* Each period ends on `fromDate + frequency − 1` (DAYS), `fromDate + frequency weeks − 1 day` (WEEKS / MONTHS / YEARS variant).
-* Periods are generated lazily: the initial period is created once on the first COB run after disbursement; subsequent periods are generated one at a time whenever the latest period's `toDate` is not after the current business date.
+* Each period ends inclusively: `DAYS` uses `fromDate + frequency - 1 day`; `WEEKS`, `MONTHS`, and `YEARS` add the configured number of units and then subtract one day.
+* Periods are generated lazily: the initial period is created once on the first COB run after disbursement; subsequent periods are generated until the latest period's `toDate` is after the current business date.
 * `minPaymentAmount` is calculated from the breach configuration:
 ** `FLAT`: uses `breachAmount` directly.
 ** `PERCENTAGE`: applies `breachAmount%` to `approvedPrincipal + discount` (rounded to currency precision).
@@ -364,7 +364,7 @@ GET /v1/working-capital-loans/{loanId}/breach-schedule
 === Near-Breach Evaluation
 
 * Triggered by the `WC_NEAR_BREACH_EVALUATION` COB step (order 5), which runs after `WC_BREACH_SCHEDULE`.
-* The step is skipped for loans whose product has no near-breach configuration.
+* The step is skipped for loans that are not active or have no near-breach configuration.
 * Evaluation checkpoints within a period are computed as multiples of the near-breach frequency starting from `fromDate`. Checkpoints that fall on or after `toDate` are excluded.
 * On each checkpoint date `d` the required cumulative payment is:
 +
@@ -378,7 +378,7 @@ requiredCumulative = (checkpointIndex + 1) × (threshold / 100) × minPaymentAmo
 
 === Repayment Application
 
-* On every repayment transaction, `WorkingCapitalLoanBreachScheduleServiceImpl.applyRepayment` identifies the breach period covering the transaction date, adds the payment to `paidAmount`, and recomputes `outstandingAmount` (floored at zero). This ensures COB evaluations operate on current repayment data.
+* On every repayment transaction, `WorkingCapitalLoanBreachScheduleServiceImpl.applyRepayment` identifies the breach period covering the transaction date, adds the payment to `paidAmount`, and recomputes `outstandingAmount` (floored at zero). If this reduces `outstandingAmount` to zero and `breach` has not yet been evaluated, the period is marked `breach = false`. This ensures COB evaluations operate on current repayment data.
 
 == Example Scenarios
 

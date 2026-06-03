@@ -413,6 +413,9 @@ public class SecurityConfig {
                     .requestMatchers(API_MATCHER.matcher(HttpMethod.DELETE, "/api/*/loan-collateral-management/*"))
                     .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_WRITE, "DELETE_LOAN_COLLATERAL_PRODUCT")
 
+                    .requestMatchers(API_MATCHER.matcher(HttpMethod.GET, "/api/*/standinginstructionrunhistory"))
+                    .hasAnyAuthority(ALL_FUNCTIONS, ALL_FUNCTIONS_READ, "READ_STANDINGINSTRUCTION")
+
                     .requestMatchers(API_MATCHER.matcher(HttpMethod.POST, "/api/*/twofactor/validate")).fullyAuthenticated()
                     .requestMatchers(API_MATCHER.matcher("/api/*/twofactor")).fullyAuthenticated()
                     .requestMatchers(API_MATCHER.matcher("/api/**"))

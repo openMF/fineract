@@ -19,7 +19,7 @@ This feature enables credit operations teams to:
 
 The scope of this document includes:
 
-* Product-level delinquency configuration (grace days, start type)
+* Product-level delinquency configuration (grace days, stored start type)
 * Delinquency bucket and minimum payment rule configuration (`m_wc_delinquency_configuration`)
 * Delinquency range schedule — generation and lifecycle (`m_wc_loan_delinquency_range_schedule`)
 * Per-period delinquency range tagging (`m_wc_loan_range_delinquency_tag`)
@@ -41,7 +41,7 @@ The scope of this document includes:
 
 *Delinquency Range Tag:* A tag derived from the bucket's configured ranges (e.g., `5–15 days overdue`) applied per period. The system records a history of tag additions and lifts in `m_wc_loan_range_delinquency_tag`.
 
-*Delinquency Start Type:* Determines from which event the first period's `fromDate` is anchored — either loan creation (`LOAN_CREATION`) or the actual disbursement date (`DISBURSEMENT`).
+*Delinquency Start Type:* Stored on the product and copied to the loan. The current range schedule generation anchors the first period to the first actual disbursement date.
 
 *Delinquency Grace Days:* A product-level integer that is copied to the loan at origination. The COB classification step adds this number of days when determining whether a period is overdue relative to the business date.
 
@@ -210,12 +210,12 @@ Each delinquency bucket used with Working Capital loans must have an entry in `m
 
 [NOTE]
 ====
-The minimum payment is calculated against the loan's `approvedPrincipal`. When `minimumPaymentType` is `PERCENTAGE`, the base amount is `principal + discount` (if a discount is configured on the loan). When `FLAT`, the `minimumPayment` value is used directly.
+When `minimumPaymentType` is `PERCENTAGE`, the base amount is the loan's approved principal plus the loan discount, if a discount is configured. When `FLAT`, the `minimumPayment` value is used directly.
 ====
 
 === System Configuration
 
-The global configuration flag `enable-instant-delinquency-calculation` (table `c_configuration`) controls whether delinquency evaluation runs immediately after monetary transactions in addition to the scheduled COB run. When enabled, repayment events trigger real-time recalculation of the period's delinquency status.
+The global configuration flag `enable-instant-delinquency-calculation` (table `c_configuration`) controls whether delinquency classification runs immediately after repayment-like monetary transactions in addition to the scheduled COB run. When enabled, the payment is first applied to the range schedule and then classification is recalculated for the transaction date when the loan has a delinquency bucket.
 
 == COB Pipeline
 
@@ -228,7 +228,7 @@ Delinquency processing for Working Capital loans is part of the `WORKING_CAPITAL
 | 3 | `WC_LOAN_DELINQUENCY_CLASSIFICATION` | Iterates over all periods whose `toDate < businessDate + 1` and assigns or lifts delinquency range tags based on the configured bucket ranges.
 |===
 
-Step 2 (`DelinquencyRangeScheduleBusinessStep`) is skipped for loans that have not yet been disbursed. Step 3 (`WorkingCapitalLoanDelinquencyClassificationBusinessStep`) is skipped when no delinquency bucket is configured on the product.
+Step 2 (`DelinquencyRangeScheduleBusinessStep`) is skipped for loans that have not yet been disbursed. If no delinquency bucket or minimum payment rule exists, no schedule period is generated. Step 3 (`WorkingCapitalLoanDelinquencyClassificationBusinessStep`) is skipped when no delinquency bucket is configured on the product.
 
 == API Design
 
@@ -343,6 +343,8 @@ Retrieves all range schedule periods for a Working Capital loan, ordered by `per
 GET /v1/working-capital-loans/{loanId}/delinquency-range-schedule
 ----
 
+This endpoint is currently available by loan ID.
+
 **Required permission**: `READ_WORKINGCAPITALLOAN`
 
 **Response:**
@@ -424,7 +426,7 @@ GET /v1/working-capital-loans/{loanId}/delinquency-range-schedule
 === Delinquency Classification
 
 * The classification step iterates over periods where `toDate < businessDate + 1`.
-* Delinquent days for a period are calculated as `businessDate - period.toDate` (only if `outstandingAmount > 0`).
+* Delinquent days for a period are calculated as the classification date minus `period.toDate` (only if `outstandingAmount > 0`). In COB this classification date is `businessDate + 1`.
 * The applicable delinquency range is resolved from the bucket by finding the range where `minimumAgeDays <= delinquentDays <= maximumAgeDays`.
 * If no range matches (e.g., the period is not overdue), any previously applied tags for that period are lifted.
 
@@ -510,4 +512,4 @@ Working Capital Product Delinquency Management provides a purpose-built, period-
 * A PAUSE action that extends all open and future periods proportionally, freezing the delinquency clock.
 * A RESCHEDULE action that modifies minimum payment terms for the current and all future periods.
 * A configurable minimum payment rule per delinquency bucket, expressed as either a flat amount or a percentage of principal.
-* Product-level controls for grace days and the delinquency start type.
+* Product-level controls for grace days and the stored delinquency start type.

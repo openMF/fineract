@@ -14,8 +14,10 @@ Creates or updates a charge product applicable to Working Capital Loans.
 ** Must be set to `5`, as the `WorkingCapitalLoan` enum identifier is `5`.
 
 * `chargeTimeType`
+** Must be `2` (`SPECIFIED_DUE_DATE`).
 
 * `chargeCalculationType`
+** Must be `1` (`FLAT`).
 
 * `name`
 ** Must be unique across all charge products.
@@ -43,7 +45,7 @@ Creates or updates a charge product applicable to Working Capital Loans.
 
 ==== chargeAppliesTo
 
-* `WorkingCapitalLoan`
+* `WorkingCapitalLoan` (`5`)
 
 [NOTE]
 ====
@@ -52,8 +54,8 @@ Creates or updates a charge product applicable to Working Capital Loans.
 
 ==== chargeTimeType
 
-* `specified due date`
+* `specified due date` (`2`)
 
 ==== chargeCalculationType
 
-* `flat`
+* `flat` (`1`)

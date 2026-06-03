@@ -7,7 +7,7 @@ On legacy and merchant term loans (progressive loans), 3 timely modifier were de
 * DUE
 * IN ADVANCE
 
-For (sales based) Working Capital type of loan products, PAST DUE is not applicable, but DUE and IN ADVANCE balances are providing enough flexibility and fine-grained configuration options to be widely accepted and used for business needs.
+For sales-based Working Capital loan products, PAST DUE is not applicable, but DUE and IN ADVANCE balances provide enough flexibility and fine-grained configuration options for business needs.
 
 * *DUE*:
 ** *Principal*: Projected principal payment
@@ -18,20 +18,22 @@ For (sales based) Working Capital type of loan products, PAST DUE is not applica
 
 == Validation
 
-Similarly to the progressive loan, Working Capital Loans accept as payment allocation the following values. When creating payment allocation the following values should be included.
+Working Capital Loans accept the following `paymentAllocationRule` enum values. Each payment allocation order must include all six values exactly once.
 
-* DUE PRINCIPAL
-* DUE FEE
-* DUE PENALTY
-* IN ADVANCE PRINCIPAL
-* IN ADVANCE FEE
-* IN ADVANCE PENALTY
+* `DUE_PRINCIPAL`
+* `DUE_FEE`
+* `DUE_PENALTY`
+* `IN_ADVANCE_PRINCIPAL`
+* `IN_ADVANCE_FEE`
+* `IN_ADVANCE_PENALTY`
 
-During loan product creation at lest one "default" configuration are included and by transaction type there could be optional allocation provided. When payment allocation is provided all available options should be included.
+During loan product creation, at least one `DEFAULT` transaction type allocation must be provided. Additional transaction-type-specific allocations can be provided, but each transaction type can appear only once.
 
 == Loan Product Creation & Update
 
-During loan product creation there is the paymentAllocation is a mandatory option therefore one allocation for "default" payment allocation should be provided.
+During loan product creation, `paymentAllocation` is mandatory. At minimum, provide one allocation with `transactionType = "DEFAULT"`.
+
+During loan product update, payment allocation rules are maintained by `transactionType`: existing transaction types are updated, new transaction types are created, and transaction types omitted from the incoming allocation list are removed.
 
 === Template
 
@@ -39,6 +41,7 @@ Template API for Loan Product related operations are providing the available pay
 
 == Loan Account Creation & Update
 
-During loan account creation there is the paymentAllocation is optional. When Payment Allocation is provided during loan account creation, it is used for the account. If Not provided, then the loan product's settings will be copied to the new loan account. This logic grants the loan account level payment allocation settings are not affected by later modifications of the loan product.
+During loan account creation, `paymentAllocation` is optional. When provided, it is used for the account. If not provided, the loan product's settings are copied to the new loan account. This keeps account-level payment allocation independent from later product-level changes.
 
+During loan account update, payment allocation rules are also maintained by `transactionType`: matching existing transaction types are updated, new ones are created, and omitted existing transaction types are deleted.
 

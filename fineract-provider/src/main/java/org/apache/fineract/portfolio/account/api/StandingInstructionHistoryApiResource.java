@@ -36,25 +36,23 @@ import org.apache.fineract.infrastructure.core.api.DateParam;
 import org.apache.fineract.infrastructure.core.data.DateFormat;
 import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.core.service.SearchParameters;
-import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.service.SqlValidator;
 import org.apache.fineract.portfolio.account.data.StandingInstructionDTO;
 import org.apache.fineract.portfolio.account.data.StandingInstructionHistoryData;
-import org.apache.fineract.portfolio.account.service.StandingInstructionHistoryReadPlatformService;
+import org.apache.fineract.portfolio.account.service.StandingInstructionHistoryReadService;
 import org.springframework.stereotype.Component;
 
 @Path("/v1/standinginstructionrunhistory")
 @Component
+@Produces({ MediaType.APPLICATION_JSON })
 @Tag(name = "Standing Instructions History", description = "The list capability of history can support pagination and sorting.")
 @RequiredArgsConstructor
 public class StandingInstructionHistoryApiResource {
 
-    private final PlatformSecurityContext context;
-    private final StandingInstructionHistoryReadPlatformService standingInstructionHistoryReadPlatformService;
+    private final StandingInstructionHistoryReadService standingInstructionHistoryReadService;
     private final SqlValidator sqlValidator;
 
     @GET
-    @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Standing Instructions Logged History", operationId = "retrieveAllStandingInstructionHistory", description = "The list capability of history can support pagination and sorting \n\n"
             + "Example Requests :\n" + "\n" + "standinginstructionrunhistory\n" + "\n"
             + "standinginstructionrunhistory?orderBy=name&sortOrder=DESC\n" + "\n" + "standinginstructionrunhistory?offset=10&limit=50")
@@ -75,8 +73,6 @@ public class StandingInstructionHistoryApiResource {
             @QueryParam("fromDate") @Parameter(description = "fromDate") final DateParam fromDateParam,
             @QueryParam("toDate") @Parameter(description = "toDate") final DateParam toDateParam) {
 
-        this.context.authenticatedUser().validateHasReadPermission(StandingInstructionApiConstants.STANDING_INSTRUCTION_RESOURCE_NAME);
-
         final DateFormat dateFormat = StringUtils.isBlank(rawDateFormat) ? null : new DateFormat(rawDateFormat);
 
         sqlValidator.validate(orderBy);
@@ -96,6 +92,6 @@ public class StandingInstructionHistoryApiResource {
         StandingInstructionDTO standingInstructionDTO = new StandingInstructionDTO(searchParameters, transferType, clientName, clientId,
                 fromAccount, fromAccountType, startDateRange, endDateRange);
 
-        return standingInstructionHistoryReadPlatformService.retrieveAll(standingInstructionDTO);
+        return standingInstructionHistoryReadService.retrieveAll(standingInstructionDTO);
     }
 }

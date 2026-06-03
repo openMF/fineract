@@ -2,6 +2,9 @@ name: Fineract Cucumber tests (without E2E tests)
 
 on:
   workflow_call:
+    secrets:
+      DEVELOCITY_ACCESS_KEY:
+        required: false
 
 permissions:
   contents: read

@@ -222,10 +222,8 @@ public final class CalendarUtils {
 
             return rrule.getRecur();
         } catch (final ParseException e) {
-            // TODO Auto-generated catch block
             log.error("Problem occurred in getICalRecur function", e);
         } catch (final ValidationException e) {
-            // TODO Auto-generated catch block
             log.error("Problem occurred in getICalRecur function", e);
         }
 
