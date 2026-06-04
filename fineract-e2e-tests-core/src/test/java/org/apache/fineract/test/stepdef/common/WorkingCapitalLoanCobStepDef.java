@@ -381,6 +381,21 @@ public class WorkingCapitalLoanCobStepDef extends AbstractStepDef {
                 });
     }
 
+    @Then("Admin verifies internal working capital cob last run data values are empty {string}")
+    public void adminClearsInternalWorkingCapitalCOBLastRunData(String isEmpty) {
+        Map<String, Object> ok = ok(() -> fineractClient.workingCapitalLoanInternalCobApi().getLastCobRun());
+        log.debug("internal working capital cob last run data values : {}", ok);
+        Assertions.assertNotNull(ok);
+        Boolean shouldContainValues = isEmpty.equals("false");
+        Assertions.assertEquals(shouldContainValues, ok.containsKey("cob-job-after-listener"));
+        Assertions.assertEquals(shouldContainValues, ok.containsKey("cob-job-before-listener"));
+    }
+
+    @When("Admin clears internal working capital cob last run data")
+    public void adminClearsInternalWorkingCapitalCOBLastRunData() {
+        ok(() -> fineractClient.workingCapitalLoanInternalCobApi().deleteLastCobRun());
+    }
+
     @SuppressWarnings("unchecked")
     private List<Long> getTrackedLoanIds() {
         return testContext().get(TestContextKey.WC_LOAN_IDS);

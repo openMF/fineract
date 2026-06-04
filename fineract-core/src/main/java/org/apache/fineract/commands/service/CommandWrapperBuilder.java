@@ -241,6 +241,7 @@ import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_USER;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_WAIVECHARGE;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_WORKINGCAPITALLOAN;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_WORKINGCAPITALLOANCHARGE;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_WORKINGCAPITALLOANPRODUCT;
 import static org.apache.fineract.useradministration.service.AppUserConstants.PASSWORD;
 import static org.apache.fineract.useradministration.service.AppUserConstants.REPEAT_PASSWORD;
@@ -1124,6 +1125,14 @@ public class CommandWrapperBuilder {
     public CommandWrapperBuilder createLoanCharge(final Long loanId) {
         this.actionName = ACTION_CREATE;
         this.entityName = ENTITY_LOANCHARGE;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId + "/charges";
+        return this;
+    }
+
+    public CommandWrapperBuilder createWorkingCapitalLoanCharge(final Long loanId) {
+        this.actionName = ACTION_CREATE;
+        this.entityName = ENTITY_WORKINGCAPITALLOANCHARGE;
         this.loanId = loanId;
         this.href = "/loans/" + loanId + "/charges";
         return this;

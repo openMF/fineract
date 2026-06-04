@@ -1,0 +1,49 @@
+{
+  "name": "Declining Balance Monthly Loan",
+  "shortName": "DECL",
+  "description": "Starter template for a monthly declining-balance loan with equal installments.",
+
+  "currencyCode": "USD",
+  "digitsAfterDecimal": 2,
+  "inMultiplesOf": 1,
+
+  "principal": 5000,
+  "minPrincipal": 500,
+  "maxPrincipal": 50000,
+
+  "numberOfRepayments": 12,
+
+  "repaymentEvery": 1,
+  "repaymentFrequencyType": 2,
+
+  "interestRatePerPeriod": 1.5,
+  "interestRateFrequencyType": 2,
+
+  "amortizationType": 1,
+  "interestType": 0,
+
+  "interestCalculationPeriodType": 1,
+  "daysInYearType": 1,
+  "daysInMonthType": 1,
+
+  "dateFormat": "dd MMMM yyyy",
+  "locale": "en",
+
+  "transactionProcessingStrategyCode": "mifos-standard-strategy",
+  "accountingRule": 1,
+
+  "inArrearsTolerance": 0,
+  "overdueDaysForNPA": 30,
+
+  "isEqualAmortization": false,
+
+  "loanScheduleType": "CUMULATIVE",
+  "loanScheduleProcessingType": "HORIZONTAL",
+
+  "isInterestRecalculationEnabled": false,
+  "allowPartialPeriodInterestCalculation": false,
+  "allowVariableInstallments": false,
+  "syncExpectedWithDisbursementDate": false,
+
+  "enableDownPayment": false
+}

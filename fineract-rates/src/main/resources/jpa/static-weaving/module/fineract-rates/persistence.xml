@@ -71,6 +71,7 @@
         <class>org.apache.fineract.useradministration.domain.AppUser</class>
         <class>org.apache.fineract.useradministration.domain.Permission</class>
         <class>org.apache.fineract.useradministration.domain.Role</class>
+        <class>org.apache.fineract.portfolio.charge.domain.ChargeTimeTypeConverter</class>
 
         <!--  fineract-rates module: -->
         <class>org.apache.fineract.portfolio.floatingrates.domain.FloatingRate</class>

@@ -157,7 +157,15 @@ public class ChargeGlobalInitializerStep implements FineractGlobalInitializerSte
                         createChargeIfNotExists(charges, CHARGE_APPLIES_TO_LOAN,
                                 ChargeProductType.LOAN_DISBURSEMENT_PERCENTAGE_AMOUNT_PLUS_INTEREST_FEE.getName(),
                                 CHARGE_TIME_TYPE_DISBURSEMENT, CHARGE_CALCULATION_TYPE_PERCENTAGE_LOAN_AMOUNT_PLUS_INTEREST,
-                                CHARGE_AMOUNT_PERCENTAGE, true, false)));
+                                CHARGE_AMOUNT_PERCENTAGE, true, false)),
+                () -> TestContext.INSTANCE.set(TestContextKey.CHARGE_FOR_WORKING_CAPITAL_SPECIFIED_DUE_DATE_FEE_CREATE_RESPONSE,
+                        createChargeIfNotExists(charges, ChargeProductAppliesTo.WORKING_CAPITAL_LOAN,
+                                ChargeProductType.WORKING_CAPITAL_SPECIFIED_DUE_DATE_FEE.getName(), CHARGE_TIME_TYPE_SPECIFIED_DUE_DATE,
+                                CHARGE_CALCULATION_TYPE_FLAT, 15.0, true, false)),
+                () -> TestContext.INSTANCE.set(TestContextKey.CHARGE_FOR_WORKING_CAPITAL_SPECIFIED_DUE_DATE_PENALTY_CREATE_RESPONSE,
+                        createChargeIfNotExists(charges, ChargeProductAppliesTo.WORKING_CAPITAL_LOAN,
+                                ChargeProductType.WORKING_CAPITAL_SPECIFIED_DUE_DATE_PENALTY.getName(), CHARGE_TIME_TYPE_SPECIFIED_DUE_DATE,
+                                CHARGE_CALCULATION_TYPE_FLAT, 20.0, true, true)));
 
         ParallelExecutionHelper.runInParallel(items);
     }
@@ -191,6 +199,9 @@ public class ChargeGlobalInitializerStep implements FineractGlobalInitializerSte
             chargeAppliesTo = ChargeProductAppliesTo.CLIENT.value;
         } else if (appliesTo.equals(ChargeProductAppliesTo.LOAN)) {
             chargeAppliesTo = ChargeProductAppliesTo.LOAN.value;
+            request.chargePaymentMode(CHARGE_PAYMENT_MODE);
+        } else if (appliesTo.equals(ChargeProductAppliesTo.WORKING_CAPITAL_LOAN)) {
+            chargeAppliesTo = ChargeProductAppliesTo.WORKING_CAPITAL_LOAN.value;
             request.chargePaymentMode(CHARGE_PAYMENT_MODE);
         } else {
             throw new IllegalArgumentException(ErrorMessageHelper.chargeAppliesToIsInvalid(appliesTo));

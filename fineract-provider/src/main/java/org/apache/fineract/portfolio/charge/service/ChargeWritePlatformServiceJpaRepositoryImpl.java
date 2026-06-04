@@ -227,9 +227,11 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
         final Collection<LoanProduct> loanProducts = this.loanProductRepository.retrieveLoanProductsByChargeId(chargeId);
         final Boolean isChargeExistWithLoans = isAnyLoansAssociateWithThisCharge(chargeId);
         final Boolean isChargeExistWithSavings = isAnySavingsAssociateWithThisCharge(chargeId);
+        final Boolean isChargeExistWithWorkingCapitalLoan = chargeRepository.isAnyWorkingCapitalLoansAssociateWithThisCharge(chargeId)
+                .isPresent();
 
         // TODO: Change error messages around:
-        if (!loanProducts.isEmpty() || isChargeExistWithLoans || isChargeExistWithSavings) {
+        if (!loanProducts.isEmpty() || isChargeExistWithLoans || isChargeExistWithSavings || isChargeExistWithWorkingCapitalLoan) {
             throw new ChargeCannotBeDeletedException("error.msg.charge.cannot.be.deleted.it.is.already.used.in.loan",
                     "This charge cannot be deleted, it is already used in loan");
         }

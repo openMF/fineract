@@ -64,6 +64,7 @@ import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.JournalEntryTransactionItem;
 import org.apache.fineract.client.models.LoanTransactionEnumData;
 import org.apache.fineract.client.models.PostAllowAttributeOverrides;
+import org.apache.fineract.client.models.PostClientsRequest;
 import org.apache.fineract.client.models.PostClientsResponse;
 import org.apache.fineract.client.models.PostCodeValueDataResponse;
 import org.apache.fineract.client.models.PostCodeValuesDataRequest;
@@ -90,6 +91,7 @@ import org.apache.fineract.test.data.paymenttype.DefaultPaymentType;
 import org.apache.fineract.test.data.paymenttype.PaymentTypeResolver;
 import org.apache.fineract.test.data.workingcapitalproduct.DefaultWorkingCapitalLoanProduct;
 import org.apache.fineract.test.data.workingcapitalproduct.WorkingCapitalLoanProductResolver;
+import org.apache.fineract.test.factory.ClientRequestFactory;
 import org.apache.fineract.test.factory.WorkingCapitalLoanRequestFactory;
 import org.apache.fineract.test.factory.WorkingCapitalRequestFactory;
 import org.apache.fineract.test.helper.BusinessDateHelper;
@@ -127,6 +129,49 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
     private final PaymentTypeResolver paymentTypeResolver;
     private final BusinessDateHelper businessDateHelper;
     private final JournalEntriesStepDef journalEntriesStepDef;
+    private final ClientRequestFactory clientRequestFactory;
+
+    @Given("Admin creates a client with random data and creates-approves-disburses a working capital loan with the following data:")
+    public void createClientAndDisburseWorkingCapitalLoanWithData(final DataTable table) {
+        final List<List<String>> data = table.asLists();
+        final List<String> loanData = data.get(1);
+
+        // Extract data needed for approval/disbursement
+        final String submittedOnDate = loanData.get(1);
+        final String expectedDisbursementDate = loanData.get(2);
+        final String principalAmount = loanData.get(3);
+
+        // Create client with random data
+        final PostClientsRequest clientsRequest = clientRequestFactory.defaultClientCreationRequest();
+        final PostClientsResponse clientResponse = ok(() -> fineractClient.clients().createClient(clientsRequest));
+        Assertions.assertNotNull(clientResponse);
+        Assertions.assertNotNull(clientResponse.getClientId());
+        testContext().set(TestContextKey.CLIENT_CREATE_RESPONSE, clientResponse);
+
+        // Create working capital loan using existing helper
+        createWorkingCapitalLoanAccount(loanData);
+
+        // Approve loan using existing helper method
+        final PostWorkingCapitalLoansLoanIdRequest approveRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanApproveRequest()//
+                .approvedOnDate(submittedOnDate)//
+                .approvedLoanAmount(new BigDecimal(principalAmount))//
+                .expectedDisbursementDate(expectedDisbursementDate);
+        executeStateTransition("approve", approveRequest, TestContextKey.LOAN_APPROVAL_RESPONSE, false);
+
+        // Disburse loan using existing helper method
+        final PostWorkingCapitalLoansLoanIdRequest disburseRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanDisburseRequest()//
+                .actualDisbursementDate(submittedOnDate);
+        executeStateTransition("disburse", disburseRequest, TestContextKey.LOAN_DISBURSE_RESPONSE, false);
+
+        // Verify loan is ACTIVE
+        final Long loanId = getCreatedLoanId();
+        final GetWorkingCapitalLoansLoanIdResponse loanDetails = ok(
+                () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
+        Assertions.assertNotNull(loanDetails);
+        Assertions.assertEquals(300, loanDetails.getStatus().getId(), "Loan should be ACTIVE");
+    }
 
     @When("Admin creates a working capital loan with the following data:")
     public void createWorkingCapitalLoan(final DataTable table) {

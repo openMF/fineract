@@ -26,6 +26,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.util.List;
 import liquibase.change.custom.CustomTaskChange;
 import okhttp3.OkHttpClient;
+import org.apache.fineract.cob.internal.TestData;
 import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseIndependentQueryService;
@@ -106,6 +107,11 @@ public class TestConfiguration {
     public HikariDataSource tenantDataSource() {
         HikariDataSource mockDataSource = mock(HikariDataSource.class, RETURNS_MOCKS);
         return mockDataSource;
+    }
+
+    @Bean
+    public TestData testData() {
+        return mock(TestData.class);
     }
 
     /**

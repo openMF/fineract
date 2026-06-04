@@ -451,6 +451,19 @@ public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService 
     }
 
     @Override
+    public List<ChargeData> retrieveWorkingCapitalLoanAccountApplicableCharges(Long loanId) {
+        final ChargeMapper rm = new ChargeMapper();
+        Map<String, Object> paramMap = new HashMap<>();
+        paramMap.put("loanId", loanId);
+        paramMap.put("chargeAppliesTo", ChargeAppliesTo.WORKING_CAPITAL_LOAN.getValue());
+        String sql = "select " + rm.chargeSchema() + " join m_wc_loan la on la.currency_code = c.currency_code" + " where la.id=:loanId"
+                + " and c.is_deleted=false and c.is_active=true and c.charge_applies_to_enum=:chargeAppliesTo ";
+        sql += addInClauseToSQL_toLimitChargesMappedToOffice_ifOfficeSpecificProductsEnabled();
+        sql += " order by c.name ";
+        return this.namedParameterJdbcTemplate.query(sql, paramMap, rm);
+    }
+
+    @Override
     public List<ChargeData> retrieveSavingsAccountApplicableCharges(Long savingsAccountId) {
 
         final ChargeMapper rm = new ChargeMapper();

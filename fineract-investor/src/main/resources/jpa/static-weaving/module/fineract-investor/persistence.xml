@@ -42,6 +42,8 @@
 
         <!--  fineract-charge module: -->
         <class>org.apache.fineract.portfolio.charge.domain.Charge</class>
+        <class>org.apache.fineract.portfolio.charge.domain.ChargeCalculationTypeConverter</class>
+        <class>org.apache.fineract.portfolio.charge.domain.ChargePaymentModeConverter</class>
 
         <!--  fineract-cob module: -->
         <class>org.apache.fineract.cob.domain.AccountLock</class>
@@ -87,6 +89,7 @@
         <class>org.apache.fineract.useradministration.domain.AppUser</class>
         <class>org.apache.fineract.useradministration.domain.Permission</class>
         <class>org.apache.fineract.useradministration.domain.Role</class>
+        <class>org.apache.fineract.portfolio.charge.domain.ChargeTimeTypeConverter</class>
 
         <!--  fineract-investor module: -->
         <class>org.apache.fineract.investor.domain.ExternalAssetOwner</class>
@@ -166,7 +169,7 @@
 
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <properties>
-            <property name="eclipselink.weaving" value="static" />
+            <property name="eclipselink.weaving" value="static"/>
             <property name="eclipselink.weaving.internal" value="false"/>
         </properties>
     </persistence-unit>

@@ -48,6 +48,8 @@
 
         <!--  fineract-charge module: -->
         <class>org.apache.fineract.portfolio.charge.domain.Charge</class>
+        <class>org.apache.fineract.portfolio.charge.domain.ChargeCalculationTypeConverter</class>
+        <class>org.apache.fineract.portfolio.charge.domain.ChargePaymentModeConverter</class>
 
         <!--  fineract-cob module: -->
         <class>org.apache.fineract.cob.domain.AccountLock</class>
@@ -93,6 +95,7 @@
         <class>org.apache.fineract.useradministration.domain.AppUser</class>
         <class>org.apache.fineract.useradministration.domain.Permission</class>
         <class>org.apache.fineract.useradministration.domain.Role</class>
+        <class>org.apache.fineract.portfolio.charge.domain.ChargeTimeTypeConverter</class>
 
         <!--  fineract-investor module: -->
         <class>org.apache.fineract.investor.domain.ExternalAssetOwner</class>
@@ -206,7 +209,8 @@
         <class>org.apache.fineract.infrastructure.jobs.domain.ScheduledJobDetail</class>
         <class>org.apache.fineract.infrastructure.jobs.domain.ScheduledJobRunHistory</class>
         <class>org.apache.fineract.infrastructure.jobs.domain.SchedulerDetail</class>
-        <class>org.apache.fineract.infrastructure.jobs.service.aggregationjob.domain.JournalEntryAggregationTracking</class>
+        <class>org.apache.fineract.infrastructure.jobs.service.aggregationjob.domain.JournalEntryAggregationTracking
+        </class>
         <class>org.apache.fineract.infrastructure.jobs.service.aggregationjob.domain.JournalEntrySummary</class>
         <class>org.apache.fineract.infrastructure.reportmailingjob.domain.ReportMailingJob</class>
         <class>org.apache.fineract.infrastructure.reportmailingjob.domain.ReportMailingJobConfiguration</class>
@@ -304,16 +308,23 @@
 
         <!--  fineract-working-capital-loan module: -->
         <class>org.apache.fineract.cob.domain.WorkingCapitalLoanAccountLock</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDelinquencyAction</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanBreachSchedule</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDelinquencyRangeSchedule</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDelinquencyRangeScheduleTagHistory</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanBalance</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDisbursementDetails</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanNote</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPaymentAllocationRule</class>
         <class>org.apache.fineract.portfolio.workingcapitalloanbreach.domain.WorkingCapitalBreach</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.ProjectedAmortizationLoanModel</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransactionRelation</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransaction</class>
         <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransactionAllocation</class>
-        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransactionRelation</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanCharge</class>
         <class>org.apache.fineract.portfolio.workingcapitalloannearbreach.domain.WorkingCapitalNearBreach</class>
+        <class>org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPeriodPaymentRateChange</class>
         <class>org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct</class>
         <class>org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductConfigurableAttributes</class>
         <class>org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductPaymentAllocationRule</class>
@@ -322,7 +333,7 @@
 
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <properties>
-            <property name="eclipselink.weaving" value="static" />
+            <property name="eclipselink.weaving" value="static"/>
             <property name="eclipselink.weaving.internal" value="false"/>
         </properties>
     </persistence-unit>

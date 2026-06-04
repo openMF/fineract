@@ -361,3 +361,9 @@ Feature: Working Capital COB Job
     When Admin runs WC COB job
     Then Admin verifies inserted WC loan 1 has no account locks
     Then Admin verifies inserted WC loan 2 has at least one account lock
+
+  Scenario: WC COB run properly uses .before/after listeners
+    When Admin clears internal working capital cob last run data
+    Then Admin verifies internal working capital cob last run data values are empty "true"
+    When Admin runs WC COB job
+    Then Admin verifies internal working capital cob last run data values are empty "false"

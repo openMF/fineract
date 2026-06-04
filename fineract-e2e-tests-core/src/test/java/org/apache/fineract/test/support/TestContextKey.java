@@ -33,6 +33,7 @@ public abstract class TestContextKey {
     public static final String LOAN_MODIFY_RESPONSE = "loanModifyResponse";
     public static final String LOAN_DELETE_RESPONSE = "loanDeleteResponse";
     public static final String ADD_DUE_DATE_CHARGE_RESPONSE = "addDueDateChargeResponse";
+    public static final String ADD_DUE_DATE_CHARGE_WORKING_CAPITAL_RESPONSE = "addDueDateChargeWorkingCapitalResponse";
     public static final String ADD_INSTALLMENT_FEE_CHARGE_RESPONSE = "addInstallmentFeeChargeResponse";
     public static final String ADD_PROCESSING_FEE_RESPONSE = "addProcessingFeeResponse";
     public static final String ADD_NSF_FEE_RESPONSE = "addNsfFeeResponse";
@@ -223,6 +224,8 @@ public abstract class TestContextKey {
     public static final String CHARGE_FOR_CLIENT_FIXED_FEE_CREATE_RESPONSE = "ChargeForClientFixedFeeCreateResponse";
     public static final String CHARGE_FOR_LOAN_DISBURSEMENT_CHARGE_CREATE_RESPONSE = "ChargeForLoanDisbursementChargeCreateResponse";
     public static final String CHARGE_FOR_LOAN_DISBURSEMENT_PERCENTAGE_AMOUNT_PLUS_INTEREST_CREATE_RESPONSE = "ChargeForLoanDisbursementPercentageAmountPlusInterestCreateResponse";
+    public static final String CHARGE_FOR_WORKING_CAPITAL_SPECIFIED_DUE_DATE_FEE_CREATE_RESPONSE = "ChargeForWorkingCapitalSpecifiedDueDateFeeCreateResponse";
+    public static final String CHARGE_FOR_WORKING_CAPITAL_SPECIFIED_DUE_DATE_PENALTY_CREATE_RESPONSE = "ChargeForWorkingCapitalSpecifiedDueDatePenaltyCreateResponse";
     public static final String LOAN_RESPONSE = "loanResponse";
     public static final String LOAN_REPAYMENT_UNDO_RESPONSE = "loanRepaymentUndoResponse";
     public static final String LOAN_CAPITALIZED_INCOME_ADJUSTMENT_UNDO_RESPONSE = "loanCapitalizedIncomeAdjustmentUndoResponse";
@@ -367,6 +370,7 @@ public abstract class TestContextKey {
     public static final String WC_LOAN_ACTION_TEMPLATE_RESPONSE = "wcLoanActionTemplateResponse";
     public static final String WORKING_CAPITAL_LOAN_RATE_CHANGE_ID = "wcLoanRateChangeId";
     public static final String WORKING_CAPITAL_CHARGE_ID = "workingCapitalChargeId";
+    public static final String WORKING_CAPITAL_LOAN_CHARGE_IDS = "workingCapitalLoanChargeIds";
     public static final String WORKING_CAPITAL_CHARGE_TEMPLATE = "workingCapitalChargeTemplate";
     public static final String WORKING_CAPITAL_LOAN_DISBURSE_DISCOUNT_EXTERNAL_ID_USER_GENERATED = "workingCapitalLoanDisburseDiscountExternalIdUserGenerated";
     public static final String WORKING_CAPITAL_LOAN_DISCOUNT_FEE_EXTERNAL_ID_USER_GENERATED = "workingCapitalLoanDiscountFeeExternalIdUserGenerated";

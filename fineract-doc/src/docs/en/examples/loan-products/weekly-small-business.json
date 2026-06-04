@@ -1,0 +1,49 @@
+{
+  "name": "Weekly Small Business Loan",
+  "shortName": "WKLY",
+  "description": "Starter template for a short-term weekly declining-balance business loan.",
+
+  "currencyCode": "USD",
+  "digitsAfterDecimal": 2,
+  "inMultiplesOf": 1,
+
+  "principal": 5000,
+  "minPrincipal": 500,
+  "maxPrincipal": 50000,
+
+  "numberOfRepayments": 26,
+
+  "repaymentEvery": 1,
+  "repaymentFrequencyType": 1,
+
+  "interestRatePerPeriod": 26.0,
+  "interestRateFrequencyType": 3,
+
+  "amortizationType": 1,
+  "interestType": 0,
+
+  "interestCalculationPeriodType": 1,
+  "daysInYearType": 1,
+  "daysInMonthType": 1,
+
+  "dateFormat": "dd MMMM yyyy",
+  "locale": "en",
+
+  "transactionProcessingStrategyCode": "mifos-standard-strategy",
+  "accountingRule": 1,
+
+  "inArrearsTolerance": 0,
+  "overdueDaysForNPA": 30,
+
+  "isEqualAmortization": false,
+
+  "loanScheduleType": "CUMULATIVE",
+  "loanScheduleProcessingType": "HORIZONTAL",
+
+  "isInterestRecalculationEnabled": false,
+  "allowPartialPeriodInterestCalculation": false,
+  "allowVariableInstallments": false,
+  "syncExpectedWithDisbursementDate": false,
+
+  "enableDownPayment": false
+}

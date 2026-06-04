@@ -25,6 +25,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -34,25 +37,41 @@ import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.ChargeData;
 import org.apache.fineract.client.models.ChargeRequest;
 import org.apache.fineract.client.models.EnumOptionData;
+import org.apache.fineract.client.models.GetBalance;
 import org.apache.fineract.client.models.GetChargesResponse;
+import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostChargesResponse;
+import org.apache.fineract.client.models.PostLoansLoanIdChargesRequest;
+import org.apache.fineract.client.models.PostLoansLoanIdChargesResponse;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansResponse;
+import org.apache.fineract.client.models.WorkingCapitalLoanChargeData;
 import org.apache.fineract.test.data.ChargeCalculationType;
 import org.apache.fineract.test.data.ChargeProductAppliesTo;
+import org.apache.fineract.test.data.ChargeProductResolver;
+import org.apache.fineract.test.data.ChargeProductType;
 import org.apache.fineract.test.data.ChargeTimeType;
 import org.apache.fineract.test.factory.WorkingCapitalChargeRequestFactory;
+import org.apache.fineract.test.helper.ErrorMessageHelper;
+import org.apache.fineract.test.helper.Utils;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.support.TestContextKey;
+import org.junit.jupiter.api.Assertions;
 
 @Slf4j
 @RequiredArgsConstructor
 public class WorkingCapitalChargeStepDef extends AbstractStepDef {
 
+    private static final String DATE_FORMAT = "dd MMMM yyyy";
+    private static final String DATE_FORMAT_API = "dd-MM-yyyy";
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
+    private static final DateTimeFormatter FORMATTER_API = DateTimeFormatter.ofPattern(DATE_FORMAT_API);
     private static final Long REGULAR_PAYMENT_MODE_ID = 0L;
     private static final Long SPECIFIED_DUE_DATE_ID = 2L;
     private static final Long FLAT_CALCULATION_TYPE_ID = 1L;
 
     private final FineractFeignClient fineractClient;
     private final WorkingCapitalChargeRequestFactory chargeRequestFactory;
+    private final ChargeProductResolver chargeProductResolver;
 
     @When("Admin creates working capital loan charge")
     public void createWorkingCapitalLoanCharge() {
@@ -90,6 +109,13 @@ public class WorkingCapitalChargeStepDef extends AbstractStepDef {
         ok(() -> fineractClient.charges().deleteCharge(getChargeId()));
     }
 
+    @When("Admin fails to delete working capital loan charge with status {int} message {string}")
+    public void adminFailsToDeleteWorkingCapitalLoanChargeWithMessage(int expectedHttpCode, String expectedErrorMessage) {
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.charges().deleteCharge(getChargeId()));
+        assertHttpStatus(exception, expectedHttpCode);
+        assertErrorMessage(exception, expectedErrorMessage);
+    }
+
     @Then("Admin retrieves working capital loan charge and verifies it is a penalty")
     public void retrieveAndVerifyPenalty() {
         final Long id = getChargeId();
@@ -106,6 +132,227 @@ public class WorkingCapitalChargeStepDef extends AbstractStepDef {
         assertThat(chargeData.getChargePaymentMode()).as("Charge payment mode should not be null").isNotNull();
         assertThat(chargeData.getChargePaymentMode().getId()).as("Payment mode should be Regular (0)").isEqualTo(REGULAR_PAYMENT_MODE_ID);
         log.info("Verified WCL charge ID {} has Regular payment mode", id);
+    }
+
+    @Then("Admin retrieves working capital loan charge template by loan id")
+    public void getWorkingCapitalLoanChargesTemplateByLoanId() {
+        Long loanId = getLoanId();
+        Long chargeId = getChargeId();
+        Assertions.assertNotNull(chargeId);
+
+        WorkingCapitalLoanChargeData response = ok(
+                () -> fineractClient.workingCapitalLoanCharges().retrieveTemplateWorkingCapitalLoanCharge(loanId));
+
+        Assertions.assertNotNull(response.getChargeOptions());
+
+        boolean anyMatch = response.getChargeOptions().stream().anyMatch(cO -> chargeId.equals(cO.getId()));
+        Assertions.assertTrue(anyMatch);
+
+    }
+
+    @Then("Admin add working capital loan charge by loan id and charge id with amount {double} and due date {string}")
+    public void admin_add_working_capital_loan_charge_by_loan_id_and_charge_id_with_amount(Double amount, String dueDate) {
+        Long loanId = getLoanId();
+        Assertions.assertNotNull(loanId);
+        Long chargeId = getChargeId();
+        Assertions.assertNotNull(chargeId);
+
+        PostLoansLoanIdChargesRequest request = new PostLoansLoanIdChargesRequest() //
+                .chargeId(chargeId).amount(amount).dueDate(dueDate).dateFormat("dd-MM-yyyy").locale("en");
+        PostLoansLoanIdChargesResponse response = ok(() -> fineractClient.workingCapitalLoanCharges().createLoanCharge(loanId, request));
+        Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response.getResourceId());
+
+        addLoanChargeId(response.getResourceId());
+
+    }
+
+    @When("Admin adds {string} specified due date charge to working capital loan with {string} due date and {double} transaction amount")
+    public void addWorkingCapitalCharge(String chargeType, String dueDate, Double amount) {
+        Long loanId = getLoanId();
+        Assertions.assertNotNull(loanId);
+
+        ChargeProductType chargeProductType = ChargeProductType.valueOf(chargeType);
+        Long chargeTypeId = chargeProductResolver.resolve(chargeProductType);
+
+        LocalDate dueDateParsed = LocalDate.parse(dueDate, FORMATTER);
+        String dueDateFormatted = dueDateParsed.format(FORMATTER_API);
+
+        PostLoansLoanIdChargesRequest request = new PostLoansLoanIdChargesRequest() //
+                .chargeId(chargeTypeId)//
+                .amount(amount)//
+                .dueDate(dueDateFormatted)//
+                .dateFormat(DATE_FORMAT_API)//
+                .locale("en");//
+        PostLoansLoanIdChargesResponse response = ok(() -> fineractClient.workingCapitalLoanCharges().createLoanCharge(loanId, request));
+        Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response.getResourceId());
+
+        log.debug("Charge response: {}", response);
+
+        testContext().set(TestContextKey.ADD_DUE_DATE_CHARGE_WORKING_CAPITAL_RESPONSE, response);
+    }
+
+    @Then("Working Capital Loan has charges with the following data:")
+    public void verifyWorkingCapitalLoanChargesWithData(DataTable table) {
+        Long loanId = getLoanId();
+        Assertions.assertNotNull(loanId);
+
+        List<WorkingCapitalLoanChargeData> charges = ok(
+                () -> fineractClient.workingCapitalLoanCharges().retrieveAllWorkingCapitalLoanChargesByLoanId(loanId));
+        Assertions.assertNotNull(charges);
+
+        log.debug("Charges list: {}", charges);
+
+        List<List<String>> data = table.asLists();
+        List<String> headers = data.get(0);
+
+        for (int i = 1; i < data.size(); i++) {
+            List<String> expectedValues = data.get(i);
+            String dueDateExpected = null;
+
+            for (int j = 0; j < headers.size(); j++) {
+                if (headers.get(j).equals("Due Date")) {
+                    dueDateExpected = expectedValues.get(j);
+                    break;
+                }
+            }
+
+            final String filterDueDate = dueDateExpected;
+            List<WorkingCapitalLoanChargeData> filteredCharges = charges.stream()
+                    .filter(charge -> charge.getDueDate() != null && filterDueDate.equals(FORMATTER.format(charge.getDueDate()))).toList();
+
+            List<List<String>> actualValuesList = filteredCharges.stream().map(charge -> fetchValuesOfCharge(headers, charge)).toList();
+
+            List<String> convertedExpectedValues = new ArrayList<>();
+            for (int j = 0; j < headers.size(); j++) {
+                convertedExpectedValues.add(convertToApiCode(headers.get(j), expectedValues.get(j)));
+            }
+
+            boolean containsExpectedValues = actualValuesList.stream()
+                    .anyMatch(actualValues -> actualValues.equals(convertedExpectedValues));
+
+            assertThat(containsExpectedValues).as(
+                    ErrorMessageHelper.wrongValueInLineInChargesTab(String.valueOf(loanId), i, actualValuesList, convertedExpectedValues))
+                    .isTrue();
+        }
+    }
+
+    @Then("Working Capital Loan charge balances has the following data:")
+    public void verifyWorkingCapitalLoanChargeBalances(DataTable table) {
+        Long loanId = getLoanId();
+        Assertions.assertNotNull(loanId);
+
+        final GetWorkingCapitalLoansLoanIdResponse loanResponse = ok(
+                () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
+        Assertions.assertNotNull(loanResponse);
+        Assertions.assertNotNull(loanResponse.getBalance());
+
+        List<List<String>> data = table.asLists();
+        List<String> headers = data.get(0);
+
+        for (int i = 1; i < data.size(); i++) {
+            List<String> expectedValues = data.get(i);
+            List<String> actualValues = fetchChargeBalanceValues(headers, loanResponse.getBalance());
+
+            assertThat(actualValues)
+                    .as(String.format("%nWrong value in Working Capital Loan charge balances of loan %s line %s."
+                            + "%nActual values: %s %nExpected values: %s", loanId, i, actualValues, expectedValues))
+                    .isEqualTo(expectedValues);
+        }
+    }
+
+    private List<String> fetchChargeBalanceValues(final List<String> header, final GetBalance balance) {
+        final List<String> actualValues = new ArrayList<>();
+        for (final String headerName : header) {
+            switch (headerName) {
+                case "Fee Amount" ->
+                    actualValues.add(balance.getFee() == null ? null : new Utils.DoubleFormatter(balance.getFee().doubleValue()).format());
+                case "Fee Outstanding" -> actualValues.add(balance.getFeeOutstanding() == null ? null
+                        : new Utils.DoubleFormatter(balance.getFeeOutstanding().doubleValue()).format());
+                case "Fee Paid" -> actualValues
+                        .add(balance.getFeePaid() == null ? null : new Utils.DoubleFormatter(balance.getFeePaid().doubleValue()).format());
+                case "Penalty Amount" -> actualValues
+                        .add(balance.getPenalty() == null ? null : new Utils.DoubleFormatter(balance.getPenalty().doubleValue()).format());
+                case "Penalty Outstanding" -> actualValues.add(balance.getPenaltyOutstanding() == null ? null
+                        : new Utils.DoubleFormatter(balance.getPenaltyOutstanding().doubleValue()).format());
+                case "Penalty Paid" -> actualValues.add(balance.getPenaltyPaid() == null ? null
+                        : new Utils.DoubleFormatter(balance.getPenaltyPaid().doubleValue()).format());
+                default -> throw new IllegalStateException(String.format("Header name %s cannot be found", headerName));
+            }
+        }
+        return actualValues;
+    }
+
+    @Then("Working Capital Loan has the created charges")
+    public void verifyWorkingCapitalLoanChargesAreCreated() {
+        Long loanId = getLoanId();
+        Assertions.assertNotNull(loanId);
+        List<WorkingCapitalLoanChargeData> responses = ok(
+                () -> fineractClient.workingCapitalLoanCharges().retrieveAllWorkingCapitalLoanChargesByLoanId(loanId));
+        Assertions.assertNotNull(responses);
+        List<Long> loanChargeIds = getLoanChargeIds();
+        for (WorkingCapitalLoanChargeData response : responses) {
+            Assertions.assertTrue(loanChargeIds.contains(response.getId()));
+        }
+        for (Long chargeId : loanChargeIds) {
+            ok(() -> fineractClient.workingCapitalLoanCharges().retrieveWorkingCapitalLoanCharge(loanId, chargeId));
+        }
+    }
+
+    private List<String> fetchValuesOfCharge(final List<String> header, final WorkingCapitalLoanChargeData charge) {
+        final List<String> actualValues = new ArrayList<>();
+        for (final String headerName : header) {
+            switch (headerName) {
+                case "Charge Name" -> actualValues.add(charge.getName());
+                case "Due Date" -> actualValues.add(charge.getDueDate() == null ? null : FORMATTER.format(charge.getDueDate()));
+                case "Amount" -> actualValues
+                        .add(charge.getAmount() == null ? null : new Utils.DoubleFormatter(charge.getAmount().doubleValue()).format());
+                case "Currency" -> actualValues.add(charge.getCurrency() == null ? null : charge.getCurrency().getCode());
+                case "isPenalty" -> actualValues.add(charge.getPenalty() == null ? null : String.valueOf(charge.getPenalty()));
+                case "Charge Time Type" ->
+                    actualValues.add(charge.getChargeTimeType() == null ? null : charge.getChargeTimeType().getCode());
+                case "Charge Calculation Type" ->
+                    actualValues.add(charge.getChargeCalculationType() == null ? null : charge.getChargeCalculationType().getCode());
+                case "Charge Payment mode" ->
+                    actualValues.add(charge.getChargePaymentMode() == null ? null : charge.getChargePaymentMode().getCode());
+                default -> throw new IllegalStateException(String.format("Header name %s cannot be found", headerName));
+            }
+        }
+        return actualValues;
+    }
+
+    private String convertToApiCode(String headerName, String value) {
+        if (value == null || "null".equals(value)) {
+            return null;
+        }
+        return switch (headerName) {
+            case "Charge Time Type" -> convertChargeTimeTypeToCode(value);
+            case "Charge Calculation Type" -> convertChargeCalculationTypeToCode(value);
+            case "Charge Payment mode" -> convertChargePaymentModeToCode(value);
+            default -> value;
+        };
+    }
+
+    private String convertChargeTimeTypeToCode(String value) {
+        return switch (value) {
+            case "Specified due date" -> "chargeTimeType.specifiedDueDate";
+            default -> value;
+        };
+    }
+
+    private String convertChargeCalculationTypeToCode(String value) {
+        return switch (value) {
+            case "Flat" -> "chargeCalculationType.flat";
+            default -> value;
+        };
+    }
+
+    private String convertChargePaymentModeToCode(String value) {
+        return switch (value) {
+            case "Regular" -> "chargepaymentmode.regular";
+            default -> value;
+        };
     }
 
     @Then("Admin retrieves the charge template for Working Capital Loan")
@@ -162,6 +409,28 @@ public class WorkingCapitalChargeStepDef extends AbstractStepDef {
                 chargeTimeTypeName, chargeCalcTypeName, exception.getStatus(), expectedErrorMessage);
     }
 
+    @Then("Trying to add working capital loan charge by loan id and charge id with amount {double} and due date {string} results an error with the following data:")
+    public void tryAddWorkingCapitalLoanChargeWithError(Double amount, String dueDate, DataTable table) {
+        Long loanId = getLoanId();
+        Assertions.assertNotNull(loanId);
+        Long chargeId = getChargeId();
+        Assertions.assertNotNull(chargeId);
+
+        final Map<String, String> expectedData = table.asMaps().get(0);
+        final int expectedHttpCode = Integer.parseInt(expectedData.get("httpCode"));
+        final String expectedErrorMessage = expectedData.get("errorMessage").trim();
+
+        PostLoansLoanIdChargesRequest request = new PostLoansLoanIdChargesRequest() //
+                .chargeId(chargeId).amount(amount).dueDate(dueDate).dateFormat("dd-MM-yyyy").locale("en");
+
+        final CallFailedRuntimeException exception = fail(
+                () -> fineractClient.workingCapitalLoanCharges().createLoanCharge(loanId, request));
+        assertHttpStatus(exception, expectedHttpCode);
+        assertErrorMessage(exception, expectedErrorMessage);
+        log.info("Verified adding WCL charge to loan {} failed with status {} and message: {}", loanId, exception.getStatus(),
+                expectedErrorMessage);
+    }
+
     // Charge API Helpers
     private void createChargeAndStore(final ChargeRequest request) {
         final PostChargesResponse response = ok(() -> fineractClient.charges().createCharge(request));
@@ -180,10 +449,32 @@ public class WorkingCapitalChargeStepDef extends AbstractStepDef {
         return testContext().get(TestContextKey.WORKING_CAPITAL_CHARGE_ID);
     }
 
+    private void addLoanChargeId(Long loanChargeId) {
+        List<Long> loanChargeIds = getLoanChargeIds();
+        if (!loanChargeIds.contains(loanChargeId)) {
+            loanChargeIds.add(loanChargeId);
+        }
+    }
+
+    private List<Long> getLoanChargeIds() {
+        List<Long> ids = testContext().get(TestContextKey.WORKING_CAPITAL_LOAN_CHARGE_IDS);
+        if (ids == null) {
+            ids = new ArrayList<>();
+            testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_CHARGE_IDS, ids);
+        }
+        return ids;
+    }
+
     private ChargeData getChargeTemplate() {
         final ChargeData templateData = testContext().get(TestContextKey.WORKING_CAPITAL_CHARGE_TEMPLATE);
         assertThat(templateData).as("Charge template should not be null").isNotNull();
         return templateData;
+    }
+
+    private Long getLoanId() {
+        PostWorkingCapitalLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        Assertions.assertNotNull(loanResponse);
+        return loanResponse.getLoanId();
     }
 
     // Assertion Helpers

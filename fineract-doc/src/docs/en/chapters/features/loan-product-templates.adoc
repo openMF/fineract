@@ -1,0 +1,70 @@
+= Loan Product Templates
+
+Apache Fineract provides a loan-product API that can be used to create reusable product configurations.
+The JSON files in `examples/loan-products` are directly importable baseline templates for common loan products.
+They contain the required create-loan-product fields and explicit operational defaults that match the standard Fineract loan-product configuration.
+They can be copied, reviewed for a tenant, and submitted to the create-loan-product endpoint.
+After a product is created, it can also be modified in a Mifos user interface connected to the same Fineract tenant.
+
+== Available templates
+
+[cols="1,2,2"]
+|===
+|Template |Purpose |Key repayment configuration
+
+|link:examples/loan-products/flat-interest-monthly.json[`flat-interest-monthly.json`]
+|Monthly microloan-style starting point
+|Flat interest and equal installments
+
+|link:examples/loan-products/declining-balance-monthly.json[`declining-balance-monthly.json`]
+|General-purpose monthly loan
+|Declining-balance interest and equal installments
+
+|link:examples/loan-products/weekly-small-business.json[`weekly-small-business.json`]
+|Short-term business loan
+|Weekly declining-balance installments
+
+|link:examples/loan-products/interest-free-installments.json[`interest-free-installments.json`]
+|Zero-interest lending program
+|Monthly installments with a zero interest rate
+
+|link:examples/loan-products/equal-principal-monthly.json[`equal-principal-monthly.json`]
+|Loan where principal payments remain constant
+|Monthly declining-balance interest and equal principal payments
+|===
+
+== Import a template
+
+The templates are request bodies for `POST /fineract-provider/api/v1/loanproducts`.
+They are API request templates, not database imports, and do not require tenant-specific database changes.
+For example, the following command imports the flat-interest monthly template into a locally running Fineract instance:
+
+[source,bash]
+----
+curl --fail-with-body \
+    --request POST \
+    --url 'https://localhost:8443/fineract-provider/api/v1/loanproducts' \
+    --header 'Authorization: Basic BASE64_ENCODED_USERNAME_AND_PASSWORD' \
+    --header 'Fineract-Platform-TenantId: default' \
+    --header 'Content-Type: application/json' \
+    --data-binary '@fineract-doc/src/docs/en/examples/loan-products/flat-interest-monthly.json'
+----
+
+Replace the authorization value, tenant identifier, and server URL before running the command.
+Each template uses a unique four-character `shortName`, but `name` and `shortName` must also be unique among the products that already exist in the target tenant.
+
+== Review a template before production use
+
+The files are valid baseline API payloads, but no shared template can be production-approved for every financial institution.
+The examples intentionally use `USD`, no-accounting mode (`accountingRule` value `1`), disabled optional features, and the standard transaction-processing strategy so that they do not depend on tenant-specific ledger-account identifiers.
+Review at least the following fields and enable any institution-specific controls before using an imported product in production:
+
+* `name`, `shortName`, and `description`
+* `currencyCode`, `digitsAfterDecimal`, and `inMultiplesOf`
+* `principal`, `minPrincipal`, and `maxPrincipal`
+* `numberOfRepayments`, `repaymentEvery`, and `repaymentFrequencyType`
+* `interestRatePerPeriod`, `interestRateFrequencyType`, `interestType`, and `amortizationType`
+* `accountingRule` and any ledger-account mappings required when accounting is enabled
+* arrears, non-performing asset, recalculation, down-payment, and optional feature settings
+
+Use `GET /fineract-provider/api/v1/loanproducts/template` to retrieve the options available in the target tenant before adding tenant-dependent settings such as funds, charges, accounting mappings, or alternative transaction-processing strategies.
