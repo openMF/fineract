@@ -251,7 +251,8 @@ public class WorkingCapitalLoanCreditBalanceRefundTest {
         AtomicLong loanId = new AtomicLong();
         BusinessDateHelper.runAt(approvedOnDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")), () -> {
             loanId.set(submitAndTrackLoan(new WorkingCapitalLoanApplicationTestBuilder().withClientId(createdClientId)
-                    .withProductId(productId).withPrincipal(principal).withPeriodPaymentRate(new BigDecimal("18")).buildSubmitRequest()));
+                    .withProductId(productId).withPrincipal(principal)
+                    .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT).buildSubmitRequest()));
             loanHelper.approveById(loanId.get(),
                     WorkingCapitalLoanApplicationTestBuilder.buildApproveRequest(approvedOnDate, principal, null));
             loanHelper.disburseById(loanId.get(),

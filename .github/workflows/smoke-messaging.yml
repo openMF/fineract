@@ -13,7 +13,7 @@ jobs:
   smoke-test:
     name: Smoke Test with ${{ matrix.messaging }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -84,7 +84,7 @@ jobs:
         run: ./gradlew --no-daemon --console=plain :integration-tests:cleanTest :integration-tests:test --tests "org.apache.fineract.integrationtests.investor.externalassetowner.InitiateExternalAssetOwnerTransferTest.saleActiveLoanToExternalAssetOwnerAndBuybackADayLater" -PcargoDisabled -x buildJavaSdk
 
       - name: Collect Docker logs
-        if: always()
+        if: failure()
         run: |
           mkdir -p "$DOCKER_LOG_DIR"
           docker ps -a > "$DOCKER_LOG_DIR/docker-ps.txt" 2>&1 || true
@@ -101,13 +101,14 @@ jobs:
           done
 
       - name: Upload Docker logs
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: docker-logs-${{ matrix.messaging }}-attempt-${{ github.run_attempt }}
           path: ci-logs/
           if-no-files-found: ignore
           retention-days: 5
+          compression-level: 9
 
       - name: Clean up
         if: always()

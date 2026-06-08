@@ -29,7 +29,6 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,7 +45,7 @@ import org.apache.fineract.client.models.GetOfficesResponse;
 import org.apache.fineract.client.models.PaymentTypeCreateRequest;
 import org.apache.fineract.infrastructure.bulkimport.constants.LoanConstants;
 import org.apache.fineract.infrastructure.bulkimport.constants.TemplatePopulateImportConstants;
-import org.apache.fineract.integrationtests.bulkimport.importhandler.LocalContentStorageUtil;
+import org.apache.fineract.integrationtests.bulkimport.importhandler.BulkImportOutputTemplateHelper;
 import org.apache.fineract.integrationtests.common.CollateralManagementHelper;
 import org.apache.fineract.integrationtests.common.GroupHelper;
 import org.apache.fineract.integrationtests.common.OfficeHelper;
@@ -58,7 +57,6 @@ import org.apache.fineract.integrationtests.common.funds.FundsResourceHandler;
 import org.apache.fineract.integrationtests.common.loans.LoanProductTestBuilder;
 import org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper;
 import org.apache.fineract.integrationtests.common.organisation.StaffHelper;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -246,17 +244,15 @@ public class LoanImportHandlerTest {
         Thread.sleep(1000);
 
         // check status column of output excel
-        String location = LocalContentStorageUtil.path(loanTransactionHelper.getOutputTemplateLocation(importDocumentId));
-        try (InputStream fileInputStream = Files.newInputStream(Path.of(location))) {
-            Workbook outputworkbook = new HSSFWorkbook(fileInputStream);
+        try (Workbook outputworkbook = BulkImportOutputTemplateHelper.waitForWorkbook(
+                () -> loanTransactionHelper.downloadOutputTemplate(importDocumentId), TemplatePopulateImportConstants.LOANS_SHEET_NAME, 1,
+                LoanConstants.STATUS_COL)) {
             Sheet outputLoanSheet = outputworkbook.getSheet(TemplatePopulateImportConstants.LOANS_SHEET_NAME);
             Row row = outputLoanSheet.getRow(1);
 
-            LOG.info("Output location: {}", location);
             LOG.info("Failure reason column: {}", row.getCell(LoanConstants.FAILURE_REPORT_COL).getStringCellValue());
 
             Assertions.assertEquals("Imported", row.getCell(LoanConstants.STATUS_COL).getStringCellValue());
-            outputworkbook.close();
         }
     }
 }

@@ -36,16 +36,18 @@ public class DiscountFeeAmortizationBusinessStep extends WorkingCapitalLoanCOBBu
 
     @Override
     public WorkingCapitalLoan execute(final WorkingCapitalLoan input) {
-        if (input.getLoanProductRelatedDetails() == null
-                || !MathUtil.isGreaterThanZero(input.getLoanProductRelatedDetails().getDiscount())) {
-            log.debug("Skipping discount fee amortization for WC loan {} - no discount fee", input.getId());
+        final boolean discountPresent = input.getLoanProductRelatedDetails() != null
+                && MathUtil.isGreaterThanZero(input.getLoanProductRelatedDetails().getDiscount());
+        final boolean adjustmentNeeded = input.getBalance() != null
+                && MathUtil.isGreaterThanZero(input.getBalance().getRealizedIncomeFromDiscountFee());
+
+        if (discountPresent || adjustmentNeeded) {
+            final LocalDate businessDate = DateUtils.getBusinessLocalDate();
+            discountFeeAmortizationService.processDiscountFeeAmortization(input, businessDate);
             return input;
         }
 
-        final LocalDate businessDate = DateUtils.getBusinessLocalDate();
-
-        discountFeeAmortizationService.processDiscountFeeAmortization(input, businessDate);
-
+        log.debug("Skipping discount fee amortization for WC loan {} - no discount fee", input.getId());
         return input;
     }
 

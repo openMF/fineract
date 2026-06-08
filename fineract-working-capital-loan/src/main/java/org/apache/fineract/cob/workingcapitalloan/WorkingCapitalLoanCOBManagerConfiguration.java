@@ -41,7 +41,6 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.core.listener.ExecutionContextPromotionListener;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.integration.config.annotation.EnableBatchIntegration;
@@ -79,11 +78,11 @@ public class WorkingCapitalLoanCOBManagerConfiguration {
     }
 
     @Bean(WORKING_CAPITAL_JOB_HUMAN_READABLE_NAME)
-    public Job workingCapitalLoanCOBJob(WorkingCapitalLoanCOBPartitioner workingCapitalLoanCOBPartitioner,
-            ExecutionContextPromotionListener customJobParametersPromotionListener, ApplicationContext applicationContext) {
+    public Job workingCapitalLoanCOBJob(final WorkingCapitalLoanCOBPartitioner workingCapitalLoanCOBPartitioner,
+            final ApplicationContext applicationContext) {
         return new JobBuilder(WORKING_CAPITAL_LOAN_COB_JOB.name(), jobRepository) //
                 .listener(new COBExecutionListenerRunner(applicationContext, WORKING_CAPITAL_LOAN_COB_JOB.name())) //
-                .start(resolveCustomJobParametersForWorkingCapitalStep(customJobParametersPromotionListener)) //
+                .start(resolveCustomJobParametersForWorkingCapitalStep()) //
                 .next(workingCapitalLoanCOBStep(workingCapitalLoanCOBPartitioner)) //
                 .next(unlockProcessedWorkingCapitalLoansStep()) //
                 .incrementer(new RunIdIncrementer()) //
@@ -107,10 +106,9 @@ public class WorkingCapitalLoanCOBManagerConfiguration {
     }
 
     @Bean
-    public Step resolveCustomJobParametersForWorkingCapitalStep(ExecutionContextPromotionListener customJobParametersPromotionListener) {
+    public Step resolveCustomJobParametersForWorkingCapitalStep() {
         return new StepBuilder("Resolve custom job parameters - Step", jobRepository)
-                .tasklet(resolveCustomJobParametersForWorkingCapitalTasklet(), transactionManager)
-                .listener(customJobParametersPromotionListener).build();
+                .tasklet(resolveCustomJobParametersForWorkingCapitalTasklet(), transactionManager).build();
     }
 
     @Bean(WORKING_CAPITAL_LOAN_COB_STEP)

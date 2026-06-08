@@ -47,7 +47,6 @@ dependencies {
 
             'com.jayway.jsonpath:json-path',
 
-            'com.github.spotbugs:spotbugs-annotations',
             'io.swagger.core.v3:swagger-annotations-jakarta',
 
             'org.springdoc:springdoc-openapi-starter-webmvc-ui',
@@ -80,6 +79,7 @@ dependencies {
     }
     implementation 'com.sun.mail:jakarta.mail'
 
+    compileOnly 'com.github.spotbugs:spotbugs-annotations'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.mapstruct:mapstruct-processor'

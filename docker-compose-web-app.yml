@@ -16,6 +16,7 @@
 # under the License.
 #
 
+# FOR TESTING PURPOSES ONLY! NOT SUITABLE FOR PRODUCTION USAGE!
 version: "3.8"
 services:
   # Frontend service
@@ -25,3 +26,4 @@ services:
     restart: always
     ports:
       - 4200:80
+# FOR TESTING PURPOSES ONLY! NOT SUITABLE FOR PRODUCTION USAGE!

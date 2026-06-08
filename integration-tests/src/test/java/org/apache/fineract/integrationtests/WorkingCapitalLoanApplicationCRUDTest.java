@@ -251,7 +251,7 @@ public class WorkingCapitalLoanApplicationCRUDTest {
         final String accountNo = "wcl-get-" + UUID.randomUUID().toString().substring(0, 8);
         final String externalId = "wcl-get-ext-" + UUID.randomUUID().toString().substring(0, 8);
         final BigDecimal principal = BigDecimal.valueOf(6000);
-        final BigDecimal periodPaymentRate = new BigDecimal("18");
+        final BigDecimal periodPaymentRate = WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT;
         final BigDecimal totalPaymentVolume = BigDecimal.valueOf(100000);
         final BigDecimal discount = BigDecimal.valueOf(25);
         final LocalDate submittedOnDate = LocalDate.now(ZoneId.systemDefault());
@@ -393,7 +393,7 @@ public class WorkingCapitalLoanApplicationCRUDTest {
         final String accountNo = "wcl-extget-" + UUID.randomUUID().toString().substring(0, 8);
         final String externalId = "wcl-by-ext-" + UUID.randomUUID().toString().substring(0, 8);
         final BigDecimal principal = BigDecimal.valueOf(7000);
-        final BigDecimal periodPaymentRate = new BigDecimal("18");
+        final BigDecimal periodPaymentRate = WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT;
         final BigDecimal totalPaymentVolume = BigDecimal.valueOf(100000);
         final BigDecimal discount = BigDecimal.ZERO;
         final LocalDate submittedOnDate = LocalDate.now(ZoneId.systemDefault());
@@ -585,7 +585,7 @@ public class WorkingCapitalLoanApplicationCRUDTest {
         final String newAccountNo = "wcl-mod-" + UUID.randomUUID().toString().substring(0, 8);
         final String newExternalId = "wcl-mod-ext-" + UUID.randomUUID().toString().substring(0, 8);
         final BigDecimal principal = BigDecimal.valueOf(9000);
-        final BigDecimal periodPaymentRate = new BigDecimal("18");
+        final BigDecimal periodPaymentRate = WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT;
         final BigDecimal totalPaymentVolume = BigDecimal.valueOf(100000);
         final BigDecimal discount = BigDecimal.valueOf(100);
         final LocalDate submittedOnDate = LocalDate.now(ZoneId.systemDefault());
@@ -656,7 +656,7 @@ public class WorkingCapitalLoanApplicationCRUDTest {
         final String accountNo = "wcl-" + UUID.randomUUID().toString().substring(0, 8);
         final String externalId = "wcl-ext-" + UUID.randomUUID().toString().substring(0, 8);
         final BigDecimal principal = BigDecimal.valueOf(7500);
-        final BigDecimal periodPaymentRate = new BigDecimal("18");
+        final BigDecimal periodPaymentRate = WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT;
         final BigDecimal totalPaymentVolume = BigDecimal.valueOf(8250);
         final BigDecimal discount = BigDecimal.valueOf(50);
         final LocalDate submittedOnDate = LocalDate.now(ZoneId.systemDefault());
@@ -712,7 +712,7 @@ public class WorkingCapitalLoanApplicationCRUDTest {
         final String accountNo = "wcl-paged-" + UUID.randomUUID().toString().substring(0, 8);
         final String externalId = "wcl-paged-ext-" + UUID.randomUUID().toString().substring(0, 8);
         final BigDecimal principal = BigDecimal.valueOf(5500);
-        final BigDecimal periodPaymentRate = new BigDecimal("18");
+        final BigDecimal periodPaymentRate = WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT;
         final BigDecimal totalPaymentVolume = BigDecimal.valueOf(100000);
         final BigDecimal discount = BigDecimal.ZERO;
         final LocalDate submittedOnDate = LocalDate.now(ZoneId.systemDefault());
@@ -817,7 +817,7 @@ public class WorkingCapitalLoanApplicationCRUDTest {
                 .withClientId(clientId) //
                 .withProductId(productId) //
                 .withPrincipal(BigDecimal.valueOf(5000)) //
-                .withPeriodPaymentRate(new BigDecimal("18")) //
+                .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
                 .withTotalPaymentVolume(BigDecimal.valueOf(100000)) //
                 .withDiscount(discountProposed) //
                 .buildSubmitRequest());
@@ -959,9 +959,9 @@ public class WorkingCapitalLoanApplicationCRUDTest {
                 .withPrincipalAmountMin(BigDecimal.valueOf(1000)) //
                 .withPrincipalAmountMax(BigDecimal.valueOf(50000)) //
                 .withPrincipalAmountDefault(BigDecimal.valueOf(10000)) //
-                .withMinPeriodPaymentRate(new BigDecimal("18")) //
-                .withMaxPeriodPaymentRate(BigDecimal.valueOf(20)) //
-                .withPeriodPaymentRate(new BigDecimal("18")) //
+                .withMinPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_MIN_PERIOD_PAYMENT_RATE_PERCENT) //
+                .withMaxPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_MAX_PERIOD_PAYMENT_RATE_PERCENT) //
+                .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
                 .withDelinquencyBucketId(delinquencyBucketId) //
                 .withAllowAttributeOverrides(Map.of(//
                         "delinquencyBucketClassification", Boolean.TRUE, //
@@ -986,9 +986,9 @@ public class WorkingCapitalLoanApplicationCRUDTest {
                 .withPrincipalAmountMin(BigDecimal.valueOf(1000)) //
                 .withPrincipalAmountMax(BigDecimal.valueOf(50000)) //
                 .withPrincipalAmountDefault(BigDecimal.valueOf(10000)) //
-                .withMinPeriodPaymentRate(new BigDecimal("18")) //
-                .withMaxPeriodPaymentRate(BigDecimal.valueOf(20)) //
-                .withPeriodPaymentRate(new BigDecimal("18")) //
+                .withMinPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_MIN_PERIOD_PAYMENT_RATE_PERCENT) //
+                .withMaxPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_MAX_PERIOD_PAYMENT_RATE_PERCENT) //
+                .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
                 .withDelinquencyBucketId(delinquencyBucketId) //
                 .withRepaymentEvery(repaymentEvery) //
                 .withRepaymentFrequencyType(repaymentFrequencyType) //

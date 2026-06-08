@@ -58,6 +58,7 @@ dependencies {
     testImplementation 'org.apache.groovy:groovy-json'
     testImplementation 'org.awaitility:awaitility'
 
+    testCompileOnly 'com.github.spotbugs:spotbugs-annotations'
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.assertj:assertj-core'

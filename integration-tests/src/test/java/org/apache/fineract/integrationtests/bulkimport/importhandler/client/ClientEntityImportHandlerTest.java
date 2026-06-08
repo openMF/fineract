@@ -27,7 +27,6 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,13 +37,12 @@ import java.util.Locale;
 import org.apache.fineract.infrastructure.bulkimport.constants.ClientEntityConstants;
 import org.apache.fineract.infrastructure.bulkimport.constants.TemplatePopulateImportConstants;
 import org.apache.fineract.infrastructure.bulkimport.data.GlobalEntityType;
-import org.apache.fineract.integrationtests.bulkimport.importhandler.LocalContentStorageUtil;
+import org.apache.fineract.integrationtests.bulkimport.importhandler.BulkImportOutputTemplateHelper;
 import org.apache.fineract.integrationtests.common.ClientHelper;
 import org.apache.fineract.integrationtests.common.OfficeHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.common.organisation.StaffHelper;
 import org.apache.fineract.integrationtests.common.system.CodeHelper;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -142,21 +140,16 @@ public class ClientEntityImportHandlerTest {
         file.delete();
         Assertions.assertNotNull(importDocumentId);
 
-        // Wait for the creation of output excel
-        Thread.sleep(1000);
-
         // check status column of output excel
-        String location = LocalContentStorageUtil.path(clientHelper.getOutputTemplateLocation(importDocumentId));
-        try (InputStream fileInputStream = Files.newInputStream(Path.of(location))) {
-            Workbook outputWorkbook = new HSSFWorkbook(fileInputStream);
+        try (Workbook outputWorkbook = BulkImportOutputTemplateHelper.waitForWorkbook(
+                () -> clientHelper.downloadOutputTemplate(importDocumentId), TemplatePopulateImportConstants.CLIENT_ENTITY_SHEET_NAME, 1,
+                ClientEntityConstants.STATUS_COL)) {
             Sheet outputClientEntitySheet = outputWorkbook.getSheet(TemplatePopulateImportConstants.CLIENT_ENTITY_SHEET_NAME);
             Row row = outputClientEntitySheet.getRow(1);
 
-            LOG.info("Output location: {}", location);
             LOG.info("Failure reason column: {}", row.getCell(ClientEntityConstants.STATUS_COL).getStringCellValue());
 
             Assertions.assertEquals("Imported", row.getCell(ClientEntityConstants.STATUS_COL).getStringCellValue());
-            outputWorkbook.close();
         }
     }
 }

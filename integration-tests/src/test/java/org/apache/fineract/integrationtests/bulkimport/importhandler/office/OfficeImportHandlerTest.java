@@ -38,7 +38,7 @@ import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.infrastructure.bulkimport.constants.OfficeConstants;
 import org.apache.fineract.infrastructure.bulkimport.constants.TemplatePopulateImportConstants;
-import org.apache.fineract.integrationtests.bulkimport.importhandler.LocalContentStorageUtil;
+import org.apache.fineract.integrationtests.bulkimport.importhandler.BulkImportOutputTemplateHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
@@ -98,17 +98,14 @@ public class OfficeImportHandlerTest {
         Thread.sleep(1000);
 
         // check status column of output excel
-        String location = LocalContentStorageUtil.path(getOutputTemplateLocation(importDocumentId));
-        try (InputStream fileInputStream = Files.newInputStream(Path.of(location))) {
-            Workbook outputWorkbook = new HSSFWorkbook(fileInputStream);
+        try (Workbook outputWorkbook = BulkImportOutputTemplateHelper.waitForWorkbook(() -> downloadOutputTemplate(importDocumentId),
+                TemplatePopulateImportConstants.OFFICE_SHEET_NAME, 1, OfficeConstants.STATUS_COL)) {
             Sheet officeSheet = outputWorkbook.getSheet(TemplatePopulateImportConstants.OFFICE_SHEET_NAME);
             Row row = officeSheet.getRow(1);
 
-            log.info("Output location: {}", location);
             log.info("Failure reason column: {}", row.getCell(OfficeConstants.STATUS_COL).getStringCellValue());
 
             Assertions.assertEquals("Imported", row.getCell(OfficeConstants.STATUS_COL).getStringCellValue());
-            outputWorkbook.close();
         }
     }
 
@@ -126,9 +123,9 @@ public class OfficeImportHandlerTest {
                 null, file, "en", "dd MMMM yyyy");
     }
 
-    private String getOutputTemplateLocation(final String importDocumentId) {
-        requestSpec.header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
-        return Utils.performServerOutputTemplateLocationGet(requestSpec, responseSpec,
-                "/fineract-provider/api/v1/imports/getOutputTemplateLocation" + "?" + Utils.TENANT_IDENTIFIER, importDocumentId);
+    private byte[] downloadOutputTemplate(final String importDocumentId) {
+        requestSpec.header(HttpHeaders.CONTENT_TYPE, "application/vnd.ms-excel");
+        return Utils.performServerOutputTemplateDownloadGet(requestSpec, responseSpec,
+                "/fineract-provider/api/v1/imports/downloadOutputTemplate" + "?" + Utils.TENANT_IDENTIFIER, importDocumentId);
     }
 }

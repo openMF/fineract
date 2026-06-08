@@ -39,9 +39,9 @@ dependencies {
 
             'org.apache.commons:commons-lang3',
 
-            'com.github.spotbugs:spotbugs-annotations',
             'org.mapstruct:mapstruct',
             )
+    compileOnly 'com.github.spotbugs:spotbugs-annotations'
     implementation ('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'com.jayway.jsonpath', module: 'json-path'
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'

@@ -1,4 +1,4 @@
-name: Fineract Cargo & Unit- & Integration tests - MySQL
+name: Fineract Docker & Unit- & Integration tests - MySQL
 
 on:
   workflow_call:
@@ -13,7 +13,7 @@ jobs:
   test:
     name: MySQL Tests (Shard ${{ matrix.shard_index }} of ${{ matrix.total_shards }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     strategy:
       fail-fast: false
@@ -22,32 +22,19 @@ jobs:
         shard_index: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ]
         total_shards: [ 15 ]
 
-    services:
-      mysql:
-        image: mysql:9.7
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_ROOT_PASSWORD: mysql
-        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=12
-
-      mock-oauth2-server:
-        image: ghcr.io/navikt/mock-oauth2-server:3.0.3
-        ports:
-          - 9000:9000
-        env:
-          SERVER_PORT: 9000
-          JSON_CONFIG: '{ "interactiveLogin": true, "httpServer": "NettyWrapper", "tokenCallbacks": [ { "issuerId": "auth/realms/fineract", "tokenExpiry": 120, "requestMappings": [{ "requestParam": "scope", "match": "fineract", "claims": { "sub": "mifos", "scope": [ "test" ] } } ] } ] }'
-
     env:
       TZ: Asia/Kolkata
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+      IMAGE_NAME: fineract
+      COMPOSE_FILE: docker-compose-mysql-test.yml
+      DOCKER_LOG_DIR: ci-logs/mysql-shard-${{ matrix.shard_index }}
       AWS_ENDPOINT_URL: http://localhost:4566
       AWS_ACCESS_KEY_ID: localstack
       AWS_SECRET_ACCESS_KEY: localstack
       AWS_REGION: us-east-1
       FINERACT_REPORT_EXPORT_S3_ENABLED: true
       FINERACT_REPORT_EXPORT_S3_BUCKET_NAME: fineract-reports
+      FINERACT_TEST_EXTERNAL_HOST: host.docker.internal
 
     steps:
       - name: Set up JDK 21
@@ -70,22 +57,29 @@ jobs:
         with:
           validate-wrappers: true
 
-      - name: Verify MySQL connection
-        run: |
-          while ! mysqladmin ping -h"127.0.0.1" -P3306 ; do
-            sleep 1
-          done
+      - name: Build the image
+        run: ./gradlew --no-daemon --console=plain :fineract-provider:jibDockerBuild -Djib.to.image=$IMAGE_NAME -x test -x cucumber -x buildJavaSdk
 
-      - name: Initialise databases
-        run: |
-          ./gradlew --no-daemon -q createMySQLDB -PdbName=fineract_tenants -x buildJavaSdk
-          ./gradlew --no-daemon -q createMySQLDB -PdbName=fineract_default -x buildJavaSdk
+      - name: Prepare database driver plugins
+        run: ./gradlew --no-daemon --console=plain :fineract-provider:copyDatabaseDriverPlugins
 
-      - name: Start LocalStack
+      - name: Start dependencies
+        run: docker compose -f "$COMPOSE_FILE" up -d db localstack mock-oauth2-server
+
+      - name: Initialise LocalStack
         run: |
-          docker run -d --name localstack -p 4566:4566 -p 4510-4559:4510-4559 localstack/localstack:2.1
-          sleep 10
-          docker exec localstack awslocal s3api create-bucket --bucket fineract-reports
+          timeout 120 bash -c 'until docker compose -f "$COMPOSE_FILE" exec -T localstack awslocal s3api head-bucket --bucket fineract-reports >/dev/null 2>&1 || docker compose -f "$COMPOSE_FILE" exec -T localstack awslocal s3api create-bucket --bucket fineract-reports; do
+            sleep 5
+          done'
+
+      - name: Start Fineract
+        run: docker compose -f "$COMPOSE_FILE" up -d fineract
+
+      - name: Check the stack
+        run: docker ps
+
+      - name: Wait for Fineract to be ready
+        run: curl -f -k --retry 60 --retry-all-errors --connect-timeout 30 --retry-delay 30 https://localhost:8443/fineract-provider/actuator/health
 
       - name: Generate test class list
         run: |
@@ -97,25 +91,88 @@ jobs:
         run: |
           set -e  # Fail the script if any command fails
           FAILED=0
+          FINERACT_AUTH_MODE=basic
+
+          wait_for_fineract() {
+            curl -f -k --retry 60 --retry-all-errors --connect-timeout 30 --retry-delay 30 https://localhost:8443/fineract-provider/actuator/health
+          }
+
+          configure_sms_gateway_host() {
+            docker compose -f "$COMPOSE_FILE" exec -T db sh -lc 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" fineract_default -e "UPDATE c_external_service_properties SET value = '\''host.docker.internal'\'' WHERE name = '\''host_name'\'' AND external_service_id = (SELECT id FROM c_external_service WHERE name = '\''MESSAGE_GATEWAY'\'')"'
+          }
+
+          configure_twofactor_smtp_host() {
+            docker compose -f "$COMPOSE_FILE" exec -T db sh -lc 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" fineract_default -e "UPDATE c_external_service_properties SET value = '\''host.docker.internal'\'' WHERE name = '\''host'\'' AND external_service_id = (SELECT id FROM c_external_service WHERE name = '\''SMTP_Email_Account'\'')"'
+          }
+
+          switch_fineract_auth_mode() {
+            local module="$1"
+            local target_auth_mode="basic"
+            local compose_args=(-f "$COMPOSE_FILE")
+
+            if [ "$module" = ":oauth2-tests" ]; then
+              target_auth_mode="oauth2"
+              compose_args=(-f "$COMPOSE_FILE" -f docker-compose-oauth2-test.yml)
+            elif [ "$module" = ":twofactor-tests" ]; then
+              target_auth_mode="twofactor"
+              compose_args=(-f "$COMPOSE_FILE" -f docker-compose-twofactor-test.yml)
+            fi
+
+            if [ "$FINERACT_AUTH_MODE" != "$target_auth_mode" ]; then
+              echo "Switching Fineract auth mode to $target_auth_mode for $module"
+              docker compose "${compose_args[@]}" up -d --force-recreate fineract
+              wait_for_fineract
+              FINERACT_AUTH_MODE="$target_auth_mode"
+            fi
+
+            if [ "$target_auth_mode" = "twofactor" ]; then
+              configure_twofactor_smtp_host
+            fi
+          }
+
+          configure_sms_gateway_host
 
           echo "Grouping test classes by module..."
           declare -A module_tests
+          declare -A module_seen
+          module_order=()
 
           while IFS=, read -r module class; do
+            if [ -z "$module" ] || [ -z "$class" ]; then
+              continue
+            fi
+            if [ -z "${module_seen[$module]}" ]; then
+              module_seen["$module"]=1
+              module_order+=("$module")
+            fi
             module_tests["$module"]+="$class "
           done < "shard-tests_${{ matrix.shard_index }}.txt"
 
-          for module in "${!module_tests[@]}"; do
+          ordered_modules=()
+          for module in "${module_order[@]}"; do
+            if [ "$module" != ":oauth2-tests" ] && [ "$module" != ":twofactor-tests" ]; then
+              ordered_modules+=("$module")
+            fi
+          done
+          for module in ":oauth2-tests" ":twofactor-tests"; do
+            if [ -n "${module_tests[$module]}" ]; then
+              ordered_modules+=("$module")
+            fi
+          done
+
+          for module in "${ordered_modules[@]}"; do
             echo "::group::Running tests in $module"
             for class in ${module_tests[$module]}; do
               echo "  - $class"
             done
 
+            switch_fineract_auth_mode "$module"
+
             # Build test args
             test_args=$(for class in ${module_tests[$module]}; do echo --tests "$class"; done | xargs)
 
             # Run test task for this module
-            if ! ./gradlew --no-daemon "$module:test" $test_args -PdbType=mysql -x checkstyleJmh -x checkstyleMain -x checkstyleTest -x spotlessCheck -x spotlessApply -x spotbugsMain -x spotbugsTest -x javadoc -x javadocJar -x modernizer -x buildJavaSdk ; then
+            if ! ./gradlew --no-daemon "$module:test" $test_args -PcargoDisabled -x checkstyleJmh -x checkstyleMain -x checkstyleTest -x spotlessCheck -x spotlessApply -x spotbugsMain -x spotbugsTest -x javadoc -x javadocJar -x modernizer -x buildJavaSdk ; then
               echo "::error::Tests failed in module $module"
               FAILED=1
             fi
@@ -129,17 +186,42 @@ jobs:
           fi
 
       - name: Archive test results
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: test-results-mysql-shard-${{ matrix.shard_index }}-attempt-${{ github.run_attempt }}
           path: '**/build/reports/'
           retention-days: 5
+          compression-level: 9
+
+      - name: Collect Docker logs
+        if: always()
+        run: |
+          mkdir -p "$DOCKER_LOG_DIR"
+          docker ps -a > "$DOCKER_LOG_DIR/docker-ps.txt" 2>&1 || true
+          docker compose -f "$COMPOSE_FILE" ps --all > "$DOCKER_LOG_DIR/docker-compose-ps.txt" 2>&1 || true
+          docker compose -f "$COMPOSE_FILE" logs --no-color --timestamps > "$DOCKER_LOG_DIR/docker-compose.log" 2>&1 || true
+          docker stats --no-stream > "$DOCKER_LOG_DIR/docker-stats.txt" 2>&1 || true
+
+          docker compose -f "$COMPOSE_FILE" ps -q | while read -r container_id; do
+            [ -n "$container_id" ] || continue
+            container_name="$(docker inspect --format '{{.Name}}' "$container_id" 2>/dev/null | sed 's#^/##; s#[^A-Za-z0-9_.-]#_#g')"
+            [ -n "$container_name" ] || container_name="$container_id"
+            docker logs --timestamps "$container_id" > "$DOCKER_LOG_DIR/${container_name}.log" 2>&1 || true
+            docker inspect "$container_id" > "$DOCKER_LOG_DIR/${container_name}.inspect.json" 2>&1 || true
+          done
 
       - name: Archive server logs
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: server-logs-mysql-shard-${{ matrix.shard_index }}-attempt-${{ github.run_attempt }}
-          path: '**/build/cargo/'
+          path: |
+            ci-logs/
+            build/fineract/logs/
           retention-days: 5
+          compression-level: 9
+
+      - name: Clean up
+        if: always()
+        run: docker compose -f "$COMPOSE_FILE" down -v

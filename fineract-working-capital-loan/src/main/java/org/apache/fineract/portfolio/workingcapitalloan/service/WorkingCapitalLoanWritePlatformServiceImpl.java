@@ -566,6 +566,11 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
         amortizationScheduleWriteService.applyDiscountFeeAdjustment(loan, transactionDate);
         updateBalanceForDiscountChange(loan, amount, true);
+
+        handleStateChanges(loan, transactionDate);
+        triggerInlineAmortizationIfLoanClosed(loan, transactionDate);
+        changes.put("status", loan.getLoanStatus());
+
         loanRepository.save(loan);
 
         final String noteText = command.stringValueOfParameterNamed(WorkingCapitalLoanConstants.noteParamName);
@@ -684,7 +689,10 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
                 && loan.getLoanProduct().getAccountingRule().isCashBased()) {
             final BigDecimal discount = loan.getLoanProductRelatedDetails() != null ? loan.getLoanProductRelatedDetails().getDiscount()
                     : null;
-            if (MathUtil.isGreaterThanZero(discount)) {
+            final boolean adjustmentNeeded = loan.getBalance() != null
+                    && MathUtil.isGreaterThanZero(loan.getBalance().getRealizedIncomeFromDiscountFee());
+
+            if (MathUtil.isGreaterThanZero(discount) || adjustmentNeeded) {
                 discountFeeAmortizationService.processDiscountFeeAmortization(loan, transactionDate);
             }
         }
@@ -868,11 +876,20 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         if (isAdjustment) {
             balance.setTotalDiscountFeeAdjustment(balance.getTotalDiscountFeeAdjustment().add(discountAmount));
             balance.setPrincipal(balance.getPrincipal().subtract(discountAmount));
+
+            final BigDecimal diff = balance.getPrincipal().subtract(balance.getPrincipalPaid());
+            if (MathUtil.isLessThanOrEqualZero(diff)) {
+                balance.setPrincipalPaid(balance.getPrincipal());
+                if (MathUtil.isLessThanZero(diff)) {
+                    balance.setOverpaymentAmount(balance.getOverpaymentAmount().add(diff.negate()));
+                } else {
+                    balance.setOverpaymentAmount(BigDecimal.ZERO);
+                }
+            }
         } else {
             balance.setTotalDiscountFee(balance.getTotalDiscountFee().add(discountAmount));
             balance.setPrincipal(balance.getPrincipal().add(discountAmount));
         }
-        balance.setOverpaymentAmount(BigDecimal.ZERO);
         this.balanceRepository.saveAndFlush(balance);
     }
 
@@ -948,8 +965,9 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
                 continue;
             }
             if (txn.getTypeOf() != LoanTransactionType.DISBURSEMENT && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE
+                    && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE_ADJUSTMENT
                     && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE_AMORTIZATION
-                    && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE_ADJUSTMENT) {
+                    && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE_AMORTIZATION_ADJUSTMENT) {
                 throw new PlatformApiDataValidationException("validation.msg.wc.loan.undo.disbursal.not.allowed",
                         "Undo disbursal is not allowed when there are other monetary transactions on the loan", "loanId");
             }

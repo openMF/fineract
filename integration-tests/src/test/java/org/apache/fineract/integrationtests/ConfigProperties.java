@@ -30,6 +30,11 @@ public class ConfigProperties {
         public static final String TENANT = getValueFromEnvOrDefault("BACKEND_TENANT", "default");
     }
 
+    public static class ExternalServices {
+
+        public static final String HOST = getValueFromEnvOrDefault("FINERACT_TEST_EXTERNAL_HOST", "localhost");
+    }
+
     private static String getValueFromEnvOrDefault(final String key, final String defaultValue) {
         return System.getenv(key) == null ? defaultValue : System.getenv(key);
     }

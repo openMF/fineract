@@ -190,6 +190,18 @@ dependencies {
     driver 'com.mysql:mysql-connector-j'
 }
 
+tasks.register('copyDatabaseDriverPlugins', Copy) {
+    description = 'Copies configured JDBC drivers into the Docker plugin directory.'
+
+    from {
+        configurations.driver.resolvedConfiguration.resolvedArtifacts.findAll {
+            it.moduleVersion.id.group != 'org.postgresql'
+        }.collect { it.file }
+    }
+
+    into rootProject.layout.buildDirectory.dir('fineract/plugins')
+}
+
 URLClassLoader loader = GroovyObject.class.classLoader
 configurations.driver.each {File file ->
     loader.addURL(file.toURL())
@@ -271,11 +283,6 @@ bootRun {
     jvmArgs = [
             "-Dspring.output.ansi.enabled=ALWAYS"
     ]
-
-    dependencies {
-        implementation 'org.mariadb.jdbc:mariadb-java-client'
-        implementation 'org.postgresql:postgresql'
-    }
 }
 
 springBoot {
@@ -328,7 +335,6 @@ jib {
     allowInsecureRegistries = true
 
     dependencies {
-        implementation 'org.mariadb.jdbc:mariadb-java-client'
         implementation 'org.postgresql:postgresql'
     }
 }

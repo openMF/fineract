@@ -12,9 +12,17 @@ permissions:
   contents: read
 jobs:
   build:
-    if: ${{ github.event_name == 'push' && (github.ref_name == 'develop' || startsWith(github.ref_name, '1.')) }}
+    if: >-
+      ${{
+        github.event_name == 'push' &&
+        (
+          github.ref_name == 'develop' ||
+          startsWith(github.ref_name, 'release/') ||
+          startsWith(github.ref_name, '1.')
+        )
+      }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
     steps:

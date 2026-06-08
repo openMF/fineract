@@ -40,7 +40,6 @@ dependencies {
 
             'org.apache.commons:commons-lang3',
 
-            'com.github.spotbugs:spotbugs-annotations',
             'io.swagger.core.v3:swagger-annotations-jakarta',
 
             'org.mapstruct:mapstruct',
@@ -55,6 +54,7 @@ dependencies {
     implementation('org.apache.tika:tika-parser-microsoft-module') {
         exclude group: 'org.apache.poi', module: 'poi-ooxml-full'
     }
+    compileOnly 'com.github.spotbugs:spotbugs-annotations'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.mapstruct:mapstruct-processor'

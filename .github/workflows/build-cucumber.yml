@@ -12,7 +12,7 @@ permissions:
 jobs:
   cucumber:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     env:
       TZ: Asia/Kolkata
@@ -43,18 +43,20 @@ jobs:
         run: ./gradlew --no-daemon cucumber -x :fineract-e2e-tests-runner:cucumber -x checkstyleJmh -x checkstyleMain -x checkstyleTest -x spotlessCheck -x spotlessApply -x spotbugsMain -x spotbugsTest -x javadoc -x javadocJar -x modernizer -x buildJavaSdk
 
       - name: Archive test results
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: test-results-cucumber
           path: '**/build/reports/'
           if-no-files-found: ignore
           retention-days: 5
+          compression-level: 9
 
       - name: Archive server logs
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: server-logs-cucumber
           path: '**/build/cargo/'
           retention-days: 5
+          compression-level: 9

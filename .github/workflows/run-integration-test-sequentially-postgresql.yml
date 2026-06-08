@@ -9,7 +9,15 @@ permissions:
   contents: read
 jobs:
   build:
-    if: ${{ github.event_name == 'push' && github.ref_name == 'develop' }}
+    if: >-
+      ${{
+        github.event_name == 'push' &&
+        (
+          github.ref_name == 'develop' ||
+          startsWith(github.ref_name, 'release/') ||
+          startsWith(github.ref_name, '1.')
+        )
+      }}
     runs-on: ubuntu-24.04
     timeout-minutes: 180
 
@@ -84,22 +92,24 @@ jobs:
           ./gradlew --no-daemon --console=plain :twofactor-tests:test -PdbType=postgresql -x buildJavaSdk
           ./gradlew --no-daemon --console=plain :oauth2-tests:test -PdbType=postgresql -x buildJavaSdk
       - name: Archive test results
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: test-results
           retention-days: 5
+          compression-level: 9
           path: |
             build/reports/
             integration-tests/build/reports/
             twofactor-tests/build/reports/
             oauth2-tests/build/reports/
       - name: Archive server logs
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: server-logs
           retention-days: 5
+          compression-level: 9
           path: |
             integration-tests/build/cargo/
             twofactor-tests/build/cargo/

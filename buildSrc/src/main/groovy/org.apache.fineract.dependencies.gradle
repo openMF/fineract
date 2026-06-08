@@ -188,8 +188,6 @@ dependencyManagement {
             exclude 'io.swagger.core.v3:swagger-core'
         }
 
-        dependency 'com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.28.3'
-
         dependency ('org.apache.activemq:activemq-client:6.2.5') {
             exclude 'javax.annotation:javax.annotation-api'
         }

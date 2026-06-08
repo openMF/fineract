@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
+import com.icegreen.greenmail.util.ServerSetup;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -61,9 +62,10 @@ public class TwoFactorAuthenticationTest {
     public static final String TENANT_IDENTIFIER = TENANT_PARAM_NAME + '=' + DEFAULT_TENANT;
     private static final String LOGIN_URL = "/fineract-provider/api/v1/authentication?" + TENANT_IDENTIFIER;
     private static final String HEALTH_URL = "/fineract-provider/actuator/health";
+    private static final ServerSetup SMTP_SETUP = ServerSetupTest.SMTP.createCopy("0.0.0.0");
 
     @RegisterExtension
-    static GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.SMTP)
+    static GreenMailExtension greenMail = new GreenMailExtension(SMTP_SETUP)
             .withConfiguration(GreenMailConfiguration.aConfig().withUser("support@cloudmicrofinance.com", "support81"))
             .withPerMethodLifecycle(true);
 
@@ -191,57 +193,57 @@ public class TwoFactorAuthenticationTest {
                 "/fineract-provider/api/v1/twofactor/configure?" + TENANT_IDENTIFIER, "");
         assertEquals(json.get("otp-token-length"), token.length());
 
-        // Update OTP token length
-        performServerPut(requestSpecWithTFA, responseSpec, "/fineract-provider/api/v1/twofactor/configure?" + TENANT_IDENTIFIER,
-                "{\"otp-token-length\": 10 }", "");
+        try {
+            // Update OTP token length
+            performServerPut(requestSpecWithTFA, responseSpec, "/fineract-provider/api/v1/twofactor/configure?" + TENANT_IDENTIFIER,
+                    "{\"otp-token-length\": 10 }", "");
 
-        // Invalidate token for re-login
-        performServerPost(requestSpecWithTFA, responseSpec, "/fineract-provider/api/v1/twofactor/invalidate?" + TENANT_IDENTIFIER,
-                "{ \"token\": \"" + tfaToken + "\" }", "");
+            // Login again
+            performServerPost(requestSpec, responseSpec,
+                    "/fineract-provider/api/v1/twofactor?deliveryMethod=email&extendedToken=false&" + TENANT_IDENTIFIER, "", "");
+            assertEquals(2, greenMail.getReceivedMessages().length);
 
-        // Login again
-        performServerPost(requestSpec, responseSpec,
-                "/fineract-provider/api/v1/twofactor?deliveryMethod=email&extendedToken=false&" + TENANT_IDENTIFIER, "", "");
-        assertEquals(2, greenMail.getReceivedMessages().length);
+            Matcher m2 = p.matcher((CharSequence) greenMail.getReceivedMessages()[1].getContent());
 
-        Matcher m2 = p.matcher((CharSequence) greenMail.getReceivedMessages()[1].getContent());
+            String token2 = null;
 
-        String token2 = null;
+            while (m2.find()) {
+                token2 = m2.group(1);
+            }
 
-        while (m2.find()) {
-            token2 = m2.group(1);
+            assertNotNull(token2);
+
+            // Check that the configuration has worked and length is now 10
+            assertEquals(10, token2.length());
+
+            tfaToken = performServerPost(requestSpec, responseSpec,
+                    "/fineract-provider/api/v1/twofactor/validate?token=" + token2 + "&" + TENANT_IDENTIFIER, "", "token");
+            assertNotNull(tfaToken);
+
+            requestSpecWithTFA = new RequestSpecBuilder() //
+                    .setContentType(ContentType.JSON) //
+                    .addHeader("Fineract-Platform-TFA-Token", tfaToken) //
+                    .addHeader("Authorization", "Basic " + basicAuthenticationKey) //
+                    .build();
+
+            // Get the configuration and check one of the values (OTP token length)
+            json = performServerGet(requestSpecWithTFA, responseSpec, "/fineract-provider/api/v1/twofactor/configure?" + TENANT_IDENTIFIER,
+                    "");
+            assertEquals(json.get("otp-token-length"), token2.length());
+        } finally {
+            // Update OTP token length back to original value
+            performServerPut(requestSpecWithTFA, responseSpec, "/fineract-provider/api/v1/twofactor/configure?" + TENANT_IDENTIFIER,
+                    "{\"otp-token-length\": " + token.length() + "}", "");
+
+            // Check that configuration has been reset
+            json = performServerGet(requestSpecWithTFA, responseSpec, "/fineract-provider/api/v1/twofactor/configure?" + TENANT_IDENTIFIER,
+                    "");
+            assertEquals(json.get("otp-token-length"), token.length());
+
+            // Invalidate token for re-login
+            performServerPost(requestSpecWithTFA, responseSpec, "/fineract-provider/api/v1/twofactor/invalidate?" + TENANT_IDENTIFIER,
+                    "{ \"token\": \"" + tfaToken + "\" }", "");
         }
-
-        assertNotNull(token2);
-
-        // Check that the configuration has worked and length is now 10
-        assertEquals(10, token2.length());
-
-        tfaToken = performServerPost(requestSpec, responseSpec,
-                "/fineract-provider/api/v1/twofactor/validate?token=" + token2 + "&" + TENANT_IDENTIFIER, "", "token");
-        assertNotNull(tfaToken);
-
-        requestSpecWithTFA = new RequestSpecBuilder() //
-                .setContentType(ContentType.JSON) //
-                .addHeader("Fineract-Platform-TFA-Token", tfaToken) //
-                .addHeader("Authorization", "Basic " + basicAuthenticationKey) //
-                .build();
-
-        // Get the configuration and check one of the values (OTP token length)
-        json = performServerGet(requestSpecWithTFA, responseSpec, "/fineract-provider/api/v1/twofactor/configure?" + TENANT_IDENTIFIER, "");
-        assertEquals(json.get("otp-token-length"), token2.length());
-
-        // Update OTP token length back to original value
-        performServerPut(requestSpecWithTFA, responseSpec, "/fineract-provider/api/v1/twofactor/configure?" + TENANT_IDENTIFIER,
-                "{\"otp-token-length\": " + token.length() + "}", "");
-
-        // Check that configuration has been reset
-        json = performServerGet(requestSpecWithTFA, responseSpec, "/fineract-provider/api/v1/twofactor/configure?" + TENANT_IDENTIFIER, "");
-        assertEquals(json.get("otp-token-length"), token.length());
-
-        // Invalidate token for re-login
-        performServerPost(requestSpecWithTFA, responseSpec, "/fineract-provider/api/v1/twofactor/invalidate?" + TENANT_IDENTIFIER,
-                "{ \"token\": \"" + tfaToken + "\" }", "");
     }
 
     private static void initializeRestAssured() {
@@ -252,11 +254,10 @@ public class TwoFactorAuthenticationTest {
     }
 
     private static void awaitSpringBootActuatorHealthyUp() throws InterruptedException {
-        int attempt = 0;
-        final int max_attempts = 10;
+        final int maxAttempts = 10;
         Response response = null;
 
-        do {
+        for (int attempt = 0; attempt < maxAttempts; attempt++) {
             try {
                 response = RestAssured.get(HEALTH_URL);
 
@@ -268,9 +269,9 @@ public class TwoFactorAuthenticationTest {
             } catch (Exception e) {
                 Thread.sleep(3000);
             }
-        } while (attempt < max_attempts);
+        }
 
-        fail(HEALTH_URL + " returned " + response.prettyPrint());
+        fail(HEALTH_URL + " returned " + (response == null ? "no response" : response.prettyPrint()));
     }
 
     @SuppressWarnings("unchecked")

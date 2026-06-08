@@ -35,6 +35,7 @@ configurations {
 }
 dependencies {
     driver 'com.mysql:mysql-connector-j'
+    driver 'org.mariadb.jdbc:mariadb-java-client'
 }
 
 cargo {
@@ -85,11 +86,16 @@ cargo {
 
 cargoRunLocal.dependsOn ':fineract-war:war'
 cargoStartLocal.dependsOn ':fineract-war:war'
-cargoStartLocal.mustRunAfter 'testClasses'
 
-test {
-    dependsOn(cargoStartLocal)
-    finalizedBy cargoStopLocal
+if (!project.hasProperty('cargoDisabled')) {
+    cargoStartLocal.mustRunAfter testClasses
+}
+
+tasks.named('test').configure {
+    if (!project.hasProperty('cargoDisabled')) {
+        dependsOn cargoStartLocal
+        finalizedBy cargoStopLocal
+    }
 }
 
 // NOTE: Gradle suggested these dependencies

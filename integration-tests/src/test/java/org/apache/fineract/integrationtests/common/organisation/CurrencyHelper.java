@@ -18,96 +18,32 @@
  */
 package org.apache.fineract.integrationtests.common.organisation;
 
-import static io.restassured.RestAssured.given;
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import org.apache.fineract.integrationtests.common.Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.fineract.client.models.CurrencyData;
+import org.apache.fineract.client.models.CurrencyUpdateRequest;
+import org.apache.fineract.integrationtests.common.FineractFeignClientHelper;
 
-public class CurrencyHelper {
+@Slf4j
+public final class CurrencyHelper {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CurrencyHelper.class);
-    private static final String CURRENCY_URL = "/fineract-provider/api/v1/currencies?" + Utils.TENANT_IDENTIFIER;
-    private static final String CURRENCY_URL_SELECTED = CURRENCY_URL + "&fields=selectedCurrencyOptions";
+    private CurrencyHelper() {}
 
-    private static final List<String> PERMITTED_CURRENCY_ARRAY = Arrays.asList("currencyOptions", "selectedCurrencyOptions");
-
-    private static final List<String> PERMITTED_CURRENCY_ARRAY_SELECTED = Arrays.asList("selectedCurrencyOptions");
-
-    private final RequestSpecification requestSpec;
-    private final ResponseSpecification responseSpec;
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public CurrencyHelper(final RequestSpecification requestSpec, final ResponseSpecification responseSpec) {
-        this.requestSpec = requestSpec;
-        this.responseSpec = responseSpec;
+    public static List<CurrencyData> getPermittedCurrencies() {
+        log.info("--------------------------------- GET PERMITTED CURRENCY OPTIONS -------------------------------");
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().currency().retrieveCurrencies()).getCurrencyOptions();
     }
 
-    public ArrayList<Currency> getPermittedCurrencies() {
-        return getCurrencies(CURRENCY_URL, PERMITTED_CURRENCY_ARRAY);
+    public static List<CurrencyData> getSelectedCurrencies() {
+        log.info("--------------------------------- GET SELECTED CURRENCY OPTIONS -------------------------------");
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().currency().retrieveCurrencies()).getSelectedCurrencyOptions();
     }
 
-    public ArrayList<Currency> getSelectedCurrencies() {
-        return getCurrencies(CURRENCY_URL_SELECTED, PERMITTED_CURRENCY_ARRAY_SELECTED);
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    private ArrayList<Currency> getCurrencies(final String getUrl, final List<String> permittedCurrencyArrays) {
-        LOG.info("--------------------------------- GET CURRENCY OPTIONS -------------------------------");
-        final String json = given().spec(requestSpec).expect().spec(responseSpec).log().ifError().when().get(getUrl).andReturn().asString();
-        final Gson gson = new Gson();
-        Assert.notNull(json, "json");
-        final ArrayList<Currency> currencyList = new ArrayList<Currency>();
-        final Type typeOfHashMap = new TypeToken<Map<String, List<Currency>>>() {}.getType();
-        final Map<String, List<Currency>> responseMap = gson.fromJson(json, typeOfHashMap);
-        for (Map.Entry<String, List<Currency>> entry : responseMap.entrySet()) {
-            Assert.isTrue(permittedCurrencyArrays.contains(entry.getKey()), "permittedCurrencyArrays");
-            for (Currency currency : entry.getValue()) {
-                currencyList.add(currency);
-            }
-        }
-        return currencyList;
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public List<String> updateCurrencies(final List<String> currencies) {
-        LOG.info("--------------------------------- UPDATE CURRENCY OPTIONS -------------------------------");
-        final String json = given().spec(requestSpec).body(getUpdateJSON(currencies)).expect().spec(responseSpec).log().ifError().when()
-                .put(CURRENCY_URL).andReturn().asString();
-        final Gson gson = new Gson();
-        Assert.notNull(json, "json");
-        final Type typeOfHashMap = new TypeToken<Map<String, Map<String, List<String>>>>() {}.getType();
-        final Map<String, Map<String, List<String>>> responseMap = gson.fromJson(json, typeOfHashMap);
-        return responseMap.get("changes").get("currencies");
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    private String getUpdateJSON(final List<String> currencies) {
-        final HashMap<String, List<String>> map = new HashMap<>();
-        map.put("currencies", currencies);
-        return new Gson().toJson(map);
+    public static List<String> updateCurrencies(final List<String> currencies) {
+        log.info("--------------------------------- UPDATE CURRENCY OPTIONS -------------------------------");
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().currency()
+                .updateCurrencies(new CurrencyUpdateRequest().currencies(currencies))).getCurrencies();
     }
 }

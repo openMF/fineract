@@ -47,7 +47,6 @@ dependencies {
 
             'com.jayway.jsonpath:json-path',
 
-            'com.github.spotbugs:spotbugs-annotations',
             'io.swagger.core.v3:swagger-annotations-jakarta',
 
             'com.squareup.retrofit2:converter-gson',
@@ -65,6 +64,7 @@ dependencies {
         exclude group: 'javax.activation'
         exclude group: 'com.sun.mail', module: 'javax.mail'
     }
+    compileOnly 'com.github.spotbugs:spotbugs-annotations'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.mapstruct:mapstruct-processor'

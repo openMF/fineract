@@ -52,7 +52,7 @@ public class SurveyIntegrationTest extends IntegrationTest {
     @BeforeEach
     void setup() {
         Utils.initializeRESTAssured();
-        this.surveyHelper = new SurveyHelper(fineractClient());
+        this.surveyHelper = new SurveyHelper();
     }
 
     @Test

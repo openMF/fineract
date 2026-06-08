@@ -12,7 +12,7 @@ permissions:
 jobs:
   javadoc:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     env:
       TZ: Asia/Kolkata
@@ -43,13 +43,14 @@ jobs:
         run: ./gradlew --no-daemon javadoc -x test -x cucumber -x doc -x buildJavaSdk
 
       - name: Archive Javadoc reports
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: javadoc-reports-quality-checks
           path: '**/build/docs/javadoc/'
           if-no-files-found: ignore
           retention-days: 5
+          compression-level: 9
 
   checkstyle:
     runs-on: ubuntu-24.04
@@ -84,13 +85,14 @@ jobs:
         run: ./gradlew --no-daemon checkstyleMain checkstyleTest checkstyleJmh -x test -x cucumber -x doc -x javadoc -x javadocJar -x buildJavaSdk
 
       - name: Archive Checkstyle reports
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: checkstyle-reports-quality-checks
           path: '**/build/reports/checkstyle/'
           if-no-files-found: ignore
           retention-days: 5
+          compression-level: 9
 
   rat:
     runs-on: ubuntu-24.04
@@ -125,13 +127,14 @@ jobs:
         run: ./gradlew --no-daemon rat -x test -x cucumber -x doc -x javadoc -x javadocJar -x buildJavaSdk
 
       - name: Archive RAT reports
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: rat-reports-quality-checks
           path: '**/build/reports/rat/'
           if-no-files-found: ignore
           retention-days: 5
+          compression-level: 9
 
   spotbugs:
     runs-on: ubuntu-24.04
@@ -166,13 +169,14 @@ jobs:
         run: ./gradlew --no-daemon spotbugsMain spotbugsTest -x test -x cucumber -x doc -x javadoc -x javadocJar -x buildJavaSdk
 
       - name: Archive SpotBugs reports
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: spotbugs-reports-quality-checks
           path: '**/build/reports/spotbugs/'
           if-no-files-found: ignore
           retention-days: 5
+          compression-level: 9
 
   spotless:
     runs-on: ubuntu-24.04

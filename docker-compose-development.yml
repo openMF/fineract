@@ -16,6 +16,7 @@
 # under the License.
 #
 
+# FOR TESTING PURPOSES ONLY! NOT SUITABLE FOR PRODUCTION USAGE!
 x-logging: &default-logging
   driver: loki
   options:
@@ -56,8 +57,8 @@ services:
 
   db:
     extends:
-      file: ./config/docker/compose/mariadb.yml
-      service: mariadb
+      file: ./config/docker/compose/postgresql.yml
+      service: postgresql
     depends_on:
       - loki
     logging: *default-logging
@@ -79,7 +80,7 @@ services:
       - ./config/docker/env/aws.env
       - ./config/docker/env/fineract.env
       - ./config/docker/env/fineract-common.env
-      - ./config/docker/env/fineract-mariadb.env
+      - ./config/docker/env/fineract-postgresql.env
       - ./config/docker/env/tracing.env
       - ./config/docker/env/oltp.env
       - ./config/docker/env/prometheus.env
@@ -90,3 +91,4 @@ services:
      default:
        aliases:
          - fineract-server
+# FOR TESTING PURPOSES ONLY! NOT SUITABLE FOR PRODUCTION USAGE!

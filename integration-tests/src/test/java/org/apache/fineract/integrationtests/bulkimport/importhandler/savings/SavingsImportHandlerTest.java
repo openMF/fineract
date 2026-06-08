@@ -28,7 +28,6 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,14 +41,13 @@ import java.util.UUID;
 import org.apache.fineract.client.models.GetOfficesResponse;
 import org.apache.fineract.infrastructure.bulkimport.constants.SavingsConstants;
 import org.apache.fineract.infrastructure.bulkimport.constants.TemplatePopulateImportConstants;
-import org.apache.fineract.integrationtests.bulkimport.importhandler.LocalContentStorageUtil;
+import org.apache.fineract.integrationtests.bulkimport.importhandler.BulkImportOutputTemplateHelper;
 import org.apache.fineract.integrationtests.common.GroupHelper;
 import org.apache.fineract.integrationtests.common.OfficeHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.common.organisation.StaffHelper;
 import org.apache.fineract.integrationtests.common.savings.SavingsAccountHelper;
 import org.apache.fineract.integrationtests.common.savings.SavingsProductHelper;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -186,17 +184,15 @@ public class SavingsImportHandlerTest {
         Thread.sleep(1000);
 
         // check status column of output excel
-        String location = LocalContentStorageUtil.path(savingsAccountHelper.getOutputTemplateLocation(importDocumentId));
-        try (InputStream fileInputStream = Files.newInputStream(Path.of(location))) {
-            Workbook wb = new HSSFWorkbook(fileInputStream);
+        try (Workbook wb = BulkImportOutputTemplateHelper.waitForWorkbook(
+                () -> savingsAccountHelper.downloadOutputTemplate(importDocumentId),
+                TemplatePopulateImportConstants.SAVINGS_ACCOUNTS_SHEET_NAME, 1, SavingsConstants.STATUS_COL)) {
             Sheet sheet = wb.getSheet(TemplatePopulateImportConstants.SAVINGS_ACCOUNTS_SHEET_NAME);
             Row row = sheet.getRow(1);
 
-            LOG.info("Output location: {}", location);
             LOG.info("Failure reason column: {}", row.getCell(SavingsConstants.STATUS_COL).getStringCellValue());
 
             Assertions.assertEquals("Imported", row.getCell(SavingsConstants.STATUS_COL).getStringCellValue());
-            wb.close();
         }
     }
 

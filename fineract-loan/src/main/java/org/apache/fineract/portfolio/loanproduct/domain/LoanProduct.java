@@ -396,14 +396,14 @@ public class LoanProduct extends AbstractPersistableCustom<Long> {
     }
 
     public void validateLoanProductPreSave() {
-        if (this.paymentAllocationRules != null && paymentAllocationRules.size() > 0
+        if (this.paymentAllocationRules != null && !paymentAllocationRules.isEmpty()
                 && !transactionProcessingStrategyCode.equals("advanced-payment-allocation-strategy")) {
             throw new LoanProductGeneralRuleException(
                     "payment_allocation.must.not.be.provided.when.allocation.strategy.is.not.advanced-payment-strategy",
                     "In case '" + transactionProcessingStrategyCode + "' payment strategy, payment_allocation must not be provided");
         }
 
-        if (this.creditAllocationRules != null && creditAllocationRules.size() > 0
+        if (this.creditAllocationRules != null && !creditAllocationRules.isEmpty()
                 && !transactionProcessingStrategyCode.equals("advanced-payment-allocation-strategy")) {
             throw new LoanProductGeneralRuleException(
                     "creditAllocation.must.not.be.provided.when.allocation.strategy.is.not.advanced-payment-strategy",

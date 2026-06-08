@@ -77,6 +77,9 @@ cd ..
 
 Before running Fineract you must first start a <<Database support,supported relational database server>> and ensure the `fineract_default` and `fineract_tenants` databases exist. Detailed steps for database preparation are left as an exercise for the reader. You can find ideas on how to prepare your database in the `build-mariadb.yml`, `build-mysql.yml`, and `build-postgresql.yml` files in source control, and in <<Database Setup>>.
 
+NOTE: The binary distribution does not include MySQL Connector/J (GPL) or MariaDB Connector/J (LGPL) due to license incompatibilities with the Apache License 2.0.
+The PostgreSQL driver is included. To use MySQL or MariaDB, download the appropriate JDBC driver from the vendor's website and supply it at runtime via `-Dloader.path=/path/to/driver.jar`.
+
 Finally, start your Fineract server:
 
 [source,bash,subs="attributes+"]
@@ -87,7 +90,7 @@ export FINERACT_SERVER_SSL_ENABLED=false
 export FINERACT_SERVER_PORT=8080
 export BACKEND_PROTOCOL=http
 export BACKEND_PORT=$FINERACT_SERVER_PORT
-# assumes reachable, healthy mariadb with default username, password, and port
+# assumes reachable, healthy postgresql with default username, password, and port
 java -jar fineract-provider-{revnumber}.jar
 ----
 
@@ -101,7 +104,7 @@ FINERACT_SERVER_PORT=8080
 BACKEND_PROTOCOL=http
 BACKEND_PORT=$FINERACT_SERVER_PORT
 EndOfRcenv
-# assumes reachable, healthy mariadb with default username, password, and port
+# assumes reachable, healthy postgresql with default username, password, and port
 docker run --rm -it -v "$(pwd):/usr/local/tomcat/webapps" \
   --net=host --env-file=rcenv tomcat:jre21
 ----

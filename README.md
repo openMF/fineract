@@ -72,19 +72,14 @@ cd fineract
 ./gradlew createPGDB -PdbName=fineract_tenants
 ./gradlew createPGDB -PdbName=fineract_default
 
-# local dev/test env settings
-export FINERACT_DEFAULT_TENANTDB_PORT=5432
-export FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME=org.postgresql.Driver
-export FINERACT_HIKARI_JDBC_URL=jdbc:postgresql://localhost:$FINERACT_DEFAULT_TENANTDB_PORT/fineract_tenants
-export POSTGRES_PASSWORD=postgres
-export FINERACT_HIKARI_PASSWORD=$POSTGRES_PASSWORD
-export FINERACT_DEFAULT_TENANTDB_PWD=$POSTGRES_PASSWORD
-
 # start backend
 ./gradlew devRun
 ```
 
-After a minute or two, Fineract will be listening for API requests on port 8443 (by default).
+After a minute or two, Fineract will be listening for API requests on port 8443.
+
+> [!TIP]
+> Java properties or environment variables can be used to override default settings. See `fineract-provider/src/main/resources/application.properties`.
 
 ### Verify the application is running
 
@@ -119,32 +114,37 @@ Expected response for fresh instance:
 
 How to run for production
 ---
+
 Running Fineract _just to try it out_ is relatively easy. If you intend to use it _in a production environment_, be aware that a proper deployment can be complex, costly, and time-consuming. Considerations include: Security, privacy, compliance, performance, service availability, backups, and more. **The Fineract project does not provide a comprehensive guide for deploying Fineract in production.** You might need skills in enterprise Java applications and more. Alternatively, you could pay a vendor for Fineract deployment and maintenance. You will find tips and tricks for [deploying](https://fineract.apache.org/docs/current/#_deployment) and [securing](https://fineract.apache.org/docs/current/#_securing_fineract) Fineract in our official documentation.
 
 
 How to build the JAR file
 ---
+
 Build a modern, cloud native, fully self contained JAR file:
+
 ```bash
 ./gradlew clean bootJar
 ```
+
 The JAR will be created in the `fineract-provider/build/libs` directory.
-If you use a MariaDB or MySQL (note: both are deprecated), you must download the appropriate JDBC driver since drivers for those databases use incompatible licenses. For example:
+If you intend to use MariaDB or MySQL (warning: [both are deprecated](https://cwiki.apache.org/confluence/display/FINERACT/FSIP-9%3A+Standardize+on+PostgreSQL)), you must download the appropriate JDBC driver yourself and override default database settings. When you start the JAR, specify the directory containing the JDBC driver.
+
+MariaDB example:
+
 ```bash
-wget https://dlm.mariadb.com/4174416/Connectors/java/connector-java-3.5.2/mariadb-java-client-3.5.2.jar
-```
-Start the JAR and specify the directory containing the JDBC driver using the loader.path option, for example:
-```bash
+# Assumes mariadb-java-client.jar exists in current dir.
+# For MariaDB or MySQL, override default settings such as these:
+export FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME=org.mariadb.jdbc.Driver
+export FINERACT_DEFAULT_TENANTDB_PORT=3306
+export FINERACT_HIKARI_JDBC_URL=jdbc:mariadb://localhost:3306/fineract_tenants
 java -Dloader.path=. -jar fineract-provider/build/libs/fineract-provider.jar
 ```
+
 This does not require an external Tomcat.
 
-The tenants database connection details are configured [via environment variables (as with Docker container)](#instructions-to-run-using-docker-or-podman), e.g. like this:
-```bash
-export FINERACT_HIKARI_PASSWORD=verysecret
-...
-java -jar fineract-provider.jar
-```
+> [!NOTE]
+> Versions of mariadb driver and Fineract JARs are omitted from filenames above for brevity.
 
 How to build the WAR file
 ---
@@ -197,7 +197,12 @@ You must go to https://localhost:8443 and remember to accept the self-signed SSL
 
 [Docker Hub](https://hub.docker.com/r/apache/fineract) has a pre-built container image of this project, built continuously.
 
-You must specify the MySQL tenants database JDBC URL by passing it to the `fineract` container via environment
+The official Fineract Docker image includes the PostgreSQL JDBC driver only. MySQL and MariaDB JDBC drivers are
+**not** included due to license incompatibility (see LICENSE section below). To use Fineract with MySQL or MariaDB,
+download the driver from the vendor and either build your own Docker image on top of the official one, mount it
+via a Docker volume, or install it from the OS package manager inside a custom image.
+
+You must specify the tenants database JDBC URL by passing it to the `fineract` container via environment
 variables; please consult the [`docker-compose.yml`](docker-compose.yml) for exact details how to specify those.
 
 The logfiles and the Java Flight Recorder output are available in `PROJECT_ROOT/build/fineract/logs`. If you use IntelliJ then you can double-click on the `.jfr` file and open it with the IDE. You can also download [Azul Mission Control](https://www.azul.com/products/components/azul-mission-control/) to analyze the Java Flight Recorder file.
@@ -406,12 +411,21 @@ LICENSE
 
 This project is licensed under [Apache License Version 2.0](https://github.com/apache/fineract/blob/develop/APACHE_LICENSETEXT.md).
 
-The Connector/J JDBC Driver client library from [MariaDB](https://www.mariadb.org) is licensed under the LGPL.
-The library is often used in development when running integration tests that use the Liquibase library. That JDBC
-driver is however not distributed with the Fineract product and is not required to use the product.
-If you are a developer and object to using the LGPL licensed Connector/J JDBC driver,
-simply do not run the integration tests that use the Liquibase library and use another JDBC driver.
-As discussed in [LEGAL-462](https://issues.apache.org/jira/browse/LEGAL-462), this project therefore
+The following libraries are **not** included in Fineract binary distribution artifacts (binary tarball, WAR, bootJar,
+or Docker image) because their licenses are [Category X](https://www.apache.org/legal/resolved.html#category-x)
+under the Apache Software Foundation third-party license policy:
+
+- **MariaDB Connector/J** (`org.mariadb.jdbc:mariadb-java-client`) — LGPL
+- **MySQL Connector/J** (`com.mysql:mysql-connector-j`) — GPL with FOSS exception
+- **SpotBugs Annotations** (`com.github.spotbugs:spotbugs-annotations`) — LGPL
+
+These libraries may be present on the compile classpath during development and testing but are excluded from
+all distributed artifacts. If you need MySQL or MariaDB support (both are deprecated; PostgreSQL is the
+recommended database), download the appropriate JDBC driver from the vendor's website and provide it at
+runtime via `-Dloader.path` as shown in the [How to build the JAR file](#how-to-build-the-jar-file) section above.
+
+As discussed in [LEGAL-462](https://issues.apache.org/jira/browse/LEGAL-462) and
+[LEGAL-726](https://issues.apache.org/jira/browse/LEGAL-726), this project therefore
 complies with the [Apache Software Foundation third-party license policy](https://www.apache.org/legal/resolved.html).
 
 

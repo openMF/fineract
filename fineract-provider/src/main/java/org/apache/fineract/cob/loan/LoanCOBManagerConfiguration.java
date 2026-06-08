@@ -37,7 +37,6 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.core.listener.ExecutionContextPromotionListener;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.integration.config.annotation.EnableBatchIntegration;
@@ -99,7 +98,7 @@ public class LoanCOBManagerConfiguration {
     @Bean
     public Step resolveCustomJobParametersStep() {
         return new StepBuilder("Resolve custom job parameters - Step", jobRepository)
-                .tasklet(resolveCustomJobParametersTasklet(), transactionManager).listener(customJobParametersPromotionListener()).build();
+                .tasklet(resolveCustomJobParametersTasklet(), transactionManager).build();
     }
 
     @Bean
@@ -141,10 +140,4 @@ public class LoanCOBManagerConfiguration {
                 .build();
     }
 
-    @Bean
-    public ExecutionContextPromotionListener customJobParametersPromotionListener() {
-        ExecutionContextPromotionListener listener = new ExecutionContextPromotionListener();
-        listener.setKeys(new String[] { LoanCOBConstant.BUSINESS_DATE_PARAMETER_NAME, LoanCOBConstant.IS_CATCH_UP_PARAMETER_NAME });
-        return listener;
-    }
 }

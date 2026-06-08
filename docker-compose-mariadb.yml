@@ -16,6 +16,7 @@
 # under the License.
 #
 
+# FOR TESTING PURPOSES ONLY! NOT SUITABLE FOR PRODUCTION USAGE!
 services:
   mariadb:
     container_name: mariadb
@@ -33,3 +34,4 @@ services:
       retries: 10
     ports:
       - "3306:3306"
+# FOR TESTING PURPOSES ONLY! NOT SUITABLE FOR PRODUCTION USAGE!

@@ -60,21 +60,21 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 public class DataSourcePerTenantServiceFactoryTest {
 
     public static final String MASTER_DB_SERVER = "localhost";
-    public static final String MASTER_DB_SERVER_PORT = "3306";
+    public static final String MASTER_DB_SERVER_PORT = "5432";
     public static final String MASTER_DB_SCHEMA_NAME = "fineract_tenants";
     public static final String MASTER_DB_USERNAME = "root";
     public static final String MASTER_DB_PASSWORD = "password";
     public static final String MASTER_DB_CONN_PARAMS = "something";
-    public static final String MASTER_DB_JDBC_URL = "jdbc:mariadb://" + MASTER_DB_SERVER + ":" + MASTER_DB_SERVER_PORT + "/"
+    public static final String MASTER_DB_JDBC_URL = "jdbc:postgresql://" + MASTER_DB_SERVER + ":" + MASTER_DB_SERVER_PORT + "/"
             + MASTER_DB_SCHEMA_NAME + "?" + MASTER_DB_CONN_PARAMS;
 
     public static final String READONLY_DB_SERVER = "localhost-readonly";
-    public static final String READONLY_DB_SERVER_PORT = "3306-readonly";
+    public static final String READONLY_DB_SERVER_PORT = "5432-readonly";
     public static final String READONLY_DB_SCHEMA_NAME = "fineract_tenants-readonly";
     public static final String READONLY_DB_USERNAME = "root-readonly";
     public static final String READONLY_DB_PASSWORD = "password-readonly";
     public static final String READONLY_DB_CONN_PARAMS = "something-readonly";
-    public static final String READONLY_DB_JDBC_URL = "jdbc:mariadb://" + READONLY_DB_SERVER + ":" + READONLY_DB_SERVER_PORT + "/"
+    public static final String READONLY_DB_JDBC_URL = "jdbc:postgresql://" + READONLY_DB_SERVER + ":" + READONLY_DB_SERVER_PORT + "/"
             + READONLY_DB_SCHEMA_NAME + "?" + READONLY_DB_CONN_PARAMS;
 
     public static final int MASTER_DB_INITIAL_SIZE = 1;
@@ -82,7 +82,7 @@ public class DataSourcePerTenantServiceFactoryTest {
     public static final long MASTER_DB_VALIDATION_INTERVAL = 500L;
     public static final long MASTER_DB_INIT_FAIL_TIMEOUT = 0L;
 
-    public static final String MASTER_DB_DRIVER_CLASS_NAME = "org.mariadb.jdbc.Driver";
+    public static final String MASTER_DB_DRIVER_CLASS_NAME = "org.postgresql.Driver";
     public static final String MASTER_DB_CONN_TEST_QUERY = "SELECT 1";
     public static final boolean MASTER_DB_AUTO_COMMIT_ENABLED = true;
 
@@ -129,7 +129,7 @@ public class DataSourcePerTenantServiceFactoryTest {
         DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
         given(connection.getMetaData()).willReturn(databaseMetaData);
 
-        given(databaseMetaData.getURL()).willReturn("jdbc:mariadb://localhost:3306/fineract_tenants");
+        given(databaseMetaData.getURL()).willReturn("jdbc:postgresql://localhost:5432/fineract_tenants");
 
         given(tenantConnection.getSchemaServer()).willReturn(MASTER_DB_SERVER);
         given(tenantConnection.getSchemaServerPort()).willReturn(MASTER_DB_SERVER_PORT);

@@ -1,0 +1,77 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements. See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership. The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# FOR TESTING PURPOSES ONLY! NOT SUITABLE FOR PRODUCTION USAGE!
+services:
+  db:
+    extends:
+      file: ./config/docker/compose/mariadb.yml
+      service: mariadb
+
+  localstack:
+    image: localstack/localstack:2.1
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+
+  mock-oauth2-server:
+    image: ghcr.io/navikt/mock-oauth2-server:3.0.3
+    ports:
+      - "9000:9000"
+    environment:
+      SERVER_PORT: 9000
+      JSON_CONFIG: '{ "interactiveLogin": true, "httpServer": "NettyWrapper", "tokenCallbacks": [ { "issuerId": "auth/realms/fineract", "tokenExpiry": 120, "requestMappings": [{ "requestParam": "scope", "match": "fineract", "claims": { "sub": "mifos", "scope": [ "test" ] } } ] } ] }'
+
+  fineract:
+    image: fineract:latest
+    user: "1000:1000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${PWD}/config/docker/logback/logback-override.xml:/app/logback-override.xml
+      - ${PWD}/config/docker/aws/etc/credentials:/etc/aws/credentials:ro
+      - ${PWD}/build/fineract/plugins:/app/plugins:ro
+      - ${PWD}/build/fineract/logs:/var/logs/fineract:rw
+    tmpfs:
+      - /tmp:rw,nosuid,size=256m
+    healthcheck:
+      test: ["CMD", 'sh', '-c', 'echo -e "Checking for the availability of Fineract server deployment"; while ! nc -z "localhost" 8443; do sleep 1; printf "-"; done; echo -e " >> Fineract server has started";' ]
+      timeout: 1s
+      retries: 60
+    ports:
+      - "8443:8443"
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+      localstack:
+        condition: service_started
+      mock-oauth2-server:
+        condition: service_started
+    env_file:
+      - ./config/docker/env/fineract.env
+      - ./config/docker/env/fineract-common.env
+      - ./config/docker/env/fineract-mariadb.env
+    environment:
+      AWS_ACCESS_KEY_ID: localstack
+      AWS_SECRET_ACCESS_KEY: localstack
+      AWS_REGION: us-east-1
+      AWS_ENDPOINT_URL: http://localstack:4566
+      FINERACT_EXTERNAL_EVENTS_ENABLED: "true"
+      FINERACT_REPORT_EXPORT_S3_ENABLED: "true"
+      FINERACT_REPORT_EXPORT_S3_BUCKET_NAME: fineract-reports
+# FOR TESTING PURPOSES ONLY! NOT SUITABLE FOR PRODUCTION USAGE!

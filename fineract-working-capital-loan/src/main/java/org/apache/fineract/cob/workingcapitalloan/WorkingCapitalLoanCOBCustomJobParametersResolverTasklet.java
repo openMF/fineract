@@ -19,6 +19,7 @@
 package org.apache.fineract.cob.workingcapitalloan;
 
 import static org.apache.fineract.cob.COBConstant.BUSINESS_DATE_PARAMETER_NAME;
+import static org.apache.fineract.cob.COBConstant.IS_CATCH_UP_PARAMETER_NAME;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.cob.common.CustomJobParameterResolver;
@@ -35,8 +36,9 @@ public class WorkingCapitalLoanCOBCustomJobParametersResolverTasklet implements 
 
     @Nullable
     @Override
-    public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        customJobParameterResolver.resolve(contribution, chunkContext, BUSINESS_DATE_PARAMETER_NAME, BUSINESS_DATE_PARAMETER_NAME);
+    public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+        customJobParameterResolver.resolveToJobExecutionContext(contribution, chunkContext, new String[] { BUSINESS_DATE_PARAMETER_NAME },
+                new String[] { IS_CATCH_UP_PARAMETER_NAME });
         return RepeatStatus.FINISHED;
     }
 }

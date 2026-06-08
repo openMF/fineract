@@ -174,7 +174,7 @@ public class LoanRepositoryWrapper {
     @Transactional(readOnly = true)
     public List<Loan> findByClientIdAndGroupId(@Param("clientId") Long clientId, @Param("groupId") Long groupId) {
         List<Loan> loans = this.repository.findByClientIdAndGroupId(clientId, groupId);
-        if (loans != null && loans.size() > 0) {
+        if (loans != null && !loans.isEmpty()) {
             for (Loan loan : loans) {
                 loan.initializeLoanOfficerHistory();
             }
@@ -186,7 +186,7 @@ public class LoanRepositoryWrapper {
     @Transactional(readOnly = true)
     public List<Loan> findLoanByClientId(@Param("clientId") Long clientId) {
         List<Loan> loans = this.repository.findLoanByClientId(clientId);
-        if (loans != null && loans.size() > 0) {
+        if (loans != null && !loans.isEmpty()) {
             for (Loan loan : loans) {
                 loan.initializeTransactions();
                 loan.initializeLoanOfficerHistory();
@@ -207,7 +207,7 @@ public class LoanRepositoryWrapper {
         List<List<Long>> partitions = Lists.partition(ids.stream().toList(), fineractProperties.getQuery().getInClauseParameterSizeLimit());
         partitions
                 .forEach(partition -> loans.addAll(this.repository.findByIdsAndLoanStatusAndLoanType(partition, loanStatuses, loanTypes)));
-        if (loans.size() > 0) {
+        if (!loans.isEmpty()) {
             for (Loan loan : loans) {
                 loan.initializeLazyCollections();
             }
@@ -224,7 +224,7 @@ public class LoanRepositoryWrapper {
     public List<Loan> findByClientOfficeIdsAndLoanStatus(@Param("officeIds") Collection<Long> officeIds,
             @Param("loanStatuses") Collection<LoanStatus> loanStatuses) {
         List<Loan> loans = this.repository.findByClientOfficeIdsAndLoanStatus(officeIds, loanStatuses);
-        if (loans != null && loans.size() > 0) {
+        if (loans != null && !loans.isEmpty()) {
             for (Loan loan : loans) {
                 loan.initializeRepaymentSchedule();
             }
@@ -236,7 +236,7 @@ public class LoanRepositoryWrapper {
     public List<Loan> findByGroupOfficeIdsAndLoanStatus(@Param("officeIds") Collection<Long> officeIds,
             @Param("loanStatuses") Collection<LoanStatus> loanStatuses) {
         List<Loan> loans = this.repository.findByGroupOfficeIdsAndLoanStatus(officeIds, loanStatuses);
-        if (loans != null && loans.size() > 0) {
+        if (loans != null && !loans.isEmpty()) {
             for (Loan loan : loans) {
                 loan.initializeRepaymentSchedule();
             }

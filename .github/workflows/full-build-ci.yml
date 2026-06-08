@@ -2,17 +2,49 @@ name: Fineract CI
 
 on:
   push:
+    branches:
+      - develop
+      - 'release/**'
+      - '1.*'
     paths-ignore:
       - '**/*.md'
   pull_request:
     paths-ignore:
       - '**/*.md'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
+  private-repository-ci-disabled:
+    if: >-
+      ${{
+        github.event.repository.private == true &&
+        github.event_name != 'workflow_dispatch' &&
+        vars.ENABLE_PRIVATE_REPOSITORY_CI != 'true'
+      }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Private repository CI disabled
+        run: |
+          echo "GitHub Actions CI is not enabled by default for private repositories to avoid unwanted costs."
+          echo "GitHub Actions is only free on public repositories."
+          echo "To enable automatic CI runs for this private repository, set the repository variable ENABLE_PRIVATE_REPOSITORY_CI to true."
+          echo "Manual workflow_dispatch runs are still allowed."
+
   build-core:
+    if: >-
+      ${{
+        github.event.repository.private == false ||
+        github.event_name == 'workflow_dispatch' ||
+        vars.ENABLE_PRIVATE_REPOSITORY_CI == 'true'
+      }}
     uses: ./.github/workflows/build-core.yml
     secrets:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}

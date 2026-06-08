@@ -567,6 +567,13 @@ public final class Utils {
     }
 
     @Deprecated(forRemoval = true)
+    public static byte[] performServerOutputTemplateDownloadGet(final RequestSpecification requestSpec,
+            final ResponseSpecification responseSpec, final String getURL, final String importDocumentId) {
+        return given().spec(requestSpec).queryParam("importDocumentId", importDocumentId).expect().spec(responseSpec).log().ifError().when()
+                .get(getURL).andReturn().asByteArray();
+    }
+
+    @Deprecated(forRemoval = true)
     public static String emptyJson() {
         return "{}";
     }

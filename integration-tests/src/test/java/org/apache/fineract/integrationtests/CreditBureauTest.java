@@ -34,6 +34,7 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.fineract.client.util.CallFailedRuntimeException;
 import org.apache.fineract.infrastructure.creditbureau.data.CreditBureauReportData;
 import org.apache.fineract.integrationtests.common.CreditBureauConfigurationHelper;
 import org.apache.fineract.integrationtests.common.CreditBureauIntegrationHelper;
@@ -50,6 +51,9 @@ public class CreditBureauTest {
     private static final Logger LOG = LoggerFactory.getLogger(CreditBureauTest.class);
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final String LOCAL_EXTERNAL_HOST = "localhost";
+    private static final String DOCKER_EXTERNAL_HOST = "host.docker.internal";
+    private static String creditBureauHost = ConfigProperties.ExternalServices.HOST;
 
     @RegisterExtension
     static WireMockExtension wm = WireMockExtension.newInstance().options(wireMockConfig().port(3558)).build();
@@ -57,10 +61,11 @@ public class CreditBureauTest {
     @BeforeEach
     public void setup() {
         Utils.initializeRESTAssured();
-        configureCreditBureauService();
+        configureCreditBureauService(creditBureauHost);
     }
 
-    private void configureCreditBureauService() {
+    private void configureCreditBureauService(String creditBureauHost) {
+        String creditBureauUrl = "http://" + creditBureauHost + ":3558";
         String organisations = CreditBureauConfigurationHelper.getOrganisationCreditBureauConfiguration();
 
         if (new Gson().fromJson(organisations, List.class).isEmpty()) {
@@ -81,13 +86,13 @@ public class CreditBureauTest {
                 .updateCreditBureauConfiguration(currentConfiguration.get("PASSWORD"), "PASSWORD", "testPassword");
         Assertions.assertNotNull(passwordResponse);
         final String creditReportUrlResponse = CreditBureauConfigurationHelper.updateCreditBureauConfiguration(
-                currentConfiguration.get("CREDITREPORTURL"), "CREDITREPORTURL", "http://localhost:3558/report/");
+                currentConfiguration.get("CREDITREPORTURL"), "CREDITREPORTURL", creditBureauUrl + "/report/");
         Assertions.assertNotNull(creditReportUrlResponse);
         final String searchUrlResponse = CreditBureauConfigurationHelper
-                .updateCreditBureauConfiguration(currentConfiguration.get("SEARCHURL"), "SEARCHURL", "http://localhost:3558/search/");
+                .updateCreditBureauConfiguration(currentConfiguration.get("SEARCHURL"), "SEARCHURL", creditBureauUrl + "/search/");
         Assertions.assertNotNull(searchUrlResponse);
         final String tokenUrlResponse = CreditBureauConfigurationHelper
-                .updateCreditBureauConfiguration(currentConfiguration.get("TOKENURL"), "TOKENURL", "http://localhost:3558/token/");
+                .updateCreditBureauConfiguration(currentConfiguration.get("TOKENURL"), "TOKENURL", creditBureauUrl + "/token/");
         Assertions.assertNotNull(tokenUrlResponse);
         final String subscriptionIdResponse = CreditBureauConfigurationHelper
                 .updateCreditBureauConfiguration(currentConfiguration.get("SUBSCRIPTIONID"), "SUBSCRIPTIONID", "subscriptionID123");
@@ -96,8 +101,26 @@ public class CreditBureauTest {
                 .updateCreditBureauConfiguration(currentConfiguration.get("SUBSCRIPTIONKEY"), "SUBSCRIPTIONKEY", "subscriptionKey456");
         Assertions.assertNotNull(subscriptionKeyResponse);
         final String addCreditReportUrlResponse = CreditBureauConfigurationHelper.updateCreditBureauConfiguration(
-                currentConfiguration.get("ADDCREDITREPORTURL"), "addCreditReporturl", "http://localhost:3558/upload/");
+                currentConfiguration.get("ADDCREDITREPORTURL"), "addCreditReporturl", creditBureauUrl + "/upload/");
         Assertions.assertNotNull(addCreditReportUrlResponse);
+    }
+
+    private String getCreditReport(String creditBureauId, String nrc) {
+        try {
+            return CreditBureauIntegrationHelper.getCreditReport(creditBureauId, nrc);
+        } catch (CallFailedRuntimeException e) {
+            if (!LOCAL_EXTERNAL_HOST.equals(creditBureauHost) || !isConnectionFailure(e)) {
+                throw e;
+            }
+
+            creditBureauHost = DOCKER_EXTERNAL_HOST;
+            configureCreditBureauService(creditBureauHost);
+            return CreditBureauIntegrationHelper.getCreditReport(creditBureauId, nrc);
+        }
+    }
+
+    private boolean isConnectionFailure(CallFailedRuntimeException e) {
+        return e.getMessage() != null && e.getMessage().contains("HTTP Response Code: 0");
     }
 
     @Test
@@ -118,7 +141,7 @@ public class CreditBureauTest {
                         + "\"Gender\":\"male\"," + "\"Address\":\"Test Address\"" + "}," + "\"CreditScore\": {\"Score\":  \"500\"},"
                         + "\"ActiveLoans\": [\"Loan1\", \"Loan2\"]," + "\"WriteOffLoans\": [\"Loan3\", \"Loan4\"]" + "}}", 200)));
 
-        String serviceResult = CreditBureauIntegrationHelper.getCreditReport("1", "NRC213");
+        String serviceResult = getCreditReport("1", "NRC213");
         Assertions.assertNotNull(serviceResult);
         Gson gson = new Gson();
         CreditBureauReportData responseData = gson.fromJson(
@@ -156,7 +179,7 @@ public class CreditBureauTest {
                         + "\"Name\":\"Test Name\"," + "\"Gender\":\"male\"," + "\"Address\":\"Test Address\"" + "},"
                         + "\"CreditScore\": {\"Score\":  \"500\"}," + "\"ActiveLoans\": []," + "\"WriteOffLoans\": []" + "}}", 200)));
 
-        String serviceResult = CreditBureauIntegrationHelper.getCreditReport("1", "NRC213");
+        String serviceResult = getCreditReport("1", "NRC213");
         Assertions.assertNotNull(serviceResult);
         Gson gson = new Gson();
         CreditBureauReportData responseData = gson.fromJson(

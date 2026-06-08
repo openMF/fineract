@@ -18,72 +18,96 @@
  */
 package org.apache.fineract.integrationtests.bulkimport.importhandler;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class LocalContentStorageUtil {
 
+    private static final long DEFAULT_MAX_WAIT_MILLIS = 10000;
+    private static final long POLL_INTERVAL_MILLIS = 500;
+
     private LocalContentStorageUtil() {}
 
     public static String path(String path) {
         var currentPath = Path.of("").toAbsolutePath();
-
-        if (Files.exists(Path.of(path))) {
-            return path;
+        Path resolvedPath = find(path, currentPath);
+        if (resolvedPath != null) {
+            return resolvedPath.toString();
         }
 
-        if (Files.exists(Path.of("/", path))) {
-            return "/" + path;
+        throw notFound(path, currentPath);
+    }
+
+    public static String waitForPath(String path) throws InterruptedException {
+        var currentPath = Path.of("").toAbsolutePath();
+        long start = System.currentTimeMillis();
+        Path previousPath = null;
+        long previousSize = -1;
+
+        while ((System.currentTimeMillis() - start) < DEFAULT_MAX_WAIT_MILLIS) {
+            Path resolvedPath = find(path, currentPath);
+            long size = resolvedPath == null ? -1 : size(resolvedPath);
+            if (size > 0 && resolvedPath.equals(previousPath) && size == previousSize) {
+                return resolvedPath.toString();
+            }
+
+            previousPath = resolvedPath;
+            previousSize = size;
+            Thread.sleep(POLL_INTERVAL_MILLIS);
         }
 
-        final var ghaPath = Path.of("/home/runner/.fineract/DefaultDemoTenant").resolve(path);
+        throw notFound(path, currentPath);
+    }
 
-        // github actions
-        if (Files.exists(ghaPath)) {
-            return ghaPath.toString();
+    private static Path find(String path, Path currentPath) {
+        for (Path candidate : candidates(path, currentPath)) {
+            if (Files.exists(candidate)) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    private static List<Path> candidates(String path, Path currentPath) {
+        List<Path> candidates = new ArrayList<>();
+        candidates.add(Path.of(path));
+        candidates.add(Path.of("/", path));
+        candidates.add(Path.of("/home/runner/.fineract/DefaultDemoTenant").resolve(path));
+        candidates.add(Path.of(System.getProperty("user.home")).toAbsolutePath().resolve(".fineract/DefaultDemoTenant").resolve(path));
+
+        String dockerContentRoot = System.getenv("FINERACT_TEST_CONTENT_ROOT");
+        if (dockerContentRoot != null && !dockerContentRoot.isBlank()) {
+            candidates.add(Path.of(dockerContentRoot).resolve("DefaultDemoTenant").resolve(path));
         }
 
-        // local dev run
-        final var devRunPath = Path.of(System.getProperty("user.home")).toAbsolutePath().resolve(".fineract/DefaultDemoTenant")
-                .resolve(path);
-
-        if (Files.exists(devRunPath)) {
-            return devRunPath.toString();
+        candidates.add(currentPath.resolve("build/fineract/tmp/DefaultDemoTenant").resolve(path));
+        Path parentPath = currentPath.getParent();
+        if (parentPath != null) {
+            candidates.add(parentPath.resolve("build/fineract/tmp/DefaultDemoTenant").resolve(path));
         }
+        return candidates;
+    }
 
-        // local docker volumes
-        final var dockerPath = Path.of("").toAbsolutePath().getParent().resolve("build").resolve("fineract").resolve("tmp")
-                .resolve("DefaultDemoTenant").resolve(path);
+    private static RuntimeException notFound(String path, Path currentPath) {
+        return new RuntimeException("Cannot find local fineract path: " + path + " (" + currentPath + ")");
+    }
 
-        if (Files.exists(dockerPath)) {
-            return dockerPath.toString();
+    private static long size(Path path) {
+        try {
+            return Files.size(path);
+        } catch (IOException e) {
+            return -1;
         }
-
-        throw new RuntimeException("Cannot find local fineract path: " + path + " (" + currentPath + ")");
     }
 
     @SuppressWarnings("UnusedMethod")
     public static void waitFor(String path) throws InterruptedException {
-        Path file = Path.of(path);
-        long maxWaitMillis = 10000;
-        long start = System.currentTimeMillis();
-        boolean exists = false;
-
-        while ((System.currentTimeMillis() - start) < maxWaitMillis) {
-            if (Files.exists(file)) {
-                exists = true;
-                break;
-            }
-
-            Thread.sleep(500);
-        }
-
-        if (exists) {
-            log.info("File found!");
-        } else {
-            log.warn("Timed out waiting for file.");
-        }
+        waitForPath(path);
+        log.info("File found!");
     }
 }

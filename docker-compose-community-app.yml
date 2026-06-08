@@ -16,6 +16,7 @@
 # under the License.
 #
 
+# FOR TESTING PURPOSES ONLY! NOT SUITABLE FOR PRODUCTION USAGE!
 services:
   # Frontend service
   community-app:
@@ -24,3 +25,4 @@ services:
     restart: always
     ports:
       - 9090:80
+# FOR TESTING PURPOSES ONLY! NOT SUITABLE FOR PRODUCTION USAGE!

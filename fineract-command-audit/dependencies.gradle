@@ -28,9 +28,9 @@ dependencies {
 
             'org.apache.commons:commons-lang3',
 
-            'com.github.spotbugs:spotbugs-annotations',
             'org.mapstruct:mapstruct',
             )
+    compileOnly 'com.github.spotbugs:spotbugs-annotations'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.mapstruct:mapstruct-processor'

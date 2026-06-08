@@ -16,6 +16,7 @@
 # under the License.
 #
 
+# FOR TESTING PURPOSES ONLY! NOT SUITABLE FOR PRODUCTION USAGE!
 services:
   mysql:
     container_name: mysql
@@ -27,8 +28,9 @@ services:
     env_file:
       - ${PWD}/config/docker/env/mysql.env
     healthcheck:
-      test: [ "CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized" ]
+      test: [ "CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD}" ]
       timeout: 10s
       retries: 10
     ports:
       - "3306:3306"
+# FOR TESTING PURPOSES ONLY! NOT SUITABLE FOR PRODUCTION USAGE!

@@ -53,7 +53,7 @@ public class LoanStatusChangeHistoryListener {
     @PostConstruct
     public void addListeners() {
         loanStatuses.addAll(getLoanStatuses(fineractProperties.getLoan().getStatusChangeHistoryStatuses()));
-        if (loanStatuses.size() > 0) {
+        if (!loanStatuses.isEmpty()) {
             businessEventNotifierService.addPostBusinessEventListener(LoanStatusChangedBusinessEvent.class,
                     new LoanStatusChangedListener());
         }

@@ -50,25 +50,41 @@ public class WorkingCapitalLoanDiscountFeeAmortizationServiceImpl implements Wor
     @Transactional
     public void processDiscountFeeAmortization(final WorkingCapitalLoan loan, final LocalDate transactionDate) {
         final BigDecimal scheduleAmortization = calculateScheduleAmortization(loan);
-        if (MathUtil.isZero(scheduleAmortization)) {
+        final boolean loanOverpaid = loan.getLoanStatus().isOverpaid();
+        final BigDecimal alreadyPosted = loan.getBalance() != null ? loan.getBalance().getRealizedIncomeFromDiscountFee() : BigDecimal.ZERO;
+
+        if (MathUtil.isZero(scheduleAmortization) && !loanOverpaid && MathUtil.isZero(alreadyPosted)) {
             log.debug("Skipping discount fee amortization for WC loan [{}] - no amortization on schedule", loan.getId());
             return;
         }
 
-        final BigDecimal alreadyPosted = loan.getBalance().getRealizedIncomeFromDiscountFee();
-        final BigDecimal amortizationAmount = scheduleAmortization.subtract(alreadyPosted);
+        final BigDecimal discount = loan.getLoanProductRelatedDetails() != null ? loan.getLoanProductRelatedDetails().getDiscount()
+                : BigDecimal.ZERO;
 
-        if (!MathUtil.isGreaterThanZero(amortizationAmount)) {
+        final BigDecimal amortizationAmount = loanOverpaid && MathUtil.isGreaterThanZero(discount) ? discount.subtract(alreadyPosted)
+                : scheduleAmortization.subtract(alreadyPosted);
+
+        if (MathUtil.isZero(amortizationAmount)) {
             log.debug("Skipping discount fee amortization for WC loan [{}] - no new amount to amortize (schedule={}, posted={})",
                     loan.getId(), scheduleAmortization, alreadyPosted);
             return;
         }
 
-        final WorkingCapitalLoanTransaction amortizationTxn = WorkingCapitalLoanTransaction.discountFeeAmortization(loan,
-                amortizationAmount, transactionDate, externalIdFactory.create());
-        transactionRepository.saveAndFlush(amortizationTxn);
+        final boolean isChargedOff = false;
+        if (MathUtil.isGreaterThanZero(amortizationAmount)) {
+            final WorkingCapitalLoanTransaction amortizationTxn = WorkingCapitalLoanTransaction.discountFeeAmortization(loan,
+                    amortizationAmount, transactionDate, externalIdFactory.create());
+            transactionRepository.saveAndFlush(amortizationTxn);
+            accountingProcessor.postJournalEntriesForDiscountFeeAmortization(loan, amortizationTxn, false);
+        } else {
+            final BigDecimal adjustmentAmount = amortizationAmount.negate();
+            final WorkingCapitalLoanTransaction adjustmentTxn = WorkingCapitalLoanTransaction.discountFeeAmortizationAdjustment(loan,
+                    adjustmentAmount, transactionDate, externalIdFactory.create());
+            transactionRepository.saveAndFlush(adjustmentTxn);
+            accountingProcessor.postJournalEntriesForDiscountFeeAmortizationAdjustment(loan, adjustmentTxn, isChargedOff);
+        }
+
         loan.getBalance().setRealizedIncomeFromDiscountFee(loan.getBalance().getRealizedIncomeFromDiscountFee().add(amortizationAmount));
-        accountingProcessor.postJournalEntriesForDiscountFeeAmortization(loan, amortizationTxn, false);
 
         log.debug("Posted discount fee amortization of {} for WC loan [{}]", amortizationAmount, loan.getId());
     }

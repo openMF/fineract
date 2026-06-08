@@ -346,6 +346,10 @@ final class SavingsAccountsApiResourceSwagger {
         public String closedOnDate;
         @Schema(example = "false")
         public Boolean withdrawBalance;
+        @Schema(example = "05 September 2014")
+        public String rejectedOnDate;
+        @Schema(example = "05 September 2014")
+        public String withdrawnOnDate;
     }
 
     @Schema(description = "PostSavingsAccountsAccountIdResponse")
