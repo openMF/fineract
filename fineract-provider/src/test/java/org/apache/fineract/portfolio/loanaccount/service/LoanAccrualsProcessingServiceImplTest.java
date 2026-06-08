@@ -20,6 +20,7 @@ package org.apache.fineract.portfolio.loanaccount.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -30,21 +31,30 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.apache.fineract.accounting.journalentry.service.JournalEntryWritePlatformService;
+import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
+import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
+import org.apache.fineract.infrastructure.event.business.domain.loan.transaction.LoanAccrualAdjustmentTransactionBusinessEvent;
 import org.apache.fineract.infrastructure.event.business.service.BusinessEventNotifierService;
 import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanChargePaidBy;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanChargePaidByRepository;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanRepositoryWrapper;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransaction;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionRepository;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionToRepaymentScheduleMapping;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
+import org.apache.fineract.portfolio.loanaccount.loanschedule.domain.LoanScheduleGeneratorFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,6 +91,30 @@ public class LoanAccrualsProcessingServiceImplTest {
     @Mock
     private JournalEntryWritePlatformService journalEntryWritePlatformService;
 
+    @Mock
+    private ConfigurationDomainService configurationDomainService;
+
+    @Mock
+    private LoanChargePaidByRepository loanChargePaidByRepository;
+
+    @Mock
+    private LoanJournalEntryPoster journalEntryPoster;
+
+    @Mock
+    private LoanBalanceService loanBalanceService;
+
+    @Mock
+    private LoanChargeService loanChargeService;
+
+    @Mock
+    private ExternalIdFactory externalIdFactory;
+
+    @Mock
+    private LoanScheduleGeneratorFactory loanScheduleFactory;
+
+    @Mock
+    private LoanRepositoryWrapper loanRepositoryWrapper;
+
     @BeforeEach
     void setUp() {
         when(loan.isClosed()).thenReturn(false);
@@ -88,6 +122,10 @@ public class LoanAccrualsProcessingServiceImplTest {
         when(loanStatus.isOverpaid()).thenReturn(false);
 
         ThreadLocalContextUtil.setTenant(new FineractPlatformTenant(1L, "test", "Test Tenant", "America/Mexico_City", null));
+        LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        ThreadLocalContextUtil.setBusinessDates(new HashMap<>(Map.of(
+                org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType.BUSINESS_DATE, today,
+                org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType.COB_DATE, today)));
         MoneyHelper.initializeTenantRoundingMode("test", 6);
     }
 
@@ -165,6 +203,62 @@ public class LoanAccrualsProcessingServiceImplTest {
 
         // Then
         assertThat(result).isEqualByComparingTo("12.34");
+    }
+
+    /**
+     * Verifies that reprocessExistingAccruals does NOT reverse a post-due-date ACCRUAL transaction. Instead, it creates
+     * an ACCRUAL_ADJUSTMENT transaction to cancel its effect.
+     */
+    @Test
+    void reprocessExistingAccruals_ShouldCreateAdjustmentNotReverse_ForPostDueDateAccrual_OnCumulativeLoan() {
+        // Given: a cumulative loan with periodic accrual accounting
+        LocalDate lastDueDate = LocalDate.of(2025, 9, 10);
+        LocalDate postDueDateAccrualDate = LocalDate.of(2025, 12, 12); // AFTER lastDueDate
+
+        LoanRepaymentScheduleInstallment lastInstallment = mock(LoanRepaymentScheduleInstallment.class);
+        when(lastInstallment.getDueDate()).thenReturn(lastDueDate);
+        when(loan.getLastLoanRepaymentScheduleInstallment()).thenReturn(lastInstallment);
+        when(loan.isChargedOff()).thenReturn(false);
+        when(loan.isPeriodicAccrualAccountingEnabledOnLoanProduct()).thenReturn(true);
+        when(loan.isProgressiveSchedule()).thenReturn(false); // cumulative
+
+        // Create a post-due-date ACCRUAL transaction (created by processAccrualsOnLoanClosure
+        // when closedOnDate > lastDueDate)
+        LoanTransaction postDueDateAccrual = mock(LoanTransaction.class);
+        when(postDueDateAccrual.isReversed()).thenReturn(false);
+        when(postDueDateAccrual.isNotReversed()).thenReturn(true);
+        when(postDueDateAccrual.isAccrual()).thenReturn(true);
+        when(postDueDateAccrual.getTransactionDate()).thenReturn(postDueDateAccrualDate);
+        when(postDueDateAccrual.getTypeOf()).thenReturn(LoanTransactionType.ACCRUAL);
+        when(postDueDateAccrual.getInterestPortion()).thenReturn(BigDecimal.valueOf(0.67));
+        when(postDueDateAccrual.getFeeChargesPortion()).thenReturn(BigDecimal.ZERO);
+        when(postDueDateAccrual.getPenaltyChargesPortion()).thenReturn(BigDecimal.ZERO);
+
+        Set<LoanTransactionType> accrualTypes = Set.of(LoanTransactionType.ACCRUAL, LoanTransactionType.ACCRUAL_ADJUSTMENT);
+        Set<LoanTransactionType> accrualOnly = Set.of(LoanTransactionType.ACCRUAL);
+
+        // retrieveListOfAccrualTransactions uses both types
+        when(loanTransactionRepository.findNonReversedByLoanAndTypes(loan, accrualTypes)).thenReturn(List.of(postDueDateAccrual));
+        // adjustAccrualsAfter only queries for ACCRUAL (not ACCRUAL_ADJUSTMENT — those must persist)
+        when(loanTransactionRepository.findNonReversedByLoanAndTypesAndAfterDate(loan, accrualOnly, lastDueDate))
+                .thenReturn(List.of(postDueDateAccrual));
+        // Idempotency check queries the loan's in-memory transaction list
+        when(loan.getLoanTransactions()).thenReturn(new java.util.ArrayList<>());
+
+        org.apache.fineract.organisation.office.domain.Office office = mock(org.apache.fineract.organisation.office.domain.Office.class);
+        when(loan.getOffice()).thenReturn(office);
+        when(externalIdFactory.create()).thenReturn(org.apache.fineract.infrastructure.core.domain.ExternalId.empty());
+        when(loanTransactionRepository.saveAndFlush(any(LoanTransaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        accrualsProcessingService.reprocessExistingAccruals(loan, true);
+
+        // Then: the post-due-date accrual is NOT reversed
+        verify(postDueDateAccrual, never()).reverse();
+        // An ACCRUAL_ADJUSTMENT is persisted, journal entries posted, and event published
+        verify(loanTransactionRepository, times(1)).saveAndFlush(any(LoanTransaction.class));
+        verify(journalEntryPoster, times(1)).postJournalEntriesForLoanTransaction(any(LoanTransaction.class), eq(false), eq(false));
+        verify(businessEventNotifierService, times(1)).notifyPostBusinessEvent(any(LoanAccrualAdjustmentTransactionBusinessEvent.class));
     }
 
     private static Stream<Arguments> loanStatusTestCases() {

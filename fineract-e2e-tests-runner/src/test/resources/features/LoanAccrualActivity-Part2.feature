@@ -4079,3 +4079,25 @@ Feature: LoanAccrualActivity - Part2
     #   --- Close loan ---
     When Loan Pay-off is made on "23 October 2025"
     Then Loan is closed with zero outstanding balance and it's all installments have obligations met
+
+  @TestRailId:C83085
+  Scenario: Verify that overpaid loan must post an ACCRUAL_ADJUSTMENT instead of bare-reversing the accrual
+    When Admin sets the business date to "01 April 2026"
+    When Admin creates a client with random data
+    When Admin creates a fully customized loan with the following data:
+      | LoanProduct                                                                                     | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
+      | LP2_ADV_PYMNT_INT_DAILY_EMI_ACTUAL_ACTUAL_INT_REFUND_FULL_ZERO_INT_CHARGE_OFF_ACCRUAL_ACTIVITY | 01 April 2026     | 220            | 36                     | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 3                 | MONTHS                | 1              | MONTHS                 | 3                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION |
+    And Admin successfully approves the loan on "01 April 2026" with "220" amount and expected disbursement date on "01 April 2026"
+    When Admin successfully disburse the loan on "01 April 2026" with "220" EUR transaction amount
+    When Admin sets the business date to "20 July 2026"
+    And Admin does charge-off the loan on "20 July 2026"
+    Then Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 01 April 2026    | Disbursement     | 220.0  | 0.0       | 0.0      | 0.0  | 0.0       | 220.0        | false    | false    |
+      | 20 July 2026     | Accrual          | 19.75  | 0.0       | 19.75    | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 20 July 2026     | Charge-off       | 239.75 | 220.0     | 19.75    | 0.0  | 0.0       | 0.0          | false    | false    |
+    And Admin does a charge-off undo the loan
+    When Admin sets the business date to "21 July 2026"
+    When Customer makes "REPAYMENT" transaction with "AUTOPAY" payment type on "21 July 2026" with 300 EUR transaction amount and system-generated Idempotency key
+    Then Loan status will be "OVERPAID"
+    Then LoanAccrualAdjustmentTransactionBusinessEvent is raised on "20 July 2026"
