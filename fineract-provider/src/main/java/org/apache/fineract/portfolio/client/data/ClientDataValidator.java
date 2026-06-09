@@ -50,6 +50,7 @@ public final class ClientDataValidator {
 
     private final FromJsonHelper fromApiJsonHelper;
     private final ConfigurationReadPlatformService configurationReadPlatformService;
+    private static final String MOBILE_NUMBER_REGEX = "^\\+?[0-9]{7,15}$";
 
     @Autowired
     public ClientDataValidator(final FromJsonHelper fromApiJsonHelper,
@@ -164,7 +165,7 @@ public final class ClientDataValidator {
         if (this.fromApiJsonHelper.parameterExists(ClientApiConstants.mobileNoParamName, element)) {
             final String mobileNo = this.fromApiJsonHelper.extractStringNamed(ClientApiConstants.mobileNoParamName, element);
             baseDataValidator.reset().parameter(ClientApiConstants.mobileNoParamName).value(mobileNo).ignoreIfNull()
-                    .notExceedingLengthOf(50);
+                    .matchesRegularExpression(MOBILE_NUMBER_REGEX).notExceedingLengthOf(50);
         }
 
         final Boolean active = this.fromApiJsonHelper.extractBooleanNamed(ClientApiConstants.activeParamName, element);
@@ -449,7 +450,8 @@ public final class ClientDataValidator {
         if (this.fromApiJsonHelper.parameterExists(ClientApiConstants.mobileNoParamName, element)) {
             atLeastOneParameterPassedForUpdate = true;
             final String mobileNo = this.fromApiJsonHelper.extractStringNamed(ClientApiConstants.mobileNoParamName, element);
-            baseDataValidator.reset().parameter(ClientApiConstants.mobileNoParamName).value(mobileNo).notExceedingLengthOf(50);
+            baseDataValidator.reset().parameter(ClientApiConstants.mobileNoParamName).value(mobileNo).ignoreIfNull()
+                    .matchesRegularExpression(MOBILE_NUMBER_REGEX).notExceedingLengthOf(50);
         }
 
         final Boolean active = this.fromApiJsonHelper.extractBooleanNamed(ClientApiConstants.activeParamName, element);

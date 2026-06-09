@@ -27,7 +27,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.fineract.cob.COBConstant;
 import org.apache.fineract.cob.converter.COBParameterConverter;
 import org.apache.fineract.cob.data.COBParameter;
-import org.apache.fineract.cob.domain.AccountLock;
 import org.apache.fineract.cob.domain.LockOwner;
 import org.apache.fineract.cob.domain.LockingService;
 import org.apache.fineract.cob.resolver.CatchUpFlagResolver;
@@ -36,10 +35,10 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.lang.NonNull;
 
 @RequiredArgsConstructor
-public class BeforeStepLockingItemReaderHelper<T extends AccountLock> {
+public class BeforeStepLockingItemReaderHelper {
 
     private final RetrieveIdService retrieveIdService;
-    private final LockingService<T> loanLockingService;
+    private final LockingService loanLockingService;
 
     @SuppressWarnings({ "unchecked" })
     public LinkedBlockingQueue<Long> filterRemainingData(@NonNull StepExecution stepExecution) {
@@ -54,16 +53,12 @@ public class BeforeStepLockingItemReaderHelper<T extends AccountLock> {
         } else {
             loanIds = retrieveIdService.retrieveAllNonClosedLoansByLastClosedBusinessDateAndMinAndMaxLoanId(loanCOBParameter, isCatchUp);
             if (!loanIds.isEmpty()) {
-                List<Long> lockedByCOBChunkProcessingAccountIds = getLoanIdsLockedWithChunkProcessingLock(loanIds);
+                List<Long> lockedByCOBChunkProcessingAccountIds = loanLockingService.findLockIdsByLoanIdInAndLockOwner(loanIds,
+                        LockOwner.LOAN_COB_CHUNK_PROCESSING);
+                loanIds = new ArrayList<>(loanIds);
                 loanIds.retainAll(lockedByCOBChunkProcessingAccountIds);
             }
         }
         return new LinkedBlockingQueue<>(loanIds);
-    }
-
-    private List<Long> getLoanIdsLockedWithChunkProcessingLock(List<Long> loanIds) {
-        List<T> accountLocks = new ArrayList<>(
-                loanLockingService.findAllByLoanIdInAndLockOwner(loanIds, LockOwner.LOAN_COB_CHUNK_PROCESSING));
-        return accountLocks.stream().map(T::getId).toList();
     }
 }

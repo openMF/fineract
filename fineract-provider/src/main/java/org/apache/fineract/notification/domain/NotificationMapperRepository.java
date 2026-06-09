@@ -18,6 +18,56 @@
  */
 package org.apache.fineract.notification.domain;
 
+import org.apache.fineract.notification.data.NotificationData;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
-public interface NotificationMapperRepository extends JpaRepository<NotificationMapper, Long> {}
+public interface NotificationMapperRepository extends JpaRepository<NotificationMapper, Long> {
+
+    @Query("""
+            select case when count(nm) > 0 then true else false end
+            from NotificationMapper nm
+            where nm.userId.id = :appUserId
+            and nm.isRead = false
+            """)
+    boolean hasUnreadNotifications(@Param("appUserId") Long appUserId);
+
+    @Modifying
+    @Transactional
+    @Query("""
+            update NotificationMapper nm
+            set nm.isRead = true
+            where nm.userId.id = :appUserId
+            and nm.isRead = false
+            """)
+    void markUnreadNotificationsAsRead(@Param("appUserId") Long appUserId);
+
+    @Query(value = """
+            select new org.apache.fineract.notification.data.NotificationData(
+                n.id,
+                n.objectType,
+                n.objectIdentifier,
+                n.actorId,
+                n.action,
+                n.notificationContent,
+                n.isSystemGenerated,
+                nm.createdAt
+            )
+            from NotificationMapper nm
+            join nm.notification n
+            where nm.userId.id = :appUserId
+            and (:isRead is null or nm.isRead = :isRead)
+            """, countQuery = """
+            select count(nm)
+            from NotificationMapper nm
+            where nm.userId.id = :appUserId
+            and (:isRead is null or nm.isRead = :isRead)
+            """)
+    Page<NotificationData> findNotificationDataByUserIdAndReadStatus(@Param("appUserId") Long appUserId, @Param("isRead") Boolean isRead,
+            Pageable pageable);
+}

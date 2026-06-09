@@ -1,0 +1,316 @@
+= Working Capital Loan — Planned and Projected Balances
+
+== Overview
+
+Working Capital Loan amortization tracks two parallel balance series for each loan: a *planned balance* (based on expected payments) and a *projected balance* (based on actual payments received). Both series use the same Effective Interest Rate (EIR) derived from the contractual loan terms. Together they enable the system to show the theoretical schedule alongside real payment activity, track income deferral separately per track, and compute income modification for each repayment.
+
+=== Purpose
+
+Separating planned and projected balances allows lenders to:
+
+* See the contracted payment schedule independently of payment behaviour
+* Measure deviation between expected and actual income recognition period by period
+* Report both the theoretical deferred income (based on the contracted schedule) and the actual deferred income remaining (based on cash received)
+
+=== Scope
+
+The scope of this document includes:
+
+* Definition of planned balance (`expectedBalance`) and projected balance (`actualBalance`)
+* Definition of planned discount fee balance (`expectedDiscountFeeBalance`) and projected discount fee balance (`actualDiscountFeeBalance`)
+* Recurrence formulas for both balance tracks
+* How the EIR links the two tracks
+* Per-payment schedule fields exposed by the API
+* The original projected payments snapshot
+
+=== Applicability
+
+* Working Capital Loans with `amortizationType = EIR`
+* Both balance tracks are computed for every loan from disbursement through closure
+
+=== Definitions and Key Concepts
+
+*Planned Balance (`expectedBalance`):* Running outstanding principal balance assuming all expected payments are made on time. Computed for every period whether or not a payment was received. Decreases monotonically from `netDisbursementAmount` to zero over the contracted term. Formerly serialized as `balance` in JSON model versions prior to `"4"`.
+
+*Projected Balance (`actualBalance`):* Running outstanding principal balance based on actual cash payments received. Populated only for periods where a positive payment exists or where `calculatedTillDate` has been reached; `null` for future unpaid periods. Deviates from the planned balance when actual payments differ from expected.
+
+*Planned Discount Fee Balance (`expectedDiscountFeeBalance`):* Remaining unrecognized discount fee income based on expected amortizations: `discountFee − Σ(expectedAmortizationAmount[1..i])`. Decreases monotonically from `discountFeeAmount` at disbursement to zero at the contracted end of term. Formerly serialized as `deferredBalance`.
+
+*Projected Discount Fee Balance (`actualDiscountFeeBalance`):* Remaining unrecognized discount fee income based on actual amortizations: `discountFee − Σ(actualAmortizationAmount[1..i])`. `null` for unpaid future periods; deviates from planned when payments differ.
+
+*EIR (Effective Interest Rate):* The daily periodic rate solved via Newton-Raphson from `RATE(originalPaymentNumber, −expectedPayment, netDisbursementAmount)`. The same EIR drives the balance recurrence for both tracks. See the xref:working-capital-eir-calculation.adoc[EIR Calculation] document for the solver algorithm and rate segment handling.
+
+*Income Modification:* The per-period difference `actualAmortization − expectedAmortization`. Positive when the borrower over-pays, negative on underpayment, `null` on no payment.
+
+*Original Projected Payments:* A snapshot list of the pure contracted schedule (`originalProjectedPayments`) that contains only planned-track fields and is not influenced by actual payments. Used internally by COB and reports that need the unmodified contracted schedule.
+
+== Design Decisions and Considerations
+
+=== Two-Track Balance Model
+
+A single `balance` field cannot distinguish between "what the balance would have been with on-time payments" and "what the balance actually is". The two-track model makes this explicit:
+
+* The planned track is always fully populated and never changes retroactively once built — it is the reference schedule.
+* The actual track is populated only where cash has been received or the business date has passed. A period with a zero-amount payment records `actualBalance = actualBalance[i-1] × (1 + EIR) − 0` (no reduction), while a no-payment period remains `null`.
+
+=== Backward Compatibility via @SerializedName Aliases
+
+`ProjectedPayment` uses Gson `@SerializedName` to deserialize old JSON snapshots transparently:
+
+* `"balance"` → `expectedBalance`
+* `"deferredBalance"` → `expectedDiscountFeeBalance`
+
+Model JSON version `"4"` is the current canonical version that writes the new field names. Models persisted under earlier versions are read with the aliases and re-persisted under version `"4"` on the next write.
+
+=== Disbursement Row Initializes Both Tracks Identically
+
+Row 0 (disbursement, `paymentNo = 0`) sets both balance tracks to the same starting values:
+
+* `expectedBalance = actualBalance = netDisbursementAmount`
+* `expectedDiscountFeeBalance = actualDiscountFeeBalance = discountFeeAmount`
+
+From period 1 onward the tracks diverge based on actual payment behaviour.
+
+== Balance Computation
+
+=== Planned Balance Recurrence
+
+For every period `i` from 1 to `effectiveTotalTerm`:
+
+----
+expectedBalance[i] = expectedBalance[i-1] × (1 + EIR) − expectedPayment
+expectedAmortizationAmount[i] = expectedBalance[i-1] × EIR
+                               = expectedBalance[i] + expectedPayment − expectedBalance[i-1]
+expectedDiscountFeeBalance[i] = discountFee − Σ(expectedAmortizationAmount[1..i])
+----
+
+`expectedBalance` is computed unconditionally for all periods regardless of actual cash received. The final period balance converges to zero by construction.
+
+=== Projected Balance Recurrence
+
+For periods where a positive payment exists:
+
+----
+actualBalance[i] = actualBalance[i-1] × (1 + EIR) − actualPayment[i]
+actualAmortizationAmount[i] = cursor-based consumption of expected amortizations
+actualDiscountFeeBalance[i] = discountFee − Σ(actualAmortizationAmount[1..i])
+----
+
+At the start of each rate segment the actual balance is reset to `segment.netDisbursementAtSplit` to align with the segment's EIR.
+
+For periods where no payment was received (`actualPayment = null`):
+
+* `actualBalance` is `null` for future periods; for past periods (before `calculatedTillDate`) it is set to the running actual balance carried forward without reduction.
+* `actualAmortizationAmount`, `incomeModification`, and `actualDiscountFeeBalance` are `null`.
+
+=== EIR Linkage
+
+The EIR used in both recurrences is identical — it is solved once from the contract terms and stored in `ProjectedAmortizationScheduleModel.effectiveInterestRate`. For segments created by a rate change, `RateSegment.effectiveInterestRate` replaces the base rate from `startDayIndex` onward, for both planned and actual computations.
+
+== Schedule Fields
+
+The `ProjectedAmortizationSchedulePaymentData` record exposes per-payment fields from the `GET /v1/working-capital-loans/{loanId}/amortization-schedule` response.
+
+[cols="2,1,4",options="header"]
+|===
+| Field | Nullable | Description
+
+| `paymentNo`
+| No
+| 1-based period number. Row 0 = disbursement.
+
+| `paymentDate`
+| No
+| `expectedDisbursementDate + paymentNo` days.
+
+| `expectedPaymentAmount`
+| Yes
+| Constant daily expected payment derived from TPV, `periodPaymentRate`, and `npvDayCount`. Row 0: `−netDisbursementAmount`. Tail rows: may be less than expected when trimmed.
+
+| `expectedBalance`
+| Yes
+| *Planned balance* — what the outstanding principal would be if all expected payments were received on time. Null for trimmed tail rows. Alias `balance` in pre-v4 JSON.
+
+| `actualBalance`
+| Yes
+| *Projected balance* — actual outstanding principal based on received payments. Null for unpaid future periods.
+
+| `expectedAmortizationAmount`
+| Yes
+| Fee income recognized per period under the planned track. `min(expectedBalance[i-1] × EIR, remainingDiscountFee)`. Null for row 0 and tail rows.
+
+| `actualPaymentAmount`
+| Yes
+| Actual cash received. Null for unpaid periods; `0` for past periods with zero-amount payment.
+
+| `actualAmortizationAmount`
+| Yes
+| Fee income recognized per period under the projected track (cursor-based). Null for unpaid periods.
+
+| `expectedDiscountFeeBalance`
+| Yes
+| *Planned deferred balance* — remaining unrecognized discount fee under the planned track. Alias `deferredBalance` in pre-v4 JSON.
+
+| `actualDiscountFeeBalance`
+| Yes
+| *Projected deferred balance* — remaining unrecognized discount fee under the projected track. Null for unpaid future periods.
+|===
+
+=== Disbursement Row (paymentNo = 0)
+
+[cols="1,2"]
+|===
+| `expectedPaymentAmount` | `−netDisbursementAmount`
+| `expectedBalance` | `+netDisbursementAmount`
+| `actualBalance` | `+netDisbursementAmount`
+| `expectedAmortizationAmount` | null
+| `actualPaymentAmount` | null
+| `actualAmortizationAmount` | null
+| `expectedDiscountFeeBalance` | `discountFeeAmount`
+| `actualDiscountFeeBalance` | `discountFeeAmount`
+|===
+
+== API Design
+
+=== Endpoints
+
+==== Retrieve Projected Amortization Schedule
+
+Returns the full amortization schedule including both planned and projected balance tracks for every period.
+
+[source]
+----
+GET /v1/working-capital-loans/{loanId}/amortization-schedule
+----
+
+**Response:**
+
+[source,json]
+----
+{
+  "discountFeeAmount": 1000.00,
+  "netDisbursementAmount": 9000.00,
+  "totalPaymentVolume": 100000.00,
+  "periodPaymentRate": 18,
+  "npvDayCount": 360,
+  "expectedDisbursementDate": "2019-01-01",
+  "expectedPaymentAmount": 50.00,
+  "originalPaymentNumber": 200,
+  "effectiveInterestRate": 0.0010678144878363462,
+  "payments": [
+    {
+      "paymentNo": 0,
+      "paymentDate": "2019-01-01",
+      "expectedPaymentAmount": -9000.00,
+      "expectedBalance": 9000.00,
+      "actualBalance": 9000.00,
+      "expectedAmortizationAmount": null,
+      "actualPaymentAmount": null,
+      "actualAmortizationAmount": null,
+      "expectedDiscountFeeBalance": 1000.00,
+      "actualDiscountFeeBalance": 1000.00
+    },
+    {
+      "paymentNo": 1,
+      "paymentDate": "2019-01-02",
+      "expectedPaymentAmount": 50.00,
+      "expectedBalance": 8959.61,
+      "actualBalance": null,
+      "expectedAmortizationAmount": 9.61,
+      "actualPaymentAmount": null,
+      "actualAmortizationAmount": null,
+      "expectedDiscountFeeBalance": 990.39,
+      "actualDiscountFeeBalance": null
+    }
+  ]
+}
+----
+
+[NOTE]
+====
+When no payments have been received, `actualBalance`, `actualAmortizationAmount`, and `actualDiscountFeeBalance` are `null` for all periods after row 0. As payments are applied the actual fields populate for those periods. `expectedBalance` and `expectedDiscountFeeBalance` are always populated for active schedule rows.
+====
+
+== Business Rules
+
+=== Planned Track Population
+
+* The planned balance is recomputed for all periods on every rebuild (`rebuildPayments`), including after payments are applied or a rate change is recorded.
+* Planned balance values do not change retroactively for past periods after a new payment is applied — they reflect the current contracted payment amount, not historical snapshots.
+* When a rate segment begins at `startDayIndex`, the planned balance resets to `segment.netDisbursementAtSplit` and continues the recurrence using `segment.effectiveInterestRate` and `segment.expectedPaymentAmount`.
+
+=== Projected Track Population
+
+* `actualBalance` is populated for a period when `actualPaymentAmount` is not null (positive or zero-amount).
+* For past periods where `calculatedTillDate` has advanced past the period date but no payment was received: `actualBalance` carries the last known actual balance forward without reduction (balance does not compound without a payment entry). `actualAmortizationAmount` is zero (not null) for these periods.
+* Future periods (after `calculatedTillDate`) that have no payment: `actualBalance` and `actualDiscountFeeBalance` are null.
+
+=== Divergence Between Tracks
+
+The two tracks converge at disbursement and diverge based on payment behavior:
+
+* *Exact payment*: `actualBalance[i] = expectedBalance[i]` for that period (and divergence closes).
+* *Overpayment*: `actualBalance[i] < expectedBalance[i]`; projected deferred balance decreases faster than planned.
+* *Underpayment or no payment*: `actualBalance[i] > expectedBalance[i]` if positive payment received; or `actualBalance[i] = null` if no payment.
+
+=== Deferred Balance Invariants
+
+* `expectedDiscountFeeBalance` decreases monotonically from `discountFeeAmount` at row 0 to `≥ 0` over the term.
+* `actualDiscountFeeBalance` + cumulative `actualAmortizationAmount` = `discountFeeAmount` (for paid periods).
+* Both planned and projected deferred balances are capped at `discountFeeAmount` and floored at zero.
+
+== Example Scenarios
+
+=== Scenario #1: On-Time Payments — Both Tracks Converge
+
+**Setup:**
+* `netDisbursementAmount = 9,000`, `discountFeeAmount = 1,000`
+* `periodPaymentRate = 18`, `npvDayCount = 360`, `TPV = 100,000`
+* Derived: `expectedPayment = 50.00/day`, `originalPaymentNumber = 200`, `EIR ≈ 0.001068`
+
+**Action:**
+Borrower pays exactly 50.00 on day 1.
+
+**Expected Behavior:**
+
+* `actualPaymentAmount[1] = 50.00`
+* `actualBalance[1] = 9,000 × (1 + 0.001068) − 50.00 = 8,959.61` → equals `expectedBalance[1]`
+* `actualAmortizationAmount[1] = 9.61` → equals `expectedAmortizationAmount[1]`
+* `incomeModification[1] = 0`
+* `actualDiscountFeeBalance[1] = 990.39` → equals `expectedDiscountFeeBalance[1]`
+
+=== Scenario #2: No Payment on Day 1, Double Payment on Day 2
+
+**Setup:**
+Same loan as Scenario #1.
+
+**Action:**
+No payment on day 1; borrower pays 100.00 on day 2.
+
+**Expected Behavior:**
+
+Day 1:
+
+* `actualPaymentAmount[1] = 0` (past period with zero payment)
+* `actualBalance[1] = 9,000.00` (actual balance unchanged — no reduction)
+* `actualAmortizationAmount[1] = 0`
+* `actualDiscountFeeBalance[1] = 1,000.00` (unchanged)
+* `expectedBalance[1] = 8,959.61` — planned track still decreases
+
+Day 2:
+
+* `actualPaymentAmount[2] = 100.00`
+* `actualBalance[2] = 9,000.00 × (1 + EIR) − 100.00 ≈ 8,909.62`
+* `actualBalance[2] < expectedBalance[2] = 8,919.18` (projected ahead of planned due to double payment)
+* Cursor-based amortization consumes 2 periods of expected amortization (100/50 = 2 periods)
+* `actualAmortizationAmount[2] ≈ 9.61 + 9.57 = 19.18`
+* `incomeModification[2] = 19.18 − 9.57 = 9.61` (positive: more income than planned)
+
+== Summary
+
+The Working Capital planned and projected balance model provides two parallel views of each loan's outstanding principal and deferred income:
+
+* *Planned balances* (`expectedBalance`, `expectedDiscountFeeBalance`) reflect the contracted schedule assuming all payments arrive on time. They are always fully populated and serve as the reference for income recognition targets.
+* *Projected balances* (`actualBalance`, `actualDiscountFeeBalance`) reflect real payment activity. They populate period by period as cash is received and diverge from planned whenever payments deviate from the expected amount.
+* Both tracks share the same EIR, derived once via Newton-Raphson from the contract terms and recomputed per rate segment when the period payment rate changes mid-lifecycle.
+* The `incomeModification` field quantifies the per-period difference, enabling lenders to reconcile actual income recognized against the contracted schedule.

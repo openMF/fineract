@@ -303,9 +303,9 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
 
             final LocalDate bussinesLocalDate = Utils.getDateAsLocalDate("01 March 2012");
             log.info("Current date {}", bussinesLocalDate);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
-            final BusinessDateResponse businessDateResponse = this.businessDateHelper.getBusinessDateByType(requestSpec, responseSpec,
-                    BusinessDateType.BUSINESS_DATE);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
+            final BusinessDateResponse businessDateResponse = this.businessDateHelper
+                    .getBusinessDate(BusinessDateType.BUSINESS_DATE.name());
 
             ArrayList<Long> rangeIds = new ArrayList<>();
             // First Range
@@ -397,7 +397,7 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
 
             final LocalDate bussinesLocalDate = Utils.getDateAsLocalDate("01 April 2012");
             log.info("Current date {}", bussinesLocalDate);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
 
             // Given
             final LoanTransactionHelper loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
@@ -691,7 +691,7 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
             LocalDate businessDate = Utils.getLocalDateOfTenant();
             businessDate = businessDate.minusDays(37);
             log.info("Current date {}", businessDate);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             final LoanTransactionHelper loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
             final SchedulerJobHelper schedulerJobHelper = new SchedulerJobHelper(requestSpec);
@@ -749,7 +749,7 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
             // Move the Business date to get older the loan and to have an overdue loan
             businessDate = businessDate.plusMonths(1);
             log.info("Current date {}", businessDate);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
             // Run Second time the Job
             schedulerJobHelper.executeAndAwaitJob(jobName);
 
@@ -783,7 +783,7 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
 
             LocalDate bussinesLocalDate = Utils.getDateAsLocalDate("01 April 2012");
             log.info("Current date {}", bussinesLocalDate);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
 
             // Given
             final LoanTransactionHelper loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
@@ -853,7 +853,7 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
             // Move the Business date to get older the loan and to have an overdue loan
             bussinesLocalDate = bussinesLocalDate.plusDays(3);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
             // Run the Loan inline COB Job
             inlineLoanCOBHelper.executeInlineCOB(Long.valueOf(loanId));
 
@@ -884,7 +884,7 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
 
             LocalDate bussinesLocalDate = Utils.getDateAsLocalDate("01 January 2012");
             log.info("Current date {}", bussinesLocalDate);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
 
             // Given
             final LoanTransactionHelper loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
@@ -934,7 +934,7 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
 
             bussinesLocalDate = Utils.getDateAsLocalDate("31 January 2012");
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
             // Run the Loan inline COB Job
             inlineLoanCOBHelper.executeInlineCOB(Long.valueOf(loanId));
 
@@ -961,7 +961,7 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
 
             LocalDate bussinesLocalDate = Utils.getDateAsLocalDate("01 January 2012");
             log.info("Current date {}", bussinesLocalDate);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
 
             // Given
             final LoanTransactionHelper loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
@@ -1021,7 +1021,7 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
 
             bussinesLocalDate = Utils.getDateAsLocalDate("31 January 2012");
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
             // Run the Loan inline COB Job
             inlineLoanCOBHelper.executeInlineCOB(Long.valueOf(loanId));
 
@@ -1127,7 +1127,7 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
             verifyDelinquency(loanId, "01 February 2012", 1033.33, 5);
 
             bussinesLocalDate = Utils.getDateAsLocalDate("10 February 2012");
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
             loanTransactionHelper.createLoanDelinquencyAction(loanId.longValue(), RESUME, "10 February 2012");
 
             updateBusinessDate("12 March 2012");
@@ -1362,7 +1362,7 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
 
             LocalDate bussinesLocalDate = Utils.getDateAsLocalDate(operationDate);
             log.info("Current date {}", bussinesLocalDate);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
 
             // Given
             final LoanTransactionHelper loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
@@ -1392,7 +1392,7 @@ public class DelinquencyBucketsIntegrationTest extends BaseLoanIntegrationTest {
 
             // run cob for business date 01 January 2012
             bussinesLocalDate = Utils.getDateAsLocalDate(operationDate);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, bussinesLocalDate);
             // Run the Loan inline COB Job
             inlineLoanCOBHelper.executeInlineCOB(Long.valueOf(loanId));
 

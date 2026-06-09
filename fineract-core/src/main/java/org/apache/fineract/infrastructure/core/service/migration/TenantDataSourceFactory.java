@@ -18,9 +18,10 @@
  */
 package org.apache.fineract.infrastructure.core.service.migration;
 
+import static org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection.resolveProtocol;
 import static org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection.toJdbcUrl;
-import static org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection.toProtocol;
 
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection;
@@ -36,13 +37,15 @@ public class TenantDataSourceFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(TenantDataSourceFactory.class);
 
+    private final HikariConfig hikariConfig;
     private final HikariDataSource tenantDataSource;
 
     private final DatabasePasswordEncryptor databasePasswordEncryptor;
 
     @Autowired
-    public TenantDataSourceFactory(@Qualifier("hikariTenantDataSource") HikariDataSource tenantDataSource,
+    public TenantDataSourceFactory(HikariConfig hikariConfig, @Qualifier("hikariTenantDataSource") HikariDataSource tenantDataSource,
             DatabasePasswordEncryptor databasePasswordEncryptor) {
+        this.hikariConfig = hikariConfig;
         this.tenantDataSource = tenantDataSource;
         this.databasePasswordEncryptor = databasePasswordEncryptor;
     }
@@ -62,7 +65,7 @@ public class TenantDataSourceFactory {
         }
         dataSource.setUsername(tenantConnection.getSchemaUsername());
         dataSource.setPassword(databasePasswordEncryptor.decrypt(tenantConnection.getSchemaPassword()));
-        String protocol = toProtocol(tenantDataSource);
+        String protocol = resolveProtocol(hikariConfig.getDriverClassName());
         String tenantJdbcUrl = toJdbcUrl(protocol, tenantConnection.getSchemaServer(), tenantConnection.getSchemaServerPort(),
                 tenantConnection.getSchemaName(), tenantConnection.getSchemaConnectionParameters());
         LOG.debug("JDBC URL for tenant {} is {}", tenant.getTenantIdentifier(), tenantJdbcUrl);

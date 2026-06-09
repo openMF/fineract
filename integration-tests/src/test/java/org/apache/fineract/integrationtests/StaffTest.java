@@ -172,8 +172,7 @@ public class StaffTest {
         final String firstname = Utils.uniqueRandomStringGenerator("michael_", 10);
         final String lastname = Utils.uniqueRandomStringGenerator("Doe_", 10);
         final String externalId = UUID.randomUUID().toString();
-        final String mobileNo = Utils.uniqueRandomStringGenerator("num_", 10);
-
+        final String mobileNo = "+14155552671";
         map.put("firstname", firstname);
         map.put("lastname", lastname);
         map.put("externalId", externalId);

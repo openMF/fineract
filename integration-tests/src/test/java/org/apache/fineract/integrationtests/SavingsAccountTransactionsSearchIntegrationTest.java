@@ -176,7 +176,7 @@ public class SavingsAccountTransactionsSearchIntegrationTest {
         try {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             this.savingsAccountHelper.depositToSavingsAccount(savingsId, "100", firstDepositDate, CommonConstants.RESPONSE_RESOURCE_ID);
             this.savingsAccountHelper.depositToSavingsAccount(savingsId, "300", secondDepositDate, CommonConstants.RESPONSE_RESOURCE_ID);

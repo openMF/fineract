@@ -2393,7 +2393,6 @@ public class BatchApiTest extends BaseLoanIntegrationTest {
     @Test
     public void shoulRetrieveTheProperErrorDuringLockedLoan_OldRelativePath() {
         ResponseSpecification responseSpec = new ResponseSpecBuilder().expectStatusCode(202).build();
-        LoanAccountLockHelper loanAccountLockHelper = new LoanAccountLockHelper(this.requestSpec, responseSpec);
         final String loanProductJSON = new LoanProductTestBuilder() //
                 .withPrincipal("1000.00") //
                 .withNumberOfRepayments("24") //
@@ -2443,7 +2442,7 @@ public class BatchApiTest extends BaseLoanIntegrationTest {
 
         final Long loanId = new FromJsonHelper().parse(responses.get(2).getBody()).getAsJsonObject().get("resourceId").getAsLong();
 
-        loanAccountLockHelper.placeSoftLockOnLoanAccount(loanId.intValue(), "LOAN_COB_CHUNK_PROCESSING");
+        LoanAccountLockHelper.placeSoftLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING");
 
         RequestSpecification requestSpec = UserHelper.getSimpleUserWithoutBypassPermission(this.requestSpec, this.responseSpec);
 
@@ -2475,7 +2474,6 @@ public class BatchApiTest extends BaseLoanIntegrationTest {
     @Test
     public void shoulRetrieveTheProperErrorDuringLockedLoan() {
         ResponseSpecification responseSpec = new ResponseSpecBuilder().expectStatusCode(202).build();
-        LoanAccountLockHelper loanAccountLockHelper = new LoanAccountLockHelper(this.requestSpec, responseSpec);
         final String loanProductJSON = new LoanProductTestBuilder() //
                 .withPrincipal("1000.00") //
                 .withNumberOfRepayments("24") //
@@ -2525,7 +2523,7 @@ public class BatchApiTest extends BaseLoanIntegrationTest {
 
         final Long loanId = new FromJsonHelper().parse(responses.get(2).getBody()).getAsJsonObject().get("resourceId").getAsLong();
 
-        loanAccountLockHelper.placeSoftLockOnLoanAccount(loanId.intValue(), "LOAN_COB_CHUNK_PROCESSING");
+        LoanAccountLockHelper.placeSoftLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING");
 
         RequestSpecification requestSpec = UserHelper.getSimpleUserWithoutBypassPermission(this.requestSpec, this.responseSpec);
 

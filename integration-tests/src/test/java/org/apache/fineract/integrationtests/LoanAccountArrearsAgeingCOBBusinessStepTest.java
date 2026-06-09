@@ -76,7 +76,7 @@ public class LoanAccountArrearsAgeingCOBBusinessStepTest extends BaseLoanIntegra
                     new PutGlobalConfigurationsRequest().enabled(true));
 
             LocalDate businessDate = Utils.getLocalDateOfTenant();
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             LocalDate operationDate = businessDate.minusDays(40);
             String loanOperationDate = Utils.dateFormatter.format(operationDate);

@@ -65,7 +65,6 @@ public class LoanCatchUpIntegrationTest extends BaseLoanIntegrationTest {
     private RequestSpecification requestSpec;
     private LoanCOBCatchUpHelper loanCOBCatchUpHelper;
     private LoanTransactionHelper loanTransactionHelper;
-    private LoanAccountLockHelper loanAccountLockHelper;
 
     @BeforeEach
     public void setup() {
@@ -83,11 +82,10 @@ public class LoanCatchUpIntegrationTest extends BaseLoanIntegrationTest {
         try {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, LocalDate.of(2020, 3, 2));
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, LocalDate.of(2020, 3, 2));
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.PENALTY_WAIT_PERIOD,
                     new PutGlobalConfigurationsRequest().value(0L));
             loanTransactionHelper = new LoanTransactionHelper(requestSpec, responseSpec);
-            loanAccountLockHelper = new LoanAccountLockHelper(requestSpec, new ResponseSpecBuilder().expectStatusCode(202).build());
 
             final Integer clientID = ClientHelper.createClient(requestSpec, responseSpec);
             Assertions.assertNotNull(clientID);
@@ -114,10 +112,10 @@ public class LoanCatchUpIntegrationTest extends BaseLoanIntegrationTest {
                     JsonPath.from(loanDetails).get("netDisbursalAmount").toString());
             LoanStatusChecker.verifyLoanIsActive(loanStatusHashMap);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.COB_DATE, LocalDate.of(2020, 3, 2));
-            loanAccountLockHelper.placeSoftLockOnLoanAccount(loanID, "LOAN_INLINE_COB_PROCESSING", "Sample error");
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.COB_DATE, LocalDate.of(2020, 3, 2));
+            LoanAccountLockHelper.placeSoftLockOnLoanAccount(loanID.longValue(), "LOAN_INLINE_COB_PROCESSING", "Sample error");
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, LocalDate.of(2020, 3, 5));
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, LocalDate.of(2020, 3, 5));
 
             loanTransactionHelper = new LoanTransactionHelper(requestSpec, responseSpec);
             loanCOBCatchUpHelper.executeLoanCOBCatchUp();

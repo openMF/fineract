@@ -32,7 +32,6 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import org.apache.fineract.cob.data.COBParameter;
-import org.apache.fineract.cob.domain.LoanAccountLock;
 import org.apache.fineract.cob.domain.LockOwner;
 import org.apache.fineract.cob.domain.LockingService;
 import org.apache.fineract.cob.exceptions.LockCannotBeAppliedException;
@@ -85,34 +84,29 @@ public class ApplyLoanLockTaskletStepDefinitions implements En {
             if ("error".equals(action)) {
                 lenient().when(fineractProperties.getQuery()).thenReturn(fineractQueryProperties);
                 lenient().when(fineractQueryProperties.getInClauseParameterSizeLimit()).thenReturn(65000);
-                lenient().when(loanLockingService.findAllByLoanIdIn(Mockito.anyList())).thenThrow(new RuntimeException("fail"));
+                lenient().when(loanLockingService.findLockIdsByLoanIdIn(Mockito.anyList())).thenThrow(new RuntimeException("fail"));
             } else if ("db-error-first-try".equals(action)) {
-                LoanAccountLock lock1 = new LoanAccountLock(1L, LockOwner.LOAN_COB_CHUNK_PROCESSING, LocalDate.now(ZoneId.systemDefault()));
-                LoanAccountLock lock3 = new LoanAccountLock(3L, LockOwner.LOAN_INLINE_COB_PROCESSING,
-                        LocalDate.now(ZoneId.systemDefault()));
-                List<LoanAccountLock> accountLocks = List.of(lock1, lock3);
+                List<Long> accountLocks = List.of(1L, 3L);
                 lenient().when(fineractProperties.getQuery()).thenReturn(fineractQueryProperties);
                 lenient().when(fineractQueryProperties.getInClauseParameterSizeLimit()).thenReturn(65000);
-                lenient().when(loanLockingService.findAllByLoanIdIn(Mockito.anyList())).thenReturn(accountLocks);
+                lenient().when(loanLockingService.findLockIdsByLoanIdIn(Mockito.anyList())).thenReturn(accountLocks);
                 Mockito.doThrow(new RuntimeException("db error")).when(loanLockingService).applyLock(Mockito.anyList(), any());
             } else if ("db-error-not-recoverable".equals(action)) {
-                LoanAccountLock lock1 = new LoanAccountLock(1L, LockOwner.LOAN_COB_CHUNK_PROCESSING, LocalDate.now(ZoneId.systemDefault()));
-                LoanAccountLock lock3 = new LoanAccountLock(3L, LockOwner.LOAN_INLINE_COB_PROCESSING,
-                        LocalDate.now(ZoneId.systemDefault()));
-                List<LoanAccountLock> accountLocks = List.of(lock1, lock3);
+                Long lock1 = 1L;
+                Long lock3 = 3L;
+                List<Long> accountLocks = List.of(lock1, lock3);
                 stepContribution.getStepExecution().setCommitCount(4);
                 lenient().when(fineractProperties.getQuery()).thenReturn(fineractQueryProperties);
                 lenient().when(fineractQueryProperties.getInClauseParameterSizeLimit()).thenReturn(65000);
-                lenient().when(loanLockingService.findAllByLoanIdIn(Mockito.anyList())).thenReturn(accountLocks);
+                lenient().when(loanLockingService.findLockIdsByLoanIdIn(Mockito.anyList())).thenReturn(accountLocks);
                 Mockito.doThrow(new RuntimeException("db error")).when(loanLockingService).applyLock(Mockito.anyList(), any());
             } else {
-                LoanAccountLock lock1 = new LoanAccountLock(1L, LockOwner.LOAN_COB_CHUNK_PROCESSING, LocalDate.now(ZoneId.systemDefault()));
-                LoanAccountLock lock3 = new LoanAccountLock(3L, LockOwner.LOAN_INLINE_COB_PROCESSING,
-                        LocalDate.now(ZoneId.systemDefault()));
-                List<LoanAccountLock> accountLocks = List.of(lock1, lock3);
+                Long lock1 = 1L;
+                Long lock3 = 3L;
+                List<Long> accountLocks = List.of(lock1, lock3);
                 lenient().when(fineractProperties.getQuery()).thenReturn(fineractQueryProperties);
                 lenient().when(fineractQueryProperties.getInClauseParameterSizeLimit()).thenReturn(65000);
-                lenient().when(loanLockingService.findAllByLoanIdIn(Mockito.anyList())).thenReturn(accountLocks);
+                lenient().when(loanLockingService.findLockIdsByLoanIdIn(Mockito.anyList())).thenReturn(accountLocks);
             }
             transactionTemplate.setTransactionManager(mock(PlatformTransactionManager.class));
 

@@ -18,37 +18,26 @@
  */
 package org.apache.fineract.notification.service;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.core.service.Page;
-import org.apache.fineract.infrastructure.core.service.PaginationHelper;
 import org.apache.fineract.infrastructure.core.service.SearchParameters;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
-import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
-import org.apache.fineract.infrastructure.security.utils.ColumnValidator;
 import org.apache.fineract.notification.cache.CacheNotificationResponseHeader;
 import org.apache.fineract.notification.data.NotificationData;
-import org.apache.fineract.notification.data.NotificationMapperData;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
+import org.apache.fineract.notification.domain.NotificationMapperRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @RequiredArgsConstructor
 public class NotificationReadPlatformServiceImpl implements NotificationReadPlatformService {
 
     private HashMap<Long, HashMap<Long, CacheNotificationResponseHeader>> tenantNotificationResponseHeaderCache = new HashMap<>();
 
-    private final NotificationDataRow notificationDataRow = new NotificationDataRow();
-    private final NotificationMapperRow notificationMapperRow = new NotificationMapperRow();
-
-    private final JdbcTemplate jdbcTemplate;
     private final PlatformSecurityContext context;
-    private final ColumnValidator columnValidator;
-    private final PaginationHelper paginationHelper;
-    private final DatabaseSpecificSQLGenerator sqlGenerator;
+    private final NotificationMapperRepository notificationMapperRepository;
 
     @Override
     public boolean hasUnreadNotifications(Long appUserId) {
@@ -69,7 +58,6 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
             }
         } else {
             return this.initializeTenantNotificationResponseHeaderCache(tenantId, now, appUserId);
-
         }
     }
 
@@ -92,127 +80,60 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
     }
 
     private boolean checkForUnreadNotifications(Long appUserId) {
-        String sql = "SELECT id, notification_id as notificationId, user_id as userId, is_read as isRead, created_at "
-                + "as createdAt FROM notification_mapper WHERE user_id = ? AND is_read = false";
-        List<NotificationMapperData> notificationMappers = this.jdbcTemplate.query(sql, notificationMapperRow, appUserId);
-        return notificationMappers.size() > 0;
+        return this.notificationMapperRepository.hasUnreadNotifications(appUserId);
     }
 
     @Override
     public void updateNotificationReadStatus() {
         final Long appUserId = context.authenticatedUser().getId();
-        String sql = "UPDATE notification_mapper SET is_read = true WHERE is_read = false and user_id = ?";
-        this.jdbcTemplate.update(sql, appUserId);
+        this.notificationMapperRepository.markUnreadNotificationsAsRead(appUserId);
     }
 
     @Override
     public Page<NotificationData> getAllUnreadNotifications(final SearchParameters searchParameters) {
         final Long appUserId = context.authenticatedUser().getId();
-        String sql = "SELECT " + sqlGenerator.calcFoundRows() + " ng.id as id, nm.user_id as userId, ng.object_type as objectType, "
-                + "ng.object_identifier as objectId, ng.actor as actor, ng." + sqlGenerator.escape("action")
-                + " as action, ng.notification_content "
-                + "as content, ng.is_system_generated as isSystemGenerated, nm.created_at as createdAt "
-                + "FROM notification_mapper nm INNER JOIN notification_generator ng ON nm.notification_id = ng.id "
-                + "WHERE nm.user_id = ? AND nm.is_read = false order by nm.created_at desc";
-
-        return getNotificationDataPage(searchParameters, appUserId, sql);
+        final Pageable pageable = toPageable(searchParameters);
+        final org.springframework.data.domain.Page<NotificationData> springPage = this.notificationMapperRepository
+                .findNotificationDataByUserIdAndReadStatus(appUserId, false, pageable);
+        return toFineractPage(springPage);
     }
 
     @Override
-    public Page<NotificationData> getAllNotifications(SearchParameters searchParameters) {
+    public Page<NotificationData> getAllNotifications(final SearchParameters searchParameters) {
         final Long appUserId = context.authenticatedUser().getId();
-        String sql = "SELECT " + sqlGenerator.calcFoundRows() + " ng.id as id, nm.user_id as userId, ng.object_type as objectType, "
-                + "ng.object_identifier as objectId, ng.actor as actor, ng." + sqlGenerator.escape("action")
-                + " as action, ng.notification_content "
-                + "as content, ng.is_system_generated as isSystemGenerated, nm.created_at as createdAt "
-                + "FROM notification_mapper nm INNER JOIN notification_generator ng ON nm.notification_id = ng.id "
-                + "WHERE nm.user_id = ? order by nm.created_at desc";
-
-        return getNotificationDataPage(searchParameters, appUserId, sql);
+        final Pageable pageable = toPageable(searchParameters);
+        final org.springframework.data.domain.Page<NotificationData> springPage = this.notificationMapperRepository
+                .findNotificationDataByUserIdAndReadStatus(appUserId, null, pageable);
+        return toFineractPage(springPage);
     }
 
-    private Page<NotificationData> getNotificationDataPage(SearchParameters searchParameters, Long appUserId, String sql) {
-        final StringBuilder sqlBuilder = new StringBuilder(200);
-        sqlBuilder.append(sql);
+    private Pageable toPageable(final SearchParameters searchParameters) {
+        final int limit = searchParameters.hasLimit() ? searchParameters.getLimit() : SearchParameters.DEFAULT_MAX_LIMIT;
+        final int offset = searchParameters.hasOffset() ? searchParameters.getOffset() : 0;
+
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Limit must be greater than zero");
+        }
+
+        if (offset < 0) {
+            throw new IllegalArgumentException("Offset must not be negative");
+        }
+
+        final int page = offset / limit;
+
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
 
         if (searchParameters.hasOrderBy()) {
-            sqlBuilder.append(" order by ").append(searchParameters.getOrderBy());
-            this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getOrderBy());
-            if (searchParameters.hasSortOrder()) {
-                sqlBuilder.append(' ').append(searchParameters.getSortOrder());
-                this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getSortOrder());
-            }
+            final String orderBy = searchParameters.getOrderBy();
+            final Sort.Direction direction = "ASC".equalsIgnoreCase(searchParameters.getSortOrder()) ? Sort.Direction.ASC
+                    : Sort.Direction.DESC;
+            sort = Sort.by(direction, orderBy);
         }
 
-        if (searchParameters.hasLimit()) {
-            sqlBuilder.append(" ");
-            if (searchParameters.hasOffset()) {
-                sqlBuilder.append(sqlGenerator.limit(searchParameters.getLimit(), searchParameters.getOffset()));
-            } else {
-                sqlBuilder.append(sqlGenerator.limit(searchParameters.getLimit()));
-            }
-        }
-
-        Object[] params = new Object[] { appUserId };
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlBuilder.toString(), params, this.notificationDataRow);
+        return PageRequest.of(page, limit, sort);
     }
 
-    private static final class NotificationMapperRow implements RowMapper<NotificationMapperData> {
-
-        @Override
-        public NotificationMapperData mapRow(ResultSet rs, int rowNum) throws SQLException {
-            NotificationMapperData notificationMapperData = new NotificationMapperData();
-
-            final Long id = rs.getLong("id");
-            notificationMapperData.setId(id);
-
-            final Long notificationId = rs.getLong("notificationId");
-            notificationMapperData.setNotificationId(notificationId);
-
-            final Long userId = rs.getLong("userId");
-            notificationMapperData.setUserId(userId);
-
-            final boolean isRead = rs.getBoolean("isRead");
-            notificationMapperData.setRead(isRead);
-
-            final String createdAt = rs.getString("createdAt");
-            notificationMapperData.setCreatedAt(createdAt);
-
-            return notificationMapperData;
-        }
-    }
-
-    private static final class NotificationDataRow implements RowMapper<NotificationData> {
-
-        @Override
-        public NotificationData mapRow(ResultSet rs, int rowNum) throws SQLException {
-            NotificationData notificationData = new NotificationData();
-
-            final Long id = rs.getLong("id");
-            notificationData.setId(id);
-
-            final String objectType = rs.getString("objectType");
-            notificationData.setObjectType(objectType);
-
-            final Long objectId = rs.getLong("objectId");
-            notificationData.setObjectId(objectId);
-
-            final Long actorId = rs.getLong("actor");
-            notificationData.setActorId(actorId);
-
-            final String action = rs.getString("action");
-            notificationData.setAction(action);
-
-            final String content = rs.getString("content");
-            notificationData.setContent(content);
-
-            final boolean isSystemGenerated = rs.getBoolean("isSystemGenerated");
-            notificationData.setSystemGenerated(isSystemGenerated);
-
-            final String createdAt = rs.getString("createdAt");
-            notificationData.setCreatedAt(createdAt);
-
-            return notificationData;
-        }
+    private Page<NotificationData> toFineractPage(final org.springframework.data.domain.Page<NotificationData> springPage) {
+        return new Page<>(springPage.getContent(), Math.toIntExact(springPage.getTotalElements()));
     }
 }

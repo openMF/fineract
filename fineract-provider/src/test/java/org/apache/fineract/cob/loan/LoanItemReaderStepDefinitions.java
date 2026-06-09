@@ -36,7 +36,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.fineract.cob.common.CustomJobParameterResolver;
 import org.apache.fineract.cob.data.COBParameter;
-import org.apache.fineract.cob.domain.LoanAccountLock;
 import org.apache.fineract.cob.domain.LockOwner;
 import org.apache.fineract.cob.domain.LockingService;
 import org.apache.fineract.cob.exceptions.LockedReadException;
@@ -61,7 +60,7 @@ public class LoanItemReaderStepDefinitions implements En {
     private LockingService lockingService = mock(LockingService.class);
 
     private LoanItemReader loanItemReader = new LoanItemReader(loanRepository,
-            new BeforeStepLockingItemReaderHelper<LoanAccountLock>(retrieveIdService, lockingService));
+            new BeforeStepLockingItemReaderHelper(retrieveIdService, lockingService));
 
     private Loan loan = mock(Loan.class);
 
@@ -96,15 +95,14 @@ public class LoanItemReaderStepDefinitions implements En {
             businessDates.put(BusinessDateType.BUSINESS_DATE, businessDate);
             businessDates.put(BusinessDateType.COB_DATE, businessDate.minusDays(1));
             ThreadLocalContextUtil.setBusinessDates(businessDates);
-            LoanAccountLock loanAccountLock = new LoanAccountLock(1L, LockOwner.LOAN_COB_CHUNK_PROCESSING, businessDate.minusDays(1));
-            LoanAccountLock loanAccountLockNegativeNumberTest = new LoanAccountLock(-1L, LockOwner.LOAN_COB_CHUNK_PROCESSING,
-                    businessDate.minusDays(1));
+            Long loanAccountLock = 1L;
+            Long loanAccountLockNegativeNumberTest = -1L;
             lenient().when(customJobParameterResolver.getCustomJobParameterSet(any())).thenReturn(Optional.empty());
-            lenient().when(lockingService.findAllByLoanIdInAndLockOwner(List.of(1L), LockOwner.LOAN_COB_CHUNK_PROCESSING))
+            lenient().when(lockingService.findLockIdsByLoanIdInAndLockOwner(List.of(1L), LockOwner.LOAN_COB_CHUNK_PROCESSING))
                     .thenReturn(List.of(loanAccountLock));
-            lenient().when(lockingService.findAllByLoanIdInAndLockOwner(List.of(1L, 2L), LockOwner.LOAN_COB_CHUNK_PROCESSING))
+            lenient().when(lockingService.findLockIdsByLoanIdInAndLockOwner(List.of(1L, 2L), LockOwner.LOAN_COB_CHUNK_PROCESSING))
                     .thenReturn(List.of(loanAccountLock));
-            lenient().when(lockingService.findAllByLoanIdInAndLockOwner(List.of(-1L), LockOwner.LOAN_COB_CHUNK_PROCESSING))
+            lenient().when(lockingService.findLockIdsByLoanIdInAndLockOwner(List.of(-1L), LockOwner.LOAN_COB_CHUNK_PROCESSING))
                     .thenReturn(List.of(loanAccountLockNegativeNumberTest));
 
             loanItemReader.beforeStep(stepExecution);

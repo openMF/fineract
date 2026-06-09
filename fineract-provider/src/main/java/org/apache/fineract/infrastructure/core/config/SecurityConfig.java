@@ -133,7 +133,6 @@ public class SecurityConfig {
             }
 
             auth.requestMatchers(API_MATCHER.matcher(HttpMethod.OPTIONS, "/api/**")).permitAll()
-                    .requestMatchers(API_MATCHER.matcher(HttpMethod.POST, "/api/*/echo")).permitAll()
                     .requestMatchers(API_MATCHER.matcher(HttpMethod.POST, "/api/*/authentication")).permitAll()
                     .requestMatchers(API_MATCHER.matcher(HttpMethod.POST, "/api/*/password/forgot")).permitAll()
                     .requestMatchers(API_MATCHER.matcher(HttpMethod.PUT, "/api/*/instance-mode")).permitAll()

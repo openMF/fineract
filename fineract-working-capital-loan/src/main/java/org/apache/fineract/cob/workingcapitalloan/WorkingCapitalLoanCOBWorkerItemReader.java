@@ -23,7 +23,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.cob.domain.WorkingCapitalLoanAccountLock;
 import org.apache.fineract.cob.exceptions.LockedReadException;
 import org.apache.fineract.cob.service.BeforeStepLockingItemReaderHelper;
 import org.apache.fineract.portfolio.loanaccount.exception.LoanNotFoundException;
@@ -40,7 +39,7 @@ import org.springframework.lang.Nullable;
 public class WorkingCapitalLoanCOBWorkerItemReader implements ItemReader<WorkingCapitalLoan> {
 
     private final WorkingCapitalLoanRepository repository;
-    private final BeforeStepLockingItemReaderHelper<WorkingCapitalLoanAccountLock> itemReaderHelper;
+    private final BeforeStepLockingItemReaderHelper itemReaderHelper;
 
     @Setter(AccessLevel.PROTECTED)
     private LinkedBlockingQueue<Long> remainingData;

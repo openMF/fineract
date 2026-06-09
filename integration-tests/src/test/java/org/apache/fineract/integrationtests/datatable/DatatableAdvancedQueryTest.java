@@ -132,7 +132,7 @@ public class DatatableAdvancedQueryTest {
         try {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, today);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, today);
 
             final Integer clientId = ClientHelper.createClient(requestSpec, responseSpec, yesterdayS);
             assertNotNull(clientId);
@@ -218,7 +218,7 @@ public class DatatableAdvancedQueryTest {
         try {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, today);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, today);
 
             final Integer clientId = ClientHelper.createClient(requestSpec, responseSpec, yesterdayS);
             assertNotNull(clientId);

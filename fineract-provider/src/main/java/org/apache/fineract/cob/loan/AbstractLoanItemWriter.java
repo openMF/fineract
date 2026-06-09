@@ -21,7 +21,6 @@ package org.apache.fineract.cob.loan;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.cob.domain.LoanAccountLock;
 import org.apache.fineract.cob.domain.LockOwner;
 import org.apache.fineract.cob.domain.LockingService;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
@@ -34,7 +33,7 @@ import org.springframework.lang.NonNull;
 @RequiredArgsConstructor
 public abstract class AbstractLoanItemWriter extends RepositoryItemWriter<Loan> {
 
-    private final LockingService<LoanAccountLock> loanLockingService;
+    private final LockingService loanLockingService;
 
     @Override
     public void write(@NonNull Chunk<? extends Loan> items) throws Exception {

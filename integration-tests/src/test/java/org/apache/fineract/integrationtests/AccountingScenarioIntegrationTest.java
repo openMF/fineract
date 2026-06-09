@@ -126,7 +126,6 @@ public class AccountingScenarioIntegrationTest {
     private FixedDepositAccountHelper fixedDepositAccountHelper;
     private RecurringDepositAccountHelper recurringDepositAccountHelper;
     private SchedulerJobHelper schedulerJobHelper;
-    private PeriodicAccrualAccountingHelper periodicAccrualAccountingHelper;
 
     private TimeZone tenantTimeZone;
 
@@ -142,7 +141,6 @@ public class AccountingScenarioIntegrationTest {
         this.accountHelper = new AccountHelper(requestSpec, responseSpec);
         this.journalEntryHelper = new JournalEntryHelper(requestSpec, responseSpec);
         this.schedulerJobHelper = new SchedulerJobHelper(requestSpec);
-        this.periodicAccrualAccountingHelper = new PeriodicAccrualAccountingHelper(requestSpec, responseSpec);
         this.savingsAccountHelper = new SavingsAccountHelper(requestSpec, responseSpec);
 
         this.tenantTimeZone = TimeZone.getTimeZone(Utils.TENANT_TIME_ZONE);
@@ -1067,7 +1065,7 @@ public class AccountingScenarioIntegrationTest {
                 new JournalEntry(LP_PRINCIPAL, JournalEntry.TransactionType.DEBIT), };
         this.journalEntryHelper.checkJournalEntryForAssetAccount(assetAccount, LOAN_DISBURSEMENT_DATE, assetAccountInitialEntry);
 
-        this.periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(runOndate);
+        PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(runOndate);
 
         final ArrayList<HashMap> loanSchedule = this.loanTransactionHelper.getLoanRepaymentSchedule(requestSpec, responseSpec, loanID);
         // MAKE 1
@@ -1094,7 +1092,7 @@ public class AccountingScenarioIntegrationTest {
 
         runOndate = dateFormat.format(todayDate.getTime());
 
-        this.periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(runOndate);
+        PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(runOndate);
         float interestPerDay = (totalInterest / totalDaysInPeriod * 4) - interest3Days;
         interestPerDay = Float.parseFloat(numberFormat.format(interestPerDay));
         this.loanTransactionHelper.checkAccrualTransactionForRepayment(getDateAsLocalDate(runOndate), interestPerDay, NEXT_FEE_PORTION,

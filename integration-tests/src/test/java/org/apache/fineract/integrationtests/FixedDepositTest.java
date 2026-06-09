@@ -2648,7 +2648,7 @@ public class FixedDepositTest extends IntegrationTest {
                     new PutGlobalConfigurationsRequest().enabled(true));
 
             LocalDate marchDate = LocalDate.of(currentYear + 1, 3, 1);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, marchDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, marchDate);
 
             log.info("Submitted Date: {}", SUBMITTED_ON_DATE);
 
@@ -2723,7 +2723,7 @@ public class FixedDepositTest extends IntegrationTest {
                     new PutGlobalConfigurationsRequest().enabled(true));
 
             LocalDate marchDate = LocalDate.of(currentYear + 1, 1, 1);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, marchDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, marchDate);
 
             log.info("Submitted Date: {}", SUBMITTED_ON_DATE);
 

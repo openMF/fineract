@@ -18,8 +18,6 @@
  */
 package org.apache.fineract.cob.loan;
 
-import org.apache.fineract.cob.domain.LoanAccountLock;
-import org.apache.fineract.cob.domain.LoanAccountLockRepository;
 import org.apache.fineract.cob.domain.LockingService;
 import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,12 +33,10 @@ public class LoanLockingConfiguration {
     private JdbcTemplate jdbcTemplate;
     @Autowired
     private FineractProperties fineractProperties;
-    @Autowired
-    private LoanAccountLockRepository loanAccountLockRepository;
 
     @Bean
-    @ConditionalOnMissingBean
-    public LockingService<LoanAccountLock> retrieveLoanLockingService() {
-        return new LoanLockingServiceImpl(jdbcTemplate, fineractProperties, loanAccountLockRepository);
+    @ConditionalOnMissingBean(name = "retrieveLoanLockingService")
+    public LockingService retrieveLoanLockingService() {
+        return new LoanLockingServiceImpl(jdbcTemplate, fineractProperties);
     }
 }

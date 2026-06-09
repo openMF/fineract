@@ -19,6 +19,7 @@
 package org.apache.fineract.notification.data;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Set;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -43,4 +44,16 @@ public class NotificationData implements Serializable {
     private String createdAt;
     private Long officeId;
     private Set<Long> userIds;
+
+    public NotificationData(final Long id, final String objectType, final Long objectId, final Long actorId, final String action,
+            final String content, final boolean isSystemGenerated, final LocalDateTime createdAt) {
+        this.id = id;
+        this.objectType = objectType;
+        this.objectId = objectId;
+        this.actorId = actorId;
+        this.action = action;
+        this.content = content;
+        this.isSystemGenerated = isSystemGenerated;
+        this.createdAt = createdAt == null ? null : createdAt.toString();
+    }
 }

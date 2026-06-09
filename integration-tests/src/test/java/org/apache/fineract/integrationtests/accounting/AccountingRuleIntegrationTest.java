@@ -26,7 +26,7 @@ import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
-import java.util.ArrayList;
+import java.util.List;
 import org.apache.fineract.client.models.AccountingRuleData;
 import org.apache.fineract.client.models.GetOfficesResponse;
 import org.apache.fineract.client.models.PostAccountingRulesResponse;
@@ -44,7 +44,6 @@ public class AccountingRuleIntegrationTest {
     private RequestSpecification requestSpec;
 
     private AccountHelper accountHelper;
-    private AccountRuleHelper accountRuleHelper;
 
     @BeforeEach
     public void setup() {
@@ -54,7 +53,6 @@ public class AccountingRuleIntegrationTest {
         requestSpec.header("Authorization", "Basic " + Utils.loginIntoServerAndGetBase64EncodedAuthenticationKey());
         responseSpec = new ResponseSpecBuilder().expectStatusCode(200).build();
 
-        accountRuleHelper = new AccountRuleHelper(requestSpec, responseSpec);
         accountHelper = new AccountHelper(requestSpec, responseSpec);
     }
 
@@ -66,10 +64,9 @@ public class AccountingRuleIntegrationTest {
         final GetOfficesResponse headOffice = OfficeHelper.getHeadOffice();
 
         // when
-        final PostAccountingRulesResponse accountingRule = accountRuleHelper.createAccountRule(headOffice.getId(), accountToCredit,
+        final PostAccountingRulesResponse accountingRule = AccountRuleHelper.createAccountRule(headOffice.getId(), accountToCredit,
                 accountToDebit);
-        final ArrayList<AccountingRuleData> accountingRules = accountRuleHelper.getAccountingRules();
-
+        final List<AccountingRuleData> accountingRules = AccountRuleHelper.getAccountingRules();
         // then
         assertNotNull(accountingRule);
         assertNotNull(accountingRule.getResourceId());

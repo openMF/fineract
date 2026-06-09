@@ -127,7 +127,7 @@ public class SavingsAccountTransactionTest {
         try {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, today);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, today);
 
             LocalDate depositDate = Utils.getDateAsLocalDate(depositDateString);
             LocalDate withdrawDate = Utils.getDateAsLocalDate(withdrawDateString);

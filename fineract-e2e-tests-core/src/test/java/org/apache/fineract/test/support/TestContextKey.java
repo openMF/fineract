@@ -376,4 +376,14 @@ public abstract class TestContextKey {
     public static final String WORKING_CAPITAL_LOAN_DISCOUNT_FEE_EXTERNAL_ID_USER_GENERATED = "workingCapitalLoanDiscountFeeExternalIdUserGenerated";
     public static final String WORKING_CAPITAL_LOAN_DISCOUNT_FEE_RESPONSE = "workingCapitalLoanDiscountFeeResponse";
     public static final String LAST_SAVINGS_ACCOUNT_ID = "lastSavingsAccountId";
+    public static final String WORKING_CAPITAL_LOAN_ID = "workingCapitalLoanId";
+    public static final String WORKING_CAPITAL_LOAN_EXTERNAL_ID = "workingCapitalLoanExternalId";
+    public static final String WORKING_CAPITAL_LOAN_MODIFY_RESPONSE = "workingCapitalLoanModifyResponse";
+    public static final String WORKING_CAPITAL_LOAN_APPROVE_RESPONSE = "workingCapitalLoanApproveResponse";
+    public static final String WORKING_CAPITAL_LOAN_REJECT_RESPONSE = "workingCapitalLoanRejectResponse";
+    public static final String WORKING_CAPITAL_LOAN_DELETE_RESPONSE = "workingCapitalLoanDeleteResponse";
+    public static final String WORKING_CAPITAL_LOAN_DISBURSE_RESPONSE = "workingCapitalLoanDisburseResponse";
+    public static final String WORKING_CAPITAL_LOAN_DISCOUNT_FEE_RESPONSE_BATCH = "workingCapitalLoanDiscountFeeResponseBatch";
+    public static final String WORKING_CAPITAL_LOAN_GET_DETAILS_RESPONSE = "workingCapitalLoanGetDetailsResponse";
+    public static final String WORKING_CAPITAL_LOAN_GET_TRANSACTIONS_RESPONSE = "workingCapitalLoanGetTransactionsResponse";
 }

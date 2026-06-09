@@ -428,8 +428,9 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
                 .forDisbursementDiscount(discountTransaction, amount);
         allocationRepository.saveAndFlush(allocation);
 
-        amortizationScheduleWriteService.generateAndSaveAmortizationScheduleOnDisbursement(loan,
-                disbursementTransaction.getTransactionAmount(), disbursementTransaction.getTransactionDate());
+        // Regenerate with the new discount while preserving repayments already recorded on the disbursement schedule
+        // (e.g. a same-day repayment that shifted the grid); a plain regeneration would drop them.
+        amortizationScheduleWriteService.applyDiscountFeeAdjustment(loan, disbursementTransaction.getTransactionDate());
 
         businessEventNotifierService
                 .notifyPostBusinessEvent(new WorkingCapitalLoanDiscountFeeTransactionBusinessEvent(discountTransaction));

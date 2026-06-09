@@ -22,7 +22,6 @@ import org.apache.fineract.cob.COBBusinessStepService;
 import org.apache.fineract.cob.common.CustomJobParameterResolver;
 import org.apache.fineract.cob.common.ResetContextTasklet;
 import org.apache.fineract.cob.conditions.LoanCOBEnabledCondition;
-import org.apache.fineract.cob.domain.LoanAccountLock;
 import org.apache.fineract.cob.domain.LockingService;
 import org.apache.fineract.cob.listener.InlineCOBLoanItemListener;
 import org.apache.fineract.infrastructure.jobs.domain.CustomJobParameterRepository;
@@ -41,6 +40,7 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.integration.config.annotation.EnableBatchIntegration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -63,13 +63,15 @@ public class LoanInlineCOBConfig {
     @Autowired
     private COBBusinessStepService cobBusinessStepService;
     @Autowired
-    private TransactionTemplate transactionTemplate;
+    @Qualifier("batchJdbcTransactionTemplate")
+    private TransactionTemplate batchJdbcTransactionTemplate;
     @Autowired
     private CustomJobParameterRepository customJobParameterRepository;
     @Autowired
     private CustomJobParameterResolver customJobParameterResolver;
     @Autowired
-    private LockingService<LoanAccountLock> loanLockingService;
+    @Qualifier("retrieveLoanLockingService")
+    private LockingService loanLockingService;
     @Autowired
     private ProgressiveLoanModelProcessingService progressiveLoanModelProcessingService;
 
@@ -127,7 +129,7 @@ public class LoanInlineCOBConfig {
 
     @Bean
     public InlineCOBLoanItemListener inlineCobLoanItemListener() {
-        return new InlineCOBLoanItemListener(loanLockingService, transactionTemplate);
+        return new InlineCOBLoanItemListener(loanLockingService, batchJdbcTransactionTemplate);
     }
 
     @Bean

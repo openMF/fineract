@@ -19,8 +19,6 @@
 package org.apache.fineract.infrastructure.core.domain;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import javax.sql.DataSource;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -126,13 +124,18 @@ public class FineractPlatformTenantConnection implements Serializable {
         return sb.toString();
     }
 
-    public static String toProtocol(DataSource dataSource) {
-        try (Connection connection = dataSource.getConnection()) {
-            String url = connection.getMetaData().getURL();
-            return url.substring(0, url.indexOf("://"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    public static String resolveProtocol(String driver) {
+        if ("org.postgresql.Driver".equals(driver)) {
+            return "jdbc:postgresql";
         }
+        if ("com.mysql.cj.jdbc.Driver".equals(driver)) {
+            return "jdbc:mysql";
+        }
+        if ("org.mariadb.jdbc.Driver".equals(driver)) {
+            return "jdbc:mariadb";
+        }
+
+        throw new IllegalStateException("Unsupported JDBC driver: " + driver);
     }
 
 }

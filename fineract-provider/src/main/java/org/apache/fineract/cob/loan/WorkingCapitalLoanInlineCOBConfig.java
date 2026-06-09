@@ -25,7 +25,6 @@ import org.apache.fineract.cob.common.CustomJobParameterResolver;
 import org.apache.fineract.cob.common.ResetContextTasklet;
 import org.apache.fineract.cob.conditions.LoanCOBEnabledCondition;
 import org.apache.fineract.cob.domain.LockingService;
-import org.apache.fineract.cob.domain.WorkingCapitalLoanAccountLock;
 import org.apache.fineract.cob.workingcapitalloan.InlineWorkingCapitalLoanCOBWorkerItemListener;
 import org.apache.fineract.cob.workingcapitalloan.InlineWorkingCapitalLoanCOBWorkerItemWriter;
 import org.apache.fineract.cob.workingcapitalloan.WorkingCapitalLoanCOBConstant;
@@ -45,6 +44,7 @@ import org.springframework.batch.core.listener.ExecutionContextPromotionListener
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.integration.config.annotation.EnableBatchIntegration;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -61,10 +61,12 @@ public class WorkingCapitalLoanInlineCOBConfig {
     private final PlatformTransactionManager transactionManager;
     private final PropertyService propertyService;
     private final COBBusinessStepService cobBusinessStepService;
-    private final TransactionTemplate transactionTemplate;
+    @Qualifier("batchJdbcTransactionTemplate")
+    private final TransactionTemplate batchJdbcTransactionTemplate;
     private final CustomJobParameterRepository customJobParameterRepository;
     private final CustomJobParameterResolver customJobParameterResolver;
-    private final LockingService<WorkingCapitalLoanAccountLock> loanLockingService;
+    @Qualifier("workingCapitalLoanLockingService")
+    private final LockingService loanLockingService;
     private final WorkingCapitalLoanRepository loanRepository;
 
     @Bean
@@ -130,7 +132,7 @@ public class WorkingCapitalLoanInlineCOBConfig {
 
     @Bean
     public InlineWorkingCapitalLoanCOBWorkerItemListener inlineWorkingCapitalLoanCobLoanItemListener() {
-        return new InlineWorkingCapitalLoanCOBWorkerItemListener(loanLockingService, transactionTemplate);
+        return new InlineWorkingCapitalLoanCOBWorkerItemListener(loanLockingService, batchJdbcTransactionTemplate);
     }
 
     @Bean

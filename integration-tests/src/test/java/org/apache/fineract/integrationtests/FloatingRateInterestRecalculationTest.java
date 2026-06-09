@@ -103,7 +103,7 @@ public class FloatingRateInterestRecalculationTest extends BaseLoanIntegrationTe
 
     private void runFloatingRateRecalculationScenario(boolean overPayment) {
         LocalDate setupDate = LocalDate.of(2024, 2, 1);
-        BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, setupDate);
+        BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, setupDate);
 
         Long floatingRateId = createFloatingRate();
 
@@ -119,7 +119,7 @@ public class FloatingRateInterestRecalculationTest extends BaseLoanIntegrationTe
         final Integer clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId().intValue();
 
         LocalDate disbursementDate = LocalDate.of(2024, 3, 15);
-        BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, disbursementDate);
+        BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, disbursementDate);
 
         final Integer loanId = createAndDisburseLoan(clientId, loanProductId, disbursementDate);
         assertNotNull(loanId);
@@ -139,7 +139,7 @@ public class FloatingRateInterestRecalculationTest extends BaseLoanIntegrationTe
         assertTrue(initialEmi.compareTo(BigDecimal.ZERO) > 0, "Initial EMI should be greater than zero");
 
         LocalDate postRateChangeDate = LocalDate.of(2024, 4, 10);
-        BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, postRateChangeDate);
+        BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, postRateChangeDate);
 
         String repaymentDate = dateFormatter.format(postRateChangeDate);
         float repaymentAmount = overPayment ? initialEmi.floatValue() + 0.01f : initialEmi.floatValue();

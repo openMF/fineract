@@ -75,7 +75,7 @@ public class LoanAccountOverpaidDateStatusTest extends BaseLoanIntegrationTest {
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, todaysDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, todaysDate);
 
             // Loan ExternalId
             String loanExternalIdStr = UUID.randomUUID().toString();

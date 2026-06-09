@@ -21,14 +21,13 @@ package org.apache.fineract.cob.workingcapitalloan;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.cob.domain.LockOwner;
 import org.apache.fineract.cob.domain.LockingService;
-import org.apache.fineract.cob.domain.WorkingCapitalLoanAccountLock;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.springframework.data.repository.CrudRepository;
 
 @Slf4j
 public class InlineWorkingCapitalLoanCOBWorkerItemWriter extends AbstractWorkingCapitalLoanCOBWorkerItemWriter {
 
-    public InlineWorkingCapitalLoanCOBWorkerItemWriter(LockingService<WorkingCapitalLoanAccountLock> loanLockingService,
+    public InlineWorkingCapitalLoanCOBWorkerItemWriter(LockingService loanLockingService,
             CrudRepository<WorkingCapitalLoan, Long> repository) {
         super(loanLockingService, repository);
     }

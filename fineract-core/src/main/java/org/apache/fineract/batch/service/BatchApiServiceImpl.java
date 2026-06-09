@@ -155,7 +155,7 @@ public class BatchApiServiceImpl implements BatchApiService {
                 TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
                 transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
                 if (transactionManager instanceof ExtendedJpaTransactionManager extendedJpaTransactionManager) {
-                    transactionTemplate.setReadOnly(extendedJpaTransactionManager.isReadOnlyConnection());
+                    transactionTemplate.setReadOnly(extendedJpaTransactionManager.isReadOnly());
                 }
                 transactionConfigurator.accept(transactionTemplate);
                 return transactionTemplate.execute(status -> {

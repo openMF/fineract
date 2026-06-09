@@ -155,7 +155,7 @@ public class SavingsAccountRepositoryWrapper {
     }
 
     private void loadLazyCollections(final List<SavingsAccount> accounts) {
-        if (accounts != null && accounts.size() > 0) {
+        if (accounts != null && !accounts.isEmpty()) {
             for (SavingsAccount account : accounts) {
                 account.loadLazyCollections();
             }

@@ -129,4 +129,76 @@ class ClientDataValidatorTest {
 
         assertDoesNotThrow(() -> validator.validateForUpdate(json));
     }
+
+    @Test
+    void validateForCreate_withInvalidMobileNumber_throwsPlatformApiDataValidationException() {
+        String json = """
+                {
+                  "officeId": 1,
+                  "firstname": "John",
+                  "lastname": "Doe",
+                  "active": false,
+                  "legalFormId": 1,
+                  "locale": "en",
+                  "dateFormat": "dd MMMM yyyy",
+                  "mobileNo": "phone123"
+                }
+                """;
+
+        PlatformApiDataValidationException ex = assertThrows(PlatformApiDataValidationException.class,
+                () -> validator.validateForCreate(json));
+
+        assertTrue(ex.getErrors().stream().anyMatch(e -> ClientApiConstants.mobileNoParamName.equals(e.getParameterName())));
+    }
+
+    @Test
+    void validateForCreate_withValidMobileNumber_doesNotThrow() {
+        String json = """
+                {
+                  "officeId": 1,
+                  "firstname": "John",
+                  "lastname": "Doe",
+                  "active": false,
+                  "legalFormId": 1,
+                  "locale": "en",
+                  "dateFormat": "dd MMMM yyyy",
+                  "mobileNo": "+919876543210"
+                }
+                """;
+
+        assertDoesNotThrow(() -> validator.validateForCreate(json));
+    }
+
+    @Test
+    void validateForUpdate_withInvalidMobileNumber_throwsPlatformApiDataValidationException() {
+        String json = """
+                {
+                  "firstname": "Jane",
+                  "lastname": "Doe",
+                  "locale": "en",
+                  "dateFormat": "yyyy-MM-dd",
+                  "mobileNo": "phone123"
+                }
+                """;
+
+        PlatformApiDataValidationException ex = assertThrows(PlatformApiDataValidationException.class,
+                () -> validator.validateForUpdate(json));
+
+        assertTrue(ex.getErrors().stream().anyMatch(e -> ClientApiConstants.mobileNoParamName.equals(e.getParameterName())));
+    }
+
+    @Test
+    void validateForUpdate_withValidMobileNumber_doesNotThrow() {
+        String json = """
+                {
+                  "firstname": "Jane",
+                  "lastname": "Doe",
+                  "locale": "en",
+                  "dateFormat": "yyyy-MM-dd",
+                  "mobileNo": "+14155552671"
+                }
+                """;
+
+        assertDoesNotThrow(() -> validator.validateForUpdate(json));
+    }
 }

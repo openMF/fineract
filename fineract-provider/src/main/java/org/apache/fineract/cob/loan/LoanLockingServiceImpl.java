@@ -20,13 +20,13 @@ package org.apache.fineract.cob.loan;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.cob.domain.AbstractLockingService;
-import org.apache.fineract.cob.domain.LoanAccountLock;
-import org.apache.fineract.cob.domain.LoanAccountLockRepository;
 import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @Slf4j
-public class LoanLockingServiceImpl extends AbstractLockingService<LoanAccountLock> {
+public class LoanLockingServiceImpl extends AbstractLockingService {
+
+    private static final String TABLE_NAME = "m_loan_account_locks";
 
     private static final String BATCH_LOAN_LOCK_INSERT = """
                 INSERT INTO m_loan_account_locks (loan_id, version, lock_owner, lock_placed_on, lock_placed_on_cob_business_date) VALUES (?,?,?,?,?)
@@ -36,9 +36,13 @@ public class LoanLockingServiceImpl extends AbstractLockingService<LoanAccountLo
                 UPDATE m_loan_account_locks SET version= version + 1, lock_owner = ?, lock_placed_on = ? WHERE loan_id = ?
             """;
 
-    public LoanLockingServiceImpl(JdbcTemplate jdbcTemplate, FineractProperties fineractProperties,
-            LoanAccountLockRepository loanAccountLockRepository) {
-        super(jdbcTemplate, fineractProperties, loanAccountLockRepository);
+    public LoanLockingServiceImpl(JdbcTemplate jdbcTemplate, FineractProperties fineractProperties) {
+        super(jdbcTemplate, fineractProperties);
+    }
+
+    @Override
+    protected String getTableName() {
+        return TABLE_NAME;
     }
 
     @Override

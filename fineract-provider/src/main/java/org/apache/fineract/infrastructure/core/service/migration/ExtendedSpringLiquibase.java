@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.infrastructure.core.service.migration;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import liquibase.Liquibase;
 import liquibase.exception.DatabaseException;
@@ -27,7 +28,7 @@ import liquibase.integration.spring.SpringLiquibase;
 public class ExtendedSpringLiquibase extends SpringLiquibase {
 
     public void changeLogSync() throws LiquibaseException {
-        try (Liquibase liquibase = createLiquibase(getDataSource().getConnection())) {
+        try (Connection connection = getDataSource().getConnection(); Liquibase liquibase = createLiquibase(connection)) {
             liquibase.changeLogSync(getContexts());
         } catch (SQLException e) {
             throw new DatabaseException(e);

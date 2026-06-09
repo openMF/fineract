@@ -20,26 +20,35 @@ package org.apache.fineract.cob.domain;
 
 import java.sql.PreparedStatement;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType;
 import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
-@RequiredArgsConstructor
 @Slf4j
-public abstract class AbstractLockingService<T extends AccountLock> implements LockingService<T> {
+public abstract class AbstractLockingService implements LockingService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final FineractProperties fineractProperties;
-    private final AccountLockRepository<T> loanAccountLockRepository;
 
-    protected abstract String getBatchLoanLockUpgrade();
+    protected AbstractLockingService(JdbcTemplate jdbcTemplate, FineractProperties fineractProperties) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+        this.fineractProperties = fineractProperties;
+    }
+
+    protected abstract String getTableName();
 
     protected abstract String getBatchLoanLockInsert();
+
+    protected abstract String getBatchLoanLockUpgrade();
 
     @Override
     public void upgradeLock(List<Long> accountsToLock, LockOwner lockOwner) {
@@ -51,21 +60,21 @@ public abstract class AbstractLockingService<T extends AccountLock> implements L
     }
 
     @Override
-    public List<T> findAllByLoanIdIn(List<Long> loanIds) {
-        return loanAccountLockRepository.findAllByLoanIdIn(loanIds);
+    public List<Long> findLockIdsByLoanIdIn(List<Long> loanIds) {
+        if (loanIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        String sql = "SELECT loan_id FROM " + getTableName() + " WHERE loan_id IN (:ids)";
+        return namedParameterJdbcTemplate.queryForList(sql, Map.of("ids", loanIds), Long.class);
     }
 
     @Override
-    public T findByLoanIdAndLockOwner(Long loanId, LockOwner lockOwner) {
-        return loanAccountLockRepository.findByLoanIdAndLockOwner(loanId, lockOwner).orElseGet(() -> {
-            log.warn("There is no lock for loan account with id: {}", loanId);
-            return null;
-        });
-    }
-
-    @Override
-    public List<T> findAllByLoanIdInAndLockOwner(List<Long> loanIds, LockOwner lockOwner) {
-        return loanAccountLockRepository.findAllByLoanIdInAndLockOwner(loanIds, lockOwner);
+    public List<Long> findLockIdsByLoanIdInAndLockOwner(List<Long> loanIds, LockOwner lockOwner) {
+        if (loanIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        String sql = "SELECT loan_id FROM " + getTableName() + " WHERE loan_id IN (:ids) AND lock_owner = :owner";
+        return namedParameterJdbcTemplate.queryForList(sql, Map.of("ids", loanIds, "owner", lockOwner.name()), Long.class);
     }
 
     @Override
@@ -82,7 +91,20 @@ public abstract class AbstractLockingService<T extends AccountLock> implements L
 
     @Override
     public void deleteByLoanIdInAndLockOwner(List<Long> loanIds, LockOwner lockOwner) {
-        loanAccountLockRepository.deleteByLoanIdInAndLockOwner(loanIds, lockOwner);
+        if (loanIds.isEmpty()) {
+            return;
+        }
+        String sql = "DELETE FROM " + getTableName() + " WHERE loan_id IN (:ids) AND lock_owner = :owner";
+        namedParameterJdbcTemplate.update(sql, Map.of("ids", loanIds, "owner", lockOwner.name()));
+    }
+
+    @Override
+    public void updateLockError(Long loanId, LockOwner lockOwner, String error, String stacktrace) {
+        String sql = "UPDATE " + getTableName() + " SET error = ?, stacktrace = ? WHERE loan_id = ? AND lock_owner = ?";
+        int updated = jdbcTemplate.update(sql, error, stacktrace, loanId, lockOwner.name());
+        if (updated == 0) {
+            log.warn("No lock found to update error for loan id: {} with owner: {}", loanId, lockOwner);
+        }
     }
 
     private int getInClauseParameterSizeLimit() {

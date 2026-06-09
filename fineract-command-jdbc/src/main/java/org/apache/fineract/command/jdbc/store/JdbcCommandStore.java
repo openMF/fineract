@@ -97,18 +97,31 @@ public class JdbcCommandStore implements CommandStore {
     @Override
     @Retry(name = "commandStore", fallbackMethod = "fallback")
     public void store(Command<?> command, Object response, CommandState state) {
+        final long startedAt = System.nanoTime();
         final var commandEntity = isNull(response) ? mapper.map(command) : mapper.map(command, response);
 
         if (state != null) {
             commandEntity.setState(state);
         }
 
-        repository.save(commandEntity);
+        log.debug("Storing command idempotencyKey={}, state={}, payloadType={}, thread={}", command.getIdempotencyKey(),
+                commandEntity.getState(), payloadType(command), Thread.currentThread().getName());
 
-        command.setCommandId(commandEntity.getId());
+        try {
+            repository.save(commandEntity);
+            command.setCommandId(commandEntity.getId());
+            log.debug("Stored command id={}, idempotencyKey={}, state={}, elapsedMs={}", commandEntity.getId(), command.getIdempotencyKey(),
+                    commandEntity.getState(), elapsedMillis(startedAt));
+        } catch (RuntimeException e) {
+            log.warn("Command store save failed idempotencyKey={}, state={}, payloadType={}, elapsedMs={}; retry/fallback may follow",
+                    command.getIdempotencyKey(), commandEntity.getState(), payloadType(command), elapsedMillis(startedAt), e);
+            throw e;
+        }
     }
 
     void fallback(Command<?> command, Object response, CommandState state, Throwable t) throws Exception {
+        log.warn("Command store fallback idempotencyKey={}, state={}, payloadType={}, deadLetterQueueEnabled={}",
+                command.getIdempotencyKey(), state, payloadType(command), properties.getFileDeadLetterQueueEnabled(), t);
         if (Boolean.TRUE.equals(properties.getFileDeadLetterQueueEnabled())) {
             write(command);
         }
@@ -136,5 +149,13 @@ public class JdbcCommandStore implements CommandStore {
                                 + Optional.ofNullable(command.getIdempotencyKey()).orElseGet(() -> UUID.randomUUID().toString()) + ".json")
                 .toFile();
         FileUtils.write(file, objectMapper.writeValueAsString(command), UTF_8);
+    }
+
+    private static long elapsedMillis(long startedAt) {
+        return (System.nanoTime() - startedAt) / 1_000_000L;
+    }
+
+    private static String payloadType(Command<?> command) {
+        return Optional.ofNullable(command.getPayload()).map(Object::getClass).map(Class::getName).orElse("null");
     }
 }

@@ -4681,9 +4681,7 @@ public class AdvancedPaymentAllocationLoanRepaymentScheduleTest extends BaseLoan
         // Not Due yet
         runAt("30 January 2024", () -> {
             // Generate the Accruals
-            final PeriodicAccrualAccountingHelper periodicAccrualAccountingHelper = new PeriodicAccrualAccountingHelper(requestSpec,
-                    responseSpec);
-            periodicAccrualAccountingHelper.runPeriodicAccrualAccounting("30 January 2024");
+            PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting("30 January 2024");
 
             GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(createdLoanId.get());
             assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
@@ -4698,9 +4696,7 @@ public class AdvancedPaymentAllocationLoanRepaymentScheduleTest extends BaseLoan
 
         runAt("31 January 2024", () -> {
             // Generate the Accruals
-            final PeriodicAccrualAccountingHelper periodicAccrualAccountingHelper = new PeriodicAccrualAccountingHelper(requestSpec,
-                    responseSpec);
-            periodicAccrualAccountingHelper.runPeriodicAccrualAccounting("31 January 2024");
+            PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting("31 January 2024");
 
             GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(createdLoanId.get());
             assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
@@ -4709,9 +4705,7 @@ public class AdvancedPaymentAllocationLoanRepaymentScheduleTest extends BaseLoan
 
         runAt("1 February 2024", () -> {
             // Generate the Accruals
-            final PeriodicAccrualAccountingHelper periodicAccrualAccountingHelper = new PeriodicAccrualAccountingHelper(requestSpec,
-                    responseSpec);
-            periodicAccrualAccountingHelper.runPeriodicAccrualAccounting("1 February 2024");
+            PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting("1 February 2024");
 
             GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(createdLoanId.get());
             assertEquals(new BigDecimal("0.12"), loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
@@ -4720,9 +4714,7 @@ public class AdvancedPaymentAllocationLoanRepaymentScheduleTest extends BaseLoan
 
         // Not Due and Due Interest
         runAt("20 February 2024", () -> {
-            final PeriodicAccrualAccountingHelper periodicAccrualAccountingHelper = new PeriodicAccrualAccountingHelper(requestSpec,
-                    responseSpec);
-            periodicAccrualAccountingHelper.runPeriodicAccrualAccounting("20 February 2024");
+            PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting("20 February 2024");
 
             GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(createdLoanId.get());
             assertEquals(new BigDecimal("0.12"), loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());
@@ -4783,9 +4775,7 @@ public class AdvancedPaymentAllocationLoanRepaymentScheduleTest extends BaseLoan
         // First day on First Period, then TotalUnpaidPayableDueInterest = 0 and TotalUnpaidPayableNotDueInterest = 3
         runAt("2 January 2024", () -> {
             // Generate the Accruals
-            final PeriodicAccrualAccountingHelper periodicAccrualAccountingHelper = new PeriodicAccrualAccountingHelper(requestSpec,
-                    responseSpec);
-            periodicAccrualAccountingHelper.runPeriodicAccrualAccounting("2 January 2024");
+            PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting("2 January 2024");
 
             GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(createdLoanId.get());
             assertEquals(BigDecimal.ZERO, loanDetails.getSummary().getTotalUnpaidPayableDueInterest().stripTrailingZeros());

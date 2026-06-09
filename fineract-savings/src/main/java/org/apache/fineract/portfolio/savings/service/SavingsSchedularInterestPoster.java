@@ -139,7 +139,7 @@ public class SavingsSchedularInterestPoster {
             }
         }
 
-        if (paramsForGLInsertion != null && paramsForGLInsertion.size() > 0) {
+        if (paramsForGLInsertion != null && !paramsForGLInsertion.isEmpty()) {
             this.jdbcTemplate.batchUpdate(queryForJGLUpdate, paramsForGLInsertion);
         }
     }

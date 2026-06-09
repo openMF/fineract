@@ -654,7 +654,7 @@ public class ClientSavingsIntegrationTest {
 
             LocalDate submittedDate = LocalDate.of(2022, 9, 28);
             String submittedDateString = "28 September 2022";
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, submittedDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, submittedDate);
 
             final ResponseSpecification erroResponseSpec = new ResponseSpecBuilder().build();
             this.savingsAccountHelper = new SavingsAccountHelper(this.requestSpec, this.responseSpec);
@@ -716,7 +716,7 @@ public class ClientSavingsIntegrationTest {
             HashMap savingsChargeForPay = charges.get(0);
             Integer annualSavingsChargeId = (Integer) savingsChargeForPay.get("id");
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, LocalDate.of(2023, 1, 16));
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, LocalDate.of(2023, 1, 16));
 
             ArrayList<HashMap> savingsAccountErrorData = (ArrayList<HashMap>) validationErrorHelper.inactivateCharge(annualSavingsChargeId,
                     savingsId, CommonConstants.RESPONSE_ERROR);
@@ -730,7 +730,7 @@ public class ClientSavingsIntegrationTest {
 
             final LocalDate today = LocalDate.of(2024, 1, 17);
             final int noChargeDues = today.getYear() - chargeDueDate.getYear();
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, today);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, today);
 
             for (int dueYearDiff = 0; dueYearDiff <= noChargeDues; dueYearDiff++) {
                 this.savingsAccountHelper.payCharge(annualSavingsChargeId, savingsId, String.valueOf(chargeAmount),
@@ -806,7 +806,7 @@ public class ClientSavingsIntegrationTest {
             LocalDate expectedNextDueDate = chargeDueDate.plusWeeks((Integer) paidCharge.get("feeInterval"));
             assertEquals(expectedNextDueDate, nextDueDate);
         } finally {
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, LocalDate.of(2024, 11, 11));
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, LocalDate.of(2024, 11, 11));
             savingsAccountHelper.closeSavingsAccountOnDate(savingsId, "true", "11 November 2024");
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(false));
@@ -961,7 +961,7 @@ public class ClientSavingsIntegrationTest {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, Utils.getLocalDateOfTenant());
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, Utils.getLocalDateOfTenant());
             this.savingsAccountHelper = new SavingsAccountHelper(this.requestSpec, this.responseSpec);
 
             /***
@@ -1035,7 +1035,7 @@ public class ClientSavingsIntegrationTest {
             // yyyy",Locale.US);
             LocalDate transactionDate = Utils.getLocalDateOfTenant();
             transactionDate = transactionDate.withDayOfMonth(2);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             String transactionDateValue = dateFormat.format(transactionDate);
 
             /***
@@ -1101,7 +1101,7 @@ public class ClientSavingsIntegrationTest {
             LOG.info("-----Post Interest As on Successfully Worked----------");
 
             transactionDate = transactionDate.withDayOfMonth(3);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             transactionDateValue = dateFormat.format(transactionDate);
 
             this.savingsAccountHelper.postInterestAsOnSavings(savingsId, transactionDateValue);
@@ -1128,7 +1128,7 @@ public class ClientSavingsIntegrationTest {
             LOG.info("-----Post Interest As on Successfully Worked-------");
 
             transactionDate = transactionDate.withDayOfMonth(22);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             transactionDateValue = dateFormat.format(transactionDate);
             if (Calendar.DAY_OF_MONTH >= 22) {
                 this.savingsAccountHelper.postInterestAsOnSavings(savingsId, transactionDateValue);
@@ -1186,7 +1186,7 @@ public class ClientSavingsIntegrationTest {
 
             }
             transactionDate = transactionDate.withDayOfMonth(1);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             transactionDateValue = dateFormat.format(transactionDate);
             final ResponseSpecification errorResponse = new ResponseSpecBuilder().expectStatusCode(403).build();
             final SavingsAccountHelper validationErrorHelper = new SavingsAccountHelper(this.requestSpec, errorResponse);
@@ -1225,7 +1225,7 @@ public class ClientSavingsIntegrationTest {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, Utils.getLocalDateOfTenant());
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, Utils.getLocalDateOfTenant());
             final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.US);
             this.savingsAccountHelper = new SavingsAccountHelper(this.requestSpec, this.responseSpec);
 
@@ -1298,7 +1298,7 @@ public class ClientSavingsIntegrationTest {
             // yyyy", Locale.US);
             LocalDate transactionDate = Utils.getLocalDateOfTenant();
             transactionDate = transactionDate.withDayOfMonth(2);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             String transactionDateValue = dateFormat.format(transactionDate);
 
             /***
@@ -1375,7 +1375,7 @@ public class ClientSavingsIntegrationTest {
             LOG.info("-----Post Interest As on Successfully Worked----------");
 
             transactionDate = transactionDate.withDayOfMonth(3);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             transactionDateValue = dateFormat.format(transactionDate);
 
             this.savingsAccountHelper.postInterestAsOnSavings(savingsId, transactionDateValue);
@@ -1405,7 +1405,7 @@ public class ClientSavingsIntegrationTest {
             // Locale.US);
 
             transactionDate = transactionDate.withDayOfMonth(22);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             transactionDateValue = dateFormat.format(transactionDate);
             if (Calendar.DAY_OF_MONTH >= 22) {
                 this.savingsAccountHelper.postInterestAsOnSavings(savingsId, transactionDateValue);
@@ -1462,7 +1462,7 @@ public class ClientSavingsIntegrationTest {
 
             }
             transactionDate = transactionDate.withDayOfMonth(1);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             transactionDateValue = dateFormat.format(transactionDate);
             final ResponseSpecification errorResponse = new ResponseSpecBuilder().expectStatusCode(403).build();
             final SavingsAccountHelper validationErrorHelper = new SavingsAccountHelper(this.requestSpec, errorResponse);
@@ -1501,7 +1501,7 @@ public class ClientSavingsIntegrationTest {
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, Utils.getLocalDateOfTenant());
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, Utils.getLocalDateOfTenant());
             final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.US);
             this.savingsAccountHelper = new SavingsAccountHelper(this.requestSpec, this.responseSpec);
             final ResponseSpecification errorResponse = new ResponseSpecBuilder().expectStatusCode(403).build();
@@ -1555,7 +1555,7 @@ public class ClientSavingsIntegrationTest {
 
             LocalDate postedDate = Utils.getLocalDateOfTenant();
             postedDate = postedDate.withDayOfMonth(2);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, postedDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, postedDate);
 
             final String POSTED_TRANSACTION_DATE = dateFormat.format(postedDate);
 
@@ -3013,7 +3013,7 @@ public class ClientSavingsIntegrationTest {
 
             LocalDate submittedDate = LocalDate.of(2023, 1, 1);
             String submittedDateString = "01 January 2023";
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, submittedDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, submittedDate);
 
             this.savingsAccountHelper = new SavingsAccountHelper(this.requestSpec, this.responseSpec);
 
@@ -3056,7 +3056,7 @@ public class ClientSavingsIntegrationTest {
             float chargeAmount = (Float) savingsChargeForPay.get("amount");
 
             LocalDate paymentDate = LocalDate.of(2023, 3, 1);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, paymentDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, paymentDate);
 
             Integer payChargeTransactionId = this.savingsAccountHelper.payCharge(annualSavingsChargeId, savingsId,
                     String.valueOf(chargeAmount), paymentDate);
@@ -3068,8 +3068,7 @@ public class ClientSavingsIntegrationTest {
 
         } finally {
             if (savingsId != null) {
-                BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE,
-                        LocalDate.of(2024, 11, 11));
+                BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, LocalDate.of(2024, 11, 11));
                 savingsAccountHelper.closeSavingsAccountOnDate(savingsId, "true", "11 November 2024");
             }
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,

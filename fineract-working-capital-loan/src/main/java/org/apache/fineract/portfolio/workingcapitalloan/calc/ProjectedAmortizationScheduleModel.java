@@ -226,9 +226,28 @@ public final class ProjectedAmortizationScheduleModel {
                 expectedDisbursementDate, Money.of(currency, expectedPayment, mc), originalPaymentNumber, eir, mc, currency, currentDate);
     }
 
-    private LocalDate calculateAllocationDate(final LocalDate paymentDate) {
-        final LocalDate firstInstallmentDate = expectedDisbursementDate.plusDays(1);
-        final LocalDate lastInstallmentDate = expectedDisbursementDate.plusDays(effectiveTotalTerm());
+    /** First-period offset: 0 when a disbursement-date repayment shifts the grid onto the disbursement date, else 1. */
+    private int currentFirstPeriodDayOffset() {
+        return hasDisbursementDatePayment() ? 0 : 1;
+    }
+
+    private boolean hasDisbursementDatePayment() {
+        return actualPayments.stream().anyMatch(payment -> payment.date().equals(expectedDisbursementDate));
+    }
+
+    /** Date of payment period {@code periodNo} (1-based) using the current first-period offset. */
+    private LocalDate dateOfPeriod(final int periodNo) {
+        return dateOfPeriod(periodNo, currentFirstPeriodDayOffset());
+    }
+
+    /** Date of payment period {@code periodNo} (1-based) for the given first-period day offset. */
+    private LocalDate dateOfPeriod(final int periodNo, final int firstPeriodDayOffset) {
+        return expectedDisbursementDate.plusDays((long) periodNo - 1 + firstPeriodDayOffset);
+    }
+
+    private LocalDate calculateAllocationDate(final LocalDate paymentDate, final int firstPeriodDayOffset) {
+        final LocalDate firstInstallmentDate = dateOfPeriod(1, firstPeriodDayOffset);
+        final LocalDate lastInstallmentDate = dateOfPeriod(effectiveTotalTerm(), firstPeriodDayOffset);
         if (paymentDate.isBefore(firstInstallmentDate) || paymentDate.equals(expectedDisbursementDate)) {
             return firstInstallmentDate;
         }
@@ -242,11 +261,13 @@ public final class ProjectedAmortizationScheduleModel {
         Objects.requireNonNull(paymentDate, "paymentDate");
         Objects.requireNonNull(amount, "amount");
         updateCalculatedTillDate(paymentDate);
-        final LocalDate allocationDate = calculateAllocationDate(paymentDate);
-        final int index = resolvePaymentIndex(allocationDate);
+        // Offset includes the payment being added now, so the range check matches the subsequent rebuild.
+        final int firstPeriodDayOffset = hasDisbursementDatePayment() || paymentDate.equals(expectedDisbursementDate) ? 0 : 1;
+        final LocalDate allocationDate = calculateAllocationDate(paymentDate, firstPeriodDayOffset);
+        final int index = resolvePaymentIndex(allocationDate, firstPeriodDayOffset);
         if (index < 0 || index >= effectiveTotalTerm()) {
             throw new IllegalArgumentException("paymentDate " + paymentDate + " is outside the valid range ["
-                    + expectedDisbursementDate.plusDays(1) + " .. " + expectedDisbursementDate.plusDays(effectiveTotalTerm()) + "]");
+                    + dateOfPeriod(1, firstPeriodDayOffset) + " .. " + dateOfPeriod(effectiveTotalTerm(), firstPeriodDayOffset) + "]");
         }
         actualPayments.add(new ActualPayment(allocationDate, money(amount)));
         rebuildPayments();
@@ -322,10 +343,10 @@ public final class ProjectedAmortizationScheduleModel {
             throw new IllegalArgumentException("rateChangeDate must not be before expectedDisbursementDate");
         }
 
-        // When the rate change is past the base schedule's term, clamp the segment start
-        // to originalPaymentNumber. The loan is still active (borrower hasn't paid), so the remaining
-        // balance is netDisbursement - paymentsReceived.
-        final int splitDayIndex = Math.min(rawSplitDayIndex, originalPaymentNumber);
+        // Segment starts on the period whose date == rateChangeDate. Convert the calendar-day rawSplitDayIndex
+        // to a period number via the first-period offset (0 when a disbursement-date repayment shifted the grid),
+        // else the new rate starts one day early. Clamped to the base term (past-term change starts there).
+        final int splitDayIndex = Math.min(rawSplitDayIndex + (1 - currentFirstPeriodDayOffset()), originalPaymentNumber);
 
         // Remove existing segments at or after split (supports overwrite on second rate change)
         // Guard against null rateSegments from V1 model deserialization
@@ -433,9 +454,9 @@ public final class ProjectedAmortizationScheduleModel {
             cumulativeExpectedAmort = cumulativeExpectedAmort.add(safeExpectedAmort, mc);
             final BigDecimal expectedDiscFeeBalance = discountFee.subtract(cumulativeExpectedAmort, mc);
 
-            result.add(new ProjectedPayment(periodNo, expectedDisbursementDate.plusDays(periodNo), segRelativePeriod,
-                    money(periodExpectedPayment), safeDf, money(npvValue), money(balance), null, money(safeExpectedAmort), null, null, null,
-                    money(expectedDiscFeeBalance), null));
+            result.add(new ProjectedPayment(periodNo, dateOfPeriod(periodNo), segRelativePeriod, money(periodExpectedPayment), safeDf,
+                    money(npvValue), money(balance), null, money(safeExpectedAmort), null, null, null, money(expectedDiscFeeBalance),
+                    null));
         }
 
         this.originalProjectedPayments = List.copyOf(result);
@@ -444,8 +465,8 @@ public final class ProjectedAmortizationScheduleModel {
     private Map<LocalDate, BigDecimal> aggregatePaymentsByDate() {
         final Map<LocalDate, BigDecimal> result = new LinkedHashMap<>();
         if (!actualPayments.isEmpty() && calculatedTillDate != null) {
-            final LocalDate firstInstallmentDate = expectedDisbursementDate.plusDays(1);
-            final LocalDate lastInstallmentDate = expectedDisbursementDate.plusDays(effectiveTotalTerm());
+            final LocalDate firstInstallmentDate = dateOfPeriod(1);
+            final LocalDate lastInstallmentDate = dateOfPeriod(effectiveTotalTerm());
             if (!calculatedTillDate.isBefore(firstInstallmentDate)) {
                 final LocalDate mapEnd = calculatedTillDate.isAfter(lastInstallmentDate) ? lastInstallmentDate : calculatedTillDate;
                 result.putAll(generateDateMap(firstInstallmentDate, mapEnd));
@@ -474,14 +495,14 @@ public final class ProjectedAmortizationScheduleModel {
         final int totalTerm = effectiveTotalTerm();
         final List<BigDecimal> result = new ArrayList<>(totalTerm);
         for (int i = 0; i < totalTerm; i++) {
-            final LocalDate paymentDate = expectedDisbursementDate.plusDays(i + 1);
+            final LocalDate paymentDate = dateOfPeriod(i + 1);
             result.add(paymentsByDate.get(paymentDate));
         }
         return result;
     }
 
-    private int resolvePaymentIndex(final LocalDate date) {
-        return (int) ChronoUnit.DAYS.between(expectedDisbursementDate, date) - 1;
+    private int resolvePaymentIndex(final LocalDate date, final int firstPeriodDayOffset) {
+        return (int) ChronoUnit.DAYS.between(expectedDisbursementDate, date) - firstPeriodDayOffset;
     }
 
     private List<ProjectedPayment> buildPayments(final List<BigDecimal> payments, final int appliedCount,
@@ -507,7 +528,7 @@ public final class ProjectedAmortizationScheduleModel {
         BigDecimal runningActualBalance = netDisb;
         for (int i = 0; i < effectiveTotalTerm(); i++) {
             final int periodNo = i + 1;
-            final LocalDate periodDate = expectedDisbursementDate.plusDays(periodNo);
+            final LocalDate periodDate = dateOfPeriod(periodNo);
             final BigDecimal periodPayment = payments.get(i);
             final boolean hasPositivePayment = periodPayment != null && periodPayment.signum() > 0;
             final boolean passedPeriod = calculatedTillDate != null && periodDate.isBefore(calculatedTillDate);
@@ -715,8 +736,8 @@ public final class ProjectedAmortizationScheduleModel {
             final BigDecimal forecast = remaining.min(tailExpectedPayment);
             final BigDecimal npv = MathUtil.negativeToZero(forecast.multiply(df, mc));
             final Money zero = money(BigDecimal.ZERO);
-            tailPayments.add(new ProjectedPayment(periodNo, expectedDisbursementDate.plusDays(periodNo), dl, money(forecast), df,
-                    money(npv), zero, null, zero, null, null, null, zero, null));
+            tailPayments.add(new ProjectedPayment(periodNo, dateOfPeriod(periodNo), dl, money(forecast), df, money(npv), zero, null, zero,
+                    null, null, null, zero, null));
             remaining = remaining.subtract(forecast, mc);
             tailIndex++;
         }

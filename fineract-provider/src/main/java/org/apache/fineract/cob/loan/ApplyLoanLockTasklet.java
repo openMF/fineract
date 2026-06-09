@@ -20,7 +20,6 @@ package org.apache.fineract.cob.loan;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.cob.COBConstant;
-import org.apache.fineract.cob.domain.LoanAccountLock;
 import org.apache.fineract.cob.domain.LockOwner;
 import org.apache.fineract.cob.domain.LockingService;
 import org.apache.fineract.cob.service.RetrieveIdService;
@@ -29,11 +28,11 @@ import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
-public class ApplyLoanLockTasklet extends ApplyCommonLockTasklet<LoanAccountLock> {
+public class ApplyLoanLockTasklet extends ApplyCommonLockTasklet {
 
-    public ApplyLoanLockTasklet(FineractProperties fineractProperties, LockingService<LoanAccountLock> loanLockingService,
-            RetrieveIdService retrieveIdService, TransactionTemplate transactionTemplate) {
-        super(fineractProperties, loanLockingService, retrieveIdService, transactionTemplate);
+    public ApplyLoanLockTasklet(FineractProperties fineractProperties, LockingService loanLockingService,
+            RetrieveIdService retrieveIdService, TransactionTemplate batchJdbcTransactionTemplate) {
+        super(fineractProperties, loanLockingService, retrieveIdService, batchJdbcTransactionTemplate);
     }
 
     @Override

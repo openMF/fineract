@@ -49,7 +49,6 @@ import org.apache.fineract.integrationtests.common.SchedulerJobHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.apache.fineract.integrationtests.common.accounting.Account;
 import org.apache.fineract.integrationtests.common.accounting.AccountHelper;
-import org.apache.fineract.integrationtests.common.accounting.PeriodicAccrualAccountingHelper;
 import org.apache.fineract.integrationtests.common.charges.ChargesHelper;
 import org.apache.fineract.integrationtests.common.loans.LoanApplicationTestBuilder;
 import org.apache.fineract.integrationtests.common.loans.LoanProductTestBuilder;
@@ -64,7 +63,6 @@ public class LoanMultipleDisbursementRepaymentScheduleTest extends BaseLoanInteg
     private RequestSpecification requestSpec;
     private LoanTransactionHelper loanTransactionHelper;
     private ClientHelper clientHelper;
-    private PeriodicAccrualAccountingHelper periodicAccrualAccountingHelper;
     private AccountHelper accountHelper;
 
     @BeforeEach
@@ -75,7 +73,6 @@ public class LoanMultipleDisbursementRepaymentScheduleTest extends BaseLoanInteg
         this.responseSpec = new ResponseSpecBuilder().expectStatusCode(200).build();
         this.loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
         this.clientHelper = new ClientHelper(this.requestSpec, this.responseSpec);
-        this.periodicAccrualAccountingHelper = new PeriodicAccrualAccountingHelper(this.requestSpec, this.responseSpec);
         this.accountHelper = new AccountHelper(this.requestSpec, this.responseSpec);
     }
 
@@ -94,7 +91,7 @@ public class LoanMultipleDisbursementRepaymentScheduleTest extends BaseLoanInteg
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, currentDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, currentDate);
 
             // Loan ExternalId
             String loanExternalIdStr = UUID.randomUUID().toString();
@@ -125,7 +122,7 @@ public class LoanMultipleDisbursementRepaymentScheduleTest extends BaseLoanInteg
 
             currentDate = LocalDate.of(2023, 7, 12);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, currentDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, currentDate);
 
             final String jobName = "Loan COB";
             schedulerJobHelper.executeAndAwaitJob(jobName);
@@ -137,7 +134,7 @@ public class LoanMultipleDisbursementRepaymentScheduleTest extends BaseLoanInteg
 
             currentDate = LocalDate.of(2023, 7, 21);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, currentDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, currentDate);
 
             final PostLoansLoanIdTransactionsResponse merchantIssuedRefund_1 = loanTransactionHelper.makeMerchantIssuedRefund((long) loanId,
                     new PostLoansLoanIdTransactionsRequest().dateFormat("dd MMMM yyyy").transactionDate("21 July 2023").locale("en")
@@ -151,7 +148,7 @@ public class LoanMultipleDisbursementRepaymentScheduleTest extends BaseLoanInteg
             // make another disbursement
             currentDate = LocalDate.of(2023, 7, 24);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, currentDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, currentDate);
 
             loanTransactionHelper.disburseLoanWithTransactionAmount("24 July 2023", loanId, "18");
 

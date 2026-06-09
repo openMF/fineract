@@ -306,7 +306,7 @@ public class SchedulerJobHelper {
     public void fastForwardTime(LocalDate lastBusinessDateBeforeFastForward, LocalDate dateToFastForward, String jobName,
             ResponseSpecification responseSpec) {
         while (DateUtils.isBefore(lastBusinessDateBeforeFastForward, dateToFastForward)) {
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.COB_DATE, lastBusinessDateBeforeFastForward);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.COB_DATE, lastBusinessDateBeforeFastForward);
             executeAndAwaitJob(jobName);
             lastBusinessDateBeforeFastForward = lastBusinessDateBeforeFastForward.plusDays(1);
         }

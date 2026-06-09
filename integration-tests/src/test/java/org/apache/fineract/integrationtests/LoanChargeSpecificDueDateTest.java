@@ -66,7 +66,6 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
     private ResponseSpecification responseSpec;
     private RequestSpecification requestSpec;
     private LoanTransactionHelper loanTransactionHelper;
-    private PeriodicAccrualAccountingHelper periodicAccrualAccountingHelper;
     private AccountHelper accountHelper;
     private JournalEntryHelper journalEntryHelper;
 
@@ -81,7 +80,6 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
         responseSpec = new ResponseSpecBuilder().expectStatusCode(200).build();
 
         loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
-        periodicAccrualAccountingHelper = new PeriodicAccrualAccountingHelper(this.requestSpec, this.responseSpec);
         accountHelper = new AccountHelper(this.requestSpec, this.responseSpec);
         journalEntryHelper = new JournalEntryHelper(this.requestSpec, this.responseSpec);
     }
@@ -129,7 +127,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
 
         // Run Accruals
         log.info("Running Periodic Accrual for date {}", transactionDate);
-        periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
+        PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
         getLoansLoanIdResponse = loanTransactionHelper.getLoan(requestSpec, responseSpec, loanId);
 
         final Long transactionId = loanTransactionHelper.evaluateLastLoanTransactionData(getLoansLoanIdResponse,
@@ -203,7 +201,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
 
         // Run Accruals
         log.info("Running Periodic Accrual for date {}", transactionDate);
-        periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
+        PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
         getLoansLoanIdResponse = loanTransactionHelper.getLoan(requestSpec, responseSpec, loanId);
 
         final Long transactionId = loanTransactionHelper.evaluateLastLoanTransactionData(getLoansLoanIdResponse,
@@ -239,7 +237,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
         globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                 new PutGlobalConfigurationsRequest().enabled(true));
         final LocalDate todaysDate = Utils.getLocalDateOfTenant();
-        BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, todaysDate);
+        BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, todaysDate);
 
         // Client and Loan account creation
         final Integer clientId = ClientHelper.createClient(this.requestSpec, this.responseSpec, "01 January 2012");
@@ -313,7 +311,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
         globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                 new PutGlobalConfigurationsRequest().enabled(true));
         final LocalDate todaysDate = Utils.getLocalDateOfTenant();
-        BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, todaysDate);
+        BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, todaysDate);
 
         // Client and Loan account creation
         final Integer clientId = ClientHelper.createClient(this.requestSpec, this.responseSpec, "01 January 2012");
@@ -345,7 +343,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
         PostLoansLoanIdTransactionsResponse loanIdTransactionsResponse = loanTransactionHelper.makeLoanRepayment(operationDate, amount,
                 loanId);
         transactionDate = todaysDate.plusDays(32);
-        BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+        BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
 
         payloadJSON = LoanTransactionHelper.getSpecifiedInstallmentChargesForLoanAsJSON(chargeId.toString(), feeAmount);
         PostLoansLoanIdChargesResponse postLoansLoanIdChargesResponse = loanTransactionHelper.addChargeForLoan(loanId, payloadJSON,
@@ -454,7 +452,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
                     new PutGlobalConfigurationsRequest().enabled(true));
 
             final LocalDate todaysDate = Utils.getLocalDateOfTenant();
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, todaysDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, todaysDate);
 
             // Client and Loan account creation
             final Integer clientId = ClientHelper.createClient(this.requestSpec, this.responseSpec, "01 January 2012");
@@ -484,7 +482,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
 
             // First Loan Charge
             transactionDate = transactionDate.plusDays(1);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             operationDate = Utils.dateFormatter.format(transactionDate);
             log.info("Operation date {}", transactionDate);
             payloadJSON = LoanTransactionHelper.getSpecifiedDueDateChargesForLoanAsJSON(chargeId.toString(), operationDate, feeAmount);
@@ -496,7 +494,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
 
             // Run Accruals
             log.info("Running Periodic Accrual for date {}", transactionDate);
-            periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
+            PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
             getLoansLoanIdResponse = loanTransactionHelper.getLoan(requestSpec, responseSpec, loanId);
             loanTransactionHelper.evaluateLoanTransactionData(getLoansLoanIdResponse, "loanTransactionType.accrual",
                     Double.valueOf("10.00"));
@@ -504,7 +502,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
             // Repay the first charge fully, 10
             Float amount = Float.valueOf("10.00");
             transactionDate = transactionDate.plusDays(40);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             operationDate = Utils.dateFormatter.format(transactionDate);
             log.info("Operation date {}", transactionDate);
             PostLoansLoanIdTransactionsResponse loanIdTransactionsResponse = loanTransactionHelper.makeLoanRepayment(operationDate, amount,
@@ -515,7 +513,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
             // Second Loan Charge
             feeAmount = "15.00";
             transactionDate = transactionDate.plusDays(1);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             operationDate = Utils.dateFormatter.format(transactionDate);
             log.info("Operation date {}", transactionDate);
             payloadJSON = LoanTransactionHelper.getSpecifiedDueDateChargesForLoanAsJSON(chargeId.toString(), operationDate, feeAmount);
@@ -529,7 +527,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
 
             // Run Accruals
             log.info("Running Periodic Accrual for date {}", transactionDate);
-            periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
+            PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
             getLoansLoanIdResponse = loanTransactionHelper.getLoan(requestSpec, responseSpec, loanId);
             loanTransactionHelper.evaluateLoanTransactionData(getLoansLoanIdResponse, "loanTransactionType.accrual",
                     Double.valueOf("25.00"));
@@ -537,7 +535,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
             // Third Loan Charge
             feeAmount = "25.00";
             transactionDate = transactionDate.plusDays(1);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             operationDate = Utils.dateFormatter.format(transactionDate);
             log.info("Operation date {}", transactionDate);
             payloadJSON = LoanTransactionHelper.getSpecifiedDueDateChargesForLoanAsJSON(chargeId.toString(), operationDate, feeAmount);
@@ -589,7 +587,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
                     new PutGlobalConfigurationsRequest().enabled(true));
 
             final LocalDate todaysDate = Utils.getLocalDateOfTenant();
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, todaysDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, todaysDate);
 
             // Client and Loan account creation
             final Integer clientId = ClientHelper.createClient(this.requestSpec, this.responseSpec, "01 January 2012");
@@ -619,7 +617,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
 
             // First Loan Charge
             transactionDate = transactionDate.plusDays(1);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             operationDate = Utils.dateFormatter.format(transactionDate);
             log.info("Operation date {}", transactionDate);
             payloadJSON = LoanTransactionHelper.getSpecifiedDueDateChargesForLoanAsJSON(chargeId.toString(), operationDate, feeAmount);
@@ -631,7 +629,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
 
             Float amount = Float.valueOf("1020.00");
             transactionDate = transactionDate.plusDays(2);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, transactionDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, transactionDate);
             operationDate = Utils.dateFormatter.format(transactionDate);
             log.info("Operation date {}", transactionDate);
             PostLoansLoanIdTransactionsResponse loanIdTransactionsResponse = loanTransactionHelper.makeLoanRepayment(operationDate, amount,
@@ -700,7 +698,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
                 responseSpec);
         assertNotNull(postLoansLoanIdChargesResponse);
 
-        periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
+        PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
 
         // Get loan details expecting to have a delinquency classification
         getLoansLoanIdResponse = loanTransactionHelper.getLoan(requestSpec, responseSpec, loanId);
@@ -760,7 +758,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
                 responseSpec);
         assertNotNull(postLoansLoanIdChargesResponse);
 
-        periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
+        PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
 
         // Get loan details expecting to have a delinquency classification
         getLoansLoanIdResponse = loanTransactionHelper.getLoan(requestSpec, responseSpec, loanId);
@@ -776,7 +774,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
         getLoansLoanIdResponse = loanTransactionHelper.getLoan(requestSpec, responseSpec, loanId);
         validateLoanAccount(getLoansLoanIdResponse, Double.parseDouble(principalAmount) * 2, Double.valueOf("10.00"), true);
 
-        periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
+        PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
 
         operationDate = Utils.dateFormatter.format(transactionDate.plusMonths(1));
         payloadJSON = LoanTransactionHelper.getSpecifiedDueDateChargesForLoanAsJSON(loanChargeId.toString(), operationDate, feeAmount);
@@ -784,7 +782,7 @@ public class LoanChargeSpecificDueDateTest extends BaseLoanIntegrationTest {
 
         transactionDate = transactionDate.plusDays(1);
         operationDate = Utils.dateFormatter.format(transactionDate);
-        periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
+        PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(operationDate);
         // Get loan details expecting to have a delinquency classification
         getLoansLoanIdResponse = loanTransactionHelper.getLoan(requestSpec, responseSpec, loanId);
         validateLoanAccount(getLoansLoanIdResponse, Double.parseDouble(principalAmount) * 2, Double.valueOf("20.00"), true);

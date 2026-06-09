@@ -1638,7 +1638,7 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
 
     public void validateAccountBalanceDoesNotViolateOverdraft(final List<SavingsAccountTransaction> savingsAccountTransaction,
             final BigDecimal amountPaid) {
-        if (savingsAccountTransaction != null && savingsAccountTransaction.size() > 0) {
+        if (savingsAccountTransaction != null && !savingsAccountTransaction.isEmpty()) {
             SavingsAccountTransaction savingsAccountTransactionFirst = savingsAccountTransaction.get(0);
             if (!this.allowOverdraft) {
                 if (savingsAccountTransactionFirst.getRunningBalance(this.currency).minus(amountPaid).isLessThanZero()) {
@@ -2821,7 +2821,7 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
             }
         }
         final List<SavingsAccountTransaction> savingsAccountTransactions = retrieveListOfTransactions();
-        if (savingsAccountTransactions.size() > 0) {
+        if (!savingsAccountTransactions.isEmpty()) {
             final SavingsAccountTransaction accountTransaction = savingsAccountTransactions.get(savingsAccountTransactions.size() - 1);
             if (accountTransaction.isAfter(closedDate)) {
                 baseDataValidator.reset().parameter(SavingsApiConstants.closedOnDateParamName).value(closedDate)
@@ -3780,7 +3780,7 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
     public LocalDate retrieveLastTransactionDate() {
         final List<SavingsAccountTransaction> transactionsSortedByDate = retrieveListOfTransactions();
         SavingsAccountTransaction lastTransaction = null;
-        if (transactionsSortedByDate.size() > 0) {
+        if (!transactionsSortedByDate.isEmpty()) {
             lastTransaction = transactionsSortedByDate.get(transactionsSortedByDate.size() - 1);
         }
         LocalDate lastransactionDate = null;
@@ -3793,7 +3793,7 @@ public class SavingsAccount extends AbstractAuditableWithUTCDateTimeCustom<Long>
     public LocalDate retrieveLastTransactionDateWithPivotConfig() {
         final List<SavingsAccountTransaction> transactionsSortedByDate = retrieveSortedTransactions();
         SavingsAccountTransaction lastTransaction = null;
-        if (transactionsSortedByDate.size() > 0) {
+        if (!transactionsSortedByDate.isEmpty()) {
             lastTransaction = transactionsSortedByDate.get(transactionsSortedByDate.size() - 1);
         }
         LocalDate lastransactionDate = null;

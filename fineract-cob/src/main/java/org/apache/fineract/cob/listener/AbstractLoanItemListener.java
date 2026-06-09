@@ -23,7 +23,6 @@ import static org.springframework.transaction.TransactionDefinition.PROPAGATION_
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.cob.domain.AccountLock;
 import org.apache.fineract.cob.domain.LockOwner;
 import org.apache.fineract.cob.domain.LockingService;
 import org.apache.fineract.cob.exceptions.LockedReadException;
@@ -43,23 +42,20 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 @RequiredArgsConstructor
-public abstract class AbstractLoanItemListener<T extends AccountLock, S extends AbstractPersistableCustom<Long>> {
+public abstract class AbstractLoanItemListener<S extends AbstractPersistableCustom<Long>> {
 
-    private final LockingService<T> loanLockingService;
-
-    private final TransactionTemplate transactionTemplate;
+    private final LockingService loanLockingService;
+    private final TransactionTemplate batchJdbcTransactionTemplate;
 
     private void updateAccountLockWithError(List<Long> loanIds, String msg, Throwable e) {
-        transactionTemplate.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-        transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+        batchJdbcTransactionTemplate.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
+        batchJdbcTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
 
             @Override
             protected void doInTransactionWithoutResult(@NonNull TransactionStatus status) {
+                String stacktrace = ThrowableSerialization.serialize(e);
                 for (Long loanId : loanIds) {
-                    T loanAccountLock = loanLockingService.findByLoanIdAndLockOwner(loanId, getLockOwner());
-                    if (loanAccountLock != null) {
-                        loanAccountLock.setError(String.format(msg, loanId), ThrowableSerialization.serialize(e));
-                    }
+                    loanLockingService.updateLockError(loanId, getLockOwner(), String.format(msg, loanId), stacktrace);
                 }
             }
         });
@@ -85,7 +81,6 @@ public abstract class AbstractLoanItemListener<T extends AccountLock, S extends 
     public void onWriteError(Exception e, @NonNull Chunk<? extends S> items) {
         List<Long> loanIds = items.getItems().stream().map(AbstractPersistableCustom::getId).toList();
         log.warn("Error was triggered during writing of Loans (ids={}) due to: {}", loanIds, ThrowableSerialization.serialize(e));
-
         updateAccountLockWithError(loanIds, "Loan (id: %d) writing is failed", e);
     }
 

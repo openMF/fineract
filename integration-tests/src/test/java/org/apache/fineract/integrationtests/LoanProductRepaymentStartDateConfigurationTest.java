@@ -130,7 +130,7 @@ public class LoanProductRepaymentStartDateConfigurationTest {
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             // Loan ExternalId
             String loanExternalIdStr = UUID.randomUUID().toString();
@@ -195,7 +195,7 @@ public class LoanProductRepaymentStartDateConfigurationTest {
 
             LocalDate disbursementDate = LocalDate.of(2023, 3, 7);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, disbursementDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, disbursementDate);
 
             loanTransactionHelper.disburseLoanWithTransactionAmount("07 March 2023", loanId, "500");
 
@@ -237,7 +237,7 @@ public class LoanProductRepaymentStartDateConfigurationTest {
 
             disbursementDate = LocalDate.of(2023, 4, 7);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, disbursementDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, disbursementDate);
 
             loanTransactionHelper.disburseLoanWithTransactionAmount("07 April 2023", loanId, "500");
 
@@ -295,7 +295,7 @@ public class LoanProductRepaymentStartDateConfigurationTest {
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             // Loan ExternalId
             String loanExternalIdStr = UUID.randomUUID().toString();
@@ -361,7 +361,7 @@ public class LoanProductRepaymentStartDateConfigurationTest {
 
             LocalDate disbursementDate = LocalDate.of(2023, 3, 7);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, disbursementDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, disbursementDate);
 
             loanTransactionHelper.disburseLoanWithTransactionAmount("07 March 2023", loanId, "500");
 
@@ -404,7 +404,7 @@ public class LoanProductRepaymentStartDateConfigurationTest {
 
             disbursementDate = LocalDate.of(2023, 4, 7);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, disbursementDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, disbursementDate);
 
             loanTransactionHelper.disburseLoanWithTransactionAmount("07 April 2023", loanId, "500");
 

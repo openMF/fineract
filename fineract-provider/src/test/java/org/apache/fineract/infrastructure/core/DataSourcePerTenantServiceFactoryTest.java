@@ -81,6 +81,7 @@ public class DataSourcePerTenantServiceFactoryTest {
     public static final int MASTER_DB_MAX_ACTIVE = 5;
     public static final long MASTER_DB_VALIDATION_INTERVAL = 500L;
     public static final long MASTER_DB_INIT_FAIL_TIMEOUT = 0L;
+    public static final long MASTER_DB_LEAK_DETECTION_THRESHOLD = 20_000L;
 
     public static final String MASTER_DB_DRIVER_CLASS_NAME = "org.postgresql.Driver";
     public static final String MASTER_DB_CONN_TEST_QUERY = "SELECT 1";
@@ -159,12 +160,14 @@ public class DataSourcePerTenantServiceFactoryTest {
         given(tenantHikariConfig.getConnectionTestQuery()).willReturn(MASTER_DB_CONN_TEST_QUERY);
         given(tenantHikariConfig.getDataSourceProperties()).willReturn(mock(Properties.class));
         given(tenantHikariConfig.isAutoCommit()).willReturn(MASTER_DB_AUTO_COMMIT_ENABLED);
+        given(tenantHikariConfig.getLeakDetectionThreshold()).willReturn(0L);
 
         given(hikariDataSourceFactory.create(any())).willReturn(mock(HikariDataSource.class));
 
         FineractProperties.FineractConfigProperties configProperties = new FineractProperties.FineractConfigProperties();
         configProperties.setMinPoolSize(-1);
         configProperties.setMaxPoolSize(-1);
+        configProperties.setLeakDetectionThreshold(0L);
 
         FineractProperties.FineractTenantProperties tenantPropertiesMock = mock(FineractProperties.FineractTenantProperties.class);
         given(tenantPropertiesMock.getEncryption()).willReturn(MASTER_ENCRYPTION);
@@ -206,6 +209,7 @@ public class DataSourcePerTenantServiceFactoryTest {
         assertEquals(MASTER_DB_DRIVER_CLASS_NAME, hikariConfig.getDriverClassName());
         assertEquals(MASTER_DB_CONN_TEST_QUERY, hikariConfig.getConnectionTestQuery());
         assertEquals(MASTER_DB_AUTO_COMMIT_ENABLED, hikariConfig.isAutoCommit());
+        assertEquals(0L, hikariConfig.getLeakDetectionThreshold());
     }
 
     @Test
@@ -238,6 +242,44 @@ public class DataSourcePerTenantServiceFactoryTest {
         assertEquals(MASTER_DB_DRIVER_CLASS_NAME, hikariConfig.getDriverClassName());
         assertEquals(MASTER_DB_CONN_TEST_QUERY, hikariConfig.getConnectionTestQuery());
         assertEquals(MASTER_DB_AUTO_COMMIT_ENABLED, hikariConfig.isAutoCommit());
+    }
+
+    @Test
+    void testCreateNewDataSourceFor_ShouldUseMasterLeakDetectionThreshold_WhenConfiguredOnHikari() {
+        // given
+        FineractProperties.FineractModeProperties modeProperties = createModeProps(MASTER_DB_AUTO_COMMIT_ENABLED,
+                MASTER_DB_AUTO_COMMIT_ENABLED, MASTER_DB_AUTO_COMMIT_ENABLED, MASTER_DB_AUTO_COMMIT_ENABLED);
+        given(fineractProperties.getMode()).willReturn(modeProperties);
+        given(tenantHikariConfig.getLeakDetectionThreshold()).willReturn(MASTER_DB_LEAK_DETECTION_THRESHOLD);
+
+        // when
+        DataSource dataSource = underTest.createNewDataSourceFor(TENANT, defaultTenant.getConnection());
+
+        // then
+        assertNotNull(dataSource);
+        verify(hikariDataSourceFactory).create(hikariConfigCaptor.capture());
+        HikariConfig hikariConfig = hikariConfigCaptor.getValue();
+        assertEquals(MASTER_DB_LEAK_DETECTION_THRESHOLD, hikariConfig.getLeakDetectionThreshold());
+    }
+
+    @Test
+    void testCreateNewDataSourceFor_ShouldOverrideLeakDetectionThreshold_WhenConfigured() {
+        // given
+        FineractProperties.FineractModeProperties modeProperties = createModeProps(MASTER_DB_AUTO_COMMIT_ENABLED,
+                MASTER_DB_AUTO_COMMIT_ENABLED, MASTER_DB_AUTO_COMMIT_ENABLED, MASTER_DB_AUTO_COMMIT_ENABLED);
+        given(fineractProperties.getMode()).willReturn(modeProperties);
+
+        FineractProperties.FineractConfigProperties config = fineractProperties.getTenant().getConfig();
+        config.setLeakDetectionThreshold(MASTER_DB_LEAK_DETECTION_THRESHOLD);
+
+        // when
+        DataSource dataSource = underTest.createNewDataSourceFor(TENANT, defaultTenant.getConnection());
+
+        // then
+        assertNotNull(dataSource);
+        verify(hikariDataSourceFactory).create(hikariConfigCaptor.capture());
+        HikariConfig hikariConfig = hikariConfigCaptor.getValue();
+        assertEquals(MASTER_DB_LEAK_DETECTION_THRESHOLD, hikariConfig.getLeakDetectionThreshold());
     }
 
     @Test

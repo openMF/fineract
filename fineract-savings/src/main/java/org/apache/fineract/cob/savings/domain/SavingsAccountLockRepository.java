@@ -16,10 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.cob.savings;
+package org.apache.fineract.cob.savings.domain;
 
 import java.util.List;
 import java.util.Optional;
+import org.apache.fineract.cob.savings.SavingsAccountLock;
+import org.apache.fineract.cob.savings.SavingsLockOwner;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;

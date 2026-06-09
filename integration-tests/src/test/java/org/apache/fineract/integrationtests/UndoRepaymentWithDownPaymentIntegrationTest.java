@@ -172,16 +172,16 @@ public class UndoRepaymentWithDownPaymentIntegrationTest extends BaseLoanIntegra
                 .makeLoanRepayment("05 September 2022", 500.0f, loanId);
         Long repaymentTransactionId = postLoansLoanIdTransactionsResponse.getResourceId();
 
-        BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, LocalDate.of(2022, 9, 25));
+        BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, LocalDate.of(2022, 9, 25));
         PostLoansLoanIdTransactionsResponse secondPostLoansLoanIdTransactionsResponse = loanTransactionHelper
                 .makeLoanRepayment("25 September 2022", 250.0f, loanId);
         Long secondRepaymentId = secondPostLoansLoanIdTransactionsResponse.getResourceId();
 
-        BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, LocalDate.of(2022, 9, 28));
+        BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, LocalDate.of(2022, 9, 28));
         loanTransactionHelper.chargebackLoanTransaction(loanExternalIdStr, secondRepaymentId,
                 new PostLoansLoanIdTransactionsTransactionIdRequest().locale("en").transactionAmount(100.0).paymentTypeId(1L));
 
-        BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, LocalDate.of(2022, 9, 30));
+        BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, LocalDate.of(2022, 9, 30));
         loanTransactionHelper.makeLoanRepayment("30 September 2022", 100.0f, loanId);
 
         PostLoansLoanIdTransactionsResponse postLoansLoanIdTransactionsResponse1 = loanTransactionHelper.reverseLoanTransaction(loanId,

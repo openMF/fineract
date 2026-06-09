@@ -65,7 +65,7 @@ public class LoanCOBCatchUpInstanceModeIntegrationTest extends BaseLoanIntegrati
         final LocalDate todaysDate = Utils.getLocalDateOfTenant();
         globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                 new PutGlobalConfigurationsRequest().enabled(true));
-        BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, todaysDate);
+        BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, todaysDate);
     }
 
     @ConfigureInstanceMode(readEnabled = false, writeEnabled = false, batchWorkerEnabled = false, batchManagerEnabled = true)

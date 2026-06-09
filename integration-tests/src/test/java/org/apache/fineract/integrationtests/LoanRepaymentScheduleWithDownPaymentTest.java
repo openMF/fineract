@@ -820,7 +820,7 @@ public class LoanRepaymentScheduleWithDownPaymentTest extends BaseLoanIntegratio
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
             LocalDate businessDate = LocalDate.of(2022, 9, 5);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
             String loanExternalIdStr = UUID.randomUUID().toString();
 
             final Long delinquencyBucketId = DelinquencyBucketsHelper.createDefaultBucket();
@@ -871,7 +871,7 @@ public class LoanRepaymentScheduleWithDownPaymentTest extends BaseLoanIntegratio
             assertEquals(2, loanDetails.getDelinquent().getDelinquentDays());
         } finally {
             final LocalDate todaysDate = Utils.getLocalDateOfTenant();
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, todaysDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, todaysDate);
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(false));
         }
@@ -993,7 +993,7 @@ public class LoanRepaymentScheduleWithDownPaymentTest extends BaseLoanIntegratio
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, disbursementDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, disbursementDate);
 
             // Accounts oof periodic accrual
             final Account assetAccount = accountHelper.createAssetAccount();
@@ -1070,7 +1070,7 @@ public class LoanRepaymentScheduleWithDownPaymentTest extends BaseLoanIntegratio
             // second disbursement
 
             disbursementDate = LocalDate.of(2023, 3, 5);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, disbursementDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, disbursementDate);
             loanTransactionHelper.disburseLoanWithTransactionAmount("05 March 2023", loanId, "200");
             checkDownPaymentTransaction(disbursementDate, 50.0f, 0.0f, 0.0f, 0.0f, loanId);
 
@@ -1121,7 +1121,7 @@ public class LoanRepaymentScheduleWithDownPaymentTest extends BaseLoanIntegratio
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, disbursementDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, disbursementDate);
 
             // Accounts oof periodic accrual
             final Account assetAccount = accountHelper.createAssetAccount();
@@ -1290,7 +1290,7 @@ public class LoanRepaymentScheduleWithDownPaymentTest extends BaseLoanIntegratio
 
             // second disbursement
             disbursementDate = LocalDate.of(2023, 3, 5);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, disbursementDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, disbursementDate);
 
             loanTransactionHelper.disburseLoan(loanResponse.getResourceId(),
                     new PostLoansLoanIdRequest().actualDisbursementDate("05 March 2023").dateFormat(DATETIME_PATTERN)
@@ -1505,7 +1505,7 @@ public class LoanRepaymentScheduleWithDownPaymentTest extends BaseLoanIntegratio
 
             // second disbursement
             disbursementDate = LocalDate.of(2023, 3, 5);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, disbursementDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, disbursementDate);
 
             loanTransactionHelper.disburseLoan(loanResponse.getResourceId(),
                     new PostLoansLoanIdRequest().actualDisbursementDate("05 March 2023").dateFormat(DATETIME_PATTERN)

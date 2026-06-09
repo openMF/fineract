@@ -18,8 +18,8 @@
  */
 package org.apache.fineract.infrastructure.core.service.database;
 
+import static org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection.resolveProtocol;
 import static org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection.toJdbcUrl;
-import static org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection.toProtocol;
 
 import com.zaxxer.hikari.HikariConfig;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -34,7 +34,6 @@ import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection;
 import org.apache.fineract.infrastructure.core.service.database.metrics.TenantConnectionPoolMetricsTrackerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 /**
@@ -48,7 +47,6 @@ public class DataSourcePerTenantServiceFactory {
 
     private final HikariConfig hikariConfig;
     private final FineractProperties fineractProperties;
-    private final ApplicationContext context;
     @Qualifier("hikariTenantDataSource")
     private final DataSource tenantDataSource;
     private final HikariDataSourceFactory hikariDataSourceFactory;
@@ -62,7 +60,7 @@ public class DataSourcePerTenantServiceFactory {
             throw new IllegalArgumentException(
                     "Invalid master password on tenant connection %d.".formatted(tenantConnection.getConnectionId()));
         }
-        String protocol = toProtocol(tenantDataSource);
+        String protocol = resolveProtocol(hikariConfig.getDriverClassName());
         // Default properties for Writing
         String schemaServer = tenantConnection.getSchemaServer();
         String schemaPort = tenantConnection.getSchemaServerPort();
@@ -95,6 +93,7 @@ public class DataSourcePerTenantServiceFactory {
         config.setDriverClassName(hikariConfig.getDriverClassName());
         config.setConnectionTestQuery(hikariConfig.getConnectionTestQuery());
         config.setAutoCommit(hikariConfig.isAutoCommit());
+        config.setLeakDetectionThreshold(getLeakDetectionThreshold());
 
         // https://github.com/brettwooldridge/HikariCP/wiki/MBean-(JMX)-Monitoring-and-Management
         config.setRegisterMbeans(true);
@@ -106,6 +105,11 @@ public class DataSourcePerTenantServiceFactory {
         // is also in src/main/resources/META-INF/spring/hikariDataSource.xml
         // for the all Tenants DB -->
         config.setDataSourceProperties(hikariConfig.getDataSourceProperties());
+
+        if (config.getLeakDetectionThreshold() > 0) {
+            log.warn("Tenant datasource {} leak detection enabled at {}ms; Hikari will log borrower stack traces for long-held connections",
+                    config.getPoolName(), config.getLeakDetectionThreshold());
+        }
 
         return hikariDataSourceFactory.create(config);
     }
@@ -130,6 +134,14 @@ public class DataSourcePerTenantServiceFactory {
         } else {
             return tenantConnection.getInitialSize();
         }
+    }
+
+    private long getLeakDetectionThreshold() {
+        FineractProperties.FineractConfigProperties configOverride = fineractProperties.getTenant().getConfig();
+        if (configOverride.isLeakDetectionThresholdSet()) {
+            return configOverride.getLeakDetectionThreshold();
+        }
+        return hikariConfig.getLeakDetectionThreshold();
     }
 
 }

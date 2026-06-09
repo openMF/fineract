@@ -20,17 +20,17 @@ package org.apache.fineract.cob.domain;
 
 import java.util.List;
 
-public interface LockingService<T extends AccountLock> {
+public interface LockingService {
 
     void upgradeLock(List<Long> accountsToLock, LockOwner lockOwner);
 
     void deleteByLoanIdInAndLockOwner(List<Long> loanIds, LockOwner lockOwner);
 
-    List<T> findAllByLoanIdIn(List<Long> loanIds);
+    List<Long> findLockIdsByLoanIdIn(List<Long> loanIds);
 
-    T findByLoanIdAndLockOwner(Long loanId, LockOwner lockOwner);
-
-    List<T> findAllByLoanIdInAndLockOwner(List<Long> loanIds, LockOwner lockOwner);
+    List<Long> findLockIdsByLoanIdInAndLockOwner(List<Long> loanIds, LockOwner lockOwner);
 
     void applyLock(List<Long> loanIds, LockOwner lockOwner);
+
+    void updateLockError(Long loanId, LockOwner lockOwner, String error, String stacktrace);
 }

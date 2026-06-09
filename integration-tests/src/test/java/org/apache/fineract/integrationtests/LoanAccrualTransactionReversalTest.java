@@ -62,7 +62,6 @@ public class LoanAccrualTransactionReversalTest extends BaseLoanIntegrationTest 
     private LoanTransactionHelper loanTransactionHelper;
     private ClientHelper clientHelper;
     private DateTimeFormatter dateFormatter = new DateTimeFormatterBuilder().appendPattern("dd MMMM yyyy").toFormatter();
-    private PeriodicAccrualAccountingHelper periodicAccrualAccountingHelper;
     private AccountHelper accountHelper;
 
     @BeforeEach
@@ -73,7 +72,6 @@ public class LoanAccrualTransactionReversalTest extends BaseLoanIntegrationTest 
         this.responseSpec = new ResponseSpecBuilder().expectStatusCode(200).build();
         this.loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
         this.clientHelper = new ClientHelper(this.requestSpec, this.responseSpec);
-        this.periodicAccrualAccountingHelper = new PeriodicAccrualAccountingHelper(this.requestSpec, this.responseSpec);
         this.accountHelper = new AccountHelper(this.requestSpec, this.responseSpec);
     }
 
@@ -117,7 +115,7 @@ public class LoanAccrualTransactionReversalTest extends BaseLoanIntegrationTest 
                 LoanTransactionHelper.getSpecifiedDueDateChargesForLoanAsJSON(String.valueOf(penalty), penaltyCharge1AddedDate, "10"));
 
         // Run accrual till charge date
-        this.periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(penaltyCharge1AddedDate);
+        PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(penaltyCharge1AddedDate);
 
         // verify accrual transaction created
         checkAccrualTransaction(targetDate, 0.0f, 0.0f, 10.0f, loanId);
@@ -141,7 +139,7 @@ public class LoanAccrualTransactionReversalTest extends BaseLoanIntegrationTest 
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, currentDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, currentDate);
 
             // Accounts oof periodic accrual
             final Account assetAccount = this.accountHelper.createAssetAccount();
@@ -164,7 +162,7 @@ public class LoanAccrualTransactionReversalTest extends BaseLoanIntegrationTest 
             final Integer loanId = createLoanAccountWithInterestRecalculation(clientId, getLoanProductsProductResponse.getId(),
                     loanExternalIdStr);
             // run accruals till business date
-            this.periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(accrualRunTillDate);
+            PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(accrualRunTillDate);
             // check amount for last accrual on business date
             checkAccrualTransaction(currentDate, 0.82f, 0.0f, 0.0f, loanId);
             // make repayment on due date

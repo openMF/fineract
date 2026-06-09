@@ -74,7 +74,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             // Loan ExternalId
             String loanExternalIdStr = UUID.randomUUID().toString();
@@ -148,7 +148,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
 
             businessDate = LocalDate.of(2023, 3, 7);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             loanTransactionHelper.disburseLoanWithTransactionAmount("07 March 2023", loanId, "500");
 
@@ -238,7 +238,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
 
             businessDate = LocalDate.of(2023, 3, 8);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             // second disbursement backdated 5 March
 
@@ -312,7 +312,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             // Loan ExternalId
             String loanExternalIdStr = UUID.randomUUID().toString();
@@ -390,7 +390,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
 
             businessDate = LocalDate.of(2023, 3, 7);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             loanTransactionHelper.disburseLoanWithTransactionAmount("07 March 2023", loanId, "500");
 
@@ -474,7 +474,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
 
             businessDate = LocalDate.of(2023, 3, 8);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             // second disbursement backdated 5 March
             loanTransactionHelper.disburseLoanWithTransactionAmount("05 March 2023", loanId, "500");
@@ -543,7 +543,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             // Loan ExternalId
             String loanExternalIdStr = UUID.randomUUID().toString();
@@ -621,7 +621,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
 
             businessDate = LocalDate.of(2023, 3, 7);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             loanTransactionHelper.disburseLoanWithTransactionAmount("07 March 2023", loanId, "500");
 
@@ -711,7 +711,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
             // set business date to next repayment due business date
             businessDate = LocalDate.of(2023, 4, 7);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             // make 2nd repayment on 7 April to pay installment
             final PostLoansLoanIdTransactionsResponse repaymentTransaction_2 = loanTransactionHelper.makeLoanRepayment(loanExternalIdStr,
@@ -832,7 +832,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             // Loan ExternalId
             String loanExternalIdStr = UUID.randomUUID().toString();
@@ -902,7 +902,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
                     Utils.getDoubleValue(loanDetails.getRepaymentSchedule().getPeriods().get(4).getTotalInstallmentAmountForPeriod()));
             // first disbursement on a future date (7 March 2023)
             businessDate = LocalDate.of(2023, 3, 7);
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
             loanTransactionHelper.disburseLoanWithTransactionAmount("07 March 2023", loanId, "500");
 
             loanDetails = loanTransactionHelper.getLoanDetails(loanId.longValue());
@@ -942,7 +942,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             // Loan ExternalId
             String loanExternalIdStr = UUID.randomUUID().toString();
@@ -1006,7 +1006,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
 
             businessDate = LocalDate.of(2023, 3, 7);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             loanTransactionHelper.disburseLoanWithTransactionAmount("07 March 2023", loanId, "500");
 
@@ -1084,7 +1084,7 @@ public class LoanAccountBackdatedDisbursementTest extends BaseLoanIntegrationTes
 
             businessDate = LocalDate.of(2023, 3, 8);
 
-            BusinessDateHelper.updateBusinessDate(requestSpec, responseSpec, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             // second disbursement backdated 5 March
 

@@ -23,8 +23,7 @@ import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 import org.apache.fineract.integrationtests.common.ProductMixHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 import org.junit.jupiter.api.Assertions;
@@ -44,15 +43,15 @@ public class ProductMixIntegrationTest {
         this.requestSpec = new RequestSpecBuilder().setContentType(ContentType.JSON).build();
         this.requestSpec.header("Authorization", "Basic " + Utils.loginIntoServerAndGetBase64EncodedAuthenticationKey());
         this.responseSpec = new ResponseSpecBuilder().expectStatusCode(200).build();
-        this.productMixHelper = new ProductMixHelper(this.requestSpec, this.responseSpec);
+        this.productMixHelper = new ProductMixHelper();
     }
 
     @Test
     public void getProductMixList() {
-        final ArrayList productMixList = this.productMixHelper.getProductsMixList();
+        final List productMixList = this.productMixHelper.getProductsMixList();
         Assertions.assertNotNull(productMixList);
 
-        final HashMap productMixTemplate = (HashMap) this.productMixHelper.getProductMixTemplate();
+        final var productMixTemplate = this.productMixHelper.getProductMixTemplate();
         Assertions.assertNotNull(productMixTemplate);
     }
 

@@ -20,12 +20,10 @@ package org.apache.fineract.infrastructure.core.persistence;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
-import org.springframework.jdbc.datasource.DataSourceUtils;
+import lombok.Getter;
 import org.springframework.jdbc.datasource.JdbcTransactionObjectSupport;
 import org.springframework.orm.jpa.EntityManagerHolder;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -37,43 +35,38 @@ public class ExtendedJpaTransactionManager extends JpaTransactionManager {
 
     private final List<TransactionLifecycleCallback> lifecycleCallbacks = new CopyOnWriteArrayList<>();
 
-    public ExtendedJpaTransactionManager() {
-        setValidateExistingTransaction(true);
+    @Getter
+    private final boolean readOnly;
+
+    public ExtendedJpaTransactionManager(boolean readOnly) {
+        this.readOnly = readOnly;
     }
 
     @Override
     protected void doBegin(Object transaction, TransactionDefinition definition) {
         super.doBegin(transaction, definition);
-        if (isReadOnlyConnection() || isReadOnlyTx(transaction)) {
+
+        if (definition.isReadOnly() || isReadOnlyTx(transaction) || isReadOnly()) {
             EntityManager entityManager = getCurrentEntityManager();
             if (entityManager != null) {
                 entityManager.setFlushMode(FlushModeType.COMMIT);
             }
         }
+
         invokeLifecycleCallbacks(TransactionLifecycleCallback::afterBegin);
     }
 
     @Override
     protected void doCommit(DefaultTransactionStatus status) {
-        if (isReadOnlyConnection() || isReadOnlyTx(status.getTransaction())) {
+        if (isReadOnlyTx(status.getTransaction()) || isReadOnly()) {
             EntityManager entityManager = getCurrentEntityManager();
             if (entityManager != null) {
                 entityManager.clear();
             }
         }
+
         super.doCommit(status);
         invokeLifecycleCallbacks(TransactionLifecycleCallback::afterCommit);
-    }
-
-    public boolean isReadOnlyConnection() {
-        Connection connection = DataSourceUtils.getConnection(getDataSource());
-        try {
-            return connection.isReadOnly();
-        } catch (SQLException e) {
-            throw new IllegalStateException(e);
-        } finally {
-            DataSourceUtils.releaseConnection(connection, getDataSource());
-        }
     }
 
     @Override

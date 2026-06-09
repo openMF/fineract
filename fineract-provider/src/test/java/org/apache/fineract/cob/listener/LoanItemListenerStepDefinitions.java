@@ -18,19 +18,16 @@
  */
 package org.apache.fineract.cob.listener;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.cucumber.java8.En;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
-import org.apache.fineract.cob.domain.LoanAccountLock;
 import org.apache.fineract.cob.domain.LockOwner;
 import org.apache.fineract.cob.domain.LockingService;
 import org.apache.fineract.cob.exceptions.LockedReadException;
@@ -45,23 +42,20 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 public class LoanItemListenerStepDefinitions implements En {
 
-    private LockingService loanLockingService = mock(LockingService.class);
-    private TransactionTemplate transactionTemplate = spy(TransactionTemplate.class);
+    private final LockingService loanLockingService = mock(LockingService.class);
+    private final TransactionTemplate batchJdbcTransactionTemplate = spy(TransactionTemplate.class);
 
-    private ChunkProcessingLoanItemListener loanItemListener = new ChunkProcessingLoanItemListener(loanLockingService, transactionTemplate);
+    private final ChunkProcessingLoanItemListener loanItemListener = new ChunkProcessingLoanItemListener(loanLockingService,
+            batchJdbcTransactionTemplate);
 
     private Exception exception;
-
-    private LoanAccountLock loanAccountLock;
     private final Loan loan = mock(Loan.class);
 
     public LoanItemListenerStepDefinitions() {
         Given("/^The LoanItemListener.onReadError method (.*)$/", (String action) -> {
             ThreadLocalContextUtil.setTenant(new FineractPlatformTenant(1L, "default", "Default", "Asia/Kolkata", null));
             exception = new LockedReadException(1L, new RuntimeException("fail"));
-            loanAccountLock = new LoanAccountLock(1L, LockOwner.LOAN_COB_CHUNK_PROCESSING, LocalDate.now(ZoneId.systemDefault()));
-            when(loanLockingService.findByLoanIdAndLockOwner(1L, LockOwner.LOAN_COB_CHUNK_PROCESSING)).thenReturn(loanAccountLock);
-            transactionTemplate.setTransactionManager(mock(PlatformTransactionManager.class));
+            batchJdbcTransactionTemplate.setTransactionManager(mock(PlatformTransactionManager.class));
             when(loan.getId()).thenReturn(1L);
         });
 
@@ -74,20 +68,17 @@ public class LoanItemListenerStepDefinitions implements En {
         });
 
         Then("LoanItemListener.onReadError result should match", () -> {
-            verify(transactionTemplate, Mockito.times(1)).setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-            verify(transactionTemplate, Mockito.times(1)).execute(any());
-            verify(loanLockingService, Mockito.times(1)).findByLoanIdAndLockOwner(1L, LockOwner.LOAN_COB_CHUNK_PROCESSING);
-            assertEquals("Loan (id: 1) reading is failed", loanAccountLock.getError());
-            assertNotNull(loanAccountLock.getStacktrace());
+            verify(batchJdbcTransactionTemplate, Mockito.times(1)).setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            verify(batchJdbcTransactionTemplate, Mockito.times(1)).execute(any());
+            verify(loanLockingService, Mockito.times(1)).updateLockError(eq(1L), eq(LockOwner.LOAN_COB_CHUNK_PROCESSING),
+                    eq("Loan (id: 1) reading is failed"), anyString());
         });
 
         Given("/^The LoanItemListener.onProcessError method (.*)$/", (String action) -> {
             ThreadLocalContextUtil.setTenant(new FineractPlatformTenant(1L, "default", "Default", "Asia/Kolkata", null));
             exception = new LockedReadException(1L, new RuntimeException("fail"));
-            loanAccountLock = new LoanAccountLock(2L, LockOwner.LOAN_COB_CHUNK_PROCESSING, LocalDate.now(ZoneId.systemDefault()));
-            when(loanLockingService.findByLoanIdAndLockOwner(2L, LockOwner.LOAN_COB_CHUNK_PROCESSING)).thenReturn(loanAccountLock);
             when(loan.getId()).thenReturn(2L);
-            transactionTemplate.setTransactionManager(mock(PlatformTransactionManager.class));
+            batchJdbcTransactionTemplate.setTransactionManager(mock(PlatformTransactionManager.class));
         });
 
         When("LoanItemListener.onProcessError method executed", () -> {
@@ -99,20 +90,17 @@ public class LoanItemListenerStepDefinitions implements En {
         });
 
         Then("LoanItemListener.onProcessError result should match", () -> {
-            verify(transactionTemplate, Mockito.times(1)).setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-            verify(transactionTemplate, Mockito.times(1)).execute(any());
-            verify(loanLockingService, Mockito.times(1)).findByLoanIdAndLockOwner(2L, LockOwner.LOAN_COB_CHUNK_PROCESSING);
-            assertEquals("Loan (id: 2) processing is failed", loanAccountLock.getError());
-            assertNotNull(loanAccountLock.getStacktrace());
+            verify(batchJdbcTransactionTemplate, Mockito.times(1)).setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            verify(batchJdbcTransactionTemplate, Mockito.times(1)).execute(any());
+            verify(loanLockingService, Mockito.times(1)).updateLockError(eq(2L), eq(LockOwner.LOAN_COB_CHUNK_PROCESSING),
+                    eq("Loan (id: 2) processing is failed"), anyString());
         });
 
         Given("/^The LoanItemListener.onWriteError method (.*)$/", (String action) -> {
             ThreadLocalContextUtil.setTenant(new FineractPlatformTenant(1L, "default", "Default", "Asia/Kolkata", null));
             exception = new LockedReadException(3L, new RuntimeException("fail"));
-            loanAccountLock = new LoanAccountLock(3L, LockOwner.LOAN_COB_CHUNK_PROCESSING, LocalDate.now(ZoneId.systemDefault()));
-            when(loanLockingService.findByLoanIdAndLockOwner(3L, LockOwner.LOAN_COB_CHUNK_PROCESSING)).thenReturn(loanAccountLock);
             when(loan.getId()).thenReturn(3L);
-            transactionTemplate.setTransactionManager(mock(PlatformTransactionManager.class));
+            batchJdbcTransactionTemplate.setTransactionManager(mock(PlatformTransactionManager.class));
         });
 
         When("LoanItemListener.onWriteError method executed", () -> {
@@ -124,11 +112,10 @@ public class LoanItemListenerStepDefinitions implements En {
         });
 
         Then("LoanItemListener.onWriteError result should match", () -> {
-            verify(transactionTemplate, Mockito.times(1)).setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-            verify(transactionTemplate, Mockito.times(1)).execute(any());
-            verify(loanLockingService, Mockito.times(1)).findByLoanIdAndLockOwner(3L, LockOwner.LOAN_COB_CHUNK_PROCESSING);
-            assertEquals("Loan (id: 3) writing is failed", loanAccountLock.getError());
-            assertNotNull(loanAccountLock.getStacktrace());
+            verify(batchJdbcTransactionTemplate, Mockito.times(1)).setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            verify(batchJdbcTransactionTemplate, Mockito.times(1)).execute(any());
+            verify(loanLockingService, Mockito.times(1)).updateLockError(eq(3L), eq(LockOwner.LOAN_COB_CHUNK_PROCESSING),
+                    eq("Loan (id: 3) writing is failed"), anyString());
         });
     }
 }

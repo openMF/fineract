@@ -19,10 +19,9 @@
 package org.apache.fineract.infrastructure.core.service.migration;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.sql.SQLException;
 import liquibase.change.custom.CustomTaskChange;
 import liquibase.database.Database;
 import liquibase.database.jvm.JdbcConnection;
@@ -44,37 +43,64 @@ public class TenantPasswordEncryptionTask implements CustomTaskChange, Applicati
 
     private static DatabasePasswordEncryptor databasePasswordEncryptor;
 
-    // NOTE: workaround for double execution bug; see: https://github.com/liquibase/liquibase/issues/3945
-    private Map<String, Boolean> done = new ConcurrentHashMap<>();
+    private static final String SELECT_UNENCRYPTED_PASSWORDS = """
+            SELECT id, schema_password
+            FROM tenant_server_connections
+            WHERE master_password_hash IS NULL
+               OR master_password_hash = ''
+            """;
+
+    private static final String UPDATE_PASSWORD = """
+            UPDATE tenant_server_connections
+            SET schema_password = ?,
+                master_password_hash = ?
+            WHERE id = ?
+              AND (master_password_hash IS NULL OR master_password_hash = '')
+            """;
 
     @Override
     public void execute(Database database) throws CustomChangeException {
-        JdbcConnection dbConn = (JdbcConnection) database.getConnection(); // autocommit is false
-        try (Statement selectStatement = dbConn.createStatement(); Statement updateStatement = dbConn.createStatement()) {
+        if (databasePasswordEncryptor == null) {
+            throw new CustomChangeException("DatabasePasswordEncryptor is not initialized");
+        }
 
-            try (ResultSet rs = selectStatement.executeQuery("SELECT id, schema_password FROM tenant_server_connections")) {
+        try {
+            liquibase.database.DatabaseConnection connection = database.getConnection();
+
+            if (!(connection instanceof JdbcConnection dbConn)) {
+                throw new CustomChangeException(
+                        "Expected Liquibase JdbcConnection but got " + (connection == null ? "null" : connection.getClass().getName()));
+            }
+
+            try (PreparedStatement selectStatement = dbConn.prepareStatement(SELECT_UNENCRYPTED_PASSWORDS);
+                    PreparedStatement updateStatement = dbConn.prepareStatement(UPDATE_PASSWORD);
+                    ResultSet rs = selectStatement.executeQuery()) {
+
+                String masterPasswordHash = databasePasswordEncryptor.getMasterPasswordHash();
+
                 while (rs.next()) {
-                    String id = rs.getString("id");
-                    if (!Boolean.TRUE.equals(done.get(id))) {
-                        String schemaPassword = rs.getString("schema_password");
-                        String encryptedPassword = TenantPasswordEncryptionTask.databasePasswordEncryptor.encrypt(schemaPassword);
+                    long id = rs.getLong("id");
+                    String schemaPassword = rs.getString("schema_password");
+                    String encryptedPassword = databasePasswordEncryptor.encrypt(schemaPassword);
 
-                        String updateSql = String.format(
-                                "update tenant_server_connections set schema_password = '%s', master_password_hash = '%s' where id = %s",
-                                encryptedPassword, TenantPasswordEncryptionTask.databasePasswordEncryptor.getMasterPasswordHash(), id);
-                        updateStatement.execute(updateSql);
-                        done.put(id, true);
-                    }
+                    updateStatement.setString(1, encryptedPassword);
+                    updateStatement.setString(2, masterPasswordHash);
+                    updateStatement.setLong(3, id);
+                    updateStatement.executeUpdate();
                 }
             }
+        } catch (CustomChangeException e) {
+            throw e;
+        } catch (SQLException e) {
+            throw new CustomChangeException("Failed to encrypt tenant database passwords", e);
         } catch (Exception e) {
-            throw new CustomChangeException(e);
+            throw new CustomChangeException("Unexpected error while encrypting tenant database passwords", e);
         }
     }
 
     @Override
     public String getConfirmationMessage() {
-        return null;
+        return "Tenant database passwords encrypted";
     }
 
     @Override
@@ -89,7 +115,13 @@ public class TenantPasswordEncryptionTask implements CustomTaskChange, Applicati
 
     @Override
     public ValidationErrors validate(Database database) {
-        return null;
+        ValidationErrors validationErrors = new ValidationErrors();
+
+        if (databasePasswordEncryptor == null) {
+            validationErrors.addError("DatabasePasswordEncryptor is not initialized");
+        }
+
+        return validationErrors;
     }
 
     @Override

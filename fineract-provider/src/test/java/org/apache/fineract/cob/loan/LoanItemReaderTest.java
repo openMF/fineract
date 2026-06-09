@@ -23,7 +23,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.apache.fineract.cob.data.COBParameter;
-import org.apache.fineract.cob.domain.LoanAccountLock;
 import org.apache.fineract.cob.domain.LockOwner;
 import org.apache.fineract.cob.domain.LockingService;
 import org.apache.fineract.cob.service.BeforeStepLockingItemReaderHelper;
@@ -64,7 +62,7 @@ class LoanItemReaderTest {
     private RetrieveIdService retrieveIdService;
 
     @Mock
-    private LockingService<LoanAccountLock> loanLockingService;
+    private LockingService loanLockingService;
 
     @Mock
     private StepExecution stepExecution;
@@ -87,7 +85,7 @@ class LoanItemReaderTest {
         // given
         ThreadLocalContextUtil.setTenant(new FineractPlatformTenant(1L, "test", "test", "UTC", null));
         LoanItemReader loanItemReader = new LoanItemReader(loanRepository,
-                new BeforeStepLockingItemReaderHelper<>(retrieveIdService, loanLockingService));
+                new BeforeStepLockingItemReaderHelper(retrieveIdService, loanLockingService));
         when(stepExecution.getExecutionContext()).thenReturn(executionContext);
         when(stepExecution.getJobExecution()).thenReturn(jobExecution);
         when(jobExecution.getExecutionContext()).thenReturn(executionContext);
@@ -95,9 +93,8 @@ class LoanItemReaderTest {
         when(executionContext.get(LoanCOBConstant.COB_PARAMETER)).thenReturn(loanCOBParameter);
         when(retrieveIdService.retrieveAllNonClosedLoansByLastClosedBusinessDateAndMinAndMaxLoanId(loanCOBParameter, false))
                 .thenReturn(new ArrayList<>(List.of(1L, 2L, 3L, 4L, 5L)));
-        List<LoanAccountLock> accountLocks = Stream.of(1L, 2L, 3L, 4L, 5L)
-                .map(l -> new LoanAccountLock(l, LockOwner.LOAN_COB_CHUNK_PROCESSING, LocalDate.of(2023, 7, 25))).toList();
-        when(loanLockingService.findAllByLoanIdInAndLockOwner(List.of(1L, 2L, 3L, 4L, 5L), LockOwner.LOAN_COB_CHUNK_PROCESSING))
+        List<Long> accountLocks = Stream.of(1L, 2L, 3L, 4L, 5L).toList();
+        when(loanLockingService.findLockIdsByLoanIdInAndLockOwner(List.of(1L, 2L, 3L, 4L, 5L), LockOwner.LOAN_COB_CHUNK_PROCESSING))
                 .thenReturn(accountLocks);
         when(loanRepository.findById(anyLong())).thenReturn(Optional.of(loan));
 
@@ -117,7 +114,7 @@ class LoanItemReaderTest {
         // given
         ThreadLocalContextUtil.setTenant(new FineractPlatformTenant(1L, "test", "test", "UTC", null));
         LoanItemReader loanItemReader = new LoanItemReader(loanRepository,
-                new BeforeStepLockingItemReaderHelper<>(retrieveIdService, loanLockingService));
+                new BeforeStepLockingItemReaderHelper(retrieveIdService, loanLockingService));
         when(stepExecution.getExecutionContext()).thenReturn(executionContext);
         when(stepExecution.getJobExecution()).thenReturn(jobExecution);
         when(jobExecution.getExecutionContext()).thenReturn(executionContext);
@@ -140,7 +137,7 @@ class LoanItemReaderTest {
         // given
         ThreadLocalContextUtil.setTenant(new FineractPlatformTenant(1L, "test", "test", "UTC", null));
         LoanItemReader loanItemReader = new LoanItemReader(loanRepository,
-                new BeforeStepLockingItemReaderHelper<>(retrieveIdService, loanLockingService));
+                new BeforeStepLockingItemReaderHelper(retrieveIdService, loanLockingService));
         when(stepExecution.getExecutionContext()).thenReturn(executionContext);
         when(stepExecution.getJobExecution()).thenReturn(jobExecution);
         when(jobExecution.getExecutionContext()).thenReturn(executionContext);
@@ -148,9 +145,8 @@ class LoanItemReaderTest {
         when(executionContext.get(LoanCOBConstant.COB_PARAMETER)).thenReturn(loanCOBParameter);
         when(retrieveIdService.retrieveAllNonClosedLoansByLastClosedBusinessDateAndMinAndMaxLoanId(loanCOBParameter, false))
                 .thenReturn(new ArrayList<>(IntStream.rangeClosed(1, 100).boxed().map(Long::valueOf).toList()));
-        List<LoanAccountLock> accountLocks = IntStream.rangeClosed(1, 100).boxed().map(Long::valueOf)
-                .map(l -> new LoanAccountLock(l, LockOwner.LOAN_COB_CHUNK_PROCESSING, LocalDate.of(2023, 7, 25))).toList();
-        when(loanLockingService.findAllByLoanIdInAndLockOwner(IntStream.rangeClosed(1, 100).boxed().map(Long::valueOf).toList(),
+        List<Long> accountLocks = IntStream.rangeClosed(1, 100).boxed().map(Long::valueOf).toList();
+        when(loanLockingService.findLockIdsByLoanIdInAndLockOwner(IntStream.rangeClosed(1, 100).boxed().map(Long::valueOf).toList(),
                 LockOwner.LOAN_COB_CHUNK_PROCESSING)).thenReturn(accountLocks);
         when(loanRepository.findById(anyLong())).thenReturn(Optional.of(loan));
 

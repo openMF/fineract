@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -48,23 +49,28 @@ public class ColumnValidator {
     private final JdbcTemplate jdbcTemplate;
 
     private void validateColumn(Map<String, Set<String>> tableColumnMap) {
-        Connection connection = null;
+        DataSource dataSource = Objects.requireNonNull(this.jdbcTemplate.getDataSource());
+        Connection connection = DataSourceUtils.getConnection(dataSource);
 
         try {
-            connection = Objects.requireNonNull(this.jdbcTemplate.getDataSource()).getConnection();
             DatabaseMetaData dbMetaData = connection.getMetaData();
+
             for (Map.Entry<String, Set<String>> entry : tableColumnMap.entrySet()) {
                 Set<String> columns = entry.getValue();
-                ResultSet resultSet = dbMetaData.getColumns(null, null, entry.getKey(), null);
-                Set<String> tableColumns = getTableColumns(resultSet);
-                if (!columns.isEmpty() && tableColumns.isEmpty()) {
-                    throw new PlatformApiDataValidationException("error.msg.invalid.table.column", "Invalid table or column name detected",
-                            entry.getKey(), columns);
-                }
-                for (String requestedColumn : columns) {
-                    if (!tableColumns.contains(requestedColumn)) {
-                        throw new PlatformApiDataValidationException("error.msg.invalid.table.column", "Invalid table column name detected",
-                                entry.getKey(), requestedColumn);
+
+                try (ResultSet resultSet = dbMetaData.getColumns(null, null, entry.getKey(), null)) {
+                    Set<String> tableColumns = getTableColumns(resultSet);
+
+                    if (!columns.isEmpty() && tableColumns.isEmpty()) {
+                        throw new PlatformApiDataValidationException("error.msg.invalid.table.column",
+                                "Invalid table or column name detected", entry.getKey(), columns);
+                    }
+
+                    for (String requestedColumn : columns) {
+                        if (!tableColumns.contains(requestedColumn)) {
+                            throw new PlatformApiDataValidationException("error.msg.invalid.table.column",
+                                    "Invalid table column name detected", entry.getKey(), requestedColumn);
+                        }
                     }
                 }
             }
@@ -72,10 +78,7 @@ public class ColumnValidator {
             throw new PlatformApiDataValidationException("error.msg.database.access.error",
                     "Database access error during column validation", e.getMessage(), e);
         } finally {
-            if (connection != null) {
-                DataSourceUtils.releaseConnection(connection, jdbcTemplate.getDataSource());
-            }
-            connection = null;
+            DataSourceUtils.releaseConnection(connection, dataSource);
         }
     }
 

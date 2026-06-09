@@ -23,7 +23,6 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.cob.domain.LockOwner;
 import org.apache.fineract.cob.domain.LockingService;
-import org.apache.fineract.cob.domain.WorkingCapitalLoanAccountLock;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.springframework.batch.item.Chunk;
@@ -33,9 +32,9 @@ import org.springframework.data.repository.CrudRepository;
 @Slf4j
 public abstract class AbstractWorkingCapitalLoanCOBWorkerItemWriter extends RepositoryItemWriter<WorkingCapitalLoan> {
 
-    private final LockingService<WorkingCapitalLoanAccountLock> loanLockingService;
+    private final LockingService loanLockingService;
 
-    public AbstractWorkingCapitalLoanCOBWorkerItemWriter(LockingService<WorkingCapitalLoanAccountLock> loanLockingService,
+    public AbstractWorkingCapitalLoanCOBWorkerItemWriter(LockingService loanLockingService,
             CrudRepository<WorkingCapitalLoan, Long> repository) {
         this.loanLockingService = loanLockingService;
         setRepository(repository);

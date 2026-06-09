@@ -18,45 +18,21 @@
  */
 package org.apache.fineract.integrationtests.common.loans;
 
-import com.google.gson.Gson;
-import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
-import java.util.Map;
-import org.apache.fineract.client.util.JSON;
-import org.apache.fineract.integrationtests.common.Utils;
+import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
 
-public class LoanAccountLockHelper {
+import org.apache.fineract.client.models.LockRequest;
+import org.apache.fineract.integrationtests.common.FineractFeignClientHelper;
 
-    private static final String INTERNAL_PLACE_LOCK_ON_LOAN_ACCOUNT_URL = "/fineract-provider/api/v1/internal/loans/";
-    private static final Gson GSON = new JSON().getGson();
-    private final RequestSpecification requestSpec;
-    private final ResponseSpecification responseSpec;
+public final class LoanAccountLockHelper {
 
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public LoanAccountLockHelper(final RequestSpecification requestSpec, final ResponseSpecification responseSpec) {
-        this.requestSpec = requestSpec;
-        this.responseSpec = responseSpec;
+    private LoanAccountLockHelper() {}
+
+    public static void placeSoftLockOnLoanAccount(Long loanId, String lockOwner) {
+        placeSoftLockOnLoanAccount(loanId, lockOwner, "");
     }
 
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public String placeSoftLockOnLoanAccount(Integer loanId, String lockOwner) {
-        return placeSoftLockOnLoanAccount(loanId, lockOwner, "");
+    public static void placeSoftLockOnLoanAccount(Long loanId, String lockOwner, String error) {
+        executeVoid(() -> FineractFeignClientHelper.getFineractFeignClient().loanAccountLock().placeLockOnLoanAccount(loanId, lockOwner,
+                new LockRequest().error(error)));
     }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public String placeSoftLockOnLoanAccount(Integer loanId, String lockOwner, String error) {
-        return Utils.performServerPost(requestSpec, responseSpec,
-                INTERNAL_PLACE_LOCK_ON_LOAN_ACCOUNT_URL + loanId + "/place-lock/" + lockOwner + "?" + Utils.TENANT_IDENTIFIER,
-                GSON.toJson(Map.of("error", error)));
-    }
-
 }

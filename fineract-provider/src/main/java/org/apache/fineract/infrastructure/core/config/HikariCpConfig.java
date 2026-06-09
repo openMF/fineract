@@ -32,8 +32,7 @@ public class HikariCpConfig {
     // TODO: we can get rid of this config class by defining "spring.hikariTenantDataSource.hikari.*" in
     // "application.properties" and enabling auto-configuration
 
-    // initMethod is triggering lazy initialization of Hikari pool
-    @Bean(initMethod = "getConnection", destroyMethod = "close")
+    @Bean(destroyMethod = "close")
     @ConfigurationProperties(prefix = "spring.datasource.hikari")
     public HikariDataSource hikariTenantDataSource() {
         return new HikariDataSource();

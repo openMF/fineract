@@ -18,54 +18,28 @@
  */
 package org.apache.fineract.integrationtests.common.accounting;
 
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
-import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
+
+import java.util.List;
+import org.apache.fineract.client.models.AccountRuleRequest;
 import org.apache.fineract.client.models.AccountingRuleData;
 import org.apache.fineract.client.models.PostAccountingRulesResponse;
-import org.apache.fineract.client.util.JSON;
+import org.apache.fineract.integrationtests.common.FineractFeignClientHelper;
 import org.apache.fineract.integrationtests.common.Utils;
 
-public class AccountRuleHelper {
+public final class AccountRuleHelper {
 
-    private static final Gson GSON = new JSON().getGson();
+    private AccountRuleHelper() {}
 
-    private static final String ACCOUNTINGRULES_URL = "/fineract-provider/api/v1/accountingrules?" + Utils.TENANT_IDENTIFIER;
-
-    private final RequestSpecification requestSpec;
-    private final ResponseSpecification responseSpec;
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public AccountRuleHelper(final RequestSpecification requestSpec, final ResponseSpecification responseSpec) {
-        this.requestSpec = requestSpec;
-        this.responseSpec = responseSpec;
+    public static List<AccountingRuleData> getAccountingRules() {
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().accountingRules().retrieveAllAccountingRules());
     }
 
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public ArrayList<AccountingRuleData> getAccountingRules() {
-        final String response = Utils.performServerGet(this.requestSpec, this.responseSpec, ACCOUNTINGRULES_URL);
-        Type accountRuleListType = new TypeToken<ArrayList<AccountingRuleData>>() {}.getType();
-        return GSON.fromJson(response, accountRuleListType);
+    public static PostAccountingRulesResponse createAccountRule(final Long officeId, final Account accountToCredit,
+            final Account accountToDebit) {
+        final String name = Utils.uniqueRandomStringGenerator("ACCOUNTRULE_NAME_", 5);
+        final AccountRuleRequest request = new AccountRuleRequest().officeId(officeId).name(name).description(name)
+                .accountToCredit(accountToCredit.getAccountID().longValue()).accountToDebit(accountToDebit.getAccountID().longValue());
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().accountingRules().createAccountingRule(request));
     }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public PostAccountingRulesResponse createAccountRule(final Long officeId, final Account accountToCredit, final Account accountToDebit) {
-        final String assetAccountJSON = new AccountingRuleBuilder()
-                .withGLAccounts(accountToCredit.getAccountID(), accountToDebit.getAccountID()).withOffice(officeId).build();
-        final String response = Utils.performServerPost(requestSpec, responseSpec, ACCOUNTINGRULES_URL, assetAccountJSON);
-        return GSON.fromJson(response, PostAccountingRulesResponse.class);
-    }
-
 }

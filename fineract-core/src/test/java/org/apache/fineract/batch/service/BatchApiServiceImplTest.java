@@ -244,7 +244,7 @@ class BatchApiServiceImplTest {
                 null);
 
         // Mock getTransaction to return our status when the read-only flag matches
-        when(extendedJpaTransactionManager.isReadOnlyConnection()).thenReturn(isReadOnly);
+        when(extendedJpaTransactionManager.isReadOnly()).thenReturn(isReadOnly);
         when(extendedJpaTransactionManager
                 .getTransaction(argThat(definition -> definition != null && definition.isReadOnly() == isReadOnly)))
                 .thenReturn(transactionStatus);

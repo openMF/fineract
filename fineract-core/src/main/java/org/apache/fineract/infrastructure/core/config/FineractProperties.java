@@ -126,6 +126,7 @@ public class FineractProperties {
 
         private int minPoolSize;
         private int maxPoolSize;
+        private long leakDetectionThreshold;
 
         public boolean isMinPoolSizeSet() {
             return minPoolSize != -1;
@@ -133,6 +134,10 @@ public class FineractProperties {
 
         public boolean isMaxPoolSizeSet() {
             return maxPoolSize != -1;
+        }
+
+        public boolean isLeakDetectionThresholdSet() {
+            return leakDetectionThreshold > 0;
         }
     }
 

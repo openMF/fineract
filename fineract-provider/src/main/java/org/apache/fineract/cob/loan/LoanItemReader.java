@@ -19,7 +19,6 @@
 package org.apache.fineract.cob.loan;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.cob.domain.LoanAccountLock;
 import org.apache.fineract.cob.service.BeforeStepLockingItemReaderHelper;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepository;
@@ -30,10 +29,9 @@ import org.springframework.lang.NonNull;
 @Slf4j
 public class LoanItemReader extends AbstractLoanItemReader<Loan> {
 
-    private final BeforeStepLockingItemReaderHelper<LoanAccountLock> beforeStepLockingItemReaderHelper;
+    private final BeforeStepLockingItemReaderHelper beforeStepLockingItemReaderHelper;
 
-    public LoanItemReader(LoanRepository loanRepository,
-            BeforeStepLockingItemReaderHelper<LoanAccountLock> beforeStepLockingItemReaderHelper) {
+    public LoanItemReader(LoanRepository loanRepository, BeforeStepLockingItemReaderHelper beforeStepLockingItemReaderHelper) {
         super(loanRepository);
         this.beforeStepLockingItemReaderHelper = beforeStepLockingItemReaderHelper;
     }

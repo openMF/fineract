@@ -93,7 +93,6 @@ public class LoanSpecificDueDateChargeAfterMaturityTest extends BaseLoanIntegrat
     private static ResponseSpecification responseSpec;
     private static LoanTransactionHelper loanTransactionHelper;
     private static AccountHelper accountHelper;
-    private static PeriodicAccrualAccountingHelper periodicAccrualAccountingHelper;
     private static Integer commonLoanProductId;
     private static PostClientsResponse client;
 
@@ -117,7 +116,6 @@ public class LoanSpecificDueDateChargeAfterMaturityTest extends BaseLoanIntegrat
 
         loanTransactionHelper = new LoanTransactionHelper(requestSpec, responseSpec);
         accountHelper = new AccountHelper(requestSpec, responseSpec);
-        periodicAccrualAccountingHelper = new PeriodicAccrualAccountingHelper(requestSpec, responseSpec);
         final Account assetAccount = accountHelper.createAssetAccount();
         final Account incomeAccount = accountHelper.createIncomeAccount();
         final Account expenseAccount = accountHelper.createExpenseAccount();
@@ -199,7 +197,7 @@ public class LoanSpecificDueDateChargeAfterMaturityTest extends BaseLoanIntegrat
 
         String runOnDateStr = penaltyCharge1AddedDate;
         LocalDate runOnDate = targetDate;
-        this.periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(runOnDateStr);
+        PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(runOnDateStr);
 
         this.loanTransactionHelper.checkAccrualTransactionForRepayment(runOnDate, 0.0f, 0.0f, PENALTY_PORTION, loanID);
 
@@ -255,7 +253,7 @@ public class LoanSpecificDueDateChargeAfterMaturityTest extends BaseLoanIntegrat
 
         runOnDateStr = penaltyCharge2AddedDate;
         runOnDate = LocalDate.of(2011, 4, 7);
-        this.periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(runOnDateStr);
+        PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(runOnDateStr);
         this.loanTransactionHelper.checkAccrualTransactionForRepayment(runOnDate, 0.0f, FEE_PORTION, NEXT_PENALTY_PORTION, loanID);
     }
 
@@ -341,7 +339,7 @@ public class LoanSpecificDueDateChargeAfterMaturityTest extends BaseLoanIntegrat
 
         targetDate = LocalDate.of(2011, 4, 14);
         String runOnDateStr = DATE_FORMATTER.format(targetDate);
-        this.periodicAccrualAccountingHelper.runPeriodicAccrualAccounting(runOnDateStr);
+        PeriodicAccrualAccountingHelper.runPeriodicAccrualAccounting(runOnDateStr);
 
         // Transaction date will be the due date of the instalment (in case of N+1 scenario)
         this.loanTransactionHelper.checkAccrualTransactionForRepayment(LocalDate.of(2011, 4, 13), 0.0f, 0.0f, PENALTY_PORTION, loanID);

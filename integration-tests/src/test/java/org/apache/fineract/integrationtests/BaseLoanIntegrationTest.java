@@ -175,8 +175,6 @@ public abstract class BaseLoanIntegrationTest extends IntegrationTest {
     protected ClientHelper clientHelper = new ClientHelper(requestSpec, responseSpec);
     protected SchedulerJobHelper schedulerJobHelper = new SchedulerJobHelper(requestSpec);
     protected final InlineLoanCOBHelper inlineLoanCOBHelper = new InlineLoanCOBHelper(requestSpec, responseSpec);
-    protected final LoanAccountLockHelper loanAccountLockHelper = new LoanAccountLockHelper(requestSpec,
-            createResponseSpecification(Matchers.is(202)));
     protected DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATETIME_PATTERN);
     protected final CodeHelper codeHelper = new CodeHelper();
     protected final ChargesHelper chargesHelper = new ChargesHelper();
@@ -994,11 +992,11 @@ public abstract class BaseLoanIntegrationTest extends IntegrationTest {
     }
 
     protected void placeHardLockOnLoan(Long loanId) {
-        loanAccountLockHelper.placeSoftLockOnLoanAccount(loanId.intValue(), "LOAN_COB_CHUNK_PROCESSING");
+        LoanAccountLockHelper.placeSoftLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING");
     }
 
     protected void placeHardLockOnLoan(Long loanId, String error) {
-        loanAccountLockHelper.placeSoftLockOnLoanAccount(loanId.intValue(), "LOAN_COB_CHUNK_PROCESSING", error);
+        LoanAccountLockHelper.placeSoftLockOnLoanAccount(loanId, "LOAN_COB_CHUNK_PROCESSING", error);
     }
 
     protected void executeInlineCOB(Long loanId) {

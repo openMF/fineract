@@ -117,7 +117,7 @@ public class ExternalAssetOwnerTransferTest extends BaseLoanIntegrationTest {
     }
 
     protected void updateBusinessDateAndExecuteCOBJob(String date) {
-        BusinessDateHelper.updateBusinessDate(REQUEST_SPEC, RESPONSE_SPEC, BUSINESS_DATE, LocalDate.parse(date));
+        BusinessDateHelper.updateBusinessDate(BUSINESS_DATE, LocalDate.parse(date));
         SCHEDULER_JOB_HELPER.executeAndAwaitJob("Loan COB");
     }
 
@@ -163,7 +163,7 @@ public class ExternalAssetOwnerTransferTest extends BaseLoanIntegrationTest {
     protected void setInitialBusinessDate(LocalDate date) {
         globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                 new PutGlobalConfigurationsRequest().enabled(true));
-        BusinessDateHelper.updateBusinessDate(REQUEST_SPEC, RESPONSE_SPEC, BUSINESS_DATE, date);
+        BusinessDateHelper.updateBusinessDate(BUSINESS_DATE, date);
     }
 
     protected void cleanUpAndRestoreBusinessDate() {
@@ -171,7 +171,7 @@ public class ExternalAssetOwnerTransferTest extends BaseLoanIntegrationTest {
         REQUEST_SPEC.header("Authorization", "Basic " + Utils.loginIntoServerAndGetBase64EncodedAuthenticationKey());
         REQUEST_SPEC.header("Fineract-Platform-TenantId", "default");
         RESPONSE_SPEC = new ResponseSpecBuilder().expectStatusCode(200).build();
-        BusinessDateHelper.updateBusinessDate(REQUEST_SPEC, RESPONSE_SPEC, BUSINESS_DATE, TODAYS_DATE);
+        BusinessDateHelper.updateBusinessDate(BUSINESS_DATE, TODAYS_DATE);
         globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                 new PutGlobalConfigurationsRequest().enabled(false));
         globalConfigurationHelper.manageConfigurations(GlobalConfigurationConstants.ENABLE_AUTO_GENERATED_EXTERNAL_ID, false);

@@ -81,7 +81,7 @@ public class LoanTransactionReprocessForAdvancedPaymentAllocationTest extends Ba
 
             globalConfigurationHelper.updateGlobalConfiguration(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE,
                     new PutGlobalConfigurationsRequest().enabled(true));
-            BusinessDateHelper.updateBusinessDate(REQUEST_SPEC, RESPONSE_SPEC, BusinessDateType.BUSINESS_DATE, businessDate);
+            BusinessDateHelper.updateBusinessDate(BusinessDateType.BUSINESS_DATE, businessDate);
 
             // Accounts oof periodic accrual
             final Account assetAccount = ACCOUNT_HELPER.createAssetAccount();

@@ -323,6 +323,8 @@ final class ClientsApiResourceSwagger {
         public Boolean active;
         @Schema(example = "04 March 2009")
         public String activationDate;
+        @Schema(example = "04 March 2009")
+        public String submittedOnDate;
         @Schema(example = "+353851239876")
         public String mobileNo;
         @Schema(description = "List of PostClientsDatatable")
@@ -359,6 +361,10 @@ final class ClientsApiResourceSwagger {
         public String externalId;
         @Schema(example = "123-456")
         public String resourceExternalId;
+        @Schema(example = "Client_FirstName")
+        public String firstname;
+        @Schema(example = "Client_LastName")
+        public String lastname;
     }
 
     @Schema(description = "PutClientsClientIdResponse")
@@ -419,6 +425,12 @@ final class ClientsApiResourceSwagger {
         public String rejectionDate;
         @Schema(example = "1")
         public Long rejectionReasonId;
+        @Schema(example = "03 August 2021")
+        public String withdrawalDate;
+        @Schema(example = "1")
+        public Long withdrawalReasonId;
+        @Schema(example = "03 August 2021")
+        public String reopenedDate;
     }
 
     @Schema(description = "PostClientsClientIdResponse")

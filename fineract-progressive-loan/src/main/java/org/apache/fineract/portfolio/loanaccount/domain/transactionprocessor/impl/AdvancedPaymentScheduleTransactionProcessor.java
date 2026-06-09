@@ -3346,8 +3346,8 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
             }
         } else {
             CommonReAgeSettings settings = switch (loanReAgeParameter.getInterestHandlingType()) {
-                case LoanReAgeInterestHandlingType.EQUAL_AMORTIZATION_FULL_INTEREST -> new CommonReAgeSettings(false, true, true, true);
-                case LoanReAgeInterestHandlingType.EQUAL_AMORTIZATION_PAYABLE_INTEREST -> new CommonReAgeSettings(true, true, true, true);
+                case LoanReAgeInterestHandlingType.EQUAL_AMORTIZATION_FULL_INTEREST -> new CommonReAgeSettings(false, false, true, true);
+                case LoanReAgeInterestHandlingType.EQUAL_AMORTIZATION_PAYABLE_INTEREST -> new CommonReAgeSettings(true, false, true, true);
                 case LoanReAgeInterestHandlingType.DEFAULT -> new CommonReAgeSettings();
                 case null -> new CommonReAgeSettings();
                 default -> throw new NotImplementedException();

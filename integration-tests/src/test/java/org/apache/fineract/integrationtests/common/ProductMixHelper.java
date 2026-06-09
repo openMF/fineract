@@ -18,48 +18,23 @@
  */
 package org.apache.fineract.integrationtests.common;
 
-import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
-import java.util.ArrayList;
-import java.util.HashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.fineract.client.models.GetLoanProductsResponse;
+import org.apache.fineract.client.models.GetLoanProductsTemplateResponse;
+
+@Slf4j
 public class ProductMixHelper {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProductMixHelper.class);
-    private static final String PRODUCT_MIX_URL = "/fineract-provider/api/v1/loanproducts";
-
-    private final RequestSpecification requestSpec;
-    private final ResponseSpecification responseSpec;
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public ProductMixHelper(final RequestSpecification requestSpec, final ResponseSpecification responseSpec) {
-        this.requestSpec = requestSpec;
-        this.responseSpec = responseSpec;
+    public List<GetLoanProductsResponse> getProductsMixList() {
+        log.info("------------------------ RETRIEVING PRODUCT MIX -------------------------");
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().loanProducts().retrieveAllLoanProducts());
     }
 
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public ArrayList getProductsMixList() {
-        final String GET_PRODUCT_MIX_URL = PRODUCT_MIX_URL + "?" + Utils.TENANT_IDENTIFIER;
-        LOG.info("------------------------ RETRIEVING PRODUCT MIX -------------------------");
-        return Utils.performServerGet(this.requestSpec, this.responseSpec, GET_PRODUCT_MIX_URL, "");
+    public GetLoanProductsTemplateResponse getProductMixTemplate() {
+        log.info("-------------------- RETRIEVING PRODUCT MIX TEMPLATE ---------------------");
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().loanProducts().retrieveTemplateLoanProduct(true));
     }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public HashMap getProductMixTemplate() {
-        final String GET_PRODUCT_MIX_URL = PRODUCT_MIX_URL + "/template?isProductMixTemplate=true&" + Utils.TENANT_IDENTIFIER;
-        LOG.info("-------------------- RETRIEVING PRODUCT MIX TEMPLATE ---------------------");
-        return Utils.performServerGet(this.requestSpec, this.responseSpec, GET_PRODUCT_MIX_URL, "");
-    }
-
 }
