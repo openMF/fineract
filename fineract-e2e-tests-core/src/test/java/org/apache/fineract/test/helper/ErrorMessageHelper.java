@@ -1118,10 +1118,6 @@ public final class ErrorMessageHelper {
         return "Failed data validation due to: cannot.be.more.than.discount.fee.";
     }
 
-    public static String discountAdjustmentBackdatedFailure() {
-        return "Failed data validation due to: backdated.not.allowed.";
-    }
-
     public static String discountAdjustmentBeforeDiscountDateFailure() {
         return "Failed data validation due to: cannot.be.before.discount.fee.date.";
     }
@@ -1136,6 +1132,22 @@ public final class ErrorMessageHelper {
 
     public static String discountAdjustmentNotActiveLoanFailure() {
         return "Failed data validation due to: adjustment.only.allowed.for.active.loan.";
+    }
+
+    public static String discountAdjustmentUndoAlreadyReversedFailure() {
+        return "Failed data validation due to: discount.adjustment.already.reversed.";
+    }
+
+    public static String discountAdjustmentUndoInvalidTypeFailure() {
+        return "Undo is not supported for transaction type";
+    }
+
+    public static String discountAdjustmentUndoTransactionNotFoundFailure() {
+        return "Working capital loan transaction not found";
+    }
+
+    public static String discountAdjustmentUndoNotActiveLoanFailure() {
+        return "Failed data validation due to: undo.discount.adjustment.only.allowed.for.active.loan.";
     }
 
     public static String nearBreachCannotEnableWithoutBreachFailure() {

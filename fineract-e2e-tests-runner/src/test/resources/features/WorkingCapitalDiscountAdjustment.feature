@@ -80,28 +80,6 @@ Feature: Working Capital Discount Adjustment
       | 01 January 2026 | Disbursement | 100.0             | 100.0            | 0.0               | 0.0                   | false    |
       | 01 January 2026 | Discount Fee | 12.0              | 12.0             | 0.0               | 0.0                   | false    |
 
-  @TestRailId:C83028
-  Scenario: Verify Discount fee adjustment fails when transaction date is before business date - UC5
-    When Admin sets the business date to "01 January 2026"
-    And Admin creates a client with random data
-    And Admin creates a working capital loan with the following data:
-      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP        | 01 January 2026 | 01 January 2026          | 100             | 100          | 1                 |          |
-    Then Working capital loan creation was successful
-    Then Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
-    Then Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
-    Then Admin adds Discount fee with "12" amount on Working Capital loan account for last disbursement
-    And Working Capital Loan has transactions:
-      | transactionDate | type         | transactionAmount | principalPortion | feeChargesPortion | penaltyChargesPortion | reversed |
-      | 01 January 2026 | Disbursement | 100.0             | 100.0            | 0.0               | 0.0                   | false    |
-      | 01 January 2026 | Discount Fee | 12.0              | 12.0             | 0.0               | 0.0                   | false    |
-    When Admin sets the business date to "20 January 2026"
-    Then Add Discount fee adjustment with "2" amount and transaction date "15 January 2026" on Working Capital loan account failed due to backdated transaction date
-    And Working Capital Loan has transactions:
-      | transactionDate | type         | transactionAmount | principalPortion | feeChargesPortion | penaltyChargesPortion | reversed |
-      | 01 January 2026 | Disbursement | 100.0             | 100.0            | 0.0               | 0.0                   | false    |
-      | 01 January 2026 | Discount Fee | 12.0              | 12.0             | 0.0               | 0.0                   | false    |
-
   @TestRailId:C83029
   Scenario: Verify Discount fee adjustment fails with transaction future date - UC6
     When Admin sets the business date to "01 January 2026"

@@ -346,7 +346,7 @@ public class DatatablesApiResource {
             Note that the default datatable UI functionality converts any field name containing spaces to underscores \
             when using the API. This means the field name "Business Description" is considered the same as \
             "Business_Description". So you shouldn't have both "versions" in any data table.""")
-    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = Object.class)), description = "{\n  \"BusinessDescription\": \"Livestock sales\",\n  \"Comment\": \"First comment made\",\n  \"Education_cv\": \"Primary\",\n  \"Gender_cd\": 6,\n  \"HighestRatePaid\": 8.5,\n  \"NextVisit\": \"01 October 2012\",\n  \"YearsinBusiness\": 5,\n  \"dateFormat\": \"dd MMMM yyyy\",\n  \"locale\": \"en\"\n}")
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = String.class)), description = "{\n  \"BusinessDescription\": \"Livestock sales\",\n  \"Comment\": \"First comment made\",\n  \"Education_cv\": \"Primary\",\n  \"Gender_cd\": 6,\n  \"HighestRatePaid\": 8.5,\n  \"NextVisit\": \"01 October 2012\",\n  \"YearsinBusiness\": 5,\n  \"dateFormat\": \"dd MMMM yyyy\",\n  \"locale\": \"en\"\n}")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = DatatablesApiResourceSwagger.PostDataTablesAppTableIdResponse.class)))
     public String createDatatableEntry(@PathParam("datatable") @Parameter(description = "datatable") final String datatable,
             @PathParam("apptableId") @Parameter(description = "apptableId") final Long apptableId,
@@ -367,7 +367,7 @@ public class DatatablesApiResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Update Entry in Data Table (One to One)", description = "Updates the row (if it exists) of the data table.")
-    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = Object.class)))
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = String.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = DatatablesApiResourceSwagger.PutDataTablesAppTableIdResponse.class)))
     public String updateDatatableEntryOnetoOne(@PathParam("datatable") @Parameter(description = "datatable") final String datatable,
             @PathParam("apptableId") @Parameter(description = "apptableId") final Long apptableId,
@@ -388,7 +388,7 @@ public class DatatablesApiResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Update Entry in Data Table (One to Many)", description = "Updates the row (if it exists) of the data table.")
-    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = Object.class)))
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = String.class)))
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = DatatablesApiResourceSwagger.PutDataTablesAppTableIdDatatableIdResponse.class)))
     public String updateDatatableEntryOneToMany(@PathParam("datatable") @Parameter(description = "datatable") final String datatable,
             @PathParam("apptableId") @Parameter(description = "apptableId") final Long apptableId,

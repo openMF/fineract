@@ -41,6 +41,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1514,6 +1515,141 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_DISCOUNT_FEE_RESPONSE, synthetic);
     }
 
+    @When("Admin undo the last Discount fee adjustment on Working Capital loan account")
+    public void undoLastDiscountFeeAdjustmentWCLoan() {
+        final Long loanId = getCreatedLoanId();
+        final GetWorkingCapitalLoanTransactionsResponse body = ok(
+                () -> fineractClient.workingCapitalLoanTransactions().retrieveWorkingCapitalLoanTransactionsById(loanId));
+        if (body.getContent() == null || body.getContent().isEmpty()) {
+            throw new IllegalStateException("No Working Capital Loan transactions found");
+        }
+        final GetWorkingCapitalLoanTransactionIdResponse adjustmentTxn = body.getContent().stream()
+                .filter(t -> t.getType() != null && "loanTransactionType.discountFeeAdjustment".equals(t.getType().getCode()))
+                .filter(t -> !Boolean.TRUE.equals(t.getReversed()))
+                .max(Comparator.comparing(GetWorkingCapitalLoanTransactionIdResponse::getId))
+                .orElseThrow(() -> new IllegalStateException("Active discount fee adjustment transaction not found on loan"));
+        final PostWorkingCapitalLoanTransactionsRequest request = workingCapitalProductRequestFactory
+                .defaultWorkingCapitalLoanRepaymentRequest();
+        ok(() -> fineractClient.workingCapitalLoanTransactions().executeWorkingCapitalLoanTransactionCommandById(loanId,
+                adjustmentTxn.getId(), "undo", request));
+    }
+
+    @When("Admin undo the Discount fee adjustment with {string} amount on Working Capital loan account")
+    public void undoDiscountFeeAdjustmentByAmountWCLoan(final String adjustmentAmount) {
+        final Long loanId = getCreatedLoanId();
+        final GetWorkingCapitalLoanTransactionsResponse body = ok(
+                () -> fineractClient.workingCapitalLoanTransactions().retrieveWorkingCapitalLoanTransactionsById(loanId));
+        if (body.getContent() == null || body.getContent().isEmpty()) {
+            throw new IllegalStateException("No Working Capital Loan transactions found");
+        }
+
+        final BigDecimal amount = new BigDecimal(adjustmentAmount);
+        final GetWorkingCapitalLoanTransactionIdResponse adjustmentTxn = body.getContent().stream().filter(t -> t.getType() != null)
+                .filter(t -> "loanTransactionType.discountFeeAdjustment".equals(t.getType().getCode()))
+                .filter(t -> !Boolean.TRUE.equals(t.getReversed())).filter(t -> t.getTransactionAmount() != null)
+                .filter(t -> t.getTransactionAmount().compareTo(amount) == 0)
+                .max(Comparator.comparing(GetWorkingCapitalLoanTransactionIdResponse::getId)).orElseThrow(() -> new IllegalStateException(
+                        "Active discount fee adjustment transaction with amount " + adjustmentAmount + " not found on loan"));
+
+        final PostWorkingCapitalLoanTransactionsRequest request = workingCapitalProductRequestFactory
+                .defaultWorkingCapitalLoanRepaymentRequest();
+
+        ok(() -> fineractClient.workingCapitalLoanTransactions().executeWorkingCapitalLoanTransactionCommandById(loanId,
+                adjustmentTxn.getId(), "undo", request));
+    }
+
+    @Then("Undo the last Discount fee adjustment on Working Capital loan account failed due to already reversed transaction with status code {int}")
+    public void undoLastDiscountFeeAdjustmentAlreadyReversedFailure(final int expectedStatus) {
+        final Long loanId = getCreatedLoanId();
+        final GetWorkingCapitalLoanTransactionsResponse body = ok(
+                () -> fineractClient.workingCapitalLoanTransactions().retrieveWorkingCapitalLoanTransactionsById(loanId));
+        if (body.getContent() == null || body.getContent().isEmpty()) {
+            throw new IllegalStateException("No Working Capital Loan transactions found");
+        }
+
+        final GetWorkingCapitalLoanTransactionIdResponse adjustmentTxn = body.getContent().stream().filter(t -> t.getType() != null)
+                .filter(t -> "loanTransactionType.discountFeeAdjustment".equals(t.getType().getCode()))
+                .max(Comparator.comparing(GetWorkingCapitalLoanTransactionIdResponse::getId))
+                .orElseThrow(() -> new IllegalStateException("Discount fee adjustment transaction not found on loan"));
+
+        final PostWorkingCapitalLoanTransactionsRequest request = workingCapitalProductRequestFactory
+                .defaultWorkingCapitalLoanRepaymentRequest();
+
+        final String errorMessage = ErrorMessageHelper.discountAdjustmentUndoAlreadyReversedFailure();
+
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoanTransactions()
+                .executeWorkingCapitalLoanTransactionCommandById(loanId, adjustmentTxn.getId(), "undo", request));
+
+        assertThat(exception.getStatus()).as(errorMessage).isEqualTo(expectedStatus);
+
+        assertThat(exception.getDeveloperMessage()).contains(errorMessage);
+    }
+
+    @Then("Undo discount fee adjustment referencing the discount fee transaction on Working Capital loan account failed due to invalid transaction type with status code {int}")
+    public void undoDiscountFeeAdjustmentInvalidTypeFailure(final int expectedStatus) {
+        final Long loanId = getCreatedLoanId();
+        final PostWorkingCapitalLoanTransactionsResponse lastDiscountResponse = testContext()
+                .get(TestContextKey.WORKING_CAPITAL_LOAN_DISCOUNT_FEE_RESPONSE);
+
+        Assertions.assertNotNull(lastDiscountResponse);
+
+        final PostWorkingCapitalLoanTransactionsRequest request = workingCapitalProductRequestFactory
+                .defaultWorkingCapitalLoanRepaymentRequest();
+
+        final String errorMessage = ErrorMessageHelper.discountAdjustmentUndoInvalidTypeFailure();
+
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoanTransactions()
+                .executeWorkingCapitalLoanTransactionCommandById(loanId, lastDiscountResponse.getResourceId(), "undo", request));
+
+        assertThat(exception.getStatus()).as(errorMessage).isEqualTo(expectedStatus);
+
+        assertThat(exception.getDeveloperMessage()).contains(errorMessage);
+    }
+
+    @Then("Undo discount fee adjustment with a non-existent transaction id on Working Capital loan account failed as not found with status code {int}")
+    public void undoDiscountFeeAdjustmentNotFoundFailure(final int expectedStatus) {
+        final Long loanId = getCreatedLoanId();
+        final PostWorkingCapitalLoanTransactionsRequest request = workingCapitalProductRequestFactory
+                .defaultWorkingCapitalLoanRepaymentRequest();
+
+        final String errorMessage = ErrorMessageHelper.discountAdjustmentUndoTransactionNotFoundFailure();
+
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoanTransactions()
+                .executeWorkingCapitalLoanTransactionCommandById(loanId, 999999999L, "undo", request));
+
+        assertThat(exception.getStatus()).as(errorMessage).isEqualTo(expectedStatus);
+
+        assertThat(exception.getDeveloperMessage()).contains(errorMessage);
+    }
+
+    @Then("Undo the last Discount fee adjustment on Working Capital loan account failed due to non active loan with status code {int}")
+    public void undoLastDiscountFeeAdjustmentNotActiveLoanFailure(final int expectedStatus) {
+        final Long loanId = getCreatedLoanId();
+        final GetWorkingCapitalLoanTransactionsResponse body = ok(
+                () -> fineractClient.workingCapitalLoanTransactions().retrieveWorkingCapitalLoanTransactionsById(loanId));
+        if (body.getContent() == null || body.getContent().isEmpty()) {
+            throw new IllegalStateException("No Working Capital Loan transactions found");
+        }
+
+        final GetWorkingCapitalLoanTransactionIdResponse adjustmentTxn = body.getContent().stream().filter(t -> t.getType() != null)
+                .filter(t -> "loanTransactionType.discountFeeAdjustment".equals(t.getType().getCode()))
+                .filter(t -> !Boolean.TRUE.equals(t.getReversed()))
+                .max(Comparator.comparing(GetWorkingCapitalLoanTransactionIdResponse::getId))
+                .orElseThrow(() -> new IllegalStateException("Active discount fee adjustment transaction not found on loan"));
+
+        final PostWorkingCapitalLoanTransactionsRequest request = workingCapitalProductRequestFactory
+                .defaultWorkingCapitalLoanRepaymentRequest();
+
+        final String errorMessage = ErrorMessageHelper.discountAdjustmentUndoNotActiveLoanFailure();
+
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoanTransactions()
+                .executeWorkingCapitalLoanTransactionCommandById(loanId, adjustmentTxn.getId(), "undo", request));
+
+        assertThat(exception.getStatus()).as(errorMessage).isEqualTo(expectedStatus);
+
+        assertThat(exception.getDeveloperMessage()).contains(errorMessage);
+    }
+
     @And("Add Discount fee adjustment with {string} amount on Working Capital loan account failed due to exceeding discount amount")
     public void addDiscountFeeAdjustmentExceededFailure(final String adjustmentAmount) {
         addDiscountFeeAdjustmentFailedCheck(adjustmentAmount, null, ErrorMessageHelper.discountAdjustmentExceedFailure());
@@ -1528,11 +1664,6 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
     @Then("Add Discount fee adjustment with {string} amount and transaction date {string} on Working Capital loan account failed due to future date")
     public void addDiscountFeeAdjustmentFutureDateFailure(final String adjustmentAmount, final String transactionDate) {
         addDiscountFeeAdjustmentFailedCheck(adjustmentAmount, transactionDate, ErrorMessageHelper.discountAdjustmentFutureDateFailure());
-    }
-
-    @Then("Add Discount fee adjustment with {string} amount and transaction date {string} on Working Capital loan account failed due to backdated transaction date")
-    public void addDiscountFeeAdjustmentBackdatedFailure(final String adjustmentAmount, final String transactionDate) {
-        addDiscountFeeAdjustmentFailedCheck(adjustmentAmount, transactionDate, ErrorMessageHelper.discountAdjustmentBackdatedFailure());
     }
 
     @Then("Add Discount fee adjustment with {string} amount and transaction date {string} on Working Capital loan account failed as amount must be greater then zero")

@@ -50,7 +50,7 @@ public class FineractMultipartEncoder implements Encoder {
             encodeFileAsMultipart((File) object, template);
         } else if (object instanceof String && template.headers().containsKey("Content-Type")) {
             String contentType = template.headers().get("Content-Type").iterator().next();
-            if (contentType.startsWith("text/html") || contentType.startsWith("text/plain")) {
+            if (contentType.startsWith("text/html") || contentType.startsWith("text/plain") || contentType.startsWith("application/json")) {
                 byte[] bodyBytes = ((String) object).getBytes(StandardCharsets.UTF_8);
                 template.body(bodyBytes, StandardCharsets.UTF_8);
             } else {

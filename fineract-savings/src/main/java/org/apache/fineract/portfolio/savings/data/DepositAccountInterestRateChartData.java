@@ -70,6 +70,10 @@ public final class DepositAccountInterestRateChartData {
     }
 
     public static DepositAccountInterestRateChartData from(InterestRateChartData productChartData) {
+        if (productChartData == null) {
+            return null;
+        }
+
         final Long id = null;
         final Long accountId = null;
         final String accountNumber = null;

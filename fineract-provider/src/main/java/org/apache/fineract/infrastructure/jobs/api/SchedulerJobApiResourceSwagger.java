@@ -87,6 +87,8 @@ final class SchedulerJobApiResourceSwagger {
             private JobDetailHistoryDataSwagger() {}
 
             @Schema(example = "1")
+            public Long id;
+            @Schema(example = "1")
             public Long version;
             @Schema(example = "Jul 16, 2013 12:00:00 PM")
             public Date jobRunStartTime;

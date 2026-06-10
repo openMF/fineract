@@ -21,10 +21,13 @@ package org.apache.fineract.portfolio.workingcapitalloan.repository;
 import java.util.List;
 import java.util.Optional;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface WorkingCapitalLoanTransactionRepository extends JpaRepository<WorkingCapitalLoanTransaction, Long> {
 
@@ -34,7 +37,16 @@ public interface WorkingCapitalLoanTransactionRepository extends JpaRepository<W
 
     Optional<WorkingCapitalLoanTransaction> findByIdAndWcLoan_Id(Long id, Long wcLoanId);
 
+    @Query("""
+            select t from WorkingCapitalLoanTransaction t
+            where t.wcLoan.id = :wcLoanId and t.transactionType = :transactionType and t.reversed = false
+            order by t.id desc
+            """)
+    List<WorkingCapitalLoanTransaction> findActiveByTypeOrderByIdDesc(@Param("wcLoanId") Long wcLoanId,
+            @Param("transactionType") LoanTransactionType transactionType);
+
     Optional<WorkingCapitalLoanTransaction> findByWcLoan_IdAndExternalId(Long wcLoanId, ExternalId externalId);
 
     boolean existsByExternalId(ExternalId externalId);
+
 }

@@ -234,4 +234,53 @@ public class WorkingCapitalLoanTransactionsApiResource {
         }
         return this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
     }
+
+    @POST
+    @Path("{loanId}/transactions/{transactionId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(operationId = "executeWorkingCapitalLoanTransactionCommandById", summary = "Execute a command on an existing Working Capital Loan transaction", description = "Supported command query parameter: undo")
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanTransactionsApiResourceSwagger.PostWorkingCapitalLoanTransactionsRequest.class)))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanTransactionsApiResourceSwagger.PostWorkingCapitalLoanTransactionsResponse.class))) })
+    public CommandProcessingResult executeLoanTransactionCommandById(
+            @PathParam("loanId") @Parameter(description = "loanId", required = true) final Long loanId,
+            @PathParam("transactionId") @Parameter(description = "transactionId", required = true) final Long transactionId,
+            @QueryParam("command") @Parameter(description = "command", required = true) final String commandParam,
+            @Parameter(hidden = true) final String apiRequestBodyAsJson) {
+        return executeTransactionCommand(loanId, null, transactionId, commandParam, apiRequestBodyAsJson);
+    }
+
+    @POST
+    @Path("external-id/{loanExternalId}/transactions/{transactionId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(operationId = "executeWorkingCapitalLoanTransactionCommandByExternalId", summary = "Execute a command on an existing Working Capital Loan transaction by loan external id", description = "Supported command query parameter: undo")
+    @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanTransactionsApiResourceSwagger.PostWorkingCapitalLoanTransactionsRequest.class)))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanTransactionsApiResourceSwagger.PostWorkingCapitalLoanTransactionsResponse.class))) })
+    public CommandProcessingResult executeLoanTransactionCommandByExternalId(
+            @PathParam("loanExternalId") @Parameter(description = "loanExternalId", required = true) final String loanExternalId,
+            @PathParam("transactionId") @Parameter(description = "transactionId", required = true) final Long transactionId,
+            @QueryParam("command") @Parameter(description = "command", required = true) final String commandParam,
+            @Parameter(hidden = true) final String apiRequestBodyAsJson) {
+        return executeTransactionCommand(null, loanExternalId, transactionId, commandParam, apiRequestBodyAsJson);
+    }
+
+    private CommandProcessingResult executeTransactionCommand(final Long loanId, final String loanExternalIdStr, final Long transactionId,
+            final String commandParam, final String apiRequestBodyAsJson) {
+        final Long resolvedLoanId = loanId != null ? loanId
+                : loanReadPlatformService.getResolvedLoanId(ExternalIdFactory.produce(loanExternalIdStr));
+        if (resolvedLoanId == null) {
+            throw new WorkingCapitalLoanNotFoundException(ExternalIdFactory.produce(loanExternalIdStr));
+        }
+        final CommandWrapperBuilder builder = new CommandWrapperBuilder().withJson(apiRequestBodyAsJson);
+        final CommandWrapper commandRequest;
+        if (CommandParameterUtil.is(commandParam, WorkingCapitalLoanConstants.UNDO_LOAN_COMMAND)) {
+            commandRequest = builder.undoWorkingCapitalLoanTransaction(resolvedLoanId, transactionId).build();
+        } else {
+            throw new UnrecognizedQueryParamException("command", commandParam);
+        }
+        return this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+    }
 }

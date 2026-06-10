@@ -26,10 +26,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.infrastructure.core.service.ExternalIdFactory;
 import org.apache.fineract.infrastructure.core.service.MathUtil;
 import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionRelationTypeEnum;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.apache.fineract.portfolio.workingcapitalloan.accounting.WorkingCapitalLoanAccountingProcessor;
 import org.apache.fineract.portfolio.workingcapitalloan.calc.ProjectedAmortizationScheduleModel;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransaction;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransactionRelation;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanBalanceRepository;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanTransactionRepository;
 import org.springframework.stereotype.Service;
@@ -75,16 +78,17 @@ public class WorkingCapitalLoanDiscountFeeAmortizationServiceImpl implements Wor
             final WorkingCapitalLoanTransaction amortizationTxn = WorkingCapitalLoanTransaction.discountFeeAmortization(loan,
                     amortizationAmount, transactionDate, externalIdFactory.create());
             transactionRepository.saveAndFlush(amortizationTxn);
-            accountingProcessor.postJournalEntriesForDiscountFeeAmortization(loan, amortizationTxn, false);
+            accountingProcessor.postJournalEntriesForDiscountFeeAmortization(loan, amortizationTxn, isChargedOff);
         } else {
             final BigDecimal adjustmentAmount = amortizationAmount.negate();
             final WorkingCapitalLoanTransaction adjustmentTxn = WorkingCapitalLoanTransaction.discountFeeAmortizationAdjustment(loan,
                     adjustmentAmount, transactionDate, externalIdFactory.create());
+            linkToTriggeringDiscountAdjustment(loan, adjustmentTxn);
             transactionRepository.saveAndFlush(adjustmentTxn);
             accountingProcessor.postJournalEntriesForDiscountFeeAmortizationAdjustment(loan, adjustmentTxn, isChargedOff);
         }
 
-        loan.getBalance().setRealizedIncomeFromDiscountFee(loan.getBalance().getRealizedIncomeFromDiscountFee().add(amortizationAmount));
+        loan.getBalance().setRealizedIncomeFromDiscountFee(alreadyPosted.add(amortizationAmount));
 
         log.debug("Posted discount fee amortization of {} for WC loan [{}]", amortizationAmount, loan.getId());
     }
@@ -93,5 +97,13 @@ public class WorkingCapitalLoanDiscountFeeAmortizationServiceImpl implements Wor
         final MathContext mc = MoneyHelper.getMathContext();
         return scheduleRepositoryWrapper.readModel(loan.getId(), mc, WorkingCapitalLoanCurrencyResolver.resolveCurrency(loan))
                 .map(ProjectedAmortizationScheduleModel::totalActualAmortization).orElse(BigDecimal.ZERO);
+    }
+
+    private void linkToTriggeringDiscountAdjustment(final WorkingCapitalLoan loan,
+            final WorkingCapitalLoanTransaction amortizationAdjustment) {
+        transactionRepository.findActiveByTypeOrderByIdDesc(loan.getId(), LoanTransactionType.DISCOUNT_FEE_ADJUSTMENT).stream().findFirst()
+                .ifPresent(discountAdjustment -> amortizationAdjustment.getLoanTransactionRelations()
+                        .add(new WorkingCapitalLoanTransactionRelation(amortizationAdjustment, discountAdjustment,
+                                LoanTransactionRelationTypeEnum.RELATED)));
     }
 }

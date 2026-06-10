@@ -23,6 +23,8 @@ import static org.apache.fineract.client.feign.util.FeignCalls.fail;
 import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -37,12 +39,14 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.fineract.client.feign.FeignException;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.feign.ObjectMapperFactory;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
 import org.apache.fineract.client.models.GetDataTablesResponse;
 import org.apache.fineract.client.models.PostColumnHeaderData;
 import org.apache.fineract.client.models.PostDataTablesAppTableIdResponse;
 import org.apache.fineract.client.models.PostDataTablesRequest;
 import org.apache.fineract.client.models.PostDataTablesResponse;
+import org.apache.fineract.client.models.PostLoansResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanProductsResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansResponse;
 import org.apache.fineract.client.models.PutDataTablesRequest;
@@ -63,6 +67,7 @@ public class DatatablesStepDef extends AbstractStepDef {
     public static final String DATATABLE_NAME = "DatatableId";
     public static final String DATATABLE_QUERY_RESPONSE = "DatatableQueryResponse";
     public static final String DATATABLE_ENTRY_ID = "DatatableEntryId";
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.getShared();
 
     private final FineractFeignClient fineractClient;
     private final DatatableNameGenerator datatableNameGenerator;
@@ -97,6 +102,20 @@ public class DatatablesStepDef extends AbstractStepDef {
     public void whenMultirowDatatableCreated(final String entityTypeStr) {
         final DatatableEntityType entityType = DatatableEntityType.fromString(entityTypeStr);
         final List<PostColumnHeaderData> columns = createRandomDatatableColumnsRequest();
+        final PostDataTablesRequest request = createDatatableRequest(entityType, columns, true);
+
+        final PostDataTablesResponse response = ok(() -> fineractClient.dataTables().createDatatable(request, Map.of()));
+
+        testContext().set(CREATE_DATATABLE_RESULT_KEY, response);
+        testContext().set(DATATABLE_NAME, response.getResourceIdentifier());
+    }
+
+    @When("A multirow datatable for {string} is created with the following extra columns:")
+    public void whenMultirowDatatableCreatedWithFollowingExtraColumns(final String entityTypeStr, final DataTable dataTable) {
+        final DatatableEntityType entityType = DatatableEntityType.fromString(entityTypeStr);
+        final List<List<String>> rows = dataTable.asLists();
+        final List<List<String>> rowsWithoutHeader = rows.subList(1, rows.size());
+        final List<PostColumnHeaderData> columns = createDatatableColumnsRequest(rowsWithoutHeader);
         final PostDataTablesRequest request = createDatatableRequest(entityType, columns, true);
 
         final PostDataTablesResponse response = ok(() -> fineractClient.dataTables().createDatatable(request, Map.of()));
@@ -268,10 +287,19 @@ public class DatatablesStepDef extends AbstractStepDef {
 
     @When("A datatable entry is created for {string} with value {string} in column {string}")
     public void whenEntryCreatedForEntity(final String entityTypeStr, final String value, final String columnName) {
+        createDatatableEntry(entityTypeStr, columnName, value);
+    }
+
+    @When("A datatable entry is created for {string} with null in column {string}")
+    public void whenEntryCreatedWithNull(final String entityTypeStr, final String columnName) {
+        createDatatableEntry(entityTypeStr, columnName, "null");
+    }
+
+    private void createDatatableEntry(final String entityTypeStr, final String columnName, final String value) {
         final DatatableEntityType entityType = DatatableEntityType.fromString(entityTypeStr);
         final String datatableName = currentDatatable();
         final Long entityId = resolveEntityId(entityType);
-        final Map<String, Object> body = buildEntryBody(columnName, value);
+        final String body = buildEntryBodyJson(columnName, value);
         final PostDataTablesAppTableIdResponse response = ok(
                 () -> fineractClient.dataTables().createDatatableEntry(datatableName, entityId, body, Map.of()));
         testContext().set(DATATABLE_ENTRY_ID, response.getResourceId());
@@ -282,7 +310,7 @@ public class DatatablesStepDef extends AbstractStepDef {
         final DatatableEntityType entityType = DatatableEntityType.fromString(entityTypeStr);
         final String datatableName = currentDatatable();
         final Long entityId = resolveEntityId(entityType);
-        final Map<String, Object> body = buildEntryBody(columnName, value);
+        final String body = buildEntryBodyJson(columnName, value);
         try {
             fineractClient.dataTables().createDatatableEntry(datatableName, entityId, body, Map.of());
             throw new AssertionError(
@@ -304,12 +332,30 @@ public class DatatablesStepDef extends AbstractStepDef {
                 .isTrue();
     }
 
+    @Then("Fetching the datatable entry for {string} returns null in column {string}")
+    public void thenEntryHasNullValue(final String entityTypeStr, final String columnName) {
+        final DatatableEntityType entityType = DatatableEntityType.fromString(entityTypeStr);
+        final List<Map<?, ?>> rows = fetchEntryRows(entityType);
+        assertThat(rows).withFailMessage("No datatable rows found for entity %s", entityType).isNotEmpty();
+        assertThat(rows.getFirst().get(columnName))
+                .withFailMessage("Column [%s] expected null but was [%s]", columnName, rows.getFirst().get(columnName)).isNull();
+    }
+
     @When("The datatable entry for {string} is updated with value {string} in column {string}")
     public void whenEntryUpdated(final String entityTypeStr, final String value, final String columnName) {
         final DatatableEntityType entityType = DatatableEntityType.fromString(entityTypeStr);
         final String datatableName = currentDatatable();
         final Long entityId = resolveEntityId(entityType);
-        final Map<String, Object> body = buildEntryBody(columnName, value);
+        final String body = buildEntryBodyJson(columnName, value);
+        ok(() -> fineractClient.dataTables().updateDatatableEntryOnetoOne(datatableName, entityId, body, Map.of()));
+    }
+
+    @When("The datatable entry for {string} is updated with null in column {string}")
+    public void whenEntryUpdatedWithNull(final String entityTypeStr, final String columnName) {
+        final DatatableEntityType entityType = DatatableEntityType.fromString(entityTypeStr);
+        final String datatableName = currentDatatable();
+        final Long entityId = resolveEntityId(entityType);
+        final String body = buildEntryBodyJson(columnName, "null");
         ok(() -> fineractClient.dataTables().updateDatatableEntryOnetoOne(datatableName, entityId, body, Map.of()));
     }
 
@@ -330,13 +376,12 @@ public class DatatablesStepDef extends AbstractStepDef {
 
     @When("A multirow datatable entry is created for {string} with value {string} in column {string}")
     public void whenMultirowEntryCreated(final String entityTypeStr, final String value, final String columnName) {
-        final DatatableEntityType entityType = DatatableEntityType.fromString(entityTypeStr);
-        final String datatableName = currentDatatable();
-        final Long entityId = resolveEntityId(entityType);
-        final Map<String, Object> body = buildEntryBody(columnName, value);
-        final PostDataTablesAppTableIdResponse response = ok(
-                () -> fineractClient.dataTables().createDatatableEntry(datatableName, entityId, body, Map.of()));
-        testContext().set(DATATABLE_ENTRY_ID, response.getResourceId());
+        createDatatableEntry(entityTypeStr, columnName, value);
+    }
+
+    @When("A multirow datatable entry is created for {string} with null in column {string}")
+    public void whenMultirowEntryCreatedWithNull(final String entityTypeStr, final String columnName) {
+        createDatatableEntry(entityTypeStr, columnName, "null");
     }
 
     @Then("Fetching multirow datatable entries for {string} returns value {string} in column {string}")
@@ -348,13 +393,21 @@ public class DatatablesStepDef extends AbstractStepDef {
         assertThat(rows).anyMatch(row -> valuesMatch(row.get(columnName), expected));
     }
 
+    @Then("Fetching multirow datatable entries for {string} returns null in column {string}")
+    public void thenMultirowEntryHasNullValue(final String entityTypeStr, final String columnName) {
+        final DatatableEntityType entityType = DatatableEntityType.fromString(entityTypeStr);
+        final List<Map<?, ?>> rows = fetchEntryRows(entityType);
+        assertThat(rows).withFailMessage("No datatable rows found for entity %s", entityType).isNotEmpty();
+        assertThat(rows).anyMatch(row -> row.get(columnName) == null);
+    }
+
     @When("The multirow datatable entry for {string} is updated with value {string} in column {string} by entry id")
     public void whenMultirowEntryUpdatedById(final String entityTypeStr, final String value, final String columnName) {
         final DatatableEntityType entityType = DatatableEntityType.fromString(entityTypeStr);
         final String datatableName = currentDatatable();
         final Long entityId = resolveEntityId(entityType);
         final Long entryId = testContext().get(DATATABLE_ENTRY_ID);
-        final Map<String, Object> body = buildEntryBody(columnName, value);
+        final String body = buildEntryBodyJson(columnName, value);
         ok(() -> fineractClient.dataTables().updateDatatableEntryOneToMany(datatableName, entityId, entryId, body, Map.of()));
     }
 
@@ -474,8 +527,15 @@ public class DatatablesStepDef extends AbstractStepDef {
         return request;
     }
 
-    private Map<String, Object> buildEntryBody(final String columnName, final String value) {
-        return Map.of("locale", "en", columnName, parseValue(value));
+    private String buildEntryBodyJson(final String columnName, final String value) {
+        if ("null".equalsIgnoreCase(value)) {
+            return "{\"locale\":\"en\",\"" + columnName + "\":null}";
+        }
+        try {
+            return OBJECT_MAPPER.writeValueAsString(Map.of("locale", "en", columnName, parseValue(value)));
+        } catch (final JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialize datatable entry body", e);
+        }
     }
 
     private Object parseValue(final String value) {
@@ -533,11 +593,20 @@ public class DatatablesStepDef extends AbstractStepDef {
 
     private Long resolveEntityId(final DatatableEntityType entityType) {
         return switch (entityType) {
+            case LOAN -> resolveLoanId();
             case WC_LOAN_PRODUCT -> resolveWcLoanProductId();
             case WC_LOAN -> resolveWcLoanId();
-            case LOAN, LOAN_PRODUCT ->
-                throw new UnsupportedOperationException("Entry steps are not implemented for " + entityType + " entity");
+            case LOAN_PRODUCT -> throw new UnsupportedOperationException("Entry steps are not implemented for " + entityType + " entity");
         };
+    }
+
+    private Long resolveLoanId() {
+        final PostLoansResponse response = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        assertThat(response)
+                .withFailMessage(
+                        "No loan found in test context. Use 'Admin creates a fully customized loan with the following data' step first.")
+                .isNotNull();
+        return response.getLoanId();
     }
 
     private Long resolveWcLoanProductId() {

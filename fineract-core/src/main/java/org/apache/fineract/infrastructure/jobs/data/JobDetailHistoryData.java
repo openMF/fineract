@@ -29,6 +29,9 @@ import lombok.experimental.Accessors;
 public class JobDetailHistoryData {
 
     @SuppressWarnings("unused")
+    private Long id;
+
+    @SuppressWarnings("unused")
     private Long version;
 
     @SuppressWarnings("unused")

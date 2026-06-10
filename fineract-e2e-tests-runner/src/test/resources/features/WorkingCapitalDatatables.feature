@@ -275,3 +275,21 @@ Feature: WorkingCapitalDatatables
     And A multirow datatable for "WC_Loan" is created
     And A multirow datatable entry is created for "WC_Loan" with value "55" in column "col"
     Then Fetching the multirow datatable entry by id for "WC_Loan" returns value "55" in column "col"
+
+  @TestRailId:C85158
+  Scenario: Single-row datatable entry create with null value persists column via client JSON body
+    When Admin creates a new Working Capital Loan Product
+    And A datatable for "WC_Loan_Product" is created with the following extra columns:
+      | Name   | Type   | Length | Unique | Indexed |
+      | amount | number | 10     | false  | false   |
+    And A datatable entry is created for "WC_Loan_Product" with null in column "amount"
+    Then Fetching the datatable entry for "WC_Loan_Product" returns null in column "amount"
+
+  @TestRailId:C85159
+  Scenario: Multi-row datatable entry create with null value persists column via client JSON body
+    When Admin creates a new Working Capital Loan Product
+    And A multirow datatable for "WC_Loan_Product" is created with the following extra columns:
+      | Name   | Type   | Length | Unique | Indexed |
+      | amount | number | 10     | false  | false   |
+    And A multirow datatable entry is created for "WC_Loan_Product" with null in column "amount"
+    Then Fetching multirow datatable entries for "WC_Loan_Product" returns null in column "amount"

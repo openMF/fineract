@@ -54,9 +54,9 @@ public final class ParallelExecutionHelper {
             return future.get();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrupted during parallel loan cleanup", e);
+            throw new IllegalStateException("Interrupted", e);
         } catch (ExecutionException e) {
-            throw new IllegalStateException("Parallel loan cleanup failed", e);
+            throw new IllegalStateException("Execution issue", e);
         }
     }
 }

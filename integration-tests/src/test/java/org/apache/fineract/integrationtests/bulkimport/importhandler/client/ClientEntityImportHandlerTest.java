@@ -111,7 +111,7 @@ public class ClientEntityImportHandlerTest {
         firstClientRow.createCell(ClientEntityConstants.INCOPORATION_DATE_COL).setCellValue(incoporationDate);
         Date validTill = simpleDateFormat.parse("14 May 2019");
         firstClientRow.createCell(ClientEntityConstants.INCOPORATION_VALID_TILL_COL).setCellValue(validTill);
-        firstClientRow.createCell(ClientEntityConstants.MOBILE_NO_COL).setCellValue(Utils.uniqueRandomNumberGenerator(7));
+        firstClientRow.createCell(ClientEntityConstants.MOBILE_NO_COL).setCellValue(Utils.uniqueRandomNumberGenerator(9));
         firstClientRow.createCell(ClientEntityConstants.CLIENT_TYPE_COL)
                 .setCellValue(clientEntitySheet.getRow(1).getCell(ClientEntityConstants.LOOKUP_CLIENT_TYPES).getStringCellValue());
         firstClientRow.createCell(ClientEntityConstants.CLIENT_CLASSIFICATION_COL)
@@ -126,18 +126,17 @@ public class ClientEntityImportHandlerTest {
         firstClientRow.createCell(ClientEntityConstants.SUBMITTED_ON_COL).setCellValue(submittedDate);
         firstClientRow.createCell(ClientEntityConstants.ADDRESS_ENABLED).setCellValue("False");
 
-        Path directory = Path.of(System.getProperty("user.home")).resolve("Fineract").resolve("bulkimport").resolve("integration_tests")
-                .resolve("importhandler").resolve("client");
-        if (!directory.toFile().exists()) {
-            directory.toFile().mkdirs();
+        Path filePath = Files.createTempFile("ClientEntity-", ".xls");
+        File file = filePath.toFile();
+        String importDocumentId;
+        try {
+            try (OutputStream outputStream = Files.newOutputStream(filePath)) {
+                workbook.write(outputStream);
+            }
+            importDocumentId = clientHelper.importClientEntityTemplate(file);
+        } finally {
+            Files.deleteIfExists(filePath);
         }
-        File file = directory.resolve("ClientEntity.xls").toFile();
-        try (OutputStream outputStream = Files.newOutputStream(file.toPath())) {
-            workbook.write(outputStream);
-        }
-
-        String importDocumentId = clientHelper.importClientEntityTemplate(file);
-        file.delete();
         Assertions.assertNotNull(importDocumentId);
 
         // check status column of output excel
@@ -146,10 +145,11 @@ public class ClientEntityImportHandlerTest {
                 ClientEntityConstants.STATUS_COL)) {
             Sheet outputClientEntitySheet = outputWorkbook.getSheet(TemplatePopulateImportConstants.CLIENT_ENTITY_SHEET_NAME);
             Row row = outputClientEntitySheet.getRow(1);
+            String status = row.getCell(ClientEntityConstants.STATUS_COL).getStringCellValue();
 
-            LOG.info("Failure reason column: {}", row.getCell(ClientEntityConstants.STATUS_COL).getStringCellValue());
+            LOG.info("Client import status: {}", status);
 
-            Assertions.assertEquals("Imported", row.getCell(ClientEntityConstants.STATUS_COL).getStringCellValue());
+            Assertions.assertEquals("Imported", status, () -> "Client import failed: " + status);
         }
     }
 }

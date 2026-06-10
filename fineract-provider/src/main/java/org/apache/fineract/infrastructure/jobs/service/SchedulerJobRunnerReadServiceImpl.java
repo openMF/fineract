@@ -162,8 +162,8 @@ public class SchedulerJobRunnerReadServiceImpl implements SchedulerJobRunnerRead
         private final String sql;
 
         JobHistoryMapper(DatabaseSpecificSQLGenerator sqlGenerator) {
-            sql = " runHistory.version, runHistory.start_time as runStartTime, runHistory.end_time as runEndTime, " + "runHistory."
-                    + sqlGenerator.escape("status")
+            sql = " runHistory.id, runHistory.version, runHistory.start_time as runStartTime, runHistory.end_time as runEndTime, "
+                    + "runHistory." + sqlGenerator.escape("status")
                     + ", runHistory.error_message as jobRunErrorMessage, runHistory.trigger_type as triggerType, runHistory.error_log as jobRunErrorLog "
                     + "from job job join job_run_history runHistory ON job.id=runHistory.job_id";
         }
@@ -174,6 +174,7 @@ public class SchedulerJobRunnerReadServiceImpl implements SchedulerJobRunnerRead
 
         @Override
         public JobDetailHistoryData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
+            final Long id = rs.getLong("id");
             final Long version = rs.getLong("version");
             final Date jobRunStartTime = rs.getTimestamp("runStartTime");
             final Date jobRunEndTime = rs.getTimestamp("runEndTime");
@@ -181,8 +182,8 @@ public class SchedulerJobRunnerReadServiceImpl implements SchedulerJobRunnerRead
             final String jobRunErrorMessage = rs.getString("jobRunErrorMessage");
             final String triggerType = rs.getString("triggerType");
             final String jobRunErrorLog = rs.getString("jobRunErrorLog");
-            return new JobDetailHistoryData().setVersion(version).setJobRunStartTime(jobRunStartTime).setJobRunEndTime(jobRunEndTime)
-                    .setStatus(status).setJobRunErrorMessage(jobRunErrorMessage).setTriggerType(triggerType)
+            return new JobDetailHistoryData().setId(id).setVersion(version).setJobRunStartTime(jobRunStartTime)
+                    .setJobRunEndTime(jobRunEndTime).setStatus(status).setJobRunErrorMessage(jobRunErrorMessage).setTriggerType(triggerType)
                     .setJobRunErrorLog(jobRunErrorLog);
         }
     }

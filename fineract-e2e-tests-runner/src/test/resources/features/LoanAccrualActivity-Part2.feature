@@ -4101,3 +4101,13 @@ Feature: LoanAccrualActivity - Part2
     When Customer makes "REPAYMENT" transaction with "AUTOPAY" payment type on "21 July 2026" with 300 EUR transaction amount and system-generated Idempotency key
     Then Loan status will be "OVERPAID"
     Then LoanAccrualAdjustmentTransactionBusinessEvent is raised on "20 July 2026"
+    # post-due-date Accrual is PRESERVED (not bare-reversed)
+    Then Loan Transactions tab has a transaction with date: "20 July 2026", and with the following data:
+      | Transaction Type | Amount | Interest | Reverted |
+      | Accrual          | 19.75  | 19.75    | false    |
+    # ...and its effect is cancelled by a visible ACCRUAL_ADJUSTMENT (the fix), instead of a hidden reversal.
+    Then Loan Transactions tab has a transaction with date: "20 July 2026", and with the following data:
+      | Transaction Type   | Amount | Interest | Reverted |
+      | Accrual Adjustment | 19.75  | 19.75    | false    |
+    # Net recognised interest income is unchanged
+    Then Loan has 19.75 total Accruals

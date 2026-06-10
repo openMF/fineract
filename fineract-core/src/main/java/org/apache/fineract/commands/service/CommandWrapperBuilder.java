@@ -863,6 +863,15 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder undoWorkingCapitalLoanTransaction(final Long loanId, final Long transactionId) {
+        this.actionName = ACTION_UNDO;
+        this.entityName = ENTITY_WORKINGCAPITALLOAN;
+        this.entityId = transactionId;
+        this.loanId = loanId;
+        this.href = "/working-capital-loans/" + loanId + "/transactions/" + transactionId + "?command=undo";
+        return this;
+    }
+
     public CommandWrapperBuilder createWorkingCapitalLoanDelinquencyAction(final Long workingCapitalLoanId) {
         this.actionName = "CREATE";
         this.entityName = "WC_DELINQUENCY_ACTION";

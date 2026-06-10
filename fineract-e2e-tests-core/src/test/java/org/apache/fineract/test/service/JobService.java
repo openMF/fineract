@@ -24,13 +24,14 @@ import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.models.ExecuteJobRequest;
-import org.apache.fineract.client.models.GetJobsResponse;
+import org.apache.fineract.client.models.GetJobsJobIDJobRunHistoryResponse;
+import org.apache.fineract.client.models.JobDetailHistoryDataSwagger;
 import org.apache.fineract.test.data.job.Job;
 import org.apache.fineract.test.data.job.JobResolver;
 import org.apache.fineract.test.messaging.config.JobPollingProperties;
@@ -52,17 +53,23 @@ public class JobService {
 
     public void execute(Job job) {
         Long jobId = jobResolver.resolve(job);
+        execute(jobId);
+    }
+
+    private void execute(Long jobId) {
         Map<String, Object> queryParams = new HashMap<>();
         queryParams.put("command", "executeJob");
         executeVoid(() -> fineractClient.schedulerJob().executeJob(jobId, new ExecuteJobRequest(), queryParams));
     }
 
     public void executeAndWait(Job job) {
-        execute(job);
-        waitUntilJobIsFinished(job);
+        Long jobId = jobResolver.resolve(job);
+        Long previousRunHistoryId = getRunHistoryId(getLatestJobRunHistory(jobId));
+        execute(jobId);
+        waitUntilJobIsFinished(job, jobId, previousRunHistoryId);
     }
 
-    private void waitUntilJobIsFinished(Job job) {
+    private void waitUntilJobIsFinished(Job job, Long jobId, Long previousRunHistoryId) {
         String jobName = job.getName();
         await().atMost(Duration.ofMillis(jobPollingProperties.getTimeoutInMillis())) //
                 .alias("%s didn't finish on time".formatted(jobName)) //
@@ -70,10 +77,25 @@ public class JobService {
                 .pollDelay(Duration.ofMillis(jobPollingProperties.getDelayInMillis())) //
                 .until(() -> {
                     log.debug("Waiting for job {} to finish", jobName);
-                    Long jobId = jobResolver.resolve(job);
-                    GetJobsResponse getJobsResponse = ok(() -> fineractClient.schedulerJob().retrieveOneSchedulerJob(jobId));
-                    Boolean currentlyRunning = getJobsResponse.getCurrentlyRunning();
-                    return BooleanUtils.isFalse(currentlyRunning);
+                    JobDetailHistoryDataSwagger latestRunHistory = getLatestJobRunHistory(jobId);
+                    if (latestRunHistory == null || latestRunHistory.getJobRunEndTime() == null) {
+                        return false;
+                    }
+                    Long runHistoryId = latestRunHistory.getId();
+                    return runHistoryId != null && (previousRunHistoryId == null || runHistoryId > previousRunHistoryId);
                 });
+    }
+
+    private Long getRunHistoryId(JobDetailHistoryDataSwagger runHistory) {
+        return runHistory == null ? null : runHistory.getId();
+    }
+
+    private JobDetailHistoryDataSwagger getLatestJobRunHistory(Long jobId) {
+        GetJobsJobIDJobRunHistoryResponse response = ok(() -> fineractClient.schedulerJob().retrieveHistory(jobId, 0, 1, "id", "DESC"));
+        List<JobDetailHistoryDataSwagger> pageItems = response.getPageItems();
+        if (pageItems == null || pageItems.isEmpty()) {
+            return null;
+        }
+        return pageItems.get(0);
     }
 }

@@ -21,15 +21,14 @@ package org.apache.fineract.integrationtests.client.feign.helpers;
 import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.feign.services.SchedulerJobApi.RetrieveHistoryQueryParams;
 import org.apache.fineract.client.feign.util.FeignCalls;
 import org.apache.fineract.client.models.ExecuteJobRequest;
+import org.apache.fineract.client.models.GetJobsJobIDJobRunHistoryResponse;
 import org.apache.fineract.client.models.GetJobsResponse;
-import org.apache.fineract.client.models.JobDetailHistoryData;
+import org.apache.fineract.client.models.JobDetailHistoryDataSwagger;
 import org.awaitility.Awaitility;
 
 public class FeignSchedulerHelper {
@@ -54,21 +53,35 @@ public class FeignSchedulerHelper {
         List<GetJobsResponse> allJobs = ok(() -> fineractClient.schedulerJob().retrieveAllSchedulerJobs());
         GetJobsResponse targetJob = allJobs.stream().filter(j -> jobDisplayName.equals(j.getDisplayName())).findFirst()
                 .orElseThrow(() -> new RuntimeException("Job not found: " + jobDisplayName));
+        Long jobId = targetJob.getJobId();
 
-        Instant beforeExecuteTime = Instant.now().truncatedTo(ChronoUnit.SECONDS);
-        FeignCalls.executeVoid(() -> fineractClient.schedulerJob().executeJob(targetJob.getJobId(), "executeJob", new ExecuteJobRequest()));
+        Long previousRunHistoryId = getRunHistoryId(getLatestJobRunHistory(jobId));
+        FeignCalls.executeVoid(() -> fineractClient.schedulerJob().executeJob(jobId, "executeJob", new ExecuteJobRequest()));
 
-        Awaitility.await().atMost(Duration.ofMinutes(2)).pollInterval(Duration.ofSeconds(1)).pollDelay(Duration.ofSeconds(1)).until(() -> {
-            GetJobsResponse job = ok(() -> fineractClient.schedulerJob().retrieveOneSchedulerJob(targetJob.getJobId()));
-            JobDetailHistoryData history = job.getLastRunHistory();
-            if (history == null || history.getJobRunStartTime() == null) {
-                return false;
-            }
-            OffsetDateTime startTime = history.getJobRunStartTime();
-            if (startTime.toInstant().isBefore(beforeExecuteTime)) {
-                return false;
-            }
-            return history.getJobRunEndTime() != null && !history.getJobRunEndTime().toInstant().isBefore(startTime.toInstant());
-        });
+        Awaitility.await().atMost(Duration.ofMinutes(2)).pollInterval(Duration.ofSeconds(1)).pollDelay(Duration.ofSeconds(1))
+                .until(() -> isNewCompletedRunHistory(jobId, previousRunHistoryId));
+    }
+
+    private boolean isNewCompletedRunHistory(Long jobId, Long previousRunHistoryId) {
+        JobDetailHistoryDataSwagger latestRunHistory = getLatestJobRunHistory(jobId);
+        if (latestRunHistory == null || latestRunHistory.getJobRunEndTime() == null) {
+            return false;
+        }
+        Long runHistoryId = latestRunHistory.getId();
+        return runHistoryId != null && (previousRunHistoryId == null || runHistoryId > previousRunHistoryId);
+    }
+
+    private Long getRunHistoryId(JobDetailHistoryDataSwagger runHistory) {
+        return runHistory == null ? null : runHistory.getId();
+    }
+
+    private JobDetailHistoryDataSwagger getLatestJobRunHistory(Long jobId) {
+        RetrieveHistoryQueryParams queryParams = new RetrieveHistoryQueryParams().offset(0).limit(1).orderBy("id").sortOrder("DESC");
+        GetJobsJobIDJobRunHistoryResponse response = ok(() -> fineractClient.schedulerJob().retrieveHistory(jobId, queryParams));
+        List<JobDetailHistoryDataSwagger> pageItems = response.getPageItems();
+        if (pageItems == null || pageItems.isEmpty()) {
+            return null;
+        }
+        return pageItems.get(0);
     }
 }
