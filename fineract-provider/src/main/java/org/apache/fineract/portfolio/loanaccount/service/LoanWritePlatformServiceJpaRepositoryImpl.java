@@ -51,6 +51,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.fineract.cob.domain.LoanAccountLock;
 import org.apache.fineract.cob.exceptions.AccountLockCannotBeOverruledException;
 import org.apache.fineract.cob.service.AccountLockService;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
@@ -268,7 +269,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     private final PostDatedChecksRepository postDatedChecksRepository;
     private final LoanRepaymentScheduleInstallmentRepository loanRepaymentScheduleInstallmentRepository;
     private final LoanLifecycleStateMachine loanLifecycleStateMachine;
-    private final AccountLockService loanAccountLockService;
+    private final AccountLockService<LoanAccountLock> loanAccountLockService;
     private final ExternalIdFactory externalIdFactory;
     private final LoanAccrualTransactionBusinessEventService loanAccrualTransactionBusinessEventService;
     private final ErrorHandler errorHandler;
@@ -1845,36 +1846,31 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
 
         final Long fromLoanOfficerId = command.longValueOfParameterNamed("fromLoanOfficerId");
         final Long toLoanOfficerId = command.longValueOfParameterNamed("toLoanOfficerId");
-        final String[] loanIds = command.arrayValueOfParameterNamed("loans");
+        final String[] loanIdsAsStr = command.arrayValueOfParameterNamed("loans");
+        List<Long> listLoanIds = Arrays.stream(loanIdsAsStr).map(Long::parseLong).toList();
 
         final LocalDate dateOfLoanOfficerAssignment = command.localDateValueOfParameterNamed("assignmentDate");
 
         final Staff fromLoanOfficer = this.loanAssembler.findLoanOfficerByIdIfProvided(fromLoanOfficerId);
         final Staff toLoanOfficer = this.loanAssembler.findLoanOfficerByIdIfProvided(toLoanOfficerId);
-        List<Long> lockedLoanIds = new ArrayList<>();
 
-        for (final String loanIdString : loanIds) {
-            final Long loanId = Long.valueOf(loanIdString);
+        if (loanAccountLockService.isAnyLoanHardLocked(listLoanIds)) {
+            throw new AccountLockCannotBeOverruledException("There are hard-locked loan accounts in the bulk loan reassignment");
+        }
+
+        for (final Long loanId : listLoanIds) {
             final Loan loan = this.loanAssembler.assembleFrom(loanId);
-            if (loanAccountLockService.isLoanHardLocked(loanId)) {
-                lockedLoanIds.add(loanId);
-            } else {
-                businessEventNotifierService.notifyPreBusinessEvent(new LoanReassignOfficerBusinessEvent(loan));
-                checkClientOrGroupActive(loan);
+            businessEventNotifierService.notifyPreBusinessEvent(new LoanReassignOfficerBusinessEvent(loan));
+            checkClientOrGroupActive(loan);
 
-                if (!loan.hasLoanOfficer(fromLoanOfficer)) {
-                    throw new LoanOfficerAssignmentException(loanId, fromLoanOfficerId);
-                }
-
-                loanOfficerService.reassignLoanOfficer(loan, toLoanOfficer, dateOfLoanOfficerAssignment);
-                saveLoanWithDataIntegrityViolationChecks(loan);
-                businessEventNotifierService.notifyPostBusinessEvent(new LoanReassignOfficerBusinessEvent(loan));
+            if (!loan.hasLoanOfficer(fromLoanOfficer)) {
+                throw new LoanOfficerAssignmentException(loanId, fromLoanOfficerId);
             }
+
+            loanOfficerService.reassignLoanOfficer(loan, toLoanOfficer, dateOfLoanOfficerAssignment);
+            saveLoanWithDataIntegrityViolationChecks(loan);
+            businessEventNotifierService.notifyPostBusinessEvent(new LoanReassignOfficerBusinessEvent(loan));
         }
-        if (!lockedLoanIds.isEmpty()) {
-            throw new AccountLockCannotBeOverruledException("There are hard-lcoked loan accounts: " + lockedLoanIds);
-        }
-        this.loanRepositoryWrapper.flush();
 
         return new CommandProcessingResultBuilder() //
                 .withCommandId(command.commandId()) //
@@ -2409,7 +2405,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     public void fallbackRecalculateInterest(Throwable t) {
         // NOTE: allow caller to catch the exceptions
         // NOTE: wrap throwable only if really necessary
-        throw errorHandler.getMappable(t, null, null, "loan.recalculateinterest");
+        throw ErrorHandler.getMappable(t, null, null, "loan.recalculateinterest");
     }
 
     @Override

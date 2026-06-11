@@ -36,13 +36,12 @@ import org.apache.fineract.batch.domain.BatchRequest;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
 import org.apache.fineract.infrastructure.core.http.BodyCachingHttpServletRequestWrapper;
 import org.apache.fineract.portfolio.loanaccount.domain.GLIMAccountInfoRepository;
-import org.apache.fineract.portfolio.loanaccount.domain.GroupLoanIndividualMonitoringAccount;
-import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepository;
 import org.apache.fineract.portfolio.loanaccount.rescheduleloan.domain.LoanRescheduleRequestRepository;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Component
@@ -100,16 +99,11 @@ public class ProgressiveLoanModelCheckerHelper extends COBFilterApiMatcher imple
     }
 
     private List<Long> getGlimChildLoanIds(Long loanIdFromRequest) {
-        GroupLoanIndividualMonitoringAccount glimAccount = glimAccountInfoRepository.findOneByIsAcceptingChildAndApplicationId(true,
-                BigDecimal.valueOf(loanIdFromRequest));
-        if (glimAccount != null) {
-            return glimAccount.getChildLoan().stream().map(Loan::getId).toList();
-        } else {
-            return Collections.emptyList();
-        }
+        return glimAccountInfoRepository.findChildLoanIdsByIsAcceptingChildAndApplicationId(true, BigDecimal.valueOf(loanIdFromRequest));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Long> calculateRelevantLoanIds(BodyCachingHttpServletRequestWrapper request) throws IOException {
         String pathInfo = request.getPathInfo();
         if (isBatchApi(pathInfo)) {

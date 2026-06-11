@@ -247,7 +247,7 @@ public class FixedDepositAccountsApiResource {
             @QueryParam("tenureInMonths") @Parameter(description = "tenureInMonths") final Long tenureInMonths,
             @QueryParam("interestCompoundingPeriodInMonths") @Parameter(description = "interestCompoundingPeriodInMonths") final Long interestCompoundingPeriodInMonths,
             @QueryParam("interestPostingPeriodInMonths") @Parameter(description = "interestPostingPeriodInMonths") final Long interestPostingPeriodInMonths) {
-        HashMap request = new HashMap<>();
+        HashMap<String, Object> request = new HashMap<>();
         request.put("annualInterestRate", annualInterestRate);
         request.put("tenureInMonths", tenureInMonths);
         request.put("interestCompoundingPeriodInMonths", interestCompoundingPeriodInMonths);
@@ -255,7 +255,7 @@ public class FixedDepositAccountsApiResource {
         request.put("principalAmount", principalAmount);
         String apiRequestBodyAsJson = toApiJsonSerializer.serialize(request);
         JsonElement jsonElement = fromJsonHelper.parse(apiRequestBodyAsJson);
-        HashMap result = fixedDepositAccountInterestCalculationService
+        HashMap<String, Object> result = fixedDepositAccountInterestCalculationService
                 .calculateInterest(new JsonQuery(apiRequestBodyAsJson, jsonElement, fromJsonHelper));
 
         return toApiJsonSerializer.serializeResult(result);

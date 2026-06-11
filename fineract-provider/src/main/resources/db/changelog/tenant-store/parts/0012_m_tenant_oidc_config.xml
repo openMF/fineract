@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet author="fineract" id="1" context="tenant_store_db">
+        <createTable tableName="m_tenant_oidc_config">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <!-- Matches tenants.identifier — one IdP config per tenant -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <!-- KEYCLOAK | GOOGLE | AZURE | OKTA | AUTH0 | GENERIC -->
+            <column name="provider_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Exact value of the JWT 'iss' claim — used as resolution key -->
+            <column name="issuer_uri" type="VARCHAR(500)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="client_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- AES-256-GCM encrypted; null for public clients -->
+            <column name="client_secret" type="VARCHAR(1000)"/>
+            <!-- Optional: derived from issuer_uri via OIDC discovery if absent -->
+            <column name="jwks_uri" type="VARCHAR(500)"/>
+            <column defaultValue="preferred_username" name="username_claim" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValue="openid,profile,email" name="scopes" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="post_logout_redirect_uri" type="VARCHAR(500)"/>
+            <column defaultValueNumeric="1" name="enabled" type="TINYINT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP(6)" name="created_at" type="DATETIME(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP(6)" name="updated_at" type="DATETIME(6)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="fineract" id="2" context="tenant_store_db">
+        <createIndex indexName="idx_tenant_oidc_config_tenant_id" tableName="m_tenant_oidc_config" unique="true">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_tenant_oidc_config_issuer_uri" tableName="m_tenant_oidc_config" unique="true">
+            <column name="issuer_uri"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

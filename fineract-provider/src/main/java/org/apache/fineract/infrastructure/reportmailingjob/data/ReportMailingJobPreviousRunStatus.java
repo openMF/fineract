@@ -18,8 +18,6 @@
  */
 package org.apache.fineract.infrastructure.reportmailingjob.data;
 
-import org.apache.commons.lang3.StringUtils;
-
 public enum ReportMailingJobPreviousRunStatus {
 
     INVALID(-1, "ReportMailingJobPreviousRunStatus.INVALID", "Invalid"), //
@@ -46,9 +44,9 @@ public enum ReportMailingJobPreviousRunStatus {
     public static ReportMailingJobPreviousRunStatus newInstance(final String value) {
         ReportMailingJobPreviousRunStatus previousRunStatus = INVALID;
 
-        if (StringUtils.equalsIgnoreCase(value, SUCCESS.value)) {
+        if (SUCCESS.value.equalsIgnoreCase(value)) {
             previousRunStatus = SUCCESS;
-        } else if (StringUtils.equalsIgnoreCase(value, ERROR.value)) {
+        } else if (ERROR.value.equalsIgnoreCase(value)) {
             previousRunStatus = ERROR;
         }
 

@@ -30,6 +30,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -99,7 +100,7 @@ public class ExecuteReportMailingJobsTasklet implements Tasklet {
                             String key = validateStretchyReportParamMapEntry.getKey();
                             String value = validateStretchyReportParamMapEntry.getValue();
 
-                            if (StringUtils.containsIgnoreCase(key, "date")) {
+                            if (key != null && key.toLowerCase(Locale.ROOT).contains("date")) {
                                 ReportMailingJobStretchyReportParamDateOption reportMailingJobStretchyReportParamDateOption = ReportMailingJobStretchyReportParamDateOption
                                         .newInstance(value);
 

@@ -51,7 +51,7 @@ public class GroupLoanIndividualMonitoringAccount extends AbstractPersistableCus
     @Column(name = "accepting_child")
     private Boolean isAcceptingChild;
 
-    @OneToMany
+    @OneToMany(mappedBy = "glim")
     private Set<Loan> childLoan;
 
     @Column(name = "loan_status_id", nullable = false)

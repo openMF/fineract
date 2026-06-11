@@ -27,6 +27,17 @@ import org.springframework.data.repository.query.Param;
 
 public interface AppUserRepository extends JpaRepository<AppUser, Long>, JpaSpecificationExecutor<AppUser>, PlatformUserRepository {
 
+    @Override
+    @Query("""
+            select distinct appUser from AppUser appUser
+            join fetch appUser.office
+            left join fetch appUser.roles role
+            left join fetch role.permissions
+            where appUser.username = :username and appUser.deleted = :deleted and appUser.enabled = :enabled
+            """)
+    AppUser findByUsernameAndDeletedAndEnabled(@Param("username") String username, @Param("deleted") boolean deleted,
+            @Param("enabled") boolean enabled);
+
     @Query("Select appUser from AppUser appUser where appUser.username = :username")
     AppUser findAppUserByName(@Param("username") String username);
 

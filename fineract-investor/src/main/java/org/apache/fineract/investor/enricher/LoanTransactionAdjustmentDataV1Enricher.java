@@ -30,8 +30,8 @@ public class LoanTransactionAdjustmentDataV1Enricher implements DataEnricher<Loa
     private final LoanTransactionDataV1Enricher loanTransactionDataV1Enricher;
 
     @Override
-    public boolean isDataTypeSupported(Class<LoanTransactionAdjustmentDataV1> dataType) {
-        return dataType.isAssignableFrom(LoanTransactionAdjustmentDataV1.class);
+    public Class<LoanTransactionAdjustmentDataV1> getDataType() {
+        return LoanTransactionAdjustmentDataV1.class;
     }
 
     @Override

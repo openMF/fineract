@@ -33,8 +33,8 @@ public class LoanTransactionDataV1Enricher implements DataEnricher<LoanTransacti
     private final ExternalIdMapper externalIdMapper;
 
     @Override
-    public boolean isDataTypeSupported(Class<LoanTransactionDataV1> dataType) {
-        return dataType.isAssignableFrom(LoanTransactionDataV1.class);
+    public Class<LoanTransactionDataV1> getDataType() {
+        return LoanTransactionDataV1.class;
     }
 
     @Override

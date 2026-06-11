@@ -20,7 +20,15 @@ package org.apache.fineract.infrastructure.core.service;
 
 public interface DataEnricher<T> {
 
-    boolean isDataTypeSupported(Class<T> dataType);
+    Class<T> getDataType();
+
+    default boolean isDataTypeSupported(Class<?> dataType) {
+        return dataType.isAssignableFrom(getDataType());
+    }
 
     void enrich(T data);
+
+    default void enrichData(Object data) {
+        enrich(getDataType().cast(data));
+    }
 }

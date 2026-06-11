@@ -104,9 +104,10 @@ public class RecurringDepositTransactionWorkbookPopulator extends AbstractWorkbo
             for (int col : textCols) {
                 Cell cell = row.getCell(col);
                 if (cell == null) {
-                    cell = row.createCell(col);
+                    cell = row.createCell(col, CellType.STRING);
+                } else if (cell.getCellType() == CellType.BLANK) {
+                    cell.setCellValue("");
                 }
-                cell.setCellType(CellType.STRING);
                 cell.setCellStyle(textCellStyle);
             }
         }

@@ -16,21 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.paymenttype.domain;
+package org.apache.fineract.infrastructure.security.exception;
 
-import lombok.RequiredArgsConstructor;
-import org.apache.fineract.portfolio.paymenttype.exception.PaymentTypeNotFoundException;
-import org.springframework.stereotype.Service;
+import org.springframework.security.core.AuthenticationException;
 
-@Service
-@RequiredArgsConstructor
-// TODO: get rid of this, unnecessarily hides real repository; don't use this outside of payment domain!
-@Deprecated(forRemoval = true)
-public class PaymentTypeRepositoryWrapper {
+/**
+ * Thrown when an OIDC-authenticated principal cannot be mapped to a Fineract AppUser and auto-creation is disabled.
+ */
+public class OidcUserNotFoundException extends AuthenticationException {
 
-    private final PaymentTypeRepository repository;
+    private final String subject;
 
-    public PaymentType findOneWithNotFoundDetection(final Long id) {
-        return this.repository.findById(id).orElseThrow(() -> new PaymentTypeNotFoundException(id));
+    public OidcUserNotFoundException(String subject) {
+        super("No Fineract user found for OIDC subject: " + subject
+                + ". Ensure the user exists in Fineract or enable fineract.security.oidc-federation.auto-create-user=true");
+        this.subject = subject;
+    }
+
+    public String getSubject() {
+        return subject;
     }
 }

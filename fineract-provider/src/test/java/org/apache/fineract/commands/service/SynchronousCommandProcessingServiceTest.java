@@ -179,7 +179,7 @@ public class SynchronousCommandProcessingServiceTest {
 
         AppUser appUser = Mockito.mock(AppUser.class);
         when(commandSourceService.saveInitialNewTransaction(commandWrapper, jsonCommand, appUser, idk)).thenReturn(commandSource);
-        when(commandSourceService.saveResultSameTransaction(commandSource)).thenReturn(commandSource);
+        when(commandSourceService.saveResultInTransaction(commandSource)).thenReturn(commandSource);
         when(commandSource.getStatus()).thenReturn(CommandProcessingResultType.PROCESSED.getValue());
         when(context.authenticatedUser(Mockito.any(CommandWrapper.class))).thenReturn(appUser);
 
@@ -192,7 +192,7 @@ public class SynchronousCommandProcessingServiceTest {
         assertEquals(commandProcessingResult, actualCommandProcessingResult);
         // verify 2x throw before success
         verify(commandSourceService, times(2)).generateErrorInfo(any());
-        verify(commandSourceService).saveResultSameTransaction(commandSource);
+        verify(commandSourceService).saveResultInTransaction(commandSource);
     }
 
     /**
@@ -230,7 +230,7 @@ public class SynchronousCommandProcessingServiceTest {
 
         AppUser appUser = Mockito.mock(AppUser.class);
         when(commandSourceService.saveInitialNewTransaction(commandWrapper, jsonCommand, appUser, idk)).thenReturn(commandSource);
-        when(commandSourceService.saveResultSameTransaction(commandSource)).thenReturn(commandSource);
+        when(commandSourceService.saveResultInTransaction(commandSource)).thenReturn(commandSource);
         when(commandSource.getStatus()).thenReturn(CommandProcessingResultType.UNDER_PROCESSING.getValue());
         when(context.authenticatedUser(Mockito.any(CommandWrapper.class))).thenReturn(appUser);
 
@@ -247,7 +247,7 @@ public class SynchronousCommandProcessingServiceTest {
         verify(commandSource, times(3)).getStatus();
         assertEquals(CommandProcessingResultType.UNDER_PROCESSING.getValue(), commandSource.getStatus());
         verify(commandSourceService, times(0)).generateErrorInfo(any());
-        verify(commandSourceService, times(0)).saveResultSameTransaction(commandSource);
+        verify(commandSourceService, times(0)).saveResultInTransaction(commandSource);
     }
 
     /**
@@ -286,7 +286,7 @@ public class SynchronousCommandProcessingServiceTest {
 
         AppUser appUser = Mockito.mock(AppUser.class);
         when(commandSourceService.saveInitialNewTransaction(commandWrapper, jsonCommand, appUser, idk)).thenReturn(commandSource);
-        when(commandSourceService.saveResultSameTransaction(commandSource)).thenReturn(commandSource);
+        when(commandSourceService.saveResultInTransaction(commandSource)).thenReturn(commandSource);
         when(commandSource.getStatus()).thenReturn(CommandProcessingResultType.UNDER_PROCESSING.getValue()) //
                 .thenReturn(CommandProcessingResultType.UNDER_PROCESSING.getValue()) //
                 // Is it possible???
@@ -304,7 +304,7 @@ public class SynchronousCommandProcessingServiceTest {
 
         verify(commandSource, times(3)).getStatus();
         verify(commandSourceService, times(0)).generateErrorInfo(any());
-        verify(commandSourceService).saveResultSameTransaction(commandSource);
+        verify(commandSourceService).saveResultInTransaction(commandSource);
         assertEquals(actualCommandProcessingResult, commandProcessingResult);
     }
 
@@ -342,7 +342,7 @@ public class SynchronousCommandProcessingServiceTest {
 
         AppUser appUser = Mockito.mock(AppUser.class);
         when(commandSourceService.saveInitialNewTransaction(commandWrapper, jsonCommand, appUser, idk)).thenReturn(commandSource);
-        when(commandSourceService.saveResultSameTransaction(commandSource)).thenReturn(commandSource);
+        when(commandSourceService.saveResultInTransaction(commandSource)).thenReturn(commandSource);
 
         when(context.authenticatedUser(Mockito.any(CommandWrapper.class))).thenReturn(appUser);
 
@@ -372,7 +372,7 @@ public class SynchronousCommandProcessingServiceTest {
         verify(commandSource, times(2)).getStatus();
         assertEquals(CommandProcessingResultType.UNDER_PROCESSING.getValue(), commandSource.getStatus());
         verify(commandSourceService, times(2)).generateErrorInfo(any());
-        verify(commandSourceService).saveResultSameTransaction(commandSource);
+        verify(commandSourceService).saveResultInTransaction(commandSource);
         assertEquals(actualCommandProcessingResult, commandProcessingResult);
     }
 
@@ -400,7 +400,7 @@ public class SynchronousCommandProcessingServiceTest {
 
         AppUser appUser = Mockito.mock(AppUser.class);
         when(commandSourceService.saveInitialNewTransaction(commandWrapper, jsonCommand, appUser, idk)).thenReturn(commandSource);
-        when(commandSourceService.saveResultSameTransaction(commandSource)).thenReturn(commandSource);
+        when(commandSourceService.saveResultInTransaction(commandSource)).thenReturn(commandSource);
         when(commandSource.getStatus()).thenReturn(CommandProcessingResultType.PROCESSED.getValue());
         when(context.authenticatedUser(Mockito.any(CommandWrapper.class))).thenReturn(appUser);
 
@@ -411,7 +411,7 @@ public class SynchronousCommandProcessingServiceTest {
 
         verify(commandSourceService).getCommandSource(commandId);
         assertEquals(CommandProcessingResultType.PROCESSED.getValue(), commandSource.getStatus());
-        verify(commandSourceService).saveResultSameTransaction(commandSource);
+        verify(commandSourceService).saveResultInTransaction(commandSource);
 
         assertEquals(commandProcessingResult, actualCommandProcessingResult);
     }
@@ -523,7 +523,7 @@ public class SynchronousCommandProcessingServiceTest {
                 throw new RuntimeException("Database error on first attempt");
             }
             return commandSource;
-        }).when(commandSourceService).saveResultSameTransaction(any(CommandSource.class));
+        }).when(commandSourceService).saveResultInTransaction(any(CommandSource.class));
 
         // When fetching the command source after failure, return the same mock
         when(commandSourceService.getCommandSource(commandId)).thenReturn(commandSource);
@@ -582,7 +582,7 @@ public class SynchronousCommandProcessingServiceTest {
             saveAttempts.incrementAndGet();
             // Always throw the exception to trigger retry
             throw persistentException;
-        }).when(commandSourceService).saveResultSameTransaction(any(CommandSource.class));
+        }).when(commandSourceService).saveResultInTransaction(any(CommandSource.class));
 
         when(commandSourceService.getCommandSource(commandId)).thenReturn(commandSource);
 
@@ -596,7 +596,7 @@ public class SynchronousCommandProcessingServiceTest {
         // First call was before saving CommandSource, then 2 calls during retry (1st retry does not try to fetch it)
         verify(commandSourceService, times(3)).getCommandSource(commandId);
         // Let test whether consecutive calls does not try to refetch immediately
-        when(commandSourceService.saveResultSameTransaction(any(CommandSource.class))).thenReturn(commandSource);
+        when(commandSourceService.saveResultInTransaction(any(CommandSource.class))).thenReturn(commandSource);
         underTest.executeCommand(commandWrapper, jsonCommand, false);
         verify(commandSourceService, times(4)).getCommandSource(commandId);
     }
@@ -631,7 +631,7 @@ public class SynchronousCommandProcessingServiceTest {
         AppUser appUser = Mockito.mock(AppUser.class);
         when(context.authenticatedUser(Mockito.any(CommandWrapper.class))).thenReturn(appUser);
         when(commandSourceService.saveInitialNewTransaction(commandWrapper, jsonCommand, appUser, idk)).thenReturn(commandSource);
-        when(commandSourceService.saveResultSameTransaction(commandSource)).thenReturn(commandSource);
+        when(commandSourceService.saveResultInTransaction(commandSource)).thenReturn(commandSource);
         when(commandSource.getStatus()).thenReturn(CommandProcessingResultType.PROCESSED.getValue());
 
         when(commandSourceService.processCommand(commandHandler, jsonCommand, commandSource, appUser, false))
@@ -685,7 +685,7 @@ public class SynchronousCommandProcessingServiceTest {
         AppUser appUser = Mockito.mock(AppUser.class);
         when(context.authenticatedUser(Mockito.any(CommandWrapper.class))).thenReturn(appUser);
         when(commandSourceService.saveInitialNewTransaction(commandWrapper, jsonCommand, appUser, idk)).thenReturn(commandSource);
-        when(commandSourceService.saveResultSameTransaction(commandSource)).thenReturn(commandSource);
+        when(commandSourceService.saveResultInTransaction(commandSource)).thenReturn(commandSource);
         when(commandSource.getStatus()).thenReturn(CommandProcessingResultType.PROCESSED.getValue());
 
         when(commandSourceService.processCommand(commandHandler, jsonCommand, commandSource, appUser, false))

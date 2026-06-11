@@ -22,7 +22,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.apache.fineract.commands.domain.CommandSourceRepository;
 import org.apache.fineract.commands.service.CommandSourceService;
 import org.apache.fineract.commands.service.SynchronousCommandProcessingService;
 import org.apache.fineract.infrastructure.core.domain.FineractRequestContextHolder;
@@ -32,16 +31,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class IdempotencyStoreHelper {
 
-    private final CommandSourceRepository commandSourceRepository;
     private final CommandSourceService commandSourceService;
     private final FineractRequestContextHolder fineractRequestContextHolder;
 
     public void storeCommandResult(Integer response, String body, Long commandId) {
-        commandSourceRepository.findById(commandId).ifPresent(commandSource -> {
-            commandSource.setResultStatusCode(response);
-            commandSource.setResult(body);
-            commandSourceService.saveResultSameTransaction(commandSource);
-        });
+        commandSourceService.saveResultInTransaction(commandId, response, body);
     }
 
     public boolean isAllowedContentTypeResponse(HttpServletResponse response) {

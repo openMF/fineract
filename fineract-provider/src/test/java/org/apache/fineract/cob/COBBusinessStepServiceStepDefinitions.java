@@ -59,6 +59,7 @@ public class COBBusinessStepServiceStepDefinitions implements En {
     private final COBBusinessStepServiceImpl businessStepService;
 
     private COBBusinessStep cobBusinessStep = mock(COBBusinessStep.class);
+    private LoanCOBBusinessStep loanCobBusinessStep = mock(LoanCOBBusinessStep.class);
     private COBBusinessStep notRegistereCobBusinessStep = mock(COBBusinessStep.class);
     private TreeMap<Long, String> executionMap;
     private AbstractAuditableCustom item;
@@ -124,8 +125,13 @@ public class COBBusinessStepServiceStepDefinitions implements En {
                     lenient().when(this.applicationContext.getBean("test")).thenReturn(this.cobBusinessStep);
                     lenient().when(this.applicationContext.getBean("testNotRegistered")).thenReturn(this.notRegistereCobBusinessStep);
                     lenient().when(this.applicationContext.getBean("notExist")).thenThrow(BeanCreationException.class);
+                    lenient().when(this.applicationContext.getBean("test", LoanCOBBusinessStep.class)).thenReturn(this.loanCobBusinessStep);
+                    lenient().when(this.applicationContext.getBean("testNotRegistered", Object.class))
+                            .thenReturn(this.notRegistereCobBusinessStep);
+                    lenient().when(this.applicationContext.getBean("notExist", (Class<?>) null)).thenThrow(BeanCreationException.class);
 
                     lenient().when(this.cobBusinessStep.getEnumStyledName()).thenReturn("registered");
+                    lenient().when(this.loanCobBusinessStep.getEnumStyledName()).thenReturn("registered");
                     lenient().when(this.notRegistereCobBusinessStep.getEnumStyledName()).thenReturn("notRegistered");
                     lenient().when(this.batchBusinessStep.getStepName()).thenReturn("registered");
                     lenient().when(this.batchBusinessStep.getStepOrder()).thenReturn(1L);

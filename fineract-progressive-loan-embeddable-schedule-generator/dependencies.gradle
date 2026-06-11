@@ -22,6 +22,8 @@ dependencies {
     implementation(project(path: ':fineract-loan'))
     testImplementation(project(path: ':fineract-core'))
 
+    compileOnly 'jakarta.persistence:jakarta.persistence-api'
+
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.mapstruct:mapstruct-processor'
 }

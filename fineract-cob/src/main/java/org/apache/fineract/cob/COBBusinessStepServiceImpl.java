@@ -100,7 +100,7 @@ public class COBBusinessStepServiceImpl implements COBBusinessStepService {
         List<String> businessSteps = Arrays.stream(beanFactory.getBeanNamesForType(businessStepClass)).toList();
         Set<BusinessStepNameAndOrder> executionMap = new HashSet<>();
         for (String businessStep : businessSteps) {
-            COBBusinessStep<S> businessStepBean = (COBBusinessStep<S>) applicationContext.getBean(businessStep);
+            T businessStepBean = applicationContext.getBean(businessStep, businessStepClass);
             Optional<BatchBusinessStep> businessStepConfig = cobStepConfigs.stream()
                     .filter(stepConfig -> businessStepBean.getEnumStyledName().equals(stepConfig.getStepName())).findFirst();
             businessStepConfig.ifPresent(

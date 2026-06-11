@@ -36,8 +36,8 @@ public class LoanAccountDataV1Enricher implements DataEnricher<LoanAccountDataV1
     private final AvroDateTimeMapper avroDateTimeMapper;
 
     @Override
-    public boolean isDataTypeSupported(Class<LoanAccountDataV1> dataType) {
-        return dataType.isAssignableFrom(LoanAccountDataV1.class);
+    public Class<LoanAccountDataV1> getDataType() {
+        return LoanAccountDataV1.class;
     }
 
     @Override

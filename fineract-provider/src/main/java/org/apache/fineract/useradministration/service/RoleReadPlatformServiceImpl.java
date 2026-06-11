@@ -27,7 +27,9 @@ import org.apache.fineract.useradministration.exception.RoleNotFoundException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional(readOnly = true)
 public class RoleReadPlatformServiceImpl implements RoleReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;

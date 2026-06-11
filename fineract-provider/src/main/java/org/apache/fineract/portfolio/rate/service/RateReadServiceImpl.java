@@ -32,11 +32,13 @@ import org.apache.fineract.portfolio.rate.exception.RateNotFoundException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Bowpi GT Created by Jose on 19/07/2017.
  */
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RateReadServiceImpl implements RateReadService {
 
     private final JdbcTemplate jdbcTemplate;

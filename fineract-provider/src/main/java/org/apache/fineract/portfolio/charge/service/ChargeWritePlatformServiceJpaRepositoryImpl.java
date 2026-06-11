@@ -45,7 +45,8 @@ import org.apache.fineract.portfolio.loanproduct.domain.LoanProduct;
 import org.apache.fineract.portfolio.loanproduct.domain.LoanProductRepository;
 import org.apache.fineract.portfolio.paymentdetail.PaymentDetailConstants;
 import org.apache.fineract.portfolio.paymenttype.domain.PaymentType;
-import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepositoryWrapper;
+import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepository;
+import org.apache.fineract.portfolio.paymenttype.exception.PaymentTypeNotFoundException;
 import org.apache.fineract.portfolio.tax.domain.TaxGroup;
 import org.apache.fineract.portfolio.tax.domain.TaxGroupRepositoryWrapper;
 import org.springframework.cache.annotation.CacheEvict;
@@ -66,7 +67,7 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
     private final FineractEntityAccessUtil fineractEntityAccessUtil;
     private final GLAccountRepositoryWrapper glAccountRepository;
     private final TaxGroupRepositoryWrapper taxGroupRepository;
-    private final PaymentTypeRepositoryWrapper paymentTyperepositoryWrapper;
+    private final PaymentTypeRepository paymentTypeRepository;
 
     @Transactional
     @Override
@@ -95,7 +96,7 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
             if (enablePaymentType) {
                 final Long paymentTypeId = command.longValueOfParameterNamed(PaymentDetailConstants.paymentTypeParamName);
                 if (paymentTypeId != null) {
-                    paymentType = this.paymentTyperepositoryWrapper.findOneWithNotFoundDetection(paymentTypeId);
+                    paymentType = findPaymentTypeWithNotFoundDetection(paymentTypeId);
                 }
             }
 
@@ -180,7 +181,7 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
                 if (paymentTypeIdNewValue != null) {
                     final Long paymentTypeId = paymentTypeIdNewValue.longValue();
 
-                    paymentType = this.paymentTyperepositoryWrapper.findOneWithNotFoundDetection(paymentTypeId);
+                    paymentType = findPaymentTypeWithNotFoundDetection(paymentTypeId);
                     chargeForUpdate.setPaymentType(paymentType);
                 }
 
@@ -258,6 +259,10 @@ public class ChargeWritePlatformServiceJpaRepositoryImpl implements ChargeWriteP
         log.error("Error occured.", dve);
         throw ErrorHandler.getMappable(dve, "error.msg.charge.unknown.data.integrity.issue",
                 "Unknown data integrity issue with resource: " + realCause.getMessage());
+    }
+
+    private PaymentType findPaymentTypeWithNotFoundDetection(final Long paymentTypeId) {
+        return this.paymentTypeRepository.findById(paymentTypeId).orElseThrow(() -> new PaymentTypeNotFoundException(paymentTypeId));
     }
 
     private boolean isAnyLoansAssociateWithThisCharge(final Long chargeId) {

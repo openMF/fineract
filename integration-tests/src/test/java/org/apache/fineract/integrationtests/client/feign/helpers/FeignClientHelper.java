@@ -18,17 +18,37 @@
  */
 package org.apache.fineract.integrationtests.client.feign.helpers;
 
+import static org.apache.fineract.client.feign.util.FeignCalls.fail;
 import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 
 import java.util.Collections;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
+import org.apache.fineract.client.models.ClientTextSearch;
+import org.apache.fineract.client.models.DeleteClientsClientIdResponse;
+import org.apache.fineract.client.models.GetClientsClientIdAccountsResponse;
 import org.apache.fineract.client.models.GetClientsClientIdResponse;
+import org.apache.fineract.client.models.PageClientSearchData;
+import org.apache.fineract.client.models.PagedRequestClientTextSearch;
+import org.apache.fineract.client.models.PostClientsClientIdRequest;
+import org.apache.fineract.client.models.PostClientsClientIdResponse;
 import org.apache.fineract.client.models.PostClientsRequest;
 import org.apache.fineract.client.models.PostClientsResponse;
+import org.apache.fineract.client.models.PutClientsClientIdRequest;
+import org.apache.fineract.client.models.PutClientsClientIdResponse;
+import org.apache.fineract.integrationtests.client.feign.modules.ClientRequestBuilders;
 import org.apache.fineract.integrationtests.client.feign.modules.LoanTestData;
 import org.apache.fineract.integrationtests.common.Utils;
 
 public class FeignClientHelper {
+
+    private static final String ACTIVATE_COMMAND = "activate";
+    private static final String CLOSE_COMMAND = "close";
+    private static final String REJECT_COMMAND = "reject";
+    private static final String REACTIVATE_COMMAND = "reactivate";
+    private static final String WITHDRAW_COMMAND = "withdraw";
+    private static final String UNDO_REJECTION_COMMAND = "undoRejection";
+    private static final String UNDO_WITHDRAWAL_COMMAND = "undoWithdrawal";
 
     private final FineractFeignClient fineractClient;
 
@@ -54,15 +74,78 @@ public class FeignClientHelper {
                 .dateFormat(LoanTestData.DATETIME_PATTERN)//
                 .locale(LoanTestData.LOCALE);
 
-        return createClient(request);
+        return createClient(request).getClientId();
     }
 
-    public Long createClient(PostClientsRequest request) {
-        PostClientsResponse response = ok(() -> fineractClient.clients().createClient(request));
-        return response.getClientId();
+    public PostClientsResponse createClient(PostClientsRequest request) {
+        return ok(() -> fineractClient.clients().createClient(request));
+    }
+
+    public PostClientsResponse createClientPending() {
+        return createClientPending(Utils.dateFormatter.format(Utils.getLocalDateOfTenant()));
+    }
+
+    public PostClientsResponse createClientPending(String submittedOnDate) {
+        return createClientPending(ClientRequestBuilders.createPendingClient(submittedOnDate));
+    }
+
+    public PostClientsResponse createClientPending(PostClientsRequest request) {
+        return ok(() -> fineractClient.clients().createClient(request));
     }
 
     public GetClientsClientIdResponse getClient(Long clientId) {
         return ok(() -> fineractClient.clients().retrieveOneClient(clientId, Collections.emptyMap()));
+    }
+
+    public CallFailedRuntimeException getClientExpectingError(Long clientId) {
+        return fail(() -> fineractClient.clients().retrieveOneClient(clientId, Collections.emptyMap()));
+    }
+
+    public GetClientsClientIdAccountsResponse getClientAccounts(Long clientId) {
+        return ok(() -> fineractClient.clients().retrieveAllClientAccounts(clientId));
+    }
+
+    public PageClientSearchData searchClients(String text) {
+        ClientTextSearch clientTextSearch = new ClientTextSearch();
+        clientTextSearch.setText(text);
+        PagedRequestClientTextSearch request = new PagedRequestClientTextSearch();
+        request.setRequest(clientTextSearch);
+        return ok(() -> fineractClient.clientSearchV2().searchClientsByText(request));
+    }
+
+    public PostClientsClientIdResponse activateClient(Long clientId, PostClientsClientIdRequest request) {
+        return ok(() -> fineractClient.clients().handleCommandClient(clientId, request, ACTIVATE_COMMAND));
+    }
+
+    public PostClientsClientIdResponse closeClient(Long clientId, PostClientsClientIdRequest request) {
+        return ok(() -> fineractClient.clients().handleCommandClient(clientId, request, CLOSE_COMMAND));
+    }
+
+    public PostClientsClientIdResponse rejectClient(Long clientId, PostClientsClientIdRequest request) {
+        return ok(() -> fineractClient.clients().handleCommandClient(clientId, request, REJECT_COMMAND));
+    }
+
+    public PostClientsClientIdResponse reactivateClient(Long clientId, PostClientsClientIdRequest request) {
+        return ok(() -> fineractClient.clients().handleCommandClient(clientId, request, REACTIVATE_COMMAND));
+    }
+
+    public PostClientsClientIdResponse withdrawClient(Long clientId, PostClientsClientIdRequest request) {
+        return ok(() -> fineractClient.clients().handleCommandClient(clientId, request, WITHDRAW_COMMAND));
+    }
+
+    public PostClientsClientIdResponse undoRejectClient(Long clientId, PostClientsClientIdRequest request) {
+        return ok(() -> fineractClient.clients().handleCommandClient(clientId, request, UNDO_REJECTION_COMMAND));
+    }
+
+    public PostClientsClientIdResponse undoWithdrawnClient(Long clientId, PostClientsClientIdRequest request) {
+        return ok(() -> fineractClient.clients().handleCommandClient(clientId, request, UNDO_WITHDRAWAL_COMMAND));
+    }
+
+    public PutClientsClientIdResponse updateClient(Long clientId, PutClientsClientIdRequest request) {
+        return ok(() -> fineractClient.clients().updateClient(clientId, request));
+    }
+
+    public DeleteClientsClientIdResponse deleteClient(Long clientId) {
+        return ok(() -> fineractClient.clients().deleteClient(clientId));
     }
 }

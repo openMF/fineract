@@ -35,7 +35,6 @@ import java.util.Objects;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.core.domain.AbstractAuditableWithUTCDateTimeCustom;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.MathUtil;
@@ -1255,7 +1254,7 @@ public class LoanRepaymentScheduleInstallment extends AbstractAuditableWithUTCDa
                 getPostDatedChecks().stream().filter(pdc -> MathUtil.isEqualTo(pdc.getCheckNo(), npdc.getCheckNo()) //
                         && MathUtil.isEqualTo(pdc.getAccountNo(), npdc.getAccountNo()) //
                         && MathUtil.isEqualTo(pdc.getAmount(), npdc.getAmount()) //
-                        && StringUtils.equals(pdc.getBankName(), npdc.getBankName()) //
+                        && Objects.equals(pdc.getBankName(), npdc.getBankName()) //
                         && MathUtil.isEqualTo(pdc.getStatus(), npdc.getStatus()) //
                         && DateUtils.isEqual(pdc.getRepaymentDate(), npdc.getRepaymentDate())) //
                         .findAny().ifPresentOrElse(retainedPostDatedChecks::add, () -> retainedPostDatedChecks.add(npdc));

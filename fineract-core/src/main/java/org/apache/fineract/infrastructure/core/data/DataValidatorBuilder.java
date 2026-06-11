@@ -294,6 +294,10 @@ public class DataValidatorBuilder {
         return this;
     }
 
+    public DataValidatorBuilder isOneOfTheseValues(final Integer[] values) {
+        return isOneOfTheseValues((Object[]) values);
+    }
+
     public DataValidatorBuilder isOneOfEnumValues(Class<? extends Enum<?>> e) {
         final List<String> enumValuesList = Arrays.asList(Arrays.stream(e.getEnumConstants()).map(Enum::name).toArray(String[]::new));
         return isOneOfTheseStringValues(enumValuesList);

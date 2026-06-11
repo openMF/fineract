@@ -43,7 +43,7 @@ public class FixedDepositAccountInterestCalculationServiceImpl implements FixedD
     private final FromJsonHelper fromApiJsonHelper;
 
     @Override
-    public HashMap calculateInterest(JsonQuery query) {
+    public HashMap<String, Object> calculateInterest(JsonQuery query) {
         depositAccountDataValidator.validateFixedDepositForInterestCalculation(query.json());
         JsonElement element = query.parsedJson();
         BigDecimal principalAmount = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(principalAmountParamName, element);
@@ -55,7 +55,7 @@ public class FixedDepositAccountInterestCalculationServiceImpl implements FixedD
                 interestCompoundingPeriodInMonths);
         String warning = "This is an approximate calculated amount - it may vary slightly when the account is created";
 
-        HashMap result = new HashMap<>();
+        HashMap<String, Object> result = new HashMap<>();
         result.put("maturityAmount", maturityAmount);
         result.put("warning", warning);
 

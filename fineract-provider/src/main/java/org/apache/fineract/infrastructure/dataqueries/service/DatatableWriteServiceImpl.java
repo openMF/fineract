@@ -794,8 +794,8 @@ public class DatatableWriteServiceImpl implements DatatableWriteService {
             }
             String fkName = "fk_" + dataTableNameAlias + "_" + oldName;
             String newFkName = "fk_" + dataTableNameAlias + "_" + newName;
-            if (!StringUtils.equalsIgnoreCase(code, newCode) || !StringUtils.equalsIgnoreCase(oldName, newName)) {
-                if (StringUtils.equalsIgnoreCase(code, newCode)) {
+            if (!equalsIgnoreCase(code, newCode) || !equalsIgnoreCase(oldName, newName)) {
+                if (equalsIgnoreCase(code, newCode)) {
                     final int codeId = getCodeIdForColumn(dataTableNameAlias, oldName);
                     if (codeId > 0) {
                         removeMappings.add(dataTableNameAlias + "_" + oldName);
@@ -809,13 +809,13 @@ public class DatatableWriteServiceImpl implements DatatableWriteService {
                 } else {
                     if (code != null) {
                         removeMappings.add(dataTableNameAlias + "_" + oldName);
-                        if (newCode == null || !StringUtils.equalsIgnoreCase(oldName, newName)) {
+                        if (newCode == null || !equalsIgnoreCase(oldName, newName)) {
                             constrainBuilder.append(", DROP CONSTRAINT ").append(sqlGenerator.escape(fkName)).append(" ");
                         }
                     }
                     if (newCode != null) {
                         codeMappings.put(dataTableNameAlias + "_" + newName, this.codeReadPlatformService.retrieveCode(newCode).getId());
-                        if (code == null || !StringUtils.equalsIgnoreCase(oldName, newName)) {
+                        if (code == null || !equalsIgnoreCase(oldName, newName)) {
                             constrainBuilder.append(", ADD CONSTRAINT  ").append(sqlGenerator.escape(newFkName)).append(" ")
                                     .append("FOREIGN KEY (").append(sqlGenerator.escape(newName)).append(") ").append(REFERENCES_CLAUSE)
                                     .append(sqlGenerator.escape(CODE_VALUES_TABLE)).append(" (").append(TABLE_FIELD_ID).append(")");
@@ -1392,6 +1392,10 @@ public class DatatableWriteServiceImpl implements DatatableWriteService {
 
     private static boolean isTechnicalParam(String param) {
         return API_PARAM_DATE_FORMAT.equals(param) || API_PARAM_DATETIME_FORMAT.equals(param) || API_PARAM_LOCALE.equals(param);
+    }
+
+    private static boolean equalsIgnoreCase(String left, String right) {
+        return left == null ? right == null : left.equalsIgnoreCase(right);
     }
 
     private String datatableColumnNameToCodeValueName(final String columnName, final String code) {

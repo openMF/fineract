@@ -30,6 +30,7 @@ import org.apache.fineract.notification.domain.NotificationMapperRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 public class NotificationReadPlatformServiceImpl implements NotificationReadPlatformService {
@@ -40,6 +41,7 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
     private final NotificationMapperRepository notificationMapperRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public boolean hasUnreadNotifications(Long appUserId) {
         Long tenantId = ThreadLocalContextUtil.getTenant().getId();
         Long now = System.currentTimeMillis() / 1000L;

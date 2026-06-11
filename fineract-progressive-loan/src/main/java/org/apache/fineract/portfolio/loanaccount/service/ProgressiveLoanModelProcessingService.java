@@ -19,6 +19,7 @@
 package org.apache.fineract.portfolio.loanaccount.service;
 
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
@@ -41,8 +42,18 @@ public class ProgressiveLoanModelProcessingService {
     private final InterestScheduleModelRepositoryWrapper modelRepositoryWrapper;
     private final ProgressiveLoanModelRepository progressiveLoanModelRepository;
 
+    @Transactional(readOnly = true)
     public boolean hasValidModel(Long loanId, String modelVersion) {
         return progressiveLoanModelRepository.hasValidModel(loanId, modelVersion);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Long> findLoanIdsRequiringModelRecalculation(List<Long> loanIds, String modelVersion) {
+        if (loanIds.isEmpty()) {
+            return List.of();
+        }
+        return progressiveLoanModelRepository.findLoanIdsRequiringModelRecalculation(Set.copyOf(loanIds), allowedLoanStatuses,
+                modelVersion);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -55,6 +66,7 @@ public class ProgressiveLoanModelProcessingService {
         }
     }
 
+    @Transactional(readOnly = true)
     public boolean allowedLoanStatuses(Long loanId) {
         return loanRepositoryWrapper.isLoanInAllowedStatus(loanId, allowedLoanStatuses);
     }

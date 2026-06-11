@@ -54,6 +54,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Component
@@ -110,7 +111,7 @@ public class WorkingCapitalLoanCOBFilterHelperImpl extends COBFilterApiMatcher
     }
 
     private boolean isLoanHardLocked(List<Long> loanIds) {
-        return loanIds.stream().anyMatch(loanAccountLockService::isLoanHardLocked);
+        return loanAccountLockService.isAnyLoanHardLocked(loanIds);
     }
 
     private boolean isLockOverrulable(Long... loanIds) {
@@ -118,10 +119,11 @@ public class WorkingCapitalLoanCOBFilterHelperImpl extends COBFilterApiMatcher
     }
 
     private boolean isLockOverrulable(List<Long> loanIds) {
-        return loanIds.stream().anyMatch(loanAccountLockService::isLockOverrulable);
+        return loanAccountLockService.isAnyLockOverrulable(loanIds);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isLoanBehind(List<Long> loanIds) {
         List<COBIdAndLastClosedBusinessDate> loanIdAndLastClosedBusinessDates = new ArrayList<>();
         List<List<Long>> partitions = Lists.partition(loanIds, fineractProperties.getQuery().getInClauseParameterSizeLimit());
@@ -135,6 +137,7 @@ public class WorkingCapitalLoanCOBFilterHelperImpl extends COBFilterApiMatcher
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Long> calculateRelevantLoanIds(BodyCachingHttpServletRequestWrapper request) throws IOException {
         String pathInfo = request.getPathInfo();
         if (isBatchApi(pathInfo)) {

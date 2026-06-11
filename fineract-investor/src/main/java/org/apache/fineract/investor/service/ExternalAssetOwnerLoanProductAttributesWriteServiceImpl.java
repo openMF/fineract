@@ -22,7 +22,6 @@ import static org.reflections.scanners.Scanners.SubTypes;
 
 import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
-import jakarta.transaction.Transactional;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,6 +51,7 @@ import org.apache.fineract.portfolio.loanproduct.exception.LoanProductNotFoundEx
 import org.reflections.Reflections;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor

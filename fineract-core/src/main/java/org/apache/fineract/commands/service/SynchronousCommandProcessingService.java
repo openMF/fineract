@@ -186,7 +186,7 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
                 currentSource.setStatus(PROCESSED);
 
                 // Return saved command source
-                return commandSourceService.saveResultSameTransaction(currentSource);
+                return commandSourceService.saveResultInTransaction(currentSource);
             });
 
             // Command successfully saved

@@ -85,10 +85,10 @@ public class LoanTransactionData implements Serializable {
     // templates
     final Collection<PaymentTypeData> paymentTypeOptions;
 
-    private Collection<CodeValueData> writeOffReasonOptions = null;
+    private Collection<CodeValueData> writeOffReasonOptions;
 
     @Setter
-    private Integer numberOfRepayments = 0;
+    private Integer numberOfRepayments;
 
     // import fields
     private transient Integer rowIndex;
@@ -114,15 +114,15 @@ public class LoanTransactionData implements Serializable {
     @Setter
     private List<LoanTransactionRelationData> transactionRelations;
 
-    private Collection<CodeValueData> chargeOffReasonOptions = null;
-    private Collection<CodeValueData> classificationOptions = null;
+    private Collection<CodeValueData> chargeOffReasonOptions;
+    private Collection<CodeValueData> classificationOptions;
     private CodeValueData classification;
 
-    private Collection<CodeValueData> reAgeReasonOptions = null;
-    private Collection<PeriodFrequencyType> periodFrequencyOptions = null;
-    private Collection<StringEnumOptionData> reAgeInterestHandlingOptions = null;
-    private Collection<CodeValueData> reAmortizationReasonOptions = null;
-    private Collection<StringEnumOptionData> reAmortizationInterestHandlingOptions = null;
+    private Collection<CodeValueData> reAgeReasonOptions;
+    private Collection<PeriodFrequencyType> periodFrequencyOptions;
+    private Collection<StringEnumOptionData> reAgeInterestHandlingOptions;
+    private Collection<CodeValueData> reAmortizationReasonOptions;
+    private Collection<StringEnumOptionData> reAmortizationInterestHandlingOptions;
 
     private Integer numberOfFutureInstallments;
     private Integer numberOfPastInstallments;

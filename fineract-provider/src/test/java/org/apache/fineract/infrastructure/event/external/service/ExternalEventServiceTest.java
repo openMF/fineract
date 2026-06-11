@@ -163,7 +163,7 @@ class ExternalEventServiceTest {
         // then
         verify(repository).save(externalEventArgumentCaptor.capture());
         verify(loanAccountDataV1Enricher).isDataTypeSupported(LoanAccountDataV1.class);
-        verify(loanAccountDataV1Enricher).enrich(loanAccountData);
+        verify(loanAccountDataV1Enricher).enrichData(loanAccountData);
         ExternalEvent externalEvent = externalEventArgumentCaptor.getValue();
         assertThat(externalEvent.getIdempotencyKey()).isEqualTo(idempotencyKey);
         assertThat(externalEvent.getData()).isEqualTo(data);
@@ -273,7 +273,7 @@ class ExternalEventServiceTest {
         // then
         verify(repository).save(externalEventArgumentCaptor.capture());
         verify(loanTransactionDataV1Enricher).isDataTypeSupported(LoanTransactionDataV1.class);
-        verify(loanTransactionDataV1Enricher).enrich(loanTransactionData);
+        verify(loanTransactionDataV1Enricher).enrichData(loanTransactionData);
         ExternalEvent externalEvent = externalEventArgumentCaptor.getValue();
         assertThat(externalEvent.getIdempotencyKey()).isEqualTo(idempotencyKey);
         assertThat(externalEvent.getData()).isEqualTo(data);
@@ -305,7 +305,7 @@ class ExternalEventServiceTest {
         // then
         verify(repository).save(externalEventArgumentCaptor.capture());
         verify(loanTransactionAdjustmentDataV1Enricher).isDataTypeSupported(LoanTransactionAdjustmentDataV1.class);
-        verify(loanTransactionAdjustmentDataV1Enricher).enrich(loanTransactionAdjustmentData);
+        verify(loanTransactionAdjustmentDataV1Enricher).enrichData(loanTransactionAdjustmentData);
         ExternalEvent externalEvent = externalEventArgumentCaptor.getValue();
         assertThat(externalEvent.getIdempotencyKey()).isEqualTo(idempotencyKey);
         assertThat(externalEvent.getData()).isEqualTo(data);

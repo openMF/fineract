@@ -49,7 +49,7 @@ public class JacksonLocalDateBeanSerializerModifier extends BeanSerializerModifi
 
     private void assignLocalDateSerializer(List<BeanPropertyWriter> beanProperties, JsonSerializer<Object> serializer) {
         for (BeanPropertyWriter writer : beanProperties) {
-            if (LocalDate.class.equals(writer.getPropertyType())) {
+            if (LocalDate.class.equals(writer.getType().getRawClass())) {
                 writer.assignSerializer(serializer);
             }
         }

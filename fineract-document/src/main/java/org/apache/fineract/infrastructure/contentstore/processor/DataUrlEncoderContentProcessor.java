@@ -46,10 +46,10 @@ public class DataUrlEncoderContentProcessor implements ContentProcessor {
 
     @Override
     public ContentProcessorContext process(final ContentProcessorContext ctx) {
-        final Integer bufferSize = ctx.getParameter(DATA_URL_ENCODE_PARAM_BUFFER_SIZE,
+        final Integer bufferSize = ctx.getParameter(DATA_URL_ENCODE_PARAM_BUFFER_SIZE, Integer.class,
                 requireNonNullElse(properties.getContent().getDefaultBufferSize(), 8192));
-        final String contentType = ctx.getParameter(DATA_URL_ENCODE_PARAM_CONTENT_TYPE, "text/plain");
-        final String encoding = ctx.getParameter(DATA_URL_ENCODE_PARAM_ENCODING, "charset=US-ASCII");
+        final String contentType = ctx.getParameter(DATA_URL_ENCODE_PARAM_CONTENT_TYPE, String.class, "text/plain");
+        final String encoding = ctx.getParameter(DATA_URL_ENCODE_PARAM_ENCODING, String.class, "charset=US-ASCII");
 
         final var pipedInputStream = pipe.pipe(ctx.getInputStream(), (in, out) -> {
             pipe.write(new DataUrlEncoderInputStream(in, contentType, encoding), out, new byte[bufferSize]);

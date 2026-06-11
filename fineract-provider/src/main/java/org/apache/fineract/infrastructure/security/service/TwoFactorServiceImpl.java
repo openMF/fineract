@@ -44,6 +44,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @ConditionalOnProperty("fineract.security.2fa.enabled")
@@ -176,6 +177,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
     @Override
     @Cacheable(value = "userTFAccessToken", key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil)"
             + ".getTenant().getTenantIdentifier().concat(#user.username).concat(#token + 'tok')")
+    @Transactional(readOnly = true)
     public TFAccessToken fetchAccessTokenForUser(final AppUser user, final String token) {
         return tfAccessTokenRepository.findByUserAndToken(user, token);
     }

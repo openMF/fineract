@@ -52,6 +52,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class DatatableReadServiceImpl implements DatatableReadService {
 
     private static final String APPLICATION_TABLE_NAME = "application_table_name";

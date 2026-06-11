@@ -19,19 +19,37 @@
 package org.apache.fineract.cob.converter;
 
 import org.apache.fineract.cob.data.COBParameter;
-import org.apache.fineract.cob.data.LoanCOBParameter;
 
 public final class COBParameterConverter {
+
+    private static final String LEGACY_LOAN_COB_PARAMETER_CLASS_NAME = "org.apache.fineract.cob.data.LoanCOBParameter";
+    private static final Class<?> LEGACY_LOAN_COB_PARAMETER_CLASS = findLegacyLoanCOBParameterClass();
 
     private COBParameterConverter() {}
 
     public static COBParameter convert(Object obj) {
         if (obj instanceof COBParameter) {
             return (COBParameter) obj;
-        } else if (obj instanceof LoanCOBParameter loanCOBParameter) {
+        } else if (LEGACY_LOAN_COB_PARAMETER_CLASS != null && LEGACY_LOAN_COB_PARAMETER_CLASS.isInstance(obj)) {
             // for backward compatibility
-            return loanCOBParameter.toCOBParameter();
+            return convertLegacyLoanCOBParameter(obj);
         }
         return null;
+    }
+
+    private static Class<?> findLegacyLoanCOBParameterClass() {
+        try {
+            return Class.forName(LEGACY_LOAN_COB_PARAMETER_CLASS_NAME);
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+    }
+
+    private static COBParameter convertLegacyLoanCOBParameter(Object obj) {
+        try {
+            return (COBParameter) LEGACY_LOAN_COB_PARAMETER_CLASS.getMethod("toCOBParameter").invoke(obj);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalArgumentException("Unable to convert legacy LoanCOBParameter", e);
+        }
     }
 }

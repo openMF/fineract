@@ -1498,7 +1498,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
             boolean backdatedTxnsAllowedTill, Throwable t) {
         // NOTE: allow caller to catch the exceptions
         // NOTE: wrap throwable only if really necessary
-        throw errorHandler.getMappable(t, null, null, "savings.postinterest");
+        throw ErrorHandler.getMappable(t, null, null, "savings.postinterest");
     }
 
     @Transactional

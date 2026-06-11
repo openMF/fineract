@@ -29,8 +29,10 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class FundReadPlatformServiceImpl implements FundReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;

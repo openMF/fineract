@@ -82,9 +82,6 @@ import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Configuration
@@ -148,8 +145,8 @@ public class AuthorizationServerConfig {
                 // TODO: Make it configurable
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
-                .apply(authorizationServerConfigurer);
+                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
+        http.with(authorizationServerConfigurer, Customizer.withDefaults());
 
         if (fineractProperties.getSecurity().getCors().isEnabled()) {
             http.cors(Customizer.withDefaults());
@@ -199,21 +196,6 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        FineractProperties.CorsProperties corsConfiguration = fineractProperties.getSecurity().getCors();
-        config.setAllowedOriginPatterns(corsConfiguration.getAllowedOriginPatterns());
-        config.setAllowedMethods(corsConfiguration.getAllowedMethods());
-        config.setAllowedHeaders(corsConfiguration.getAllowedHeaders());
-        config.setExposedHeaders(corsConfiguration.getExposedHeaders());
-        config.setAllowCredentials(corsConfiguration.isAllowCredentials()); // if you use cookies / Authorization header
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
-
-    @Bean
     public OncePerRequestFilter tenantAwareAuthenticationFilter() {
         return new TenantAwareAuthenticationFilter(resolver(), tenantDetailsService);
     }
@@ -235,8 +217,7 @@ public class AuthorizationServerConfig {
 
     @Bean
     public DaoAuthenticationProvider customAuthenticationProvider() {
-        DaoAuthenticationProvider authProvider = new TemporaryPasswordAwareAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
+        DaoAuthenticationProvider authProvider = new TemporaryPasswordAwareAuthenticationProvider(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }

@@ -28,7 +28,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = SPRING, injectionStrategy = CONSTRUCTOR, uses = { CommandJsonMapper.class })
-@SuppressWarnings("rawtypes")
 public interface CommandMapper {
 
     @Mapping(source = "commandId", target = "id")
@@ -47,7 +46,7 @@ public interface CommandMapper {
     @Mapping(source = "error", target = "error")
     @Mapping(ignore = true, target = "state")
     @Mapping(ignore = true, target = "response")
-    CommandEntity map(Command source);
+    CommandEntity map(Command<?> source);
 
     @Mapping(source = "source.commandId", target = "id")
     @Mapping(source = "source.createdAt", target = "createdAt")
@@ -65,8 +64,8 @@ public interface CommandMapper {
     @Mapping(source = "source.error", target = "error")
     @Mapping(source = "response", target = "response")
     @Mapping(ignore = true, target = "state")
-    CommandEntity map(Command source, Object response);
+    CommandEntity map(Command<?> source, Object response);
 
     @InheritInverseConfiguration
-    Command map(CommandEntity source);
+    Command<Object> map(CommandEntity source);
 }

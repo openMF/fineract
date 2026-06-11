@@ -139,7 +139,6 @@ public class Charge extends AbstractPersistableCustom<Long> {
     @Column(name = "restart_frequency_enum")
     private Integer restartFrequencyEnum;
 
-    @Getter
     @Column(name = "is_payment_type", nullable = false)
     private boolean enablePaymentType;
 

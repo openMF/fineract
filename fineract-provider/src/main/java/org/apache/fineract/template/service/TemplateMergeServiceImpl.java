@@ -29,7 +29,7 @@ import java.io.StringWriter;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
-import java.net.URL;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -169,7 +169,7 @@ public class TemplateMergeServiceImpl implements TemplateMergeService {
 
         HttpURLConnection connection = null;
         try {
-            connection = (HttpURLConnection) new URL(url).openConnection();
+            connection = (HttpURLConnection) URI.create(url).toURL().openConnection();
             if (authToken != null) {
                 connection.setRequestProperty("Authorization", "Basic " + authToken);// NOSONAR
             }

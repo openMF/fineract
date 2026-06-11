@@ -31,6 +31,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.fineract.infrastructure.security.domain.OidcFederationType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Getter
@@ -90,6 +91,8 @@ public class FineractProperties {
     private FineractCache cache;
 
     private RetryProperties retry;
+
+    private FineractDefaultValues defaults;
 
     @Getter
     @Setter
@@ -525,6 +528,7 @@ public class FineractProperties {
         private FineractSecurityTwoFactorAuth twoFactor;
         private FineractSecurityHsts hsts;
         private FineractSecurityOAuth2Properties oauth2;
+        private FineractSecurityOidcFederationProperties oidcFederation;
         private CorsProperties cors;
 
         public void set2fa(FineractSecurityTwoFactorAuth twoFactor) {
@@ -558,6 +562,45 @@ public class FineractProperties {
                     private List<String> redirectUris = new ArrayList<>();
                     private boolean requireAuthorizationConsent = true;
                 }
+            }
+        }
+
+        @Getter
+        @Setter
+        public static class FineractSecurityOidcFederationProperties {
+
+            private boolean enabled;
+            // JWT claim name used to resolve the Fineract tenant ID.
+            // Falls back to HTTP header / query param if absent.
+            private String tenantClaimName = "fineract_tenant";
+            // Claim used as the Fineract username. Common values: preferred_username, email, sub.
+            private String usernameClaim = "preferred_username";
+            // When true, creates a Fineract AppUser on first successful OIDC login.
+            private boolean autoCreateUser = false;
+            // Comma-separated role names assigned to auto-created users.
+            private String defaultRoles = "";
+            // Controls the RP-Initiated Logout URL format.
+            // Values: keycloak | azure_ad | okta | auth0 | generic (default)
+            private OidcFederationType provider = OidcFederationType.GENERIC;
+            // Redirect URI sent to the IdP after successful logout.
+            private String postLogoutRedirectUri;
+            // Static per-issuer tenant mapping (YAML fallback).
+            // Used when the master DB has no m_tenant_oidc_config record for an incoming issuer.
+            // Priority: DB config > issuers[] > tenantClaimName claim.
+            private List<OidcIssuerProperties> issuers = new ArrayList<>();
+
+            @Getter
+            @Setter
+            public static class OidcIssuerProperties {
+
+                // Exact value expected in the JWT 'iss' claim.
+                private String issuerUri;
+                // Fineract tenant identifier this issuer maps to.
+                private String tenantId;
+                // Optional: if absent, derived from issuerUri via OIDC discovery.
+                private String jwksUri;
+                // Optional: per-issuer override for the username claim.
+                private String usernameClaim;
             }
         }
 
@@ -706,5 +749,12 @@ public class FineractProperties {
         private List<String> allowedHeaders;
         private List<String> exposedHeaders;
         private boolean allowCredentials;
+    }
+
+    @Getter
+    @Setter
+    public static class FineractDefaultValues {
+
+        private Long officeId;
     }
 }

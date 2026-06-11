@@ -27,6 +27,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Used in securityContext.xml as implementation of spring security's {@link UserDetailsService}.
@@ -39,6 +40,7 @@ public class TenantAwareJpaPlatformUserDetailsService implements PlatformUserDet
 
     @Override
     @Cacheable(value = "usersByUsername", key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat(#username+'ubu')")
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException, DataAccessException {
 
         // Retrieve active users only

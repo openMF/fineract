@@ -37,7 +37,7 @@ public class AmazonS3ConfigCondition extends PropertiesCondition {
         try {
             // The credentials provider is intentionally not closed here since Spring will close it at the
             // context closure event
-            DefaultCredentialsProvider.create().resolveCredentials();
+            DefaultCredentialsProvider.builder().build().resolveCredentials();
             DefaultAwsRegionProviderChain.builder().build().getRegion();
             return true;
         } catch (Exception e) {

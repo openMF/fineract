@@ -35,8 +35,8 @@ public class LoanRepaymentDueDataV1OriginatorEnricher implements DataEnricher<Lo
     private final LoanOriginatorDetailsResolver loanOriginatorDetailsResolver;
 
     @Override
-    public boolean isDataTypeSupported(final Class<LoanRepaymentDueDataV1> dataType) {
-        return dataType.isAssignableFrom(LoanRepaymentDueDataV1.class);
+    public Class<LoanRepaymentDueDataV1> getDataType() {
+        return LoanRepaymentDueDataV1.class;
     }
 
     @Override

@@ -21,6 +21,9 @@ package org.apache.fineract.portfolio.loanaccount.service;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializer;
 import com.google.gson.ToNumberPolicy;
 import java.math.MathContext;
 import java.time.LocalDate;
@@ -30,8 +33,6 @@ import org.apache.fineract.infrastructure.core.serialization.gson.JsonExcludeAnn
 import org.apache.fineract.infrastructure.core.serialization.gson.LocalDateAdapter;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.Money;
-import org.apache.fineract.organisation.monetary.serialization.MoneyDeserializer;
-import org.apache.fineract.organisation.monetary.serialization.MoneySerializer;
 import org.apache.fineract.portfolio.loanproduct.calc.data.InterestPeriod;
 import org.apache.fineract.portfolio.loanproduct.calc.data.ProgressiveLoanInterestScheduleModel;
 import org.apache.fineract.portfolio.loanproduct.calc.data.RepaymentPeriod;
@@ -46,7 +47,8 @@ public class ProgressiveLoanInterestScheduleModelParserServiceGsonImpl implement
 
     private Gson createSerializer() {
         return new GsonBuilder().registerTypeAdapter(LocalDate.class, new LocalDateAdapter().nullSafe())
-                .setNumberToNumberStrategy(ToNumberPolicy.BIG_DECIMAL).registerTypeAdapter(Money.class, new MoneySerializer())
+                .setNumberToNumberStrategy(ToNumberPolicy.BIG_DECIMAL)
+                .registerTypeAdapter(Money.class, (JsonSerializer<Money>) (money, type, context) -> new JsonPrimitive(money.getAmount()))
                 .addDeserializationExclusionStrategy(new JsonExcludeAnnotationBasedExclusionStrategy())
                 .addSerializationExclusionStrategy(new JsonExcludeAnnotationBasedExclusionStrategy()).create();
     }
@@ -58,7 +60,9 @@ public class ProgressiveLoanInterestScheduleModelParserServiceGsonImpl implement
                 installmentAmountInMultipliesOf);
         return new GsonBuilder().registerTypeAdapter(LocalDate.class, new LocalDateAdapter().nullSafe())
                 .setNumberToNumberStrategy(ToNumberPolicy.BIG_DECIMAL)
-                .registerTypeAdapter(Money.class, new MoneyDeserializer(ctx.getMc(), ctx.getCurrency()))
+                .registerTypeAdapter(Money.class,
+                        (JsonDeserializer<Money>) (jsonElement, type, context) -> Money.of(ctx.getCurrency(), jsonElement.getAsBigDecimal(),
+                                ctx.getMc()))
                 .registerTypeAdapter(InterestPeriod.class, (InstanceCreator<InterestPeriod>) ctx::createInterestPeriodInstance)
                 .registerTypeAdapter(ProgressiveLoanInterestScheduleModel.class,
                         (InstanceCreator<ProgressiveLoanInterestScheduleModel>) ctx::createProgressiveLoanInterestScheduleModelInstance)

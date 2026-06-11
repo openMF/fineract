@@ -36,8 +36,10 @@ import org.apache.fineract.portfolio.loanaccount.domain.LoanRepository;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RetrieveAllNonClosedIdServiceImpl implements RetrieveLoanIdService {
 
     private static final Collection<LoanStatus> NON_CLOSED_LOAN_STATUSES = new ArrayList<>(

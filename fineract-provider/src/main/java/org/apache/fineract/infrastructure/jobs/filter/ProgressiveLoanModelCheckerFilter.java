@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.core.http.BodyCachingHttpServletRequestWrapper;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanRepository;
 import org.apache.fineract.portfolio.loanaccount.service.ProgressiveLoanModelProcessingService;
 import org.apache.fineract.portfolio.loanproduct.calc.data.ProgressiveLoanInterestScheduleModel;
 import org.springframework.stereotype.Component;
@@ -36,7 +35,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class ProgressiveLoanModelCheckerFilter extends OncePerRequestFilter {
 
-    private final LoanRepository loanRepository;
     private final ProgressiveLoanModelProcessingService progressiveLoanModelProcessingService;
     private final ProgressiveLoanModelCheckerHelper helper;
 
@@ -50,26 +48,12 @@ public class ProgressiveLoanModelCheckerFilter extends OncePerRequestFilter {
         } else {
             List<Long> loanIds = helper.calculateRelevantLoanIds((BodyCachingHttpServletRequestWrapper) request);
             if (!loanIds.isEmpty()) {
-                loanIds.forEach(loanId -> {
-                    if (isProgressiveLoan(loanId) && allowedLoanStatuses(loanId) && !hasValidModel(loanId)) {
-                        progressiveLoanModelProcessingService.recalculateModelAndSave(loanId);
-                    }
-                });
+                progressiveLoanModelProcessingService
+                        .findLoanIdsRequiringModelRecalculation(loanIds, ProgressiveLoanInterestScheduleModel.getModelVersion())
+                        .forEach(progressiveLoanModelProcessingService::recalculateModelAndSave);
             }
             proceed(filterChain, request, response);
         }
-    }
-
-    private boolean isProgressiveLoan(Long loanId) {
-        return loanRepository.isProgressiveLoan(loanId);
-    }
-
-    private boolean allowedLoanStatuses(Long loanId) {
-        return progressiveLoanModelProcessingService.allowedLoanStatuses(loanId);
-    }
-
-    private boolean hasValidModel(Long loanId) {
-        return progressiveLoanModelProcessingService.hasValidModel(loanId, ProgressiveLoanInterestScheduleModel.getModelVersion());
     }
 
     private void proceed(FilterChain filterChain, HttpServletRequest request, HttpServletResponse response)

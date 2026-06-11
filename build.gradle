@@ -475,7 +475,7 @@ configure(project.fineractJavaProjects) {
                 "-Xlint:overloads",
                 "-Xlint:overrides",
                 "-Xlint:path",
-                "-Xlint:processing",
+//                "-Xlint:processing", -> Unnecessary noise
                 "-Xlint:removal",
                 "-Xlint:requires-automatic",
                 "-Xlint:requires-transitive-automatic",

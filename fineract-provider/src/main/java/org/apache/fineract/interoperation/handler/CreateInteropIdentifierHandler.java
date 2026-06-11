@@ -32,7 +32,6 @@ import org.apache.fineract.interoperation.service.InteropService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 @Service
 @CommandType(entity = ENTITY_NAME_IDENTIFIER, action = "CREATE")
@@ -50,7 +49,7 @@ public class CreateInteropIdentifierHandler implements NewCommandSourceHandler {
     public CommandProcessingResult processCommand(final JsonCommand command) {
         List<String> split = Splitter.on('/').splitToList(command.getUrl());
         int length = split.size();
-        String subIdOrType = Strings.emptyToNull(StringUtils.trimWhitespace(split.get(length - 1)));
+        String subIdOrType = Strings.emptyToNull(split.get(length - 1).strip());
         String idValue = split.get(length - 2);
         InteropIdentifierType idType = InteropIdentifierType.valueOf(split.get(length - 3).toUpperCase());
         return this.interopService.registerAccountIdentifier(idType, idValue, subIdOrType, command);

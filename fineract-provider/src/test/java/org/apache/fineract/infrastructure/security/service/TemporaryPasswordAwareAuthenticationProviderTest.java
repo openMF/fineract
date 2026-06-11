@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 class TemporaryPasswordAwareAuthenticationProviderTest {
@@ -38,7 +39,8 @@ class TemporaryPasswordAwareAuthenticationProviderTest {
     @BeforeEach
     void setUp() {
         passwordEncoder = mock(PasswordEncoder.class);
-        subject = new TemporaryPasswordAwareAuthenticationProvider();
+        UserDetailsService userDetailsService = mock(UserDetailsService.class);
+        subject = new TemporaryPasswordAwareAuthenticationProvider(userDetailsService);
         subject.setPasswordEncoder(passwordEncoder);
     }
 

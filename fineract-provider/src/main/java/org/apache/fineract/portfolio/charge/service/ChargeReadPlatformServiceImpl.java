@@ -51,12 +51,14 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author vishwas
  *
  */
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ChargeReadPlatformServiceImpl implements ChargeReadPlatformService {
 
     private final CurrencyReadPlatformService currencyReadPlatformService;

@@ -24,11 +24,16 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 /**
  * Supports authentication with either the permanent password or a non-expired temporary password.
  */
 public class TemporaryPasswordAwareAuthenticationProvider extends DaoAuthenticationProvider {
+
+    public TemporaryPasswordAwareAuthenticationProvider(UserDetailsService userDetailsService) {
+        super(userDetailsService);
+    }
 
     @Override
     protected void additionalAuthenticationChecks(final UserDetails userDetails, final UsernamePasswordAuthenticationToken authentication)

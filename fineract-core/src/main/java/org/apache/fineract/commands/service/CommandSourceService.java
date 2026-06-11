@@ -96,8 +96,17 @@ public class CommandSourceService {
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public CommandSource saveResultSameTransaction(@NonNull CommandSource commandSource) {
+    public CommandSource saveResultInTransaction(@NonNull CommandSource commandSource) {
         return saveResult(commandSource);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void saveResultInTransaction(Long commandSourceId, Integer response, String body) {
+        commandSourceRepository.findById(commandSourceId).ifPresent(commandSource -> {
+            commandSource.setResultStatusCode(response);
+            commandSource.setResult(body);
+            saveResult(commandSource);
+        });
     }
 
     @NonNull

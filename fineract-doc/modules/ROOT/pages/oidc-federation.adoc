@@ -1,0 +1,725 @@
+////
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+////
+
+= OIDC Federation
+
+OIDC Federation allows Apache Fineract to delegate authentication to an external Identity Provider (IdP) — Keycloak, Azure Active Directory, Okta, Auth0, Google, or any standards-compliant OpenID Connect server — while keeping its existing multi-tenant user model intact.
+
+When enabled, Fineract accepts signed JWTs issued by the configured IdP as Bearer tokens on all `/api/**` requests, resolving the incoming identity to a Fineract `AppUser` before the request reaches any business logic.
+
+== Architecture Overview
+
+image::oidc/architecture.png[OIDC Federation Architecture — Multi-Tenant,width=100%]
+
+The key design principle is **one IdP per tenant**: each Fineract tenant has its own IdP record in the master database, keyed by the JWT `iss` claim. A single Fineract instance can serve multiple tenants, each authenticating against a completely different IdP (Keycloak, Google, Azure AD, etc.) without any server restart.
+
+[source]
+----
+Tenant A (Keycloak) ──► JWT  ──┐
+Tenant B (Google)   ──► JWT  ──┤──► OidcTenantAwareFilter
+Tenant C (Azure AD) ──► JWT  ──┘         │
+                                          ▼
+                              DynamicJwtIssuerAuthenticationManagerResolver
+                                  │  reads JWT 'iss' claim
+                                  ├── Priority 1: m_tenant_oidc_config (Master DB)
+                                  │     → CRUD via REST API, no restart required
+                                  └── Priority 2: issuers[] (YAML, dev/CI fallback)
+                                          │  builds + caches AuthenticationManager
+                                          ▼
+                              FineractOidcJwtAuthenticationConverter
+                                  │  maps JWT → AppUser (username / email / auto-create)
+                                  ▼
+                              Business Logic (AppUser principal — same as Basic Auth)
+----
+
+Downstream Fineract services receive a standard `AppUser` principal with no code changes required.
+
+== Provider-Specific Setup Guides
+
+* xref:oidc-federation-google.adoc[Google Identity Provider — step-by-step]
+
+== Prerequisites
+
+* Fineract 1.x (Spring Boot 3)
+* An IdP reachable from the Fineract server
+* The IdP's issuer URI (for OIDC discovery) or JWK Set URI
+
+== Issuer Resolution Priority
+
+`DynamicJwtIssuerAuthenticationManagerResolver` routes each incoming JWT to the correct IdP validator using the following priority chain:
+
+[cols="1,3"]
+|===
+| Priority | Source
+
+| 1 (highest)
+| Per-tenant config stored in `m_tenant_oidc_config` master DB table (managed via the <<_per_tenant_oidc_configuration_api,OIDC Config API>>).
+
+| 2
+| Static `fineract.security.oidc-federation.issuers[]` list in `application.yml` — suitable for dev/CI environments where all tenants share the same IdP.
+|===
+
+If no match is found for the JWT's `iss` claim, the request is rejected with HTTP 401 (`unknown_issuer`).
+
+The resolved `AuthenticationManager` for each issuer URI is cached in memory and invalidated automatically when the DB config changes.
+
+== Configuration Properties
+
+All global properties are under `fineract.security.oidc-federation.*`.
+
+[cols="3,1,3"]
+|===
+| Property | Default | Description
+
+| `enabled`
+| `false`
+| Master switch. Set to `true` to activate the OIDC filter chain.
+
+| `tenant-claim-name`
+| `fineract_tenant`
+| JWT claim used to resolve the Fineract tenant ID. Falls back to the `Fineract-Platform-TenantId` header, then the `tenantIdentifier` query parameter.
+
+| `username-claim`
+| `preferred_username`
+| JWT claim used as the Fineract username. Common alternatives: `email`, `sub`. Can be overridden per-issuer in the `issuers[]` list or the DB config.
+
+| `auto-create-user`
+| `false`
+| When `true`, a Fineract `AppUser` is created automatically on the first successful login for an unknown identity. When `false`, login fails with HTTP 401 unless the user already exists.
+
+| `default-roles`
+| _(empty)_
+| Comma-separated Fineract role names assigned to auto-created users (e.g. `Read-Only Role,Branch Manager`).
+
+| `provider`
+| `generic`
+| Controls the RP-Initiated Logout URL format. Values: `keycloak`, `azure_ad`, `okta`, `auth0`, `google`, `generic`.
+
+| `post-logout-redirect-uri`
+| _(empty)_
+| URI sent to the IdP after logout. When blank, defaults to the request's base URL + `/login?logout`.
+
+| `issuers[]`
+| _(empty)_
+| Static per-issuer configuration list (YAML fallback). See <<_yaml_issuer_list_fallback>> for details.
+|===
+
+== YAML Issuer List Fallback
+
+The `issuers[]` list provides static per-issuer configuration for environments where the DB-based API is not used (local development, CI). Each entry in the list defines a trusted issuer and its JWT validation settings.
+
+[source,yaml]
+----
+fineract:
+  security:
+    oidc-federation:
+      enabled: true
+      issuers:
+        - issuerUri: https://keycloak.example.com/realms/fineract   # <1>
+          tenantId: default                                          # <2>
+          jwksUri: ""                                                # <3>
+          usernameClaim: preferred_username                          # <4>
+        - issuerUri: https://accounts.google.com
+          tenantId: google-tenant
+          usernameClaim: email
+----
+<1> Exact value of the JWT `iss` claim. Must match exactly, including trailing slashes.
+<2> Fineract tenant identifier this issuer maps to. Used for tenant resolution when no JWT claim or header is present.
+<3> Optional. If blank or absent, the JWK Set URI is derived automatically from `issuerUri` via OIDC discovery (fetches `{issuerUri}/.well-known/openid-configuration`).
+<4> Optional per-issuer override for the username claim. Falls back to the global `username-claim` property if absent.
+
+[NOTE]
+====
+The `issuers[]` list is a development/CI convenience. For production multi-tenant deployments, configure IdPs via the <<_per_tenant_oidc_configuration_api,OIDC Config API>> so that each tenant's settings are stored in the master database and can be updated without a server restart.
+====
+
+== Per-Tenant OIDC Configuration API
+
+Each Fineract tenant can be independently linked to a different IdP. The configuration is stored in the `m_tenant_oidc_config` master database table and is consulted at runtime by `DynamicJwtIssuerAuthenticationManagerResolver` on every authenticated request. Changes take effect immediately — no server restart is required.
+
+All endpoints require the `MANAGE_TENANT_OIDC_CONFIG` permission (Super Admin only). The `clientSecret` is accepted on write operations but is **never** returned in responses — it is stored AES-256-GCM encrypted.
+
+=== Multi-Tenant Setup Example
+
+The following example configures three tenants, each using a different IdP, against a running Fineract instance. All calls use Basic Auth from the admin tenant (`default`).
+
+==== Tenant A — Keycloak
+
+[source,bash]
+----
+curl -X POST http://localhost:8080/fineract-provider/api/v1/tenants/tenant-a/oidc-config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic $(echo -n 'mifos:password' | base64)" \
+  -H "Fineract-Platform-TenantId: default" \
+  -d '{
+    "providerType": "KEYCLOAK",
+    "issuerUri": "https://keycloak.example.com/realms/tenant-a",        <1>
+    "clientId": "fineract-tenant-a",
+    "clientSecret": "keycloak-secret-a",
+    "jwksUri": "",                                                       <2>
+    "usernameClaim": "preferred_username",
+    "scopes": "openid,profile,email",
+    "postLogoutRedirectUri": "https://app.example.com/tenant-a/login?logout",
+    "enabled": true
+  }'
+----
+<1> Each realm in Keycloak has a distinct issuer URI. This is the JWT `iss` value Fineract will match.
+<2> Empty string — Fineract derives the JWK Set URI automatically from `issuerUri + /.well-known/openid-configuration`.
+
+Expected response:
+[source,json]
+----
+{
+  "id": 1,
+  "tenantId": "tenant-a",
+  "providerType": "KEYCLOAK",
+  "issuerUri": "https://keycloak.example.com/realms/tenant-a",
+  "clientId": "fineract-tenant-a",
+  "usernameClaim": "preferred_username",
+  "scopes": "openid,profile,email",
+  "postLogoutRedirectUri": "https://app.example.com/tenant-a/login?logout",
+  "enabled": true
+}
+----
+
+Note that `clientSecret` is **absent** from the response — it is stored encrypted and never returned.
+
+==== Tenant B — Google
+
+[source,bash]
+----
+curl -X POST http://localhost:8080/fineract-provider/api/v1/tenants/tenant-b/oidc-config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic $(echo -n 'mifos:password' | base64)" \
+  -H "Fineract-Platform-TenantId: default" \
+  -d '{
+    "providerType": "GOOGLE",
+    "issuerUri": "https://accounts.google.com",                          <1>
+    "clientId": "123456789-xxxxx.apps.googleusercontent.com",
+    "clientSecret": "GOCSPX-xxxxxxxxxxxxxxxxxxxx",
+    "jwksUri": "https://www.googleapis.com/oauth2/v3/certs",            <2>
+    "usernameClaim": "email",                                            <3>
+    "scopes": "openid,email,profile",
+    "enabled": true
+  }'
+----
+<1> Google's issuer URI is always `https://accounts.google.com` regardless of the project.
+<2> Optional — explicitly set here to avoid an OIDC discovery round-trip on first use.
+<3> Google ID tokens expose the user's identity via the `email` claim.
+
+==== Tenant C — Azure Active Directory
+
+[source,bash]
+----
+curl -X POST http://localhost:8080/fineract-provider/api/v1/tenants/tenant-c/oidc-config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic $(echo -n 'mifos:password' | base64)" \
+  -H "Fineract-Platform-TenantId: default" \
+  -d '{
+    "providerType": "AZURE_AD",
+    "issuerUri": "https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0",  <1>
+    "clientId": "your-azure-app-client-id",
+    "clientSecret": "your-azure-app-secret",
+    "jwksUri": "https://login.microsoftonline.com/YOUR_TENANT_ID/discovery/v2.0/keys",
+    "usernameClaim": "preferred_username",
+    "scopes": "openid,profile,email",
+    "enabled": true
+  }'
+----
+<1> Replace `YOUR_TENANT_ID` with the Azure AD Directory (tenant) ID from the App Registration overview.
+
+==== Verify All Three Are Registered
+
+[source,bash]
+----
+# Tenant A
+curl http://localhost:8080/fineract-provider/api/v1/tenants/tenant-a/oidc-config \
+  -H "Authorization: Basic $(echo -n 'mifos:password' | base64)" \
+  -H "Fineract-Platform-TenantId: default" | jq '{tenantId,providerType,issuerUri,enabled}'
+
+# Tenant B
+curl http://localhost:8080/fineract-provider/api/v1/tenants/tenant-b/oidc-config \
+  -H "Authorization: Basic $(echo -n 'mifos:password' | base64)" \
+  -H "Fineract-Platform-TenantId: default" | jq '{tenantId,providerType,issuerUri,enabled}'
+
+# Tenant C
+curl http://localhost:8080/fineract-provider/api/v1/tenants/tenant-c/oidc-config \
+  -H "Authorization: Basic $(echo -n 'mifos:password' | base64)" \
+  -H "Fineract-Platform-TenantId: default" | jq '{tenantId,providerType,issuerUri,enabled}'
+----
+
+=== Using Each Tenant's IdP
+
+Once registered, each tenant's users authenticate by passing a JWT from their respective IdP. Fineract reads the `iss` claim to route the token to the correct validator automatically — the client only needs to pass its own IdP's token.
+
+[source,bash]
+----
+# Tenant A user — token from Keycloak
+KEYCLOAK_TOKEN="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+curl http://localhost:8080/fineract-provider/api/v1/clients \
+  -H "Authorization: Bearer ${KEYCLOAK_TOKEN}" \
+  -H "Fineract-Platform-TenantId: tenant-a"
+
+# Tenant B user — token from Google
+GOOGLE_TOKEN="eyJhbGciOiJSUzI1NiIsImtpZCI6IjZmNzI1N..."
+curl http://localhost:8080/fineract-provider/api/v1/clients \
+  -H "Authorization: Bearer ${GOOGLE_TOKEN}" \
+  -H "Fineract-Platform-TenantId: tenant-b"
+
+# Tenant C user — token from Azure AD
+AZURE_TOKEN="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1..."
+curl http://localhost:8080/fineract-provider/api/v1/clients \
+  -H "Authorization: Bearer ${AZURE_TOKEN}" \
+  -H "Fineract-Platform-TenantId: tenant-c"
+----
+
+[NOTE]
+====
+The `Fineract-Platform-TenantId` header is the tenant resolution fallback used here because none of these standard tokens include a `fineract_tenant` claim. If your IdP injects a custom `fineract_tenant` claim into the JWT, the header is not needed.
+====
+
+=== Update Configuration
+
+Update specific fields without touching the rest. On `PUT`, any field omitted from the request body retains its current database value.
+
+[source,bash]
+----
+# Disable Tenant B's Google IdP temporarily (e.g., during a credential rotation)
+curl -X PUT http://localhost:8080/fineract-provider/api/v1/tenants/tenant-b/oidc-config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic $(echo -n 'mifos:password' | base64)" \
+  -H "Fineract-Platform-TenantId: default" \
+  -d '{ "enabled": false }'
+
+# Rotate the client secret (omitting clientSecret on PUT preserves the existing encrypted value)
+curl -X PUT http://localhost:8080/fineract-provider/api/v1/tenants/tenant-a/oidc-config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic $(echo -n 'mifos:password' | base64)" \
+  -H "Fineract-Platform-TenantId: default" \
+  -d '{ "clientSecret": "new-rotated-secret" }'
+
+# Migrate Tenant C from Azure AD to Okta
+curl -X PUT http://localhost:8080/fineract-provider/api/v1/tenants/tenant-c/oidc-config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic $(echo -n 'mifos:password' | base64)" \
+  -H "Fineract-Platform-TenantId: default" \
+  -d '{
+    "providerType": "OKTA",
+    "issuerUri": "https://dev-xxx.okta.com/oauth2/default",
+    "clientId": "new-okta-client-id",
+    "clientSecret": "new-okta-secret",
+    "jwksUri": "",
+    "usernameClaim": "preferred_username"
+  }'
+----
+
+[IMPORTANT]
+====
+When updating `issuerUri`, the old issuer's `AuthenticationManager` cache entry is evicted automatically. The new issuer is registered on the next authenticated request — no restart needed.
+====
+
+=== Delete Configuration
+
+[source,bash]
+----
+# Remove the OIDC config for Tenant B (fallback to Basic Auth or other auth mechanism)
+curl -X DELETE http://localhost:8080/fineract-provider/api/v1/tenants/tenant-b/oidc-config \
+  -H "Authorization: Basic $(echo -n 'mifos:password' | base64)" \
+  -H "Fineract-Platform-TenantId: default"
+----
+
+After deletion, the in-memory `AuthenticationManager` cache entry for that issuer URI is evicted immediately. Subsequent requests carrying a JWT from the deleted issuer are rejected with HTTP 401 (`unknown_issuer`) — no server restart required.
+
+=== Configuration Fields
+
+[cols="2,1,3"]
+|===
+| Field | Required | Description
+
+| `providerType`
+| Yes
+| `KEYCLOAK`, `GOOGLE`, `AZURE_AD`, `OKTA`, `AUTH0`, or `GENERIC`.
+
+| `issuerUri`
+| Yes
+| Exact value of the JWT `iss` claim. Must be globally unique across all tenants.
+
+| `clientId`
+| Yes
+| OAuth2 Client ID registered with the IdP.
+
+| `clientSecret`
+| No
+| OAuth2 Client Secret. Encrypted at rest. Never returned in responses.
+
+| `jwksUri`
+| No
+| JWK Set URI for JWT signature verification. Derived from `issuerUri` via OIDC discovery if absent.
+
+| `usernameClaim`
+| No (default: `preferred_username`)
+| JWT claim used as the Fineract username.
+
+| `scopes`
+| No (default: `openid,profile,email`)
+| Comma-separated OAuth2 scopes.
+
+| `postLogoutRedirectUri`
+| No
+| URI sent to the IdP after logout.
+
+| `enabled`
+| No (default: `true`)
+| Set to `false` to disable this IdP without deleting the configuration.
+|===
+
+=== Database Schema
+
+The `m_tenant_oidc_config` table lives in the master (tenant-store) database and is created by a Liquibase migration on startup.
+
+[source,sql]
+----
+CREATE TABLE m_tenant_oidc_config (
+    id                    BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id             VARCHAR(100)  NOT NULL UNIQUE,  -- matches tenants.identifier
+    provider_type         VARCHAR(50)   NOT NULL,         -- KEYCLOAK | GOOGLE | AZURE_AD | OKTA | AUTH0 | GENERIC
+    issuer_uri            VARCHAR(500)  NOT NULL UNIQUE,  -- JWT 'iss' claim, resolution key
+    client_id             VARCHAR(255)  NOT NULL,
+    client_secret         VARCHAR(1000),                  -- AES-256-GCM encrypted
+    jwks_uri              VARCHAR(500),                   -- derived from issuer_uri if absent
+    username_claim        VARCHAR(100)  NOT NULL DEFAULT 'preferred_username',
+    scopes                VARCHAR(500)  NOT NULL DEFAULT 'openid,profile,email',
+    post_logout_redirect_uri VARCHAR(500),
+    enabled               TINYINT(1)   NOT NULL DEFAULT 1,
+    created_at            DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at            DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+);
+----
+
+== Quick Start: Keycloak
+
+=== Option A — Database (Recommended for Production)
+
+. Start Fineract with OIDC enabled:
++
+[source,yaml]
+----
+fineract:
+  security:
+    oidc-federation:
+      enabled: true
+      auto-create-user: false
+      username-claim: preferred_username
+----
+
+. Register the Keycloak IdP via the API:
++
+[source,bash]
+----
+curl -X POST http://localhost:8080/fineract-provider/api/v1/tenants/default/oidc-config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic <admin-credentials>" \
+  -H "Fineract-Platform-TenantId: default" \
+  -d '{
+    "providerType": "KEYCLOAK",
+    "issuerUri": "https://keycloak.example.com/realms/fineract",
+    "clientId": "fineract-app",
+    "clientSecret": "s3cr3t",
+    "usernameClaim": "preferred_username",
+    "enabled": true
+  }'
+----
+
+. In Keycloak, add a client scope with a mapper of type *User Attribute* that injects the Fineract tenant identifier into the `fineract_tenant` claim.
+
+=== Option B — YAML (Development/CI)
+
+[source,yaml]
+----
+fineract:
+  security:
+    oidc-federation:
+      enabled: true
+      provider: keycloak
+      auto-create-user: false
+      issuers:
+        - issuerUri: https://keycloak.example.com/realms/fineract
+          tenantId: default
+          usernameClaim: preferred_username
+----
+
+== Quick Start: Azure Active Directory
+
+=== Option A — Database
+
+[source,bash]
+----
+curl -X POST http://localhost:8080/fineract-provider/api/v1/tenants/default/oidc-config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic <admin-credentials>" \
+  -H "Fineract-Platform-TenantId: default" \
+  -d '{
+    "providerType": "AZURE_AD",
+    "issuerUri": "https://login.microsoftonline.com/{tenant-id}/v2.0",
+    "clientId": "your-app-client-id",
+    "clientSecret": "your-app-secret",
+    "jwksUri": "https://login.microsoftonline.com/{tenant-id}/discovery/v2.0/keys",
+    "usernameClaim": "preferred_username",
+    "enabled": true
+  }'
+----
+
+=== Option B — YAML
+
+[source,yaml]
+----
+fineract:
+  security:
+    oidc-federation:
+      enabled: true
+      provider: azure_ad
+      issuers:
+        - issuerUri: https://login.microsoftonline.com/{tenant-id}/v2.0
+          tenantId: default
+          jwksUri: https://login.microsoftonline.com/{tenant-id}/discovery/v2.0/keys
+          usernameClaim: preferred_username
+----
+
+Add an optional claims configuration in your Azure App Registration to include `preferred_username` in access tokens. Add `fineract_tenant` as a custom optional claim pointing to an extension attribute or app role.
+
+== Quick Start: Okta
+
+=== Option A — Database
+
+[source,bash]
+----
+curl -X POST http://localhost:8080/fineract-provider/api/v1/tenants/default/oidc-config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic <admin-credentials>" \
+  -H "Fineract-Platform-TenantId: default" \
+  -d '{
+    "providerType": "OKTA",
+    "issuerUri": "https://dev-xxx.okta.com/oauth2/default",
+    "clientId": "your-okta-client-id",
+    "clientSecret": "your-okta-secret",
+    "usernameClaim": "preferred_username",
+    "enabled": true
+  }'
+----
+
+=== Option B — YAML
+
+[source,yaml]
+----
+fineract:
+  security:
+    oidc-federation:
+      enabled: true
+      provider: okta
+      issuers:
+        - issuerUri: https://dev-xxx.okta.com/oauth2/default
+          tenantId: default
+          usernameClaim: preferred_username
+----
+
+Use Okta's *Groups claims* or a custom attribute in the Okta Expression Language to populate `fineract_tenant`.
+
+== Quick Start: Auth0
+
+=== Option A — Database
+
+[source,bash]
+----
+curl -X POST http://localhost:8080/fineract-provider/api/v1/tenants/default/oidc-config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic <admin-credentials>" \
+  -H "Fineract-Platform-TenantId: default" \
+  -d '{
+    "providerType": "AUTH0",
+    "issuerUri": "https://your-tenant.us.auth0.com/",
+    "clientId": "your-auth0-client-id",
+    "clientSecret": "your-auth0-secret",
+    "usernameClaim": "nickname",
+    "postLogoutRedirectUri": "https://your-fineract-app.example.com/login?logout",
+    "enabled": true
+  }'
+----
+
+=== Option B — YAML
+
+[source,yaml]
+----
+fineract:
+  security:
+    oidc-federation:
+      enabled: true
+      provider: auth0
+      tenant-claim-name: https://fineract.apache.org/tenant
+      issuers:
+        - issuerUri: https://your-tenant.us.auth0.com/
+          tenantId: default
+          usernameClaim: nickname
+----
+
+Auth0 namespaces custom claims with a URI prefix. Use an Auth0 Action to add `https://fineract.apache.org/tenant` to the access token.
+
+== Tenant Resolution
+
+`OidcTenantAwareFilter` resolves the active tenant in priority order:
+
+1. Configurable JWT claim (value of `tenant-claim-name` property)
+2. HTTP header `Fineract-Platform-TenantId`
+3. Query parameter `tenantIdentifier`
+
+If no tenant can be resolved, the filter chain continues without setting a tenant context; subsequent Spring Security validation will reject the request.
+
+== User Resolution
+
+On every authenticated request, `FineractOidcJwtAuthenticationConverter` maps the incoming JWT to a Fineract `AppUser`:
+
+1. Look up by username (value of the `username-claim` claim, or the per-issuer override from the DB config / `issuers[]` entry).
+2. Fall back to email lookup if the username is not found.
+3. If still not found and `auto-create-user=true`: create a new `AppUser` with a random placeholder password, assigned to the head office (id=1) and the roles listed in `default-roles`.
+4. If not found and `auto-create-user=false`: reject with HTTP 401.
+
+The resolved `AppUser` is set as the principal in a `FineractJwtAuthenticationToken`, ensuring full compatibility with all existing Fineract services without any code changes.
+
+== Running Alongside Basic Auth
+
+Both authentication modes can be active simultaneously. The OIDC filter chain runs at `@Order(100)` and targets `/api/**`. The Basic Auth chain has no explicit order (lowest priority). Requests to `/api/**` with a `Bearer` token are handled by the OIDC chain; requests with an `Authorization: Basic` header fall through to the Basic Auth chain.
+
+When both are enabled, a single `CorsConfigurationSource` bean is shared via `FineractCorsConfiguration`, preventing duplicate bean registration errors.
+
+== RP-Initiated Logout
+
+Browser-based sessions can perform IdP logout via `GET /logout`. The redirect URL sent to the IdP depends on the `provider` property:
+
+[cols="1,2"]
+|===
+| Provider | Logout URL pattern
+
+| `keycloak`
+| `{issuer}/protocol/openid-connect/logout?id_token_hint={token}&post_logout_redirect_uri={uri}`
+
+| `azure_ad`
+| `{issuer}/oauth2/v2.0/logout?post_logout_redirect_uri={uri}`
+
+| `okta`
+| `{issuer}/v1/logout?id_token_hint={token}&post_logout_redirect_uri={uri}`
+
+| `auth0`
+| `{issuer}/v2/logout?returnTo={uri}`
+
+| `google`
+| Spring's `OidcClientInitiatedLogoutSuccessHandler` uses Google's discovered `end_session_endpoint`
+
+| `generic`
+| Spring's `OidcClientInitiatedLogoutSuccessHandler` uses the IdP's discovered `end_session_endpoint`
+|===
+
+RP-Initiated Logout only applies to the browser login redirect flow. Stateless Bearer token API clients do not use it.
+
+== Environment Variables
+
+All properties can be overridden with environment variables, following Spring Boot's relaxed binding rules:
+
+[source,bash]
+----
+FINERACT_SECURITY_OIDC_FEDERATION_ENABLED=true
+FINERACT_SECURITY_OIDC_TENANT_CLAIM=fineract_tenant
+FINERACT_SECURITY_OIDC_USERNAME_CLAIM=preferred_username
+FINERACT_SECURITY_OIDC_AUTO_CREATE_USER=false
+FINERACT_SECURITY_OIDC_DEFAULT_ROLES=Read-Only Role
+FINERACT_SECURITY_OIDC_PROVIDER=keycloak
+FINERACT_SECURITY_OIDC_POST_LOGOUT_URI=https://app.example.com/login?logout
+----
+
+The `issuers[]` list can only be configured via YAML. Use the <<_per_tenant_oidc_configuration_api,OIDC Config API>> for dynamic, restart-free configuration.
+
+== Verification Checklist
+
+After configuring OIDC, verify the following scenarios:
+
+=== 1. Tenant resolution fallback chain
+[source,bash]
+----
+# Via JWT claim (configure IdP to include fineract_tenant claim)
+curl -H "Authorization: Bearer <jwt-with-tenant-claim>" https://fineract/api/v1/clients
+
+# Via header
+curl -H "Authorization: Bearer <jwt>" \
+     -H "Fineract-Platform-TenantId: default" \
+     https://fineract/api/v1/clients
+
+# Via query param
+curl -H "Authorization: Bearer <jwt>" \
+     "https://fineract/api/v1/clients?tenantIdentifier=default"
+----
+
+=== 2. Issuer resolution (multi-IdP)
+Send tokens from two different IdPs and confirm each resolves to the correct tenant and user.
+
+=== 3. Principal compatibility
+After a successful request, confirm that `SpringSecurityPlatformSecurityContext.authenticatedUser()` returns the expected `AppUser` with no `ClassCastException`. Any Fineract endpoint that accesses the current user (e.g., `GET /api/v1/users/me`) exercises this path.
+
+=== 4. Auto-create disabled (default)
+Send a valid IdP token for a username that does not exist in Fineract. Expect HTTP 401 with an error body referencing `auto-create-user`.
+
+=== 5. Auto-create enabled
+With `auto-create-user=true`, send a valid token for a new user. Confirm:
+
+* HTTP 200 on the first request.
+* A new row appears in `m_appuser` with the expected username.
+* Subsequent requests resolve the same `AppUser`.
+
+=== 6. No duplicate bean errors
+Enable both `fineract.security.basicauth.enabled=true` and `fineract.security.oidc-federation.enabled=true`. Confirm:
+
+* Exactly one `CorsConfigurationSource` bean in the context.
+* No `BeanDefinitionStoreException` on startup.
+* No duplicate `@EnableMethodSecurity` error.
+
+=== 7. RP-Initiated Logout redirect
+With a browser session, navigate to `GET /logout`. Confirm the browser is redirected to the IdP's end-session endpoint with the correct URL structure for your configured provider.
+
+=== 8. Unknown issuer rejection
+Send a JWT whose `iss` claim does not match any DB config or YAML `issuers[]` entry. Expect HTTP 401 with `unknown_issuer`.
+
+=== 9. DB config cache invalidation
+After calling `DELETE /api/v1/tenants/{tenantId}/oidc-config`, confirm that subsequent requests from the deleted issuer are rejected with HTTP 401 without a server restart.
+
+== Troubleshooting
+
+*HTTP 401 — "No Fineract user found for OIDC subject"*::
+The `preferred_username` (or configured `username-claim`) in the token does not match any Fineract user. Either create the user in Fineract, enable `auto-create-user=true`, or change `username-claim` to match how your users are named in Fineract.
+
+*HTTP 401 — "unknown_issuer"*::
+The JWT `iss` claim does not match any entry in `m_tenant_oidc_config` or the `issuers[]` YAML list. Register the issuer via the <<_per_tenant_oidc_configuration_api,OIDC Config API>> or add it to the `issuers[]` list.
+
+*HTTP 401 — JWT signature verification failed*::
+The `issuerUri` or `jwksUri` is incorrect, or the IdP's JWK Set is not reachable from the Fineract server. Check network connectivity and the configured URIs.
+
+*Tenant context not set (NullPointerException on tenant)*::
+The token does not include the configured `tenant-claim-name` claim, the `Fineract-Platform-TenantId` header is missing, and the `tenantIdentifier` query parameter is absent. Configure the IdP to include the tenant claim, or always pass the header.
+
+*Startup failure: "No qualifying bean of type CorsConfigurationSource"*::
+Ensure `fineract-provider` is on the classpath. The shared `FineractCorsConfiguration` bean lives there.
+
+*OIDC Config API returns 403*::
+The authenticated user does not have the `MANAGE_TENANT_OIDC_CONFIG` permission. Assign this permission to the Super Admin role.

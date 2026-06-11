@@ -46,28 +46,28 @@ public final class ContentProcessorContext {
         this.results = results;
     }
 
-    public <R> R getParameter(String key) {
-        return getParameter(key, null);
+    public <R> R getParameter(String key, Class<R> type) {
+        return getParameter(key, type, null);
     }
 
-    public <R> R getParameter(String key, R defaultValue) {
+    public <R> R getParameter(String key, Class<R> type, R defaultValue) {
         final var val = parameters.get(key);
 
-        return val != null ? (R) val : defaultValue;
+        return type != null && val != null ? type.cast(val) : defaultValue;
     }
 
     public void setResult(String key, Object value) {
         results.put(key, value);
     }
 
-    public <R> R getResult(String key) {
-        return getResult(key, null);
+    public <R> R getResult(String key, Class<R> type) {
+        return getResult(key, type, null);
     }
 
-    public <R> R getResult(String key, R defaultValue) {
+    public <R> R getResult(String key, Class<R> type, R defaultValue) {
         final var val = results.get(key);
 
-        return val != null ? (R) val : defaultValue;
+        return type != null && val != null ? type.cast(val) : defaultValue;
     }
 
     public ContentProcessorContext clone(InputStream inputStream) {

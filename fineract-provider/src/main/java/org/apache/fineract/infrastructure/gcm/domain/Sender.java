@@ -63,7 +63,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -705,7 +705,7 @@ public class Sender {
      * Gets an {@link HttpURLConnection} given an URL.
      */
     protected HttpURLConnection getConnection(String url) throws IOException {
-        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+        HttpURLConnection conn = (HttpURLConnection) URI.create(url).toURL().openConnection();
         conn.setConnectTimeout(connectTimeout);
         conn.setReadTimeout(readTimeout);
         return conn;

@@ -21,7 +21,6 @@ package org.apache.fineract.infrastructure.core.config;
 
 import static org.springframework.security.authorization.AuthenticatedAuthorizationManager.fullyAuthenticated;
 import static org.springframework.security.authorization.AuthorityAuthorizationManager.hasAuthority;
-import static org.springframework.security.authorization.AuthorizationManagers.allOf;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +58,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -73,9 +74,6 @@ import org.springframework.security.web.access.intercept.RequestAuthorizationCon
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @ConditionalOnProperty("fineract.security.basicauth.enabled")
@@ -417,8 +415,7 @@ public class SecurityConfig {
 
                     .requestMatchers(API_MATCHER.matcher(HttpMethod.POST, "/api/*/twofactor/validate")).fullyAuthenticated()
                     .requestMatchers(API_MATCHER.matcher("/api/*/twofactor")).fullyAuthenticated()
-                    .requestMatchers(API_MATCHER.matcher("/api/**"))
-                    .access(allOf(authorizationManagers.toArray(new AuthorizationManager[0])));
+                    .requestMatchers(API_MATCHER.matcher("/api/**")).access(allOfRequestManagers(authorizationManagers));
         }).httpBasic(hb -> hb.authenticationEntryPoint(basicAuthenticationEntryPoint())).csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(smc -> smc.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(tenantAwareBasicAuthenticationFilter(), SecurityContextHolderFilter.class)
@@ -442,11 +439,11 @@ public class SecurityConfig {
         }
 
         if (serverProperties.getSsl().isEnabled()) {
-            http.requiresChannel(channel -> channel.requestMatchers(API_MATCHER.matcher("/api/**")).requiresSecure());
+            http.redirectToHttps(redirect -> redirect.requestMatchers(API_MATCHER.matcher("/api/**")));
         }
 
         if (fineractProperties.getSecurity().getHsts().isEnabled()) {
-            http.requiresChannel(channel -> channel.anyRequest().requiresSecure()).headers(
+            http.redirectToHttps(Customizer.withDefaults()).headers(
                     headers -> headers.httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000)));
         }
 
@@ -504,8 +501,7 @@ public class SecurityConfig {
 
     @Bean(name = "customAuthenticationProvider")
     public DaoAuthenticationProvider authProvider() {
-        DaoAuthenticationProvider authProvider = new TemporaryPasswordAwareAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
+        DaoAuthenticationProvider authProvider = new TemporaryPasswordAwareAuthenticationProvider(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         authProvider.setPostAuthenticationChecks(platformUserDetailsChecker);
         return authProvider;
@@ -516,6 +512,19 @@ public class SecurityConfig {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
+    private AuthorizationManager<RequestAuthorizationContext> allOfRequestManagers(
+            List<AuthorizationManager<RequestAuthorizationContext>> authorizationManagers) {
+        return (authentication, context) -> {
+            for (AuthorizationManager<RequestAuthorizationContext> authorizationManager : authorizationManagers) {
+                AuthorizationResult result = authorizationManager.authorize(authentication, context);
+                if (result != null && !result.isGranted()) {
+                    return new AuthorizationDecision(false);
+                }
+            }
+            return new AuthorizationDecision(true);
+        };
+    }
+
     @Bean
     public AuthenticationManager authenticationManagerBean() throws Exception {
         ProviderManager providerManager = new ProviderManager(authProvider());
@@ -523,18 +532,4 @@ public class SecurityConfig {
         return providerManager;
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        FineractProperties.CorsProperties corsConfiguration = fineractProperties.getSecurity().getCors();
-        config.setAllowedOriginPatterns(corsConfiguration.getAllowedOriginPatterns());
-        config.setAllowedMethods(corsConfiguration.getAllowedMethods());
-        config.setAllowedHeaders(corsConfiguration.getAllowedHeaders());
-        config.setExposedHeaders(corsConfiguration.getExposedHeaders());
-        config.setAllowCredentials(corsConfiguration.isAllowCredentials()); // if you use cookies / Authorization header
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
 }

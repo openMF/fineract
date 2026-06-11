@@ -46,6 +46,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.apache.fineract.cob.data.COBIdAndLastClosedBusinessDate;
@@ -59,8 +60,6 @@ import org.apache.fineract.infrastructure.core.http.BodyCachingHttpServletReques
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.portfolio.loanaccount.domain.GLIMAccountInfoRepository;
-import org.apache.fineract.portfolio.loanaccount.domain.GroupLoanIndividualMonitoringAccount;
-import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepository;
 import org.apache.fineract.portfolio.loanaccount.rescheduleloan.domain.LoanRescheduleRequestRepository;
 import org.apache.fineract.useradministration.domain.AppUser;
@@ -226,7 +225,7 @@ class LoanCOBApiFilterTest {
         final byte[] cachedBody = new byte[0];
         given(request.getInputStream())
                 .willReturn(new BodyCachingHttpServletRequestWrapper.CachedBodyServletInputStream(new ByteArrayInputStream(cachedBody)));
-        given(loanAccountLockService.isLoanHardLocked(2L)).willReturn(false);
+        given(loanAccountLockService.isAnyLoanHardLocked(List.of(2L))).willReturn(false);
         given(context.authenticatedUser()).willReturn(appUser);
         given(fineractProperties.getQuery()).willReturn(fineractQueryProperties);
         given(fineractQueryProperties.getInClauseParameterSizeLimit()).willReturn(65000);
@@ -255,7 +254,7 @@ class LoanCOBApiFilterTest {
         final byte[] cachedBody = new byte[0];
         given(request.getInputStream())
                 .willReturn(new BodyCachingHttpServletRequestWrapper.CachedBodyServletInputStream(new ByteArrayInputStream(cachedBody)));
-        given(loanAccountLockService.isLoanHardLocked(2L)).willReturn(false);
+        given(loanAccountLockService.isAnyLoanHardLocked(List.of(2L))).willReturn(false);
         given(context.authenticatedUser()).willReturn(appUser);
         given(loanRepository.findIdByExternalId(any())).willReturn(2L);
         given(fineractProperties.getQuery()).willReturn(fineractQueryProperties);
@@ -285,7 +284,7 @@ class LoanCOBApiFilterTest {
         final byte[] cachedBody = new byte[0];
         given(request.getInputStream())
                 .willReturn(new BodyCachingHttpServletRequestWrapper.CachedBodyServletInputStream(new ByteArrayInputStream(cachedBody)));
-        given(loanAccountLockService.isLoanHardLocked(2L)).willReturn(false);
+        given(loanAccountLockService.isAnyLoanHardLocked(List.of(2L))).willReturn(false);
         given(fineractProperties.getQuery()).willReturn(fineractQueryProperties);
         given(fineractQueryProperties.getInClauseParameterSizeLimit()).willReturn(65000);
         given(loanRescheduleRequestRepository.getLoanIdByRescheduleRequestId(resourceId)).willReturn(Optional.of(2L));
@@ -320,7 +319,7 @@ class LoanCOBApiFilterTest {
         final byte[] cachedBody = new byte[0];
         given(request.getInputStream())
                 .willReturn(new BodyCachingHttpServletRequestWrapper.CachedBodyServletInputStream(new ByteArrayInputStream(cachedBody)));
-        given(loanAccountLockService.isLoanHardLocked(2L)).willReturn(false);
+        given(loanAccountLockService.isAnyLoanHardLocked(List.of(2L))).willReturn(false);
         given(fineractProperties.getQuery()).willReturn(fineractQueryProperties);
         given(fineractQueryProperties.getInClauseParameterSizeLimit()).willReturn(65000);
         given(retrieveIdService.retrieveLoanIdsBehindDate(eq(ThreadLocalContextUtil.getBusinessDateByType(BusinessDateType.COB_DATE)),
@@ -353,7 +352,7 @@ class LoanCOBApiFilterTest {
         final byte[] cachedBody = new byte[0];
         given(request.getInputStream())
                 .willReturn(new BodyCachingHttpServletRequestWrapper.CachedBodyServletInputStream(new ByteArrayInputStream(cachedBody)));
-        given(loanAccountLockService.isLoanHardLocked(2L)).willReturn(false);
+        given(loanAccountLockService.isAnyLoanHardLocked(List.of(2L))).willReturn(false);
         given(fineractProperties.getQuery()).willReturn(fineractQueryProperties);
         given(fineractQueryProperties.getInClauseParameterSizeLimit()).willReturn(65000);
         given(retrieveIdService.retrieveLoanIdsBehindDate(eq(ThreadLocalContextUtil.getBusinessDateByType(BusinessDateType.COB_DATE)),
@@ -419,7 +418,7 @@ class LoanCOBApiFilterTest {
         final byte[] cachedBody = new byte[0];
         given(request.getInputStream())
                 .willReturn(new BodyCachingHttpServletRequestWrapper.CachedBodyServletInputStream(new ByteArrayInputStream(cachedBody)));
-        given(loanAccountLockService.isLoanHardLocked(2L)).willReturn(true);
+        given(loanAccountLockService.isAnyLoanHardLocked(List.of(2L))).willReturn(true);
         given(response.getWriter()).willReturn(writer);
         given(context.authenticatedUser()).willReturn(appUser);
 
@@ -433,8 +432,6 @@ class LoanCOBApiFilterTest {
         MockHttpServletResponse response = mock(MockHttpServletResponse.class);
         FilterChain filterChain = mock(FilterChain.class);
         PrintWriter writer = mock(PrintWriter.class);
-        GroupLoanIndividualMonitoringAccount glimAccount = mock(GroupLoanIndividualMonitoringAccount.class);
-        Loan loan = mock(Loan.class);
         Long loanId = 2L;
         AppUser appUser = mock(AppUser.class);
 
@@ -443,10 +440,9 @@ class LoanCOBApiFilterTest {
         final byte[] cachedBody = new byte[0];
         given(request.getInputStream())
                 .willReturn(new BodyCachingHttpServletRequestWrapper.CachedBodyServletInputStream(new ByteArrayInputStream(cachedBody)));
-        given(glimAccountInfoRepository.findOneByIsAcceptingChildAndApplicationId(true, BigDecimal.valueOf(2))).willReturn(glimAccount);
-        given(glimAccount.getChildLoan()).willReturn(Collections.singleton(loan));
-        given(loan.getId()).willReturn(loanId);
-        given(loanAccountLockService.isLoanHardLocked(loanId)).willReturn(true);
+        given(glimAccountInfoRepository.findChildLoanIdsByIsAcceptingChildAndApplicationId(true, BigDecimal.valueOf(2)))
+                .willReturn(Collections.singletonList(loanId));
+        given(loanAccountLockService.isAnyLoanHardLocked(List.of(loanId))).willReturn(true);
         given(response.getWriter()).willReturn(writer);
         given(context.authenticatedUser()).willReturn(appUser);
 

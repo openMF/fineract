@@ -1299,7 +1299,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         sql.append(" and ").append(sqlGenerator.dateDiff("?", compareDate)).append(" >= sp.days_to_inactive ");
 
         try {
-            ret = this.jdbcTemplate.queryForList(sql.toString(), new Object[] { tenantLocalDate }, Long.class);
+            ret = this.jdbcTemplate.queryForList(sql.toString(), Long.class, tenantLocalDate);
         } catch (EmptyResultDataAccessException e) {
             // ignore empty result scenario
         } catch (DataAccessException e) {
@@ -1323,7 +1323,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         sql.append(" >= sp.days_to_dormancy ");
 
         try {
-            ret = this.jdbcTemplate.queryForList(sql.toString(), new Object[] { tenantLocalDate }, Long.class);
+            ret = this.jdbcTemplate.queryForList(sql.toString(), Long.class, tenantLocalDate);
         } catch (EmptyResultDataAccessException e) {
             // ignore empty result scenario
         } catch (DataAccessException e) {

@@ -19,7 +19,6 @@
 package org.apache.fineract.portfolio.loanaccount.service;
 
 import jakarta.persistence.FlushModeType;
-import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
@@ -40,6 +39,7 @@ import org.apache.fineract.portfolio.loanaccount.repository.ProgressiveLoanModel
 import org.apache.fineract.portfolio.loanproduct.calc.data.ProgressiveLoanInterestScheduleModel;
 import org.apache.fineract.portfolio.loanproduct.domain.ILoanConfigurationDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -75,11 +75,11 @@ public class InterestScheduleModelRepositoryWrapperImpl implements InterestSched
 
     @Override
     public Optional<ProgressiveLoanModel> findOneByLoanId(Long loanId) {
-        final Optional[] progressiveLoanModel = new Optional[1];
+        AtomicReference<Optional<ProgressiveLoanModel>> progressiveLoanModel = new AtomicReference<>();
         flushModeHandler.withFlushMode(FlushModeType.COMMIT, () -> {
-            progressiveLoanModel[0] = loanModelRepository.findOneByLoanId(loanId);
+            progressiveLoanModel.set(loanModelRepository.findOneByLoanId(loanId));
         });
-        return progressiveLoanModel[0];
+        return progressiveLoanModel.get();
     }
 
     @Override

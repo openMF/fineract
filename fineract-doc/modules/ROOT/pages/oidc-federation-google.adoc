@@ -1,0 +1,623 @@
+////
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+////
+
+= OIDC Federation — Google Identity Provider
+
+This guide walks through configuring Google as an OIDC Identity Provider for Apache Fineract step by step, from creating a Google Cloud project to sending authenticated API requests.
+
+== Prerequisites
+
+* A Google account with access to link:https://console.cloud.google.com[Google Cloud Console]
+* A running Fineract instance (local or remote)
+* `curl` and `jq` installed locally
+
+[NOTE]
+====
+Google's standard ID tokens do **not** include a `fineract_tenant` claim. The tenant is resolved either from the `tenantId` field in the OIDC config (DB or YAML `issuers[]` entry), from the `Fineract-Platform-TenantId` HTTP header, or from the `tenantIdentifier` query parameter. This is normal and safe for development; in production you would add a custom claim via a Google Workspace domain-wide policy or a middleware token enricher.
+====
+
+== Step 1: Create a Google Cloud Project
+
+. Go to link:https://console.cloud.google.com[console.cloud.google.com].
+. Click the project selector in the top bar → *New Project*.
+. Enter a name such as `fineract-oidc-test` and click *Create*.
+. Wait for the project to be created (a few seconds), then select it from the project selector.
+
+image::oidc-google/01-new-project.png[Creating a new Google Cloud project,width=600]
+
+== Step 2: Configure the OAuth Consent Screen
+
+The OAuth consent screen is shown to users when they authorize your application. It must be configured before creating credentials.
+
+. In the left navigation, go to *APIs & Services* → *OAuth consent screen*.
+. Under "User Type", select:
+** *Internal* — if you are using a Google Workspace account and only want users from your organization to log in (recommended for testing in a corporate environment).
+** *External* — if you are testing with personal Gmail accounts.
+. Click *Create*.
+. Fill in the required fields:
+
+[cols="1,2"]
+|===
+| Field | Value
+
+| App name | `Fineract OIDC Test`
+| User support email | your Google account email
+| Developer contact email | your Google account email
+|===
+
+[start=5]
+. Click *Save and Continue*.
+
+. On the *Scopes* step, click *Add or Remove Scopes* and add:
++
+[source]
+----
+openid
+https://www.googleapis.com/auth/userinfo.email
+https://www.googleapis.com/auth/userinfo.profile
+----
++
+Click *Update*, then *Save and Continue*.
+
+. On the *Test users* step (only for External apps), click *Add Users* and enter your Gmail address. Click *Save and Continue*.
+
+. Review the summary and click *Back to Dashboard*.
+
+== Step 3: Create OAuth 2.0 Credentials
+
+. In *APIs & Services* → *Credentials*, click *Create Credentials* → *OAuth client ID*.
+. Under *Application type*, select *Web application*.
+. Enter a name: `Fineract Local Test`.
+. Under *Authorized redirect URIs*, click *Add URI* and add:
++
+[source]
+----
+http://localhost:8080/login/oauth2/code/google
+----
++
+This URI is required for the browser login redirect flow. Add `https://developers.google.com/oauthplayground` as a second URI to enable token acquisition via the OAuth 2.0 Playground (used in Step 5).
+
+. Click *Create*.
+. A dialog appears with your credentials. Note the two values — you will need them shortly:
++
+[source]
+----
+Client ID:     xxxxxxxxxxxxxxxx.apps.googleusercontent.com
+Client Secret: GOCSPX-xxxxxxxxxxxxxxxxxxxxxxxx
+----
+
+[IMPORTANT]
+====
+Do not commit these values to version control. Use environment variables or a secrets manager.
+====
+
+== Step 4: Understand the Google OIDC Endpoints
+
+Google exposes all OIDC metadata via its discovery document. You can verify it at any time:
+
+[source,bash]
+----
+curl https://accounts.google.com/.well-known/openid-configuration | jq .
+----
+
+The key values for Fineract configuration are:
+
+[cols="1,2"]
+|===
+| Property | Value
+
+| Issuer URI
+| `https://accounts.google.com`
+
+| JWK Set URI
+| `https://www.googleapis.com/oauth2/v3/certs`
+
+| Authorization endpoint
+| `https://accounts.google.com/o/oauth2/v2/auth`
+
+| Token endpoint
+| `https://oauth2.googleapis.com/token`
+|===
+
+== Step 5: Configure Fineract
+
+Fineract resolves IdP configurations using a priority chain: DB-stored config takes precedence over static YAML. Choose whichever option fits your environment.
+
+=== Option A — Register Google via the API (Recommended)
+
+Register Google as the IdP for the `default` tenant using the OIDC Config REST API. No server restart required; the in-memory cache updates immediately.
+
+First, enable OIDC globally:
+
+[source,yaml]
+----
+fineract:
+  security:
+    oidc-federation:
+      enabled: true
+      provider: google
+      auto-create-user: true           # <1>
+      default-roles: ""
+----
+<1> Set to `true` for testing so Fineract auto-creates a user on the first login. For production, set to `false` and pre-create users.
+
+Then register the Google IdP via the REST API:
+
+[source,bash]
+----
+curl -X POST http://localhost:8080/fineract-provider/api/v1/tenants/default/oidc-config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic <admin-credentials>" \
+  -H "Fineract-Platform-TenantId: default" \
+  -d '{
+    "providerType": "GOOGLE",
+    "issuerUri": "https://accounts.google.com",     <1>
+    "clientId": "YOUR_CLIENT_ID",
+    "clientSecret": "YOUR_CLIENT_SECRET",
+    "usernameClaim": "email",                       <2>
+    "scopes": "openid,email,profile",
+    "enabled": true
+  }'
+----
+<1> Google's OIDC discovery document is at `https://accounts.google.com/.well-known/openid-configuration`. Fineract fetches the JWK Set URI automatically from the discovery document.
+<2> Google ID tokens include `email`. This maps the Google email to the Fineract username.
+
+=== Option B — YAML Issuer List (Development/CI)
+
+Use the `issuers[]` property for a fully static configuration without database interaction.
+
+[source,yaml]
+----
+fineract:
+  security:
+    oidc-federation:
+      enabled: true
+      provider: google                      # <1>
+      auto-create-user: true
+      issuers:
+        - issuerUri: https://accounts.google.com   # <2>
+          tenantId: default                        # <3>
+          usernameClaim: email                     # <4>
+----
+<1> Use the `google` provider type. Logout delegates to Spring's `OidcClientInitiatedLogoutSuccessHandler`, which discovers Google's `end_session_endpoint` automatically.
+<2> Google's issuer URI. The JWK Set URI is derived automatically via OIDC discovery.
+<3> Fineract tenant identifier for tokens from this issuer. Google does not include a `fineract_tenant` claim, so the `tenantId` here acts as the fallback mapping.
+<4> Google ID tokens include `email`. Overrides the global `username-claim` for this issuer.
+
+Equivalent environment variable overrides for Option B global settings:
+
+[source,bash]
+----
+export FINERACT_SECURITY_OIDC_FEDERATION_ENABLED=true
+export FINERACT_SECURITY_OIDC_PROVIDER=google
+export FINERACT_SECURITY_OIDC_AUTO_CREATE_USER=true
+----
+
+[NOTE]
+====
+Google's standard ID tokens do **not** include a `fineract_tenant` claim. The tenant is resolved from the `tenantId` mapping in the `issuers[]` entry (Option B) or from the `m_tenant_oidc_config` record (Option A). When calling the API directly without a browser session, you can also pass `Fineract-Platform-TenantId: default` as a header.
+====
+
+=== 5.2 Audience Validation (Recommended for Production)
+
+Google issues ID tokens with an `aud` claim set to your Client ID. By default, Spring Security's resource server does not validate the audience, which means any Google ID token from any application would be accepted.
+
+For production environments, configure audience validation by adding a `SecurityFilterChain` customizer or by subclassing `OidcFederationSecurityConfig`. A quick way using Spring Boot auto-configuration:
+
+[source,yaml]
+----
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://accounts.google.com
+          # Audience validation (Spring Boot 3.x)
+          # Set to your OAuth2 Client ID to reject tokens from other apps:
+          # audiences: xxxxxxxxxxxxxxxx.apps.googleusercontent.com
+----
+
+NOTE: The `audiences` property under `spring.security.oauth2.resourceserver.jwt` requires Spring Boot 3.3+. On earlier versions, configure it programmatically via `JwtDecoderFactory`.
+
+=== 5.3 Optional: Browser Login Redirect Flow
+
+Add these properties only if you want browser-based login (the OAuth2 authorization code redirect flow). This is separate from Bearer token API validation and is not required for API testing.
+
+[source,yaml]
+----
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: YOUR_CLIENT_ID
+            client-secret: YOUR_CLIENT_SECRET
+            scope:
+              - openid
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          google:
+            issuer-uri: https://accounts.google.com
+----
+
+Replace `YOUR_CLIENT_ID` and `YOUR_CLIENT_SECRET` with the values from Step 3.
+
+== Step 6: Create a Fineract Test User (Manual Pre-Provisioning)
+
+If `auto-create-user=false`, you must create the Fineract user before logging in. The username must match the `email` claim value from your Google account (since `usernameClaim: email` was configured in Step 5).
+
+[source,bash]
+----
+# Replace BASIC_AUTH_TOKEN with your current admin credentials (base64 of user:password)
+# Replace your.email@gmail.com with the Gmail address you will use to log in
+
+curl -X POST http://localhost:8080/fineract-provider/api/v1/users \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Basic BASIC_AUTH_TOKEN" \
+  -H "Fineract-Platform-TenantId: default" \
+  -d '{
+    "username": "your.email@gmail.com",
+    "firstname": "Your",
+    "lastname": "Name",
+    "email": "your.email@gmail.com",
+    "officeId": 1,
+    "roles": [1],
+    "sendPasswordToEmail": false,
+    "password": "Change1t!",
+    "repeatPassword": "Change1t!"
+  }'
+----
+
+TIP: If `auto-create-user=true`, skip this step. Fineract will create the `AppUser` automatically on the first successful Google login.
+
+== Step 7: Obtain a Google ID Token
+
+Google issues two tokens: an **access token** (opaque, for Google APIs) and an **ID token** (a signed JWT, suitable as a Fineract Bearer token). Fineract validates the ID token.
+
+=== Method A: OAuth2 Playground (Easiest — Recommended for Development)
+
+. Open link:https://developers.google.com/oauthplayground[developers.google.com/oauthplayground].
+
+. Click the gear icon (⚙) in the top-right corner and enable:
++
+[source]
+----
+☑ Use your own OAuth credentials
+----
++
+Enter your Client ID and Client Secret from Step 3.
+
+. In the left panel under "Select & authorize APIs", scroll to the bottom and find *Step 1*. In the input box, enter:
++
+[source]
+----
+openid email profile
+----
++
+Click *Authorize APIs*. A Google consent screen appears — sign in with the account you will use for testing.
+
+. After authorization, you are redirected back to the Playground at *Step 2*. Click *Exchange authorization code for tokens*.
+
+. In the response panel, copy the value of `id_token`. This is a JWT signed by Google that Fineract will validate.
+
+[source,json]
+----
+{
+  "access_token": "ya29.xxxxxxxx",
+  "id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6...",   <-- Copy this
+  "token_type": "Bearer",
+  "expires_in": 3599
+}
+----
+
+[NOTE]
+====
+ID tokens expire after 1 hour. If the token expires during testing, repeat Step 7 to obtain a new one.
+====
+
+=== Method B: Authorization Code Flow via cURL
+
+This method is more suitable for scripted testing. It requires a browser for the initial authorization step.
+
+[source,bash]
+----
+# Step 1 — Build the authorization URL and open it in a browser
+CLIENT_ID="YOUR_CLIENT_ID"
+REDIRECT_URI="http://localhost:8080/login/oauth2/code/google"
+SCOPE="openid%20email%20profile"
+STATE="fineract-test"
+
+AUTH_URL="https://accounts.google.com/o/oauth2/v2/auth\
+?client_id=${CLIENT_ID}\
+&redirect_uri=${REDIRECT_URI}\
+&response_type=code\
+&scope=${SCOPE}\
+&state=${STATE}\
+&access_type=offline"
+
+echo "Open this URL in your browser:"
+echo "$AUTH_URL"
+----
+
+After authorizing, Google redirects to your `redirect_uri` with a `code` parameter in the URL. Copy the code value.
+
+[source,bash]
+----
+# Step 2 — Exchange the authorization code for tokens
+CLIENT_SECRET="YOUR_CLIENT_SECRET"
+CODE="4/xxxxxxxxxxxxxxxxxx"  # paste the code from the redirect URL
+
+curl -s -X POST https://oauth2.googleapis.com/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "code=${CODE}" \
+  -d "client_id=${CLIENT_ID}" \
+  -d "client_secret=${CLIENT_SECRET}" \
+  -d "redirect_uri=${REDIRECT_URI}" \
+  -d "grant_type=authorization_code" | jq .
+
+# The response contains id_token — save it:
+ID_TOKEN=$(curl -s -X POST https://oauth2.googleapis.com/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "code=${CODE}" \
+  -d "client_id=${CLIENT_ID}" \
+  -d "client_secret=${CLIENT_SECRET}" \
+  -d "redirect_uri=${REDIRECT_URI}" \
+  -d "grant_type=authorization_code" | jq -r '.id_token')
+
+echo "ID Token: $ID_TOKEN"
+----
+
+=== Inspect the Token (Optional)
+
+Before testing, you can inspect the token's claims:
+
+[source,bash]
+----
+# Decode the JWT payload (no signature verification — for inspection only)
+echo "$ID_TOKEN" | cut -d. -f2 | base64 -d 2>/dev/null | jq .
+----
+
+Expected output (example):
+
+[source,json]
+----
+{
+  "iss": "https://accounts.google.com",
+  "azp": "xxxxxxxxxxxxxxxx.apps.googleusercontent.com",
+  "aud": "xxxxxxxxxxxxxxxx.apps.googleusercontent.com",
+  "sub": "117349871234567890123",
+  "email": "yourname@gmail.com",
+  "email_verified": true,
+  "name": "Your Name",
+  "given_name": "Your",
+  "family_name": "Name",
+  "iat": 1715000000,
+  "exp": 1715003600
+}
+----
+
+Notice there is no `fineract_tenant` claim. The tenant will be provided via the HTTP header in Step 8.
+
+== Step 8: Test the API with the Google ID Token
+
+=== 8.1 Authenticated API Call
+
+Use the `id_token` as a Bearer token and pass the Fineract tenant via the `Fineract-Platform-TenantId` header:
+
+[source,bash]
+----
+ID_TOKEN="eyJhbGciOiJSUzI1NiIs..."   # paste your id_token here
+
+curl -v http://localhost:8080/fineract-provider/api/v1/users \
+  -H "Authorization: Bearer ${ID_TOKEN}" \
+  -H "Fineract-Platform-TenantId: default" \
+  -H "Accept: application/json"
+----
+
+Expected result for a successful authentication:
+
+* HTTP 200 with a JSON list of Fineract users.
+* A new row in `m_appuser` with `username = yourname@gmail.com` (if `auto-create-user=true`).
+
+=== 8.2 Verify User Was Created (if auto-create is enabled)
+
+[source,bash]
+----
+# Query the database (replace with your MariaDB/PostgreSQL connection details)
+mysql -u root -p fineract_default -e \
+  "SELECT id, username, email, firstname, lastname, is_deleted \
+   FROM m_appuser \
+   WHERE username = 'yourname@gmail.com';"
+----
+
+=== 8.3 Confirm the AppUser Principal (principal casting test)
+
+The following Fineract endpoint returns the currently authenticated user. If the OIDC principal is correctly set to `AppUser`, this call will succeed without a `ClassCastException`:
+
+[source,bash]
+----
+curl http://localhost:8080/fineract-provider/api/v1/users/me \
+  -H "Authorization: Bearer ${ID_TOKEN}" \
+  -H "Fineract-Platform-TenantId: default" \
+  -H "Accept: application/json"
+----
+
+=== 8.4 Verify Rejection When Token is Absent or Invalid
+
+[source,bash]
+----
+# No token — expect 401
+curl -I http://localhost:8080/fineract-provider/api/v1/users \
+  -H "Fineract-Platform-TenantId: default"
+
+# Tampered token — expect 401
+curl -I http://localhost:8080/fineract-provider/api/v1/users \
+  -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInRhbXBlcmVkIjoidHJ1ZSJ9.INVALID.signature" \
+  -H "Fineract-Platform-TenantId: default"
+----
+
+=== 8.5 Verify Tenant Fallback Chain
+
+Test each source in the resolution chain independently to confirm all three work:
+
+[source,bash]
+----
+# 1. Header (standard fallback when no JWT tenant claim)
+curl -s -o /dev/null -w "%{http_code}" \
+  http://localhost:8080/fineract-provider/api/v1/offices \
+  -H "Authorization: Bearer ${ID_TOKEN}" \
+  -H "Fineract-Platform-TenantId: default"
+# Expected: 200
+
+# 2. Query parameter
+curl -s -o /dev/null -w "%{http_code}" \
+  "http://localhost:8080/fineract-provider/api/v1/offices?tenantIdentifier=default" \
+  -H "Authorization: Bearer ${ID_TOKEN}"
+# Expected: 200
+
+# 3. No tenant at all
+curl -s -o /dev/null -w "%{http_code}" \
+  http://localhost:8080/fineract-provider/api/v1/offices \
+  -H "Authorization: Bearer ${ID_TOKEN}"
+# Expected: 401 or 400 (no tenant context)
+----
+
+== Step 9: Test the Browser Login Flow (Optional)
+
+This step requires the Spring OAuth2 client properties from Step 5.3.
+
+. Start Fineract with the browser login configuration.
+. Open a browser and navigate to `http://localhost:8080/login`.
+. Click *"Login with Google"* (or the equivalent button rendered by Spring Security's default login page).
+. Complete the Google sign-in flow.
+. On success, you are redirected back to Fineract. Verify the Fineract logs show (DEBUG level):
++
+[source]
+----
+DEBUG OidcAuthenticationSuccessHandler - OIDC login successful — user: 'yourname@gmail.com', tenant: 'default', Fineract id: 42
+----
+
+. To test RP-Initiated Logout, navigate to `http://localhost:8080/logout`. With `provider: generic`, Spring uses Google's discovered `end_session_endpoint` to end the Google session.
+
+== Step 10: Verify No Startup Conflicts (Both Auth Modes)
+
+If Basic Auth is also enabled, confirm there are no bean conflicts:
+
+[source,yaml]
+----
+fineract:
+  security:
+    basicauth:
+      enabled: true
+    oidc-federation:
+      enabled: true
+      ...
+----
+
+[source,bash]
+----
+# Start Fineract and check for these specific error patterns
+grep -i "BeanDefinitionStoreException\|NoUniqueBeanDefinitionException\|EnableMethodSecurity" fineract.log
+----
+
+Expected: no matching lines. Exactly one `CorsConfigurationSource` bean should be registered (from `FineractCorsConfiguration`).
+
+== Fineract Logs Reference
+
+When OIDC is working correctly, expect these log lines:
+
+[source]
+----
+# Converter extracting username from incoming JWT
+DEBUG FineractOidcJwtAuthenticationConverter - Converting external IdP JWT for username 'yourname@gmail.com' (subject: '117349871234567890123')
+
+# User resolved by username from the database
+DEBUG OidcAppUserResolutionServiceImpl - OIDC user resolved by username: 'yourname@gmail.com'
+
+# Tenant set from header fallback
+DEBUG OidcTenantAwareFilter - OIDC tenant context set to 'default' for /fineract-provider/api/v1/users
+
+# Auto-create (first login)
+INFO  OidcAppUserResolutionServiceImpl - Auto-creating Fineract user for OIDC subject 'yourname@gmail.com'
+INFO  OidcAppUserResolutionServiceImpl - Auto-created Fineract user 'yourname@gmail.com' (id=42) from OIDC identity
+----
+
+== Troubleshooting
+
+=== HTTP 401 — "OAuth2 Bearer token is invalid"
+
+The JWT signature verification failed. Check:
+
+* Is `spring.security.oauth2.resourceserver.jwt.issuer-uri` set to exactly `https://accounts.google.com`?
+* Is the network between Fineract and `https://www.googleapis.com/oauth2/v3/certs` open?
+* Did you use the `id_token` (not the `access_token`) as the Bearer value?
+
+Verify with:
+[source,bash]
+----
+# Fineract should be able to reach Google's JWK Set
+curl https://www.googleapis.com/oauth2/v3/certs | jq .keys[0].kid
+----
+
+=== HTTP 401 — "No Fineract user found for OIDC subject"
+
+The Google email address does not match any `m_appuser.username` in the database. Either:
+
+* Enable `auto-create-user=true`, or
+* Create the user manually (Step 6) with `username = yourname@gmail.com`.
+
+=== HTTP 400 — "Required header 'Fineract-Platform-TenantId' is missing"
+
+The Google token does not contain a `fineract_tenant` claim (expected — see the note at the top). Always pass `Fineract-Platform-TenantId: default` (or your tenant name) in the request header when using Google as the IdP.
+
+=== Token Expired — HTTP 401
+
+Google ID tokens are valid for 1 hour. Return to Step 7 and obtain a new token from the OAuth2 Playground.
+
+=== "redirect_uri_mismatch" on Google Consent Screen
+
+The `redirect_uri` in your request does not match what was configured in Step 3. Ensure `http://localhost:8080/login/oauth2/code/google` is listed as an authorized redirect URI in Google Cloud Console.
+
+=== Consent Screen Shows "App not verified"
+
+For External apps in testing mode, Google shows a warning. Click *Continue* → *Go to [App Name] (unsafe)*. This warning only appears for apps in testing mode with scopes that access user data.
+
+== Security Considerations for Production
+
+[IMPORTANT]
+====
+The following changes are **required** before using Google OIDC in a production environment.
+====
+
+. **Disable `auto-create-user`**: Set `auto-create-user: false`. Pre-provision users via the Fineract Admin API and enforce role assignments through your provisioning workflow.
+
+. **Validate the audience**: Configure the JWT decoder to reject tokens not issued for your Client ID (see Step 5.2). This prevents tokens obtained by other Google apps from being accepted.
+
+. **Add a custom tenant claim**: Use a Google Workspace domain-wide policy or an API Gateway / OAuth2 Proxy to inject the `fineract_tenant` claim into tokens before they reach Fineract. This removes the dependency on the HTTP header for tenant resolution.
+
+. **Restrict scopes**: Request only `openid email profile`. Do not request Google Drive or other scopes.
+
+. **Rotate credentials**: Rotate the OAuth2 Client Secret regularly and store it in a secrets manager (HashiCorp Vault, AWS Secrets Manager, etc.), not in `application.yml`.
+
+. **Use HTTPS**: Ensure Fineract is served over HTTPS in production. Google will not issue tokens to non-HTTPS redirect URIs outside of `localhost`.
+
+. **Monitor failed logins**: `OidcUserNotFoundException` is logged at WARN level. Route these logs to your SIEM or alerting system to detect enumeration attempts.

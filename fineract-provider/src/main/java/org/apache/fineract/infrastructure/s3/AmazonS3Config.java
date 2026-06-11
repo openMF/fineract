@@ -40,7 +40,7 @@ public class AmazonS3Config {
 
     @Bean
     public DefaultCredentialsProvider awsCredentialsProvider() {
-        return DefaultCredentialsProvider.create();
+        return DefaultCredentialsProvider.builder().build();
     }
 
     @Bean

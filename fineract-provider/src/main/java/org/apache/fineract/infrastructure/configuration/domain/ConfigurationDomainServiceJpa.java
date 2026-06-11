@@ -126,6 +126,7 @@ public class ConfigurationDomainServiceJpa implements ConfigurationDomainService
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isEhcacheEnabled() {
         return this.cacheTypeRepository.findById(1L).map(PlatformCache::isEhcacheEnabled).orElseThrow();
     }
@@ -434,6 +435,7 @@ public class ConfigurationDomainServiceJpa implements ConfigurationDomainService
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isBusinessDateEnabled() {
         return getGlobalConfigurationPropertyData(GlobalConfigurationConstants.ENABLE_BUSINESS_DATE).isEnabled();
     }

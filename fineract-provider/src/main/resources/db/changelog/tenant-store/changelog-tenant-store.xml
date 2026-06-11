@@ -32,4 +32,5 @@
      <include file="parts/0009_set_and_encrypt_ro_if_not_exists.xml" relativeToChangelogFile="true"/>
      <include file="parts/0010_set_datetime_precision.xml" relativeToChangelogFile="true"/>
      <include file="parts/0011_standardize_character_set_and_collation.xml" relativeToChangelogFile="true"/>
+     <include file="parts/0012_m_tenant_oidc_config.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

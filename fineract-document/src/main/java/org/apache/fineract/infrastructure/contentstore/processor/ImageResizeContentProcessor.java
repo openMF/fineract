@@ -49,9 +49,9 @@ public class ImageResizeContentProcessor implements ContentProcessor {
 
     @Override
     public ContentProcessorContext process(final ContentProcessorContext ctx) {
-        final Integer maxWidth = ctx.getParameter(IMAGE_RESIZE_PARAM_MAX_WIDTH);
-        final Integer maxHeight = ctx.getParameter(IMAGE_RESIZE_PARAM_MAX_HEIGHT);
-        final String format = ctx.getParameter(IMAGE_RESIZE_PARAM_FORMAT, "jpg");
+        final Integer maxWidth = ctx.getParameter(IMAGE_RESIZE_PARAM_MAX_WIDTH, Integer.class);
+        final Integer maxHeight = ctx.getParameter(IMAGE_RESIZE_PARAM_MAX_HEIGHT, Integer.class);
+        final String format = ctx.getParameter(IMAGE_RESIZE_PARAM_FORMAT, String.class, "jpg");
 
         requireNonNull(maxWidth, "Missing max width parameter");
         requireNonNull(maxHeight, "Missing max height parameter");

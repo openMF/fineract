@@ -21,6 +21,7 @@ package org.apache.fineract.investor.event;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -75,7 +76,9 @@ public class EnricherTest {
     @Test
     public void testLoanAccountDataEnricher() {
         LoanAccountDataV1Enricher loanAccountDataV1Enricher = mock(LoanAccountDataV1Enricher.class);
+        when(loanAccountDataV1Enricher.getDataType()).thenCallRealMethod();
         when(loanAccountDataV1Enricher.isDataTypeSupported(any())).thenCallRealMethod();
+        doCallRealMethod().when(loanAccountDataV1Enricher).enrichData(any());
         doAnswer(a -> {
             LoanAccountDataV1 data = a.getArgument(0, LoanAccountDataV1.class);
             data.setExternalOwnerId("1");
@@ -99,7 +102,9 @@ public class EnricherTest {
     @Test
     public void testLoanChargeDataEnricher() {
         LoanChargeDataV1Enricher loanChargeDataV1Enricher = mock(LoanChargeDataV1Enricher.class);
+        when(loanChargeDataV1Enricher.getDataType()).thenCallRealMethod();
         when(loanChargeDataV1Enricher.isDataTypeSupported(any())).thenCallRealMethod();
+        doCallRealMethod().when(loanChargeDataV1Enricher).enrichData(any());
         doAnswer(a -> {
             LoanChargeDataV1 data = a.getArgument(0, LoanChargeDataV1.class);
             data.setExternalOwnerId("2");
@@ -120,7 +125,9 @@ public class EnricherTest {
     @Test
     public void testLoanTransactionDataEnricher() {
         LoanTransactionDataV1Enricher loanTransactionDataV1Enricher = mock(LoanTransactionDataV1Enricher.class);
+        when(loanTransactionDataV1Enricher.getDataType()).thenCallRealMethod();
         when(loanTransactionDataV1Enricher.isDataTypeSupported(any())).thenCallRealMethod();
+        doCallRealMethod().when(loanTransactionDataV1Enricher).enrichData(any());
         doAnswer(a -> {
             LoanTransactionDataV1 data = a.getArgument(0, LoanTransactionDataV1.class);
             data.setExternalOwnerId("3");
@@ -140,11 +147,17 @@ public class EnricherTest {
     @Test
     public void testAllEventEnricherWorksCorrectly() {
         LoanAccountDataV1Enricher loanAccountDataV1Enricher = mock(LoanAccountDataV1Enricher.class);
+        when(loanAccountDataV1Enricher.getDataType()).thenCallRealMethod();
         when(loanAccountDataV1Enricher.isDataTypeSupported(any())).thenCallRealMethod();
+        doCallRealMethod().when(loanAccountDataV1Enricher).enrichData(any());
         LoanChargeDataV1Enricher loanChargeDataV1Enricher = mock(LoanChargeDataV1Enricher.class);
+        when(loanChargeDataV1Enricher.getDataType()).thenCallRealMethod();
         when(loanChargeDataV1Enricher.isDataTypeSupported(any())).thenCallRealMethod();
+        lenient().doCallRealMethod().when(loanChargeDataV1Enricher).enrichData(any());
         LoanTransactionDataV1Enricher loanTransactionDataV1Enricher = mock(LoanTransactionDataV1Enricher.class);
+        when(loanTransactionDataV1Enricher.getDataType()).thenCallRealMethod();
         when(loanTransactionDataV1Enricher.isDataTypeSupported(any())).thenCallRealMethod();
+        lenient().doCallRealMethod().when(loanTransactionDataV1Enricher).enrichData(any());
 
         doAnswer(a -> {
             LoanAccountDataV1 data = a.getArgument(0, LoanAccountDataV1.class);

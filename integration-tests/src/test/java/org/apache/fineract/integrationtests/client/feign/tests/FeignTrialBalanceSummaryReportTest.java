@@ -351,7 +351,7 @@ public class FeignTrialBalanceSummaryReportTest extends FeignIntegrationTest {
                 .active(true)//
                 .activationDate(activationDate)//
                 .dateFormat(LoanTestData.DATETIME_PATTERN)//
-                .locale(LoanTestData.LOCALE));
+                .locale(LoanTestData.LOCALE)).getClientId();
     }
 
     private Long createAndDisburseLoan(Long clientId, String submitDate, String disburseDate, Long chargeId, String originatorExternalId) {

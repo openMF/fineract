@@ -47,8 +47,10 @@ import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class LoanChargeReadPlatformServiceImpl implements LoanChargeReadPlatformService {
 
     private final JdbcTemplate jdbcTemplate;

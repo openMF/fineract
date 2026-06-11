@@ -41,7 +41,7 @@ public class Base64EncoderContentProcessor implements ContentProcessor {
 
     @Override
     public ContentProcessorContext process(final ContentProcessorContext ctx) {
-        final Integer bufferSize = ctx.getParameter(BASE64_ENCODE_PARAM_BUFFER_SIZE,
+        final Integer bufferSize = ctx.getParameter(BASE64_ENCODE_PARAM_BUFFER_SIZE, Integer.class,
                 requireNonNullElse(properties.getContent().getDefaultBufferSize(), 8192));
 
         final var pipedInputStream = pipe.pipe(ctx.getInputStream(), (in, out) -> {

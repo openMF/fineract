@@ -36,7 +36,7 @@ public class LoanOriginatorRequestData implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "Unique external identifier (Revenue Share ID)", example = "REV-SHARE-001", required = true)
+    @Schema(description = "Unique external identifier (Revenue Share ID)", example = "REV-SHARE-001", requiredMode = Schema.RequiredMode.REQUIRED)
     private String externalId;
 
     @Schema(description = "Originator name", example = "Acme Merchant")

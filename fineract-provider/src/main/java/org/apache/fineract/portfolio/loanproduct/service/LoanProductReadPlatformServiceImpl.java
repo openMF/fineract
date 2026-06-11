@@ -75,8 +75,10 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.lang.NonNull;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatformService {
 
     private final PlatformSecurityContext context;

@@ -18,8 +18,11 @@
  */
 package org.apache.fineract.portfolio.loanaccount.repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
 import org.apache.fineract.portfolio.loanaccount.domain.ProgressiveLoanModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -37,4 +40,18 @@ public interface ProgressiveLoanModelRepository
 
     @Query("SELECT CASE WHEN COUNT(plm) > 0 THEN TRUE ELSE FALSE END FROM ProgressiveLoanModel plm WHERE plm.loan.id = :loanId AND plm.jsonModelVersion = :modelVersion")
     Boolean hasValidModel(@Param("loanId") Long loanId, @Param("modelVersion") String modelVersion);
+
+    @Query("""
+            SELECT loan.id FROM Loan loan
+            WHERE loan.id IN :loanIds
+            AND loan.loanStatus IN :allowedLoanStatuses
+            AND loan.loanRepaymentScheduleDetail.loanScheduleType = org.apache.fineract.portfolio.loanaccount.loanschedule.domain.LoanScheduleType.PROGRESSIVE
+            AND NOT EXISTS (
+                SELECT progressiveLoanModel.id FROM ProgressiveLoanModel progressiveLoanModel
+                WHERE progressiveLoanModel.loan = loan
+                AND progressiveLoanModel.jsonModelVersion = :modelVersion
+            )
+            """)
+    List<Long> findLoanIdsRequiringModelRecalculation(@Param("loanIds") Collection<Long> loanIds,
+            @Param("allowedLoanStatuses") Collection<LoanStatus> allowedLoanStatuses, @Param("modelVersion") String modelVersion);
 }

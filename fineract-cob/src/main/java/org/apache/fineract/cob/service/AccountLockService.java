@@ -25,9 +25,9 @@ public interface AccountLockService<T extends AccountLock> {
 
     List<T> getLockedLoanAccountByPage(int page, int limit);
 
-    boolean isLoanHardLocked(Long loanId);
+    boolean isAnyLoanHardLocked(List<Long> loanIds);
 
-    boolean isLockOverrulable(Long loanId);
+    boolean isAnyLockOverrulable(List<Long> loanIds);
 
     void updateCobAndRemoveLocks();
 

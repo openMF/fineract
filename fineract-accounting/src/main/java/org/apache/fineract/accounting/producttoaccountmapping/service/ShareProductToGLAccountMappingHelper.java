@@ -33,7 +33,7 @@ import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.portfolio.PortfolioProductType;
 import org.apache.fineract.portfolio.charge.domain.ChargeRepositoryWrapper;
-import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepositoryWrapper;
+import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepository;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -42,9 +42,9 @@ public class ShareProductToGLAccountMappingHelper extends ProductToGLAccountMapp
     public ShareProductToGLAccountMappingHelper(final GLAccountRepository glAccountRepository,
             final ProductToGLAccountMappingRepository glAccountMappingRepository, final FromJsonHelper fromApiJsonHelper,
             final ChargeRepositoryWrapper chargeRepositoryWrapper, final GLAccountRepositoryWrapper accountRepositoryWrapper,
-            final PaymentTypeRepositoryWrapper paymentTypeRepositoryWrapper, final CodeValueRepository codeValueRepository) {
+            final PaymentTypeRepository paymentTypeRepository, final CodeValueRepository codeValueRepository) {
         super(glAccountRepository, glAccountMappingRepository, fromApiJsonHelper, chargeRepositoryWrapper, accountRepositoryWrapper,
-                paymentTypeRepositoryWrapper, codeValueRepository);
+                paymentTypeRepository, codeValueRepository);
     }
 
     /***

@@ -34,11 +34,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.exception.ErrorHandler;
@@ -141,12 +142,17 @@ public class ReadReportingServiceImpl implements ReadReportingService {
         // permitted to be run by the user
         sql = this.genericDataService.replace(sql, "${currentUserId}", currentUser.getId().toString());
         sql = this.genericDataService.replace(sql, "${currentDate}", sqlGenerator.currentBusinessDate());
-        sql = StringUtils.replaceIgnoreCase(sql, "NOW()", sqlGenerator.currentTenantDateTime());
-        sql = StringUtils.replaceIgnoreCase(sql, "curdate()", sqlGenerator.currentBusinessDate());
-        sql = StringUtils.replaceIgnoreCase(sql, "CURRENT_DATE", sqlGenerator.currentBusinessDate());
+        sql = replaceIgnoreCase(sql, "NOW()", sqlGenerator.currentTenantDateTime());
+        sql = replaceIgnoreCase(sql, "curdate()", sqlGenerator.currentBusinessDate());
+        sql = replaceIgnoreCase(sql, "CURRENT_DATE", sqlGenerator.currentBusinessDate());
         sql = this.genericDataService.wrapSQL(sql);
 
         return sql;
+    }
+
+    private String replaceIgnoreCase(String text, String searchString, String replacement) {
+        return Pattern.compile(Pattern.quote(searchString), Pattern.CASE_INSENSITIVE).matcher(text)
+                .replaceAll(Matcher.quoteReplacement(replacement));
     }
 
     private String getSql(final String name, final String type) {

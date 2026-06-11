@@ -57,7 +57,7 @@ public class ContentS3Config {
 
     private AwsCredentialsProvider getCredentialProvider(FineractProperties.FineractContentS3Properties s3Properties) {
         if (Strings.isNullOrEmpty(s3Properties.getAccessKey()) || Strings.isNullOrEmpty(s3Properties.getSecretKey())) {
-            return DefaultCredentialsProvider.create();
+            return DefaultCredentialsProvider.builder().build();
         }
 
         return StaticCredentialsProvider.create(AwsBasicCredentials.create(s3Properties.getAccessKey(), s3Properties.getSecretKey()));

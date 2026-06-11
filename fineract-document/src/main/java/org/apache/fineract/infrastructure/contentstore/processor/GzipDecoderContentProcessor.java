@@ -41,7 +41,7 @@ public class GzipDecoderContentProcessor implements ContentProcessor {
 
     @Override
     public ContentProcessorContext process(final ContentProcessorContext ctx) {
-        final Integer bufferSize = ctx.getParameter(GZIP_DECODE_PARAM_BUFFER_SIZE,
+        final Integer bufferSize = ctx.getParameter(GZIP_DECODE_PARAM_BUFFER_SIZE, Integer.class,
                 requireNonNullElse(properties.getContent().getDefaultBufferSize(), 8192));
 
         final var pipedInputStream = pipe.pipe(ctx.getInputStream(), (in, out) -> {

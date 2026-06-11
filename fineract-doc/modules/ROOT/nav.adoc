@@ -1,3 +1,7 @@
 .Project Overview
 * xref:index.adoc[Introduction]
 * xref:faq.adoc[FAQs]
+
+.Security & Configuration
+* xref:oidc-federation.adoc[OIDC Federation]
+** xref:oidc-federation-google.adoc[Google Identity Provider]

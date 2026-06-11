@@ -35,8 +35,8 @@ public class LoanAccountDelinquencyRangeDataV1OriginatorEnricher implements Data
     private final LoanOriginatorDetailsResolver loanOriginatorDetailsResolver;
 
     @Override
-    public boolean isDataTypeSupported(final Class<LoanAccountDelinquencyRangeDataV1> dataType) {
-        return dataType.isAssignableFrom(LoanAccountDelinquencyRangeDataV1.class);
+    public Class<LoanAccountDelinquencyRangeDataV1> getDataType() {
+        return LoanAccountDelinquencyRangeDataV1.class;
     }
 
     @Override

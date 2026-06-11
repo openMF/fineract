@@ -99,7 +99,7 @@ jar {
 compileJava {
     dependsOn buildJavaSdk
     source = sourceSets.main.java.srcDirs
-    options.compilerArgs += ['-parameters']
+    options.compilerArgs += ['-parameters', '-proc:none', '-Xlint:-options']
 }
 
 java {

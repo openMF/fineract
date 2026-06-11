@@ -33,10 +33,12 @@ import org.apache.fineract.infrastructure.businessdate.mapper.BusinessDateMapper
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BusinessDateReadPlatformServiceImpl implements BusinessDateReadPlatformService {
 
     private final BusinessDateRepository repository;
