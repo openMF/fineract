@@ -30,5 +30,5 @@ public interface ReportingProcessService {
 
     List<ReportExportType> getAvailableExportTargets();
 
-    Map<String, String> getReportParams(MultivaluedMap<String, String> queryParams);
+    Map<String, String> getReportParams(String reportName, MultivaluedMap<String, String> queryParams);
 }

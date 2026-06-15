@@ -47,26 +47,37 @@ public interface NotificationMapperRepository extends JpaRepository<Notification
             """)
     void markUnreadNotificationsAsRead(@Param("appUserId") Long appUserId);
 
+    // 1. Method for fetching ALL notifications (No read status filter)
     @Query(value = """
             select new org.apache.fineract.notification.data.NotificationData(
-                n.id,
-                n.objectType,
-                n.objectIdentifier,
-                n.actorId,
-                n.action,
-                n.notificationContent,
-                n.isSystemGenerated,
-                nm.createdAt
+                n.id, n.objectType, n.objectIdentifier, n.actorId, n.action,
+                n.notificationContent, n.isSystemGenerated, nm.createdAt
             )
             from NotificationMapper nm
             join nm.notification n
             where nm.userId.id = :appUserId
-            and (:isRead is null or nm.isRead = :isRead)
             """, countQuery = """
             select count(nm)
             from NotificationMapper nm
             where nm.userId.id = :appUserId
-            and (:isRead is null or nm.isRead = :isRead)
+            """)
+    Page<NotificationData> findNotificationDataByUserId(@Param("appUserId") Long appUserId, Pageable pageable);
+
+    // 2. Method for fetching with a SPECIFIC read status (e.g., Unread only)
+    @Query(value = """
+            select new org.apache.fineract.notification.data.NotificationData(
+                n.id, n.objectType, n.objectIdentifier, n.actorId, n.action,
+                n.notificationContent, n.isSystemGenerated, nm.createdAt
+            )
+            from NotificationMapper nm
+            join nm.notification n
+            where nm.userId.id = :appUserId
+            and nm.isRead = :isRead
+            """, countQuery = """
+            select count(nm)
+            from NotificationMapper nm
+            where nm.userId.id = :appUserId
+            and nm.isRead = :isRead
             """)
     Page<NotificationData> findNotificationDataByUserIdAndReadStatus(@Param("appUserId") Long appUserId, @Param("isRead") Boolean isRead,
             Pageable pageable);
