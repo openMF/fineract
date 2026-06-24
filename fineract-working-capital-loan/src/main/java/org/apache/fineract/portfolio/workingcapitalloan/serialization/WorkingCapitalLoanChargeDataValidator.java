@@ -44,6 +44,42 @@ public class WorkingCapitalLoanChargeDataValidator {
 
     private final FromJsonHelper fromJsonHelper;
 
+    public void validateChargeAdjustmentRequest(final String json) {
+        if (StringUtils.isBlank(json)) {
+            throw new InvalidJsonException();
+        }
+
+        final Set<String> allowedParameters = new HashSet<>(Arrays.asList(WorkingCapitalLoanChargeConstants.amountParamName,
+                WorkingCapitalLoanChargeConstants.transactionDateParamName, WorkingCapitalLoanChargeConstants.externalIdParamName,
+                WorkingCapitalLoanChargeConstants.localeParamName, WorkingCapitalLoanChargeConstants.dateFormatParamName,
+                WorkingCapitalLoanChargeConstants.noteParamName, WorkingCapitalLoanChargeConstants.paymentDetailsParamName,
+                WorkingCapitalLoanChargeConstants.paymentTypeIdParamName, WorkingCapitalLoanChargeConstants.accountNumberParamName,
+                WorkingCapitalLoanChargeConstants.checkNumberParamName, WorkingCapitalLoanChargeConstants.routingCodeParamName,
+                WorkingCapitalLoanChargeConstants.receiptNumberParamName, WorkingCapitalLoanChargeConstants.bankNumberParamName));
+
+        final Type typeOfMap = new TypeToken<Map<String, Object>>() {}.getType();
+        fromJsonHelper.checkForUnsupportedParameters(typeOfMap, json, allowedParameters);
+
+        final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
+                .resource("workingCapitalLoanChargeAdjustment");
+
+        final JsonElement element = this.fromJsonHelper.parse(json);
+
+        final BigDecimal amount = this.fromJsonHelper.extractBigDecimalWithLocaleNamed(WorkingCapitalLoanChargeConstants.amountParamName,
+                element);
+        baseDataValidator.reset().parameter(WorkingCapitalLoanChargeConstants.amountParamName).value(amount).notNull().positiveAmount();
+
+        if (this.fromJsonHelper.parameterExists(WorkingCapitalLoanChargeConstants.transactionDateParamName, element)) {
+            final LocalDate transactionDate = this.fromJsonHelper
+                    .extractLocalDateNamed(WorkingCapitalLoanChargeConstants.transactionDateParamName, element);
+            baseDataValidator.reset().parameter(WorkingCapitalLoanChargeConstants.transactionDateParamName).value(transactionDate)
+                    .notBlank();
+        }
+
+        throwExceptionIfValidationWarningsExist(dataValidationErrors);
+    }
+
     public void validateCreateLoanCharge(final String json) {
         if (StringUtils.isBlank(json)) {
             throw new InvalidJsonException();

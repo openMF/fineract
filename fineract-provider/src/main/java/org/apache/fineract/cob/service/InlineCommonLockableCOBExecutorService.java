@@ -18,8 +18,6 @@
  */
 package org.apache.fineract.cob.service;
 
-import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
-
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -68,11 +66,8 @@ import org.springframework.batch.core.configuration.JobLocator;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.NoSuchJobException;
-import org.springframework.lang.NonNull;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
@@ -85,7 +80,7 @@ public abstract class InlineCommonLockableCOBExecutorService<T extends AccountLo
     private final JobLauncher jobLauncher;
     private final JobLocator jobLocator;
     private final JobExplorer jobExplorer;
-    private final TransactionTemplate transactionTemplate;
+    private final TransactionTemplate requiresNewTransactionTemplate;
     private final CustomJobParameterRepository customJobParameterRepository;
     private final PlatformSecurityContext context;
     private final RetrieveIdService retrieveIdService;
@@ -216,23 +211,18 @@ public abstract class InlineCommonLockableCOBExecutorService<T extends AccountLo
     }
 
     private void lockLoanAccounts(List<Long> loanIds, LocalDate businessDate) {
-        transactionTemplate.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-        transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-
-            @Override
-            protected void doInTransactionWithoutResult(@NonNull TransactionStatus status) {
-                List<T> loanAccountLocks = getLoanAccountLocks(loanIds, businessDate);
-                loanAccountLocks.forEach(loanAccountLock -> {
-                    try {
-                        loanAccountLock.setNewLockOwner(LockOwner.LOAN_INLINE_COB_PROCESSING);
-                        loanAccountLockRepository.saveAndFlush(loanAccountLock);
-                    } catch (Exception e) {
-                        log.error("Error updating lock on loan account. Locked loan ID: {}", loanAccountLock.getLoanId(), e);
-                        throw new AccountLockCannotBeOverruledException(
-                                "Error updating lock on loan account. Locked loan ID: %s".formatted(loanAccountLock.getLoanId()), e);
-                    }
-                });
-            }
+        requiresNewTransactionTemplate.executeWithoutResult(status -> {
+            List<T> loanAccountLocks = getLoanAccountLocks(loanIds, businessDate);
+            loanAccountLocks.forEach(loanAccountLock -> {
+                try {
+                    loanAccountLock.setNewLockOwner(LockOwner.LOAN_INLINE_COB_PROCESSING);
+                    loanAccountLockRepository.saveAndFlush(loanAccountLock);
+                } catch (Exception e) {
+                    log.error("Error updating lock on loan account. Locked loan ID: {}", loanAccountLock.getLoanId(), e);
+                    throw new AccountLockCannotBeOverruledException(
+                            "Error updating lock on loan account. Locked loan ID: %s".formatted(loanAccountLock.getLoanId()), e);
+                }
+            });
         });
     }
 

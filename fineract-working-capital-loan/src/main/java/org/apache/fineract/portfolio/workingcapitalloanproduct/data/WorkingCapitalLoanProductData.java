@@ -88,6 +88,7 @@ public class WorkingCapitalLoanProductData implements Serializable {
     private StringEnumOptionData repaymentFrequencyType;
     private Integer delinquencyGraceDays;
     private StringEnumOptionData delinquencyStartType;
+    private Integer breachGraceDays;
 
     // Configurable attributes (allowAttributeOverrides)
     private WorkingCapitalLoanProductConfigurableAttributesData allowAttributeOverrides;

@@ -43,6 +43,7 @@ import org.apache.fineract.test.support.TestContextKey;
 public class ReportingStepDef extends AbstractStepDef {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.ENGLISH);
+    private static final String TRIAL_BALANCE_REPORT = "Trial Balance Summary Report with Asset Owner";
     private final FineractFeignClient fineractClient;
 
     @Then("Transaction Summary Report for date {string} has the following data:")
@@ -60,9 +61,40 @@ public class ReportingStepDef extends AbstractStepDef {
         verifyColumnNullability("Transaction Summary Report with Asset Owner", dateStr, columnName, false);
     }
 
+    @Then("Transaction Summary Report with Asset Owner for date {string} has originatorId, asset owner externalId and the following data:")
+    public void transactionSummaryReportWithAssetOwnerHasDataWithOwnerExternalIdAndOriginatorId(final String dateStr,
+            final DataTable dataTable) {
+        verifyReportDataWithOwnerExternalIdAndOriginatorId("Transaction Summary Report with Asset Owner", dateStr, dataTable);
+    }
+
     @Then("Transaction Summary Report with Asset Owner for date {string} column {string} has empty value for all rows")
     public void transactionSummaryReportWithAssetOwnerColumnEmpty(final String dateStr, final String columnName) {
         verifyColumnNullability("Transaction Summary Report with Asset Owner", dateStr, columnName, true);
+    }
+
+    @Then("Trial Balance Summary Report with Asset Owner for date {string} has originatorId, asset owner externalId and the following data:")
+    public void trialBalanceSummaryReportWithAssetOwnerHasDataWithOwnerExternalIdAndOriginatorId(final String dateStr,
+            final DataTable dataTable) {
+        verifyBalanceReportDataWithOwnerExternalIdAndOriginatorId("Trial Balance Summary Report with Asset Owner", dateStr, dataTable);
+    }
+
+    @Then("Trial Balance Summary Report with Asset Owner for date {string} has a row for GL account {string} with non-zero ending balance")
+    public void trialBalanceHasNonZeroEndingBalanceForGlAccount(final String dateStr, final String glCode) {
+        final BigDecimal ending = sumColumnForGlAccount(executeReport(TRIAL_BALANCE_REPORT, dateStr), glCode, "endingbalance");
+        assertThat(ending).as("Trial Balance for %s: expected GL account '%s' to be present", dateStr, glCode).isNotNull();
+        assertThat(ending.signum())
+                .as("Trial Balance for %s: expected GL account '%s' ending balance to be non-zero but was %s", dateStr, glCode, ending)
+                .isNotEqualTo(0);
+    }
+
+    @Then("Trial Balance Summary Report with Asset Owner for date {string} shows GL account {string} closed out")
+    public void trialBalanceShowsGlAccountClosedOut(final String dateStr, final String glCode) {
+        final BigDecimal ending = sumColumnForGlAccount(executeReport(TRIAL_BALANCE_REPORT, dateStr), glCode, "endingbalance");
+        if (ending != null) {
+            assertThat(ending.signum()).as(
+                    "Trial Balance for %s: expected GL account '%s' to be closed out (absent or zero ending balance) but it has ending balance %s",
+                    dateStr, glCode, ending).isEqualTo(0);
+        }
     }
 
     private void verifyReportData(final String reportName, final String dateStr, final DataTable dataTable) {
@@ -71,6 +103,11 @@ public class ReportingStepDef extends AbstractStepDef {
         final List<List<String>> expected = dataTable.asLists();
         final List<String> headers = expected.getFirst();
 
+        verifyReportData(reportName, response, expected, headers);
+    }
+
+    private List<List<String>> verifyReportDataHeaders(final String reportName, final RunReportsResponse response,
+            final List<List<String>> expected, List<String> headers) {
         assertThat(response.getColumnHeaders()).isNotNull();
         final int[] colIdx = headers.stream().mapToInt(h -> findColumnIndex(response.getColumnHeaders(), h)).toArray();
 
@@ -86,6 +123,11 @@ public class ReportingStepDef extends AbstractStepDef {
         assertThat(actual).as("Report '%s' row count mismatch.\nActual rows:\n%s", reportName, formatRows(actual))
                 .hasSize(expected.size() - 1);
 
+        return actual;
+    }
+
+    private void verifyReportDataRows(final String reportName, List<List<String>> actual, final List<List<String>> expected,
+            List<String> headers) {
         for (int i = 1; i < expected.size(); i++) {
             final List<String> expRow = expected.get(i).stream().map(v -> v == null ? "" : v).toList();
             final List<String> actRow = actual.get(i - 1);
@@ -99,6 +141,132 @@ public class ReportingStepDef extends AbstractStepDef {
                 }
             }
         }
+    }
+
+    private void verifyReportDataRowsWithEmptyValues(final String reportName, List<List<String>> actual, final List<List<String>> expected,
+            List<String> headers) {
+        for (int i = 1; i < expected.size(); i++) {
+            final List<String> expRow = expected.get(i).stream().map(v -> v == null ? "" : v).toList();
+            final List<String> actRow = actual.get(i - 1);
+            for (int j = 0; j < headers.size(); j++) {
+                if (expRow.get(j).isEmpty()) {
+                    assertThat(actRow.get(j).isEmpty() || actRow.get(j).equals("null")).isTrue();
+                    continue;
+                }
+                if (!valuesMatch(expRow.get(j), actRow.get(j))) {
+                    fail("Report '%s', row %d, column '%s': expected='%s', actual='%s'\nAll actual rows:\n%s", reportName, i,
+                            headers.get(j), expRow.get(j), actRow.get(j), formatRows(actual));
+                }
+            }
+        }
+    }
+
+    private void verifyBalanceReportData(final String reportName, List<List<String>> actual, final List<List<String>> expected,
+            List<String> headers) {
+        for (int i = 1; i < expected.size(); i++) {
+            final List<String> expRow = expected.get(i).stream().map(v -> v == null ? "" : v).toList();
+            String expectedDescription = expRow.get(3);
+            String expectedAssetOwnerId = expRow.get(4);
+            final List<String> actRow = actual.stream()
+                    .filter(actualRow -> actualRow.contains(expectedDescription) && actualRow.contains(expectedAssetOwnerId)).findFirst()
+                    .orElseThrow(() -> new RuntimeException(String.format("No such row is found in %s report!", reportName)));
+            for (int j = 0; j < headers.size(); j++) {
+                if (expRow.get(j).isEmpty()) {
+                    assertThat(actRow.get(j).isEmpty() || actRow.get(j).equals("null")).isTrue();
+                    continue;
+                }
+                if (!valuesMatch(expRow.get(j), actRow.get(j))) {
+                    fail("Report '%s', row %d, column '%s': expected='%s', actual='%s'\nAll actual rows:\n%s", reportName, i,
+                            headers.get(j), expRow.get(j), actRow.get(j), formatRows(actual));
+                }
+            }
+        }
+    }
+
+    private void verifyReportDataWithEmptyValues(final String reportName, final RunReportsResponse response,
+            final List<List<String>> expected, List<String> headers) {
+        final List<List<String>> actual = verifyReportDataHeaders(reportName, response, expected, headers);
+        verifyReportDataRowsWithEmptyValues(reportName, actual, expected, headers);
+    }
+
+    private void verifyReportData(final String reportName, final RunReportsResponse response, final List<List<String>> expected,
+            List<String> headers) {
+        final List<List<String>> actual = verifyReportDataHeaders(reportName, response, expected, headers);
+        verifyReportDataRows(reportName, actual, expected, headers);
+    }
+
+    private void verifyBalanceReportData(final String reportName, final RunReportsResponse response, final List<List<String>> expected,
+            List<String> headers) {
+        final List<List<String>> actual = verifyReportDataHeaders(reportName, response, expected, headers);
+        verifyBalanceReportData(reportName, actual, expected, headers);
+    }
+
+    private void verifyReportDataWithOwnerExternalIdAndOriginatorId(final String reportName, final String dateStr,
+            final DataTable dataTable) {
+        String originatorExternalId = testContext().get(TestContextKey.ORIGINATOR_EXTERNAL_ID);
+        String ownerExternalId = testContext().get(TestContextKey.ASSET_EXTERNALIZATION_OWNER_EXTERNAL_ID);
+        String previousOwnerExternalId = testContext().get(TestContextKey.ASSET_EXTERNALIZATION_PREVIOUS_OWNER_EXTERNAL_ID);
+
+        final RunReportsResponse response = executeReport(reportName, dateStr);
+
+        final List<List<String>> expected = dataTable.asLists();
+        final List<String> headers = expected.getFirst();
+
+        expected.stream().skip(1).forEach(expectedRow -> {
+            if (expectedRow.contains("previous_owner_external_id")) {
+                int index = expectedRow.indexOf("previous_owner_external_id");
+                if (index != -1) {
+                    expectedRow.set(index, previousOwnerExternalId);
+                }
+            }
+            if (expectedRow.contains("owner_external_id")) {
+                int index = expectedRow.indexOf("owner_external_id");
+                if (index != -1) {
+                    expectedRow.set(index, ownerExternalId);
+                }
+            }
+
+            if (expectedRow.contains("originator_external_id")) {
+                int index = expectedRow.indexOf("originator_external_id");
+                if (index != -1) {
+                    expectedRow.set(index, originatorExternalId);
+                }
+            }
+        });
+        verifyReportDataWithEmptyValues(reportName, response, expected, headers);
+    }
+
+    private void verifyBalanceReportDataWithOwnerExternalIdAndOriginatorId(final String reportName, final String dateStr,
+            final DataTable dataTable) {
+        String originatorExternalId = testContext().get(TestContextKey.ORIGINATOR_EXTERNAL_ID);
+        String ownerExternalId = testContext().get(TestContextKey.ASSET_EXTERNALIZATION_OWNER_EXTERNAL_ID);
+        String previousOwnerExternalId = testContext().get(TestContextKey.ASSET_EXTERNALIZATION_PREVIOUS_OWNER_EXTERNAL_ID);
+
+        final RunReportsResponse response = executeReport(reportName, dateStr);
+
+        final List<List<String>> expected = dataTable.asLists();
+        expected.stream().skip(1).forEach(expectedRow -> {
+            if (expectedRow.contains("previous_owner_external_id")) {
+                int index = expectedRow.indexOf("previous_owner_external_id");
+                if (index != -1) {
+                    expectedRow.set(index, previousOwnerExternalId);
+                }
+            } else if (expectedRow.contains("owner_external_id")) {
+                int index = expectedRow.indexOf("owner_external_id");
+                if (index != -1) {
+                    expectedRow.set(index, ownerExternalId);
+                }
+            }
+            if (expectedRow.contains("originator_external_id")) {
+                int index = expectedRow.indexOf("originator_external_id");
+                if (index != -1) {
+                    expectedRow.set(index, originatorExternalId);
+                }
+            }
+        });
+        final List<String> headers = expected.getFirst();
+
+        verifyBalanceReportData(reportName, response, expected, headers);
     }
 
     private void verifyColumnNullability(final String reportName, final String dateStr, final String columnName,
@@ -133,6 +301,13 @@ public class ReportingStepDef extends AbstractStepDef {
                 String.valueOf(officeResponse.getOfficeId()), "locale", "en", "dateFormat", "yyyy-MM-dd"));
         assertThat(response.getData()).as("Report '%s' returned no data", reportName).isNotNull();
         return response;
+    }
+
+    private BigDecimal sumColumnForGlAccount(final RunReportsResponse response, final String glCode, final String columnName) {
+        final int glIdx = findColumnIndex(response.getColumnHeaders(), "glacct");
+        final int colIdx = findColumnIndex(response.getColumnHeaders(), columnName);
+        return response.getData().stream().filter(r -> r.getRow() != null && glCode.equals(stringify(r.getRow().get(glIdx))))
+                .map(r -> new BigDecimal(Objects.toString(r.getRow().get(colIdx), "0"))).reduce(BigDecimal::add).orElse(null);
     }
 
     private boolean valuesMatch(final String expected, final String actual) {

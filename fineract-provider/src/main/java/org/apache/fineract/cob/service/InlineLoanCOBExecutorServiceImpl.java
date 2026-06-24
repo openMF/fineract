@@ -30,6 +30,7 @@ import org.apache.fineract.infrastructure.security.service.PlatformSecurityConte
 import org.springframework.batch.core.configuration.JobLocator;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -41,9 +42,10 @@ public class InlineLoanCOBExecutorServiceImpl extends InlineCommonLockableCOBExe
 
     public InlineLoanCOBExecutorServiceImpl(LoanAccountLockRepository loanAccountLockRepository,
             InlineLoanCOBExecutionDataParser dataParser, JobLauncher jobLauncher, JobLocator jobLocator, JobExplorer jobExplorer,
-            TransactionTemplate transactionTemplate, CustomJobParameterRepository customJobParameterRepository,
-            PlatformSecurityContext context, RetrieveLoanIdService retrieveIdService, FineractProperties fineractProperties) {
-        super(loanAccountLockRepository, dataParser, jobLauncher, jobLocator, jobExplorer, transactionTemplate,
+            @Qualifier("requiresNewTransactionTemplate") TransactionTemplate requiresNewTransactionTemplate,
+            CustomJobParameterRepository customJobParameterRepository, PlatformSecurityContext context,
+            RetrieveLoanIdService retrieveIdService, FineractProperties fineractProperties) {
+        super(loanAccountLockRepository, dataParser, jobLauncher, jobLocator, jobExplorer, requiresNewTransactionTemplate,
                 customJobParameterRepository, context, retrieveIdService, fineractProperties);
     }
 

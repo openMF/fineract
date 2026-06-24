@@ -20,9 +20,10 @@ package org.apache.fineract.portfolio.workingcapitalloan.service;
 
 import java.time.LocalDate;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanNearBreachAction;
 
 public interface WorkingCapitalLoanNearBreachEvaluationService {
 
-    void evaluateNearBreach(WorkingCapitalLoan loan, LocalDate effectiveDate);
+    void evaluateNearBreach(WorkingCapitalLoan loan, WorkingCapitalLoanNearBreachAction latestAction, LocalDate effectiveDate);
 
 }

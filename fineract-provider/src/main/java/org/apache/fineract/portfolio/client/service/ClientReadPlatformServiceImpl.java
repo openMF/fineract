@@ -42,6 +42,8 @@ import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.core.service.PaginationHelper;
 import org.apache.fineract.infrastructure.core.service.SearchParameters;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
+import org.apache.fineract.infrastructure.security.exception.InputValidationException;
+import org.apache.fineract.infrastructure.security.service.InputValidator;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.utils.ColumnValidator;
 import org.apache.fineract.portfolio.client.data.ClientCollateralManagementData;
@@ -84,6 +86,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
     private final ClientCollateralManagementRepositoryWrapper clientCollateralManagementRepositoryWrapper;
     private final ClientRepositoryWrapper clientRepositoryWrapper;
     private final ClientMapper clientMapper;
+    private final InputValidator inputValidator;
 
     @Override
     public Page<ClientData> retrieveAll(final SearchParameters searchParameters) {
@@ -120,11 +123,15 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             }
 
             if (searchParameters.hasOrderBy()) {
-                sqlBuilder.append(" order by ").append(searchParameters.getOrderBy());
-                this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getOrderBy());
+                String orderBy = searchParameters.getOrderBy();
+                this.inputValidator.validate("client-order-by", orderBy);
+                sqlBuilder.append(" order by ").append(orderBy);
                 if (searchParameters.hasSortOrder()) {
-                    sqlBuilder.append(' ').append(searchParameters.getSortOrder());
-                    this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getSortOrder());
+                    String sortOrder = searchParameters.getSortOrder();
+                    if (!"ASC".equalsIgnoreCase(sortOrder) && !"DESC".equalsIgnoreCase(sortOrder)) {
+                        throw new InputValidationException(String.format("invalid sortOrder value '%s'", sortOrder));
+                    }
+                    sqlBuilder.append(' ').append(sortOrder);
                 }
             }
 

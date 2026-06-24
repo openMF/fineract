@@ -110,16 +110,15 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
     }
 
     @When("Admin makes asset externalization request by Loan ID with unique ownerExternalId, system-generated transferExternalId and the following data:")
-    public void createAssetExternalizationRequestByLoanIdSystemGeneratedExtId(DataTable table) throws IOException {
+    public void createAssetExternalizationRequestByLoanIdSystemGeneratedExtId(DataTable table) {
         createAssetExternalizationRequestByLoanId(table, null);
     }
 
-    private void createAssetExternalizationRequestByLoanId(DataTable table, String transferExternalId) throws IOException {
+    private void createAssetExternalizationRequestByLoanId(DataTable table, String transferExternalId) {
         createAssetExternalizationRequestByLoanId(table, transferExternalId, true);
     }
 
-    private void createAssetExternalizationRequestByLoanId(DataTable table, String transferExternalId, boolean regenerateOwner)
-            throws IOException {
+    private void createAssetExternalizationRequestByLoanId(DataTable table, String transferExternalId, boolean regenerateOwner) {
         List<List<String>> data = table.asLists();
         List<String> transferData = data.get(1);
 
@@ -286,7 +285,7 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
     }
 
     @Then("Fetching Asset externalization details by loan id gives numberOfElements: {int} with correct ownerExternalId and the following data:")
-    public void checkAssetExternalizationDetailsByLoanId(int numberOfElements, DataTable table) throws IOException {
+    public void checkAssetExternalizationDetailsByLoanId(int numberOfElements, DataTable table) {
         PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         long loanId = loanResponse.getLoanId();
 
@@ -296,7 +295,7 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
     }
 
     @Then("Fetching Asset externalization details by loan external id gives numberOfElements: {int} with correct ownerExternalId and the following data:")
-    public void checkAssetExternalizationDetailsByLoanExternalId(int numberOfElements, DataTable table) throws IOException {
+    public void checkAssetExternalizationDetailsByLoanExternalId(int numberOfElements, DataTable table) {
         PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         String loanExternalId = loanResponse.getResourceExternalId();
 
@@ -305,7 +304,7 @@ public class AssetExternalizationStepDef extends AbstractStepDef {
     }
 
     @Then("Fetching Asset externalization details by transfer external id gives numberOfElements: {int} with correct ownerExternalId and the following data:")
-    public void checkAssetExternalizationDetailsByTransferExternalId(int numberOfElements, DataTable table) throws IOException {
+    public void checkAssetExternalizationDetailsByTransferExternalId(int numberOfElements, DataTable table) {
         String transferExternalId = testContext().get(TestContextKey.ASSET_EXTERNALIZATION_SALES_TRANSFER_EXTERNAL_ID_FROM_RESPONSE);
 
         PageExternalTransferData response = externalAssetOwnersApi().getTransfers(Map.of("transferExternalId", transferExternalId),

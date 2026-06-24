@@ -31,7 +31,6 @@ import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.models.BusinessStep;
 import org.apache.fineract.client.models.BusinessStepRequest;
-import org.apache.fineract.client.models.ChargeRequest;
 import org.apache.fineract.client.models.ExternalAssetOwnerRequest;
 import org.apache.fineract.client.models.GetFinancialActivityAccountsResponse;
 import org.apache.fineract.client.models.PostClientsRequest;
@@ -49,6 +48,7 @@ import org.apache.fineract.client.models.RunReportsResponse;
 import org.apache.fineract.integrationtests.client.FeignIntegrationTest;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignAccountHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignBusinessDateHelper;
+import org.apache.fineract.integrationtests.client.feign.helpers.FeignChargesHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignClientHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignGlobalConfigurationHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignLoanHelper;
@@ -80,6 +80,7 @@ public class FeignTrialBalanceSummaryReportTest extends FeignIntegrationTest {
     private FeignTransactionHelper transactionHelper;
     private FeignClientHelper clientHelper;
     private FeignSchedulerHelper schedulerHelper;
+    private FeignChargesHelper chargesHelper;
     private static FeignLoanOriginatorHelper originatorHelper;
 
     private Account assetAccount;
@@ -102,6 +103,7 @@ public class FeignTrialBalanceSummaryReportTest extends FeignIntegrationTest {
         clientHelper = new FeignClientHelper(fineractClient());
         schedulerHelper = new FeignSchedulerHelper(fineractClient());
         originatorHelper = new FeignLoanOriginatorHelper(fineractClient());
+        chargesHelper = new FeignChargesHelper(fineractClient());
 
         todaysDate = Utils.getLocalDateOfTenant().toString();
 
@@ -414,16 +416,7 @@ public class FeignTrialBalanceSummaryReportTest extends FeignIntegrationTest {
     }
 
     private Long createFlatFeeCharge(double amount) {
-        return ok(() -> fineractClient().charges().createCharge(new ChargeRequest()//
-                .name("TB Fee " + System.currentTimeMillis())//
-                .currencyCode("USD")//
-                .chargeAppliesTo(1)//
-                .chargeTimeType(2)//
-                .chargeCalculationType(1)//
-                .chargePaymentMode(0)//
-                .amount(amount)//
-                .active(true)//
-                .locale(LoanTestData.LOCALE))).getResourceId();
+        return chargesHelper.createLoanSpecifiedDueDateCharge(amount);
     }
 
     private Long createLoanProduct() {

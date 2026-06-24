@@ -122,6 +122,7 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
     public static final String DELINQUENCY_BUCKET_ID_FIELD_NAME = "delinquencyBucketId";
     public static final String DELINQUENCY_GRACE_DAYS_FIELD_NAME = "delinquencyGraceDays";
     public static final String DELINQUENCY_START_TYPE_FIELD_NAME = "delinquencyStartType";
+    public static final String BREACH_GRACE_DAYS_FIELD_NAME = "breachGraceDays";
     public static final String BREACH_ID_FIELD_NAME = "breachId";
     public static final String NEAR_BREACH_ID_FIELD_NAME = "nearBreachId";
     public static final String LOCALE_FIELD_NAME = "locale";
@@ -340,13 +341,17 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
 
         final String graceDaysStr = data.get("delinquencyGraceDays");
         final Integer graceDays = graceDaysStr != null && !graceDaysStr.isEmpty() ? Integer.valueOf(graceDaysStr) : null;
+        final String breachGraceDaysStr = data.get(BREACH_GRACE_DAYS_FIELD_NAME);
+        final Integer breachGraceDays = breachGraceDaysStr != null && !breachGraceDaysStr.isEmpty() ? Integer.valueOf(breachGraceDaysStr)
+                : null;
 
         final String name = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
         final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory
                 .defaultWorkingCapitalLoanProductAllowAttributesOverrideRequest() //
                 .name(name) //
                 .breachId(breachId) //
-                .delinquencyGraceDays(graceDays);
+                .delinquencyGraceDays(graceDays) //
+                .breachGraceDays(breachGraceDays);
 
         final PostWorkingCapitalLoanProductsResponse response = createWorkingCapitalLoanProduct(request);
         testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, response);
@@ -380,6 +385,9 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
 
         final String graceDaysStr = data.get("delinquencyGraceDays");
         final Integer graceDays = graceDaysStr != null && !graceDaysStr.isEmpty() ? Integer.valueOf(graceDaysStr) : null;
+        final String breachGraceDaysStr = data.get(BREACH_GRACE_DAYS_FIELD_NAME);
+        final Integer breachGraceDays = breachGraceDaysStr != null && !breachGraceDaysStr.isEmpty() ? Integer.valueOf(breachGraceDaysStr)
+                : null;
 
         final String name = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
         final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory
@@ -387,7 +395,8 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
                 .name(name) //
                 .breachId(breachId) //
                 .nearBreachId(nearBreachId) //
-                .delinquencyGraceDays(graceDays);
+                .delinquencyGraceDays(graceDays) //
+                .breachGraceDays(breachGraceDays);
 
         final PostWorkingCapitalLoanProductsResponse response = createWorkingCapitalLoanProduct(request);
         testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, response);
@@ -1878,7 +1887,10 @@ public class WorkingCapitalStepDef extends AbstractStepDef {
     public void createWorkingCapitalLoanProductWithPaymentAllocationOrder(final DataTable table) {
         final List<String> rules = table.asList();
         final String productName = DefaultWorkingCapitalLoanProduct.WCLP.getName() + Utils.randomStringGenerator("_", 10);
-        final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory.defaultWorkingCapitalLoanProductRequest() //
+        // Allow attribute overrides so loans created from this product can supply their own discount (the loan
+        // creation step always sends a discount value).
+        final PostWorkingCapitalLoanProductsRequest request = workingCapitalRequestFactory
+                .defaultWorkingCapitalLoanProductAllowAttributesOverrideRequest() //
                 .name(productName) //
                 .paymentAllocation(List.of(WorkingCapitalRequestFactory
                         .createPaymentAllocation(PostPaymentAllocation.TransactionTypeEnum.DEFAULT.getValue(), rules)));

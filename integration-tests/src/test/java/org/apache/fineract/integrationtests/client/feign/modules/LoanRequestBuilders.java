@@ -25,6 +25,8 @@ import java.util.stream.Stream;
 import org.apache.fineract.client.models.AdvancedPaymentData;
 import org.apache.fineract.client.models.PaymentAllocationOrder;
 import org.apache.fineract.client.models.PostCreateRescheduleLoansRequest;
+import org.apache.fineract.client.models.PostLoansLoanIdChargesChargeIdRequest;
+import org.apache.fineract.client.models.PostLoansLoanIdChargesRequest;
 import org.apache.fineract.client.models.PostLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostLoansLoanIdTransactionsRequest;
 import org.apache.fineract.client.models.PostLoansRequest;
@@ -232,5 +234,88 @@ public final class LoanRequestBuilders {
                 .map(rule -> new PaymentAllocationOrder().paymentAllocationRule(rule).order(order.getAndIncrement())).toList();
         data.setPaymentAllocationOrder(orders);
         return data;
+    }
+
+    public static PostLoansLoanIdRequest rejectLoan(String rejectedOnDate) {
+        return new PostLoansLoanIdRequest()//
+                .rejectedOnDate(rejectedOnDate)//
+                .locale(LoanTestData.LOCALE)//
+                .dateFormat(LoanTestData.DATETIME_PATTERN);
+    }
+
+    public static PostLoansLoanIdRequest withdrawLoan(String withdrawnOnDate) {
+        return new PostLoansLoanIdRequest()//
+                .withdrawnOnDate(withdrawnOnDate)//
+                .locale(LoanTestData.LOCALE)//
+                .dateFormat(LoanTestData.DATETIME_PATTERN);
+    }
+
+    public static PostLoansLoanIdTransactionsRequest closeLoan(String transactionDate) {
+        return new PostLoansLoanIdTransactionsRequest()//
+                .transactionDate(transactionDate)//
+                .locale(LoanTestData.LOCALE)//
+                .dateFormat(LoanTestData.DATETIME_PATTERN);
+    }
+
+    public static PostLoansLoanIdTransactionsRequest forecloseLoan(String transactionDate) {
+        return new PostLoansLoanIdTransactionsRequest()//
+                .transactionDate(transactionDate)//
+                .locale(LoanTestData.LOCALE)//
+                .dateFormat(LoanTestData.DATETIME_PATTERN);
+    }
+
+    public static PostLoansLoanIdRequest assignLoanOfficer(Long toLoanOfficerId, String assignmentDate) {
+        return new PostLoansLoanIdRequest()//
+                .toLoanOfficerId(toLoanOfficerId)//
+                .assignmentDate(assignmentDate)//
+                .locale(LoanTestData.LOCALE)//
+                .dateFormat(LoanTestData.DATETIME_PATTERN);
+    }
+
+    public static PostLoansLoanIdRequest unassignLoanOfficer(String unassignedDate) {
+        return new PostLoansLoanIdRequest()//
+                .unassignedDate(unassignedDate)//
+                .locale(LoanTestData.LOCALE)//
+                .dateFormat(LoanTestData.DATETIME_PATTERN);
+    }
+
+    public static PostLoansLoanIdChargesRequest addLoanCharge(Long chargeId, double amount, String dueDate) {
+        return new PostLoansLoanIdChargesRequest()//
+                .chargeId(chargeId)//
+                .amount(amount)//
+                .dueDate(dueDate)//
+                .locale(LoanTestData.LOCALE)//
+                .dateFormat(LoanTestData.DATETIME_PATTERN);
+    }
+
+    public static PostLoansLoanIdChargesRequest addLoanCharge(Long chargeId, double amount) {
+        return new PostLoansLoanIdChargesRequest()//
+                .chargeId(chargeId)//
+                .amount(amount)//
+                .locale(LoanTestData.LOCALE)//
+                .dateFormat(LoanTestData.DATETIME_PATTERN);
+    }
+
+    public static PostLoansLoanIdChargesChargeIdRequest waiveLoanCharge(double amount) {
+        PostLoansLoanIdChargesChargeIdRequest request = new PostLoansLoanIdChargesChargeIdRequest();
+        request.setAmount(amount);
+        request.setLocale(LoanTestData.LOCALE);
+        return request;
+    }
+
+    public static PostLoansLoanIdChargesChargeIdRequest payLoanCharge(double amount, String transactionDate) {
+        PostLoansLoanIdChargesChargeIdRequest request = new PostLoansLoanIdChargesChargeIdRequest();
+        request.setAmount(amount);
+        request.setTransactionDate(transactionDate);
+        request.setDateFormat(LoanTestData.DATETIME_PATTERN);
+        request.setLocale(LoanTestData.LOCALE);
+        return request;
+    }
+
+    public static PostLoansLoanIdChargesChargeIdRequest adjustLoanCharge(double amount) {
+        PostLoansLoanIdChargesChargeIdRequest request = new PostLoansLoanIdChargesChargeIdRequest();
+        request.setAmount(amount);
+        request.setLocale(LoanTestData.LOCALE);
+        return request;
     }
 }

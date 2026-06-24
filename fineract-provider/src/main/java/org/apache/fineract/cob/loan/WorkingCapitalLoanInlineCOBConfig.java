@@ -61,8 +61,8 @@ public class WorkingCapitalLoanInlineCOBConfig {
     private final PlatformTransactionManager transactionManager;
     private final PropertyService propertyService;
     private final COBBusinessStepService cobBusinessStepService;
-    @Qualifier("batchJdbcTransactionTemplate")
-    private final TransactionTemplate batchJdbcTransactionTemplate;
+    @Qualifier("requiresNewTransactionJdbcTemplate")
+    private final TransactionTemplate requiresNewTransactionJdbcTemplate;
     private final CustomJobParameterRepository customJobParameterRepository;
     private final CustomJobParameterResolver customJobParameterResolver;
     @Qualifier("workingCapitalLoanLockingService")
@@ -132,7 +132,7 @@ public class WorkingCapitalLoanInlineCOBConfig {
 
     @Bean
     public InlineWorkingCapitalLoanCOBWorkerItemListener inlineWorkingCapitalLoanCobLoanItemListener() {
-        return new InlineWorkingCapitalLoanCOBWorkerItemListener(loanLockingService, batchJdbcTransactionTemplate);
+        return new InlineWorkingCapitalLoanCOBWorkerItemListener(loanLockingService, requiresNewTransactionJdbcTemplate);
     }
 
     @Bean

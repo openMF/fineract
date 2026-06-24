@@ -178,13 +178,13 @@ Feature: Working Capital Delinquency Reschedule Action
     Then WC loan delinquency range schedule has the following periods:
       | periodNumber | fromDate         | toDate              | expectedAmount | paidAmount | outstandingAmount | minPaymentCriteriaMet |
       | 1            | 01 January 2026  | 30 January 2026     | 300            | 0          | 300               | false                 |
-      | 2            | 31 January 2026  | 15 March 2026       | 300            | 0          | 300               | false                 |
-      | 3            | 16 March 2026    | 14 April 2026       | 300            | 0          | 300               | false                 |
-      | 4            | 15 April 2026    | 14 May 2026         | 300            | 0          | 300               | false                 |
-      | 5            | 15 May 2026      | 13 June 2026        | 100            | 0          | 100               | false                 |
-      | 6            | 14 June 2026     | 13 July 2026        | 100            | 0          | 100               | false                 |
-      | 7            | 14 July 2026     | 12 August 2026      | 100            | 0          | 100               | false                 |
-      | 8            | 13 August 2026   | 11 September 2026   | 100            | 0          | 100               |                       |
+      | 2            | 31 January 2026  | 16 March 2026       | 300            | 0          | 300               | false                 |
+      | 3            | 17 March 2026    | 15 April 2026       | 300            | 0          | 300               | false                 |
+      | 4            | 16 April 2026    | 15 May 2026         | 300            | 0          | 300               | false                 |
+      | 5            | 16 May 2026      | 14 June 2026        | 100            | 0          | 100               | false                 |
+      | 6            | 15 June 2026     | 14 July 2026        | 100            | 0          | 100               | false                 |
+      | 7            | 15 July 2026     | 13 August 2026      | 100            | 0          | 100               | false                 |
+      | 8            | 14 August 2026   | 12 September 2026   | 100            | 0          | 100               |                       |
 
   @TestRailId:C74501
   Scenario: Verify that PAUSE after RESCHEDULE preserves rescheduled parameters
@@ -215,10 +215,10 @@ Feature: Working Capital Delinquency Reschedule Action
       | 1            | 01 January 2026  | 30 January 2026   | 300            | 0          | 300               | false                 |
       | 2            | 31 January 2026  | 01 March 2026     | 200            | 0          | 200               | false                 |
       | 3            | 02 March 2026    | 31 March 2026     | 200            | 0          | 200               | false                 |
-      | 4            | 01 April 2026    | 14 May 2026       | 200            | 0          | 200               | false                 |
-      | 5            | 15 May 2026      | 13 June 2026      | 200            | 0          | 200               | false                 |
-      | 6            | 14 June 2026     | 13 July 2026      | 200            | 0          | 200               | false                 |
-      | 7            | 14 July 2026     | 12 August 2026    | 200            | 0          | 200               |                       |
+      | 4            | 01 April 2026    | 15 May 2026       | 200            | 0          | 200               | false                 |
+      | 5            | 16 May 2026      | 14 June 2026      | 200            | 0          | 200               | false                 |
+      | 6            | 15 June 2026     | 14 July 2026      | 200            | 0          | 200               | false                 |
+      | 7            | 15 July 2026     | 13 August 2026    | 200            | 0          | 200               |                       |
 
   @TestRailId:C74502
   Scenario: Verify that reschedule spot-check reflects evaluated vs rescheduled period amounts

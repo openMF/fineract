@@ -116,7 +116,7 @@ public class LoanTermVariations extends AbstractAuditableWithUTCDateTimeCustom<L
     public LoanTermVariationsData toData() {
         EnumOptionData type = LoanEnumerations.loanVariationType(this.termType);
         return new LoanTermVariationsData(getId(), type, this.termApplicableFrom, this.decimalValue, this.dateValue,
-                this.isSpecificToInstallment);
+                this.isSpecificToInstallment, getCreatedDate().orElse(null));
     }
 
     public LocalDate getTermApplicableFrom() {

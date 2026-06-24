@@ -88,12 +88,14 @@ public class WorkingCapitalLoanDelinquencyActionIntegrationTest {
         assertNotNull(createResult);
         log.info("Create pause response resourceId={}", createResult.getResourceId());
 
-        // then - range schedule periods should be shifted by 10 days
+        // then - range schedule periods should be shifted by 11 days (inclusive pause length)
         final List<WorkingCapitalLoanDelinquencyRangeScheduleData> periodsAfterPause = getRangeSchedule(loanId);
         assertEquals(1, periodsAfterPause.size());
 
         final LocalDate newToDate = periodsAfterPause.getFirst().getToDate();
-        assertEquals(expectedPeriodToDate.plusDays(10), newToDate, "Period toDate should be extended by 10 days (the pause duration)");
+        assert expectedPeriodToDate != null;
+        assertEquals(expectedPeriodToDate.plusDays(11), newToDate,
+                "Period toDate should be extended by 11 days (the inclusive pause duration)");
 
         // and - GET returns the saved action
         final List<WorkingCapitalLoanDelinquencyActionData> actions = WorkingCapitalLoanDelinquencyActionHelper
@@ -142,16 +144,19 @@ public class WorkingCapitalLoanDelinquencyActionIntegrationTest {
         final List<WorkingCapitalLoanDelinquencyRangeScheduleData> periodsAfterPause = getRangeSchedule(loanId);
         assertEquals(2, periodsAfterPause.size());
 
-        // First period: fromDate unchanged (contains pauseStart), toDate extended by 7
-        assertEquals(firstPeriodOriginalFromDate, periodsAfterPause.get(0).getFromDate(), "First period fromDate should stay unchanged");
-        assertEquals(firstPeriodOriginalToDate.plusDays(7), periodsAfterPause.get(0).getToDate(),
-                "First period toDate should be extended by 7 days");
+        // First period: fromDate unchanged (contains pauseStart), toDate extended by 8 (inclusive)
+        assertEquals(firstPeriodOriginalFromDate, periodsAfterPause.getFirst().getFromDate(),
+                "First period fromDate should stay unchanged");
+        assert firstPeriodOriginalToDate != null;
+        assertEquals(firstPeriodOriginalToDate.plusDays(8), periodsAfterPause.get(0).getToDate(),
+                "First period toDate should be extended by 8 days");
 
-        // Second period: both fromDate and toDate shifted by 7 (starts after pauseStart)
-        assertEquals(secondPeriodOriginalFromDate.plusDays(7), periodsAfterPause.get(1).getFromDate(),
-                "Second period fromDate should shift by 7 days");
-        assertEquals(secondPeriodOriginalToDate.plusDays(7), periodsAfterPause.get(1).getToDate(),
-                "Second period toDate should shift by 7 days");
+        // Second period: both fromDate and toDate shifted by 8 (starts after pauseStart)
+        assert secondPeriodOriginalFromDate != null;
+        assertEquals(secondPeriodOriginalFromDate.plusDays(8), periodsAfterPause.get(1).getFromDate(),
+                "Second period fromDate should shift by 8 days");
+        assertEquals(secondPeriodOriginalToDate.plusDays(8), periodsAfterPause.get(1).getToDate(),
+                "Second period toDate should shift by 8 days");
     }
 
     /**
@@ -245,20 +250,20 @@ public class WorkingCapitalLoanDelinquencyActionIntegrationTest {
         final LocalDate disbursementDate = LocalDate.now(ZoneId.systemDefault()).minusDays(5);
         WorkingCapitalLoanDelinquencyActionHelper.activateLoan(loanId, disbursementDate);
 
-        // when - send action type "resume" which is not supported yet
+        // when - send unsupported action type
         // then - should fail with 400
         CallFailedRuntimeException exception = assertThrows(CallFailedRuntimeException.class,
-                () -> WorkingCapitalLoanDelinquencyActionHelper.createDelinquencyAction(loanId, "resume", disbursementDate,
+                () -> WorkingCapitalLoanDelinquencyActionHelper.createDelinquencyAction(loanId, "invalid", disbursementDate,
                         disbursementDate.plusDays(10)));
         assertEquals(400, exception.getStatus());
-        log.info("Expected 400 for unsupported action 'resume': {}", exception.getMessage());
+        log.info("Expected 400 for unsupported action 'invalid': {}", exception.getMessage());
     }
 
     /**
-     * startDate >= endDate is rejected with 400.
+     * startDate after endDate is rejected with 400.
      */
     @Test
-    public void testStartDateNotBeforeEndDateIsRejected() {
+    public void testStartDateAfterEndDateIsRejected() {
         // given
         final Long bucketId = createWorkingCapitalLoanDelinquencyBucket(PERIOD_FREQUENCY_DAYS);
         final Long productId = createProduct(bucketId);
@@ -268,18 +273,17 @@ public class WorkingCapitalLoanDelinquencyActionIntegrationTest {
         final LocalDate disbursementDate = LocalDate.now(ZoneId.systemDefault()).minusDays(5);
         WorkingCapitalLoanDelinquencyActionHelper.activateLoan(loanId, disbursementDate);
 
-        // when - startDate == endDate (not strictly before)
+        // when - startDate is after endDate
         // then - should fail with 400
         CallFailedRuntimeException exception = assertThrows(CallFailedRuntimeException.class,
-                () -> WorkingCapitalLoanDelinquencyActionHelper.createDelinquencyAction(loanId, "pause", disbursementDate,
+                () -> WorkingCapitalLoanDelinquencyActionHelper.createDelinquencyAction(loanId, "pause", disbursementDate.plusDays(5),
                         disbursementDate));
         assertEquals(400, exception.getStatus());
-        log.info("Expected 400 for startDate == endDate: {}", exception.getMessage());
+        log.info("Expected 400 for startDate after endDate: {}", exception.getMessage());
     }
 
     /**
-     * Two consecutive (non-overlapping) pauses are accepted: first pause ends on day 10, second starts on day 10
-     * (touching but not overlapping).
+     * Two consecutive inclusive pauses are accepted when the next pause starts the day after the previous one ends.
      */
     @Test
     public void testConsecutiveNonOverlappingPausesAreAccepted() {
@@ -292,14 +296,13 @@ public class WorkingCapitalLoanDelinquencyActionIntegrationTest {
         final LocalDate disbursementDate = LocalDate.now(ZoneId.systemDefault()).minusDays(5);
         WorkingCapitalLoanDelinquencyActionHelper.activateLoan(loanId, disbursementDate);
 
-        // First pause: [disbursement, disbursement+10)
         final LocalDate pause1Start = disbursementDate;
-        final LocalDate pause1End = disbursementDate.plusDays(10);
+        final LocalDate pause1End = disbursementDate.plusDays(9);
         WorkingCapitalLoanDelinquencyActionHelper.createDelinquencyAction(loanId, "pause", pause1Start, pause1End);
 
-        // when - second pause starts exactly where first ends (touching, not overlapping)
-        final LocalDate pause2Start = pause1End;
-        final LocalDate pause2End = pause1End.plusDays(5);
+        // when - second pause starts the day after the first pause ends
+        final LocalDate pause2Start = pause1End.plusDays(1);
+        final LocalDate pause2End = pause2Start.plusDays(5);
         WorkingCapitalLoanDelinquencyActionHelper.createDelinquencyAction(loanId, "pause", pause2Start, pause2End);
 
         // then - both actions saved

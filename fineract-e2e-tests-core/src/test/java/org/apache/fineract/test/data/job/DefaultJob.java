@@ -29,7 +29,9 @@ public enum DefaultJob implements Job {
     ADD_ACCRUAL_TRANSACTIONS_FOR_LOANS_WITH_INCOME_POSTED_AS_TRANSACTIONS(
             "Add Accrual Transactions For Loans With Income Posted As Transactions", "LA_AATR"), //
     RECALCULATE_INTEREST_FOR_LOANS("Recalculate Interest For Loans", "LA_RINT"), //
-    WORKING_CAPITAL_LOAN_COB("Working Capital Loan COB", "WC_COB"); //
+    WORKING_CAPITAL_LOAN_COB("Working Capital Loan COB", "WC_COB"), //
+    JOURNAL_ENTRY_AGGREGATION("Journal Entry Aggregation", "JRNL_AGG"), //
+    RETAINED_EARNING("Retained Earning Job", "RE_ERNG"); //
 
     private final String customName;
     private final String shortName;

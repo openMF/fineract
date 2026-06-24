@@ -35,4 +35,7 @@ public interface WorkingCapitalLoanTransactionRelationRepository
 
     List<WorkingCapitalLoanTransactionRelation> findAllByToTransactionAndFromTransactionReversedAndFromTransactionTransactionType(
             WorkingCapitalLoanTransaction relatedDisbursementTransaction, boolean reversed, LoanTransactionType transactionType);
+
+    List<WorkingCapitalLoanTransactionRelation> findAllByToChargeAndFromTransactionReversedAndFromTransactionTransactionType(
+            WorkingCapitalLoanCharge toCharge, boolean reversed, LoanTransactionType transactionType);
 }

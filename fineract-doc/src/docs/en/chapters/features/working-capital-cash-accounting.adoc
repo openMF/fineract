@@ -1,0 +1,344 @@
+= Working Capital Loan — Cash-Based Accounting
+
+== Overview
+
+Working Capital Loan products support cash-based accounting, where journal entries are posted only when cash actually moves. The accounting rule is selected at the product level via `accountingRule = CASH_BASED`. Each monetary transaction on a Working Capital Loan (repayment, goodwill credit, reversals) drives a balanced set of journal entries against GL accounts mapped on the loan product.
+
+=== Purpose
+
+Cash-based accounting allows lenders to record the financial impact of Working Capital Loan transactions in the general ledger at the moment cash is received or disbursed, without recognizing accrued income or receivables in advance. This is the simpler of the two accounting bases and is appropriate when income recognition should track cash flow rather than economic activity.
+
+=== Scope
+
+The scope of this document includes:
+
+* Working Capital Loan product accounting rule configuration
+* GL account mappings required for cash-based accounting
+* Journal entries posted on repayment (regular and charged-off)
+* Journal entries posted on goodwill credit
+* Reversal journal entries
+* Fund source mapping by payment type
+* Read-side mapping retrieval
+
+EIR-specific discount fee amortization journal entries are documented separately in `working-capital-eir-calculation-accounting.adoc`.
+
+=== Applicability
+
+* Working Capital Loan products with `accountingRule = CASH_BASED`
+* Working Capital Loans linked to such products
+
+=== Definitions and Key Concepts
+
+*Accounting Rule:* Product-level configuration that selects the accounting basis. For Working Capital Loans the supported values are `NONE` (no journal entries posted) and `CASH_BASED`.
+
+*GL Account Mapping:* Persisted link between a Working Capital Loan product, an accounting placeholder (e.g., `LOAN_PORTFOLIO`), and a concrete `GLAccount` row.
+
+*Fund Source:* The bank or cash GL account used as the contra side for cash movements. May be overridden per payment type.
+
+*Charged-Off Loan:* A loan marked as `isChargedOff = true`. After charge-off, repayments post to `INCOME_FROM_RECOVERY` instead of the regular portfolio/fees/penalties accounts.
+
+== Design Decisions and Considerations
+
+=== Dedicated Working Capital Accounting Processor
+
+Working Capital Loans use a dedicated `WorkingCapitalLoanAccountingProcessor` interface with a single `CashBasedAccountingProcessorForWorkingCapitalLoan` implementation. This keeps Working Capital posting logic independent from the standard Loan accounting processors, which avoids coupling the Working Capital allocation model (`WorkingCapitalLoanTransactionAllocation`) to the standard loan data structures.
+
+=== Accrual Basis Not Supported
+
+The `WorkingCapitalAccountingRuleType` enum only exposes `NONE` and `CASH_BASED`. Accrual-based accounting is not implemented for Working Capital Loan products.
+
+== Database Design
+
+=== Existing Tables
+
+*m_product_loan_gl_account_mapping*: Stores the mapping between a Working Capital Loan product, a cash account placeholder (`CashAccountsForLoan` value), an optional payment type / charge / code value, and the target `GLAccount`. Working Capital mappings are identified by `product_type = PortfolioProductType.WORKING_CAPITAL_LOAN.value` (4).
+
+*acc_gl_journal_entry*: Standard journal entry table. Cash-based Working Capital postings are written here with a transaction id prefixed by `WC` (see `AccountingProcessorHelper.WORKING_CAPITAL_LOAN_TRANSACTION_IDENTIFIER`) and `entity_type = WORKING_CAPITAL_LOAN`.
+
+=== Changes to Existing Tables
+
+==== m_wc_loan_product
+
+The product-level accounting rule is persisted in:
+
+[cols="1,2,1,3",options="header"]
+|===
+| Column Name | Type | Constraints | Description
+| accounting_type | VARCHAR(20) | not null, default `NONE` | Selected `WorkingCapitalAccountingRuleType` (`NONE` or `CASH_BASED`)
+|===
+
+== Configuration
+
+=== Loan Product Configuration
+
+The accounting rule and GL account mappings are supplied when creating or updating a Working Capital Loan product:
+
+[source,json]
+----
+{
+  "accountingRule": "CASH_BASED",
+  "fundSourceAccountId": 1,
+  "loanPortfolioAccountId": 2,
+  "transfersInSuspenseAccountId": 3,
+  "receivableFeeAccountId": 19,
+  "receivablePenaltyAccountId": 20,
+  "incomeFromFeeAccountId": 6,
+  "incomeFromPenaltyAccountId": 6,
+  "incomeFromRecoveryAccountId": 7,
+  "writeOffAccountId": 8,
+  "overpaymentLiabilityAccountId": 9,
+  "goodwillCreditAccountId": 16,
+  "incomeFromGoodwillCreditFeesAccountId": 12,
+  "incomeFromGoodwillCreditPenaltyAccountId": 13,
+  "chargeOffExpenseAccountId": 17,
+  "chargeOffFraudExpenseAccountId": 18,
+  "incomeFromChargeOffFeesAccountId": 10,
+  "incomeFromChargeOffPenaltyAccountId": 11,
+  "paymentChannelToFundSourceMappings": [
+    { "paymentTypeId": 1, "fundSourceAccountId": 100 }
+  ],
+  "feeToIncomeAccountMappings": [
+    { "chargeId": 1, "incomeAccountId": 6 }
+  ],
+  "penaltyToIncomeAccountMappings": [
+    { "chargeId": 2, "incomeAccountId": 6 }
+  ],
+  "chargeOffReasonToExpenseAccountMappings": [
+    { "chargeOffReasonCodeValueId": 1, "expenseAccountId": 17 }
+  ],
+  "writeOffReasonsToExpenseMappings": [
+    { "writeOffReasonCodeValueId": 1, "expenseAccountId": 8 }
+  ]
+}
+----
+
+=== GL Account Mappings
+
+When `accountingRule = CASH_BASED`, the platform persists one `ProductToGLAccountMapping` row per supplied mapping. The placeholder enum is `CashAccountsForLoan`:
+
+* *Fund Source (Asset)*: `fundSourceAccountId` — cash account that is debited on repayment and may be overridden per payment type via `paymentChannelToFundSourceMappings`
+* *Loan Portfolio (Asset)*: `loanPortfolioAccountId` — credited for the principal portion of regular repayments
+* *Fees Receivable (Asset)*: `receivableFeeAccountId` — credited for the fees portion of regular repayments
+* *Penalties Receivable (Asset)*: `receivablePenaltyAccountId` — credited for the penalty portion of regular repayments
+* *Overpayment Liability (Liability)*: `overpaymentLiabilityAccountId` — credited for any amount in excess of principal + fees + penalties
+* *Income from Recovery (Income)*: `incomeFromRecoveryAccountId` — credited for all repayment portions when the loan is charged off
+* *Goodwill Credit (Expense)*: `goodwillCreditAccountId` — debited for principal + overpayment portion of a goodwill credit
+* *Income from Goodwill Credit Fees (Income)*: `incomeFromGoodwillCreditFeesAccountId` — debited for fees portion of a goodwill credit
+* *Income from Goodwill Credit Penalty (Income)*: `incomeFromGoodwillCreditPenaltyAccountId` — debited for penalty portion of a goodwill credit
+* *Charge-off Expense (Expense)* / *Charge-off Fraud Expense (Expense)*: optional, used by charge-off reason mappings
+
+Additional advanced mappings:
+
+* *Payment Channel to Fund Source*: per-payment-type override of the default fund source account
+* *Fee/Penalty to Income*: per-charge income account override
+* *Charge-off Reason to Expense*: per-reason expense account override
+* *Write-off Reason to Expense*: per-reason expense account override
+
+[IMPORTANT]
+====
+GL account mappings are validated at product create/update time. Duplicated entries in `paymentChannelToFundSourceMappings`, `feeToIncomeAccountMappings`, `penaltyToIncomeAccountMappings`, `chargeOffReasonToExpenseAccountMappings`, or `writeOffReasonsToExpenseMappings` are rejected with `duplicated.enrty.for.<mapping>`.
+====
+
+== API Design
+
+=== Endpoints
+
+==== Configure Accounting on a Working Capital Loan Product
+
+Accounting fields are part of the standard Working Capital Loan product endpoints:
+
+[source]
+----
+POST /v1/working-capital-loan-products
+PUT  /v1/working-capital-loan-products/{productId}
+PUT  /v1/working-capital-loan-products/external-id/{externalProductId}
+GET  /v1/working-capital-loan-products/{productId}
+GET  /v1/working-capital-loan-products/external-id/{externalProductId}
+GET  /v1/working-capital-loan-products/template
+----
+
+The `GET` responses expose:
+
+* `accountingRule` — current rule as a `StringEnumOptionData`
+* `accountingMappings` — map of placeholder name to `GLAccountData` (only populated when the rule is cash-based)
+* `accountingMappingOptions` (template) — lookup data for the UI: fund source, payment channels, fee/penalty income, charge-off / write-off reason mappings
+
+== Validation Rules
+
+=== General Rules
+
+* `accountingRule` must be a valid `WorkingCapitalAccountingRuleType` name (`NONE` or `CASH_BASED`).
+* When `accountingRule = NONE`, no GL account mappings are persisted; if previously cash-based, the prior mappings are deleted.
+
+=== Validation Rules for Mappings
+
+* Each advanced mapping array (`paymentChannelToFundSourceMappings`, `feeToIncomeAccountMappings`, `penaltyToIncomeAccountMappings`, `chargeOffReasonToExpenseAccountMappings`, `writeOffReasonsToExpenseMappings`) must not contain duplicates on its key field.
+
+== Business Rules
+
+=== Branch Closure Check
+
+Before posting any journal entries for a transaction date, the processor calls `helper.checkForBranchClosures(...)`. If the transaction date falls on or before the latest accounting closure for the loan's branch, posting is rejected.
+
+=== Repayment — Regular
+
+When a repayment is posted on a non-charged-off Working Capital Loan, the processor reads principal, fees, and penalties portions from the `WorkingCapitalLoanTransactionAllocation`, computes the overpayment portion as the residual of the transaction amount, and posts:
+
+* a credit per non-zero portion (principal → `LOAN_PORTFOLIO`, fees → `FEES_RECEIVABLE`, penalties → `PENALTIES_RECEIVABLE`, overpayment → `OVERPAYMENT`)
+* a single debit to the fund source for the full transaction amount, resolved against `paymentChannelToFundSourceMappings` using `paymentDetail.paymentType.id` when present
+
+=== Repayment — Charged Off
+
+When the loan is already charged off, all three credit legs are redirected to `INCOME_FROM_RECOVERY` instead of the regular portfolio/receivable accounts. The fund source debit is unchanged.
+
+=== Goodwill Credit
+
+For a goodwill credit on a non-charged-off loan, the processor posts:
+
+* debit `GOODWILL_CREDIT` for principal + overpayment portion
+* debit `INCOME_FROM_GOODWILL_CREDIT_FEES` for fees portion
+* debit `INCOME_FROM_GOODWILL_CREDIT_PENALTY` for penalty portion
+* credit `LOAN_PORTFOLIO`, `FEES_RECEIVABLE`, `PENALTIES_RECEIVABLE`, `OVERPAYMENT` for the matching portions
+
+Posting a goodwill credit while the loan is charged off raises `NotImplementedException("Charge off is not implemented yet for Goodwill Credit for Working Capital Loan")`.
+
+=== Unsupported Transaction Types
+
+If `postJournalEntries` is invoked with a transaction type other than `REPAYMENT` or `GOODWILL_CREDIT`, it raises `NotImplementedException("Post Journal Entries is not implemented yet for <code> for Working Capital Loan")`. Discount fee amortization and its adjustment are handled by dedicated processor methods (see `working-capital-eir-calculation-accounting.adoc`).
+
+=== Reversal
+
+`postReversalJournalEntries` reads existing journal entries for the transaction identifier `WC<txnId>` and `entityType = WORKING_CAPITAL_LOAN`, then for each one creates a mirror entry with the opposite `JournalEntryType`. The original entries are marked `reversed = true` and linked to their reversal entry. The reversal posting date is `txn.reversedOnDate` when present, otherwise the current business date.
+
+=== Zero-Amount Skipping
+
+Each journal leg checks `MathUtil.isGreaterThanZero(amount)` before creating the entry. Zero or null portions produce no journal entry.
+
+== Accounting Entries
+
+=== Repayment — Regular
+
+[cols="3*"]
+|===
+|Transaction Type |Debit |Credit
+
+|Repayment (principal)
+|Fund Source (Asset)
+|Loan Portfolio (Asset)
+
+|Repayment (fees)
+|Fund Source (Asset)
+|Fees Receivable (Asset)
+
+|Repayment (penalties)
+|Fund Source (Asset)
+|Penalties Receivable (Asset)
+
+|Repayment (overpayment)
+|Fund Source (Asset)
+|Overpayment Liability (Liability)
+
+|===
+
+=== Repayment — Charged Off
+
+[cols="3*"]
+|===
+|Transaction Type |Debit |Credit
+
+|Repayment (principal)
+|Fund Source (Asset)
+|Income from Recovery (Income)
+
+|Repayment (fees)
+|Fund Source (Asset)
+|Income from Recovery (Income)
+
+|Repayment (penalties)
+|Fund Source (Asset)
+|Income from Recovery (Income)
+
+|Repayment (overpayment)
+|Fund Source (Asset)
+|Overpayment Liability (Liability)
+
+|===
+
+=== Goodwill Credit (not charged off)
+
+[cols="3*"]
+|===
+|Transaction Type |Debit |Credit
+
+|Goodwill Credit (principal + overpayment)
+|Goodwill Credit (Expense)
+|Loan Portfolio (Asset)
+
+|Goodwill Credit (fees)
+|Income from Goodwill Credit Fees (Income)
+|Fees Receivable (Asset)
+
+|Goodwill Credit (penalty)
+|Income from Goodwill Credit Penalty (Income)
+|Penalties Receivable (Asset)
+
+|Goodwill Credit (overpayment)
+|
+|Overpayment Liability (Liability)
+
+|===
+
+=== Reversal
+
+Every journal entry written for a Working Capital Loan transaction can be reversed. The reversal posts a balanced mirror entry per leg, swapping debit and credit, and marks the original entries `reversed = true`.
+
+== Example Scenarios
+
+=== Scenario #1: Regular repayment with fees and overpayment
+
+**Setup:**
+
+* Working Capital Loan product with `accountingRule = CASH_BASED`
+* Mappings configured for Fund Source, Loan Portfolio, Fees Receivable, Overpayment
+* Active loan with outstanding principal 800 and fees 50
+
+**Action:**
+
+A repayment of 1,000 is posted. The allocator records principal = 800, fees = 50, penalties = 0, leaving an overpayment of 150.
+
+**Expected Behavior:**
+
+* Debit Fund Source 1,000
+* Credit Loan Portfolio 800
+* Credit Fees Receivable 50
+* Credit Overpayment Liability 150
+* All entries share transaction id `WC<txnId>` and `entityType = WORKING_CAPITAL_LOAN`
+
+=== Scenario #2: Repayment after charge-off
+
+**Setup:**
+
+* Same product, but the loan was previously charged off (`isChargedOff = true`)
+* Mappings include `Income from Recovery`
+
+**Action:**
+
+A repayment of 500 is posted with allocation principal = 300, fees = 100, penalties = 100.
+
+**Expected Behavior:**
+
+* Debit Fund Source 500
+* Credit Income from Recovery 300 (principal)
+* Credit Income from Recovery 100 (fees)
+* Credit Income from Recovery 100 (penalties)
+* No entries to Loan Portfolio / Fees Receivable / Penalties Receivable
+
+== Summary
+
+Working Capital Loan cash-based accounting provides cash-aligned journal entries for repayments and goodwill credits via a dedicated `CashBasedAccountingProcessorForWorkingCapitalLoan`. Key aspects include:
+
+* Product-level `accountingRule` selecting `NONE` or `CASH_BASED`
+* `CashAccountsForLoan`-based GL account mappings, with advanced overrides per payment type, charge, and reason code
+* Distinct posting flows for regular vs. charged-off repayments
+* Dedicated goodwill credit posting with charge-off explicitly unsupported
+* Symmetric reversal that mirrors every leg of the original transaction

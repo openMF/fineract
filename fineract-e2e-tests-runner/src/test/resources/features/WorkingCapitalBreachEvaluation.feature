@@ -144,41 +144,39 @@ Feature: Working Capital Breach Evaluation
       | 1            | 2026-01-01 | 2026-01-31 | 31           | 500.00           | 0.00              | null       | false  |
       | 2            | 2026-02-01 | 2026-02-28 | 28           | 500.00           | 500.00            | null       | null   |
 
-  #TODO pending implementation of grace days support for breach management
-  @Skip
   @TestRailId:C76614
   Scenario: Verify that breach evaluation matches CSV example with 90 DAY frequency and partial payment
     When Admin sets the business date to "01 January 2019"
     And Admin creates a client with random data
     And Admin creates a Working Capital Loan Product with custom breach config and overrides enabled:
-      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays |
-      | 90              | DAYS                | PERCENTAGE                  | 9            | 3                    |
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays | breachGraceDays |
+      | 90              | DAYS                | PERCENTAGE                  | 9            | 3                    | 3               |
     And Admin creates a working capital loan using created product with the following data:
       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2019 | 01 January 2019          | 9000            | 100000       | 18                | 1000     |
     And Admin successfully approves the working capital loan on "01 January 2019" with "9000" amount and expected disbursement date on "01 January 2019"
-    When Admin successfully disburse the Working Capital loan on "01 January 2019" with "9000" EUR transaction amount
+    When Admin successfully disburse the Working Capital loan on "01 January 2019" with "9000" EUR transaction amount and "1000" discount amount
     And Admin runs inline COB job for Working Capital Loan by loanId
-    # Period 1: fromDate=Jan04 (disburse+3 grace), 90 days, min=(9000+1000)*9%=900
-    # CSV reference: row 29 — Start=1/4/2019, End=4/4/2019, Days=90, Min=900
+    # Period 1: fromDate=Jan04 (disburse+3 breach grace days), 90 days, min=(9000+1000)*9%=900
+    # CSV reference: row 29 — Start=1/4/2019, 90 days, Min=900 (CSV end 4/4/2019 is exclusive; schedule stores inclusive toDate 4/3/2019)
     Then Working Capital loan breach schedule has the following data:
       | periodNumber | fromDate   | toDate     | numberOfDays | minPaymentAmount | outstandingAmount | nearBreach | breach |
-      | 1            | 2019-01-04 | 2019-04-04 | 90           | 900.00           | 900.00            | null       | null   |
+      | 1            | 2019-01-04 | 2019-04-03 | 90           | 900.00           | 900.00            | null       | null   |
     # Payment of 250 on Jan 5 (within period 1)
     When Admin sets the business date to "05 January 2019"
     And Admin makes Internal Payment "250.0" on "2019-01-05"
     # Outstanding should decrease mid-period
     Then Working Capital loan breach schedule has the following data:
       | periodNumber | fromDate   | toDate     | numberOfDays | minPaymentAmount | outstandingAmount | nearBreach | breach |
-      | 1            | 2019-01-04 | 2019-04-04 | 90           | 900.00           | 650.00            | null       | null   |
+      | 1            | 2019-01-04 | 2019-04-03 | 90           | 900.00           | 650.00            | null       | null   |
     # Advance past period 1 end: 250 < 900 -> breach=true
-    # CSV reference: row 30 — Period 2 Start=4/4/2019, End=7/3/2019, Days=90
+    # CSV reference: row 30 — Period 2 Start=4/4/2019, 90 days (inclusive toDate 7/2/2019)
     When Admin sets the business date to "05 April 2019"
     And Admin runs inline COB job for Working Capital Loan by loanId
     Then Working Capital loan breach schedule has the following data:
       | periodNumber | fromDate   | toDate     | numberOfDays | minPaymentAmount | outstandingAmount | nearBreach | breach |
-      | 1            | 2019-01-04 | 2019-04-04 | 90           | 900.00           | 650.00            | null       | true   |
-      | 2            | 2019-04-04 | 2019-07-03 | 90           | 900.00           | 900.00            | null       | null   |
+      | 1            | 2019-01-04 | 2019-04-03 | 90           | 900.00           | 650.00            | null       | true   |
+      | 2            | 2019-04-04 | 2019-07-02 | 90           | 900.00           | 900.00            | null       | null   |
 
   @TestRailId:C76615
   Scenario: Verify that paidAmount and outstandingAmount update immediately on payment

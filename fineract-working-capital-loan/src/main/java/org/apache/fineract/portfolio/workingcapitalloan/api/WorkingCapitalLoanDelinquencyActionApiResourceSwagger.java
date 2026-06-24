@@ -30,11 +30,11 @@ public final class WorkingCapitalLoanDelinquencyActionApiResourceSwagger {
 
         private PostWorkingCapitalLoansDelinquencyActionRequest() {}
 
-        @Schema(example = "pause", description = "Delinquency action type: pause or reschedule")
+        @Schema(example = "pause", description = "Delinquency action type: pause, resume or reschedule")
         public String action;
-        @Schema(example = "2026-03-05", description = "Start date of the pause period (required for pause)")
+        @Schema(example = "2026-03-05", description = "Start date of the pause period (required for pause) or resume date (required for resume, must be current business date)")
         public String startDate;
-        @Schema(example = "2026-03-12", description = "End date of the pause period (required for pause)")
+        @Schema(example = "2026-03-12", description = "End date of the pause period (required for pause, must not be provided for resume)")
         public String endDate;
         @Schema(example = "2", description = "Minimum payment value (required together with minimumPaymentType)")
         public BigDecimal minimumPayment;

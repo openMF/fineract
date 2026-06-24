@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.accounting.journalentry.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -55,6 +56,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -240,6 +242,54 @@ class CashBasedAccountingProcessorForWorkingCapitalLoanTest {
         verify(helper, org.mockito.Mockito.times(4)).persistJournalEntry(any());
         assertTrue(originalDebit.isReversed());
         assertTrue(originalCredit.isReversed());
+    }
+
+    @Test
+    void testCreditBalanceRefundPostsOverpaymentDebitAndFundSourceCredit() {
+        when(txn.getTypeOf()).thenReturn(LoanTransactionType.CREDIT_BALANCE_REFUND);
+        when(txn.getTransactionAmount()).thenReturn(new BigDecimal("50"));
+
+        processor.postJournalEntries(loan, txn, allocation, false);
+
+        // debit Overpayment Liability, credit Fund source
+        verify(helper).createDebitJournalEntryForWorkingCapitalLoan(eq(office), eq(CURRENCY_CODE), eq(overpaymentGLAccount), eq(LOAN_ID),
+                eq(TXN_ID), any(), eq(new BigDecimal("50")), isNull());
+        verify(helper).createCreditJournalEntryForWorkingCapitalLoan(eq(office), eq(CURRENCY_CODE), eq(fundSourceGLAccount), eq(LOAN_ID),
+                eq(TXN_ID), any(), eq(new BigDecimal("50")), isNull());
+    }
+
+    @Test
+    void testCreditBalanceRefundReversalSwapsToFundSourceDebitAndOverpaymentCredit() {
+        when(txn.getReversedOnDate()).thenReturn(LocalDate.of(2026, 5, 3));
+
+        final JournalEntry overpaymentDebit = JournalEntry.createNew(office, null, overpaymentGLAccount, CURRENCY_CODE, "WC" + TXN_ID, false,
+                LocalDate.of(2026, 5, 1), JournalEntryType.DEBIT, new BigDecimal("50"), null, WORKING_CAPITAL_LOAN_ENTITY_TYPE, LOAN_ID,
+                null, TXN_ID, null, null, null);
+        final JournalEntry fundSourceCredit = JournalEntry.createNew(office, null, fundSourceGLAccount, CURRENCY_CODE, "WC" + TXN_ID, false,
+                LocalDate.of(2026, 5, 1), JournalEntryType.CREDIT, new BigDecimal("50"), null, WORKING_CAPITAL_LOAN_ENTITY_TYPE, LOAN_ID,
+                null, TXN_ID, null, null, null);
+
+        when(journalEntryRepository.findJournalEntries("WC" + TXN_ID, WORKING_CAPITAL_LOAN_ENTITY_TYPE))
+                .thenReturn(List.of(overpaymentDebit, fundSourceCredit));
+
+        processor.postReversalJournalEntries(loan, txn);
+
+        final ArgumentCaptor<JournalEntry> captor = ArgumentCaptor.forClass(JournalEntry.class);
+        verify(helper, org.mockito.Mockito.times(4)).persistJournalEntry(captor.capture());
+
+        final List<JournalEntry> reversalEntries = captor.getAllValues().stream()
+                .filter(entry -> entry != overpaymentDebit && entry != fundSourceCredit).toList();
+
+        final JournalEntry overpaymentReversal = reversalEntries.stream().filter(entry -> entry.getGlAccount() == overpaymentGLAccount)
+                .findFirst().orElseThrow();
+        final JournalEntry fundSourceReversal = reversalEntries.stream().filter(entry -> entry.getGlAccount() == fundSourceGLAccount)
+                .findFirst().orElseThrow();
+
+        // reversal flips the original CBR direction: debit Fund source, credit Overpayment Liability
+        assertTrue(fundSourceReversal.isDebitEntry());
+        assertTrue(overpaymentReversal.isCreditEntry());
+        assertEquals(new BigDecimal("50"), fundSourceReversal.getAmount());
+        assertEquals(new BigDecimal("50"), overpaymentReversal.getAmount());
     }
 
     @Test

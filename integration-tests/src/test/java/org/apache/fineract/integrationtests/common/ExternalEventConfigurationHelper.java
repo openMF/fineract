@@ -705,6 +705,16 @@ public class ExternalEventConfigurationHelper {
         workingCapitalLoanDiscountFeeAdjustmentTransactionBusinessEvent.put("enabled", false);
         defaults.add(workingCapitalLoanDiscountFeeAdjustmentTransactionBusinessEvent);
 
+        Map<String, Object> workingCapitalLoanChargeAdjustmentPreBusinessEvent = new HashMap<>();
+        workingCapitalLoanChargeAdjustmentPreBusinessEvent.put("type", "WorkingCapitalLoanChargeAdjustmentPreBusinessEvent");
+        workingCapitalLoanChargeAdjustmentPreBusinessEvent.put("enabled", false);
+        defaults.add(workingCapitalLoanChargeAdjustmentPreBusinessEvent);
+
+        Map<String, Object> workingCapitalLoanChargeAdjustmentPostBusinessEvent = new HashMap<>();
+        workingCapitalLoanChargeAdjustmentPostBusinessEvent.put("type", "WorkingCapitalLoanChargeAdjustmentPostBusinessEvent");
+        workingCapitalLoanChargeAdjustmentPostBusinessEvent.put("enabled", false);
+        defaults.add(workingCapitalLoanChargeAdjustmentPostBusinessEvent);
+
         return defaults;
     }
 

@@ -33,4 +33,8 @@ public interface WorkingCapitalLoanAccountingProcessor {
 
     void postJournalEntriesForDiscountFeeAmortizationAdjustment(WorkingCapitalLoan loan, WorkingCapitalLoanTransaction txn,
             boolean isChargedOff);
+
+    void postJournalEntriesForDiscountFee(WorkingCapitalLoan loan, WorkingCapitalLoanTransaction txn);
+
+    void postJournalEntriesForDiscountFeeAdjustment(WorkingCapitalLoan loan, WorkingCapitalLoanTransaction txn);
 }

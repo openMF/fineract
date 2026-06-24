@@ -51,7 +51,7 @@ public class ScheduledJobRunnerConfig {
 
     @Bean
     public JobRepository jobRepository(RoutingDataSource routingDataSource,
-            @Qualifier("batchJdbcTransactionManager") PlatformTransactionManager transactionManager,
+            @Qualifier("jdbcTransactionManager") PlatformTransactionManager transactionManager,
             Jackson2ExecutionContextStringSerializer executionContextSerializer, DataFieldMaxValueIncrementerFactory incrementerFactory)
             throws Exception {
         JobRepositoryFactoryBean factory = new JobRepositoryFactoryBean();
@@ -66,7 +66,7 @@ public class ScheduledJobRunnerConfig {
 
     @Bean
     public JobExplorer jobExplorer(RoutingDataSource routingDataSource,
-            @Qualifier("batchJdbcTransactionManager") PlatformTransactionManager transactionManager,
+            @Qualifier("jdbcTransactionManager") PlatformTransactionManager transactionManager,
             Jackson2ExecutionContextStringSerializer executionContextSerializer) throws Exception {
         JobExplorerFactoryBean jobExplorerFactoryBean = new JobExplorerFactoryBean();
         jobExplorerFactoryBean.setDataSource(routingDataSource);

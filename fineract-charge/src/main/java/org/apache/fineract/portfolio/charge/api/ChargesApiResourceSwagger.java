@@ -159,6 +159,14 @@ final class ChargesApiResourceSwagger {
         public BigDecimal maxCap;
         @Schema(example = "1")
         public Long taxGroupId;
+        @Schema(example = "1")
+        public Integer freeWithdrawalFrequency;
+        @Schema(example = "10")
+        public Integer restartCountFrequency;
+        @Schema(example = "1")
+        public Integer countFrequencyType;
+        @Schema(example = "true")
+        public boolean enableFreeWithdrawalCharge;
     }
 
     @Schema(description = "PostChargesResponse")

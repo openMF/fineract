@@ -46,7 +46,7 @@ public class NotificationData implements Serializable {
     private Set<Long> userIds;
 
     public NotificationData(final Long id, final String objectType, final Long objectId, final Long actorId, final String action,
-            final String content, final boolean isSystemGenerated, final LocalDateTime createdAt) {
+            final String content, final boolean isSystemGenerated, final boolean isRead, final LocalDateTime createdAt) {
         this.id = id;
         this.objectType = objectType;
         this.objectId = objectId;
@@ -54,6 +54,7 @@ public class NotificationData implements Serializable {
         this.action = action;
         this.content = content;
         this.isSystemGenerated = isSystemGenerated;
+        this.isRead = isRead;
         this.createdAt = createdAt == null ? null : createdAt.toString();
     }
 }

@@ -63,8 +63,8 @@ public class LoanInlineCOBConfig {
     @Autowired
     private COBBusinessStepService cobBusinessStepService;
     @Autowired
-    @Qualifier("batchJdbcTransactionTemplate")
-    private TransactionTemplate batchJdbcTransactionTemplate;
+    @Qualifier("requiresNewTransactionJdbcTemplate")
+    private TransactionTemplate requiresNewTransactionJdbcTemplate;
     @Autowired
     private CustomJobParameterRepository customJobParameterRepository;
     @Autowired
@@ -129,7 +129,7 @@ public class LoanInlineCOBConfig {
 
     @Bean
     public InlineCOBLoanItemListener inlineCobLoanItemListener() {
-        return new InlineCOBLoanItemListener(loanLockingService, batchJdbcTransactionTemplate);
+        return new InlineCOBLoanItemListener(loanLockingService, requiresNewTransactionJdbcTemplate);
     }
 
     @Bean

@@ -260,6 +260,10 @@ Feature: Working Capital Discount Adjustment
       | 01 January 2026 | Disbursement | 100.0             | 100.0            | 0.0               | 0.0                   | false    |
       | 01 January 2026 | Discount Fee | 12.0              | 12.0             | 0.0               | 0.0                   | false    |
       | 02 January 2026 | Repayment    | 50.0              | 50.0             | 0.0               | 0.0                   | false    |
+    Then Working Capital Loan Transactions tab has a "DISCOUNT_FEE" transaction with date "01 January 2026" which has the following Journal entries:
+      | Type      | Account code | Account name              | Debit | Credit |
+      | ASSET     | 112601       | Loans Receivable          | 12.0  |        |
+      | LIABILITY | 240005       | Deferred Interest Revenue |       | 12.0   |
     And Admin adds Discount fee adjustment with "10" amount on transaction date "02 January 2026" on Working Capital loan account for last discount
     And Working Capital Loan has transactions:
       | transactionDate | type                    | transactionAmount | principalPortion | feeChargesPortion | penaltyChargesPortion | reversed |
@@ -267,8 +271,41 @@ Feature: Working Capital Discount Adjustment
       | 01 January 2026 | Discount Fee            | 12.0              | 12.0             | 0.0               | 0.0                   | false    |
       | 02 January 2026 | Repayment               | 50.0              | 50.0             | 0.0               | 0.0                   | false    |
       | 02 January 2026 | Discount Fee Adjustment | 10.0              | 10.0             | 0.0               | 0.0                   | false    |
+    Then Working Capital Loan Transactions tab has a "DISCOUNT_FEE_ADJUSTMENT" transaction with date "02 January 2026" which has the following Journal entries:
+      | Type      | Account code | Account name              | Debit | Credit |
+      | LIABILITY | 240005       | Deferred Interest Revenue | 10.0  |        |
+      | ASSET     | 112601       | Loans Receivable          |       | 10.0   |
     And WorkingCapitalLoanDiscountFeeTransactionBusinessEvent is raised with amount "12" on "01 January 2026" date
     And WorkingCapitalLoanDiscountFeeAdjustmentTransactionBusinessEvent is raised with amount "10" on "02 January 2026" date
+
+  @TestRailId:C85207
+  Scenario: Verify Discount fee and multiple Discount fee adjustments on the same day post correct journal entries
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a working capital loan with the following data:
+      | LoanProduct                | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP_ACCOUNTING_CASH_BASED | 01 January 2026 | 01 January 2026          | 100             | 100          | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
+    And Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
+    Then Admin adds Discount fee with "12" amount on Working Capital loan account for last disbursement
+    Then Working Capital Loan Transactions tab has a "DISCOUNT_FEE" transaction with date "01 January 2026" which has the following Journal entries:
+      | Type      | Account code | Account name              | Debit | Credit |
+      | ASSET     | 112601       | Loans Receivable          | 12.0  |        |
+      | LIABILITY | 240005       | Deferred Interest Revenue |       | 12.0   |
+    And Admin adds Discount fee adjustment with "5" amount on Working Capital loan account for last discount
+    And Admin adds Discount fee adjustment with "7" amount on Working Capital loan account for last discount
+    And Working Capital Loan has transactions:
+      | transactionDate | type                    | transactionAmount | principalPortion | feeChargesPortion | penaltyChargesPortion | reversed |
+      | 01 January 2026 | Disbursement            | 100.0             | 100.0            | 0.0               | 0.0                   | false    |
+      | 01 January 2026 | Discount Fee            | 12.0              | 12.0             | 0.0               | 0.0                   | false    |
+      | 01 January 2026 | Discount Fee Adjustment | 5.0               | 5.0              | 0.0               | 0.0                   | false    |
+      | 01 January 2026 | Discount Fee Adjustment | 7.0               | 7.0              | 0.0               | 0.0                   | false    |
+    Then Working Capital Loan Transactions tab has 2 "DISCOUNT_FEE_ADJUSTMENT" transactions with date "01 January 2026" which have the following Journal entries:
+      | Type      | Account code | Account name              | Debit | Credit |
+      | LIABILITY | 240005       | Deferred Interest Revenue | 5.0   |        |
+      | ASSET     | 112601       | Loans Receivable          |       | 5.0    |
+      | LIABILITY | 240005       | Deferred Interest Revenue | 7.0   |        |
+      | ASSET     | 112601       | Loans Receivable          |       | 7.0    |
 
   @TestRailId:C83036
   Scenario: Verify discount fee adjustment transaction with classification field set - UC13

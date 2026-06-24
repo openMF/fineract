@@ -96,7 +96,7 @@ public class SkipRepaymentOnMonthFirstTest {
         final String startDate = "15 September 2011";
         final String frequency = "3"; // Monthly
         final String interval = "1"; // Every One Moth
-        Integer calendarID = CalendarHelper.createMeetingForGroup(requestSpec, responseSpec, groupID, startDate, frequency, interval, null);
+        Long calendarID = CalendarHelper.createMeetingForGroup(groupID.longValue(), startDate, frequency, interval, null).getResourceId();
         LOG.info("caladerId -------------------- {}", calendarID);
         final Integer loanProductID = createLoanProduct();
         final Integer loanID = applyForLoanApplication(groupID, loanProductID, calendarID, clientID);
@@ -122,7 +122,7 @@ public class SkipRepaymentOnMonthFirstTest {
         return this.loanTransactionHelper.getLoanProductId(loanProductJSON);
     }
 
-    private Integer applyForLoanApplication(final Integer groupID, final Integer loanProductID, Integer calendarID, Integer clientID) {
+    private Integer applyForLoanApplication(final Integer groupID, final Integer loanProductID, Long calendarID, Integer clientID) {
         LOG.info("--------------------------------APPLYING FOR LOAN APPLICATION--------------------------------");
         List<HashMap> collaterals = new ArrayList<>();
         final Integer collateralId = CollateralManagementHelper.createCollateralProduct(this.requestSpec, this.responseSpec);

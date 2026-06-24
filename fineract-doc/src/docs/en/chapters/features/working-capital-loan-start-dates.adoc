@@ -1,0 +1,184 @@
+= Working Capital Loan Start Dates (Breach and Delinquency)
+
+== Overview
+
+The Working Capital (WC) Loan retrieve response exposes two read-only derived fields, `breachStartDate` and `delinquencyStartDate`, that tell a consumer *when* a loan first entered breach and when it first became delinquent. Both values are computed on-the-fly from the loan's breach schedule and delinquency-range schedule when a single WC loan is fetched. They are `null` while the loan is healthy and become populated once the corresponding schedule period is flagged by the WC Close-of-Business (COB) job.
+
+The feature is implemented in the `fineract-working-capital-loan` module and is exposed on the WC Loan retrieve REST API as `breachStartDate` and `delinquencyStartDate`.
+
+=== Purpose
+
+Lenders and collection officers need a single, stable anchor date for each loan that answers "since when has this loan been in trouble?" — for ageing reports, dunning timelines, and SLA tracking. Rather than forcing API consumers to scan the full breach/delinquency schedule and re-apply grace-day arithmetic themselves, the platform derives the earliest affected period and returns its effective start date directly.
+
+=== Scope
+
+The scope of this document includes:
+
+* New read-only fields `breachStartDate` and `delinquencyStartDate` on the WC Loan retrieve response.
+* Derivation logic in `WorkingCapitalLoanApplicationReadPlatformServiceImpl.enrichWithStartDates`.
+* Two repository finder methods that locate the earliest breached / delinquent period.
+* The differing grace-day handling between the breach schedule and the delinquency-range schedule.
+
+The scope explicitly excludes:
+
+* No new database tables or columns — both values are derived at read time from existing schedules.
+* No business events are emitted for these fields.
+* The fields are populated only by the single-loan retrieve path (`retrieveOne`); they are not enriched in the paginated list response.
+
+=== Applicability
+
+* Applies to Working Capital loans returned by `GET /v1/working-capital-loans/{loanId}` and `GET /v1/working-capital-loans/external-id/{loanExternalId}`.
+* `breachStartDate` is meaningful only when the product/loan has a breach configuration (`breach_id` not null) so that a breach schedule exists.
+* `delinquencyStartDate` is meaningful only when the loan has a delinquency bucket assigned so that a delinquency-range schedule exists.
+* Values reflect the state at the time of the last WC COB run; a loan whose periods have not yet been evaluated will report `null`.
+
+=== Definitions and Key Concepts
+
+*`breachStartDate`:* The `fromDate` of the earliest breached breach-schedule period (`m_wc_loan_breach_schedule` row with `breach = true`, ordered by `from_date` ascending). The breach schedule already offsets its first period by `breachGraceDays`, so the grace is *implicitly reflected* in this date — no further adjustment is applied. `null` when no period is in breach.
+
+*`delinquencyStartDate`:* The `fromDate` of the earliest delinquent range-schedule period (`m_wc_loan_delinquency_range_schedule` row with `min_payment_criteria_met = false`, ordered by `from_date` ascending) *plus* `delinquencyGraceDays`. The delinquency-range schedule does **not** bake grace days into its period boundaries, so the grace is *added explicitly* here. `null` when no period is delinquent.
+
+*Breach period (`breach = true`):* A breach-schedule period whose `outstanding_amount > 0` after its `toDate` has passed and the WC COB has evaluated it.
+
+*Delinquent period (`min_payment_criteria_met = false`):* A delinquency-range-schedule period whose required minimum payment was not met by its `toDate` once evaluated by the WC COB.
+
+== Design Decisions and Considerations
+
+=== Asymmetric Grace-Day Handling
+
+The two start dates apply grace days differently, and this asymmetry is intentional — it mirrors how each schedule is generated:
+
+* *Breach schedule*: `BreachScheduleBusinessStep` shifts the first period's `fromDate` to `disbursementDate + breachGraceDays`. The grace is therefore *already embedded* in the period boundary, so `breachStartDate` is simply that `fromDate` with no extra arithmetic.
+* *Delinquency-range schedule*: periods are generated anchored at the date selected by `delinquencyStartType` (the loan submitted-on date for `LOAN_CREATION`, the actual disbursement date for `DISBURSEMENT`/unset) *without* applying `delinquencyGraceDays`. Therefore `enrichWithStartDates` adds `delinquencyGraceDays` to the period `fromDate` to obtain the effective `delinquencyStartDate`.
+
+Treating both identically would either double-count the breach grace or omit the delinquency grace. See <<Example Scenarios>>.
+
+=== Derived at Read Time, Not Persisted
+
+Both fields are computed in `enrichWithStartDates` during `retrieveOne` rather than stored as columns. This keeps the values always consistent with the current schedule state (e.g., after a backdated payment clears the earliest breached period, the next retrieve naturally reports the new earliest breached period) without requiring a migration or a maintenance job to keep a denormalized column in sync.
+
+=== Null Treated as Zero for Grace
+
+`enrichWithStartDates` defends against a `null` `delinquencyGraceDays`:
+
+[source,java]
+----
+final int graceDays = data.getDelinquencyGraceDays() != null ? data.getDelinquencyGraceDays() : 0;
+data.setDelinquencyStartDate(period.getFromDate().plusDays(graceDays));
+----
+
+A `null` grace value is treated as `0`, so a loan with no configured delinquency grace reports the raw period `fromDate`.
+
+== Database Design
+
+=== Overview
+
+No tables or columns are introduced by this feature. Both fields are derived by querying two existing schedule tables.
+
+=== Existing Tables
+
+*`m_wc_loan_breach_schedule`*: read to find the earliest period flagged `breach = true`. The relevant columns are `wc_loan_id`, `from_date`, and `breach`.
+
+*`m_wc_loan_delinquency_range_schedule`*: read to find the earliest period flagged `min_payment_criteria_met = false`. The relevant columns are `wc_loan_id`, `from_date`, and `min_payment_criteria_met`.
+
+== API Design
+
+=== Endpoints
+
+==== Retrieve a Working Capital Loan
+
+Returns the full WC loan detail, including the derived start dates.
+
+[source]
+----
+GET /v1/working-capital-loans/{loanId}
+GET /v1/working-capital-loans/external-id/{loanExternalId}
+----
+
+**Response (relevant fields only):**
+
+[source,json]
+----
+{
+  "delinquencyGraceDays": 3,            // product/loan delinquency grace days
+  "delinquencyStartType": { "id": 2, "code": "DISBURSEMENT", "value": "Disbursement" },
+  "breachGraceDays": 5,                 // product/loan breach grace days
+  "breachStartDate": [2026, 1, 6],      // fromDate of earliest breached period (grace already reflected)
+  "delinquencyStartDate": [2026, 1, 4]  // fromDate of earliest delinquent period + delinquencyGraceDays
+}
+----
+
+[NOTE]
+====
+`breachStartDate` and `delinquencyStartDate` are read-only and derived. They cannot be set in a create/update request and are absent (or `null`) on responses where the loan is not yet in breach / delinquency, or where the breach / delinquency configuration is not present.
+====
+
+== Business Rules
+
+=== Breach Start Date
+
+* `breachStartDate` is the `fromDate` of the earliest `m_wc_loan_breach_schedule` row with `breach = true` (`findTopByLoanIdAndBreachTrueOrderByFromDateAsc`).
+* The breach grace days are *not* re-added — they are already embedded in the period's `fromDate` by the breach schedule generator.
+* When no breach period exists or none is flagged `breach = true`, `breachStartDate` is `null`.
+
+=== Delinquency Start Date
+
+* `delinquencyStartDate` is the `fromDate` of the earliest `m_wc_loan_delinquency_range_schedule` row with `min_payment_criteria_met = false` (`findTopByLoanIdAndMinPaymentCriteriaMetFalseOrderByFromDateAsc`), shifted forward by `delinquencyGraceDays`.
+* The delinquency schedule itself is anchored according to `delinquencyStartType`: `LOAN_CREATION` anchors the first period on the loan submitted-on date, while `DISBURSEMENT` (or an unset type) anchors it on the actual disbursement date. This anchor is resolved in `WorkingCapitalLoanDelinquencyRangeScheduleServiceImpl.generateInitialPeriod`.
+* A `null` `delinquencyGraceDays` is treated as `0`.
+* When no delinquent period exists, `delinquencyStartDate` is `null`.
+
+== Example Scenarios
+
+=== Scenario #1: Loan breaches and becomes delinquent on the same COB run
+
+**Setup:**
+
+* Disbursement date `D = 2026-01-01`.
+* Breach configuration: 15-day frequency, `breachGraceDays = 5` → first breach period is `[D+5 .. D+19]` = `[2026-01-06 .. 2026-01-20]`.
+* Delinquency bucket: 20-day frequency (no grace baked into the schedule), `delinquencyGraceDays = 3` → first delinquency period is `[D .. D+19]` = `[2026-01-01 .. 2026-01-20]`.
+* The borrower makes no qualifying payment.
+
+**Action:**
+
+The business date is advanced to `D+19` (`2026-01-20`, the end of both first periods) and the `WC_LOAN_COB` job runs for the loan. A single COB run flags both the first breach period (`breach = true`) and the first delinquency period (`min_payment_criteria_met = false`).
+
+**Expected Behavior:**
+
+* `breachStartDate = 2026-01-06` — the `fromDate` of the first breached period (`D + breachGraceDays`); grace already reflected in the schedule.
+* `delinquencyStartDate = 2026-01-04` — the `fromDate` of the first delinquent period (`D`) plus `delinquencyGraceDays` (`+3`).
+
+This is the exact behavior asserted by `WorkingCapitalLoanStartDatesIntegrationTest.testStartDatesArePopulatedWhenLoanBreachesAndBecomesDelinquent`.
+
+=== Scenario #2: Healthy loan — both start dates null
+
+**Setup:**
+
+* Same product/loan configuration as Scenario #1, disbursed on `D = 2026-01-01`.
+
+**Action:**
+
+The `WC_LOAN_COB` job runs on the disbursement date itself, before any schedule period has expired. No period is flagged.
+
+**Expected Behavior:**
+
+* `breachStartDate = null` — the loan is not in breach.
+* `delinquencyStartDate = null` — the loan is not delinquent.
+
+This is asserted by `WorkingCapitalLoanStartDatesIntegrationTest.testStartDatesAreNullForHealthyLoan`.
+
+=== Exception Cases
+
+* *No breach configuration:* When the product/loan has no `breach_id`, the breach schedule is never generated; `findTopByLoanIdAndBreachTrueOrderByFromDateAsc` returns empty and `breachStartDate` stays `null` regardless of payment behavior.
+* *No delinquency bucket:* With no delinquency-range schedule generated, `delinquencyStartDate` stays `null`.
+* *`null` delinquency grace days:* `delinquencyGraceDays` is treated as `0`, so `delinquencyStartDate` equals the raw period `fromDate`.
+* *Earliest period subsequently cured:* Because the values are derived at read time, if a backdated payment clears the earliest breached/delinquent period, the *next* retrieve reports the new earliest still-flagged period — or `null` if none remain.
+* *List vs. single retrieve:* The paginated WC loan list response does not invoke `enrichWithStartDates`; these fields are populated only by the single-loan retrieve path.
+
+== Summary
+
+Working Capital Loan Start Dates surface two derived, read-only anchor dates on the WC loan retrieve response. Key aspects include:
+
+* `breachStartDate` — the `fromDate` of the earliest breached breach-schedule period, with `breachGraceDays` already reflected by the schedule generator.
+* `delinquencyStartDate` — the `fromDate` of the earliest delinquent range-schedule period, with `delinquencyGraceDays` added explicitly because the delinquency schedule does not bake grace into its boundaries.
+* Both values are computed at read time in `enrichWithStartDates`, are `null` while the loan is healthy or unconfigured, and stay consistent with the current schedule state without any persisted column.

@@ -349,13 +349,19 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
         final boolean isStalePreReAgeVariation = !targetIsReAged && reAgeAlreadyProcessed;
 
         Optional<LoanTransaction> lastActiveReAgeTransaction = findLastActiveReAgeTransactionIn(alreadyProcessedTransactions);
+        if ((termVariationsData.getCreatedDate() != null && lastActiveReAgeTransaction.isPresent() && lastActiveReAgeTransaction.get()
+                .getCreatedDate().orElse(DateUtils.getOffsetDateTimeOfTenant()).isAfter(termVariationsData.getCreatedDate()))
+                || targetInstallment.isEmpty()) {
+            return;
+        }
         final Integer repayEvery = lastActiveReAgeTransaction.map(t -> t.getLoanReAgeParameter().getFrequencyNumber())
                 .orElse(loan.getLoanProductRelatedDetail().getRepayEvery());
         final PeriodFrequencyType repaymentFrequency = lastActiveReAgeTransaction.map(t -> t.getLoanReAgeParameter().getFrequencyType())
                 .orElse(loan.getLoanProductRelatedDetail().getRepaymentPeriodFrequencyType());
         final ChronoUnit repaymentFrequencyChronoUnit = resolveChronoUnit(repaymentFrequency);
+        boolean canUseEmiCalculator = !reAgeAlreadyProcessed || loan.isInterestBearingAndInterestRecalculationEnabled();
 
-        if (targetExistsInScheduleModel && !isStalePreReAgeVariation) {
+        if (canUseEmiCalculator && targetExistsInScheduleModel && !isStalePreReAgeVariation) {
             final LoanApplicationTerms loanApplicationTerms = new LoanApplicationTerms.Builder() //
                     .currency(loan.getCurrency().toData()) //
                     .repaymentEvery(repayEvery) //
@@ -366,7 +372,7 @@ public class AdvancedPaymentScheduleTransactionProcessor extends AbstractLoanRep
             emiCalculator.changeDueDate(scheduleModel, loanApplicationTerms, targetRepaymentPeriodDueDate, newDueDate);
         }
 
-        final boolean dateShiftOnly = isStalePreReAgeVariation || !targetExistsInScheduleModel;
+        final boolean dateShiftOnly = !canUseEmiCalculator || isStalePreReAgeVariation || !targetExistsInScheduleModel;
 
         IntStream.range(0, installments.size()).filter(i -> installments.get(i).getDueDate().equals(targetRepaymentPeriodDueDate))
                 .findFirst().ifPresent(targetInstallmentIndex -> {

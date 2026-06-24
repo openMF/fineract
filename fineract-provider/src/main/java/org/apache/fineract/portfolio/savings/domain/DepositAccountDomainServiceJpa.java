@@ -61,6 +61,7 @@ import org.apache.fineract.portfolio.savings.DepositAccountType;
 import org.apache.fineract.portfolio.savings.DepositsApiConstants;
 import org.apache.fineract.portfolio.savings.SavingsApiConstants;
 import org.apache.fineract.portfolio.savings.SavingsTransactionBooleanValues;
+import org.apache.fineract.portfolio.savings.service.SavingsAccountActivationService;
 import org.apache.fineract.portfolio.savings.service.SavingsAccountDomainService;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.springframework.stereotype.Service;
@@ -71,6 +72,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DepositAccountDomainServiceJpa implements DepositAccountDomainService {
 
     private final SavingsAccountRepositoryWrapper savingsAccountRepository;
+    private final SavingsAccountActivationService savingsAccountActivationService;
     private final JournalEntryWritePlatformService journalEntryWritePlatformService;
     private final AccountNumberGenerator accountNumberGenerator;
     private final DepositAccountAssembler depositAccountAssembler;
@@ -127,7 +129,8 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
         final boolean isAnyActivationChargesDue = isAnyActivationChargesDue(account);
         if (isAnyActivationChargesDue) {
             updateExistingTransactionsDetails(account, existingTransactionIds, existingReversedTransactionIds);
-            account.processAccountUponActivation(isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth);
+            savingsAccountActivationService.processAccountUponActivation(account, isSavingsInterestPostingAtCurrentPeriodEnd,
+                    financialYearBeginningMonth);
             this.savingsAccountRepository.saveAndFlush(account);
         }
         account.handleScheduleInstallments(deposit);

@@ -20,6 +20,8 @@ package org.apache.fineract.portfolio.loanorigination.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
@@ -64,7 +66,7 @@ public class LoanOriginatorsApiResource {
     @Path("{loanId}/originators")
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve originators for a loan by loan ID", description = "Retrieves all originators attached to a specific loan. Requires READ_LOAN permission.")
-    @ApiResponse(responseCode = "200", description = "OK - Returns wrapped list of originators (may be empty)")
+    @ApiResponse(responseCode = "200", description = "OK - Returns wrapped list of originators (may be empty)", content = @Content(schema = @Schema(implementation = LoanOriginatorsResponse.class)))
     @ApiResponse(responseCode = "403", description = "Insufficient permissions")
     @ApiResponse(responseCode = "404", description = "Loan not found")
     public LoanOriginatorsResponse retrieveOriginatorsByLoanId(@PathParam("loanId") @Parameter(description = "loanId") final Long loanId) {
@@ -81,7 +83,7 @@ public class LoanOriginatorsApiResource {
     @Path("external-id/{loanExternalId}/originators")
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Retrieve originators for a loan by loan external ID", description = "Retrieves all originators attached to a specific loan using loan external ID. Requires READ_LOAN permission.")
-    @ApiResponse(responseCode = "200", description = "OK - Returns wrapped list of originators (may be empty)")
+    @ApiResponse(responseCode = "200", description = "OK - Returns wrapped list of originators (may be empty)", content = @Content(schema = @Schema(implementation = LoanOriginatorsResponse.class)))
     @ApiResponse(responseCode = "403", description = "Insufficient permissions")
     @ApiResponse(responseCode = "404", description = "Loan not found")
     public LoanOriginatorsResponse retrieveOriginatorsByLoanExternalId(
@@ -102,7 +104,7 @@ public class LoanOriginatorsApiResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Attach originator to loan by IDs", description = "Attaches an originator to a loan. Loan must be in 'Submitted and Pending Approval' status. Requires ATTACH_LOAN_ORIGINATOR permission.")
-    @ApiResponse(responseCode = "200", description = "OK - Originator attached")
+    @ApiResponse(responseCode = "200", description = "OK - Originator attached", content = @Content(schema = @Schema(implementation = LoanOriginatorMappingResponse.class)))
     @ApiResponse(responseCode = "403", description = "Loan not in correct status, originator not ACTIVE, duplicate mapping, or insufficient permissions")
     @ApiResponse(responseCode = "404", description = "Loan or originator not found")
     public LoanOriginatorMappingResponse attachOriginatorToLoan(@PathParam("loanId") @Parameter(description = "loanId") final Long loanId,
@@ -119,7 +121,7 @@ public class LoanOriginatorsApiResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Attach originator to loan by loan ID and originator external ID")
-    @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanOriginatorMappingResponse.class)))
     @ApiResponse(responseCode = "403", description = "Loan not in correct status, originator not ACTIVE, duplicate mapping")
     @ApiResponse(responseCode = "404", description = "Loan or originator not found")
     public LoanOriginatorMappingResponse attachOriginatorToLoanByOriginatorExternalId(
@@ -139,7 +141,7 @@ public class LoanOriginatorsApiResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Attach originator to loan by loan external ID and originator ID")
-    @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanOriginatorMappingResponse.class)))
     @ApiResponse(responseCode = "403", description = "Loan not in correct status, originator not ACTIVE, duplicate mapping")
     @ApiResponse(responseCode = "404", description = "Loan or originator not found")
     public LoanOriginatorMappingResponse attachOriginatorToLoanByLoanExternalId(
@@ -163,7 +165,7 @@ public class LoanOriginatorsApiResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Attach originator to loan by external IDs")
-    @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanOriginatorMappingResponse.class)))
     @ApiResponse(responseCode = "403", description = "Loan not in correct status, originator not ACTIVE, duplicate mapping")
     @ApiResponse(responseCode = "404", description = "Loan or originator not found")
     public LoanOriginatorMappingResponse attachOriginatorToLoanByExternalIds(
@@ -188,7 +190,7 @@ public class LoanOriginatorsApiResource {
     @Path("{loanId}/originators/{originatorId}")
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Detach originator from loan by IDs", description = "Detaches an originator from a loan. Loan must be in 'Submitted and Pending Approval' status. Requires DETACH_LOAN_ORIGINATOR permission.")
-    @ApiResponse(responseCode = "200", description = "OK - Originator detached")
+    @ApiResponse(responseCode = "200", description = "OK - Originator detached", content = @Content(schema = @Schema(implementation = LoanOriginatorMappingResponse.class)))
     @ApiResponse(responseCode = "403", description = "Loan not in correct status or insufficient permissions")
     @ApiResponse(responseCode = "404", description = "Loan, originator, or mapping not found")
     public LoanOriginatorMappingResponse detachOriginatorFromLoan(@PathParam("loanId") @Parameter(description = "loanId") final Long loanId,
@@ -204,7 +206,7 @@ public class LoanOriginatorsApiResource {
     @Path("{loanId}/originators/external-id/{originatorExternalId}")
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Detach originator from loan by loan ID and originator external ID")
-    @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanOriginatorMappingResponse.class)))
     @ApiResponse(responseCode = "403", description = "Loan not in correct status")
     @ApiResponse(responseCode = "404", description = "Loan, originator, or mapping not found")
     public LoanOriginatorMappingResponse detachOriginatorFromLoanByOriginatorExternalId(
@@ -223,7 +225,7 @@ public class LoanOriginatorsApiResource {
     @Path("external-id/{loanExternalId}/originators/{originatorId}")
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Detach originator from loan by loan external ID and originator ID")
-    @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanOriginatorMappingResponse.class)))
     @ApiResponse(responseCode = "403", description = "Loan not in correct status")
     @ApiResponse(responseCode = "404", description = "Loan, originator, or mapping not found")
     public LoanOriginatorMappingResponse detachOriginatorFromLoanByLoanExternalId(
@@ -246,7 +248,7 @@ public class LoanOriginatorsApiResource {
     @Path("external-id/{loanExternalId}/originators/external-id/{originatorExternalId}")
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Detach originator from loan by external IDs")
-    @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanOriginatorMappingResponse.class)))
     @ApiResponse(responseCode = "403", description = "Loan not in correct status")
     @ApiResponse(responseCode = "404", description = "Loan, originator, or mapping not found")
     public LoanOriginatorMappingResponse detachOriginatorFromLoanByExternalIds(

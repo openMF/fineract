@@ -35,6 +35,8 @@ public interface WorkingCapitalLoanChargeRepository
 
     Long findIdByExternalId(ExternalId externalId);
 
+    List<WorkingCapitalLoanCharge> findByLoanIdAndActiveTrueOrderByDueDateAscIdAsc(Long loanId);
+
     @Query("select new org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanChargeData("
             + "lc.id, c.id, c.name, lc.chargeTimeType, lc.submittedOnDate, lc.dueDate, lc.chargeCalculationType, oc.code, oc.name, oc.decimalPlaces, oc.inMultiplesOf, oc.displaySymbol,"
             + " oc.nameCode, lc.amount, lc.amountPaid, lc.penaltyCharge, lc.chargePaymentMode, lc.paid, l.id, lc.externalId, l.externalId) from WorkingCapitalLoanCharge lc join fetch lc.charge c join OrganisationCurrency oc on c.currencyCode = oc.code join fetch lc.loan l where l.id = :loanId and lc.id = :id")

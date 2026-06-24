@@ -86,14 +86,15 @@ public class WorkingCapitalLoanApplicationDataValidator {
             WorkingCapitalLoanConstants.clientIdParameterName, WorkingCapitalLoanConstants.productIdParameterName,
             WorkingCapitalLoanConstants.fundIdParameterName, WorkingCapitalLoanConstants.accountNoParameterName,
             WorkingCapitalLoanConstants.externalIdParameterName, WorkingCapitalLoanConstants.principalAmountParamName,
-            WorkingCapitalLoanProductConstants.periodPaymentRateParamName, WorkingCapitalLoanConstants.totalPaymentVolumeParamName,
-            WorkingCapitalLoanProductConstants.discountParamName, WorkingCapitalLoanConstants.submittedOnDateParameterName,
-            WorkingCapitalLoanConstants.expectedDisbursementDateParameterName,
+            WorkingCapitalLoanConstants.originatorsParameterName, WorkingCapitalLoanProductConstants.periodPaymentRateParamName,
+            WorkingCapitalLoanConstants.totalPaymentVolumeParamName, WorkingCapitalLoanProductConstants.discountParamName,
+            WorkingCapitalLoanConstants.submittedOnDateParameterName, WorkingCapitalLoanConstants.expectedDisbursementDateParameterName,
             WorkingCapitalLoanProductConstants.delinquencyBucketIdParamName, WorkingCapitalLoanProductConstants.repaymentEveryParamName,
             WorkingCapitalLoanProductConstants.repaymentFrequencyTypeParamName, WorkingCapitalLoanConstants.submittedOnNoteParameterName,
             WorkingCapitalLoanProductConstants.breachIdParamName, WorkingCapitalLoanProductConstants.allowAttributeOverridesParamName,
             WorkingCapitalLoanProductConstants.paymentAllocationParamName, WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName,
-            WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, WorkingCapitalLoanProductConstants.nearBreachIdParamName));
+            WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, WorkingCapitalLoanProductConstants.nearBreachIdParamName,
+            WorkingCapitalLoanProductConstants.breachGraceDaysParamName));
 
     private final FromJsonHelper fromApiJsonHelper;
     private final WorkingCapitalPaymentAllocationDataValidator paymentAllocationDataValidator;
@@ -215,6 +216,13 @@ public class WorkingCapitalLoanApplicationDataValidator {
                     .extractIntegerWithLocaleNamed(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element);
             baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName)
                     .value(delinquencyGraceDays).ignoreIfNull().integerZeroOrGreater();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.breachGraceDaysParamName, element)) {
+            final Integer breachGraceDays = this.fromApiJsonHelper
+                    .extractIntegerWithLocaleNamed(WorkingCapitalLoanProductConstants.breachGraceDaysParamName, element);
+            baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.breachGraceDaysParamName).value(breachGraceDays)
+                    .ignoreIfNull().integerZeroOrGreater();
         }
 
         if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element)) {
@@ -462,6 +470,14 @@ public class WorkingCapitalLoanApplicationDataValidator {
                     .extractIntegerWithLocaleNamed(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element);
             baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName)
                     .value(delinquencyGraceDays).ignoreIfNull().integerZeroOrGreater();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.breachGraceDaysParamName, element)) {
+            atLeastOneParameterPassedForUpdate = true;
+            final Integer breachGraceDays = this.fromApiJsonHelper
+                    .extractIntegerWithLocaleNamed(WorkingCapitalLoanProductConstants.breachGraceDaysParamName, element);
+            baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.breachGraceDaysParamName).value(breachGraceDays)
+                    .ignoreIfNull().integerZeroOrGreater();
         }
 
         if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element)) {

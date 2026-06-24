@@ -19,7 +19,7 @@ runs:
         distribution: 'zulu'
 
     - name: Setup Gradle and Validate Wrapper
-      uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       with:
         validate-wrappers: true
         cache-read-only: ${{ inputs.cache-read-only }}
@@ -27,17 +27,17 @@ runs:
     - name: Build Avro Java SDK
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: ./gradlew --no-daemon :fineract-avro-schemas:buildJavaSdk -x test -x cucumber -x doc -x javadoc -x javadocJar -x checkstyleMain -x checkstyleTest -x checkstyleJmh -x spotbugsMain -x spotbugsTest -x spotlessCheck -x spotlessApply -x rat
+      run: ./gradlew :fineract-avro-schemas:buildJavaSdk
 
     - name: Compile Fineract Provider
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: ./gradlew --no-daemon :fineract-provider:compileJava -x test -x cucumber -x doc -x buildJavaSdk -x javadoc -x javadocJar -x checkstyleMain -x checkstyleTest -x checkstyleJmh -x spotbugsMain -x spotbugsTest -x spotlessCheck -x spotlessApply -x rat
+      run: ./gradlew :fineract-provider:compileJava
 
     - name: Generate Fineract Git Properties
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: ./gradlew --no-daemon :fineract-provider:generateGitProperties -x javadoc -x javadocJar -x checkstyleMain -x checkstyleTest -x checkstyleJmh -x spotbugsMain -x spotbugsTest -x spotlessCheck -x spotlessApply -x rat
+      run: ./gradlew :fineract-provider:generateGitProperties
 
     - name: Verify generated git.properties
       shell: bash
@@ -47,14 +47,14 @@ runs:
     - name: Build Fineract Client Java SDK
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: ./gradlew --no-daemon :fineract-client:buildJavaSdk -x test -x cucumber -x doc -x javadoc -x javadocJar -x checkstyleMain -x checkstyleTest -x checkstyleJmh -x spotbugsMain -x spotbugsTest -x spotlessCheck -x spotlessApply -x rat
+      run: ./gradlew :fineract-client:buildJavaSdk
 
     - name: Build Fineract Client Feign Java SDK
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: ./gradlew --no-daemon :fineract-client-feign:buildJavaSdk -x test -x cucumber -x doc -x javadoc -x javadocJar -x checkstyleMain -x checkstyleTest -x checkstyleJmh -x spotbugsMain -x spotbugsTest -x spotlessCheck -x spotlessApply -x rat
+      run: ./gradlew :fineract-client-feign:buildJavaSdk
 
     - name: Build Fineract
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: ./gradlew --no-daemon build -x test -x cucumber -x doc -x javadoc -x javadocJar -x checkstyleMain -x checkstyleTest -x checkstyleJmh -x spotbugsMain -x spotbugsTest -x spotlessCheck -x spotlessApply -x rat
+      run: ./gradlew build -x test -x cucumber -x doc -x javadoc -x javadocJar -x checkstyleMain -x checkstyleTest -x checkstyleJmh -x spotbugsMain -x spotbugsTest -x spotlessCheck -x spotlessApply -x rat

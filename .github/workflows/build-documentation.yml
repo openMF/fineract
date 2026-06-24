@@ -26,14 +26,14 @@ jobs:
       - name: Extract workspace
         run: tar -xf fineract-workspace.tar
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: 22
       - name: Configure vega-cli
         run: npm i -g vega-cli --unsafe
       - name: Validate Gradle wrapper
-        uses: gradle/actions/wrapper-validation@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/wrapper-validation@5e2ebd065dc2488b7a6ad670704656cbbe1e8f60 # v6.1.1
       - name: Install additional software
         run: |
           sudo apt-get update

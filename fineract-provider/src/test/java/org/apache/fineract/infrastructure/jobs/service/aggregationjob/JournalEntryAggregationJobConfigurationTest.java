@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.BDDMockito.given;
 
 import org.apache.fineract.infrastructure.core.config.FineractProperties;
+import org.apache.fineract.infrastructure.core.service.database.DatabaseTypeResolver;
 import org.apache.fineract.infrastructure.core.service.migration.TenantDataSourceFactory;
 import org.apache.fineract.infrastructure.jobs.service.aggregationjob.listener.JournalEntryAggregationJobListener;
 import org.apache.fineract.infrastructure.jobs.service.aggregationjob.tasklet.JournalEntryAggregationTrackingTasklet;
@@ -62,6 +63,9 @@ class JournalEntryAggregationJobConfigurationTest {
 
     @Mock
     private TenantDataSourceFactory tenantDataSourceFactory;
+
+    @Mock
+    private DatabaseTypeResolver databaseTypeResolver;
 
     @Mock
     private FineractProperties fineractProperties;

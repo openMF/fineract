@@ -649,6 +649,51 @@ public class GlobalConfigurationHelper {
         enableInstantDelinquencyCalculation.put("trapDoor", false);
         defaults.add(enableInstantDelinquencyCalculation);
 
+        HashMap<String, Object> lastDayOfFinancialYear = new HashMap<>();
+        lastDayOfFinancialYear.put("name", GlobalConfigurationConstants.LAST_DAY_OF_FINANCIAL_YEAR);
+        lastDayOfFinancialYear.put("value", 31L);
+        lastDayOfFinancialYear.put("enabled", true);
+        lastDayOfFinancialYear.put("trapDoor", false);
+        defaults.add(lastDayOfFinancialYear);
+
+        HashMap<String, Object> lastMonthOfFinancialYear = new HashMap<>();
+        lastMonthOfFinancialYear.put("name", GlobalConfigurationConstants.LAST_MONTH_OF_FINANCIAL_YEAR);
+        lastMonthOfFinancialYear.put("value", 12L);
+        lastMonthOfFinancialYear.put("enabled", true);
+        lastMonthOfFinancialYear.put("trapDoor", false);
+        defaults.add(lastMonthOfFinancialYear);
+
+        HashMap<String, Object> incomeExpenseGlAccounts = new HashMap<>();
+        incomeExpenseGlAccounts.put("name", GlobalConfigurationConstants.INCOME_EXPENSE_GL_ACCOUNTS);
+        incomeExpenseGlAccounts.put("value", 0L);
+        incomeExpenseGlAccounts.put("enabled", true);
+        incomeExpenseGlAccounts.put("trapDoor", false);
+        incomeExpenseGlAccounts.put("string_value", "");
+        defaults.add(incomeExpenseGlAccounts);
+
+        HashMap<String, Object> retainedEarningGlAccount = new HashMap<>();
+        retainedEarningGlAccount.put("name", GlobalConfigurationConstants.RETAINED_EARNING_GL_ACCOUNT);
+        retainedEarningGlAccount.put("value", 0L);
+        retainedEarningGlAccount.put("enabled", true);
+        retainedEarningGlAccount.put("trapDoor", false);
+        retainedEarningGlAccount.put("string_value", "");
+        defaults.add(retainedEarningGlAccount);
+
+        HashMap<String, Object> officeId = new HashMap<>();
+        officeId.put("name", GlobalConfigurationConstants.OFFICE_ID);
+        officeId.put("value", 1L);
+        officeId.put("enabled", true);
+        officeId.put("trapDoor", false);
+        defaults.add(officeId);
+
+        HashMap<String, Object> retainedEarningUsedByReportName = new HashMap<>();
+        retainedEarningUsedByReportName.put("name", GlobalConfigurationConstants.RETAINED_EARNING_USED_BY_REPORT_NAME);
+        retainedEarningUsedByReportName.put("value", 0L);
+        retainedEarningUsedByReportName.put("enabled", true);
+        retainedEarningUsedByReportName.put("trapDoor", false);
+        retainedEarningUsedByReportName.put("string_value", "Trial Balance Summary Report with Asset Owner");
+        defaults.add(retainedEarningUsedByReportName);
+
         return defaults;
     }
 

@@ -38,10 +38,10 @@ import org.springframework.stereotype.Repository;
 @CacheConfig(cacheNames = "calendarInstances")
 public interface CalendarInstanceRepository extends JpaRepository<CalendarInstance, Long>, JpaSpecificationExecutor<CalendarInstance> {
 
-    @Cacheable(key = "'calId_' + #calendarId + '_entityId_' + #entityId + '_entityTypeId_' + #entityTypeId")
+    @Cacheable(key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('calId_' + #calendarId + '_entityId_' + #entityId + '_entityTypeId_' + #entityTypeId)")
     CalendarInstance findByCalendarIdAndEntityIdAndEntityTypeId(Long calendarId, Long entityId, Integer entityTypeId);
 
-    @Cacheable(key = "'entityId_' + #entityId + '_entityTypeId_' + #entityTypeId")
+    @Cacheable(key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('entityId_' + #entityId + '_entityTypeId_' + #entityTypeId)")
     Collection<CalendarInstance> findByEntityIdAndEntityTypeId(Long entityId, Integer entityTypeId);
 
     /**
@@ -53,18 +53,18 @@ public interface CalendarInstanceRepository extends JpaRepository<CalendarInstan
      *            {@link CalendarType}
      * @return
      */
-    @Cacheable(key = "'entityId_' + #entityId + '_entityTypeId_' + #entityTypeId + '_calendarTypeId_' + #calendarTypeId")
+    @Cacheable(key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('entityId_' + #entityId + '_entityTypeId_' + #entityTypeId + '_calendarTypeId_' + #calendarTypeId)")
     CalendarInstance findByEntityIdAndEntityTypeIdAndCalendarTypeId(Long entityId, Integer entityTypeId, Integer calendarTypeId);
 
-    @Cacheable(key = "'findCalendarInstanceByEntityId_entityId_' + #entityId + '_entityTypeId_' + #entityTypeId")
+    @Cacheable(key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('findCalendarInstanceByEntityId_entityId_' + #entityId + '_entityTypeId_' + #entityTypeId)")
     @Query("select ci from CalendarInstance ci where ci.entityId = :entityId and ci.entityTypeId = :entityTypeId")
     CalendarInstance findCalendarInstanceByEntityId(@Param("entityId") Long entityId, @Param("entityTypeId") Integer entityTypeId);
 
-    @Cacheable(key = "'calendarId_' + #calendarId + '_entityTypeId_' + #entityTypeId")
+    @Cacheable(key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('calendarId_' + #calendarId + '_entityTypeId_' + #entityTypeId)")
     Collection<CalendarInstance> findByCalendarIdAndEntityTypeId(Long calendarId, Integer entityTypeId);
 
     /** Should use in clause, can I do it without creating a new class? **/
-    @Cacheable(key = "'groupId_' + #groupId + '_clientId_' + #clientId + '_statuses_' + T(org.springframework.util.StringUtils).collectionToCommaDelimitedString(#loanStatuses)")
+    @Cacheable(key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('groupId_' + #groupId + '_clientId_' + #clientId + '_statuses_' + T(org.springframework.util.StringUtils).collectionToCommaDelimitedString(#loanStatuses))")
     @Query("select ci from CalendarInstance ci where ci.entityId in (select loan.id from Loan loan where loan.client.id = :clientId and loan.group.id = :groupId and loan.loanStatus in :loanStatuses) and ci.entityTypeId = 3")
     List<CalendarInstance> findCalendarInstancesForLoansByGroupIdAndClientIdAndStatuses(@Param("groupId") Long groupId,
             @Param("clientId") Long clientId, @Param("loanStatuses") Collection<LoanStatus> loanStatuses);
@@ -72,7 +72,7 @@ public interface CalendarInstanceRepository extends JpaRepository<CalendarInstan
     /**
      * EntityType = 3 is for loan
      */
-    @Cacheable(key = "'countLoans_calendarId_' + #calendarId + '_statuses_' + T(org.springframework.util.StringUtils).collectionToCommaDelimitedString(#loanStatuses)")
+    @Cacheable(key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('countLoans_calendarId_' + #calendarId + '_statuses_' + T(org.springframework.util.StringUtils).collectionToCommaDelimitedString(#loanStatuses))")
     @Query("SELECT COUNT(ci.id) FROM CalendarInstance ci, Loan loan WHERE loan.id = ci.entityId AND ci.entityTypeId = 3 AND ci.calendar.id = :calendarId AND loan.loanStatus IN :loanStatuses ")
     Integer countOfLoansSyncedWithCalendar(@Param("calendarId") Long calendarId,
             @Param("loanStatuses") Collection<LoanStatus> loanStatuses);

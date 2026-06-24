@@ -1,0 +1,298 @@
+= Working Capital Loan — EIR Calculation Accounting
+
+== Overview
+
+Working Capital Loans amortize discount fee income across the loan term using an Effective Interest Rate (EIR) schedule. When the COB business step `WC_DISCOUNT_FEE_AMORTIZATION` advances the realized income figure, the accounting processor posts a balanced pair of journal entries that move the newly recognized amount out of the *Deferred Income Liability* placeholder and into income (or, when the loan is charged off, into the charge-off expense placeholder).
+
+The EIR calculation itself — solver, schedule shape, rate segments — is documented in `working-capital-eir-calculation.adoc`. This document focuses on the journal entries derived from the schedule.
+
+=== Purpose
+
+EIR-based income recognition spreads the discount fee over the life of the Working Capital Loan in proportion to its present value at each period, rather than recognizing it at disbursement. The corresponding journal entries keep the general ledger in step with the periodic income figure produced by the amortization schedule.
+
+=== Scope
+
+The scope of this document includes:
+
+* The COB business step that drives EIR income recognition
+* Calculation of the periodic amortization amount from the schedule
+* Journal entries for `DISCOUNT_FEE_AMORTIZATION`
+* Journal entries for `DISCOUNT_FEE_AMORTIZATION_ADJUSTMENT`
+* Charge-off behavior for amortization entries
+* Reversal handling
+
+General Working Capital Loan repayment and goodwill credit accounting are documented in `working-capital-cash-accounting.adoc`.
+
+=== Applicability
+
+* Working Capital Loan products with `accountingRule = CASH_BASED`
+* Working Capital Loans with `amortizationType = EIR` and a non-zero discount fee, OR with previously recognized discount fee income that needs to be reconciled downward
+
+=== Definitions and Key Concepts
+
+*Discount Fee:* The upfront fee charged on a Working Capital Loan, persisted on `loanProductRelatedDetails.discount`.
+
+*Deferred Income Liability:* The unrecognized portion of the discount fee, sitting as a liability on the lender's balance sheet until it is amortized into income.
+
+*Realized Income from Discount Fee:* The cumulative amount of discount fee that has already been recognized as income for the loan. Persisted on the loan balance as `realizedIncomeFromDiscountFee`.
+
+*Schedule Amortization:* The income figure produced by the EIR amortization schedule up to the current business date, accessed via `ProjectedAmortizationScheduleModel.totalActualAmortization()`.
+
+*Amortization Transaction:* A monetary Working Capital Loan transaction (`DISCOUNT_FEE_AMORTIZATION` or `DISCOUNT_FEE_AMORTIZATION_ADJUSTMENT`) that carries the journal-entry amount.
+
+== Design Decisions and Considerations
+
+=== Separate Adjustment Path for Downward Reconciliation
+
+Two transaction types and two processor methods are used: `postJournalEntriesForDiscountFeeAmortization` for the normal increase in realized income and `postJournalEntriesForDiscountFeeAmortizationAdjustment` for downward reconciliation (for example after a discount fee adjustment reduces the discount). The adjustment path swaps debit and credit so the previously recognized income is reversed against the deferred liability rather than recorded as a negative amortization. This avoids posting a debit balance against an income account.
+
+=== Charged-Off Loans Redirect to Charge-Off Expense
+
+When the loan is charged off, the income leg of both amortization and adjustment is redirected from `INCOME_FROM_DISCOUNT_FEE` to `CHARGE_OFF_EXPENSE`. This keeps post-charge-off discount fee movement out of the income statement and aligns it with the charge-off expense recognized at the time of charge-off.
+
+== Database Design
+
+=== Existing Tables
+
+*m_wc_loan_balance*: Holds the cumulative realized income for the loan via `realized_income_from_discount_fee`. This value is consulted on every business step run to decide how much new amortization to post and is updated after the journal entries are written.
+
+*m_wc_loan_amortization_model*: Serialized `ProjectedAmortizationScheduleModel` (JSON CLOB) keyed by loan id. The processor reads this to compute the schedule's `totalActualAmortization` for the current business date.
+
+*m_wc_loan_transaction*: Stores the `DISCOUNT_FEE_AMORTIZATION` (45) and `DISCOUNT_FEE_AMORTIZATION_ADJUSTMENT` (47) transactions that carry the journal entry amount.
+
+*acc_gl_journal_entry*: Receives the balanced debit/credit pair for each amortization or adjustment, with transaction id `WC<txnId>` and `entityType = WORKING_CAPITAL_LOAN`.
+
+=== Changes to Existing Tables
+
+==== m_batch_business_steps
+
+The COB step that drives EIR income recognition is registered as:
+
+[cols="1,2,1,3",options="header"]
+|===
+| Column Name | Type | Constraints | Description
+| job_name | VARCHAR | not null | `WORKING_CAPITAL_LOAN_CLOSE_OF_BUSINESS`
+| step_name | VARCHAR | not null | `WC_DISCOUNT_FEE_AMORTIZATION`
+| step_order | INT | not null | `6`
+|===
+
+== Configuration
+
+=== Loan Product Configuration
+
+EIR amortization accounting is gated on:
+
+[source,json]
+----
+{
+  "amortizationType": "EIR",
+  "accountingRule": "CASH_BASED",
+  "deferredIncomeLiabilityAccountId": 4,
+  "incomeFromDiscountFeeAccountId": 5,
+  "chargeOffExpenseAccountId": 17
+}
+----
+
+=== GL Account Mappings
+
+Required GL account mappings for EIR calculation accounting:
+
+* *Deferred Income Liability (Liability)*: `deferredIncomeLiabilityAccountId` — the liability that holds unrecognized discount fee income; debited as income is amortized and credited when amortization is reduced
+* *Income from Discount Fee (Income)*: `incomeFromDiscountFeeAccountId` — credited as discount fee is recognized into income (or debited on adjustment) when the loan is not charged off
+* *Charge-off Expense (Expense)*: `chargeOffExpenseAccountId` — used in place of `Income from Discount Fee` when the loan is charged off
+
+[IMPORTANT]
+====
+The Deferred Income Liability mapping is required whenever `amortizationType = EIR` is used together with `accountingRule = CASH_BASED`. Without it the processor cannot resolve the debit leg for amortization entries.
+====
+
+== API Design
+
+EIR amortization journal entries are not exposed through dedicated REST endpoints. They are produced internally by the COB business step. The resulting transactions are visible through the standard Working Capital Loan transaction endpoints:
+
+[source]
+----
+GET /v1/working-capital-loans/{loanId}/transactions/{transactionId}
+GET /v1/working-capital-loans/external-id/{loanExternalId}/transactions/external-id/{externalTransactionId}
+----
+
+== Business Rules
+
+=== Discount Fee Amortization Business Step
+
+The `DiscountFeeAmortizationBusinessStep` (COB step `WC_DISCOUNT_FEE_AMORTIZATION`, order 6) runs at end of day. It skips the loan when both of the following are true:
+
+* `loanProductRelatedDetails.discount` is zero or null, AND
+* `loanBalance.realizedIncomeFromDiscountFee` is zero or null
+
+Otherwise the step delegates to `WorkingCapitalLoanDiscountFeeAmortizationServiceImpl.processDiscountFeeAmortization(loan, businessDate)`.
+
+=== Amortization Amount Calculation
+
+The service reads `scheduleAmortization` from the amortization model (`totalActualAmortization`) and `alreadyPosted` from `loanBalance.realizedIncomeFromDiscountFee`. The amount to post is:
+
+* If the loan is overpaid and `discount > 0`: `amortizationAmount = discount − alreadyPosted` (catch realization up to the full discount on overpayment)
+* Otherwise: `amortizationAmount = scheduleAmortization − alreadyPosted`
+
+If the amortization amount is zero (or both schedule and already-posted are zero on a non-overpaid loan), the step exits without posting.
+
+=== Posting Direction
+
+* `amortizationAmount > 0` — create a `DISCOUNT_FEE_AMORTIZATION` transaction for that amount and call `postJournalEntriesForDiscountFeeAmortization`.
+* `amortizationAmount < 0` — create a `DISCOUNT_FEE_AMORTIZATION_ADJUSTMENT` transaction for the absolute value, link it via `m_wc_loan_transaction_relation` (`RELATED`) to the most recent `DISCOUNT_FEE_ADJUSTMENT` transaction, and call `postJournalEntriesForDiscountFeeAmortizationAdjustment`.
+
+After posting, `loanBalance.realizedIncomeFromDiscountFee` is set to `alreadyPosted + amortizationAmount`.
+
+=== Branch Closure Check
+
+Both `postJournalEntriesForDiscountFeeAmortization` and `postJournalEntriesForDiscountFeeAmortizationAdjustment` call `helper.checkForBranchClosures(...)`. If the transaction date falls on or before the latest accounting closure for the loan's branch, posting is rejected.
+
+=== Zero-Amount Skip
+
+Both processor methods short-circuit when `MathUtil.isGreaterThanZero(amount)` is false, so a zero-amount transaction never produces journal entries.
+
+=== Charge-Off Behavior
+
+When the loan is charged off (`isChargedOff = true`), the income placeholder is replaced by `CHARGE_OFF_EXPENSE` on both the amortization and the adjustment posting. The Deferred Income Liability leg is unchanged.
+
+=== Reversal
+
+EIR amortization transactions reverse through the same generic mechanism as other Working Capital Loan transactions: `postReversalJournalEntries` reads the existing entries for transaction id `WC<txnId>` and writes a mirror entry per leg, then flags the originals as reversed.
+
+== Accounting Entries
+
+=== Discount Fee Amortization — Not Charged Off
+
+[cols="3*"]
+|===
+|Transaction Type |Debit |Credit
+
+|`DISCOUNT_FEE_AMORTIZATION`
+|Deferred Income Liability (Liability)
+|Income from Discount Fee (Income)
+
+|===
+
+=== Discount Fee Amortization — Charged Off
+
+[cols="3*"]
+|===
+|Transaction Type |Debit |Credit
+
+|`DISCOUNT_FEE_AMORTIZATION`
+|Deferred Income Liability (Liability)
+|Charge-off Expense (Expense)
+
+|===
+
+=== Discount Fee Amortization Adjustment — Not Charged Off
+
+[cols="3*"]
+|===
+|Transaction Type |Debit |Credit
+
+|`DISCOUNT_FEE_AMORTIZATION_ADJUSTMENT`
+|Income from Discount Fee (Income)
+|Deferred Income Liability (Liability)
+
+|===
+
+=== Discount Fee Amortization Adjustment — Charged Off
+
+[cols="3*"]
+|===
+|Transaction Type |Debit |Credit
+
+|`DISCOUNT_FEE_AMORTIZATION_ADJUSTMENT`
+|Charge-off Expense (Expense)
+|Deferred Income Liability (Liability)
+
+|===
+
+=== Reversal
+
+Every leg can be reversed; the reversal posts a balanced mirror entry per leg and flags the originals as reversed (see `working-capital-cash-accounting.adoc`).
+
+== Example Scenarios
+
+=== Scenario #1: Daily amortization on a non-charged-off loan
+
+**Setup:**
+
+* Working Capital Loan product with `amortizationType = EIR` and `accountingRule = CASH_BASED`
+* Mappings configured for Deferred Income Liability and Income from Discount Fee
+* Discount fee = 1,000, schedule has advanced to `totalActualAmortization = 120`
+* `loanBalance.realizedIncomeFromDiscountFee = 100`
+
+**Action:**
+
+The `WC_DISCOUNT_FEE_AMORTIZATION` business step runs at end of day.
+
+**Expected Behavior:**
+
+* New amortization amount = 120 − 100 = 20
+* A `DISCOUNT_FEE_AMORTIZATION` transaction of 20 is created
+* Debit Deferred Income Liability 20, Credit Income from Discount Fee 20
+* `realizedIncomeFromDiscountFee` becomes 120
+
+=== Scenario #2: Downward reconciliation after a discount adjustment
+
+**Setup:**
+
+* Same product, `realizedIncomeFromDiscountFee = 200`
+* A `DISCOUNT_FEE_ADJUSTMENT` has reduced the discount and the schedule now reports `totalActualAmortization = 150`
+
+**Action:**
+
+The business step runs.
+
+**Expected Behavior:**
+
+* Amortization amount = 150 − 200 = −50, so a `DISCOUNT_FEE_AMORTIZATION_ADJUSTMENT` of 50 is created
+* The adjustment transaction is linked (`RELATED`) to the most recent `DISCOUNT_FEE_ADJUSTMENT`
+* Debit Income from Discount Fee 50, Credit Deferred Income Liability 50
+* `realizedIncomeFromDiscountFee` becomes 150
+
+=== Scenario #3: Overpaid loan catches up to the full discount
+
+**Setup:**
+
+* Same product, loan status is `OVERPAID`
+* Discount fee = 1,000, `realizedIncomeFromDiscountFee = 800`, schedule reports `totalActualAmortization = 950`
+
+**Action:**
+
+The business step runs.
+
+**Expected Behavior:**
+
+* Because the loan is overpaid and `discount > 0`, the amount uses the discount as the target: 1,000 − 800 = 200
+* A `DISCOUNT_FEE_AMORTIZATION` of 200 is created
+* Debit Deferred Income Liability 200, Credit Income from Discount Fee 200
+* `realizedIncomeFromDiscountFee` becomes 1,000
+
+=== Scenario #4: Amortization on a charged-off loan
+
+**Setup:**
+
+* Same product, but the loan was charged off after disbursement
+* Mappings include Charge-off Expense
+
+**Action:**
+
+The business step posts a 30-unit amortization for the day.
+
+**Expected Behavior:**
+
+* A `DISCOUNT_FEE_AMORTIZATION` of 30 is created
+* Debit Deferred Income Liability 30, Credit Charge-off Expense 30 (the income placeholder is replaced)
+* `realizedIncomeFromDiscountFee` advances by 30
+
+== Summary
+
+EIR calculation accounting recognizes Working Capital Loan discount fee income over time, in proportion to the EIR amortization schedule. Key aspects include:
+
+* COB step `WC_DISCOUNT_FEE_AMORTIZATION` drives nightly recognition based on the difference between schedule amortization and already-posted income
+* `DISCOUNT_FEE_AMORTIZATION` (upward) and `DISCOUNT_FEE_AMORTIZATION_ADJUSTMENT` (downward) transactions carry the journal entry amounts
+* Journal entries move value between Deferred Income Liability and Income from Discount Fee, with charged-off loans redirecting the income leg to Charge-off Expense
+* The loan balance field `realizedIncomeFromDiscountFee` is the source of truth for what has already been recognized and is updated atomically with the journal entries

@@ -77,6 +77,7 @@ public class WorkingCapitalLoanProductTestBuilder {
     private Map<String, Boolean> allowAttributeOverrides;
     private Integer delinquencyGraceDays;
     private String delinquencyStartType;
+    private Integer breachGraceDays;
     private AccountingRuleEnum accountingRule = DEFAULT_ACCOUNTING_RULE;
     private Long nearBreachId;
 
@@ -224,6 +225,11 @@ public class WorkingCapitalLoanProductTestBuilder {
         return this;
     }
 
+    public WorkingCapitalLoanProductTestBuilder withBreachGraceDays(final Integer breachGraceDays) {
+        this.breachGraceDays = breachGraceDays;
+        return this;
+    }
+
     public WorkingCapitalLoanProductTestBuilder withAccountingRule(final AccountingRuleEnum accountingRule) {
         this.accountingRule = accountingRule;
         return this;
@@ -333,6 +339,7 @@ public class WorkingCapitalLoanProductTestBuilder {
         }
         request.setDelinquencyGraceDays(this.delinquencyGraceDays);
         request.setDelinquencyStartType(this.delinquencyStartType);
+        request.setBreachGraceDays(this.breachGraceDays);
         request.setBreachId(this.breachId);
         request.setAccountingRule(this.accountingRule);
         request.setNearBreachId(this.nearBreachId);
@@ -379,6 +386,7 @@ public class WorkingCapitalLoanProductTestBuilder {
         }
         request.setDelinquencyGraceDays(this.delinquencyGraceDays);
         request.setDelinquencyStartType(this.delinquencyStartType);
+        request.setBreachGraceDays(this.breachGraceDays);
         request.setBreachId(this.breachId);
         if (this.accountingRule != null) {
             request.setAccountingRule(PutWorkingCapitalLoanProductsProductIdRequest.AccountingRuleEnum.valueOf(this.accountingRule.name()));

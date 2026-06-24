@@ -37,7 +37,6 @@ import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.mockito.Mockito;
 import org.springframework.batch.item.Chunk;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 public class LoanItemListenerStepDefinitions implements En {
@@ -68,7 +67,6 @@ public class LoanItemListenerStepDefinitions implements En {
         });
 
         Then("LoanItemListener.onReadError result should match", () -> {
-            verify(batchJdbcTransactionTemplate, Mockito.times(1)).setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
             verify(batchJdbcTransactionTemplate, Mockito.times(1)).execute(any());
             verify(loanLockingService, Mockito.times(1)).updateLockError(eq(1L), eq(LockOwner.LOAN_COB_CHUNK_PROCESSING),
                     eq("Loan (id: 1) reading is failed"), anyString());
@@ -90,7 +88,6 @@ public class LoanItemListenerStepDefinitions implements En {
         });
 
         Then("LoanItemListener.onProcessError result should match", () -> {
-            verify(batchJdbcTransactionTemplate, Mockito.times(1)).setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
             verify(batchJdbcTransactionTemplate, Mockito.times(1)).execute(any());
             verify(loanLockingService, Mockito.times(1)).updateLockError(eq(2L), eq(LockOwner.LOAN_COB_CHUNK_PROCESSING),
                     eq("Loan (id: 2) processing is failed"), anyString());
@@ -112,7 +109,6 @@ public class LoanItemListenerStepDefinitions implements En {
         });
 
         Then("LoanItemListener.onWriteError result should match", () -> {
-            verify(batchJdbcTransactionTemplate, Mockito.times(1)).setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
             verify(batchJdbcTransactionTemplate, Mockito.times(1)).execute(any());
             verify(loanLockingService, Mockito.times(1)).updateLockError(eq(3L), eq(LockOwner.LOAN_COB_CHUNK_PROCESSING),
                     eq("Loan (id: 3) writing is failed"), anyString());

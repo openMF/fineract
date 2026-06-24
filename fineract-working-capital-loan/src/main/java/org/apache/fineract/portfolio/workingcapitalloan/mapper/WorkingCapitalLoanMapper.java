@@ -72,6 +72,9 @@ public interface WorkingCapitalLoanMapper {
     @Mapping(target = "disbursementDetails", source = "disbursementDetails")
     @Mapping(target = "delinquencyGraceDays", source = "loanProductRelatedDetails.delinquencyGraceDays")
     @Mapping(target = "delinquencyStartType", source = "loanProductRelatedDetails", qualifiedByName = "delinquencyStartTypeData")
+    @Mapping(target = "breachGraceDays", source = "loanProductRelatedDetails.breachGraceDays")
+    @Mapping(target = "breachStartDate", ignore = true)
+    @Mapping(target = "delinquencyStartDate", ignore = true)
     @Mapping(target = "collectionData", ignore = true)
     @Mapping(target = "totalNoPayments", ignore = true)
     @Mapping(target = "periodPaymentAmount", ignore = true)
@@ -79,6 +82,7 @@ public interface WorkingCapitalLoanMapper {
     @Mapping(target = "calculatedAnnualEir", ignore = true)
     @Mapping(target = "summary", source = ".", qualifiedByName = "toSummaryData")
     @Mapping(target = "totalPaymentVolume", source = "totalPaymentVolume")
+    @Mapping(target = "originators", ignore = true)
     WorkingCapitalLoanData toData(WorkingCapitalLoan loan);
 
     List<WorkingCapitalLoanData> toDataList(List<WorkingCapitalLoan> loans);

@@ -401,10 +401,13 @@ public class WorkingCapitalLoanProductWritePlatformServiceImpl implements Workin
                 .stringValueOfParameterNamed(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName);
         final WorkingCapitalLoanDelinquencyStartType delinquencyStartType = WorkingCapitalLoanDelinquencyStartType
                 .fromString(delinquencyStartTypeValue);
+        final Integer breachGraceDays = command.parameterExists(WorkingCapitalLoanProductConstants.breachGraceDaysParamName)
+                ? command.integerValueOfParameterNamed(WorkingCapitalLoanProductConstants.breachGraceDaysParamName)
+                : 0;
 
         final WorkingCapitalLoanProductRelatedDetail relatedDetail = new WorkingCapitalLoanProductRelatedDetail(amortizationType,
                 npvDayCount, principal, periodPaymentRate, repaymentEvery, repaymentFrequencyType, discount, delinquencyGraceDays,
-                delinquencyStartType);
+                delinquencyStartType, breachGraceDays);
 
         // Min/max constraints
         final BigDecimal minPrincipal = command.parameterExists(WorkingCapitalLoanProductConstants.minPrincipalParamName)

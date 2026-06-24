@@ -127,6 +127,12 @@ public class WorkingCapitalLoanProductUpdateUtil {
             changes.put(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, newValue);
             relatedDetail.setDelinquencyGraceDays(newValue);
         }
+        if (command.isChangeInIntegerParameterNamed(WorkingCapitalLoanProductConstants.breachGraceDaysParamName,
+                relatedDetail.getBreachGraceDays())) {
+            final Integer newValue = command.integerValueOfParameterNamed(WorkingCapitalLoanProductConstants.breachGraceDaysParamName);
+            changes.put(WorkingCapitalLoanProductConstants.breachGraceDaysParamName, newValue);
+            relatedDetail.setBreachGraceDays(newValue);
+        }
         final String currentDelinquencyStartType = (relatedDetail.getDelinquencyStartType() != null)
                 ? relatedDetail.getDelinquencyStartType().name()
                 : null;

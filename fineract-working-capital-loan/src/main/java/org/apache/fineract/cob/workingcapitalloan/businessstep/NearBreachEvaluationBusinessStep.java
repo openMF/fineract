@@ -19,10 +19,14 @@
 package org.apache.fineract.cob.workingcapitalloan.businessstep;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.NearBreachActionType;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanNearBreachAction;
+import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanNearBreachActionRepository;
 import org.apache.fineract.portfolio.workingcapitalloan.service.WorkingCapitalLoanNearBreachEvaluationService;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductRelatedDetails;
 import org.springframework.stereotype.Component;
@@ -33,6 +37,7 @@ import org.springframework.stereotype.Component;
 public class NearBreachEvaluationBusinessStep extends WorkingCapitalLoanCOBBusinessStep {
 
     private final WorkingCapitalLoanNearBreachEvaluationService nearBreachEvaluationService;
+    private final WorkingCapitalLoanNearBreachActionRepository nearBreachActionRepository;
 
     @Override
     public WorkingCapitalLoan execute(final WorkingCapitalLoan loan) {
@@ -42,13 +47,16 @@ public class NearBreachEvaluationBusinessStep extends WorkingCapitalLoanCOBBusin
         }
 
         final WorkingCapitalLoanProductRelatedDetails details = loan.getLoanProductRelatedDetails();
-        if (details == null || details.getNearBreach() == null) {
+        final Optional<WorkingCapitalLoanNearBreachAction> latestAction = nearBreachActionRepository
+                .findTopByWorkingCapitalLoanIdAndActionOrderByIdDesc(loan.getId(), NearBreachActionType.RESCHEDULE);
+        final boolean hasConfig = details != null && (details.getNearBreach() != null || latestAction.isPresent());
+        if (!hasConfig) {
             log.debug("Skipping near breach evaluation for WC loan {} - no near breach configuration", loan.getId());
             return loan;
         }
 
         final LocalDate businessDate = DateUtils.getBusinessLocalDate();
-        nearBreachEvaluationService.evaluateNearBreach(loan, businessDate);
+        nearBreachEvaluationService.evaluateNearBreach(loan, latestAction.orElse(null), businessDate);
         return loan;
     }
 

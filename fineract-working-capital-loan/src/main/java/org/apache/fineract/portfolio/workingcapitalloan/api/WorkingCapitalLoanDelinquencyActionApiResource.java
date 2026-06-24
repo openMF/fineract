@@ -51,7 +51,7 @@ import org.springframework.stereotype.Component;
 
 @Path("/v1/working-capital-loans")
 @Component
-@Tag(name = "Working Capital Loan Delinquency Actions", description = "Manages delinquency pause actions for Working Capital loans")
+@Tag(name = "Working Capital Loan Delinquency Actions", description = "Manages delinquency pause, resume and reschedule actions for Working Capital loans")
 @RequiredArgsConstructor
 public class WorkingCapitalLoanDelinquencyActionApiResource {
 
@@ -66,7 +66,7 @@ public class WorkingCapitalLoanDelinquencyActionApiResource {
     @Path("{loanId}/delinquency-actions")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create Delinquency Action", description = "Creates a delinquency action (pause or reschedule) for a Working Capital loan.")
+    @Operation(summary = "Create Delinquency Action", description = "Creates a delinquency action (pause, resume or reschedule) for a Working Capital loan.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanDelinquencyActionApiResourceSwagger.PostWorkingCapitalLoansDelinquencyActionRequest.class)))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanDelinquencyActionApiResourceSwagger.PostWorkingCapitalLoansDelinquencyActionResponse.class))),
@@ -86,7 +86,7 @@ public class WorkingCapitalLoanDelinquencyActionApiResource {
     @Path("external-id/{loanExternalId}/delinquency-actions")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(operationId = "createDelinquencyActionByExternalId", summary = "Create Delinquency Action by external id", description = "Creates a delinquency action (pause or reschedule) for a Working Capital loan identified by external id.")
+    @Operation(operationId = "createDelinquencyActionByExternalId", summary = "Create Delinquency Action by external id", description = "Creates a delinquency action (pause, resume or reschedule) for a Working Capital loan identified by external id.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanDelinquencyActionApiResourceSwagger.PostWorkingCapitalLoansDelinquencyActionRequest.class)))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanDelinquencyActionApiResourceSwagger.PostWorkingCapitalLoansDelinquencyActionResponse.class))),

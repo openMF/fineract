@@ -21,10 +21,10 @@ package org.apache.fineract.integrationtests.client.feign.tests;
 import java.util.List;
 import java.util.Map;
 import org.apache.fineract.client.feign.FineractFeignClient;
-import org.apache.fineract.client.models.ChargeRequest;
 import org.apache.fineract.client.models.PostLoansLoanIdChargesRequest;
 import org.apache.fineract.infrastructure.event.external.data.ExternalEventResponse;
 import org.apache.fineract.integrationtests.client.FeignIntegrationTest;
+import org.apache.fineract.integrationtests.client.feign.helpers.FeignChargesHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignClientHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignExternalEventHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignLoanHelper;
@@ -42,6 +42,7 @@ public class FeignLoanChargeOriginatorEnricherTest extends FeignIntegrationTest 
     private static FeignClientHelper clientHelper;
     private static FeignLoanHelper loanHelper;
     private static FeignExternalEventHelper externalEventHelper;
+    private static FeignChargesHelper chargesHelper;
 
     @BeforeAll
     public static void setup() {
@@ -50,6 +51,7 @@ public class FeignLoanChargeOriginatorEnricherTest extends FeignIntegrationTest 
         clientHelper = new FeignClientHelper(fineractClient);
         loanHelper = new FeignLoanHelper(fineractClient);
         externalEventHelper = new FeignExternalEventHelper(fineractClient);
+        chargesHelper = new FeignChargesHelper(fineractClient);
     }
 
     @Test
@@ -174,16 +176,7 @@ public class FeignLoanChargeOriginatorEnricherTest extends FeignIntegrationTest 
     }
 
     private Long createFlatFeeCharge(double amount) {
-        return ok(() -> fineractClient.charges().createCharge(new ChargeRequest()//
-                .name("Originator Test Fee " + System.currentTimeMillis())//
-                .currencyCode("USD")//
-                .chargeAppliesTo(1)//
-                .chargeTimeType(2)//
-                .chargeCalculationType(1)//
-                .chargePaymentMode(0)//
-                .amount(amount)//
-                .active(true)//
-                .locale("en"))).getResourceId();
+        return chargesHelper.createLoanSpecifiedDueDateCharge(amount);
     }
 
     private Long extractLoanId(ExternalEventResponse event) {

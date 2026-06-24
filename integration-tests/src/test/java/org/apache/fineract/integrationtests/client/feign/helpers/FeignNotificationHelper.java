@@ -34,7 +34,19 @@ public class FeignNotificationHelper {
     }
 
     public GetNotificationsResponse getNotifications() {
-        return ok(() -> fineractClient.notification().getAllNotifications(null, null, null, null, null));
+        return ok(() -> fineractClient.notification().getAllNotifications(null, null, null, null, true));
+    }
+
+    public GetNotificationsResponse getNotifications(Boolean isRead) {
+        return ok(() -> fineractClient.notification().getAllNotifications(null, null, null, null, isRead));
+    }
+
+    public GetNotificationsResponse getUnreadNotifications() {
+        return ok(() -> fineractClient.notification().getAllNotifications(null, null, null, null, false));
+    }
+
+    public void markNotificationsAsRead() {
+        fineractClient.notification().update4();
     }
 
     public boolean areNotificationsAvailable() {

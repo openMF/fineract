@@ -19,7 +19,6 @@
 package org.apache.fineract.infrastructure.event.external.repository;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 import org.apache.fineract.infrastructure.event.external.repository.domain.ExternalEvent;
 import org.apache.fineract.infrastructure.event.external.repository.domain.ExternalEventStatus;
@@ -31,7 +30,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface ExternalEventRepository extends JpaRepository<ExternalEvent, Long>, JpaSpecificationExecutor<ExternalEvent> {
+public interface ExternalEventRepository
+        extends JpaRepository<ExternalEvent, Long>, JpaSpecificationExecutor<ExternalEvent>, CustomExternalEventRepository {
 
     List<ExternalEventView> findByStatusOrderByBusinessDateAscIdAsc(ExternalEventStatus status, Pageable batchSize);
 
@@ -40,7 +40,4 @@ public interface ExternalEventRepository extends JpaRepository<ExternalEvent, Lo
     void deleteOlderEventsWithSentStatus(@Param("status") ExternalEventStatus status,
             @Param("dateForPurgeCriteria") LocalDate dateForPurgeCriteria);
 
-    @Modifying
-    @Query("UPDATE ExternalEvent e SET e.status = org.apache.fineract.infrastructure.event.external.repository.domain.ExternalEventStatus.SENT, e.sentAt = :sentAt WHERE e.id IN :ids")
-    void markEventsSent(@Param("ids") List<Long> ids, @Param("sentAt") OffsetDateTime sentAt);
 }

@@ -209,6 +209,10 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
                         ? fromApiJsonHelper.extractIntegerNamed(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element,
                                 new HashSet<>())
                         : productDetail.getDelinquencyGraceDays());
+        detail.setBreachGraceDays(fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.breachGraceDaysParamName, element)
+                ? fromApiJsonHelper.extractIntegerNamed(WorkingCapitalLoanProductConstants.breachGraceDaysParamName, element,
+                        new HashSet<>())
+                : productDetail.getBreachGraceDays());
         final String delinquencyStartTypeValue = fromApiJsonHelper
                 .parameterExists(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element)
                         ? fromApiJsonHelper.extractStringNamed(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element)
@@ -415,6 +419,15 @@ public class WorkingCapitalLoanAssemblerImpl implements WorkingCapitalLoanAssemb
                         detail.getDelinquencyGraceDays())) {
                     detail.setDelinquencyGraceDays(delinquencyGraceDays);
                     changes.put(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, delinquencyGraceDays);
+                }
+            }
+            if (fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.breachGraceDaysParamName, element)) {
+                final Integer breachGraceDays = fromApiJsonHelper
+                        .extractIntegerWithLocaleNamed(WorkingCapitalLoanProductConstants.breachGraceDaysParamName, element);
+                if (command.isChangeInIntegerParameterNamed(WorkingCapitalLoanProductConstants.breachGraceDaysParamName,
+                        detail.getBreachGraceDays())) {
+                    detail.setBreachGraceDays(breachGraceDays);
+                    changes.put(WorkingCapitalLoanProductConstants.breachGraceDaysParamName, breachGraceDays);
                 }
             }
             if (fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element)) {

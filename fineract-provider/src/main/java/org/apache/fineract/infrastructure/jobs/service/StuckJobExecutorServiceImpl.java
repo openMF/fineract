@@ -18,17 +18,14 @@
  */
 package org.apache.fineract.infrastructure.jobs.service;
 
-import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
-
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.infrastructure.jobs.data.partitionedjobs.PartitionedJob;
 import org.apache.fineract.infrastructure.jobs.domain.JobExecutionRepository;
 import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
@@ -37,7 +34,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class StuckJobExecutorServiceImpl implements StuckJobExecutorService {
 
     private final JobExecutionRepository jobExecutionRepository;
-    private final TransactionTemplate transactionTemplate;
+    @Qualifier("requiresNewTransactionJdbcTemplate")
+    private final TransactionTemplate requiresNewTransactionJdbcTemplate;
     private final JobOperator jobOperator;
 
     @Override
@@ -86,18 +84,16 @@ public class StuckJobExecutorServiceImpl implements StuckJobExecutorService {
     private void handleStuckPartitionedJob(Long stuckJobId, String partitionerStepName) {
         try {
             waitUntilAllPartitionsFinished(stuckJobId, partitionerStepName);
-            transactionTemplate.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-            transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-
-                @Override
-                protected void doInTransactionWithoutResult(TransactionStatus status) {
-                    jobExecutionRepository.updateJobStatusToFailed(stuckJobId, partitionerStepName);
-                }
-            });
+            updateJobStatusToFailedInNewTransaction(stuckJobId, partitionerStepName);
             jobOperator.restart(stuckJobId);
         } catch (Exception e) {
             throw new RuntimeException("Exception while handling a stuck job", e);
         }
+    }
+
+    private void updateJobStatusToFailedInNewTransaction(Long stuckJobId, String partitionerStepName) {
+        requiresNewTransactionJdbcTemplate
+                .executeWithoutResult(status -> jobExecutionRepository.updateJobStatusToFailed(stuckJobId, partitionerStepName));
     }
 
     private void waitUntilAllPartitionsFinished(Long stuckJobId, String partitionerStepName) throws InterruptedException {

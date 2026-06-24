@@ -108,4 +108,36 @@ public class NotificationApiTest {
         Assertions.assertEquals(clientId.longValue(), firstNotification.getObjectId());
         Assertions.assertEquals(CLIENT_OBJECT_TYPE, firstNotification.getObjectType());
     }
+
+    @Test
+    public void testNotificationReadStatusFiltering() {
+        // given
+        PostClientsRequest clientRequest = ClientHelper.defaultClientCreationRequest();
+        Integer clientId = ClientHelper.createClient(requestSpec, responseSpec, clientRequest);
+        Assertions.assertNotNull(clientId);
+
+        newUserNotificationHelper.waitUntilNotificationsAreAvailable();
+
+        // verify the new notification is unread
+        GetNotificationsResponse unreadResponse = newUserNotificationHelper.getUnreadNotifications();
+        Assertions.assertNotNull(unreadResponse);
+        Assertions.assertEquals(1, unreadResponse.getPageItems().size());
+        Assertions.assertFalse(unreadResponse.getPageItems().get(0).getIsRead());
+
+        // mark the notification as read
+        newUserNotificationHelper.markNotificationsAsRead();
+
+        // verify it is removed from the unread result
+        GetNotificationsResponse unreadAfterUpdate = newUserNotificationHelper.getUnreadNotifications();
+        Assertions.assertNotNull(unreadAfterUpdate);
+        Assertions.assertTrue(unreadAfterUpdate.getPageItems().isEmpty());
+
+        GetNotificationsResponse allNotifications = newUserNotificationHelper.getNotifications();
+        Assertions.assertNotNull(allNotifications);
+        Assertions.assertEquals(1, allNotifications.getPageItems().size());
+
+        GetNotification notification = allNotifications.getPageItems().get(0);
+        Assertions.assertTrue(notification.getIsRead());
+        Assertions.assertEquals(clientId.longValue(), notification.getObjectId());
+    }
 }

@@ -40,8 +40,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionExecution;
 import org.springframework.transaction.TransactionExecutionListener;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -90,7 +88,6 @@ public class BusinessEventNotifierServiceImpl implements BusinessEventNotifierSe
     }
 
     @Override
-    @Transactional(propagation = Propagation.SUPPORTS)
     public void notifyPostBusinessEvent(BusinessEvent<?> businessEvent) {
         throwExceptionIfBulkEvent(businessEvent);
         boolean isExternalEvent = !(businessEvent instanceof NoExternalEvent);

@@ -73,7 +73,6 @@ public class CobWorkerStepListener implements StepExecutionListener {
                 if (status == null) {
                     status = RepeatStatus.FINISHED;
                 }
-                stepExecution.incrementCommitCount();
             } catch (Exception exception) {
                 throw new IllegalStateException("COB worker step listener failed for step " + stepExecution.getStepName(), exception);
             }

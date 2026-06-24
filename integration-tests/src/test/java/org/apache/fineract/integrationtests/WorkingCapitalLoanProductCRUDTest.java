@@ -212,6 +212,30 @@ public class WorkingCapitalLoanProductCRUDTest {
     }
 
     @Test
+    public void testUpdateWorkingCapitalLoanProductBreachGraceDays() {
+        // Given - product created with default breachGraceDays = 0
+        final String uniqueName = "Test wcl Product " + UUID.randomUUID().toString().substring(0, 8);
+        final String uniqueShortName = Utils.uniqueRandomStringGenerator("", 4);
+        final PostWorkingCapitalLoanProductsRequest createRequest = new WorkingCapitalLoanProductTestBuilder().withName(uniqueName)
+                .withShortName(uniqueShortName).build();
+        final Long productId = wclProductHelper.createWorkingCapitalLoanProduct(createRequest).getResourceId();
+        final GetWorkingCapitalLoanProductsProductIdResponse afterCreate = wclProductHelper
+                .retrieveWorkingCapitalLoanProductById(productId);
+        assertEquals(0, afterCreate.getBreachGraceDays());
+
+        // When - update breachGraceDays to 7
+        final PutWorkingCapitalLoanProductsProductIdRequest updateRequest = new WorkingCapitalLoanProductTestBuilder().withName(uniqueName)
+                .withShortName(uniqueShortName).withBreachGraceDays(7).buildUpdateRequest();
+        wclProductHelper.updateWorkingCapitalLoanProductById(productId, updateRequest);
+
+        // Then
+        final GetWorkingCapitalLoanProductsProductIdResponse afterUpdate = wclProductHelper
+                .retrieveWorkingCapitalLoanProductById(productId);
+        assertEquals(7, afterUpdate.getBreachGraceDays());
+        wclProductHelper.deleteWorkingCapitalLoanProductById(productId);
+    }
+
+    @Test
     public void testUpdateWorkingCapitalLoanProductByExternalId() {
         // Given
         final String externalId = UUID.randomUUID().toString();
@@ -397,6 +421,7 @@ public class WorkingCapitalLoanProductCRUDTest {
                 .withPaymentAllocationTypes(paymentAllocationTypes) //
                 .withDelinquencyGraceDays(1) //
                 .withDelinquencyStartType(WorkingCapitalLoanDelinquencyStartType.DISBURSEMENT.getCode()) //
+                .withBreachGraceDays(5) //
                 // Term category
                 .withPrincipalAmountMin(BigDecimal.valueOf(1000)) //
                 .withPrincipalAmountDefault(BigDecimal.valueOf(5000)) //
@@ -463,6 +488,7 @@ public class WorkingCapitalLoanProductCRUDTest {
         assertEquals(365, retrieved.getNpvDayCount());
         assertEquals(1, retrieved.getDelinquencyGraceDays());
         assertEquals("DISBURSEMENT", retrieved.getDelinquencyStartType().getCode());
+        assertEquals(5, retrieved.getBreachGraceDays());
 
         // Verify Payment Allocation (if present)
         if (retrieved.getPaymentAllocation() != null && !retrieved.getPaymentAllocation().isEmpty()) {

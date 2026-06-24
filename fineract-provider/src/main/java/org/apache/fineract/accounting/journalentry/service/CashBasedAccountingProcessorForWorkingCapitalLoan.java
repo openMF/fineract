@@ -83,11 +83,31 @@ public class CashBasedAccountingProcessorForWorkingCapitalLoan implements Workin
                     throw new NotImplementedException("Charge off is not implemented yet for Goodwill Credit for Working Capital Loan");
                 }
             }
+            case LoanTransactionType.CREDIT_BALANCE_REFUND -> postCreditBalanceRefundJournalEntries(loan, txn);
+            case LoanTransactionType.CHARGE_ADJUSTMENT ->
+                postChargeAdjustmentJournalEntries(loan, txn, feesPortion, penaltiesPortion, isChargedOff);
             default -> {
                 throw new NotImplementedException(
                         "Post Journal Entries is not implemented yet for " + txn.getTypeOf().getCode() + " for Working Capital Loan");
             }
         }
+    }
+
+    private void postChargeAdjustmentJournalEntries(final WorkingCapitalLoan loan, final WorkingCapitalLoanTransaction txn,
+            final BigDecimal feesPortion, final BigDecimal penaltiesPortion, final boolean isChargedOff) {
+        final JournalEntryPostingHelper accountPostHelper = new JournalEntryPostingHelper(loan, txn);
+        final CashAccountsForLoan feeIncomeAccountType = isChargedOff ? CashAccountsForLoan.INCOME_FROM_RECOVERY
+                : CashAccountsForLoan.INCOME_FROM_FEES;
+        final CashAccountsForLoan penaltyIncomeAccountType = isChargedOff ? CashAccountsForLoan.INCOME_FROM_RECOVERY
+                : CashAccountsForLoan.INCOME_FROM_PENALTIES;
+
+        // Debit income (reverse income recognized at accrual time)
+        accountPostHelper.postDebitJournalEntry(feeIncomeAccountType, feesPortion);
+        accountPostHelper.postDebitJournalEntry(penaltyIncomeAccountType, penaltiesPortion);
+
+        // Credit receivable (reduce the outstanding charge)
+        accountPostHelper.postCreditJournalEntry(CashAccountsForLoan.FEES_RECEIVABLE, feesPortion);
+        accountPostHelper.postCreditJournalEntry(CashAccountsForLoan.PENALTIES_RECEIVABLE, penaltiesPortion);
     }
 
     private void postGoodwillCreditJournalEntries(WorkingCapitalLoan loan, WorkingCapitalLoanTransaction txn, BigDecimal principalPortion,
@@ -103,6 +123,15 @@ public class CashBasedAccountingProcessorForWorkingCapitalLoan implements Workin
         accountPostHelper.postCreditJournalEntry(CashAccountsForLoan.FEES_RECEIVABLE, feesPortion);
         accountPostHelper.postCreditJournalEntry(CashAccountsForLoan.PENALTIES_RECEIVABLE, penaltiesPortion);
         accountPostHelper.postCreditJournalEntry(CashAccountsForLoan.OVERPAYMENT, overpaymentPortion);
+    }
+
+    private void postCreditBalanceRefundJournalEntries(final WorkingCapitalLoan loan, final WorkingCapitalLoanTransaction txn) {
+        final BigDecimal amount = txn.getTransactionAmount();
+        final JournalEntryPostingHelper accountPostHelper = new JournalEntryPostingHelper(loan, txn);
+        // debit
+        accountPostHelper.postDebitJournalEntry(CashAccountsForLoan.OVERPAYMENT, amount);
+        // credit
+        accountPostHelper.postCreditJournalEntry(CashAccountsForLoan.FUND_SOURCE, amount);
     }
 
     @Override
@@ -250,6 +279,41 @@ public class CashBasedAccountingProcessorForWorkingCapitalLoan implements Workin
                     null);
             helper.createDebitJournalEntryForWorkingCapitalLoan(office, currencyCode, debitAccount, loanId, txnId, transactionDate, amount,
                     null);
+        }
+    }
+
+    @Override
+    public void postJournalEntriesForDiscountFee(final WorkingCapitalLoan loan, final WorkingCapitalLoanTransaction txn) {
+        postDiscountFeeDeferralEntries(loan, txn, CashAccountsForLoan.LOAN_PORTFOLIO, CashAccountsForLoan.DEFERRED_INCOME_LIABILITY);
+    }
+
+    @Override
+    public void postJournalEntriesForDiscountFeeAdjustment(final WorkingCapitalLoan loan, final WorkingCapitalLoanTransaction txn) {
+        postDiscountFeeDeferralEntries(loan, txn, CashAccountsForLoan.DEFERRED_INCOME_LIABILITY, CashAccountsForLoan.LOAN_PORTFOLIO);
+    }
+
+    private void postDiscountFeeDeferralEntries(final WorkingCapitalLoan loan, final WorkingCapitalLoanTransaction txn,
+            final CashAccountsForLoan debitAccountType, final CashAccountsForLoan creditAccountType) {
+        final Office office = loan.getClient().getOffice();
+        final Long productId = loan.getLoanProduct().getId();
+        final String currencyCode = loan.getLoanProductRelatedDetails().getCurrency().getCode();
+        final LocalDate transactionDate = txn.getTransactionDate();
+        final Long loanId = loan.getId();
+        final Long txnId = txn.getId();
+        final BigDecimal amount = txn.getTransactionAmount();
+
+        helper.checkForBranchClosures(helper.getLatestClosureByBranch(office.getId()), transactionDate);
+
+        if (MathUtil.isGreaterThanZero(amount)) {
+            final GLAccount debitAccount = helper.getLinkedGLAccountForWorkingCapitalLoanProduct(productId, debitAccountType.getValue(),
+                    null);
+            helper.createDebitJournalEntryForWorkingCapitalLoan(office, currencyCode, debitAccount, loanId, txnId, transactionDate, amount,
+                    null);
+
+            final GLAccount creditAccount = helper.getLinkedGLAccountForWorkingCapitalLoanProduct(productId, creditAccountType.getValue(),
+                    null);
+            helper.createCreditJournalEntryForWorkingCapitalLoan(office, currencyCode, creditAccount, loanId, txnId, transactionDate,
+                    amount, null);
         }
     }
 

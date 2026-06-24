@@ -216,13 +216,8 @@ public class WorkingCapitalLoanAmortizationScheduleWriteServiceImpl implements W
 
         final List<ProjectedAmortizationScheduleModel.ActualPayment> preservedPayments = currentModel.snapshotActualPayments();
 
-        final BigDecimal disbursedAmount = loan.getDisbursementDetails() != null && !loan.getDisbursementDetails().isEmpty()
-                && loan.getDisbursementDetails().getFirst().getActualAmount() != null
-                        ? loan.getDisbursementDetails().getFirst().getActualAmount()
-                        : BigDecimal.ZERO;
-        final LocalDate disbursementDate = loan.getDisbursementDetails() != null && !loan.getDisbursementDetails().isEmpty()
-                ? loan.getDisbursementDetails().getFirst().getActualDisbursementDate()
-                : null;
+        final BigDecimal disbursedAmount = resolveActualDisbursedAmount(loan);
+        final LocalDate disbursementDate = resolveActualDisbursementDate(loan);
 
         final ProjectedAmortizationScheduleModel restatedModel = generateProjectedAmortizationScheduleModel(loan, disbursedAmount,
                 disbursementDate);
@@ -230,6 +225,23 @@ public class WorkingCapitalLoanAmortizationScheduleWriteServiceImpl implements W
                 .forEach(payment -> restatedModel.applyPayment(payment.date(), payment.amount().getAmount()));
 
         scheduleRepositoryWrapper.writeModel(loan, restatedModel);
+    }
+
+    @Override
+    public void rebuildScheduleFromPrincipalPayments(final WorkingCapitalLoan loan, final List<PrincipalPayment> principalPayments) {
+        Validate.notNull(loan, "loan must not be null");
+        Validate.notNull(principalPayments, "principalPayments must not be null");
+
+        final BigDecimal disbursedAmount = resolveActualDisbursedAmount(loan);
+        final LocalDate disbursementDate = resolveActualDisbursementDate(loan);
+
+        final ProjectedAmortizationScheduleModel model = generateProjectedAmortizationScheduleModel(loan, disbursedAmount,
+                disbursementDate);
+        principalPayments.stream().filter(payment -> payment.amount() != null && payment.amount().signum() > 0)
+                .sorted(Comparator.comparing(PrincipalPayment::date))
+                .forEach(payment -> model.applyPayment(payment.date(), payment.amount()));
+
+        scheduleRepositoryWrapper.writeModel(loan, model);
     }
 
     private LocalDate resolveLoanDisbursementDate(final WorkingCapitalLoan loan) {
@@ -240,5 +252,20 @@ public class WorkingCapitalLoanAmortizationScheduleWriteServiceImpl implements W
             }
         }
         throw new IllegalStateException("Active loan " + loan.getId() + " has no actual disbursement date");
+    }
+
+    private BigDecimal resolveActualDisbursedAmount(final WorkingCapitalLoan loan) {
+        if (loan.getDisbursementDetails() != null && !loan.getDisbursementDetails().isEmpty()
+                && loan.getDisbursementDetails().getFirst().getActualAmount() != null) {
+            return loan.getDisbursementDetails().getFirst().getActualAmount();
+        }
+        return BigDecimal.ZERO;
+    }
+
+    private LocalDate resolveActualDisbursementDate(final WorkingCapitalLoan loan) {
+        if (loan.getDisbursementDetails() != null && !loan.getDisbursementDetails().isEmpty()) {
+            return loan.getDisbursementDetails().getFirst().getActualDisbursementDate();
+        }
+        return null;
     }
 }

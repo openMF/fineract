@@ -163,7 +163,8 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         // Disburse loan using existing helper method
         final PostWorkingCapitalLoansLoanIdRequest disburseRequest = workingCapitalLoanRequestFactory
                 .defaultWorkingCapitalLoanDisburseRequest()//
-                .actualDisbursementDate(submittedOnDate);
+                .actualDisbursementDate(submittedOnDate)//
+                .transactionAmount(new BigDecimal(principalAmount));
         executeStateTransition("disburse", disburseRequest, TestContextKey.LOAN_DISBURSE_RESPONSE, false);
 
         // Verify loan is ACTIVE
@@ -182,6 +183,15 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
 
     @When("Admin creates a working capital loan using created product with the following data:")
     public void createWorkingCapitalLoanUsingCreatedProduct(final DataTable table) {
+        submitLoanUsingCreatedProduct(table, null);
+    }
+
+    @When("Admin creates a working capital loan using created product with breachGraceDays {int} and the following data:")
+    public void createWorkingCapitalLoanUsingCreatedProductWithBreachGraceDays(final int breachGraceDays, final DataTable table) {
+        submitLoanUsingCreatedProduct(table, breachGraceDays);
+    }
+
+    private void submitLoanUsingCreatedProduct(final DataTable table, final Integer breachGraceDays) {
         final List<List<String>> data = table.asLists();
         final List<String> rawData = data.get(1);
         final Long clientId = extractClientId();
@@ -201,6 +211,9 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
                 .principalAmount(new BigDecimal(principal)).totalPaymentVolume(new BigDecimal(totalPaymentVolume))
                 .periodPaymentRate(new BigDecimal(periodPaymentRate))
                 .discount(discount != null && !discount.isEmpty() ? new BigDecimal(discount) : null);
+        if (breachGraceDays != null) {
+            loansRequest.breachGraceDays(breachGraceDays);
+        }
         testContext().set(TestContextKey.LOAN_CREATE_REQUEST, loansRequest);
 
         final PostWorkingCapitalLoansResponse response = ok(
@@ -208,6 +221,14 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         testContext().set(TestContextKey.LOAN_CREATE_RESPONSE, response);
         testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_CREATE_RESPONSE, response);
         log.info("Working Capital Loan created with dynamic product ID: {}, Loan ID: {}", loanProductId, response.getLoanId());
+    }
+
+    @Then("Working capital loan account has breachGraceDays {int}")
+    public void verifyLoanBreachGraceDays(final int expectedBreachGraceDays) {
+        final Long loanId = getCreatedLoanId();
+        final GetWorkingCapitalLoansLoanIdResponse response = ok(
+                () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
+        assertThat(response.getBreachGraceDays()).as("breachGraceDays").isEqualTo(expectedBreachGraceDays);
     }
 
     @Then("Working capital loan creation was successful")
@@ -1934,10 +1955,12 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
     }
 
     private Long resolveLoanProductId(final String loanProductName) {
-        if ("WCLP_DELINQUENCY".equals(loanProductName)) {
+        if ("WCLP_DELINQUENCY".equals(loanProductName) || "WCLP_BREACH".equals(loanProductName)) {
             final PostWorkingCapitalLoanProductsResponse response = testContext()
                     .get(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE);
-            return response.getResourceId();
+            if (response != null) {
+                return response.getResourceId();
+            }
         }
         final DefaultWorkingCapitalLoanProduct product = DefaultWorkingCapitalLoanProduct.valueOf(loanProductName);
         return workingCapitalLoanProductResolver.resolve(product);
@@ -1992,6 +2015,10 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
                 case "totalDiscountFee" ->
                     actualValues.add(response.getBalance() == null || response.getBalance().getTotalDiscountFee() == null ? null
                             : new Utils.DoubleFormatter(response.getBalance().getTotalDiscountFee().doubleValue()).format());
+                case "breachStartDate" ->
+                    actualValues.add(response.getBreachStartDate() == null ? "null" : response.getBreachStartDate().toString());
+                case "delinquencyStartDate" ->
+                    actualValues.add(response.getDelinquencyStartDate() == null ? "null" : response.getDelinquencyStartDate().toString());
                 case "totalDiscountFeeAdjustment" ->
                     actualValues.add(response.getBalance() == null || response.getBalance().getTotalDiscountFeeAdjustment() == null ? null
                             : new Utils.DoubleFormatter(response.getBalance().getTotalDiscountFeeAdjustment().doubleValue()).format());
@@ -2543,6 +2570,21 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
                 paymentDetails);
         final PostWorkingCapitalLoanTransactionsResponse response = executeRepaymentLikeById(loanId, "repayment", repaymentRequest);
         validateRepaymentResponse(response, transactionAmount, transactionDate, loanId);
+    }
+
+    @Then("Admin closes the Working Capital loan with a full repayment on {string}")
+    public void closeWorkingCapitalLoanWithFullRepayment(final String transactionDate) {
+        final Long loanId = getCreatedLoanId();
+        final GetWorkingCapitalLoansLoanIdResponse loanDetails = ok(
+                () -> fineractClient.workingCapitalLoans().retrieveWorkingCapitalLoanById(loanId));
+        Assertions.assertNotNull(loanDetails.getBalance());
+        Assertions.assertNotNull(loanDetails.getBalance().getTotalOutstanding());
+        final BigDecimal totalOutstanding = loanDetails.getBalance().getTotalOutstanding();
+        final PostWorkingCapitalLoanTransactionsRequest repaymentRequest = workingCapitalProductRequestFactory
+                .defaultWorkingCapitalLoanRepaymentRequest().transactionDate(transactionDate).transactionAmount(totalOutstanding);
+        final PostWorkingCapitalLoanTransactionsResponse response = executeRepaymentLikeById(loanId, "repayment", repaymentRequest);
+        Assertions.assertNotNull(loanDetails.getBalance());
+        validateRepaymentResponse(response, totalOutstanding.doubleValue(), transactionDate, loanId);
     }
 
     @Then("Customer makes credit balance refund on {string} with {double} transaction amount on Working Capital loan")

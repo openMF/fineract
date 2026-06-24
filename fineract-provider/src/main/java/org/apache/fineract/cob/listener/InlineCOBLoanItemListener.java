@@ -25,8 +25,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 public class InlineCOBLoanItemListener extends AbstractLoanItemListener<Loan> {
 
-    public InlineCOBLoanItemListener(LockingService lockingService, TransactionTemplate batchJdbcTransactionTemplate) {
-        super(lockingService, batchJdbcTransactionTemplate);
+    public InlineCOBLoanItemListener(LockingService lockingService, TransactionTemplate requiresNewTransactionJdbcTemplate) {
+        super(lockingService, requiresNewTransactionJdbcTemplate);
     }
 
     @Override

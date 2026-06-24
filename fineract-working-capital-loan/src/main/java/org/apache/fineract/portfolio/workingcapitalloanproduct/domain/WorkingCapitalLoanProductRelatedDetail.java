@@ -71,4 +71,7 @@ public class WorkingCapitalLoanProductRelatedDetail {
     @Enumerated(EnumType.STRING)
     @Column(name = "delinquency_start_type", nullable = false)
     private WorkingCapitalLoanDelinquencyStartType delinquencyStartType;
+
+    @Column(name = "breach_grace_days", nullable = true)
+    private Integer breachGraceDays;
 }

@@ -146,6 +146,10 @@ class SavingsAccountWritePlatformServiceJpaRepositoryImplTest {
     @Mock
     private SavingsAccountInterestPostingService savingsAccountInterestPostingService;
     @Mock
+    private SavingsAccountPostInterestService savingsAccountPostInterestService;
+    @Mock
+    private SavingsAccountActivationService savingsAccountActivationService;
+    @Mock
     private ExternalIdFactory externalIdFactory;
     @Mock
     private ErrorHandler errorHandler;
@@ -385,7 +389,8 @@ class SavingsAccountWritePlatformServiceJpaRepositoryImplTest {
         Mockito.doAnswer(invocation -> {
             transactions.add(postingTransaction);
             return null;
-        }).when(account).postInterest(any(), any(), anyBoolean(), anyBoolean(), any(), any(), anyBoolean(), anyBoolean());
+        }).when(savingsAccountPostInterestService).postInterest(any(), any(), any(), anyBoolean(), anyBoolean(), any(), any(), anyBoolean(),
+                anyBoolean());
 
         service.postInterest(command);
 

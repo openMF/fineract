@@ -47,14 +47,19 @@ public interface NotificationMapperRepository extends JpaRepository<Notification
             """)
     void markUnreadNotificationsAsRead(@Param("appUserId") Long appUserId);
 
-    // 1. Method for fetching ALL notifications (No read status filter)
     @Query(value = """
             select new org.apache.fineract.notification.data.NotificationData(
-                n.id, n.objectType, n.objectIdentifier, n.actorId, n.action,
-                n.notificationContent, n.isSystemGenerated, nm.createdAt
+                nm.notification.id,
+                nm.notification.objectType,
+                nm.notification.objectIdentifier,
+                nm.notification.actorId,
+                nm.notification.action,
+                nm.notification.notificationContent,
+                nm.notification.isSystemGenerated,
+                nm.isRead,
+                nm.createdAt
             )
             from NotificationMapper nm
-            join nm.notification n
             where nm.userId.id = :appUserId
             """, countQuery = """
             select count(nm)
@@ -63,22 +68,26 @@ public interface NotificationMapperRepository extends JpaRepository<Notification
             """)
     Page<NotificationData> findNotificationDataByUserId(@Param("appUserId") Long appUserId, Pageable pageable);
 
-    // 2. Method for fetching with a SPECIFIC read status (e.g., Unread only)
     @Query(value = """
             select new org.apache.fineract.notification.data.NotificationData(
-                n.id, n.objectType, n.objectIdentifier, n.actorId, n.action,
-                n.notificationContent, n.isSystemGenerated, nm.createdAt
+                nm.notification.id,
+                nm.notification.objectType,
+                nm.notification.objectIdentifier,
+                nm.notification.actorId,
+                nm.notification.action,
+                nm.notification.notificationContent,
+                nm.notification.isSystemGenerated,
+                nm.isRead,
+                nm.createdAt
             )
             from NotificationMapper nm
-            join nm.notification n
             where nm.userId.id = :appUserId
-            and nm.isRead = :isRead
+            and nm.isRead = false
             """, countQuery = """
             select count(nm)
             from NotificationMapper nm
             where nm.userId.id = :appUserId
-            and nm.isRead = :isRead
+            and nm.isRead = false
             """)
-    Page<NotificationData> findNotificationDataByUserIdAndReadStatus(@Param("appUserId") Long appUserId, @Param("isRead") Boolean isRead,
-            Pageable pageable);
+    Page<NotificationData> findUnreadNotificationDataByUserId(@Param("appUserId") Long appUserId, Pageable pageable);
 }

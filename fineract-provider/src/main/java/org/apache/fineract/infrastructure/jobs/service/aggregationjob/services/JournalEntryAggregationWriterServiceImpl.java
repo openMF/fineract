@@ -27,7 +27,6 @@ import org.apache.fineract.infrastructure.jobs.service.aggregationjob.domain.Jou
 import org.apache.fineract.infrastructure.jobs.service.aggregationjob.domain.JournalEntryAggregationTrackingRepository;
 import org.apache.fineract.infrastructure.jobs.service.aggregationjob.domain.JournalEntrySummary;
 import org.apache.fineract.infrastructure.jobs.service.aggregationjob.domain.JournalEntrySummaryRepository;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -37,7 +36,6 @@ public class JournalEntryAggregationWriterServiceImpl implements JournalEntryAgg
 
     private JournalEntrySummaryRepository journalSummaryRepository;
     private JournalEntryAggregationTrackingRepository journalEntryAggregationTrackingRepository;
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Override
     public void insertJournalEntrySummaryBatch(final List<JournalEntryAggregationSummaryData> journalEntrySummaries) {
@@ -82,6 +80,7 @@ public class JournalEntryAggregationWriterServiceImpl implements JournalEntryAgg
         entrySummary.setDebitAmount(summaryDTO.getDebitAmount());
         entrySummary.setCreditAmount(summaryDTO.getCreditAmount());
         entrySummary.setExternalOwnerId(summaryDTO.getExternalOwnerId());
+        entrySummary.setOriginatorExternalIds(summaryDTO.getOriginatorExternalIds());
         entrySummary.setAggregatedOnDate(summaryDTO.getAggregatedOnDate());
         entrySummary.setJobExecutionId(summaryDTO.getJobExecutionId());
         return entrySummary;

@@ -183,11 +183,18 @@ project.ext.pgPassword='postgres'
 
 configurations {
     driver
+    bootRunDriver {
+        canBeConsumed = false
+        canBeResolved = true
+    }
 }
 dependencies {
     driver 'org.mariadb.jdbc:mariadb-java-client'
     driver 'org.postgresql:postgresql'
     driver 'com.mysql:mysql-connector-j'
+
+    bootRunDriver 'org.mariadb.jdbc:mariadb-java-client'
+    bootRunDriver 'com.mysql:mysql-connector-j'
 }
 
 tasks.register('copyDatabaseDriverPlugins', Copy) {
@@ -280,6 +287,7 @@ tasks.named('licenseMain') {
 }
 
 bootRun {
+    classpath += configurations.bootRunDriver
     jvmArgs = [
             "-Dspring.output.ansi.enabled=ALWAYS"
     ]

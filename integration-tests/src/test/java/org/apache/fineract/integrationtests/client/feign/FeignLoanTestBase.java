@@ -19,20 +19,30 @@
 package org.apache.fineract.integrationtests.client.feign;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.function.Function;
 import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.models.DeleteLoansLoanIdChargesChargeIdResponse;
+import org.apache.fineract.client.models.GetLoansLoanIdChargesChargeIdResponse;
 import org.apache.fineract.client.models.GetLoansLoanIdResponse;
 import org.apache.fineract.client.models.GetLoansLoanIdStatus;
 import org.apache.fineract.client.models.GetLoansLoanIdTransactionsTemplateResponse;
 import org.apache.fineract.client.models.PostCreateRescheduleLoansRequest;
 import org.apache.fineract.client.models.PostLoanProductsRequest;
+import org.apache.fineract.client.models.PostLoansLoanIdChargesChargeIdRequest;
+import org.apache.fineract.client.models.PostLoansLoanIdChargesChargeIdResponse;
+import org.apache.fineract.client.models.PostLoansLoanIdChargesRequest;
+import org.apache.fineract.client.models.PostLoansLoanIdChargesResponse;
 import org.apache.fineract.client.models.PostLoansLoanIdRequest;
+import org.apache.fineract.client.models.PostLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostLoansLoanIdTransactionsRequest;
+import org.apache.fineract.client.models.PostLoansLoanIdTransactionsResponse;
 import org.apache.fineract.client.models.PostLoansRequest;
 import org.apache.fineract.client.models.PostUpdateRescheduleLoansRequest;
 import org.apache.fineract.integrationtests.client.FeignIntegrationTest;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignAccountHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignBusinessDateHelper;
+import org.apache.fineract.integrationtests.client.feign.helpers.FeignChargesHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignClientHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignJournalEntryHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignLoanHelper;
@@ -56,6 +66,7 @@ public abstract class FeignLoanTestBase extends FeignIntegrationTest implements 
     protected static FeignJournalEntryHelper journalHelper;
     protected static FeignBusinessDateHelper businessDateHelper;
     protected static FeignClientHelper clientHelper;
+    protected static FeignChargesHelper chargesHelper;
     protected static LoanTestAccounts accounts;
 
     @BeforeAll
@@ -67,6 +78,7 @@ public abstract class FeignLoanTestBase extends FeignIntegrationTest implements 
         journalHelper = new FeignJournalEntryHelper(client);
         businessDateHelper = new FeignBusinessDateHelper(client);
         clientHelper = new FeignClientHelper(client);
+        chargesHelper = new FeignChargesHelper(client);
     }
 
     protected LoanTestAccounts getAccounts() {
@@ -112,11 +124,11 @@ public abstract class FeignLoanTestBase extends FeignIntegrationTest implements 
         return loanHelper.applyForLoan(request);
     }
 
-    protected Long approveLoan(Long loanId, PostLoansLoanIdRequest request) {
+    protected PostLoansLoanIdResponse approveLoan(Long loanId, PostLoansLoanIdRequest request) {
         return loanHelper.approveLoan(loanId, request);
     }
 
-    protected Long disburseLoan(Long loanId, PostLoansLoanIdRequest request) {
+    protected PostLoansLoanIdResponse disburseLoan(Long loanId, PostLoansLoanIdRequest request) {
         return loanHelper.disburseLoan(loanId, request);
     }
 
@@ -130,6 +142,60 @@ public abstract class FeignLoanTestBase extends FeignIntegrationTest implements 
 
     protected void undoDisbursement(Long loanId) {
         loanHelper.undoDisbursement(loanId);
+    }
+
+    protected PostLoansLoanIdResponse disburseToSavings(Long loanId, PostLoansLoanIdRequest request) {
+        return loanHelper.disburseToSavings(loanId, request);
+    }
+
+    protected PostLoansLoanIdResponse rejectLoan(Long loanId, PostLoansLoanIdRequest request) {
+        return loanHelper.rejectLoan(loanId, request);
+    }
+
+    protected PostLoansLoanIdResponse withdrawLoan(Long loanId, PostLoansLoanIdRequest request) {
+        return loanHelper.withdrawLoan(loanId, request);
+    }
+
+    protected PostLoansLoanIdTransactionsResponse closeLoan(Long loanId, PostLoansLoanIdTransactionsRequest request) {
+        return loanHelper.closeLoan(loanId, request);
+    }
+
+    protected PostLoansLoanIdTransactionsResponse forecloseLoan(Long loanId, PostLoansLoanIdTransactionsRequest request) {
+        return loanHelper.forecloseLoan(loanId, request);
+    }
+
+    protected PostLoansLoanIdChargesResponse addLoanCharge(Long loanId, PostLoansLoanIdChargesRequest request) {
+        return loanHelper.addLoanCharge(loanId, request);
+    }
+
+    protected List<GetLoansLoanIdChargesChargeIdResponse> getLoanCharges(Long loanId) {
+        return loanHelper.getLoanCharges(loanId);
+    }
+
+    protected GetLoansLoanIdChargesChargeIdResponse getLoanCharge(Long loanId, Long loanChargeId) {
+        return loanHelper.getLoanCharge(loanId, loanChargeId);
+    }
+
+    protected DeleteLoansLoanIdChargesChargeIdResponse deleteLoanCharge(Long loanId, Long loanChargeId) {
+        return loanHelper.deleteLoanCharge(loanId, loanChargeId);
+    }
+
+    protected PostLoansLoanIdChargesChargeIdResponse waiveLoanCharge(Long loanId, Long loanChargeId,
+            PostLoansLoanIdChargesChargeIdRequest request) {
+        return loanHelper.waiveLoanCharge(loanId, loanChargeId, request);
+    }
+
+    protected PostLoansLoanIdChargesChargeIdResponse payLoanCharge(Long loanId, Long loanChargeId,
+            PostLoansLoanIdChargesChargeIdRequest request) {
+        return loanHelper.payLoanCharge(loanId, loanChargeId, request);
+    }
+
+    protected Long createLoanSpecifiedDueDateCharge(double amount) {
+        return chargesHelper.createLoanSpecifiedDueDateCharge(amount);
+    }
+
+    protected Long createLoanDisbursementCharge(double amount) {
+        return chargesHelper.createLoanDisbursementCharge(amount);
     }
 
     protected Long addRepayment(Long loanId, PostLoansLoanIdTransactionsRequest request) {

@@ -47,7 +47,9 @@ import org.apache.fineract.portfolio.loanaccount.domain.ExpectedDisbursementDate
 import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.apache.fineract.portfolio.workingcapitalloan.WorkingCapitalLoanConstants;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.NearBreachActionType;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPeriodFrequencyType;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransaction;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanTransactionRepository;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductRelatedDetail;
@@ -106,6 +108,11 @@ public class WorkingCapitalLoanDataValidator {
     private static final Set<String> UPDATE_RATE_SUPPORTED_PARAMETERS = new HashSet<>(
             Arrays.asList(WorkingCapitalLoanConstants.localeParameterName, WorkingCapitalLoanConstants.periodPaymentRateParamName,
                     WorkingCapitalLoanConstants.noteParamName));
+
+    private static final Set<String> NEAR_BREACH_ACTION_SUPPORTED_PARAMETERS = new HashSet<>(
+            Arrays.asList(WorkingCapitalLoanConstants.localeParameterName, WorkingCapitalLoanConstants.nearBreachActionParamName,
+                    WorkingCapitalLoanConstants.nearBreachThresholdParamName, WorkingCapitalLoanConstants.nearBreachFrequencyParamName,
+                    WorkingCapitalLoanConstants.nearBreachFrequencyTypeParamName));
 
     private static final int NOTE_MAX_LENGTH = 1000;
     private static final int EXTERNAL_ID_MAX_LENGTH = 100;
@@ -769,6 +776,73 @@ public class WorkingCapitalLoanDataValidator {
 
         validatePaymentDetails(baseDataValidator, element);
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
+    }
+
+    public void validateNearBreachAction(final String json, final WorkingCapitalLoan loan) {
+        if (StringUtils.isBlank(json)) {
+            throw new InvalidJsonException();
+        }
+
+        final Type typeOfMap = new TypeToken<Map<String, Object>>() {}.getType();
+        this.fromApiJsonHelper.checkForUnsupportedParameters(typeOfMap, json, NEAR_BREACH_ACTION_SUPPORTED_PARAMETERS);
+
+        final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
+                .resource(WorkingCapitalLoanConstants.RESOURCE_NAME);
+        final JsonElement element = this.fromApiJsonHelper.parse(json);
+
+        if (loan.getLoanStatus() != LoanStatus.ACTIVE) {
+            baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.loanStatusParamName)
+                    .failWithCode("near.breach.action.not.allowed.for.non.active.loan");
+        }
+
+        if (loan.getLoanProductRelatedDetails().getNearBreach() == null) {
+            baseDataValidator.reset()
+                    .failWithCodeNoParameterAddedToErrorCode("near.breach.action.not.allowed.loan.has.no.near.breach.configuration");
+        }
+
+        final String actionStr = this.fromApiJsonHelper.extractStringNamed(WorkingCapitalLoanConstants.nearBreachActionParamName, element);
+        baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.nearBreachActionParamName).value(actionStr).notBlank();
+        if (StringUtils.isNotBlank(actionStr)) {
+            try {
+                NearBreachActionType.valueOf(actionStr);
+            } catch (IllegalArgumentException e) {
+                baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.nearBreachActionParamName).failWithCode("invalid.action");
+            }
+
+            final NearBreachActionType currentNearBreachAction = NearBreachActionType.valueOf(actionStr);
+
+            if (currentNearBreachAction == NearBreachActionType.RESCHEDULE) {
+                validateActionReschedule(element, baseDataValidator);
+            }
+        }
+
+        throwExceptionIfValidationWarningsExist(dataValidationErrors);
+    }
+
+    private void validateActionReschedule(JsonElement element, DataValidatorBuilder baseDataValidator) {
+        final BigDecimal threshold = this.fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanConstants.nearBreachThresholdParamName,
+                element, new HashSet<>());
+        baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.nearBreachThresholdParamName).value(threshold).notNull()
+                .positiveAmount();
+        if (threshold != null && threshold.compareTo(BigDecimal.valueOf(100)) > 0) {
+            baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.nearBreachThresholdParamName)
+                    .failWithCode("must.not.exceed.100.percent");
+        }
+
+        final Integer frequency = this.fromApiJsonHelper
+                .extractIntegerSansLocaleNamed(WorkingCapitalLoanConstants.nearBreachFrequencyParamName, element);
+        baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.nearBreachFrequencyParamName).value(frequency).notNull()
+                .integerGreaterThanZero();
+
+        final String frequencyTypeStr = this.fromApiJsonHelper
+                .extractStringNamed(WorkingCapitalLoanConstants.nearBreachFrequencyTypeParamName, element);
+        baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.nearBreachFrequencyTypeParamName).value(frequencyTypeStr)
+                .notBlank();
+        if (StringUtils.isNotBlank(frequencyTypeStr) && WorkingCapitalLoanPeriodFrequencyType.fromString(frequencyTypeStr) == null) {
+            baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.nearBreachFrequencyTypeParamName)
+                    .failWithCode("invalid.frequency.type");
+        }
     }
 
     public void validateUpdatePeriodPaymentRate(final String json, final WorkingCapitalLoan loan) {

@@ -59,7 +59,7 @@ public class MinimumDaysBetweenDisbursalAndFirstRepaymentTest {
     private LoanTransactionHelper loanTransactionHelper;
     private Integer clientId;
     private Integer groupId;
-    private Integer groupCalendarId;
+    private Long groupCalendarId;
     private Integer loanProductId;
     private Integer loanId;
     private final String loanPrincipalAmount = "100000.00";
@@ -219,8 +219,8 @@ public class MinimumDaysBetweenDisbursalAndFirstRepaymentTest {
         final String interval = "1"; // Every one week
         final String repeatsOnDay = "1"; // 1:Monday
 
-        this.setGroupCalendarId(CalendarHelper.createMeetingCalendarForGroup(this.requestSpec, this.responseSpec, this.groupId, startDate,
-                frequency, interval, repeatsOnDay));
+        this.setGroupCalendarId(CalendarHelper
+                .createMeetingCalendarForGroup(this.groupId.longValue(), startDate, frequency, interval, repeatsOnDay).getResourceId());
     }
 
     /**
@@ -242,11 +242,11 @@ public class MinimumDaysBetweenDisbursalAndFirstRepaymentTest {
         this.loanProductId = this.loanTransactionHelper.getLoanProductId(loanProductJSON);
     }
 
-    public Integer getGroupCalendarId() {
+    public Long getGroupCalendarId() {
         return groupCalendarId;
     }
 
-    public void setGroupCalendarId(Integer groupCalendarId) {
+    public void setGroupCalendarId(Long groupCalendarId) {
         this.groupCalendarId = groupCalendarId;
     }
 }

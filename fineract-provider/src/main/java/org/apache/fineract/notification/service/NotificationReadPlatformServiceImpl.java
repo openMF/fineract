@@ -96,7 +96,7 @@ public class NotificationReadPlatformServiceImpl implements NotificationReadPlat
         final Long appUserId = context.authenticatedUser().getId();
         final Pageable pageable = toPageable(searchParameters);
         final org.springframework.data.domain.Page<NotificationData> springPage = this.notificationMapperRepository
-                .findNotificationDataByUserIdAndReadStatus(appUserId, false, pageable);
+                .findUnreadNotificationDataByUserId(appUserId, pageable);
         return toFineractPage(springPage);
     }
 

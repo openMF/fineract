@@ -20,6 +20,8 @@ package org.apache.fineract.integrationtests.client.feign.modules;
 
 import java.math.BigDecimal;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdNearBreachActionsRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdNearBreachActionsRequest.NearBreachFrequencyTypeEnum;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRateRequest;
@@ -71,6 +73,14 @@ public final class WorkingCapitalLoanRequestBuilders {
 
     public static PutWorkingCapitalLoansLoanIdRateRequest updateRate(BigDecimal newRate) {
         return new PutWorkingCapitalLoansLoanIdRateRequest().periodPaymentRate(newRate).locale(LOCALE);
+    }
+
+    public static PostWorkingCapitalLoansLoanIdNearBreachActionsRequest createNearBreachRescheduleAction(BigDecimal threshold,
+            Integer frequency, String frequencyType) {
+        return new PostWorkingCapitalLoansLoanIdNearBreachActionsRequest()
+                .action(PostWorkingCapitalLoansLoanIdNearBreachActionsRequest.ActionEnum.RESCHEDULE).nearBreachThreshold(threshold)
+                .nearBreachFrequency(frequency).nearBreachFrequencyType(NearBreachFrequencyTypeEnum.fromValue(frequencyType))
+                .locale(LOCALE);
     }
 
     public static PostWorkingCapitalLoanTransactionsRequest repayment(BigDecimal amount, String transactionDate) {

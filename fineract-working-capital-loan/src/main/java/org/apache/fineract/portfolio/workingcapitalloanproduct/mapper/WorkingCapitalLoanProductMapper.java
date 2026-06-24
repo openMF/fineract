@@ -72,6 +72,7 @@ public interface WorkingCapitalLoanProductMapper {
     @Mapping(target = "allowAttributeOverrides", source = "configurableAttributes", qualifiedByName = "configurableAttributesToData")
     @Mapping(target = "delinquencyGraceDays", source = "relatedDetail.delinquencyGraceDays")
     @Mapping(target = "delinquencyStartType", source = "relatedDetail.delinquencyStartType", qualifiedByName = "delinquencyStartTypeToStringEnumOptionData")
+    @Mapping(target = "breachGraceDays", source = "relatedDetail.breachGraceDays")
     @Mapping(target = "accountingRule", source = "accountingRule", qualifiedByName = "accountingRuleToStringEnumOptionData")
     @Mapping(target = "accountingMappings", ignore = true)
     @Mapping(target = "paymentChannelToFundSourceMappings", ignore = true)

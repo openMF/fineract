@@ -132,6 +132,7 @@ public class JournalEntryAggregationWriterServiceImplTest {
         when(summaryData.getAggregatedOnDate()).thenReturn(LocalDate.now(Clock.systemUTC()));
         when(summaryData.getDebitAmount()).thenReturn(debitAmount);
         when(summaryData.getCreditAmount()).thenReturn(creditAmount);
+        when(summaryData.getOriginatorExternalIds()).thenReturn("originator1, originator2");
         when(summaryData.getJobExecutionId()).thenReturn(123L);
 
         List<JournalEntryAggregationSummaryData> summariesList = List.of(summaryData);
@@ -145,9 +146,11 @@ public class JournalEntryAggregationWriterServiceImplTest {
                 return false;
             }
             JournalEntrySummary entity = (JournalEntrySummary) ((List<?>) entities).getFirst();
-            return entity.getDebitAmount().compareTo(debitAmount) == 0 && entity.getCreditAmount().compareTo(creditAmount) == 0;
+            return entity.getDebitAmount().compareTo(debitAmount) == 0 && entity.getCreditAmount().compareTo(creditAmount) == 0
+                    && "originator1, originator2".equals(entity.getOriginatorExternalIds());
         }));
         verify(summaryData, times(1)).getDebitAmount();
         verify(summaryData, times(1)).getCreditAmount();
+        verify(summaryData, times(1)).getOriginatorExternalIds();
     }
 }

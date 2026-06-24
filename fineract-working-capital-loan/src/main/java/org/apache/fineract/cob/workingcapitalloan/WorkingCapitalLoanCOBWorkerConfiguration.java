@@ -36,7 +36,6 @@ import org.apache.fineract.infrastructure.springbatch.PropertyService;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanRepository;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.SimpleStepBuilder;
 import org.springframework.batch.integration.partition.RemotePartitioningWorkerStepBuilderFactory;
@@ -61,10 +60,10 @@ public class WorkingCapitalLoanCOBWorkerConfiguration {
     private final MessageChannel inboundRequests;
     private final PropertyService propertyService;
     private final PlatformTransactionManager transactionManager;
-    @Qualifier("batchJdbcTransactionManager")
-    private final PlatformTransactionManager batchJdbcTransactionManager;
-    @Qualifier("batchJdbcTransactionTemplate")
-    private final TransactionTemplate batchJdbcTransactionTemplate;
+    @Qualifier("jdbcTransactionManager")
+    private final PlatformTransactionManager jdbcTransactionManager;
+    @Qualifier("requiresNewTransactionJdbcTemplate")
+    private final TransactionTemplate requiresNewTransactionJdbcTemplate;
     @Qualifier("workingCapitalLoanLockingService")
     private final LockingService wpcLoanLockingService;
     private final FineractProperties fineractProperties;
@@ -123,21 +122,12 @@ public class WorkingCapitalLoanCOBWorkerConfiguration {
 
     @Bean
     public WorkingCapitalLoanCOBWorkerItemListener workingCapitalLoanItemListener() {
-        return new WorkingCapitalLoanCOBWorkerItemListener(wpcLoanLockingService, batchJdbcTransactionTemplate);
+        return new WorkingCapitalLoanCOBWorkerItemListener(wpcLoanLockingService, requiresNewTransactionJdbcTemplate);
     }
 
     @Bean
     public ApplyWorkingCapitalLoanLockTasklet applyWorkingCapitalLoanLock() {
         return new ApplyWorkingCapitalLoanLockTasklet(fineractProperties, wpcLoanLockingService, retrieveIdService,
-                batchJdbcTransactionTemplate);
+                requiresNewTransactionJdbcTemplate);
     }
-
-    @Bean
-    @StepScope
-    public Step applyWorkingCapitalLoanLockStep(
-            @org.springframework.beans.factory.annotation.Value("#{stepExecutionContext['partition']}") String partitionName) {
-        return new org.springframework.batch.core.step.builder.StepBuilder("Apply WC lock - Step:" + partitionName, jobRepository)
-                .tasklet(applyWorkingCapitalLoanLock(), batchJdbcTransactionManager).build();
-    }
-
 }

@@ -18,85 +18,27 @@
  */
 package org.apache.fineract.integrationtests.common;
 
-import com.google.gson.Gson;
-import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
-import java.util.HashMap;
+import static org.apache.fineract.client.feign.util.FeignCalls.executeVoid;
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
+
+import java.util.List;
+import org.apache.fineract.client.models.GetPasswordPreferencesTemplateResponse;
+import org.apache.fineract.client.models.PutPasswordPreferencesTemplateRequest;
 
 public final class PasswordPreferencesHelper {
 
-    private PasswordPreferencesHelper() {
+    private PasswordPreferencesHelper() {}
 
+    public static void updatePasswordPreferences(String validationPolicyId) {
+        executeVoid(() -> FineractFeignClientHelper.getFineractFeignClient().passwordPreferences()
+                .update7(new PutPasswordPreferencesTemplateRequest().validationPolicyId(Long.parseLong(validationPolicyId))));
     }
 
-    private static final String PASSWORD_PREFERENCES_URL = "/fineract-provider/api/v1/passwordpreferences";
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static Object updatePasswordPreferences(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
-            String validationPolicyId) {
-        final String UPDATE_PASSWORD_PREFERENCES_URL = PASSWORD_PREFERENCES_URL + "?" + Utils.TENANT_IDENTIFIER;
-        // system.out.println("---------------------------------UPDATE PASSWORD
-        // PREFERENCE---------------------------------------------");
-        return Utils.performServerPut(requestSpec, responseSpec, UPDATE_PASSWORD_PREFERENCES_URL,
-                updatePreferencesAsJson(validationPolicyId), "");
+    public static GetPasswordPreferencesTemplateResponse getActivePasswordPreference() {
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().passwordPreferences().retrieve2());
     }
 
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static Object updateWithInvalidValidationPolicyId(final RequestSpecification requestSpec,
-            final ResponseSpecification responseSpec, String invalidValidationPolicyId, String jsonAttributeToGetback) {
-        final String UPDATE_PASSWORD_PREFERENCES_URL = PASSWORD_PREFERENCES_URL + "?" + Utils.TENANT_IDENTIFIER;
-        // system.out
-        // .println("---------------------------------UPDATE PASSWORD
-        // PREFERENCES WITH INVALID
-        // ID-----------------------------------------");
-        return Utils.performServerPut(requestSpec, responseSpec, UPDATE_PASSWORD_PREFERENCES_URL,
-                updatePreferencesWithInvalidId(invalidValidationPolicyId), jsonAttributeToGetback);
+    public static List<GetPasswordPreferencesTemplateResponse> getAllPreferences() {
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().passwordPreferences().template4());
     }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static String updatePreferencesAsJson(String validationPolicyId) {
-        final HashMap<String, Object> map = new HashMap<>();
-        map.put("validationPolicyId", validationPolicyId);
-        return new Gson().toJson(map);
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static String updatePreferencesWithInvalidId(String invalidValidationPolicyId) {
-        final HashMap<String, Object> map = new HashMap<>();
-        map.put("validationPolicyId", invalidValidationPolicyId);
-        return new Gson().toJson(map);
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static int getActivePasswordPreference(final RequestSpecification requestSpec, final ResponseSpecification responseSpec) {
-        return Utils.performServerGet(requestSpec, responseSpec, PASSWORD_PREFERENCES_URL + "?" + Utils.TENANT_IDENTIFIER, "id");
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static HashMap<String, Object> getAllPreferences(final RequestSpecification requestSpec,
-            final ResponseSpecification responseSpec) {
-
-        return Utils.performServerGet(requestSpec, responseSpec, PASSWORD_PREFERENCES_URL + "/template" + "?" + Utils.TENANT_IDENTIFIER,
-                "");
-
-    }
-
 }

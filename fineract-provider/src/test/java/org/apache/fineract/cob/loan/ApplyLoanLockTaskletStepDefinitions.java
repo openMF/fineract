@@ -52,16 +52,17 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 public class ApplyLoanLockTaskletStepDefinitions implements En {
 
-    ArgumentCaptor<List> valueCaptor = ArgumentCaptor.forClass(List.class);
-    ArgumentCaptor<LockOwner> lockOwnerValueCaptor = ArgumentCaptor.forClass(LockOwner.class);
+    @SuppressWarnings("unchecked")
+    private final ArgumentCaptor<List<Long>> valueCaptor = ArgumentCaptor.forClass(List.class);
+    private final ArgumentCaptor<LockOwner> lockOwnerValueCaptor = ArgumentCaptor.forClass(LockOwner.class);
     private LockingService loanLockingService = mock(LockingService.class);
     private FineractProperties fineractProperties = mock(FineractProperties.class);
     private FineractProperties.FineractQueryProperties fineractQueryProperties = mock(FineractProperties.FineractQueryProperties.class);
     private RetrieveIdService retrieveIdService = mock(RetrieveIdService.class);
-    private TransactionTemplate transactionTemplate = spy(TransactionTemplate.class);
+    private TransactionTemplate requiresNewTransactionJdbcTemplate = spy(new TransactionTemplate(mock(PlatformTransactionManager.class)));
 
     private ApplyLoanLockTasklet applyLoanLockTasklet = new ApplyLoanLockTasklet(fineractProperties, loanLockingService, retrieveIdService,
-            transactionTemplate);
+            requiresNewTransactionJdbcTemplate);
     private RepeatStatus resultItem;
     private StepContribution stepContribution;
 
@@ -95,7 +96,7 @@ public class ApplyLoanLockTaskletStepDefinitions implements En {
                 Long lock1 = 1L;
                 Long lock3 = 3L;
                 List<Long> accountLocks = List.of(lock1, lock3);
-                stepContribution.getStepExecution().setCommitCount(4);
+                executionContext.putLong(LoanCOBConstant.COB_PARAMETER + ".apply-lock-attempts", 4);
                 lenient().when(fineractProperties.getQuery()).thenReturn(fineractQueryProperties);
                 lenient().when(fineractQueryProperties.getInClauseParameterSizeLimit()).thenReturn(65000);
                 lenient().when(loanLockingService.findLockIdsByLoanIdIn(Mockito.anyList())).thenReturn(accountLocks);
@@ -108,8 +109,6 @@ public class ApplyLoanLockTaskletStepDefinitions implements En {
                 lenient().when(fineractQueryProperties.getInClauseParameterSizeLimit()).thenReturn(65000);
                 lenient().when(loanLockingService.findLockIdsByLoanIdIn(Mockito.anyList())).thenReturn(accountLocks);
             }
-            transactionTemplate.setTransactionManager(mock(PlatformTransactionManager.class));
-
         });
 
         When("ApplyLoanLockTasklet.execute method executed", () -> {

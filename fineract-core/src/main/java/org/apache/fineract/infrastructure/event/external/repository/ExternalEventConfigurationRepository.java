@@ -19,7 +19,17 @@
 package org.apache.fineract.infrastructure.event.external.repository;
 
 import org.apache.fineract.infrastructure.event.external.repository.domain.ExternalEventConfiguration;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+@CacheConfig(cacheNames = ExternalEventConfigurationRepository.EXTERNAL_EVENT_CONFIGURATION_CACHE_NAME)
 public interface ExternalEventConfigurationRepository
-        extends JpaRepository<ExternalEventConfiguration, String>, CustomExternalEventConfigurationRepository {}
+        extends JpaRepository<ExternalEventConfiguration, String>, CustomExternalEventConfigurationRepository {
+
+    String EXTERNAL_EVENT_CONFIGURATION_CACHE_NAME = "externalEventConfigurationByType";
+
+    @Override
+    @Cacheable(key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat(#externalEventType)")
+    ExternalEventConfiguration findExternalEventConfigurationByTypeWithNotFoundDetection(String externalEventType);
+}

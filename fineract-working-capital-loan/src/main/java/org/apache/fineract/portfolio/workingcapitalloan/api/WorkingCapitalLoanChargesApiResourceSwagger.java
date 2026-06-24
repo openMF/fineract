@@ -20,6 +20,7 @@
 package org.apache.fineract.portfolio.workingcapitalloan.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.math.BigDecimal;
 
 final class WorkingCapitalLoanChargesApiResourceSwagger {
 
@@ -59,6 +60,46 @@ final class WorkingCapitalLoanChargesApiResourceSwagger {
         public Long resourceId;
         @Schema(example = "95174ff9-1a75-4d72-a413-6f9b1cb988b7")
         public String resourceExternalId;
+    }
+
+    @Schema(description = "PostWorkingCapitalLoansLoanIdChargesChargeIdRequest")
+    public static final class PostWorkingCapitalLoansLoanIdChargesChargeIdRequest {
+
+        private PostWorkingCapitalLoansLoanIdChargesChargeIdRequest() {}
+
+        @Schema(example = "100.00")
+        public BigDecimal amount;
+        @Schema(example = "en")
+        public String locale;
+        @Schema(example = "dd MMMM yyyy")
+        public String dateFormat;
+        @Schema(example = "29 April 2013")
+        public String transactionDate;
+        @Schema(example = "786444UUUYYH7")
+        public String externalId;
+        @Schema(example = "some note")
+        public String note;
+    }
+
+    @Schema(description = "PostWorkingCapitalLoansLoanIdChargesChargeIdResponse")
+    public static final class PostWorkingCapitalLoansLoanIdChargesChargeIdResponse {
+
+        private PostWorkingCapitalLoansLoanIdChargesChargeIdResponse() {}
+
+        @Schema(example = "1")
+        public Long officeId;
+        @Schema(example = "1")
+        public Long clientId;
+        @Schema(example = "1")
+        public Long loanId;
+        @Schema(example = "31")
+        public Long resourceId;
+        @Schema(example = "95174ff9-1a75-4d72-a413-6f9b1cb988b7")
+        public String resourceExternalId;
+        @Schema(example = "12")
+        public Long subEntityId;
+        @Schema(example = "a1b2c3d4-0000-0000-0000-000000000000")
+        public String subEntityExternalId;
     }
 
 }

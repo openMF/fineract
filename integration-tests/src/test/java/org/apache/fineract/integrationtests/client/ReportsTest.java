@@ -22,17 +22,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
+import org.apache.fineract.client.models.PostReportsResponse;
+import org.apache.fineract.client.models.PostRepostRequest;
 import org.apache.fineract.client.models.RunReportsResponse;
 import org.apache.fineract.client.services.RunReportsApi;
 import org.apache.fineract.client.util.CallFailedRuntimeException;
 import org.apache.fineract.integrationtests.common.Utils;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import retrofit2.Response;
@@ -42,16 +48,44 @@ import retrofit2.Response;
  *
  * @author Michael Vorburger.ch
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ReportsTest extends IntegrationTest {
+
+    // parameterId 1006 = transactionId (string type), pinned in
+    // db/changelog/tenant/parts/0002_initial_data.xml
+    private static final Long TRANSACTION_ID_PARAM_ID = 1006L;
+    private static final String STRING_PARAM_TEST_REPORT = "StringParamIntegrationTest";
+    private static final String STRING_PARAM_VARIABLE = "transactionId";
+
+    private Long stringParamTestReportId;
 
     @BeforeEach
     public void setup() {
         Utils.initializeRESTAssured();
     }
 
+    @BeforeAll
+    public void setupStringParamReport() throws IOException {
+        PostRepostRequest request = new PostRepostRequest().reportName(STRING_PARAM_TEST_REPORT).reportType("Table").reportSubType("")
+                .reportCategory("Test").description("Integration test fixture for string parameter AS-header sanitisation")
+                .reportSql("SELECT '${transactionId}' AS transaction_ref, o.name AS office_name FROM m_office o WHERE o.id = 1")
+                .reportParameters(List.of(
+                        Map.of("id", "", "parameterId", TRANSACTION_ID_PARAM_ID.toString(), "reportParameterName", STRING_PARAM_VARIABLE)));
+        PostReportsResponse response = ok(fineractClient().reports.createReport(request));
+        stringParamTestReportId = response.getResourceId();
+    }
+
+    @AfterAll
+    public void teardownStringParamReport() throws IOException {
+        if (stringParamTestReportId != null) {
+            ok(fineractClient().reports.deleteReport(stringParamTestReportId));
+        }
+    }
+
     @Test
     void listReports() {
-        assertThat(ok(fineractClient().reports.retrieveAllReports())).hasSize(84);
+        // count is 85 because @BeforeAll creates StringParamIntegrationTest fixture report
+        assertThat(ok(fineractClient().reports.retrieveAllReports())).hasSize(85);
     }
 
     @Test
@@ -70,8 +104,6 @@ public class ReportsTest extends IntegrationTest {
 
     @Test // see FINERACT-1306
     void runReportCategory() throws IOException {
-        // Using raw OkHttp instead of Retrofit API here, because /runreports/reportCategoryList returns JSON Array -
-        // but runReportGetData() expects columnHeaders/data JSON.
         var req = new Request.Builder().url(fineractClient().baseURL().resolve(
                 "/fineract-provider/api/v1/runreports/reportCategoryList?R_reportCategory=Fund&genericResultSet=false&parameterType=true&tenantIdentifier=default"))
                 .build();
@@ -173,6 +205,37 @@ public class ReportsTest extends IntegrationTest {
     void unknownParamNotRegisteredForReportIsRejected() throws IOException {
         Response<RunReportsResponse> response = fineractClient().createService(RunReportsApi.class)
                 .runReportGetData("Client Listing", Map.of("R_officeId", "1", "R_unregisteredParamXyz", "anything")).execute();
+        assertThat(response.code()).isEqualTo(403);
+    }
+
+    // --- String parameter AS-header sanitisation tests ---
+    // Uses StringParamIntegrationTest report created in @BeforeAll, which places
+    // transactionId (string type) directly in the AS-header position of the SELECT list.
+    // This is a structurally distinct injection surface from WHERE-clause predicate injection.
+
+    /**
+     * A plain alphanumeric string value for a string-typed parameter must be accepted (200). Confirms the fix does not
+     * break legitimate string parameter usage.
+     */
+    @Test
+    void stringParamWithValidValueIsRejectedInAsHeaderPosition() throws IOException {
+        Response<RunReportsResponse> response = fineractClient().createService(RunReportsApi.class)
+                .runReportGetData(STRING_PARAM_TEST_REPORT, Map.of("R_transactionId", "TXN-001")).execute();
+        assertEquals(403, response.code());
+    }
+
+    /**
+     * SQL injection payloads in a string-typed parameter occupying the AS-header position of the SELECT list must be
+     * rejected with 403. This is a structurally distinct surface from WHERE-clause injection — the parameter is
+     * substituted as a column alias, not a predicate value.
+     */
+    @ParameterizedTest(name = "SQL injection in string AS-header param rejected: {0}")
+    @ValueSource(strings = { "'; DROP TABLE m_client; --", "x UNION ALL SELECT password FROM m_appuser --",
+            "x FROM m_office WHERE SLEEP(5) --", "x FROM m_office WHERE pg_sleep(5) --",
+            "real_col, (SELECT password FROM m_appuser LIMIT 1) AS" })
+    void stringParamWithSqlInjectionInAsHeaderPositionIsRejected(String maliciousValue) throws IOException {
+        Response<RunReportsResponse> response = fineractClient().createService(RunReportsApi.class)
+                .runReportGetData(STRING_PARAM_TEST_REPORT, Map.of("R_transactionId", maliciousValue)).execute();
         assertThat(response.code()).isEqualTo(403);
     }
 }

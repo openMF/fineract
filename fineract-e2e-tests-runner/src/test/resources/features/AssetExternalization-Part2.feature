@@ -15,7 +15,6 @@ Feature: Asset Externalization - Part2
   @TestRailId:C3801 @AssetExternalizationJournalEntry
   Scenario: Verify manual journal entry with External Asset Owner empty value if asset-externalization is enabled for existing loan - UC3
     Given Global configuration "asset-externalization-of-non-active-loans" is enabled
-
     When Admin sets the business date to "1 June 2025"
     When Admin creates a client with random data
     When Admin creates a new default Loan with date: "1 June 2025"
@@ -29,7 +28,6 @@ Feature: Asset Externalization - Part2
     Then Fetching Asset externalization details by loan id gives numberOfElements: 1 with correct ownerExternalId and the following data:
       | settlementDate | purchasePriceRatio | status  | effectiveFrom | effectiveTo | Transaction type |
       | 2025-06-01     | 1                  | PENDING | 2025-06-01    | 9999-12-31  | SALE             |
-
     When Admin sets the business date to "27 June 2025"
     Then Admin creates manual Journal entry with "99" amount and "27 June 2025" date and unique External Asset Owner
     Then Verify manual Journal entry with External Asset Owner "true" and with the following Journal entries:
@@ -37,7 +35,6 @@ Feature: Asset Externalization - Part2
       | ASSET     | 112601       | Loans Receivable          | 99.0  |        | true         |
       | LIABILITY | 145023       | Suspense/Clearing account |       | 99.0   | true         |
     Given Global configuration "asset-externalization-of-non-active-loans" is enabled
-
     When Loan Pay-off is made on "26 June 2025"
     Then Loan's all installments have obligations met
 
@@ -96,6 +93,8 @@ Feature: Asset Externalization - Part2
       | 2023-06-14     | 1                  | ACTIVE               | 2023-06-15    | 9999-12-31  | SALE             |
     Then LoanOwnershipTransferBusinessEvent with transfer type: "SALE" and transfer asset owner based on intermediarySale is created
     When Admin set external asset owner loan product attribute "SETTLEMENT_MODEL" value "DEFAULT_SETTLEMENT" for loan product "LP1_DUE_DATE"
+    When Loan Pay-off is made on "15 June 2023" with transfer external owner
+    Then Loan is closed with zero outstanding balance and it's all installments have obligations met
 
   @TestRailId:C3992
   Scenario: Verify asset externalization previous owner for intermediarySale transfer with following SALES and BUYBACK requests - UC2
@@ -122,7 +121,6 @@ Feature: Asset Externalization - Part2
       | 2023-05-21     | 1                  | PENDING_INTERMEDIATE | 2023-05-01    | 2023-05-21  | INTERMEDIARYSALE |
       | 2023-05-21     | 1                  | ACTIVE_INTERMEDIATE  | 2023-05-22    | 9999-12-31  | INTERMEDIARYSALE |
     Then LoanOwnershipTransferBusinessEvent with transfer type: "INTERMEDIARYSALE" and transfer asset owner is created
-
     When Admin sets the business date to "14 June 2023"
     When Admin makes asset externalization request by Loan ID with unique ownerExternalId, system-generated transferExternalId and the following data:
       | Transaction type | settlementDate | purchasePriceRatio |
@@ -141,7 +139,6 @@ Feature: Asset Externalization - Part2
       | 2023-06-14     | 1                  | PENDING              | 2023-06-14    | 2023-06-14  | SALE             |
       | 2023-06-14     | 1                  | ACTIVE               | 2023-06-15    | 9999-12-31  | SALE             |
     Then LoanOwnershipTransferBusinessEvent with transfer type: "SALE" and transfer asset owner based on intermediarySale is created
-
     When Admin makes asset externalization request by Loan ID with unique ownerExternalId, system-generated transferExternalId and the following data:
       | Transaction type | settlementDate | purchasePriceRatio |
       | buyback          | 2023-06-16     |                    |
@@ -163,6 +160,8 @@ Feature: Asset Externalization - Part2
       | 2023-06-16     | 1                  | BUYBACK              | 2023-06-15    | 2023-06-16  | BUYBACK          |
     Then LoanOwnershipTransferBusinessEvent with transfer type: "BUYBACK" and transfer asset owner is created
     When Admin set external asset owner loan product attribute "SETTLEMENT_MODEL" value "DEFAULT_SETTLEMENT" for loan product "LP1_DUE_DATE"
+    When Loan Pay-off is made on "17 June 2023"
+    Then Loan is closed with zero outstanding balance and it's all installments have obligations met
 
   @TestRailId:C3993
   Scenario: Verify asset externalization previous owner for intermediarySale transfer with following BUYBACK requests - UC3
@@ -207,6 +206,8 @@ Feature: Asset Externalization - Part2
       | 2023-06-14     | 1                  | BUYBACK_INTERMEDIATE | 2023-06-14    | 2023-06-14  | BUYBACK          |
     Then LoanOwnershipTransferBusinessEvent with transfer type: "BUYBACK" and transfer asset owner based on intermediarySale is created
     When Admin set external asset owner loan product attribute "SETTLEMENT_MODEL" value "DEFAULT_SETTLEMENT" for loan product "LP1_DUE_DATE"
+    When Loan Pay-off is made on "15 June 2023"
+    Then Loan is closed with zero outstanding balance and it's all installments have obligations met
 
   @TestRailId:C4640
   Scenario: Verify creation of new external asset owner and it presence in the list
@@ -342,6 +343,8 @@ Feature: Asset Externalization - Part2
       | ASSET         | 112601        | Loans Receivable          | DEBIT     | 1000.00 |
       | ASSET         | 112601        | Loans Receivable          | CREDIT    | 200.00  |
       | LIABILITY     | 145023        | Suspense/Clearing account | DEBIT     | 200.00  |
+    When Loan Pay-off is made on "26 May 2023" with transfer external owner
+    Then Loan is closed with zero outstanding balance and it's all installments have obligations met
 
   @TestRailId:C72363
   Scenario: Verify owner-to-owner repayment accounting goes to old owner while PENDING transfer not yet settled
@@ -372,6 +375,8 @@ Feature: Asset Externalization - Part2
       | sale             | 2023-06-14     | 1                  |
     Then Asset externalization response has the correct Loan ID, transferExternalId
     When Customer makes "REPAYMENT" transaction with "AUTOPAY" payment type on "25 May 2023" with 200 EUR transaction amount and system-generated Idempotency key and check previous external owner
+    When Loan Pay-off is made on "25 May 2023" with previous transfer external owner
+    Then Loan is closed with zero outstanding balance and it's all installments have obligations met
 
   @TestRailId:C72364
   Scenario: Verify chained owner-to-owner transfers complete successfully
@@ -423,6 +428,8 @@ Feature: Asset Externalization - Part2
       | ASSET         | 112601        | Loans Receivable          | DEBIT     | 1000.00 |
       | ASSET         | 112601        | Loans Receivable          | CREDIT    | 300.00  |
       | LIABILITY     | 145023        | Suspense/Clearing account | DEBIT     | 300.00  |
+    When Loan Pay-off is made on "29 May 2023" with transfer external owner
+    Then Loan is closed with zero outstanding balance and it's all installments have obligations met
 
   @TestRailId:C72365
   Scenario: Verify cancel of PENDING owner-to-owner transfer before COB preserves original owner
@@ -454,6 +461,8 @@ Feature: Asset Externalization - Part2
       | settlementDate | purchasePriceRatio | status    | effectiveFrom | effectiveTo | Transaction type |
       | 2023-05-30     | 1                  | CANCELLED | 2023-05-25    | 2023-05-25  | SALE             |
     When Customer makes "REPAYMENT" transaction with "AUTOPAY" payment type on "25 May 2023" with 200 EUR transaction amount and system-generated Idempotency key and check previous external owner
+    When Loan Pay-off is made on "25 May 2023" with previous transfer external owner
+    Then Loan is closed with zero outstanding balance and it's all installments have obligations met
 
   @TestRailId:C72366
   Scenario: Verify buyback is blocked while PENDING owner-to-owner transfer exists
@@ -483,3 +492,5 @@ Feature: Asset Externalization - Part2
     Then Asset externalization transaction with the following data results a 403 error and "BUYBACK_ALREADY_IN_PROGRESS_CANNOT_BE_BOUGHT" error message
       | Transaction type | settlementDate | purchasePriceRatio |
       | buyback          | 2023-06-01     |                    |
+    When Loan Pay-off is made on "25 May 2023" with previous transfer external owner
+    Then Loan is closed with zero outstanding balance and it's all installments have obligations met

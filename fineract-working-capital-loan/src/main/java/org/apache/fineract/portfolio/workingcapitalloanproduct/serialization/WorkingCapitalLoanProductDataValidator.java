@@ -99,6 +99,7 @@ public class WorkingCapitalLoanProductDataValidator {
                     WorkingCapitalLoanProductConstants.allowAttributeOverridesParamName, //
                     WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, //
                     WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, //
+                    WorkingCapitalLoanProductConstants.breachGraceDaysParamName, //
                     WorkingCapitalLoanProductConstants.accountingRuleParamName, //
                     WorkingCapitalLoanProductConstants.fundSourceAccountIdParamName, //
                     WorkingCapitalLoanProductConstants.loanPortfolioAccountIdParamName, //
@@ -382,6 +383,13 @@ public class WorkingCapitalLoanProductDataValidator {
                     .extractIntegerNamed(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName, element, locale);
             baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.delinquencyGraceDaysParamName)
                     .value(delinquencyGraceDays).ignoreIfNull().integerZeroOrGreater();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.breachGraceDaysParamName, element)) {
+            final Integer breachGraceDays = this.fromApiJsonHelper
+                    .extractIntegerNamed(WorkingCapitalLoanProductConstants.breachGraceDaysParamName, element, locale);
+            baseDataValidator.reset().parameter(WorkingCapitalLoanProductConstants.breachGraceDaysParamName).value(breachGraceDays)
+                    .ignoreIfNull().integerZeroOrGreater();
         }
 
         if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanProductConstants.delinquencyStartTypeParamName, element)) {

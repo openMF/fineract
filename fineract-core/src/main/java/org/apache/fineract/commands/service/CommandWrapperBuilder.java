@@ -243,6 +243,7 @@ import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_WORKINGCAPITALLOAN;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_WORKINGCAPITALLOANCHARGE;
 import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_WORKINGCAPITALLOANPRODUCT;
+import static org.apache.fineract.commands.domain.CommandWrapperConstants.ENTITY_WORKING_CAPITAL_LOAN_ORIGINATOR;
 import static org.apache.fineract.useradministration.service.AppUserConstants.PASSWORD;
 import static org.apache.fineract.useradministration.service.AppUserConstants.REPEAT_PASSWORD;
 
@@ -881,6 +882,15 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder createWorkingCapitalLoanBreachAction(final Long workingCapitalLoanId) {
+        this.actionName = "CREATE";
+        this.entityName = "WC_BREACH_ACTION";
+        this.entityId = workingCapitalLoanId;
+        this.loanId = workingCapitalLoanId;
+        this.href = "/working-capital-loans/" + workingCapitalLoanId + "/breach-actions";
+        return this;
+    }
+
     public CommandWrapperBuilder updateDiscountWorkingCapitalLoanApplication(final Long loanId) {
         this.actionName = "UPDATEDISCOUNT";
         this.entityName = "WORKINGCAPITALLOAN";
@@ -911,6 +921,14 @@ public class CommandWrapperBuilder {
         this.entityName = "WORKINGCAPITALLOAN";
         this.entityId = loanId;
         this.href = "/workingcapitalloans/" + loanId;
+        return this;
+    }
+
+    public CommandWrapperBuilder createNearBreachActionWorkingCapitalLoan(final Long loanId) {
+        this.actionName = "CREATE";
+        this.entityName = "WC_NEAR_BREACH_ACTION";
+        this.entityId = loanId;
+        this.href = "/working-capital-loans/" + loanId + "/near-breach-actions";
         return this;
     }
 
@@ -1144,6 +1162,15 @@ public class CommandWrapperBuilder {
         this.entityName = ENTITY_WORKINGCAPITALLOANCHARGE;
         this.loanId = loanId;
         this.href = "/loans/" + loanId + "/charges";
+        return this;
+    }
+
+    public CommandWrapperBuilder adjustmentForWorkingCapitalLoanCharge(final Long loanId, final Long loanChargeId) {
+        this.actionName = ACTION_ADJUSTMENT;
+        this.entityName = ENTITY_WORKINGCAPITALLOANCHARGE;
+        this.entityId = loanChargeId;
+        this.loanId = loanId;
+        this.href = "/working-capital-loans/" + loanId + "/charges/" + loanChargeId;
         return this;
     }
 
@@ -4075,6 +4102,26 @@ public class CommandWrapperBuilder {
         this.entityName = ENTITY_ACCOUNTTRANSFER;
         this.entityId = transferId;
         this.href = "/accounttransfers";
+        return this;
+    }
+
+    public CommandWrapperBuilder attachWorkingCapitalLoanOriginator(final Long loanId, final Long originatorId) {
+        this.actionName = ACTION_ATTACH;
+        this.entityName = ENTITY_WORKING_CAPITAL_LOAN_ORIGINATOR;
+        this.entityId = loanId;
+        this.loanId = loanId;
+        this.subentityId = originatorId;
+        this.href = "/working-capital-loans/" + loanId + "/originators/" + originatorId;
+        return this;
+    }
+
+    public CommandWrapperBuilder detachWorkingCapitalLoanOriginator(final Long loanId, final Long originatorId) {
+        this.actionName = ACTION_DETACH;
+        this.entityName = ENTITY_WORKING_CAPITAL_LOAN_ORIGINATOR;
+        this.entityId = loanId;
+        this.loanId = loanId;
+        this.subentityId = originatorId;
+        this.href = "/working-capital-loans/" + loanId + "/originators/" + originatorId;
         return this;
     }
 }

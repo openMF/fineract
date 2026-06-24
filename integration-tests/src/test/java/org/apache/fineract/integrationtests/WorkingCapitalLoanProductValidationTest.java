@@ -743,4 +743,18 @@ public class WorkingCapitalLoanProductValidationTest {
 
         wclProductHelper.deleteWorkingCapitalLoanProductById(productId);
     }
+
+    @Test
+    public void testCreateWorkingCapitalLoanProductWithNegativeBreachGraceDays() {
+        // Given - breachGraceDays must be >= 0
+        final PostWorkingCapitalLoanProductsRequest request = new WorkingCapitalLoanProductTestBuilder().withBreachGraceDays(-1).build();
+
+        // When & Then
+        final CallFailedRuntimeException exception = assertThrows(CallFailedRuntimeException.class,
+                () -> wclProductHelper.createWorkingCapitalLoanProduct(request));
+        assertEquals(400, exception.getStatus());
+        assertNotNull(exception.getDeveloperMessage());
+        assertEquals("Validation errors: [breachGraceDays] The parameter `breachGraceDays` must be zero or greater.",
+                exception.getDeveloperMessage());
+    }
 }

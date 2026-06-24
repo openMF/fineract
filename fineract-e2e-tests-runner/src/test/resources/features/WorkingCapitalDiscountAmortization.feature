@@ -57,6 +57,10 @@ Feature: WorkingCapitalDiscountFeeAmortization
       | Type      | Account code | Account name              | Debit | Credit |
       | INCOME    | 404000       | Interest Income           |       | 28.7   |
       | LIABILITY | 240005       | Deferred Interest Revenue | 28.7  |        |
+    Then Working Capital Loan Transactions tab has a "DISCOUNT_FEE" transaction with date "01 January 2026" which has the following Journal entries:
+      | Type      | Account code | Account name              | Debit  | Credit |
+      | ASSET     | 112601       | Loans Receivable          | 1000.0 |        |
+      | LIABILITY | 240005       | Deferred Interest Revenue |        | 1000.0 |
 
   @TestRailId:C80969
   Scenario: Verify NO Discount Fee Amortization transaction on Working Capital Loan account triggers on COB without repayment - UC2

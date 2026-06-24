@@ -64,6 +64,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
@@ -83,7 +84,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 @EnableWebSecurity
 @EnableConfigurationProperties({ FineractProperties.class, LiquibaseProperties.class })
-@ComponentScan(basePackages = "org.apache.fineract")
+@ComponentScan(basePackages = "org.apache.fineract", excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "org\\.apache\\.fineract\\..*\\$TestConfig"))
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 @PropertySource("classpath:application-test.properties")

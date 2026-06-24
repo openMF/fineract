@@ -127,6 +127,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public String delinquencyStartType;
         @Schema(example = "1")
         public Long nearBreachId;
+        @Schema(example = "0", description = "Number of days to shift the start of the first breach schedule period after disbursement")
+        public Integer breachGraceDays;
 
         // Configurable attributes
         public PostAllowAttributeOverrides allowAttributeOverrides;
@@ -329,6 +331,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         @Schema(example = "1")
         public Integer delinquencyGraceDays;
         public StringEnumOptionData delinquencyStartType;
+        @Schema(example = "0", description = "Number of days to shift the start of the first breach schedule period after disbursement")
+        public Integer breachGraceDays;
 
         // Configurable attributes
         public GetConfigurableAttributes allowAttributeOverrides;
@@ -510,6 +514,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public Integer delinquencyGraceDays;
         public StringEnumOptionData delinquencyStartType;
         public GetWorkingCapitalLoanNearBreach nearBreach;
+        @Schema(example = "0", description = "Number of days to shift the start of the first breach schedule period after disbursement")
+        public Integer breachGraceDays;
 
         // Configurable attributes
         public GetWorkingCapitalLoanProductsResponse.GetConfigurableAttributes allowAttributeOverrides;
@@ -591,6 +597,8 @@ public final class WorkingCapitalLoanProductApiResourceSwagger {
         public String delinquencyStartType;
         @Schema(example = "1")
         public Long nearBreachId;
+        @Schema(example = "0", description = "Number of days to shift the start of the first breach schedule period after disbursement")
+        public Integer breachGraceDays;
 
         // Configurable attributes
         public PostWorkingCapitalLoanProductsRequest.PostAllowAttributeOverrides allowAttributeOverrides;

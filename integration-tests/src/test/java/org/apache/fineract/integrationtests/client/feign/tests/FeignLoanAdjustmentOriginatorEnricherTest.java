@@ -20,13 +20,13 @@ package org.apache.fineract.integrationtests.client.feign.tests;
 
 import java.util.List;
 import org.apache.fineract.client.feign.FineractFeignClient;
-import org.apache.fineract.client.models.ChargeRequest;
 import org.apache.fineract.client.models.GetLoansLoanIdResponse;
 import org.apache.fineract.client.models.GetLoansLoanIdTransactions;
 import org.apache.fineract.client.models.PostLoansLoanIdChargesChargeIdRequest;
 import org.apache.fineract.client.models.PostLoansLoanIdChargesRequest;
 import org.apache.fineract.infrastructure.event.external.data.ExternalEventResponse;
 import org.apache.fineract.integrationtests.client.feign.FeignLoanTestBase;
+import org.apache.fineract.integrationtests.client.feign.helpers.FeignChargesHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignExternalEventHelper;
 import org.apache.fineract.integrationtests.client.feign.helpers.FeignLoanOriginatorHelper;
 import org.apache.fineract.integrationtests.client.feign.modules.ExternalEventTestValidators;
@@ -44,12 +44,14 @@ public class FeignLoanAdjustmentOriginatorEnricherTest extends FeignLoanTestBase
     private static FineractFeignClient fineractClient;
     private static FeignLoanOriginatorHelper originatorHelper;
     private static FeignExternalEventHelper externalEventHelper;
+    private static FeignChargesHelper chargesHelper;
 
     @BeforeAll
     public static void setupOriginatorHelpers() {
         fineractClient = FineractFeignClientHelper.getFineractFeignClient();
         originatorHelper = new FeignLoanOriginatorHelper(fineractClient);
         externalEventHelper = new FeignExternalEventHelper(fineractClient);
+        chargesHelper = new FeignChargesHelper(fineractClient);
     }
 
     @Test
@@ -188,15 +190,6 @@ public class FeignLoanAdjustmentOriginatorEnricherTest extends FeignLoanTestBase
     }
 
     private Long createFlatFeeCharge(double amount, String currencyCode) {
-        return ok(() -> fineractClient.charges().createCharge(new ChargeRequest()//
-                .name("Originator Test Fee " + System.currentTimeMillis())//
-                .currencyCode(currencyCode)//
-                .chargeAppliesTo(1)//
-                .chargeTimeType(2)//
-                .chargeCalculationType(1)//
-                .chargePaymentMode(0)//
-                .amount(amount)//
-                .active(true)//
-                .locale("en"))).getResourceId();
+        return chargesHelper.createLoanSpecifiedDueDateCharge(amount, currencyCode);
     }
 }

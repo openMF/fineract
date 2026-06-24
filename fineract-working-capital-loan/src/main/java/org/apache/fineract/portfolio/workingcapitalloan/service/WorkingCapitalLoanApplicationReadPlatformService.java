@@ -53,4 +53,9 @@ public interface WorkingCapitalLoanApplicationReadPlatformService {
      * Retrieves Working Capital Loan Summary Data based on the Client Id
      */
     List<WorkingCapitalLoanAccountSummaryData> retrieveLoanSummaryData(Long clientId);
+
+    /**
+     * Checks if a Working Capital Loan exists with the given Id
+     */
+    boolean existsByLoanId(Long loanId);
 }

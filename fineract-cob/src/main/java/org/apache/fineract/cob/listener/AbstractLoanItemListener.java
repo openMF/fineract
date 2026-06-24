@@ -18,8 +18,6 @@
  */
 package org.apache.fineract.cob.listener;
 
-import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
-
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,8 +34,6 @@ import org.springframework.batch.core.annotation.OnSkipInWrite;
 import org.springframework.batch.core.annotation.OnWriteError;
 import org.springframework.batch.item.Chunk;
 import org.springframework.lang.NonNull;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
@@ -45,18 +41,13 @@ import org.springframework.transaction.support.TransactionTemplate;
 public abstract class AbstractLoanItemListener<S extends AbstractPersistableCustom<Long>> {
 
     private final LockingService loanLockingService;
-    private final TransactionTemplate batchJdbcTransactionTemplate;
+    private final TransactionTemplate requiresNewTransactionJdbcTemplate;
 
     private void updateAccountLockWithError(List<Long> loanIds, String msg, Throwable e) {
-        batchJdbcTransactionTemplate.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-        batchJdbcTransactionTemplate.execute(new TransactionCallbackWithoutResult() {
-
-            @Override
-            protected void doInTransactionWithoutResult(@NonNull TransactionStatus status) {
-                String stacktrace = ThrowableSerialization.serialize(e);
-                for (Long loanId : loanIds) {
-                    loanLockingService.updateLockError(loanId, getLockOwner(), String.format(msg, loanId), stacktrace);
-                }
+        requiresNewTransactionJdbcTemplate.executeWithoutResult(status -> {
+            String stacktrace = ThrowableSerialization.serialize(e);
+            for (Long loanId : loanIds) {
+                loanLockingService.updateLockError(loanId, getLockOwner(), String.format(msg, loanId), stacktrace);
             }
         });
     }

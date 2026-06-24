@@ -25,4 +25,6 @@ import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 public interface WorkingCapitalLoanChargeWritePlatformService {
 
     CommandProcessingResult createLoanCharge(Long loanId, JsonCommand command);
+
+    CommandProcessingResult adjustmentForLoanCharge(Long loanId, Long wcLoanChargeId, JsonCommand command);
 }

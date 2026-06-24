@@ -36,6 +36,7 @@ public class JournalEntryAggregationSummaryData {
     private LocalDate submittedOnDate;
     private LocalDate aggregatedOnDate;
     private Long externalOwnerId;
+    private String originatorExternalIds;
     private BigDecimal debitAmount;
     private BigDecimal creditAmount;
     private Boolean manualEntry;

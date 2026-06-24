@@ -19,6 +19,8 @@
 
 package org.apache.fineract.infrastructure.core.config.jpa;
 
+import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
+
 import java.util.List;
 import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.apache.fineract.infrastructure.core.persistence.ExtendedJpaTransactionManager;
@@ -50,5 +52,12 @@ public class JpaTransactionConfig {
     @Primary
     public TransactionTemplate jpaTransactionTemplate(PlatformTransactionManager transactionManager) {
         return new TransactionTemplate(transactionManager);
+    }
+
+    @Bean("requiresNewTransactionTemplate")
+    public TransactionTemplate requiresNewTransactionTemplate(PlatformTransactionManager transactionManager) {
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
+        return transactionTemplate;
     }
 }

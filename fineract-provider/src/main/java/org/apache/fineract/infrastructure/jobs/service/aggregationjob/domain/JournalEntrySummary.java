@@ -54,6 +54,9 @@ public class JournalEntrySummary extends AbstractAuditableWithUTCDateTimeCustom<
     @Column(name = "external_owner_id", nullable = false)
     private Long externalOwnerId;
 
+    @Column(name = "originator_external_ids")
+    private String originatorExternalIds;
+
     @Column(name = "debit_amount")
     private BigDecimal debitAmount;
 

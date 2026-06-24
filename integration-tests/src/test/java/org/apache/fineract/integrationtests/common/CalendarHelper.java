@@ -18,147 +18,72 @@
  */
 package org.apache.fineract.integrationtests.common;
 
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.google.gson.Gson;
-import io.restassured.path.json.JsonPath;
-import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
-import java.util.HashMap;
+import org.apache.fineract.client.models.CalendarRequest;
+import org.apache.fineract.client.models.CommandProcessingResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class CalendarHelper {
 
     private static final Logger LOG = LoggerFactory.getLogger(CalendarHelper.class);
-    private static final String BASE_URL = "/fineract-provider/api/v1/";
-    private static final String PARENT_ENTITY_NAME = "groups/";
-    private static final String ENITY_NAME = "/calendars";
-    private static final String CENTER_ENTITY = "centers/";
-    private static final String EDIT_CALENDAR = "editcalendarbasedonmeetingdates/";
 
-    private CalendarHelper() {
+    private CalendarHelper() {}
 
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static Integer createMeetingCalendarForGroup(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
-            final Integer groupId, final String startDate, final String frequency, final String interval, final String repeatsOnDay) {
-
+    public static CommandProcessingResult createMeetingCalendarForGroup(final Long groupId, final String startDate, final String frequency,
+            final String interval, final String repeatsOnDay) {
         LOG.info("---------------------------------CREATING A MEETING CALENDAR FOR THE GROUP------------------------------");
-
-        final String CALENDAR_RESOURCE_URL = BASE_URL + PARENT_ENTITY_NAME + groupId + ENITY_NAME + "?" + Utils.TENANT_IDENTIFIER;
-
-        LOG.info("{}", CALENDAR_RESOURCE_URL);
-
-        return Utils.performServerPost(requestSpec, responseSpec, CALENDAR_RESOURCE_URL,
-                getTestCalendarAsJSON(frequency, interval, repeatsOnDay, startDate), "resourceId");
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().calendar().createCalendar("groups", groupId,
+                buildCalendarRequest(frequency, interval, repeatsOnDay, startDate)));
     }
 
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static Integer updateMeetingCalendarForGroup(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
-            final Integer groupId, String calendarID, final String startDate, final String frequency, final String interval,
-            final String repeatsOnDay) {
-
+    public static CommandProcessingResult updateMeetingCalendarForGroup(final Long groupId, final String calendarID, final String startDate,
+            final String frequency, final String interval, final String repeatsOnDay) {
         LOG.info("---------------------------------UPDATING A MEETING CALENDAR FOR THE GROUP------------------------------");
-
-        final String CALENDAR_RESOURCE_URL = BASE_URL + PARENT_ENTITY_NAME + groupId + ENITY_NAME + "/" + calendarID;
-
-        LOG.info("{}", CALENDAR_RESOURCE_URL);
-        // TODO: check that resource id indeed exists in calendar update put.
-        return Utils.performServerPut(requestSpec, responseSpec, CALENDAR_RESOURCE_URL,
-                getTestCalendarAsJSON(frequency, interval, repeatsOnDay, startDate), "resourceId");
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().calendar().updateCalendar("groups", groupId,
+                Long.parseLong(calendarID), buildCalendarJson(frequency, interval, repeatsOnDay, startDate)));
     }
 
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static String getTestCalendarAsJSON(final String frequency, final String interval, final String repeatsOnDay,
-            final String startDate) {
-
-        final HashMap<String, String> map = new HashMap<>();
-        map.put("dateFormat", "dd MMMM yyyy");
-        map.put("locale", "en");
-        map.put("frequency", frequency);
-        map.put("interval", interval);
-        map.put("repeating", "true");
-        map.put("repeatsOnDay", repeatsOnDay);
-        map.put("title", Utils.randomStringGenerator("groups_CollectionMeeting", 4));
-        map.put("typeId", "1");
-        map.put("startDate", startDate);
-        LOG.info("map : {}", map);
-        return new Gson().toJson(map);
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static void verifyCalendarCreatedOnServer(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
-            final Integer generatedGroupId, final Integer generatedCalendarId) {
-        LOG.info("------------------------------CHECK CALENDAR DETAILS------------------------------------\n");
-        final String CLIENT_URL = "/fineract-provider/api/v1/groups/" + generatedGroupId + "?associations=all&" + Utils.TENANT_IDENTIFIER;
-        final String responseCalendarDetailsinJSON = Utils.performServerGet(requestSpec, responseSpec, CLIENT_URL,
-                "collectionMeetingCalendar");
-        final Integer responseCalendarId = JsonPath.from(responseCalendarDetailsinJSON).get("id");
-        assertEquals(generatedCalendarId, responseCalendarId, "ERROR IN CREATING THE CALENDAR");
-    }
-
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static Integer createMeetingForGroup(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
-            final Integer groupId, final String startDate, final String frequency, final String interval, final String repeatsOnDay) {
-
+    public static CommandProcessingResult createMeetingForGroup(final Long groupId, final String startDate, final String frequency,
+            final String interval, final String repeatsOnDay) {
         LOG.info("---------------------------------CREATING A MEETING CALENDAR FOR THE GROUP------------------------------");
-
-        final String CALENDAR_RESOURCE_URL = BASE_URL + CENTER_ENTITY + groupId + ENITY_NAME + "?" + Utils.TENANT_IDENTIFIER;
-
-        LOG.info("{}", CALENDAR_RESOURCE_URL);
-
-        return Utils.performServerPost(requestSpec, responseSpec, CALENDAR_RESOURCE_URL,
-                getTestCalendarAsJSON(frequency, interval, repeatsOnDay, startDate), "resourceId");
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().calendar().createCalendar("centers", groupId,
+                buildCalendarRequest(frequency, interval, repeatsOnDay, startDate)));
     }
 
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    public static Integer updateMeetingCalendarForCenter(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
-            Integer centerId, String calendarID, String oldDate, String startDate) {
-
-        LOG.info("---------------------------------UPADATING A MEETING CALENDAR FOR THE CENTER------------------------------");
-
-        final String CALENDAR_RESOURCE_URL = BASE_URL + CENTER_ENTITY + centerId + ENITY_NAME + "/" + calendarID + "?"
-                + Utils.TENANT_IDENTIFIER;
-
-        LOG.info("{}", CALENDAR_RESOURCE_URL);
-
-        return Utils.performServerPut(requestSpec, responseSpec, CALENDAR_RESOURCE_URL, getTestCalendarMeetingAsJSON(oldDate, startDate),
-                "resourceId");
-
+    public static CommandProcessingResult updateMeetingCalendarForCenter(final Long centerId, final String calendarID, final String oldDate,
+            final String startDate) {
+        LOG.info("---------------------------------UPDATING A MEETING CALENDAR FOR THE CENTER------------------------------");
+        return ok(() -> FineractFeignClientHelper.getFineractFeignClient().calendar().updateCalendar("centers", centerId,
+                Long.parseLong(calendarID), buildRescheduleMeetingJson(oldDate, startDate)));
     }
 
-    // TODO: Rewrite to use fineract-client instead!
-    // Example: org.apache.fineract.integrationtests.common.loans.LoanTransactionHelper.disburseLoan(java.lang.Long,
-    // org.apache.fineract.client.models.PostLoansLoanIdRequest)
-    @Deprecated(forRemoval = true)
-    private static String getTestCalendarMeetingAsJSON(String oldDate, String startDate) {
-        final HashMap<String, String> map = new HashMap<>();
-        map.put("dateFormat", "dd MMMM yyyy");
-        map.put("locale", "en");
-        map.put("newMeetingDate", startDate);
-        map.put("presentMeetingDate", oldDate);
-        map.put("reschedulebasedOnMeetingDates", "true");
-        LOG.info("map : {}", map);
-        return new Gson().toJson(map);
+    public static void verifyCalendarCreatedOnServer(final Long generatedGroupId, final Long generatedCalendarId) {
+        LOG.info("------------------------------CHECK CALENDAR DETAILS------------------------------------\n");
+        final Long id = ok(() -> FineractFeignClientHelper.getFineractFeignClient().calendar().retrieveCalendar(generatedCalendarId,
+                "groups", generatedGroupId)).getId();
+        assertEquals(generatedCalendarId, id, "ERROR IN CREATING THE CALENDAR");
+    }
+
+    private static CalendarRequest buildCalendarRequest(final String frequency, final String interval, final String repeatsOnDay,
+            final String startDate) {
+        return new CalendarRequest().dateFormat("dd MMMM yyyy").locale("en").frequency(frequency).interval(interval).repeating("true")
+                .repeatsOnDay(repeatsOnDay).title(Utils.randomStringGenerator("groups_CollectionMeeting", 4)).typeId("1")
+                .startDate(startDate);
+    }
+
+    private static String buildCalendarJson(final String frequency, final String interval, final String repeatsOnDay,
+            final String startDate) {
+        return String.format(
+                "{\"dateFormat\":\"dd MMMM yyyy\",\"locale\":\"en\",\"frequency\":\"%s\",\"interval\":\"%s\","
+                        + "\"repeating\":\"true\",\"repeatsOnDay\":\"%s\",\"title\":\"%s\",\"typeId\":\"1\",\"startDate\":\"%s\"}",
+                frequency, interval, repeatsOnDay, Utils.randomStringGenerator("groups_CollectionMeeting", 4), startDate);
+    }
+
+    private static String buildRescheduleMeetingJson(final String oldDate, final String startDate) {
+        return String.format("{\"dateFormat\":\"dd MMMM yyyy\",\"locale\":\"en\",\"newMeetingDate\":\"%s\","
+                + "\"presentMeetingDate\":\"%s\",\"reschedulebasedOnMeetingDates\":\"true\"}", startDate, oldDate);
     }
 }

@@ -68,6 +68,37 @@ public class WorkingCapitalDelinquencyStepDef extends AbstractStepDef {
                 startDate, endDate, response);
     }
 
+    @When("Admin initiate a Working Capital loan delinquency resume with startDate {string}")
+    public void initiateDelinquencyResume(final String startDate) {
+        final Long loanId = extractLoanId();
+        final PostWorkingCapitalLoansDelinquencyActionRequest request = buildResumeRequest(startDate);
+        final PostWorkingCapitalLoansDelinquencyActionResponse response = createDelinquencyActionById(loanId, request);
+
+        log.debug("Delinquency resume initiated for loan {} with startDate: {}, response: {}", loanId, startDate, response);
+    }
+
+    @When("Admin initiate a Working Capital loan delinquency resume by external ID with startDate {string}")
+    public void initiateDelinquencyResumeByExternalId(final String startDate) {
+        final String loanExternalId = extractLoanExternalId();
+        final PostWorkingCapitalLoansDelinquencyActionRequest request = buildResumeRequest(startDate);
+        final PostWorkingCapitalLoansDelinquencyActionResponse response = createDelinquencyActionByExternalId(loanExternalId, request);
+
+        log.debug("Delinquency resume initiated for loan externalId {} with startDate: {}, response: {}", loanExternalId, startDate,
+                response);
+    }
+
+    @Then("Initiating a Working Capital loan delinquency resume with startDate {string} results an error with the following data:")
+    public void initiateDelinquencyResumeResultsAnErrorWithDetails(final String startDate, final DataTable table) {
+        final Long loanId = extractLoanId();
+        final PostWorkingCapitalLoansDelinquencyActionRequest request = buildResumeRequest(startDate);
+
+        final CallFailedRuntimeException exception = fail(
+                () -> fineractClient.workingCapitalLoanDelinquencyActions().createDelinquencyAction(loanId, request));
+
+        verifyDelinquencyPauseErrorWithTable(exception, table);
+        log.info("Verified delinquency resume initiation failed with expected error for loan {}", loanId);
+    }
+
     @Then("Initiating a Working Capital loan delinquency pause with startDate {string} and endDate {string} results an error")
     public void initiateDelinquencyPauseResultsAnError(String startDate, String endDate) {
         initiateDelinquencyPauseResultsAnErrorWithDetails(startDate, endDate, null);
@@ -127,8 +158,13 @@ public class WorkingCapitalDelinquencyStepDef extends AbstractStepDef {
             case "action" -> assertThat(actual.getAction().name()).as("Action for row %d", rowNumber).isEqualTo(expectedValue);
             case "startDate" ->
                 assertThat(actual.getStartDate()).as("Start date for row %d", rowNumber).isEqualTo(LocalDate.parse(expectedValue));
-            case "endDate" ->
-                assertThat(actual.getEndDate()).as("End date for row %d", rowNumber).isEqualTo(LocalDate.parse(expectedValue));
+            case "endDate" -> {
+                if (expectedValue == null || expectedValue.isBlank()) {
+                    assertThat(actual.getEndDate()).as("End date for row %d", rowNumber).isNull();
+                } else {
+                    assertThat(actual.getEndDate()).as("End date for row %d", rowNumber).isEqualTo(LocalDate.parse(expectedValue));
+                }
+            }
             default -> throw new IllegalArgumentException("Unknown field name: " + fieldName);
         }
     }
@@ -181,6 +217,11 @@ public class WorkingCapitalDelinquencyStepDef extends AbstractStepDef {
     private PostWorkingCapitalLoansDelinquencyActionRequest buildDelinquencyActionRequest(String action, String startDate, String endDate) {
         return workingCapitalLoanRequestFactory.defaultWorkingCapitalLoansDelinquencyActionRequest(action).startDate(startDate)
                 .endDate(endDate);
+    }
+
+    private PostWorkingCapitalLoansDelinquencyActionRequest buildResumeRequest(final String startDate) {
+        return workingCapitalLoanRequestFactory.defaultWorkingCapitalLoansDelinquencyActionRequest("resume").startDate(startDate)
+                .endDate(null);
     }
 
     private PostWorkingCapitalLoansDelinquencyActionResponse createDelinquencyActionById(Long loanId,

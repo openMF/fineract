@@ -43,4 +43,7 @@ public interface WorkingCapitalLoanDelinquencyRangeScheduleService {
 
     void rescheduleMinimumPayment(WorkingCapitalLoan loan, WorkingCapitalLoanDelinquencyAction rescheduleAction);
 
+    void resumeActivePause(WorkingCapitalLoan loan, WorkingCapitalLoanDelinquencyAction activePause,
+            WorkingCapitalLoanDelinquencyAction resumeAction);
+
 }

@@ -197,11 +197,11 @@ Feature: Working Capital Near Breach Evaluation
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
-      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
-      | 3               | MONTHS              | FLAT                        | 900          | 60                  | DAYS                    | 33.33               | 10                   |
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | breachGraceDays | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 3               | MONTHS              | FLAT                        | 900          | 10              | 60                  | DAYS                    | 33.33               | 10                   |
     And Admin creates a working capital loan using created product with the following data:
       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
-      | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
     When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
     And Admin runs inline COB job for Working Capital Loan by loanId
@@ -570,8 +570,8 @@ Feature: Working Capital Near Breach Evaluation
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
-      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
-      | 9               | DAYS                | PERCENTAGE                  | 50           | 3                   | DAYS                    | 33                  | 3                    |
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays | breachGraceDays |
+      | 9               | DAYS                | PERCENTAGE                  | 50           | 3                   | DAYS                    | 33                  | 3                    | 3               |
     And Admin creates a working capital loan using created product with the following data:
       | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | 01 January 2026 | 01 January 2026          | 800             | 100000       | 18                | 0        |
@@ -655,3 +655,400 @@ Feature: Working Capital Near Breach Evaluation
     Then Working Capital loan breach schedule has the following data:
       | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
       | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 0.00              | true       | false  |
+
+  @TestRailId:C77001
+  Scenario: Verify near breach evaluation window shifts when breachGraceDays is set on the product
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | breachGraceDays |
+      | 3               | MONTHS              | FLAT                        | 900          | 60                  | DAYS                    | 33.33               | 5               |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    # breachGraceDays=5 -> Period 1: 01-06 -> 04-05; freq=60d -> 1 eval at 03-07 (cumulative required = 33.33% of 900 = 299.97)
+    # No payment by 03-07 -> cumulative paid=0 < 299.97 -> trigger Y
+    When Admin sets the business date to "08 March 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-06 | 2026-04-05 | 900.00           | 900.00            | true       | null   |
+
+  @TestRailId:C85315
+  Scenario: Verify near breach RESCHEDULE action - UC1: threshold raised so period that would have triggered no longer triggers
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           | 3                   | DAYS                    | 33.33               |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    # Default: freq=3 DAYS -> eval#1 at 04-Jan. Threshold=33.33% of 90=29.997. No payment -> would trigger.
+    # Pre-change check: schedule exists with nearBreach=null (eval not yet reached), no action history yet.
+    Then Near breach action history has 0 entries
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | null       | null   |
+    # Post RESCHEDULE: raise threshold to 99% (=89.1) and shift frequency to 14 DAYS -> new eval#1 at 15-Jan.
+    # COB on 05-Jan: past old eval date (04-Jan), before new eval date (15-Jan) -> nearBreach stays null.
+    When Admin sets the business date to "02 January 2026"
+    And Admin creates a near breach reschedule action with threshold "99" frequency 14 frequencyType "DAYS"
+    Then Near breach action history has the following data:
+      | action     | threshold | frequency | frequencyType |
+      | RESCHEDULE | 99        | 14        | DAYS          |
+    When Admin sets the business date to "05 January 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | null       | null   |
+
+  @TestRailId:C85316
+  Scenario: Verify near breach RESCHEDULE action - UC2: threshold lowered so period that would not have triggered now triggers
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           | 3                   | DAYS                    | 33.33               |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    # Pay 28 on 02-Jan: below 33.33% bar (29.997). Default: would NOT trigger at eval#1 (04-Jan).
+    # Pre-change check: no action history yet, schedule shows nearBreach=null.
+    Then Near breach action history has 0 entries
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | null       | null   |
+    # Post RESCHEDULE: raise threshold to 50% (=45). Pay 28 < 45 -> triggers nearBreach=true with new threshold.
+    When Admin sets the business date to "02 January 2026"
+    And Customer makes repayment on "02 January 2026" with 28.0 transaction amount on Working Capital loan
+    And Admin creates a near breach reschedule action with threshold "50" frequency 3 frequencyType "DAYS"
+    Then Near breach action history has the following data:
+      | action     | threshold | frequency | frequencyType |
+      | RESCHEDULE | 50        | 3         | DAYS          |
+    When Admin sets the business date to "05 January 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 62.00             | true       | null   |
+
+  @TestRailId:C85317
+  Scenario: Verify near breach RESCHEDULE action - UC3: frequency change shifts evaluation date forward
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           | 3                   | DAYS                    | 33.33               |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    # Default eval#1 at 04-Jan. Post RESCHEDULE: freq=6 DAYS -> new eval#1 at 07-Jan.
+    # Pre-change check: no action history yet, schedule shows nearBreach=null.
+    Then Near breach action history has 0 entries
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | null       | null   |
+    # COB on 05-Jan: past old eval date (04-Jan), before new eval date (07-Jan) -> still null.
+    When Admin sets the business date to "02 January 2026"
+    And Admin creates a near breach reschedule action with threshold "33.33" frequency 6 frequencyType "DAYS"
+    Then Near breach action history has the following data:
+      | action     | threshold | frequency | frequencyType |
+      | RESCHEDULE | 33.33     | 6         | DAYS          |
+    When Admin sets the business date to "05 January 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | null       | null   |
+    # COB on 08-Jan: past new eval#1 (07-Jan), no payment -> cumPaid=0 < 29.997 -> triggers.
+    When Admin sets the business date to "08 January 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | true       | null   |
+
+  @TestRailId:C85318
+  Scenario: Verify near breach RESCHEDULE action - UC4: multiple actions posted; only the latest governs evaluation
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           | 3                   | DAYS                    | 33.33               |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    # Action 1: threshold=50%, freq=3 DAYS -> would trigger at eval#1 (04-Jan) since cumPaid=0 < 45.
+    # Action 2: threshold=99%, freq=14 DAYS -> latest wins; eval#1 at 15-Jan; cumPaid=0 < 89.1 but no eval before 15-Jan.
+    # Pre-change check: no action history yet, schedule shows nearBreach=null.
+    Then Near breach action history has 0 entries
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | null       | null   |
+    When Admin sets the business date to "02 January 2026"
+    And Admin creates a near breach reschedule action with threshold "50" frequency 3 frequencyType "DAYS"
+    And Admin creates a near breach reschedule action with threshold "99" frequency 14 frequencyType "DAYS"
+    Then Near breach action history has the following data:
+      | action     | threshold | frequency | frequencyType |
+      | RESCHEDULE | 99        | 14        | DAYS          |
+      | RESCHEDULE | 50        | 3         | DAYS          |
+    When Admin sets the business date to "05 January 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | null       | null   |
+
+  @TestRailId:C85319
+  Scenario: Verify near breach RESCHEDULE action - UC5: posting action after nearBreach already true does not clear it
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           | 3                   | DAYS                    | 33.33               |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    # No payment -> COB 05-Jan: eval#1 (04-Jan) triggers -> nearBreach=true.
+    When Admin sets the business date to "05 January 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | true       | null   |
+    # Post RESCHEDULE with threshold that would NOT have triggered. Immutability must protect already-set nearBreach=true.
+    When Admin creates a near breach reschedule action with threshold "99" frequency 14 frequencyType "DAYS"
+    Then Near breach action history has the following data:
+      | action     | threshold | frequency | frequencyType |
+      | RESCHEDULE | 99        | 14        | DAYS          |
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | true       | null   |
+
+  @TestRailId:C85320
+  Scenario: Verify near breach RESCHEDULE action - UC6: action posted after period end does not affect closed period; applies to next
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           | 3                   | DAYS                    | 33.33               |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    # Pay 90 on 02-Jan: period 1 fully settled -> nearBreach=false, breach=false.
+    When Admin sets the business date to "02 January 2026"
+    And Customer makes repayment on "02 January 2026" with 90.0 transaction amount on Working Capital loan
+    When Admin sets the business date to "10 January 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 0.00              | false      | false  |
+      | 2            | 2026-01-10 | 2026-01-18 | 90.00            | 90.00             | null       | null   |
+    # Post RESCHEDULE: threshold=50%, freq=3 DAYS -> applies from now on for period 2.
+    # Period 1 already closed (nearBreach=false, breach=false) -> must not change.
+    # Period 2 eval#1 at 13-Jan: no new payment -> cumPaid=0 < 45 -> triggers nearBreach=true.
+    When Admin creates a near breach reschedule action with threshold "50" frequency 3 frequencyType "DAYS"
+    Then Near breach action history has the following data:
+      | action     | threshold | frequency | frequencyType |
+      | RESCHEDULE | 50        | 3         | DAYS          |
+    When Admin sets the business date to "14 January 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 0.00              | false      | false  |
+      | 2            | 2026-01-10 | 2026-01-18 | 90.00            | 90.00             | true       | null   |
+
+  @TestRailId:C85321
+  Scenario: Verify near breach RESCHEDULE action - UC7: repayment after action keeps nearBreach=false at new eval date
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           | 3                   | DAYS                    | 33.33               |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    # Post RESCHEDULE: threshold=50% (=45), freq=6 DAYS -> eval#1 at 07-Jan.
+    # Pre-change check: no action history yet, schedule shows nearBreach=null.
+    Then Near breach action history has 0 entries
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | null       | null   |
+    # Post RESCHEDULE on 02-Jan: threshold=50% (=45), freq=6 DAYS -> eval#1 at 07-Jan (01-Jan + 6 days).
+    # Pay 50 on 04-Jan: outstanding=40 which is <= threshold amount (45) -> nearBreach not triggered (stays null).
+    When Admin sets the business date to "02 January 2026"
+    And Admin creates a near breach reschedule action with threshold "50" frequency 6 frequencyType "DAYS"
+    Then Near breach action history has the following data:
+      | action     | threshold | frequency | frequencyType |
+      | RESCHEDULE | 50        | 6         | DAYS          |
+    When Admin sets the business date to "04 January 2026"
+    And Customer makes repayment on "04 January 2026" with 50.0 transaction amount on Working Capital loan
+    When Admin sets the business date to "08 January 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 40.00             | null       | null   |
+
+  @TestRailId:C85322
+  Scenario: Verify near breach RESCHEDULE action - UC8: backdated repayment does not clear immutable nearBreach set under new config
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           | 3                   | DAYS                    | 33.33               |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    # Post RESCHEDULE: threshold=50% (=45), freq=3 DAYS -> eval#1 at 04-Jan.
+    # Pre-change check: no action history yet, schedule shows nearBreach=null.
+    Then Near breach action history has 0 entries
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | null       | null   |
+    # No payment -> COB 05-Jan: cumPaid=0 < 45 -> nearBreach=true.
+    When Admin sets the business date to "02 January 2026"
+    And Admin creates a near breach reschedule action with threshold "50" frequency 3 frequencyType "DAYS"
+    Then Near breach action history has the following data:
+      | action     | threshold | frequency | frequencyType |
+      | RESCHEDULE | 50        | 3         | DAYS          |
+    When Admin sets the business date to "05 January 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | true       | null   |
+    # Backdate repayment of 50 to 02-Jan. Immutability must keep nearBreach=true.
+    When Admin sets the business date to "06 January 2026"
+    And Customer makes repayment on "02 January 2026" with 50.0 transaction amount on Working Capital loan
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 40.00             | true       | null   |
+
+  @TestRailId:C85323
+  Scenario: Verify near breach RESCHEDULE action - UC9: goodwill credit after action keeps nearBreach=false at eval date
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           | 3                   | DAYS                    | 33.33               |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    # Post RESCHEDULE: threshold=50% (=45), freq=6 DAYS -> eval#1 at 07-Jan.
+    # Pre-change check: no action history yet, schedule shows nearBreach=null.
+    Then Near breach action history has 0 entries
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 90.00             | null       | null   |
+    # Goodwill credit of 50 on 04-Jan: outstanding=40 which is <= threshold amount (45) -> nearBreach not triggered (stays null).
+    When Admin sets the business date to "02 January 2026"
+    And Admin creates a near breach reschedule action with threshold "50" frequency 6 frequencyType "DAYS"
+    Then Near breach action history has the following data:
+      | action     | threshold | frequency | frequencyType |
+      | RESCHEDULE | 50        | 6         | DAYS          |
+    When Admin sets the business date to "04 January 2026"
+    And Customer makes "GOODWILL_CREDIT" transaction on "04 January 2026" with 50.0 transaction amount on Working Capital loan
+    When Admin sets the business date to "08 January 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    Then Working Capital loan breach schedule has the following data:
+      | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
+      | 1            | 2026-01-01 | 2026-01-09 | 90.00            | 40.00             | null       | null   |
+
+  @TestRailId:C85324
+  Scenario: Verify near breach RESCHEDULE action - UC10: action on loan with no near breach config fails (Negative)
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with custom breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    # No near breach config on product -> RESCHEDULE action must fail.
+    When Admin sets the business date to "02 January 2026"
+    When Admin creates a near breach reschedule action with threshold "33.33" frequency 3 frequencyType "DAYS" expecting error:
+      | httpCode | errorMessage                                                                                                    |
+      | 400      | Failed data validation due to: near.breach.action.not.allowed.loan.has.no.near.breach.configuration. |
+
+  @TestRailId:C85325
+  Scenario: Verify near breach RESCHEDULE action - UC11: action on non-active loan (submitted, not approved) fails (Negative)
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           | 3                   | DAYS                    | 33.33               |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    # Loan is in SUBMITTED state (not approved) -> action must fail.
+    Then Working capital loan account has the correct data:
+      | submittedOnDate | expectedDisbursementDate | status                         | approvedPrincipal | proposedPrincipal | totalPaymentVolume | periodPaymentRate | discount |
+      | 2026-01-01      | 2026-01-01               | Submitted and pending approval | 0.0               | 9000.0            | 100000.0           | 18.0              | null     |
+    When Admin creates a near breach reschedule action with threshold "50" frequency 3 frequencyType "DAYS" expecting error:
+      | httpCode | errorMessage                                                                                        |
+      | 400      | Failed data validation due to: near.breach.action.not.allowed.for.non.active.loan. |
+
+  @TestRailId:C85326
+  Scenario: Verify near breach RESCHEDULE action - UC12: action on approved but not yet disbursed loan fails (Negative)
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           | 3                   | DAYS                    | 33.33               |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    # Loan is APPROVED but not yet disbursed (not ACTIVE) -> action must fail.
+    Then Working capital loan account has the correct data:
+      | submittedOnDate | expectedDisbursementDate | status   | approvedPrincipal | proposedPrincipal | totalPaymentVolume | periodPaymentRate | discount |
+      | 2026-01-01      | 2026-01-01               | Approved | 9000.0            | 9000.0            | 100000.0           | 18.0              | null     |
+    When Admin creates a near breach reschedule action with threshold "50" frequency 3 frequencyType "DAYS" expecting error:
+      | httpCode | errorMessage                                                                                        |
+      | 400      | Failed data validation due to: near.breach.action.not.allowed.for.non.active.loan. |
+
+  @TestRailId:C85327
+  Scenario: Verify near breach RESCHEDULE action - UC13: threshold exceeding 100 percent fails validation (Negative)
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a Working Capital Loan Product with breach and near breach config and overrides enabled:
+      | breachFrequency | breachFrequencyType | breachAmountCalculationType | breachAmount | nearBreachFrequency | nearBreachFrequencyType | nearBreachThreshold | delinquencyGraceDays |
+      | 9               | DAYS                | FLAT                        | 90           | 3                   | DAYS                    | 33.33               |                      |
+    And Admin creates a working capital loan using created product with the following data:
+      | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    When Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    When Admin creates a near breach reschedule action with threshold "101" frequency 3 frequencyType "DAYS" expecting error:
+      | httpCode | errorMessage                                                                                        |
+      | 400      | Failed data validation due to: must.not.exceed.100.percent. |

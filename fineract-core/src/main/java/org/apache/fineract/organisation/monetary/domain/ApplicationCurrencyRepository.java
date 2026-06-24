@@ -37,14 +37,14 @@ public interface ApplicationCurrencyRepository
 
     String FIND_CURRENCY_DETAILS = "SELECT new org.apache.fineract.organisation.monetary.data.CurrencyData(ac.code, ac.name, ac.decimalPlaces, ac.inMultiplesOf, ac.displaySymbol, ac.nameCode) FROM ApplicationCurrency ac ";
 
-    @Cacheable(key = "'entity_' + #currencyCode")
+    @Cacheable(key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('entity_' + #currencyCode)")
     ApplicationCurrency findOneByCode(String currencyCode);
 
-    @Cacheable(key = "'data_' + #currencyCode")
+    @Cacheable(key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('data_' + #currencyCode)")
     @Query(FIND_CURRENCY_DETAILS + " WHERE ac.code = :code")
     CurrencyData findCurrencyDataByCode(@Param("code") String currencyCode);
 
-    @Cacheable
+    @Cacheable(key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('allSorted_' + #sort)")
     @Query(FIND_CURRENCY_DETAILS)
     List<CurrencyData> findAllSorted(Sort sort);
 

@@ -88,6 +88,12 @@ public final class GlobalConfigurationConstants {
     public static final String FORCE_PASSWORD_RESET_ON_FIRST_LOGIN = "force-password-reset-on-first-login";
     public static final String ALLOW_CASH_AND_NON_CASH_ACCRUAL = "allow-cash-and-non-cash-accrual";
     public static final String BLOCK_TRANSACTIONS_ON_CLOSED_OVERPAID_LOANS = "block-transactions-on-closed-overpaid-loans";
+    public static final String INCOME_EXPENSE_GL_ACCOUNTS = "income-expense-gl-accounts";
+    public static final String LAST_DAY_OF_FINANCIAL_YEAR = "last-day-of-financial-year";
+    public static final String LAST_MONTH_OF_FINANCIAL_YEAR = "last-month-of-financial-year";
+    public static final String RETAINED_EARNING_GL_ACCOUNT = "retained-gl-account";
+    public static final String RETAINED_EARNING_USED_BY_REPORT_NAME = "retained-earning-used-by-report-name";
+    public static final String OFFICE_ID = "office-id";
 
     private GlobalConfigurationConstants() {}
 }

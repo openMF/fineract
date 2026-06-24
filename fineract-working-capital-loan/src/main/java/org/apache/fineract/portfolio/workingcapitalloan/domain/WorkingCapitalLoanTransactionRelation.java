@@ -21,6 +21,7 @@ package org.apache.fineract.portfolio.workingcapitalloan.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -45,6 +46,11 @@ public class WorkingCapitalLoanTransactionRelation extends AbstractAuditableWith
     @JoinColumn(name = "to_loan_transaction_id")
     private WorkingCapitalLoanTransaction toTransaction;
 
+    @Setter
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "to_loan_charge_id")
+    private WorkingCapitalLoanCharge toCharge;
+
     @Column(name = "relation_type_enum", nullable = false)
     @Convert(converter = LoanTransactionRelationTypeEnumConverter.class)
     private LoanTransactionRelationTypeEnum relationType;
@@ -56,6 +62,14 @@ public class WorkingCapitalLoanTransactionRelation extends AbstractAuditableWith
         this.fromTransaction = fromTransaction;
         this.toTransaction = toTransaction;
         this.relationType = relationType;
+    }
+
+    public static WorkingCapitalLoanTransactionRelation linkToCharge(@NotNull WorkingCapitalLoanTransaction fromTransaction,
+            @NotNull WorkingCapitalLoanCharge charge, LoanTransactionRelationTypeEnum relationType) {
+        final WorkingCapitalLoanTransactionRelation relation = new WorkingCapitalLoanTransactionRelation(fromTransaction, null,
+                relationType);
+        relation.toCharge = charge;
+        return relation;
     }
 
 }

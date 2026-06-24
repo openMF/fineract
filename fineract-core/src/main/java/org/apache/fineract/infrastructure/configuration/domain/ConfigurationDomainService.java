@@ -164,6 +164,18 @@ public interface ConfigurationDomainService {
 
     Integer retrieveMaxLoginRetries();
 
+    String getIncomeExpenseGlAccounts();
+
+    String getRetainedEarningGlAccount();
+
+    Long getLastDayOfFinancialYear();
+
+    Long getLastMonthOfFinancialYear();
+
+    String getRetainedEarningUsedByReportName();
+
+    Long getOfficeId();
+
     boolean isAllowCashAndNonCashAccrual();
 
     boolean isBlockTransactionsOnClosedOverpaidLoansEnabled();

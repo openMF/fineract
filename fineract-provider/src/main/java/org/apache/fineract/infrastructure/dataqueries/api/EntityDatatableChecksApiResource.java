@@ -20,7 +20,6 @@ package org.apache.fineract.infrastructure.dataqueries.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -67,7 +66,7 @@ public class EntityDatatableChecksApiResource {
             + "\n" + "OPTIONAL ARGUMENTS\n"
             + "offset Integer optional, defaults to 0 Indicates the result from which pagination startslimit Integer optional, defaults to 200 Restricts the size of results returned. To override the default and return all entries you must explicitly pass a non-positive integer value for limit e.g. limit=0, or limit=-1\n"
             + "Example Request:\n" + "\n" + "entityDatatableChecks?offset=0&limit=15")
-    @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = EntityDatatableChecksApiResourceSwagger.GetEntityDatatableChecksResponse.class))))
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = EntityDatatableChecksApiResourceSwagger.PageGetEntityDatatableChecksResponse.class)))
     public String retrieveAll(@Context final UriInfo uriInfo, @QueryParam("status") @Parameter(description = "status") final Integer status,
             @QueryParam("entity") @Parameter(description = "entity") final String entity,
             @QueryParam("productId") @Parameter(description = "productId") final Long productId,

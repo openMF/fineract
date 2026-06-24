@@ -19,15 +19,12 @@
 package org.apache.fineract.infrastructure.event.business.service;
 
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Component
-@Transactional(propagation = Propagation.SUPPORTS)
 public class TransactionHelper {
 
     boolean hasTransaction() {
-        return TransactionAspectSupport.currentTransactionStatus().hasTransaction();
+        return TransactionSynchronizationManager.isActualTransactionActive();
     }
 }

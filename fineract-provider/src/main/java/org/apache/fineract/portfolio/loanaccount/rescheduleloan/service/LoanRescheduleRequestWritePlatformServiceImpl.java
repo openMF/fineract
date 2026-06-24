@@ -436,7 +436,7 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
             LocalDate rescheduleFromDate = null;
             List<LoanTermVariations> activeLoanTermVariations = loan.getActiveLoanTermVariations();
             LoanTermVariations dueDateVariationInCurrentRequest = loanRescheduleRequest.getDueDateTermVariationIfExists();
-            if (dueDateVariationInCurrentRequest != null && !activeLoanTermVariations.isEmpty()) {
+            if (!loan.isProgressiveSchedule() && dueDateVariationInCurrentRequest != null && !activeLoanTermVariations.isEmpty()) {
                 LocalDate fromScheduleDate = dueDateVariationInCurrentRequest.fetchTermApplicaDate();
                 LocalDate currentScheduleDate = fromScheduleDate;
                 LocalDate modifiedScheduleDate = dueDateVariationInCurrentRequest.fetchDateValue();

@@ -94,4 +94,13 @@ public final class WorkingCapitalLoanConstants {
     // Period payment rate change parameters
     public static final String periodPaymentRateParamName = "periodPaymentRate";
     public static final String previousPeriodPaymentRateParamName = "previousRate";
+
+    // Near breach action parameters
+    public static final String nearBreachActionParamName = "action";
+    public static final String nearBreachThresholdParamName = "nearBreachThreshold";
+    public static final String nearBreachFrequencyParamName = "nearBreachFrequency";
+    public static final String nearBreachFrequencyTypeParamName = "nearBreachFrequencyType";
+
+    // Loan origination parameters
+    public static final String originatorsParameterName = "originators";
 }

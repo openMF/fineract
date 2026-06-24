@@ -46,4 +46,6 @@ public interface WorkingCapitalLoanDelinquencyRangeScheduleRepository
     List<WorkingCapitalLoanDelinquencyRangeSchedule> findByLoanIdAndToDateLessThanEqualAndMinPaymentCriteriaMetIsNull(Long loanId,
             LocalDate businessDate);
 
+    Optional<WorkingCapitalLoanDelinquencyRangeSchedule> findTopByLoanIdAndMinPaymentCriteriaMetFalseOrderByFromDateAsc(Long loanId);
+
 }

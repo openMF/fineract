@@ -64,7 +64,7 @@ public class DisbursalAndRepaymentScheduleTest {
     private Integer loanRescheduleRequestId;
     private Integer clientId;
     private Integer groupId;
-    private Integer groupCalendarId;
+    private Long groupCalendarId;
     private Integer loanProductId;
     private Integer loanId;
     private final String loanPrincipalAmount = "100000.00";
@@ -157,14 +157,14 @@ public class DisbursalAndRepaymentScheduleTest {
         loanStatusHashMap = LoanStatusChecker.getStatusOfLoan(this.requestSpec, this.responseSpec, this.loanId);
         LoanStatusChecker.verifyLoanIsActive(loanStatusHashMap);
 
-        CalendarHelper.updateMeetingCalendarForGroup(this.requestSpec, this.responseSpec, this.groupId, this.groupCalendarId.toString(),
-                groupMeetingNewStartDate, "2", "2", "2"); // New
-                                                          // meeting
-                                                          // dates
-                                                          // will be
-                                                          // the
-                                                          // tuesday
-                                                          // after the
+        CalendarHelper.updateMeetingCalendarForGroup(this.groupId.longValue(), this.groupCalendarId.toString(), groupMeetingNewStartDate,
+                "2", "2", "2"); // New
+                                // meeting
+                                // dates
+                                // will be
+                                // the
+                                // tuesday
+                                // after the
         // coming
         // monday
 
@@ -284,16 +284,16 @@ public class DisbursalAndRepaymentScheduleTest {
         loanStatusHashMap = LoanStatusChecker.getStatusOfLoan(this.requestSpec, this.responseSpec, this.loanId);
         LoanStatusChecker.verifyLoanIsActive(loanStatusHashMap);
 
-        CalendarHelper.updateMeetingCalendarForGroup(this.requestSpec, this.responseSpec, this.groupId, this.groupCalendarId.toString(),
-                groupMeetingNewStartDate, "2", "2", "2"); // New
-                                                          // meeting
-                                                          // dates
-                                                          // will be
-                                                          // the
-                                                          // tuesday
-                                                          // after the
-                                                          // coming
-                                                          // monday
+        CalendarHelper.updateMeetingCalendarForGroup(this.groupId.longValue(), this.groupCalendarId.toString(), groupMeetingNewStartDate,
+                "2", "2", "2"); // New
+                                // meeting
+                                // dates
+                                // will be
+                                // the
+                                // tuesday
+                                // after the
+                                // coming
+                                // monday
 
         Calendar expectedMaturityCalendar = Calendar.getInstance();
         expectedMaturityCalendar.setFirstDayOfWeek(Calendar.MONDAY);
@@ -340,8 +340,8 @@ public class DisbursalAndRepaymentScheduleTest {
 
         final String startDate = groupActivationDate;
 
-        this.setGroupCalendarId(CalendarHelper.createMeetingCalendarForGroup(this.requestSpec, this.responseSpec, this.groupId, startDate,
-                frequency, interval, repeatsOnDay));
+        this.setGroupCalendarId(CalendarHelper
+                .createMeetingCalendarForGroup(this.groupId.longValue(), startDate, frequency, interval, repeatsOnDay).getResourceId());
     }
 
     /**
@@ -362,7 +362,7 @@ public class DisbursalAndRepaymentScheduleTest {
         this.loanProductId = this.loanTransactionHelper.getLoanProductId(loanProductJSON);
     }
 
-    public void setGroupCalendarId(Integer groupCalendarId) {
+    public void setGroupCalendarId(Long groupCalendarId) {
         this.groupCalendarId = groupCalendarId;
     }
 }

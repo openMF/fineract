@@ -598,4 +598,45 @@ public class ConfigurationDomainServiceJpa implements ConfigurationDomainService
     public boolean isBlockTransactionsOnClosedOverpaidLoansEnabled() {
         return getGlobalConfigurationPropertyData(GlobalConfigurationConstants.BLOCK_TRANSACTIONS_ON_CLOSED_OVERPAID_LOANS).isEnabled();
     }
+
+    @Override
+    public String getIncomeExpenseGlAccounts() {
+        final GlobalConfigurationPropertyData property = getGlobalConfigurationPropertyData(
+                GlobalConfigurationConstants.INCOME_EXPENSE_GL_ACCOUNTS);
+        return property.getStringValue();
+    }
+
+    @Override
+    public String getRetainedEarningGlAccount() {
+        final GlobalConfigurationPropertyData property = getGlobalConfigurationPropertyData(
+                GlobalConfigurationConstants.RETAINED_EARNING_GL_ACCOUNT);
+        return property.getStringValue();
+    }
+
+    @Override
+    public Long getLastDayOfFinancialYear() {
+        final GlobalConfigurationPropertyData property = getGlobalConfigurationPropertyData(
+                GlobalConfigurationConstants.LAST_DAY_OF_FINANCIAL_YEAR);
+        return property.getValue();
+    }
+
+    @Override
+    public Long getLastMonthOfFinancialYear() {
+        final GlobalConfigurationPropertyData property = getGlobalConfigurationPropertyData(
+                GlobalConfigurationConstants.LAST_MONTH_OF_FINANCIAL_YEAR);
+        return property.getValue();
+    }
+
+    @Override
+    public String getRetainedEarningUsedByReportName() {
+        final GlobalConfigurationPropertyData property = getGlobalConfigurationPropertyData(
+                GlobalConfigurationConstants.RETAINED_EARNING_USED_BY_REPORT_NAME);
+        return property.getStringValue();
+    }
+
+    @Override
+    public Long getOfficeId() {
+        final GlobalConfigurationPropertyData property = getGlobalConfigurationPropertyData(GlobalConfigurationConstants.OFFICE_ID);
+        return property.getValue();
+    }
 }

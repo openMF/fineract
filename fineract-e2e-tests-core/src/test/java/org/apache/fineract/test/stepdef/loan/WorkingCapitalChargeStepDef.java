@@ -25,9 +25,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -39,10 +41,15 @@ import org.apache.fineract.client.models.ChargeRequest;
 import org.apache.fineract.client.models.EnumOptionData;
 import org.apache.fineract.client.models.GetBalance;
 import org.apache.fineract.client.models.GetChargesResponse;
+import org.apache.fineract.client.models.GetWorkingCapitalLoanTransactionIdResponse;
+import org.apache.fineract.client.models.GetWorkingCapitalLoanTransactionsResponse;
 import org.apache.fineract.client.models.GetWorkingCapitalLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostChargesResponse;
 import org.apache.fineract.client.models.PostLoansLoanIdChargesRequest;
 import org.apache.fineract.client.models.PostLoansLoanIdChargesResponse;
+import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdChargesChargeIdRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdChargesChargeIdResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansResponse;
 import org.apache.fineract.client.models.WorkingCapitalLoanChargeData;
 import org.apache.fineract.test.data.ChargeCalculationType;
@@ -409,6 +416,102 @@ public class WorkingCapitalChargeStepDef extends AbstractStepDef {
                 chargeTimeTypeName, chargeCalcTypeName, exception.getStatus(), expectedErrorMessage);
     }
 
+    @When("Admin makes a charge adjustment for the last added charge with {double} amount on working capital loan")
+    public void makeWcChargeAdjustment(final Double amount) {
+        final Long loanId = getLoanId();
+        final Long loanChargeId = getLastAddedLoanChargeId();
+        final PostWorkingCapitalLoansLoanIdChargesChargeIdRequest request = new PostWorkingCapitalLoansLoanIdChargesChargeIdRequest()
+                .amount(BigDecimal.valueOf(amount)).locale("en");
+        final PostWorkingCapitalLoansLoanIdChargesChargeIdResponse response = ok(
+                () -> fineractClient.workingCapitalLoanCharges().adjustLoanCharge(loanId, loanChargeId, request, "adjustment"));
+        Assertions.assertNotNull(response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_CHARGE_ADJUSTMENT_RESPONSE, response);
+        log.debug("WC charge adjustment response: {}", response);
+    }
+
+    @When("Admin makes a charge adjustment for the last added fee charge with {double} amount on working capital loan")
+    public void makeWcFeeChargeAdjustment(final Double amount) {
+        final Long loanId = getLoanId();
+        final Long loanChargeId = getLastAddedFeeChargeId(loanId);
+        final PostWorkingCapitalLoansLoanIdChargesChargeIdRequest request = new PostWorkingCapitalLoansLoanIdChargesChargeIdRequest()
+                .amount(BigDecimal.valueOf(amount)).locale("en");
+        final PostWorkingCapitalLoansLoanIdChargesChargeIdResponse response = ok(
+                () -> fineractClient.workingCapitalLoanCharges().adjustLoanCharge(loanId, loanChargeId, request, "adjustment"));
+        Assertions.assertNotNull(response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_CHARGE_ADJUSTMENT_RESPONSE, response);
+        log.debug("WC fee charge adjustment response: {}", response);
+    }
+
+    @When("Admin makes a charge adjustment for the last added penalty charge with {double} amount on working capital loan")
+    public void makeWcPenaltyChargeAdjustment(final Double amount) {
+        final Long loanId = getLoanId();
+        final Long loanChargeId = getLastAddedPenaltyChargeId(loanId);
+        final PostWorkingCapitalLoansLoanIdChargesChargeIdRequest request = new PostWorkingCapitalLoansLoanIdChargesChargeIdRequest()
+                .amount(BigDecimal.valueOf(amount)).locale("en");
+        final PostWorkingCapitalLoansLoanIdChargesChargeIdResponse response = ok(
+                () -> fineractClient.workingCapitalLoanCharges().adjustLoanCharge(loanId, loanChargeId, request, "adjustment"));
+        Assertions.assertNotNull(response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_CHARGE_ADJUSTMENT_RESPONSE, response);
+        log.debug("WC penalty charge adjustment response: {}", response);
+    }
+
+    @When("Admin makes a charge adjustment for the last added charge with {double} amount and transaction date {string} on working capital loan")
+    public void makeWcChargeAdjustmentWithDate(final Double amount, final String transactionDate) {
+        final Long loanId = getLoanId();
+        final Long loanChargeId = getLastAddedLoanChargeId();
+        final LocalDate parsedDate = LocalDate.parse(transactionDate, FORMATTER);
+        final PostWorkingCapitalLoansLoanIdChargesChargeIdRequest request = new PostWorkingCapitalLoansLoanIdChargesChargeIdRequest()
+                .amount(BigDecimal.valueOf(amount)).transactionDate(parsedDate.format(FORMATTER_API)).dateFormat(DATE_FORMAT_API)
+                .locale("en");
+        final PostWorkingCapitalLoansLoanIdChargesChargeIdResponse response = ok(
+                () -> fineractClient.workingCapitalLoanCharges().adjustLoanCharge(loanId, loanChargeId, request, "adjustment"));
+        Assertions.assertNotNull(response);
+        testContext().set(TestContextKey.WORKING_CAPITAL_CHARGE_ADJUSTMENT_RESPONSE, response);
+        log.debug("WC charge adjustment with date response: {}", response);
+    }
+
+    @Then("Making a charge adjustment with {double} amount on working capital loan results an error with the following data:")
+    public void makeWcChargeAdjustmentFails(final Double amount, final DataTable table) {
+        final Long loanId = getLoanId();
+        final Long loanChargeId = getLastAddedLoanChargeId();
+        final PostWorkingCapitalLoansLoanIdChargesChargeIdRequest request = new PostWorkingCapitalLoansLoanIdChargesChargeIdRequest()
+                .amount(BigDecimal.valueOf(amount)).locale("en");
+        final Map<String, String> expectedData = table.asMaps().get(0);
+        final int expectedHttpCode = Integer.parseInt(expectedData.get("httpCode"));
+        final String expectedErrorMessage = expectedData.get("errorMessage").trim();
+        final CallFailedRuntimeException exception = fail(
+                () -> fineractClient.workingCapitalLoanCharges().adjustLoanCharge(loanId, loanChargeId, request, "adjustment"));
+        assertHttpStatus(exception, expectedHttpCode);
+        assertErrorMessage(exception, expectedErrorMessage);
+        log.info("Verified WC charge adjustment failed with status {} and message: {}", exception.getStatus(), expectedErrorMessage);
+    }
+
+    @When("Admin reverts the last charge adjustment on working capital loan")
+    public void revertLastWcChargeAdjustment() {
+        final Long loanId = getLoanId();
+        final GetWorkingCapitalLoanTransactionIdResponse adjustmentTxn = getLastChargeAdjustmentTransaction(loanId, false);
+        final PostWorkingCapitalLoanTransactionsRequest request = new PostWorkingCapitalLoanTransactionsRequest();
+        ok(() -> fineractClient.workingCapitalLoanTransactions().executeWorkingCapitalLoanTransactionCommandById(loanId,
+                adjustmentTxn.getId(), "undo", request));
+        log.debug("Reverted WC charge adjustment transaction id={} on loan {}", adjustmentTxn.getId(), loanId);
+    }
+
+    @Then("Reverting an already reversed charge adjustment on working capital loan results an error with the following data:")
+    public void revertAlreadyRevertedWcChargeAdjustmentFails(final DataTable table) {
+        final Long loanId = getLoanId();
+        final GetWorkingCapitalLoanTransactionIdResponse adjustmentTxn = getLastChargeAdjustmentTransaction(loanId, null);
+        final PostWorkingCapitalLoanTransactionsRequest request = new PostWorkingCapitalLoanTransactionsRequest();
+        final Map<String, String> expectedData = table.asMaps().get(0);
+        final int expectedHttpCode = Integer.parseInt(expectedData.get("httpCode"));
+        final String expectedErrorMessage = expectedData.get("errorMessage").trim();
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoanTransactions()
+                .executeWorkingCapitalLoanTransactionCommandById(loanId, adjustmentTxn.getId(), "undo", request));
+        assertHttpStatus(exception, expectedHttpCode);
+        assertErrorMessage(exception, expectedErrorMessage);
+        log.info("Verified reverting already reversed WC charge adjustment failed with status {} and message: {}", expectedHttpCode,
+                expectedErrorMessage);
+    }
+
     @Then("Trying to add working capital loan charge by loan id and charge id with amount {double} and due date {string} results an error with the following data:")
     public void tryAddWorkingCapitalLoanChargeWithError(Double amount, String dueDate, DataTable table) {
         Long loanId = getLoanId();
@@ -429,6 +532,43 @@ public class WorkingCapitalChargeStepDef extends AbstractStepDef {
         assertErrorMessage(exception, expectedErrorMessage);
         log.info("Verified adding WCL charge to loan {} failed with status {} and message: {}", loanId, exception.getStatus(),
                 expectedErrorMessage);
+    }
+
+    // Charge Adjustment Helpers
+    private Long getLastAddedLoanChargeId() {
+        final PostLoansLoanIdChargesResponse response = testContext().get(TestContextKey.ADD_DUE_DATE_CHARGE_WORKING_CAPITAL_RESPONSE);
+        Assertions.assertNotNull(response, "No charge has been added to the working capital loan yet");
+        return response.getResourceId();
+    }
+
+    private Long getLastAddedFeeChargeId(final Long loanId) {
+        return getLastAddedChargeIdByPenaltyFlag(loanId, false);
+    }
+
+    private Long getLastAddedPenaltyChargeId(final Long loanId) {
+        return getLastAddedChargeIdByPenaltyFlag(loanId, true);
+    }
+
+    private Long getLastAddedChargeIdByPenaltyFlag(final Long loanId, final boolean isPenalty) {
+        final List<WorkingCapitalLoanChargeData> charges = ok(
+                () -> fineractClient.workingCapitalLoanCharges().retrieveAllWorkingCapitalLoanChargesByLoanId(loanId));
+        Assertions.assertNotNull(charges, "No charges found on loan " + loanId);
+        final String chargeType = isPenalty ? "penalty" : "fee";
+        return charges.stream().filter(c -> isPenalty == Boolean.TRUE.equals(c.getPenalty()))
+                .max(Comparator.comparing(WorkingCapitalLoanChargeData::getId)).map(WorkingCapitalLoanChargeData::getId)
+                .orElseThrow(() -> new IllegalStateException("No active " + chargeType + " charge found on loan " + loanId));
+    }
+
+    private GetWorkingCapitalLoanTransactionIdResponse getLastChargeAdjustmentTransaction(final Long loanId,
+            final Boolean excludeReversed) {
+        final GetWorkingCapitalLoanTransactionsResponse body = ok(
+                () -> fineractClient.workingCapitalLoanTransactions().retrieveWorkingCapitalLoanTransactionsById(loanId));
+        Assertions.assertNotNull(body.getContent(), "No WC loan transactions found");
+        return body.getContent().stream()
+                .filter(t -> t.getType() != null && "loanTransactionType.chargeAdjustment".equals(t.getType().getCode()))
+                .filter(t -> excludeReversed == null || !Boolean.TRUE.equals(t.getReversed()))
+                .max(Comparator.comparing(GetWorkingCapitalLoanTransactionIdResponse::getId))
+                .orElseThrow(() -> new IllegalStateException("No charge adjustment transaction found on loan " + loanId));
     }
 
     // Charge API Helpers

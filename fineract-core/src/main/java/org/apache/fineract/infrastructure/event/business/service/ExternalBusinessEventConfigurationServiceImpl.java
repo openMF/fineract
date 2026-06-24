@@ -21,6 +21,7 @@ package org.apache.fineract.infrastructure.event.business.service;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.infrastructure.event.business.domain.BusinessEvent;
 import org.apache.fineract.infrastructure.event.external.repository.ExternalEventConfigurationRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Default implementation for {@link ExternalBusinessEventConfigurationService}, configured by
@@ -32,6 +33,7 @@ public class ExternalBusinessEventConfigurationServiceImpl implements ExternalBu
     private final ExternalEventConfigurationRepository eventConfigurationRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isExternalEventConfiguredForPosting(BusinessEvent<?> businessEvent) {
         if (businessEvent == null) {
             return false;

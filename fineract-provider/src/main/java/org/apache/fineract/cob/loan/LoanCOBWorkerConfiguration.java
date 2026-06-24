@@ -60,11 +60,11 @@ public class LoanCOBWorkerConfiguration {
     @Autowired
     private PlatformTransactionManager transactionManager;
     @Autowired
-    @Qualifier("batchJdbcTransactionManager")
-    private PlatformTransactionManager batchJdbcTransactionManager;
+    @Qualifier("jdbcTransactionManager")
+    private PlatformTransactionManager jdbcTransactionManager;
     @Autowired
-    @Qualifier("batchJdbcTransactionTemplate")
-    private TransactionTemplate batchJdbcTransactionTemplate;
+    @Qualifier("requiresNewTransactionJdbcTemplate")
+    private TransactionTemplate requiresNewTransactionJdbcTemplate;
     @Autowired
     private RemotePartitioningWorkerStepBuilderFactory stepBuilderFactory;
 
@@ -141,20 +141,12 @@ public class LoanCOBWorkerConfiguration {
 
     @Bean
     public ChunkProcessingLoanItemListener loanItemListener() {
-        return new ChunkProcessingLoanItemListener(loanLockingService, batchJdbcTransactionTemplate);
+        return new ChunkProcessingLoanItemListener(loanLockingService, requiresNewTransactionJdbcTemplate);
     }
 
     @Bean
     public ApplyLoanLockTasklet applyLock() {
-        return new ApplyLoanLockTasklet(fineractProperties, loanLockingService, retrieveIdService, batchJdbcTransactionTemplate);
-    }
-
-    @Bean
-    @StepScope
-    public Step applyLockStep(
-            @org.springframework.beans.factory.annotation.Value("#{stepExecutionContext['partition']}") String partitionName) {
-        return new org.springframework.batch.core.step.builder.StepBuilder("Apply lock - Step:" + partitionName, jobRepository)
-                .tasklet(applyLock(), batchJdbcTransactionManager).build();
+        return new ApplyLoanLockTasklet(fineractProperties, loanLockingService, retrieveIdService, requiresNewTransactionJdbcTemplate);
     }
 
     @Bean

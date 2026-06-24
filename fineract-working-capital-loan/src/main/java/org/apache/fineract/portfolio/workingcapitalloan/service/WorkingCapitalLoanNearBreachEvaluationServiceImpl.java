@@ -30,6 +30,7 @@ import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanBreachSchedule;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanNearBreachAction;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanPeriodFrequencyType;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanBreachScheduleRepository;
 import org.apache.fineract.portfolio.workingcapitalloannearbreach.domain.WorkingCapitalNearBreach;
@@ -43,7 +44,8 @@ public class WorkingCapitalLoanNearBreachEvaluationServiceImpl implements Workin
     private final WorkingCapitalLoanBreachScheduleRepository breachScheduleRepository;
 
     @Override
-    public void evaluateNearBreach(final WorkingCapitalLoan loan, final LocalDate effectiveDate) {
+    public void evaluateNearBreach(final WorkingCapitalLoan loan, final WorkingCapitalLoanNearBreachAction latestAction,
+            final LocalDate effectiveDate) {
         final Optional<WorkingCapitalLoanBreachSchedule> relevantPeriod = breachScheduleRepository
                 .findByLoanIdAndFromDateLessThanEqualAndToDateGreaterThanEqual(loan.getId(), effectiveDate, effectiveDate);
         if (relevantPeriod.isEmpty()) {
@@ -54,26 +56,38 @@ public class WorkingCapitalLoanNearBreachEvaluationServiceImpl implements Workin
             return;
         }
         final WorkingCapitalNearBreach config = loan.getLoanProductRelatedDetails().getNearBreach();
-        if (evaluatePeriod(loan.getId(), period, config, effectiveDate)) {
+
+        final BigDecimal effectiveThreshold;
+        final Integer effectiveFrequency;
+        final WorkingCapitalLoanPeriodFrequencyType effectiveFrequencyType;
+        if (latestAction != null) {
+            effectiveThreshold = latestAction.getThreshold();
+            effectiveFrequency = latestAction.getFrequency();
+            effectiveFrequencyType = latestAction.getFrequencyType();
+        } else {
+            effectiveThreshold = config.getThreshold();
+            effectiveFrequency = config.getFrequency();
+            effectiveFrequencyType = config.getFrequencyType();
+        }
+        if (evaluatePeriod(loan.getId(), period, effectiveThreshold, effectiveFrequency, effectiveFrequencyType, effectiveDate)) {
             breachScheduleRepository.saveAndFlush(period);
         }
     }
 
-    private boolean evaluatePeriod(final Long loanId, final WorkingCapitalLoanBreachSchedule period, final WorkingCapitalNearBreach config,
-            final LocalDate effectiveDate) {
+    private boolean evaluatePeriod(final Long loanId, final WorkingCapitalLoanBreachSchedule period, final BigDecimal threshold,
+            final Integer frequency, final WorkingCapitalLoanPeriodFrequencyType frequencyType, final LocalDate effectiveDate) {
         if (period.getMinPaymentAmount().compareTo(BigDecimal.ZERO) == 0) {
             return false;
         }
-        final LocalDate firstEvalDate = addFrequency(period.getFromDate(), config.getFrequency(), config.getFrequencyType());
+        final LocalDate firstEvalDate = addFrequency(period.getFromDate(), frequency, frequencyType);
         if (firstEvalDate.isAfter(period.getToDate())) {
             return false;
         }
-        final List<LocalDate> evalDates = listEvalDates(period.getFromDate(), period.getToDate(), config.getFrequency(),
-                config.getFrequencyType());
+        final List<LocalDate> evalDates = listEvalDates(period.getFromDate(), period.getToDate(), frequency, frequencyType);
         final int evalIndex = evalDates.indexOf(effectiveDate);
         if (evalIndex >= 0) {
             final MonetaryCurrency currency = period.getLoan().getLoanProductRelatedDetails().getCurrency();
-            final BigDecimal thresholdFraction = config.getThreshold().divide(BigDecimal.valueOf(100), MoneyHelper.getMathContext());
+            final BigDecimal thresholdFraction = threshold.divide(BigDecimal.valueOf(100), MoneyHelper.getMathContext());
             final Money requiredCumulative = calculateRequiredCumulative(currency, period.getMinPaymentAmount(), thresholdFraction,
                     evalIndex);
             final Money paidCumulative = Money.of(currency, period.getPaidAmount());

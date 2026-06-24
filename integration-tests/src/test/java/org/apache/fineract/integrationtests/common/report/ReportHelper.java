@@ -27,7 +27,6 @@ import retrofit2.Response;
 public class ReportHelper {
 
     public Response<ResponseBody> runReport(String reportName, Map<String, String> reportParameters) throws IOException {
-        return FineractClientHelper.getFineractClient().reportsRun
-                .runReportGetFile("Transaction Summary Report with Asset Owner", reportParameters).execute();
+        return FineractClientHelper.getFineractClient().reportsRun.runReportGetFile(reportName, reportParameters).execute();
     }
 }

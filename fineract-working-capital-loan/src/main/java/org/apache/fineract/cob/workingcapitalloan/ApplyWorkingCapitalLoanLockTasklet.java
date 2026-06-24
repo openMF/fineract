@@ -30,8 +30,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class ApplyWorkingCapitalLoanLockTasklet extends ApplyCommonLockTasklet {
 
     public ApplyWorkingCapitalLoanLockTasklet(FineractProperties fineractProperties, LockingService loanLockingService,
-            RetrieveIdService retrieveIdService, TransactionTemplate batchJdbcTransactionTemplate) {
-        super(fineractProperties, loanLockingService, retrieveIdService, batchJdbcTransactionTemplate);
+            RetrieveIdService retrieveIdService, TransactionTemplate requiresNewTransactionJdbcTemplate) {
+        super(fineractProperties, loanLockingService, retrieveIdService, requiresNewTransactionJdbcTemplate);
     }
 
     @Override

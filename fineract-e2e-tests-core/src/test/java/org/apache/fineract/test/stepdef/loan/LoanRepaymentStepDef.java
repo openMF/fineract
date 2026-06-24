@@ -114,8 +114,7 @@ public class LoanRepaymentStepDef extends AbstractStepDef {
         makeRepayment(repaymentType, transactionDate, transactionAmount, previousOwnerId);
     }
 
-    private void makeRepayment(String repaymentType, String transactionDate, double transactionAmount, String transferExternalOwnerId)
-            throws IOException {
+    private void makeRepayment(String repaymentType, String transactionDate, double transactionAmount, String transferExternalOwnerId) {
         eventStore.reset();
         PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
         long loanId = loanResponse.getLoanId();
@@ -630,17 +629,41 @@ public class LoanRepaymentStepDef extends AbstractStepDef {
         adjustNthRepaymentWithExternalOwnerCheck(nthItemStr, transactionDate, amount, null);
     }
 
-    @When("Loan Pay-off is made on {string}")
-    public void makeLoanPayOff(String transactionDate) throws IOException {
-        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+    public Double getLoanTransactionAmountToPayOff(PostLoansResponse loanResponse, String transactionDate) {
         long loanId1 = loanResponse.getLoanId();
         GetLoansLoanIdTransactionsTemplateResponse response = ok(
                 () -> fineractClient.loanTransactions().retrieveTransactionTemplate(loanId1, Map.<String, Object>of("command", "prepayLoan",
                         "dateFormat", DATE_FORMAT, "transactionDate", transactionDate, "locale", DEFAULT_LOCALE)));
-        Double transactionAmount = response.getAmount();
+        return response.getAmount();
+    }
+
+    @When("Loan Pay-off is made on {string}")
+    public void makeLoanPayOff(String transactionDate) throws IOException {
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        Double transactionAmount = getLoanTransactionAmountToPayOff(loanResponse, transactionDate);
 
         log.debug("%n--- Loan Pay-off with amount: {} ---", transactionAmount);
         makeRepayment(DEFAULT_REPAYMENT_TYPE, transactionDate, transactionAmount, null);
+    }
+
+    @When("Loan Pay-off is made on {string} with transfer external owner")
+    public void makeLoanPayOffWithTransferExternalOwner(String transactionDate) {
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        String transferExternalOwnerId = testContext().get(TestContextKey.ASSET_EXTERNALIZATION_OWNER_EXTERNAL_ID);
+        Double transactionAmount = getLoanTransactionAmountToPayOff(loanResponse, transactionDate);
+
+        log.debug("%n--- Loan Pay-off with transfer external owner and with amount: {} ---", transactionAmount);
+        makeRepayment(DEFAULT_REPAYMENT_TYPE, transactionDate, transactionAmount, transferExternalOwnerId);
+    }
+
+    @When("Loan Pay-off is made on {string} with previous transfer external owner")
+    public void makeLoanPayOffWithOtherTransferExternalOwner(String transactionDate) {
+        PostLoansResponse loanResponse = testContext().get(TestContextKey.LOAN_CREATE_RESPONSE);
+        String transferExternalOwnerId = testContext().get(TestContextKey.ASSET_EXTERNALIZATION_PREVIOUS_OWNER_EXTERNAL_ID);
+        Double transactionAmount = getLoanTransactionAmountToPayOff(loanResponse, transactionDate);
+
+        log.debug("%n--- Loan Pay-off with transfer external owner and amount: {} ---", transactionAmount);
+        makeRepayment(DEFAULT_REPAYMENT_TYPE, transactionDate, transactionAmount, transferExternalOwnerId);
     }
 
     private void adjustNthRepaymentWithExternalOwnerCheck(String nthItemStr, String transactionDate, String amount, String externalOwnerId)

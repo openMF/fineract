@@ -51,6 +51,16 @@ final class EntityDatatableChecksApiResourceSwagger {
         public String productName;
     }
 
+    @Schema(description = "PageGetEntityDatatableChecksResponse")
+    public static final class PageGetEntityDatatableChecksResponse {
+
+        private PageGetEntityDatatableChecksResponse() {}
+
+        @Schema(example = "1")
+        public Integer totalFilteredRecords;
+        public List<GetEntityDatatableChecksResponse> pageItems;
+    }
+
     @Schema(description = "GetEntityDatatableChecksTemplateResponse")
     public static final class GetEntityDatatableChecksTemplateResponse {
 

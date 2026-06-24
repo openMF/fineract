@@ -69,6 +69,9 @@ public final class WorkingCapitalLoanProductConstants {
     public static final String delinquencyGraceDaysParamName = "delinquencyGraceDays";
     public static final String delinquencyStartTypeParamName = "delinquencyStartType";
 
+    // Breach grace
+    public static final String breachGraceDaysParamName = "breachGraceDays";
+
     // Accounting
     public static final String accountingRuleParamName = "accountingRule";
     public static final String fundSourceAccountIdParamName = "fundSourceAccountId";

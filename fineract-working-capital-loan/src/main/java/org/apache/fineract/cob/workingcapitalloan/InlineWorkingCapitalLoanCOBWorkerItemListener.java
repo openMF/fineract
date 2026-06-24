@@ -26,8 +26,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 public class InlineWorkingCapitalLoanCOBWorkerItemListener extends AbstractLoanItemListener<WorkingCapitalLoan> {
 
-    public InlineWorkingCapitalLoanCOBWorkerItemListener(LockingService lockingService, TransactionTemplate batchJdbcTransactionTemplate) {
-        super(lockingService, batchJdbcTransactionTemplate);
+    public InlineWorkingCapitalLoanCOBWorkerItemListener(LockingService lockingService,
+            TransactionTemplate requiresNewTransactionJdbcTemplate) {
+        super(lockingService, requiresNewTransactionJdbcTemplate);
     }
 
     @Override

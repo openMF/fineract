@@ -27,8 +27,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Slf4j
 public class ChunkProcessingLoanItemListener extends AbstractLoanItemListener<Loan> {
 
-    public ChunkProcessingLoanItemListener(LockingService lockingService, TransactionTemplate batchJdbcTransactionTemplate) {
-        super(lockingService, batchJdbcTransactionTemplate);
+    public ChunkProcessingLoanItemListener(LockingService lockingService, TransactionTemplate requiresNewTransactionJdbcTemplate) {
+        super(lockingService, requiresNewTransactionJdbcTemplate);
     }
 
     @Override
