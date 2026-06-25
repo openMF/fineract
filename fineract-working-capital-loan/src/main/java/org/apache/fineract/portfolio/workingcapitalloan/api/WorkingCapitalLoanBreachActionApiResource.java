@@ -66,7 +66,7 @@ public class WorkingCapitalLoanBreachActionApiResource {
     @Path("{loanId}/breach-actions")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(summary = "Create Breach Action", description = "Creates a breach reschedule action for a Working Capital loan.")
+    @Operation(summary = "Create Breach Action", description = "Creates a breach action (pause, reschedule or resume) for a Working Capital loan. A resume shortens the currently active pause to the current business date.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanBreachActionApiResourceSwagger.PostWorkingCapitalLoansBreachActionRequest.class)))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanBreachActionApiResourceSwagger.PostWorkingCapitalLoansBreachActionResponse.class))),
@@ -86,7 +86,7 @@ public class WorkingCapitalLoanBreachActionApiResource {
     @Path("external-id/{loanExternalId}/breach-actions")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    @Operation(operationId = "createBreachActionByExternalId", summary = "Create Breach Action by external id", description = "Creates a breach reschedule action for a Working Capital loan identified by external id.")
+    @Operation(operationId = "createBreachActionByExternalId", summary = "Create Breach Action by external id", description = "Creates a breach action (pause, reschedule or resume) for a Working Capital loan identified by external id.")
     @RequestBody(required = true, content = @Content(schema = @Schema(implementation = WorkingCapitalLoanBreachActionApiResourceSwagger.PostWorkingCapitalLoansBreachActionRequest.class)))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = WorkingCapitalLoanBreachActionApiResourceSwagger.PostWorkingCapitalLoansBreachActionResponse.class))),

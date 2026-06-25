@@ -29,6 +29,8 @@ public interface LoanBuyDownFeeAmortizationProcessingService {
 
     void processBuyDownFeeAmortizationOnLoanClosure(@NonNull Loan loan, boolean addJournal);
 
+    void processBuyDownFeeAmortizationOnLoanSale(@NonNull Loan loan, @NonNull LocalDate transactionDate, boolean addJournal);
+
     void processBuyDownFeeAmortizationOnLoanChargeOff(@NonNull Loan loan, @NonNull LoanTransaction chargeOffTransaction);
 
     void processBuyDownFeeAmortizationOnLoanUndoChargeOff(@NonNull LoanTransaction loanTransaction);
