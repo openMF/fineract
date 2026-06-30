@@ -436,7 +436,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
         amortizationScheduleWriteService.applyDiscountFeeAdjustment(loan);
 
-        if (loan.getLoanProduct().getAccountingRule().isCashBased()) {
+        if (loan.getLoanProduct().getAccountingRule().isAccrualWithDeferredRevenueAmortization()) {
             accountingProcessor.postJournalEntriesForDiscountFee(loan, discountTransaction);
         }
 
@@ -566,7 +566,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         saveNewTransactionRelation(adjustmentTransaction, relatedDiscountTransaction, LoanTransactionRelationTypeEnum.RELATED);
         allocationRepository.saveAndFlush(WorkingCapitalLoanTransactionAllocation.forDiscountFeeAdjustment(adjustmentTransaction, amount));
 
-        if (loan.getLoanProduct().getAccountingRule().isCashBased()) {
+        if (loan.getLoanProduct().getAccountingRule().isAccrualWithDeferredRevenueAmortization()) {
             accountingProcessor.postJournalEntriesForDiscountFeeAdjustment(loan, adjustmentTransaction);
         }
 
@@ -768,7 +768,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
         handleNote(loan, command, changes);
 
-        if (loan.getLoanProduct().getAccountingRule().isCashBased()) {
+        if (loan.getLoanProduct().getAccountingRule().isAccrualWithDeferredRevenueAmortization()) {
             accountingProcessor.postJournalEntries(loan, transaction, allocation, false);
         }
 
@@ -813,7 +813,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
     private void triggerInlineAmortizationIfLoanClosed(final WorkingCapitalLoan loan, final LocalDate transactionDate) {
         if ((loan.getLoanStatus().isClosed() || loan.getLoanStatus().isOverpaid())
-                && loan.getLoanProduct().getAccountingRule().isCashBased()) {
+                && loan.getLoanProduct().getAccountingRule().isAccrualWithDeferredRevenueAmortization()) {
             final BigDecimal discount = loan.getLoanProductRelatedDetails() != null ? loan.getLoanProductRelatedDetails().getDiscount()
                     : null;
             final boolean adjustmentNeeded = loan.getBalance() != null
@@ -910,7 +910,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
         this.loanRepository.saveAndFlush(loan);
 
-        if (loan.getLoanProduct().getAccountingRule().isCashBased()) {
+        if (loan.getLoanProduct().getAccountingRule().isAccrualWithDeferredRevenueAmortization()) {
             accountingProcessor.postJournalEntries(loan, creditBalanceRefundTransaction, allocation, false);
         }
 
@@ -1042,10 +1042,14 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
                         || (txn.getTransactionDate().equals(newTxn.getTransactionDate()) && txn.getId().compareTo(newTxn.getId()) > 0));
     }
 
-    private void reverseTransaction(final WorkingCapitalLoanTransaction txn) {
+    private void markReversed(final WorkingCapitalLoanTransaction txn) {
         txn.setReversed(true);
         txn.setReversedOnDate(DateUtils.getBusinessLocalDate());
         txn.setReversalExternalId(ExternalId.generate());
+    }
+
+    private void reverseTransaction(final WorkingCapitalLoanTransaction txn) {
+        markReversed(txn);
         this.transactionRepository.save(txn);
         this.transactionRepository.flush();
     }
@@ -1065,17 +1069,22 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         }
         final WorkingCapitalLoanTransaction txn = activeDisbursements.getFirst();
 
-        transactions.forEach(this::reverseTransaction);
+        transactions.forEach(this::markReversed);
+        this.transactionRepository.saveAll(transactions);
+        this.transactionRepository.flush();
 
-        final Optional<WorkingCapitalLoanBalance> balanceOpt = this.balanceRepository.findByWcLoan_Id(loan.getId());
-        balanceOpt.ifPresent(b -> {
+        // Operate on loan.getBalance() directly: it is the single managed balance instance that
+        // recalculateRealizedIncome writes to, so all updates here apply to the same object that gets persisted.
+        final WorkingCapitalLoanBalance balance = loan.getBalance();
+        if (balance != null) {
             // Restore balance to pre-disbursement state.
-            b.setPrincipal(loan.getApprovedPrincipal() != null ? loan.getApprovedPrincipal() : loan.getProposedPrincipal());
-            b.setPrincipalPaid(BigDecimal.ZERO);
-            b.setRealizedIncomeFromDiscountFee(BigDecimal.ZERO);
-            b.setOverpaymentAmount(BigDecimal.ZERO);
-            this.balanceRepository.saveAndFlush(b);
-        });
+            balance.setPrincipal(loan.getApprovedPrincipal() != null ? loan.getApprovedPrincipal() : loan.getProposedPrincipal());
+            balance.setPrincipalPaid(BigDecimal.ZERO);
+            // All transactions were just reversed, so the single owner recomputes realized income to zero from them.
+            discountFeeAmortizationService.recalculateRealizedIncome(loan);
+            balance.setOverpaymentAmount(BigDecimal.ZERO);
+            this.balanceRepository.saveAndFlush(balance);
+        }
         return txn;
     }
 
@@ -1106,15 +1115,14 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
     private void reverseDiscountFeeAmortizationAdjustments(final WorkingCapitalLoan loan,
             final WorkingCapitalLoanTransaction discountAdjustment) {
-        final WorkingCapitalLoanBalance balance = loan.getBalance();
         relationRepository.findAllByToTransactionAndFromTransactionReversedAndFromTransactionTransactionType(discountAdjustment, false,
                 LoanTransactionType.DISCOUNT_FEE_AMORTIZATION_ADJUSTMENT).forEach(relation -> {
                     final WorkingCapitalLoanTransaction txn = relation.getFromTransaction();
                     reverseTransaction(txn);
                     accountingProcessor.postReversalJournalEntries(loan, txn);
-                    balance.setRealizedIncomeFromDiscountFee(
-                            MathUtil.nullToZero(balance.getRealizedIncomeFromDiscountFee()).add(txn.getTransactionAmount()));
                 });
+        // Realized income is recomputed from the (now-reversed) transactions by its single owner, not adjusted here.
+        discountFeeAmortizationService.recalculateRealizedIncome(loan);
     }
 
 }

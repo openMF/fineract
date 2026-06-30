@@ -57,7 +57,7 @@ public class FeignClientHelper {
     }
 
     public Long createClient() {
-        return createClient(Utils.dateFormatter.format(Utils.getLocalDateOfTenant()));
+        return createClient(org.apache.fineract.integrationtests.common.ClientHelper.DEFAULT_DATE);
     }
 
     public Long createClient(String activationDate) {

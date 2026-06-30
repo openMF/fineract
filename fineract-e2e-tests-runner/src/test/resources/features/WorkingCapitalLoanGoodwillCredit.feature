@@ -31,6 +31,23 @@ Feature: Working Capital Loan Goodwill Credit
       | 01 January 2026 | Disbursement    | 9000.0            | 9000.0           | 0.0               | 0.0                   | false    |
       | 10 January 2026 | Goodwill Credit | 270.0             | 270.0            | 0.0               | 0.0                   | false    |
 
+  @TestRailId:C85369
+  Scenario: Verify working capital loan Goodwill Credit transaction - UC1b: Goodwill Credit with payment details exposes payment type on GET
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    And Admin creates a working capital loan with the following data:
+      | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
+      | WCLP        | 01 January 2026 | 01 January 2026          | 9000            | 100000             | 18                | 0        |
+    And Admin successfully approves the working capital loan on "01 January 2026" with "9000" amount and expected disbursement date on "01 January 2026"
+    And Admin successfully disburse the Working Capital loan on "01 January 2026" with "9000" EUR transaction amount
+    Then Working Capital loan status will be "ACTIVE"
+    When Admin sets the business date to "10 January 2026"
+    And Admin runs inline COB job for Working Capital Loan by loanId
+    And Customer makes "GOODWILL_CREDIT" transaction on "10 January 2026" with 270.0 transaction amount on Working Capital loan with the following payment details:
+      | paymentType | accountNumber | checkNumber | routingCode | receiptNumber | bankNumber |
+      | AUTOPAY     | acc123        | che456      | rou789      | rec012        | ban345     |
+    Then Working Capital loan transaction with type "GOODWILL_CREDIT" has payment type "AUTOPAY"
+
   @TestRailId:C80924
   Scenario: Verify working capital loan Goodwill Credit transaction - UC2: Goodwill Credit transaction with zero amount results an error (Negative)
     When Admin sets the business date to "01 January 2026"
@@ -463,7 +480,7 @@ Feature: Working Capital Loan Goodwill Credit
       | LoanProduct | submittedOnDate | expectedDisbursementDate | principalAmount | totalPaymentVolume | periodPaymentRate | discount |
       | WCLP        | 01 January 2026 | 01 January 2026          | 9000            | 100000       | 18                | 0        |
     Then Initiating a "GOODWILL_CREDIT" transaction on "01 January 2026" with 270.0 transaction amount on Working Capital loan results an error with the following data:
-      | httpCode | errorMessage                                                                      |
+      | httpCode | errorMessage                                                                     |
       | 400      | Goodwill Credit is allowed only for active/closed obligations met/overpaid loans |
 
   @TestRailId:C80936
@@ -479,5 +496,5 @@ Feature: Working Capital Loan Goodwill Credit
       | product.name | submittedOnDate | expectedDisbursementDate | status   | proposedPrincipal | approvedPrincipal | totalPaymentVolume | periodPaymentRate | discountApproved |
       | WCLP         | 2026-01-01      | 2026-01-01               | Approved | 9000.0    | 9000.0            | 100000.0     | 18.0              | null      |
     Then Initiating a "GOODWILL_CREDIT" transaction on "01 January 2026" with 270.0 transaction amount on Working Capital loan results an error with the following data:
-      | httpCode | errorMessage                                                                      |
+      | httpCode | errorMessage                                                                     |
       | 400      | Goodwill Credit is allowed only for active/closed obligations met/overpaid loans |

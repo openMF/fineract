@@ -145,6 +145,10 @@ public class WorkingCapitalLoanHelper {
         FeignCalls.ok(() -> transactionsApi().executeWorkingCapitalLoanTransactionById(loanId, "creditBalanceRefund", request));
     }
 
+    public void makeGoodwillCreditByLoanId(final Long loanId, final PostWorkingCapitalLoanTransactionsRequest request) {
+        FeignCalls.ok(() -> transactionsApi().executeWorkingCapitalLoanTransactionById(loanId, "goodwillCredit", request));
+    }
+
     public CallFailedRuntimeException runCreditBalanceRefundByLoanIdExpectingFailure(final Long loanId,
             final PostWorkingCapitalLoanTransactionsRequest request) {
         return FeignCalls.fail(() -> transactionsApi().executeWorkingCapitalLoanTransactionById(loanId, "creditBalanceRefund", request));

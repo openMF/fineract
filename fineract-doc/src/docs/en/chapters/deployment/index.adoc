@@ -1,5 +1,14 @@
 = Deployment
 
+The recommended *starting point* for deployment is the https://fineract.apache.org/#downloads[latest stable binary release]. Obtain one from an Apache mirror, https://www.apache.org/info/verification.html[verify it], and try running the JAR file within.
+
+[source,bash,subs="attributes+,+macros"]
+----
+java -jar fineract-provider-{revnumber}.jar
+----
+
+Start with the command above then read and follow tips and tricks in <<HTTPS>> and <<Security>> as you work towards becoming production-ready.
+
 include::plugins.adoc[leveloffset=+1]
 
 include::https.adoc[leveloffset=+1]

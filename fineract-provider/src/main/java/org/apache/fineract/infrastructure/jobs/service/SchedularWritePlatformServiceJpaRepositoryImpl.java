@@ -35,6 +35,7 @@ import org.apache.fineract.infrastructure.jobs.domain.SchedulerDetailRepository;
 import org.apache.fineract.infrastructure.jobs.exception.JobNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -132,9 +133,16 @@ public class SchedularWritePlatformServiceJpaRepositoryImpl implements Schedular
 
     }
 
-    @Transactional
-    @Override
+    // Annotation/aspect order matters here: the resilience4j @Retry aspect (default order
+    // LOWEST_PRECEDENCE - 3) wraps Spring's transaction interceptor (LOWEST_PRECEDENCE), so each
+    // retry attempt re-enters the transaction interceptor. Combined with REQUIRES_NEW, every
+    // attempt runs in a brand-new transaction with a fresh DB snapshot. This is what lets a
+    // serialization failure (e.g. Postgres 40001 under the pool's REPEATABLE_READ default) recover:
+    // on retry the competing node's job-claim is already committed and visible, so we veto correctly
+    // instead of failing. The caller (SchedulerVetoer#veto) must stay non-transactional for this.
     @Retry(name = "processJobDetailForExecution", fallbackMethod = "fallbackProcessJobDetailForExecution")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Override
     public boolean processJobDetailForExecution(final String jobKey, final String triggerType) {
         boolean isStopExecution = false;
         final ScheduledJobDetail scheduledJobDetail = this.scheduledJobDetailsRepository.findByJobKeyWithLock(jobKey);

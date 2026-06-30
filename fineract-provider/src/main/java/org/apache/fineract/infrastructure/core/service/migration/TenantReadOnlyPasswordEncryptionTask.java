@@ -49,7 +49,6 @@ public class TenantReadOnlyPasswordEncryptionTask implements CustomTaskChange, A
             FROM tenant_server_connections
             WHERE readonly_schema_password IS NOT NULL
               AND readonly_schema_password <> ''
-              AND (master_password_hash IS NULL OR master_password_hash = '')
             """;
 
     private static final String UPDATE_READ_ONLY_PASSWORD = """

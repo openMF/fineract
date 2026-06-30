@@ -21,7 +21,8 @@
 # check-liquibase-ddl-safety.sh
 #
 # Scans Liquibase XML changesets introduced in a PR for dangerous DDL
-# operations on critical tables. Designed for CI but also runs locally.
+# operations on critical tables and invalid DATETIME precision. Designed for
+# CI but also runs locally.
 #
 # Uses only bash builtins + grep/sed (no xmllint dependency).
 #
@@ -96,17 +97,20 @@ while IFS= read -r line; do
     CRITICAL_TABLES+=("$line")
 done < "$CRITICAL_TABLES_FILE"
 
-# Load dangerous operations into associative arrays
-declare -A OP_SEVERITY
-declare -A OP_RISK
+# Load dangerous operations into indexed arrays. Avoid associative arrays so
+# this script can also start on macOS' default Bash 3.
+OP_ELEMENTS=()
+OP_SEVERITIES=()
+OP_RISKS=()
 while IFS='|' read -r element severity risk; do
     element="${element%%#*}"
     element="$(echo "$element" | tr -d '[:space:]')"
     [[ -z "$element" ]] && continue
     severity="$(echo "$severity" | tr -d '[:space:]')"
     risk="$(echo "$risk" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-    OP_SEVERITY["$element"]="$severity"
-    OP_RISK["$element"]="$risk"
+    OP_ELEMENTS+=("$element")
+    OP_SEVERITIES+=("$severity")
+    OP_RISKS+=("$risk")
 done < "$DANGEROUS_OPS_FILE"
 
 # ---- Find changed XML files ----
@@ -117,7 +121,7 @@ else
     MERGE_BASE=$(git -C "$REPO_ROOT" merge-base "$BASE_REF" "$HEAD_REF" 2>/dev/null || echo "$BASE_REF")
     while IFS= read -r f; do
         [[ -n "$f" ]] && CHANGED_FILES+=("$f")
-    done < <(git -C "$REPO_ROOT" diff --name-only --diff-filter=AM "$MERGE_BASE".."$HEAD_REF" -- '*.xml' | grep '/db/changelog/' || true)
+    done < <(git -C "$REPO_ROOT" diff --name-only --diff-filter=AM "$MERGE_BASE".."$HEAD_REF" -- '*.xml' | grep -E '/db/(changelog|custom-changelog)/' || true)
 fi
 
 if [[ ${#CHANGED_FILES[@]} -eq 0 ]]; then
@@ -182,6 +186,10 @@ done
 
 is_created_in_pr() {
     local table="$1"
+    if [[ ${#CREATED_TABLES[@]} -eq 0 ]]; then
+        return 1
+    fi
+
     for ct in "${CREATED_TABLES[@]}"; do
         if [[ "$table" == "$ct" ]]; then
             return 0
@@ -210,7 +218,9 @@ add_violation() {
     fi
 
     local effective_severity="$severity"
-    if [[ "$severity" == "CRITICAL" ]] || [[ "$severity" == "HIGH" ]]; then
+    if [[ "$severity" == "BLOCKING" ]]; then
+        ((BLOCKING_COUNT++)) || true
+    elif [[ "$severity" == "CRITICAL" ]] || [[ "$severity" == "HIGH" ]]; then
         if is_critical_table "$table"; then
             effective_severity="CRITICAL"
             ((BLOCKING_COUNT++)) || true
@@ -228,6 +238,56 @@ add_violation() {
     fi
 
     VIOLATIONS+=("${effective_severity}|${file}|${operation}|${table}${detail_str}|${risk}")
+}
+
+find_invalid_datetime_precision() {
+    local local_file="$1"
+    awk '
+    BEGIN {}
+    {
+        remaining = $0
+        while (match(remaining, /(type|columnDataType)[[:space:]]*=[[:space:]]*"[^"]*"/)) {
+            attr = substr(remaining, RSTART, RLENGTH)
+            value = attr
+            sub(/^[^"]*"/, "", value)
+            sub(/"$/, "", value)
+
+            normalized = toupper(value)
+            gsub(/[[:space:]]/, "", normalized)
+
+            if (normalized ~ /^DATETIME(\([0-9]+\))?$/ && normalized != "DATETIME(6)") {
+                print FNR "|" attr
+            }
+
+            remaining = substr(remaining, RSTART + RLENGTH)
+        }
+    }
+    ' "$local_file"
+}
+
+find_invalid_datetime_precision_in_sql_blocks() {
+    local local_file="$1"
+    awk '
+    BEGIN { in_sql = 0 }
+    /<sql([[:space:]>]|$)/ { in_sql = 1 }
+    in_sql {
+        remaining = $0
+        while (match(toupper(remaining), /(^|[^[:alnum:]_])DATETIME[[:space:]]*(\([[:space:]]*[0-9]+[[:space:]]*\))?([^[:alnum:]_]|$)/)) {
+            token = substr(remaining, RSTART, RLENGTH)
+            gsub(/^[^[:alnum:]_]+/, "", token)
+            gsub(/[^[:alnum:]_)]+$/, "", token)
+            normalized = toupper(token)
+            gsub(/[[:space:]]/, "", normalized)
+
+            if (normalized != "DATETIME(6)") {
+                print FNR "|" token
+            }
+
+            remaining = substr(remaining, RSTART + RLENGTH)
+        }
+    }
+    /<\/sql>/ { in_sql = 0 }
+    ' "$local_file"
 }
 
 # ---- Scan each changed file ----
@@ -248,8 +308,28 @@ for file in "${CHANGED_FILES[@]}"; do
     # Flatten multiline XML tags so attribute matching works across line breaks
     FLAT_CONTENT=$(flatten_xml_tags "$(cat "$local_file")")
 
+    # ---- Check DATETIME precision ----
+    # MySQL DATETIME defaults to precision 0. Use DATETIME(6) explicitly in
+    # Liquibase changelogs to preserve microsecond precision.
+    while IFS='|' read -r line match; do
+        [[ -z "$line" ]] && continue
+        add_violation "BLOCKING" "$file" "datetime-precision" "n/a" \
+            "Use DATETIME(6) instead of DATETIME; MySQL DATETIME defaults to precision 0" \
+            "line: $line, match: $match"
+    done < <(find_invalid_datetime_precision "$local_file")
+
+    while IFS='|' read -r line match; do
+        [[ -z "$line" ]] && continue
+        add_violation "BLOCKING" "$file" "raw-SQL-datetime-precision" "n/a" \
+            "Use DATETIME(6) instead of DATETIME in raw SQL blocks; MySQL DATETIME defaults to precision 0" \
+            "line: $line, match: $match"
+    done < <(find_invalid_datetime_precision_in_sql_blocks "$local_file")
+
     # ---- Check simple dangerous operations ----
-    for op in "${!OP_SEVERITY[@]}"; do
+    for op_index in "${!OP_ELEMENTS[@]}"; do
+        op="${OP_ELEMENTS[$op_index]}"
+        op_severity="${OP_SEVERITIES[$op_index]}"
+        op_risk="${OP_RISKS[$op_index]}"
         # Find all occurrences of <operation ... tableName="xxx" ...> or <operation ... tableName="xxx"/>
         while IFS= read -r table; do
             [[ -z "$table" ]] && continue
@@ -280,7 +360,7 @@ for file in "${CHANGED_FILES[@]}"; do
                     ;;
             esac
 
-            add_violation "${OP_SEVERITY[$op]}" "$file" "$op" "$table" "${OP_RISK[$op]}" "$detail"
+            add_violation "$op_severity" "$file" "$op" "$table" "$op_risk" "$detail"
         done < <(echo "$FLAT_CONTENT" | grep -oP "<${op}[^>]*tableName=\"\K[^\"]*" 2>/dev/null | sort -u || true)
     done
 
@@ -328,12 +408,12 @@ echo ""
 TOTAL_VIOLATIONS=${#VIOLATIONS[@]}
 
 if [[ $TOTAL_VIOLATIONS -eq 0 ]]; then
-    echo "No dangerous DDL changes detected."
+    echo "No Liquibase safety violations detected."
     if [[ -n "$OUTPUT_DIR" ]]; then
         cat > "$OUTPUT_DIR/report.md" << 'MDEOF'
 ## Liquibase DDL Safety Check - PASSED
 
-No dangerous DDL changes detected in this PR's Liquibase migrations.
+No Liquibase safety violations detected in this PR's Liquibase migrations.
 All migrations are safe for rolling deployments.
 MDEOF
         echo '{"violations":[],"summary":{"total":0,"critical":0,"warnings":0}}' > "$OUTPUT_DIR/report.json"
@@ -345,8 +425,8 @@ fi
 MD_REPORT=""
 if [[ $BLOCKING_COUNT -gt 0 ]]; then
     MD_REPORT+="## Liquibase DDL Safety Check - BLOCKED"$'\n\n'
-    MD_REPORT+="**${BLOCKING_COUNT} blocking violation(s) found** on critical tables."$'\n'
-    MD_REPORT+="These changes are dangerous for rolling deployments and must be reviewed."$'\n\n'
+    MD_REPORT+="**${BLOCKING_COUNT} blocking violation(s) found**."$'\n'
+    MD_REPORT+="These changes violate Liquibase migration safety rules and must be reviewed."$'\n\n'
 else
     MD_REPORT+="## Liquibase DDL Safety Check - WARNINGS"$'\n\n'
     MD_REPORT+="**${WARNING_COUNT} warning(s) found** (non-blocking)."$'\n\n'
@@ -399,6 +479,7 @@ if [[ $BLOCKING_COUNT -gt 0 ]]; then
     MD_REPORT+="- **Instead of DROP COLUMN**: Mark as deprecated, remove in a future release after all instances are updated"$'\n'
     MD_REPORT+="- **Instead of RENAME COLUMN**: Add new column, backfill, update code, drop old column in a later release"$'\n'
     MD_REPORT+="- **Instead of ADD NOT NULL**: Add as nullable first, backfill defaults, add constraint in a later release"$'\n'
+    MD_REPORT+="- **Instead of DATETIME**: Use \`DATETIME(6)\` to preserve MySQL microsecond precision"$'\n'
 fi
 
 # Print to console
@@ -418,7 +499,7 @@ fi
 # Exit code
 if [[ $BLOCKING_COUNT -gt 0 ]]; then
     echo ""
-    echo "FAILED: $BLOCKING_COUNT blocking violation(s) on critical tables."
+    echo "FAILED: $BLOCKING_COUNT blocking violation(s)."
     exit 1
 else
     echo ""

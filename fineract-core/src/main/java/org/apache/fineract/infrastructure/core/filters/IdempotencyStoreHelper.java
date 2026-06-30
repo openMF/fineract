@@ -35,7 +35,7 @@ public class IdempotencyStoreHelper {
     private final FineractRequestContextHolder fineractRequestContextHolder;
 
     public void storeCommandResult(Integer response, String body, Long commandId) {
-        commandSourceService.saveResultInTransaction(commandId, response, body);
+        commandSourceService.saveResult(commandId, response, body);
     }
 
     public boolean isAllowedContentTypeResponse(HttpServletResponse response) {

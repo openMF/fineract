@@ -21,8 +21,10 @@ package org.apache.fineract.client.feign.support;
 import feign.Response;
 import feign.codec.Decoder;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import org.apache.fineract.client.models.ApiResponse;
 
 /**
@@ -37,9 +39,12 @@ import org.apache.fineract.client.models.ApiResponse;
  * This decoder:
  * <ol>
  * <li>Detects if the return type is ApiResponse&lt;T&gt;</li>
- * <li>Extracts the inner type T and delegates body decoding to the underlying decoder</li>
+ * <li>Extracts the inner type T and decodes it</li>
  * <li>Wraps the decoded body with status code and headers into ApiResponse&lt;T&gt;</li>
  * </ol>
+ *
+ * Generated methods returning String represent raw response bodies in Fineract's OpenAPI output. They may contain JSON
+ * arrays or objects, so they must be read directly instead of being delegated to Jackson as JSON string literals.
  */
 public final class ApiResponseDecoder implements Decoder {
 
@@ -53,10 +58,36 @@ public final class ApiResponseDecoder implements Decoder {
     public Object decode(Response response, Type type) throws IOException {
         if (isApiResponseType(type)) {
             Type innerType = getApiResponseInnerType(type);
-            Object body = delegate.decode(response, innerType);
+            Object body = decodeBody(response, innerType);
             return new ApiResponse<>(response.status(), response.headers(), body);
         }
+        return decodeBody(response, type);
+    }
+
+    private Object decodeBody(Response response, Type type) throws IOException {
+        if (type == String.class) {
+            return decodeStringBody(response);
+        }
         return delegate.decode(response, type);
+    }
+
+    private Object decodeStringBody(Response response) throws IOException {
+        if (response.body() == null) {
+            return null;
+        }
+        String body;
+        try (InputStream inputStream = response.body().asInputStream()) {
+            body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        if (isJsonStringLiteral(body)) {
+            return delegate.decode(response.toBuilder().body(body, StandardCharsets.UTF_8).build(), String.class);
+        }
+        return body;
+    }
+
+    private boolean isJsonStringLiteral(String body) {
+        String trimmedBody = body.trim();
+        return trimmedBody.length() >= 2 && trimmedBody.charAt(0) == '"' && trimmedBody.charAt(trimmedBody.length() - 1) == '"';
     }
 
     private boolean isApiResponseType(Type type) {

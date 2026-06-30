@@ -27,7 +27,6 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -136,7 +135,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
     public void testWorkingCapitalLoanLifecycleViaBatchApiByLoanId() {
         final Long productId = createProduct();
         final Long clientId = createClient();
-        final LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate today = Utils.getLocalDateOfTenant();
 
         final String submitBody = new Gson().toJson(new WorkingCapitalLoanApplicationTestBuilder() //
                 .withClientId(clientId) //
@@ -144,6 +143,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
                 .withPrincipal(BigDecimal.valueOf(5000)) //
                 .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
                 .withTotalPaymentVolume(BigDecimal.valueOf(5500)) //
+                .withSubmittedOnDate(today) //
                 .buildSubmitRequest());
 
         // Submit via batch
@@ -213,7 +213,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
     public void testWorkingCapitalLoanLifecycleViaSingleBatchApiCallByLoanId() {
         final Long productId = createProduct();
         final Long clientId = createClient();
-        final LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate today = Utils.getLocalDateOfTenant();
 
         List<BatchRequest> batchRequests = new ArrayList<>();
 
@@ -223,6 +223,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
                 .withPrincipal(BigDecimal.valueOf(5000)) //
                 .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
                 .withTotalPaymentVolume(BigDecimal.valueOf(5500)) //
+                .withSubmittedOnDate(today) //
                 .buildSubmitRequest());
 
         // Submit via batch
@@ -468,7 +469,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
         final Long productId = createProduct();
         final Long clientId = createClient();
         final String externalId = "wcl-lc-batch-" + UUID.randomUUID().toString().substring(0, 8);
-        final LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate today = Utils.getLocalDateOfTenant();
 
         final Long loanId = submitAndTrack(new WorkingCapitalLoanApplicationTestBuilder() //
                 .withClientId(clientId) //
@@ -477,6 +478,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
                 .withPrincipal(BigDecimal.valueOf(5000)) //
                 .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
                 .withTotalPaymentVolume(BigDecimal.valueOf(5500)) //
+                .withSubmittedOnDate(today) //
                 .buildSubmitRequest());
 
         // Approve via batch by external id
@@ -521,7 +523,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
     public void testGetWorkingCapitalLoanTransactionByIdViaBatchApi() {
         final Long productId = createProduct();
         final Long clientId = createClient();
-        final LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate today = Utils.getLocalDateOfTenant();
 
         final Long loanId = submitAndTrack(new WorkingCapitalLoanApplicationTestBuilder() //
                 .withClientId(clientId) //
@@ -529,6 +531,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
                 .withPrincipal(BigDecimal.valueOf(5000)) //
                 .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
                 .withTotalPaymentVolume(BigDecimal.valueOf(5500)) //
+                .withSubmittedOnDate(today) //
                 .buildSubmitRequest());
 
         loanHelper.approveById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildApproveRequest(today, BigDecimal.valueOf(5000), null));
@@ -559,7 +562,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
         final Long productId = createProduct();
         final Long clientId = createClient();
         final String txnExternalId = "wcl-txn-ext-" + UUID.randomUUID().toString().substring(0, 8);
-        final LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate today = Utils.getLocalDateOfTenant();
 
         final Long loanId = submitAndTrack(new WorkingCapitalLoanApplicationTestBuilder() //
                 .withClientId(clientId) //
@@ -567,6 +570,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
                 .withPrincipal(BigDecimal.valueOf(5000)) //
                 .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
                 .withTotalPaymentVolume(BigDecimal.valueOf(5500)) //
+                .withSubmittedOnDate(today) //
                 .buildSubmitRequest());
 
         loanHelper.approveById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildApproveRequest(today, BigDecimal.valueOf(5000), null));
@@ -595,7 +599,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
         final Long productId = createProduct();
         final Long clientId = createClient();
         final String loanExternalId = "wcl-txn-batch-" + UUID.randomUUID().toString().substring(0, 8);
-        final LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate today = Utils.getLocalDateOfTenant();
 
         final Long loanId = submitAndTrack(new WorkingCapitalLoanApplicationTestBuilder() //
                 .withClientId(clientId) //
@@ -604,6 +608,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
                 .withPrincipal(BigDecimal.valueOf(5000)) //
                 .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
                 .withTotalPaymentVolume(BigDecimal.valueOf(5500)) //
+                .withSubmittedOnDate(today) //
                 .buildSubmitRequest());
 
         loanHelper.approveById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildApproveRequest(today, BigDecimal.valueOf(5000), null));
@@ -635,7 +640,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
         final Long clientId = createClient();
         final String loanExternalId = "wcl-txn-batch-" + UUID.randomUUID().toString().substring(0, 8);
         final String txnExternalId = "wcl-txn-ext-" + UUID.randomUUID().toString().substring(0, 8);
-        final LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        final LocalDate today = Utils.getLocalDateOfTenant();
 
         final Long loanId = submitAndTrack(new WorkingCapitalLoanApplicationTestBuilder() //
                 .withClientId(clientId) //
@@ -644,6 +649,7 @@ public class BatchWorkingCapitalLoanIntegrationTest {
                 .withPrincipal(BigDecimal.valueOf(5000)) //
                 .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
                 .withTotalPaymentVolume(BigDecimal.valueOf(5500)) //
+                .withSubmittedOnDate(today) //
                 .buildSubmitRequest());
 
         loanHelper.approveById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildApproveRequest(today, BigDecimal.valueOf(5000), null));

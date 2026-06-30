@@ -21,6 +21,7 @@ package org.apache.fineract.integrationtests.client.feign.modules;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.apache.fineract.client.models.AdvancedPaymentData;
 import org.apache.fineract.client.models.PaymentAllocationOrder;
@@ -100,6 +101,11 @@ public final class LoanRequestBuilders {
                 .approvedOnDate(approvedOnDate)//
                 .locale(LoanTestData.LOCALE)//
                 .dateFormat(LoanTestData.DATETIME_PATTERN);
+    }
+
+    public static PostLoansLoanIdRequest approveLoan(Double approvedAmount, String approvedOnDate, String expectedDisbursementDate) {
+        return approveLoan(approvedAmount, approvedOnDate)//
+                .expectedDisbursementDate(expectedDisbursementDate);
     }
 
     public static PostLoansLoanIdRequest disburseLoan(Double disbursedAmount, String disbursedOnDate) {
@@ -316,6 +322,67 @@ public final class LoanRequestBuilders {
         PostLoansLoanIdChargesChargeIdRequest request = new PostLoansLoanIdChargesChargeIdRequest();
         request.setAmount(amount);
         request.setLocale(LoanTestData.LOCALE);
+        return request;
+    }
+
+    public static PostLoansRequest applyLoanRequest(Long clientId, Long productId, String submittedOnDate, Double principal,
+            int numberOfRepayments, Consumer<PostLoansRequest> customizer) {
+        PostLoansRequest request = new PostLoansRequest()//
+                .clientId(clientId)//
+                .productId(productId)//
+                .expectedDisbursementDate(submittedOnDate)//
+                .dateFormat(LoanTestData.DATETIME_PATTERN)//
+                .transactionProcessingStrategyCode("due-penalty-interest-principal-fee-in-advance-penalty-interest-principal-fee-strategy")//
+                .locale(LoanTestData.LOCALE)//
+                .submittedOnDate(submittedOnDate)//
+                .amortizationType(LoanTestData.AmortizationType.EQUAL_INSTALLMENTS)//
+                .interestRatePerPeriod(BigDecimal.ZERO)//
+                .interestCalculationPeriodType(LoanTestData.InterestCalculationPeriodType.SAME_AS_REPAYMENT_PERIOD)//
+                .interestType(LoanTestData.InterestType.DECLINING_BALANCE)//
+                .repaymentEvery(30)//
+                .repaymentFrequencyType(LoanTestData.RepaymentFrequencyType.DAYS)//
+                .numberOfRepayments(numberOfRepayments)//
+                .loanTermFrequency(numberOfRepayments * 30)//
+                .loanTermFrequencyType(LoanTestData.RepaymentFrequencyType.DAYS)//
+                .maxOutstandingLoanBalance(BigDecimal.valueOf(principal))//
+                .principal(BigDecimal.valueOf(principal))//
+                .loanType("individual")//
+                .graceOnArrearsAgeing(0);
+        if (customizer != null) {
+            customizer.accept(request);
+        }
+        return request;
+    }
+
+    public static PostLoansRequest applyLoanRequest(Long clientId, Long productId, String submittedOnDate, Double principal,
+            int numberOfRepayments) {
+        return applyLoanRequest(clientId, productId, submittedOnDate, principal, numberOfRepayments, null);
+    }
+
+    public static PostLoansRequest applyLP2ProgressiveLoanRequest(Long clientId, Long productId, String submittedOnDate, Double principal,
+            Double interestRate, int numberOfRepayments, Consumer<PostLoansRequest> customizer) {
+        PostLoansRequest request = new PostLoansRequest()//
+                .clientId(clientId)//
+                .transactionProcessingStrategyCode(LoanTestData.TransactionProcessingStrategyCode.ADVANCED_PAYMENT_ALLOCATION_STRATEGY)//
+                .productId(productId)//
+                .expectedDisbursementDate(submittedOnDate)//
+                .dateFormat(LoanTestData.DATETIME_PATTERN)//
+                .locale(LoanTestData.LOCALE)//
+                .submittedOnDate(submittedOnDate)//
+                .amortizationType(LoanTestData.AmortizationType.EQUAL_INSTALLMENTS)//
+                .interestRatePerPeriod(BigDecimal.valueOf(interestRate))//
+                .numberOfRepayments(numberOfRepayments)//
+                .principal(BigDecimal.valueOf(principal))//
+                .loanTermFrequency(numberOfRepayments)//
+                .repaymentEvery(1)//
+                .repaymentFrequencyType(LoanTestData.RepaymentFrequencyType.MONTHS)//
+                .loanTermFrequencyType(LoanTestData.RepaymentFrequencyType.MONTHS)//
+                .interestType(LoanTestData.InterestType.DECLINING_BALANCE)//
+                .interestCalculationPeriodType(LoanTestData.InterestCalculationPeriodType.DAILY)//
+                .loanType("individual");
+        if (customizer != null) {
+            customizer.accept(request);
+        }
         return request;
     }
 }

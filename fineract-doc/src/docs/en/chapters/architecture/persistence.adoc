@@ -10,8 +10,6 @@ https://cwiki.apache.org/confluence/display/FINERACT/FSIP-9%3A+Standardize+on+Po
 
 The platform differentiates between these database types in certain cases when there's a need to use some database specific tooling. To do so, the platform examines the JDBC driver used for running the platform and tries to determine which database is being used.
 
-The currently supported JDBC driver and corresponding mappings can be found below.
-
 [cols="1,1"]
 |===
 |*JDBC driver class name*

@@ -68,9 +68,10 @@ public class ProvisioningCategoryWritePlatformServiceJpaRepositoryImpl implement
 
     @Override
     public CommandProcessingResult deleteProvisioningCateogry(JsonCommand command) {
-        this.fromApiJsonDeserializer.validateForCreate(command.json());
-        final ProvisioningCategory provisioningCategory = ProvisioningCategory.fromJson(command);
-        boolean isProvisioningCategoryInUse = isAnyLoanProductsAssociateWithThisProvisioningCategory(provisioningCategory.getId());
+        final Long categoryId = command.entityId();
+        final ProvisioningCategory provisioningCategory = this.provisioningCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ProvisioningCategoryNotFoundException(categoryId));
+        boolean isProvisioningCategoryInUse = isAnyLoanProductsAssociateWithThisProvisioningCategory(categoryId);
         if (isProvisioningCategoryInUse) {
             throw new ProvisioningCategoryCannotBeDeletedException(
                     "error.msg.provisioningcategory.cannot.be.deleted.it.is.already.used.in.loanproduct",
@@ -78,7 +79,7 @@ public class ProvisioningCategoryWritePlatformServiceJpaRepositoryImpl implement
         }
         this.provisioningCategoryRepository.delete(provisioningCategory);
         return new CommandProcessingResultBuilder() //
-                .withEntityId(provisioningCategory.getId()) //
+                .withEntityId(categoryId) //
                 .build();
     }
 
@@ -107,10 +108,20 @@ public class ProvisioningCategoryWritePlatformServiceJpaRepositoryImpl implement
         }
     }
 
-    private boolean isAnyLoanProductsAssociateWithThisProvisioningCategory(final Long categoryID) {
-        final String sql = "select (CASE WHEN (exists (select 1 from m_loanproduct_provisioning_details lpd where lpd.category_id = ?)) = 1 THEN 'true' ELSE 'false' END)";
-        final String isLoansUsingCharge = this.jdbcTemplate.queryForObject(sql, String.class, new Object[] { categoryID });
-        return Boolean.valueOf(isLoansUsingCharge);
+    private boolean isAnyLoanProductsAssociateWithThisProvisioningCategory(final Long categoryId) {
+        // The category is in use when a provisioning criteria definition references it. The original code queried the
+        // non-existent m_loanproduct_provisioning_details table; the category_id column actually lives on
+        // m_provisioning_criteria_definition. EXISTS short-circuits at the first match instead of counting every row,
+        // and maps cleanly to Boolean across PostgreSQL (native bool) and MySQL/MariaDB (BIGINT 1/0).
+        final String sql = """
+                select exists (
+                    select 1
+                    from m_provisioning_criteria_definition
+                    where category_id = ?
+                )
+                """;
+        final Boolean exists = this.jdbcTemplate.queryForObject(sql, Boolean.class, categoryId);
+        return Boolean.TRUE.equals(exists);
     }
 
     /*

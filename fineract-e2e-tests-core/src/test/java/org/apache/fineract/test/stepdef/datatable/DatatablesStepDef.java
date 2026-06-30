@@ -576,6 +576,9 @@ public class DatatablesStepDef extends AbstractStepDef {
     }
 
     private List<Map<?, ?>> toRowList(final Object response) {
+        if (response instanceof String serialized) {
+            return deserializeRowList(serialized);
+        }
         if (response instanceof List<?> list) {
             final List<Map<?, ?>> rows = new ArrayList<>();
             for (final Object item : list) {
@@ -589,6 +592,17 @@ public class DatatablesStepDef extends AbstractStepDef {
             return List.of(map);
         }
         return List.of();
+    }
+
+    private List<Map<?, ?>> deserializeRowList(final String serialized) {
+        if (serialized.isBlank()) {
+            return List.of();
+        }
+        try {
+            return toRowList(OBJECT_MAPPER.readValue(serialized, Object.class));
+        } catch (final JsonProcessingException e) {
+            throw new IllegalStateException("Failed to deserialize datatable row response", e);
+        }
     }
 
     private Long resolveEntityId(final DatatableEntityType entityType) {

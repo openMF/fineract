@@ -120,6 +120,9 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
     private static final String WC_CBR_TEMPLATE_RESPONSE = "wcCbrTemplateResponse";
     private static final String WC_CBR_JOURNAL_ENTRIES_BEFORE = "wcCbrJournalEntriesBefore";
     private static final String WC_CBR_JOURNAL_ENTRIES_AFTER = "wcCbrJournalEntriesAfter";
+    private static final String WC_LAST_TRANSACTION_TYPE = "wcLastTransactionType";
+    private static final String WC_LAST_TRANSACTION_DATE = "wcLastTransactionDate";
+    private static final String WC_LAST_TRANSACTION_AMOUNT = "wcLastTransactionAmount";
 
     private final FineractFeignClient fineractClient;
     private final WorkingCapitalLoanProductResolver workingCapitalLoanProductResolver;
@@ -2607,6 +2610,57 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         validateRepaymentResponse(response, transactionAmount, transactionDate, loanId);
     }
 
+    @Then("Customer makes {string} transaction on {string} with {double} transaction amount on Working Capital loan with the following payment details:")
+    public void makeWorkingCapitalLoanTransactionLikeWithPaymentDetails(final String transactionTypeInput, final String transactionDate,
+            final double transactionAmount, final DataTable table) {
+        final Long loanId = getCreatedLoanId();
+        final String command = TransactionType.valueOf(transactionTypeInput).getValue();
+        final PostWorkingCapitalLoanTransactionsPaymentDetailRequest paymentDetails = buildPaymentDetailsFromTable(table);
+        final PostWorkingCapitalLoanTransactionsRequest request = buildRepaymentRequest(transactionDate, transactionAmount, paymentDetails);
+        final PostWorkingCapitalLoanTransactionsResponse response = executeRepaymentLikeById(loanId, command, request);
+        validateRepaymentResponse(response, transactionAmount, transactionDate, loanId);
+    }
+
+    @Then("Working Capital loan transaction with type {string} has payment type {string}")
+    public void workingCapitalLoanTransactionHasPaymentType(final String transactionTypeInput, final String expectedPaymentTypeName) {
+        final String expectedTransactionType = TransactionType.valueOf(transactionTypeInput).getValue();
+        final String expectedTypeCode = "loanTransactionType." + expectedTransactionType;
+        final Long loanId = getCreatedLoanId();
+        final String lastTransactionType = testContext().get(WC_LAST_TRANSACTION_TYPE);
+        final String lastTransactionDate = testContext().get(WC_LAST_TRANSACTION_DATE);
+        final BigDecimal lastTransactionAmount = testContext().get(WC_LAST_TRANSACTION_AMOUNT);
+        Assertions.assertNotNull(lastTransactionType,
+                String.format("WC transaction type must be present before asserting payment type for %s", transactionTypeInput));
+        Assertions.assertNotNull(lastTransactionDate,
+                String.format("WC transaction date must be present before asserting payment type for %s", transactionTypeInput));
+        Assertions.assertNotNull(lastTransactionAmount,
+                String.format("WC transaction amount must be present before asserting payment type for %s", transactionTypeInput));
+        assertThat(lastTransactionType).as("last WC transaction type").isEqualTo(expectedTransactionType);
+
+        final List<GetWorkingCapitalLoanTransactionIdResponse> transactions = retrieveLoanTransactions(loanId).getContent();
+        Assertions.assertNotNull(transactions, "WC loan transactions list must not be null");
+        final List<GetWorkingCapitalLoanTransactionIdResponse> matchingTransactions = transactions.stream()
+                .filter(t -> !Boolean.TRUE.equals(t.getReversed()) && t.getType() != null && expectedTypeCode.equals(t.getType().getCode()))
+                .filter(t -> t.getTransactionDate() != null && lastTransactionDate.equals(DATE_FORMATTER.format(t.getTransactionDate())))
+                .filter(t -> t.getTransactionAmount() != null && t.getTransactionAmount().compareTo(lastTransactionAmount) == 0).toList();
+        assertThat(matchingTransactions)
+                .as("active %s WC transaction on %s with amount %s", transactionTypeInput, lastTransactionDate, lastTransactionAmount)
+                .hasSize(1);
+        final Long transactionId = matchingTransactions.getFirst().getId();
+        Assertions.assertNotNull(transactionId, String.format("transaction id must be present on %s transaction", transactionTypeInput));
+
+        final GetWorkingCapitalLoanTransactionIdResponse txn = ok(
+                () -> fineractClient.workingCapitalLoanTransactions().retrieveWorkingCapitalLoanTransactionById(loanId, transactionId));
+        Assertions.assertNotNull(txn.getType(), String.format("transaction type must be present on %s transaction", transactionTypeInput));
+        assertThat(txn.getType().getCode()).as("transaction type code").isEqualTo(expectedTypeCode);
+        Assertions.assertNotNull(txn.getPaymentDetailData(),
+                String.format("paymentDetailData must be present on %s transaction", transactionTypeInput));
+        Assertions.assertNotNull(txn.getPaymentDetailData().getPaymentType(),
+                String.format("paymentType must be present on %s transaction", transactionTypeInput));
+        assertThat(txn.getPaymentDetailData().getPaymentType().getName()).as("payment type name on %s transaction", transactionTypeInput)
+                .isEqualTo(expectedPaymentTypeName);
+    }
+
     private PostWorkingCapitalLoanTransactionsRequest buildCreditBalanceRefundRequest(final String transactionDate,
             final double transactionAmount, final PostWorkingCapitalLoanTransactionsPaymentDetailRequest paymentDetails) {
         final PostWorkingCapitalLoanTransactionsRequest request = workingCapitalProductRequestFactory
@@ -2626,6 +2680,7 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         final int before = countJournalEntriesForLoan(loanId);
         final PostWorkingCapitalLoanTransactionsResponse response = ok(() -> fineractClient.workingCapitalLoanTransactions()
                 .executeWorkingCapitalLoanTransactionById(loanId, "creditBalanceRefund", cbrRequest));
+        rememberLastWorkingCapitalTransaction("creditBalanceRefund", cbrRequest.getTransactionDate(), cbrRequest.getTransactionAmount());
         final int after = countJournalEntriesForLoan(loanId);
         testContext().set(WC_CBR_JOURNAL_ENTRIES_BEFORE, before);
         testContext().set(WC_CBR_JOURNAL_ENTRIES_AFTER, after);
@@ -2650,8 +2705,11 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         log.debug("Making {} for loan ID: {}, transactionDate: {}, transactionAmount: {}", transactionType, loanId,
                 repaymentRequest.getTransactionDate(), repaymentRequest.getTransactionAmount());
 
-        return ok(() -> fineractClient.workingCapitalLoanTransactions().executeWorkingCapitalLoanTransactionById(loanId, transactionType,
-                repaymentRequest));
+        final PostWorkingCapitalLoanTransactionsResponse response = ok(() -> fineractClient.workingCapitalLoanTransactions()
+                .executeWorkingCapitalLoanTransactionById(loanId, transactionType, repaymentRequest));
+        rememberLastWorkingCapitalTransaction(transactionType, repaymentRequest.getTransactionDate(),
+                repaymentRequest.getTransactionAmount());
+        return response;
     }
 
     private PostWorkingCapitalLoanTransactionsResponse executeRepaymentByExternalId(final String loanExternalId,
@@ -2659,8 +2717,17 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         log.debug("Making repayment for loan externalId: {}, transactionDate: {}, transactionAmount: {}", loanExternalId,
                 repaymentRequest.getTransactionDate(), repaymentRequest.getTransactionAmount());
 
-        return ok(() -> fineractClient.workingCapitalLoanTransactions().executeWorkingCapitalLoanTransactionByExternalId(loanExternalId,
-                "repayment", repaymentRequest));
+        final PostWorkingCapitalLoanTransactionsResponse response = ok(() -> fineractClient.workingCapitalLoanTransactions()
+                .executeWorkingCapitalLoanTransactionByExternalId(loanExternalId, "repayment", repaymentRequest));
+        rememberLastWorkingCapitalTransaction("repayment", repaymentRequest.getTransactionDate(), repaymentRequest.getTransactionAmount());
+        return response;
+    }
+
+    private void rememberLastWorkingCapitalTransaction(final String transactionType, final String transactionDate,
+            final BigDecimal transactionAmount) {
+        testContext().set(WC_LAST_TRANSACTION_TYPE, transactionType);
+        testContext().set(WC_LAST_TRANSACTION_DATE, transactionDate);
+        testContext().set(WC_LAST_TRANSACTION_AMOUNT, transactionAmount);
     }
 
     @Then("Working Capital loan amortization schedule has {int} periods, with the following data for periods:")

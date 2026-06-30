@@ -4533,6 +4533,7 @@ Feature: Working Capital Loan Repayment
     And Customer makes repayment on "10 January 2026" with 270.0 transaction amount on Working Capital loan with the following payment details:
       | paymentType | accountNumber | checkNumber | routingCode | receiptNumber | bankNumber |
       | AUTOPAY     | acc123        | che456      | rou789      | rec012        | ban345     |
+    And Working Capital loan transaction with type "REPAYMENT" has payment type "AUTOPAY"
     Then Working Capital loan delinquency range schedule has the following data:
       | periodNumber | fromDate   | toDate     | expectedAmount | paidAmount | outstandingAmount | minPaymentCriteriaMet | delinquentAmount | delinquentDays |
       | 1            | 2026-01-01 | 2026-01-30 | 270.0          | 270.0      | 0.0               | true                  | 0.0              | 0              |

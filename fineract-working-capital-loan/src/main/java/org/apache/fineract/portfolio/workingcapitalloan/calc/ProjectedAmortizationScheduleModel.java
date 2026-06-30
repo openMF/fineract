@@ -174,6 +174,27 @@ public final class ProjectedAmortizationScheduleModel {
                 .map(p -> p.actualAmortizationAmount().getAmount()).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    public BigDecimal totalActualAmortizationWithDiscount(final BigDecimal asOfDiscount) {
+        if (asOfDiscount == null || discountFeeAmount == null || asOfDiscount.compareTo(discountFeeAmount.getAmount()) == 0) {
+            return totalActualAmortization();
+        }
+        return withDiscount(asOfDiscount).totalActualAmortization();
+    }
+
+    private ProjectedAmortizationScheduleModel withDiscount(final BigDecimal asOfDiscount) {
+        final ProjectedAmortizationScheduleModel asOfModel = generate(asOfDiscount, netDisbursementAmount.getAmount(),
+                totalPaymentVolume.getAmount(), periodPaymentRate, npvDayCount, expectedDisbursementDate, mc, currency,
+                calculatedTillDate != null ? calculatedTillDate : expectedDisbursementDate);
+        for (final ActualPayment payment : actualPayments) {
+            asOfModel.applyPayment(payment.date(), payment.amount().getAmount());
+        }
+        if (calculatedTillDate != null) {
+            asOfModel.updateCalculatedTillDate(calculatedTillDate);
+            asOfModel.rebuildPayments();
+        }
+        return asOfModel;
+    }
+
     public int effectiveTotalTerm() {
         if (rateSegments == null || rateSegments.isEmpty()) {
             return originalPaymentNumber;

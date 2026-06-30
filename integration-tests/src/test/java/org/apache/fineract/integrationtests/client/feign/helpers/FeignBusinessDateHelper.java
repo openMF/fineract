@@ -43,19 +43,27 @@ public class FeignBusinessDateHelper {
     }
 
     public void updateBusinessDate(String type, String date) {
+        updateBusinessDate(type, date, LoanTestData.ISO_DATE_PATTERN);
+    }
+
+    public void updateBusinessDate(String type, String date, String dateFormat) {
         BusinessDateUpdateRequest request = new BusinessDateUpdateRequest()//
                 .type(BusinessDateUpdateRequest.TypeEnum.fromValue(type))//
                 .date(date)//
-                .dateFormat("yyyy-MM-dd")//
+                .dateFormat(dateFormat)//
                 .locale(LoanTestData.LOCALE);
 
         ok(() -> fineractClient.businessDateManagement().updateBusinessDate(request, Collections.emptyMap()));
     }
 
     public void runAt(String date, Runnable action) {
+        runAt(date, LoanTestData.ISO_DATE_PATTERN, action);
+    }
+
+    public void runAt(String date, String dateFormat, Runnable action) {
         try {
             configHelper.updateConfigurationByName(ENABLE_BUSINESS_DATE, true);
-            updateBusinessDate("BUSINESS_DATE", date);
+            updateBusinessDate("BUSINESS_DATE", date, dateFormat);
             action.run();
         } finally {
             configHelper.updateConfigurationByName(ENABLE_BUSINESS_DATE, false);

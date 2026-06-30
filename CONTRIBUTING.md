@@ -10,6 +10,11 @@ The [JIRA Dashboard](https://issues.apache.org/jira/secure/Dashboard.jspa?select
 
 You don't need to be a committer to provide pull requests, but [Becoming a Committer](https://cwiki.apache.org/confluence/display/FINERACT/Becoming+a+Committer) explains the process of becoming one - just in case...
 
+## Non-code contributions
+
+We need a lot of help besides code changes. For example, we also welcome wiki edits! If you wish to make non-code contributions, please first get involved on the [developer mailing list](https://lists.apache.org/list.html?dev@fineract.apache.org) and in [chat](https://app.element.io/#/room/#apache-fineract-home:matrix.org). Around the time you [request wiki access](https://selfserve.apache.org/confluence-account.html), tell us something like:
+
+> Hello! I'm Adam from Seattle, USA and I'd like to help improve the FSIP-78 wiki page. I've submitted a request for wiki edit access.
 
 ## Developer How To's
 

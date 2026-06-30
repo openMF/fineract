@@ -20,6 +20,7 @@ package org.apache.fineract.notification.eventandlistener;
 
 import jakarta.jms.Queue;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.fineract.infrastructure.core.condition.EnableFineractEventsCondition;
 import org.apache.fineract.notification.data.NotificationData;
@@ -27,18 +28,39 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @Profile("activeMqEnabled")
 @Conditional(EnableFineractEventsCondition.class)
 @RequiredArgsConstructor
+@Slf4j
 public class ActiveMQNotificationEventPublisher implements NotificationEventPublisher {
 
     private final JmsTemplate jmsTemplate;
 
     @Override
     public void broadcastNotification(NotificationData notificationData) {
+        if (TransactionSynchronizationManager.isActualTransactionActive() && TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+
+                @Override
+                public void afterCommit() {
+                    try {
+                        send(notificationData);
+                    } catch (Exception e) {
+                        log.error("Error while sending ActiveMQ notification event after transaction commit", e);
+                    }
+                }
+            });
+            return;
+        }
+        send(notificationData);
+    }
+
+    private void send(NotificationData notificationData) {
         Queue queue = new ActiveMQQueue("NotificationQueue");
-        this.jmsTemplate.send(queue, session -> session.createObjectMessage(notificationData));
+        jmsTemplate.send(queue, session -> session.createObjectMessage(notificationData));
     }
 }

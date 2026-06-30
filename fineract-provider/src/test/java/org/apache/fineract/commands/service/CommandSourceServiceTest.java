@@ -79,7 +79,7 @@ public class CommandSourceServiceTest {
         ThreadLocalContextUtil.setTenant(ft);
 
         String idk = "idk";
-        underTest.saveInitialNewTransaction(wrapper, jsonCommand, appUser, idk);
+        underTest.saveInitial(wrapper, jsonCommand, appUser, idk);
 
         ArgumentCaptor<CommandSource> commandSourceArgumentCaptor = ArgumentCaptor.forClass(CommandSource.class);
         Mockito.verify(commandSourceRepository).saveAndFlush(commandSourceArgumentCaptor.capture());

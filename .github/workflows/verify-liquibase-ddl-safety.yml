@@ -17,13 +17,30 @@ jobs:
 
     steps:
       - name: Download workspace
+        id: download-workspace
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        continue-on-error: true
         with:
           name: fineract-workspace-${{ github.run_id }}
           path: .
 
       - name: Extract workspace
+        if: steps.download-workspace.outcome == 'success'
         run: tar -xf fineract-workspace.tar
+
+      - name: Checkout
+        if: steps.download-workspace.outcome != 'success'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Build workspace fallback
+        if: steps.download-workspace.outcome != 'success'
+        uses: ./.github/actions/setup-and-build-fineract
+        with:
+          cache-read-only: false
 
       - name: Fetch base branch
         env:
@@ -36,7 +53,7 @@ jobs:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
           MERGE_BASE=$(git merge-base "origin/$BASE_REF" HEAD)
-          CHANGES=$(git diff --name-only "$MERGE_BASE"..HEAD -- '**/db/changelog/**/*.xml' || true)
+          CHANGES=$(git diff --name-only "$MERGE_BASE"..HEAD -- '**/db/changelog/**/*.xml' '**/db/custom-changelog/**/*.xml' '**/db/custom-changelog/*.xml' || true)
           if [ -n "$CHANGES" ]; then
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
             echo "$CHANGES"
@@ -102,9 +119,9 @@ jobs:
           retention-days: 5
           compression-level: 9
 
-      - name: Fail if critical violations found (unless overridden)
+      - name: Fail if blocking violations found (unless overridden)
         if: steps.changes.outputs.has_changes == 'true' && steps.ddl-check.outcome == 'failure' && steps.override.outputs.override != 'true'
         run: |
-          echo "::error::Dangerous DDL changes detected on critical tables. See the report above for details."
+          echo "::error::Liquibase safety violations detected. See the report above for details."
           echo "::error::Add the 'ddl-safety-override' label to bypass this check if the change is intentional."
           exit 1

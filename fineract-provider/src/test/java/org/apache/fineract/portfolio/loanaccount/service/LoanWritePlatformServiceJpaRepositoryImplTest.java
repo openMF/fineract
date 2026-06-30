@@ -72,6 +72,7 @@ import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionRepositor
 import org.apache.fineract.portfolio.loanaccount.serialization.LoanTransactionValidator;
 import org.apache.fineract.portfolio.loanproduct.domain.LoanProduct;
 import org.apache.fineract.portfolio.loanproduct.domain.LoanProductRelatedDetail;
+import org.apache.fineract.portfolio.loanproduct.exception.LinkedAccountRequiredException;
 import org.apache.fineract.portfolio.paymentdetail.service.PaymentDetailWritePlatformService;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.junit.jupiter.api.BeforeEach;
@@ -394,6 +395,89 @@ public class LoanWritePlatformServiceJpaRepositoryImplTest {
         // ASSERT: The private disburseLoan() calls updateLoanSummaryDerivedFields once.
         // Our fix adds a second call after the account-transfer charge loop.
         verify(loanBalanceService, times(2)).updateLoanSummaryDerivedFields(loan);
+    }
+
+    @Test
+    @MockitoSettings(strictness = Strictness.LENIENT)
+    public void disburseLoan_withAccountTransferDisbursementChargeButNoLinkedAccount_shouldThrowLinkedAccountRequired() {
+        setupMoneyHelper();
+
+        final LocalDate disbursementDate = DateUtils.parseLocalDate("2025-05-20");
+        final MonetaryCurrency currency = new MonetaryCurrency("KES", 2, null);
+
+        // Setup loan product
+        LoanProductRelatedDetail loanProductDetail = mock(LoanProductRelatedDetail.class);
+        LoanProduct loanProduct = mock(LoanProduct.class);
+        when(loanProduct.getLoanProductRelatedDetail()).thenReturn(loanProductDetail);
+        when(loanProduct.isMultiDisburseLoan()).thenReturn(false);
+        when(loanProduct.isDisallowExpectedDisbursements()).thenReturn(false);
+        when(loanProduct.getId()).thenReturn(1L);
+        when(loanProduct.isIncludeInBorrowerCycle()).thenReturn(false);
+
+        // A disbursement charge payable by ACCOUNT_TRANSFER — requires a linked savings account.
+        LoanCharge disbursementCharge = mock(LoanCharge.class);
+        when(disbursementCharge.isDueAtDisbursement()).thenReturn(true);
+        when(disbursementCharge.getChargePaymentMode()).thenReturn(ChargePaymentMode.ACCOUNT_TRANSFER);
+        when(disbursementCharge.isChargePending()).thenReturn(true);
+        when(disbursementCharge.amountOutstanding()).thenReturn(BigDecimal.valueOf(500));
+        when(disbursementCharge.getId()).thenReturn(100L);
+        when(disbursementCharge.isActive()).thenReturn(true);
+
+        // Setup repayment schedule installment
+        LoanRepaymentScheduleInstallment installment = mock(LoanRepaymentScheduleInstallment.class);
+        when(installment.getDueDate()).thenReturn(disbursementDate.plusMonths(1));
+
+        // Setup summary
+        LoanSummary summary = mock(LoanSummary.class);
+        when(summary.getTotalInterestCharged()).thenReturn(BigDecimal.ZERO);
+
+        // Setup loan as mock for full control over method return values
+        loan = mock(Loan.class);
+        when(loan.getId()).thenReturn(LOAN_ID);
+        when(loan.loanProduct()).thenReturn(loanProduct);
+        when(loan.getLoanProduct()).thenReturn(loanProduct);
+        when(loan.getLoanProductRelatedDetail()).thenReturn(loanProductDetail);
+        when(loan.getLoanRepaymentScheduleDetail()).thenReturn(loanProductDetail);
+        when(loan.getActiveCharges()).thenReturn(Set.of(disbursementCharge));
+        when(loan.getRepaymentScheduleInstallments()).thenReturn(List.of(installment));
+        when(loan.fetchRepaymentScheduleInstallment(1)).thenReturn(installment);
+        when(loan.isGroupLoan()).thenReturn(false);
+        when(loan.getClientId()).thenReturn(1L);
+        when(loan.getStatus()).thenReturn(LoanStatus.APPROVED);
+        when(loan.getLoanStatus()).thenReturn(LoanStatus.ACTIVE);
+        when(loan.isMultiDisburmentLoan()).thenReturn(false);
+        when(loan.isTopup()).thenReturn(false);
+        when(loan.getPrincipal()).thenReturn(Money.of(currency, BigDecimal.valueOf(20000)));
+        when(loan.getCurrency()).thenReturn(currency);
+        when(loan.getSummary()).thenReturn(summary);
+        when(loan.getNextPossibleRepaymentDateForRescheduling()).thenReturn(disbursementDate.plusMonths(1));
+        when(loan.deriveSumTotalOfChargesDueAtDisbursement()).thenReturn(BigDecimal.valueOf(500));
+        when(loan.shouldCreateStandingInstructionAtDisbursement()).thenReturn(false);
+        when(loan.getIsFloatingInterestRate()).thenReturn(false);
+        when(loan.getExternalId()).thenReturn(ExternalId.empty());
+
+        // Setup command
+        command = mock(JsonCommand.class);
+        when(command.localDateValueOfParameterNamed("actualDisbursementDate")).thenReturn(disbursementDate);
+        when(command.extractLocale()).thenReturn(Locale.ENGLISH);
+        when(command.dateFormat()).thenReturn("dd MMMM yyyy");
+
+        // Setup service mocks
+        when(loanAssembler.assembleFrom(LOAN_ID)).thenReturn(loan);
+        when(loanLifecycleStateMachine.dryTransition(any(), any())).thenReturn(LoanStatus.ACTIVE);
+        when(loanDisbursementService.adjustDisburseAmount(any(), any(), any())).thenReturn(Money.of(currency, BigDecimal.valueOf(20000)));
+        when(externalIdFactory.createFromCommand(any(), any())).thenReturn(ExternalId.empty());
+
+        // The loan has NO linked savings account — this is the bug scenario that used to NPE.
+        when(accountAssociationsReadPlatformService.retriveLoanLinkedAssociation(LOAN_ID)).thenReturn(null);
+        when(loanRepositoryWrapper.getClientOrJLGLoansDisbursedAfter(any(), anyLong())).thenReturn(List.of());
+        when(loanRepositoryWrapper.saveAndFlush(any(Loan.class))).thenReturn(loan);
+
+        // ACT + ASSERT: a clean domain-rule exception instead of a NullPointerException.
+        assertThrows(LinkedAccountRequiredException.class, () -> loanWritePlatformService.disburseLoan(LOAN_ID, command, true, false));
+
+        // No funds transfer is attempted when the linked account is missing.
+        verify(accountTransfersWritePlatformService, times(0)).transferFunds(any());
     }
 
     @Test

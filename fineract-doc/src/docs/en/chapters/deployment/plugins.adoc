@@ -3,8 +3,9 @@
 Apache Fineract is extensible through plugin JARs (https://issues.apache.org/jira/browse/FINERACT-1177[FINERACT-1177]; based on
 https://docs.spring.io/spring-boot/docs/current/reference/html/appendix-executable-jar-format.html[Spring Boot's support]). To launch Fineract with plugin JARs in `libs/*.jar`, use:
 
+[source,bash,subs="attributes+,+macros"]
 ----
-java -Dloader.path=libs/ -jar fineract-provider.jar
+java -Dloader.path=libs/ -jar fineract-provider-{revnumber}.jar
 ----
 
 The Fineract "Docker" container image's `ENTRYPOINT` uses this, see our `Dockerfile`. You could therefore build your customized Fineract distribution container image with your own `Dockerfile` using e.g. `FROM apache/fineract:latest` and then drop some plugin JARs into `/app/libs/`.

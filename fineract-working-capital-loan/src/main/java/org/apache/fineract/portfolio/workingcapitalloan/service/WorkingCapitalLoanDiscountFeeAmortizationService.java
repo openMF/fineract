@@ -24,4 +24,11 @@ import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoa
 public interface WorkingCapitalLoanDiscountFeeAmortizationService {
 
     void processDiscountFeeAmortization(WorkingCapitalLoan loan, LocalDate transactionDate);
+
+    /**
+     * Recomputes {@code realizedIncomeFromDiscountFee} on the loan balance from the database aggregate of non-reversed
+     * amortization transactions. Callers must flush any pending amortization transaction posts or reversals before
+     * invoking this method, otherwise the aggregate will not reflect them.
+     */
+    void recalculateRealizedIncome(WorkingCapitalLoan loan);
 }

@@ -21,6 +21,7 @@ package org.apache.fineract.integrationtests.client.feign.modules;
 public final class FeignTestConstants {
 
     public static final String DATETIME_PATTERN = "dd MMMM yyyy";
+    public static final String ISO_DATE_PATTERN = "yyyy-MM-dd";
     public static final String LOCALE = "en";
 
     private FeignTestConstants() {}

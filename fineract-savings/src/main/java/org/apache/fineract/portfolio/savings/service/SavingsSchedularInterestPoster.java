@@ -23,6 +23,7 @@ import static org.apache.fineract.infrastructure.core.domain.AuditableFieldsCons
 import static org.apache.fineract.infrastructure.core.domain.AuditableFieldsConstants.LAST_MODIFIED_BY_DB_FIELD;
 import static org.apache.fineract.infrastructure.core.domain.AuditableFieldsConstants.LAST_MODIFIED_DATE_DB_FIELD;
 
+import io.github.resilience4j.retry.annotation.Retry;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -35,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.accounting.journalentry.domain.JournalEntryType;
+import org.apache.fineract.infrastructure.core.exception.ErrorHandler;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.MathUtil;
 import org.apache.fineract.infrastructure.jobs.exception.JobExecutionException;
@@ -63,7 +65,15 @@ public class SavingsSchedularInterestPoster {
     private Collection<SavingsAccountData> savingAccounts;
     private boolean backdatedTxnsAllowedTill;
 
-    @Transactional(isolation = Isolation.READ_UNCOMMITTED, rollbackFor = Exception.class)
+    // Runs through the JDBC transaction manager (not the primary JPA one) so READ_UNCOMMITTED is applied per-connection
+    // by DataSourceTransactionManager rather than via EclipseLink's shared DatabaseLogin. This keeps the primary JPA
+    // EntityManagerFactory free of any custom isolation level - which is what makes the lock-free getConnection() in
+    // the
+    // EclipseLink dialect safe - while preserving this job's READ_UNCOMMITTED behavior. It is safe to run outside a JPA
+    // transaction because postInterest() performs no JPA entity writes: all persistence is raw jdbcTemplate batch
+    // updates, and the savings write/interest-posting services only compute on SavingsAccountData DTOs.
+    @Retry(name = "postInterest", fallbackMethod = "fallbackPostInterest")
+    @Transactional(transactionManager = "jdbcTransactionManager", isolation = Isolation.READ_UNCOMMITTED, rollbackFor = Exception.class)
     public void postInterest() throws JobExecutionException {
         if (!savingAccounts.isEmpty()) {
             List<Throwable> errors = new ArrayList<>();
@@ -94,6 +104,13 @@ public class SavingsSchedularInterestPoster {
                 throw new JobExecutionException(errors);
             }
         }
+    }
+
+    @SuppressWarnings("unused")
+    public void fallbackPostInterest(Throwable t) {
+        // NOTE: allow caller to catch the exceptions
+        // NOTE: wrap throwable only if really necessary
+        throw ErrorHandler.getMappable(t, null, null, "savings.postinterest");
     }
 
     private void batchUpdateJournalEntries(final List<SavingsAccountData> savingsAccountDataList,

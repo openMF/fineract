@@ -103,6 +103,8 @@ public final class WorkingCapitalLoanTransactionsApiResourceSwagger {
 
         @Schema(example = "62")
         public Long id;
+        @Schema(description = "Payment type")
+        public PaymentTypeData paymentType;
         @Schema(example = "acc123")
         public String accountNumber;
         @Schema(example = "che123")
@@ -113,6 +115,27 @@ public final class WorkingCapitalLoanTransactionsApiResourceSwagger {
         public String receiptNumber;
         @Schema(example = "ban123")
         public String bankNumber;
+    }
+
+    @Schema(description = "Payment type data")
+    public static final class PaymentTypeData {
+
+        private PaymentTypeData() {}
+
+        @Schema(example = "1")
+        public Long id;
+        @Schema(example = "Money Transfer")
+        public String name;
+        @Schema(example = "Transfer via banking network")
+        public String description;
+        @Schema(example = "false")
+        public Boolean isCashPayment;
+        @Schema(example = "1")
+        public Long position;
+        @Schema(example = "PAYMENT_TYPE_CODE")
+        public String codeName;
+        @Schema(example = "false")
+        public Boolean isSystemDefined;
     }
 
     @Schema(description = "Payment details for transaction request payload")

@@ -89,14 +89,9 @@ public class LoanBuyDownFeeAmortizationProcessingServiceImpl implements LoanBuyD
                     continue;
                 }
                 totalAmortization = totalAmortization.add(amortizationTillDate);
-                if (!adjustments.isEmpty()) {
-                    if (alreadyAmortizedAmount.compareTo(amortizationTillDate.getAmount()) > 0) {
-                        amortizationAmount = alreadyAmortizedAmount.subtract(amortizationTillDate.getAmount());
-                        amortizationType = AmortizationType.AM_ADJ;
-                    } else {
-                        amortizationAmount = amortizationTillDate.getAmount().subtract(alreadyAmortizedAmount);
-                        amortizationType = AmortizationType.AM;
-                    }
+                if (alreadyAmortizedAmount.compareTo(amortizationTillDate.getAmount()) > 0) {
+                    amortizationAmount = alreadyAmortizedAmount.subtract(amortizationTillDate.getAmount());
+                    amortizationType = AmortizationType.AM_ADJ;
                 } else {
                     amortizationAmount = amortizationTillDate.getAmount().subtract(alreadyAmortizedAmount);
                     amortizationType = AmortizationType.AM;
@@ -241,14 +236,9 @@ public class LoanBuyDownFeeAmortizationProcessingServiceImpl implements LoanBuyD
                 totalAmortization = totalAmortization.add(amortizationTillDate.getAmount());
                 final BigDecimal alreadyAmortizedAmount = loanAmortizationAllocationService
                         .calculateAlreadyAmortizedAmount(balance.getLoanTransaction().getId(), loan.getId());
-                if (!adjustments.isEmpty()) {
-                    if (alreadyAmortizedAmount.compareTo(amortizationTillDate.getAmount()) > 0) {
-                        amortizationAmount = alreadyAmortizedAmount.subtract(amortizationTillDate.getAmount());
-                        amortizationType = AmortizationType.AM_ADJ;
-                    } else {
-                        amortizationAmount = amortizationTillDate.getAmount().subtract(alreadyAmortizedAmount);
-                        amortizationType = AmortizationType.AM;
-                    }
+                if (alreadyAmortizedAmount.compareTo(amortizationTillDate.getAmount()) > 0) {
+                    amortizationAmount = alreadyAmortizedAmount.subtract(amortizationTillDate.getAmount());
+                    amortizationType = AmortizationType.AM_ADJ;
                 } else {
                     amortizationAmount = amortizationTillDate.getAmount().subtract(alreadyAmortizedAmount);
                     amortizationType = AmortizationType.AM;

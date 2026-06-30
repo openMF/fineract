@@ -21,15 +21,14 @@ package org.apache.fineract.integrationtests;
 import java.math.BigDecimal;
 import org.apache.fineract.client.models.GetLoanProductsProductIdResponse;
 import org.apache.fineract.client.models.GetLoansLoanIdResponse;
-import org.apache.fineract.client.models.PostLoanProductsResponse;
-import org.apache.fineract.client.models.PostLoansResponse;
 import org.apache.fineract.client.models.PutLoanProductsProductIdRequest;
-import org.apache.fineract.integrationtests.common.ClientHelper;
+import org.apache.fineract.integrationtests.client.feign.FeignLoanTestBase;
+import org.apache.fineract.integrationtests.client.feign.modules.LoanRequestBuilders;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class LoanProductWithChargeOffBehaviourTest extends BaseLoanIntegrationTest {
+public class LoanProductWithChargeOffBehaviourTest extends FeignLoanTestBase {
 
     private Long clientId;
     private Long loanProductId;
@@ -41,13 +40,10 @@ public class LoanProductWithChargeOffBehaviourTest extends BaseLoanIntegrationTe
     @BeforeEach
     public void beforeEach() {
         runAt("01 June 2024", () -> {
-            clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
-            final PostLoanProductsResponse loanProductsResponse = loanProductHelper.createLoanProduct(create4IProgressive());
-            loanProductId = loanProductsResponse.getResourceId();
-            PostLoansResponse postLoansResponse = loanTransactionHelper.applyLoan(
-                    applyLP2ProgressiveLoanRequest(clientId, loanProductsResponse.getResourceId(), "01 June 2024", 1000.0, 10.0, 4, null));
-            loanId = postLoansResponse.getLoanId();
-            loanTransactionHelper.approveLoan(loanId, approveLoanRequest(1000.0, "01 June 2024"));
+            clientId = createClient();
+            loanProductId = createLoanProduct(create4IProgressive());
+            loanId = applyForLoan(applyLP2ProgressiveLoanRequest(clientId, loanProductId, "01 June 2024", 1000.0, 10.0, 4, null));
+            approveLoan(loanId, LoanRequestBuilders.approveLoan(1000.0, "01 June 2024"));
             disburseLoan(loanId, BigDecimal.valueOf(250.0), "01 June 2024");
         });
     }
@@ -55,15 +51,14 @@ public class LoanProductWithChargeOffBehaviourTest extends BaseLoanIntegrationTe
     @Test
     public void testSavedToLoanNotChangingWithProduct() {
         runAt("01 June 2024", () -> {
-            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
+            GetLoansLoanIdResponse loanDetails = getLoanDetails(loanId);
             Assertions.assertEquals("REGULAR", loanDetails.getChargeOffBehaviour().getId());
 
-            loanProductHelper.updateLoanProductById(loanProductId,
-                    new PutLoanProductsProductIdRequest().chargeOffBehaviour("ZERO_INTEREST"));
-            final GetLoanProductsProductIdResponse loanProduct = loanTransactionHelper.getLoanProduct(loanProductId.intValue());
+            updateLoanProduct(loanProductId, new PutLoanProductsProductIdRequest().chargeOffBehaviour("ZERO_INTEREST"));
+            final GetLoanProductsProductIdResponse loanProduct = retrieveLoanProduct(loanProductId);
             Assertions.assertEquals("ZERO_INTEREST", loanProduct.getChargeOffBehaviour().getId());
 
-            loanDetails = loanTransactionHelper.getLoanDetails(loanId);
+            loanDetails = getLoanDetails(loanId);
             Assertions.assertEquals("REGULAR", loanDetails.getChargeOffBehaviour().getId());
         });
     }

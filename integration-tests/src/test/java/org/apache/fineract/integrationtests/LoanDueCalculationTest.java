@@ -24,10 +24,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.stream.Stream;
 import org.apache.fineract.client.models.PostLoanProductsRequest;
-import org.apache.fineract.client.models.PostLoanProductsResponse;
 import org.apache.fineract.client.models.PostLoansRequest;
-import org.apache.fineract.client.models.PostLoansResponse;
-import org.apache.fineract.integrationtests.common.ClientHelper;
+import org.apache.fineract.integrationtests.client.feign.FeignLoanTestBase;
+import org.apache.fineract.integrationtests.client.feign.modules.LoanTestData;
 import org.apache.fineract.portfolio.loanaccount.domain.transactionprocessor.impl.AdvancedPaymentScheduleTransactionProcessor;
 import org.apache.fineract.portfolio.loanproduct.domain.RepaymentStartDateType;
 import org.junit.jupiter.api.Named;
@@ -35,7 +34,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class LoanDueCalculationTest extends BaseLoanIntegrationTest {
+public class LoanDueCalculationTest extends FeignLoanTestBase {
 
     private static Stream<Arguments> processingStrategy() {
         return Stream.of(
@@ -51,37 +50,35 @@ public class LoanDueCalculationTest extends BaseLoanIntegrationTest {
     @MethodSource("processingStrategy")
     public void dueDateBasedOnFirstRepaymentDate(String repaymentProcessor) {
         runAt("2 February 2024", () -> {
-            // Client and Loan account creation
-            final Long clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
+            final Long clientId = createClient();
             PostLoanProductsRequest loanProductsRequest = create4Period1MonthLongWithoutInterestProduct(repaymentProcessor);
-            PostLoanProductsResponse loanProductResponse = loanProductHelper.createLoanProduct(loanProductsRequest);
+            Long loanProductId = createLoanProduct(loanProductsRequest);
 
-            PostLoansRequest loanRequest = applyLoanRequest(clientId, loanProductResponse.getResourceId(), "2024-01-31", 1000.0, 4,
-                    (postLoansRequest) -> {
-                        postLoansRequest.transactionProcessingStrategyCode(repaymentProcessor).repaymentEvery(1).repaymentFrequencyType(2)
-                                .loanTermFrequency(4).loanTermFrequencyType(2).dateFormat("yyyy-MM-dd")
-                                .repaymentsStartingFromDate(LocalDate.of(2024, 2, 29));
-                    });
-            PostLoansResponse postLoansResponse = loanTransactionHelper.applyLoan(loanRequest);
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), installment(1000.0, null, "31 January 2024"), //
+            PostLoansRequest loanRequest = applyLoanRequest(clientId, loanProductId, "2024-01-31", 1000.0, 4, (postLoansRequest) -> {
+                postLoansRequest.transactionProcessingStrategyCode(repaymentProcessor).repaymentEvery(1).repaymentFrequencyType(2)
+                        .loanTermFrequency(4).loanTermFrequencyType(2).dateFormat(LoanTestData.ISO_DATE_PATTERN)
+                        .repaymentsStartingFromDate(LocalDate.of(2024, 2, 29));
+            });
+            Long loanId = applyForLoan(loanRequest);
+            verifyRepaymentSchedule(loanId, installment(1000.0, null, "31 January 2024"), //
                     installment(250.0, false, "29 February 2024"), //
                     installment(250.0, false, "29 March 2024"), //
                     installment(250.0, false, "29 April 2024"), //
                     installment(250.0, false, "29 May 2024")) //
             ;
 
-            loanTransactionHelper.approveLoan(postLoansResponse.getResourceId(), approveLoanRequest(1000.0, "31 January 2024"));
+            approveLoan(loanId, approveLoanRequest(1000.0, "31 January 2024"));
 
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), installment(1000.0, null, "31 January 2024"), //
+            verifyRepaymentSchedule(loanId, installment(1000.0, null, "31 January 2024"), //
                     installment(250.0, false, "29 February 2024"), //
                     installment(250.0, false, "29 March 2024"), //
                     installment(250.0, false, "29 April 2024"), //
                     installment(250.0, false, "29 May 2024")) //
             ;
 
-            disburseLoan(postLoansResponse.getLoanId(), BigDecimal.valueOf(1000.00), "31 January 2024");
+            disburseLoan(loanId, BigDecimal.valueOf(1000.00), "31 January 2024");
 
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), installment(1000.0, null, "31 January 2024"), //
+            verifyRepaymentSchedule(loanId, installment(1000.0, null, "31 January 2024"), //
                     installment(250.0, false, "29 February 2024"), //
                     installment(250.0, false, "29 March 2024"), //
                     installment(250.0, false, "29 April 2024"), //
@@ -100,37 +97,35 @@ public class LoanDueCalculationTest extends BaseLoanIntegrationTest {
     @MethodSource("processingStrategy")
     public void dueDateBasedOnExpectedDisbursementDate(String repaymentProcessor) {
         runAt("31 March 2024", () -> {
-            // Client and Loan account creation
-            final Long clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
+            final Long clientId = createClient();
             PostLoanProductsRequest loanProductsRequest = create4Period1MonthLongWithoutInterestProduct(repaymentProcessor)
                     .repaymentStartDateType(RepaymentStartDateType.DISBURSEMENT_DATE.getValue());
-            PostLoanProductsResponse loanProductResponse = loanProductHelper.createLoanProduct(loanProductsRequest);
+            Long loanProductId = createLoanProduct(loanProductsRequest);
 
-            PostLoansRequest loanRequest = applyLoanRequest(clientId, loanProductResponse.getResourceId(), "2024-01-30", 1000.0, 4,
-                    (postLoansRequest) -> {
-                        postLoansRequest.transactionProcessingStrategyCode(repaymentProcessor).repaymentEvery(1).repaymentFrequencyType(2)
-                                .loanTermFrequency(4).loanTermFrequencyType(2).dateFormat("yyyy-MM-dd");
-                    });
-            PostLoansResponse postLoansResponse = loanTransactionHelper.applyLoan(loanRequest);
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), installment(1000.0, null, "30 January 2024"), //
+            PostLoansRequest loanRequest = applyLoanRequest(clientId, loanProductId, "2024-01-30", 1000.0, 4, (postLoansRequest) -> {
+                postLoansRequest.transactionProcessingStrategyCode(repaymentProcessor).repaymentEvery(1).repaymentFrequencyType(2)
+                        .loanTermFrequency(4).loanTermFrequencyType(2).dateFormat(LoanTestData.ISO_DATE_PATTERN);
+            });
+            Long loanId = applyForLoan(loanRequest);
+            verifyRepaymentSchedule(loanId, installment(1000.0, null, "30 January 2024"), //
                     installment(250.0, false, "29 February 2024"), //
                     installment(250.0, false, "30 March 2024"), //
                     installment(250.0, false, "30 April 2024"), //
                     installment(250.0, false, "30 May 2024")) //
             ;
 
-            loanTransactionHelper.approveLoan(postLoansResponse.getResourceId(), approveLoanRequest(1000.0, "30 January 2024"));
+            approveLoan(loanId, approveLoanRequest(1000.0, "30 January 2024"));
 
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), installment(1000.0, null, "30 January 2024"), //
+            verifyRepaymentSchedule(loanId, installment(1000.0, null, "30 January 2024"), //
                     installment(250.0, false, "29 February 2024"), //
                     installment(250.0, false, "30 March 2024"), //
                     installment(250.0, false, "30 April 2024"), //
                     installment(250.0, false, "30 May 2024")) //
             ;
 
-            disburseLoan(postLoansResponse.getLoanId(), BigDecimal.valueOf(1000.00), "31 March 2024");
+            disburseLoan(loanId, BigDecimal.valueOf(1000.00), "31 March 2024");
 
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), installment(1000.0, null, "31 March 2024"), //
+            verifyRepaymentSchedule(loanId, installment(1000.0, null, "31 March 2024"), //
                     installment(250.0, false, "30 April 2024"), //
                     installment(250.0, false, "31 May 2024"), //
                     installment(250.0, false, "30 June 2024"), //
@@ -148,19 +143,18 @@ public class LoanDueCalculationTest extends BaseLoanIntegrationTest {
     @MethodSource("processingStrategy")
     public void dueDateBasedOnSubmittedOnDate(String repaymentProcessor) {
         runAt("03 February 2024", () -> {
-            // Client and Loan account creation
-            final Long clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
+            final Long clientId = createClient();
             PostLoanProductsRequest loanProductsRequest = create4Period1MonthLongWithoutInterestProduct(repaymentProcessor)
                     .repaymentStartDateType(RepaymentStartDateType.SUBMITTED_ON_DATE.getValue());
-            PostLoanProductsResponse loanProductResponse = loanProductHelper.createLoanProduct(loanProductsRequest);
+            Long loanProductId = createLoanProduct(loanProductsRequest);
 
-            PostLoansRequest loanRequest = applyLoanRequest(clientId, loanProductResponse.getResourceId(), "2024-02-01", 1000.0, 4,
-                    (postLoansRequest) -> {
-                        postLoansRequest.transactionProcessingStrategyCode(repaymentProcessor).repaymentEvery(1).repaymentFrequencyType(2)
-                                .loanTermFrequency(4).loanTermFrequencyType(2).submittedOnDate("2024-01-31").dateFormat("yyyy-MM-dd");
-                    });
-            PostLoansResponse postLoansResponse = loanTransactionHelper.applyLoan(loanRequest);
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), //
+            PostLoansRequest loanRequest = applyLoanRequest(clientId, loanProductId, "2024-02-01", 1000.0, 4, (postLoansRequest) -> {
+                postLoansRequest.transactionProcessingStrategyCode(repaymentProcessor).repaymentEvery(1).repaymentFrequencyType(2)
+                        .loanTermFrequency(4).loanTermFrequencyType(2).submittedOnDate("2024-01-31")
+                        .dateFormat(LoanTestData.ISO_DATE_PATTERN);
+            });
+            Long loanId = applyForLoan(loanRequest);
+            verifyRepaymentSchedule(loanId, //
                     installment(1000.0, null, "01 February 2024"), //
                     installment(250.0, false, "29 February 2024"), //
                     installment(250.0, false, "31 March 2024"), //
@@ -168,9 +162,9 @@ public class LoanDueCalculationTest extends BaseLoanIntegrationTest {
                     installment(250.0, false, "31 May 2024")) //
             ;
 
-            loanTransactionHelper.approveLoan(postLoansResponse.getResourceId(), approveLoanRequest(1000.0, "31 January 2024"));
+            approveLoan(loanId, approveLoanRequest(1000.0, "31 January 2024"));
 
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), //
+            verifyRepaymentSchedule(loanId, //
                     installment(1000.0, null, "01 February 2024"), //
                     installment(250.0, false, "29 February 2024"), //
                     installment(250.0, false, "31 March 2024"), //
@@ -178,9 +172,9 @@ public class LoanDueCalculationTest extends BaseLoanIntegrationTest {
                     installment(250.0, false, "31 May 2024")) //
             ;
 
-            disburseLoan(postLoansResponse.getLoanId(), BigDecimal.valueOf(1000.00), "03 February 2024");
+            disburseLoan(loanId, BigDecimal.valueOf(1000.00), "03 February 2024");
 
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), //
+            verifyRepaymentSchedule(loanId, //
                     installment(1000.0, null, "03 February 2024"), //
                     installment(250.0, false, "29 February 2024"), //
                     installment(250.0, false, "31 March 2024"), //
@@ -198,38 +192,37 @@ public class LoanDueCalculationTest extends BaseLoanIntegrationTest {
     @MethodSource("processingStrategy")
     public void dueDateBasedOnSubmittedOnDateButThereShallBeMinimumDaysBetweenDisbursementAndFirstRepayment(String repaymentProcessor) {
         runAt("31 January 2024", () -> {
-            // Client and Loan account creation
-            final Long clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
+            final Long clientId = createClient();
             PostLoanProductsRequest loanProductsRequest = create4Period1MonthLongWithoutInterestProduct(repaymentProcessor)
                     .repaymentStartDateType(RepaymentStartDateType.SUBMITTED_ON_DATE.getValue())
                     .minimumDaysBetweenDisbursalAndFirstRepayment(10);
-            PostLoanProductsResponse loanProductResponse = loanProductHelper.createLoanProduct(loanProductsRequest);
+            Long loanProductId = createLoanProduct(loanProductsRequest);
 
-            PostLoansRequest loanRequest = applyLoanRequest(clientId, loanProductResponse.getResourceId(), "2024-02-26", 1000.0, 4,
-                    (postLoansRequest) -> {
-                        postLoansRequest.transactionProcessingStrategyCode(repaymentProcessor).repaymentEvery(1).repaymentFrequencyType(2)
-                                .loanTermFrequency(4).loanTermFrequencyType(2).submittedOnDate("2024-01-31").dateFormat("yyyy-MM-dd");
-                    });
-            PostLoansResponse postLoansResponse = loanTransactionHelper.applyLoan(loanRequest);
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), installment(1000.0, null, "26 February 2024"), //
+            PostLoansRequest loanRequest = applyLoanRequest(clientId, loanProductId, "2024-02-26", 1000.0, 4, (postLoansRequest) -> {
+                postLoansRequest.transactionProcessingStrategyCode(repaymentProcessor).repaymentEvery(1).repaymentFrequencyType(2)
+                        .loanTermFrequency(4).loanTermFrequencyType(2).submittedOnDate("2024-01-31")
+                        .dateFormat(LoanTestData.ISO_DATE_PATTERN);
+            });
+            Long loanId = applyForLoan(loanRequest);
+            verifyRepaymentSchedule(loanId, installment(1000.0, null, "26 February 2024"), //
                     installment(250.0, false, "07 March 2024"), //
                     installment(250.0, false, "07 April 2024"), //
                     installment(250.0, false, "07 May 2024"), //
                     installment(250.0, false, "07 June 2024")) //
             ;
 
-            loanTransactionHelper.approveLoan(postLoansResponse.getResourceId(), approveLoanRequest(1000.0, "31 January 2024"));
+            approveLoan(loanId, approveLoanRequest(1000.0, "31 January 2024"));
 
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), installment(1000.0, null, "26 February 2024"), //
+            verifyRepaymentSchedule(loanId, installment(1000.0, null, "26 February 2024"), //
                     installment(250.0, false, "07 March 2024"), //
                     installment(250.0, false, "07 April 2024"), //
                     installment(250.0, false, "07 May 2024"), //
                     installment(250.0, false, "07 June 2024")) //
             ;
 
-            disburseLoan(postLoansResponse.getLoanId(), BigDecimal.valueOf(1000.00), "31 January 2024");
+            disburseLoan(loanId, BigDecimal.valueOf(1000.00), "31 January 2024");
 
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), installment(1000.0, null, "31 January 2024"), //
+            verifyRepaymentSchedule(loanId, installment(1000.0, null, "31 January 2024"), //
                     installment(250.0, false, "07 March 2024"), //
                     installment(250.0, false, "07 April 2024"), //
                     installment(250.0, false, "07 May 2024"), //
@@ -247,38 +240,37 @@ public class LoanDueCalculationTest extends BaseLoanIntegrationTest {
     public void dueDateBasedOnExpectedDisbursalDateButThereShallBeMinimumDaysBetweenDisbursementAndFirstRepayment(
             String repaymentProcessor) {
         runAt("31 January 2024", () -> {
-            // Client and Loan account creation
-            final Long clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
+            final Long clientId = createClient();
             PostLoanProductsRequest loanProductsRequest = create4Period1MonthLongWithoutInterestProduct(repaymentProcessor)
                     .repaymentStartDateType(RepaymentStartDateType.DISBURSEMENT_DATE.getValue())
                     .minimumDaysBetweenDisbursalAndFirstRepayment(36);
-            PostLoanProductsResponse loanProductResponse = loanProductHelper.createLoanProduct(loanProductsRequest);
+            Long loanProductId = createLoanProduct(loanProductsRequest);
 
-            PostLoansRequest loanRequest = applyLoanRequest(clientId, loanProductResponse.getResourceId(), "2024-01-31", 1000.0, 4,
-                    (postLoansRequest) -> {
-                        postLoansRequest.transactionProcessingStrategyCode(repaymentProcessor).repaymentEvery(1).repaymentFrequencyType(2)
-                                .loanTermFrequency(4).loanTermFrequencyType(2).submittedOnDate("2024-01-31").dateFormat("yyyy-MM-dd");
-                    });
-            PostLoansResponse postLoansResponse = loanTransactionHelper.applyLoan(loanRequest);
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), installment(1000.0, null, "31 January 2024"), //
+            PostLoansRequest loanRequest = applyLoanRequest(clientId, loanProductId, "2024-01-31", 1000.0, 4, (postLoansRequest) -> {
+                postLoansRequest.transactionProcessingStrategyCode(repaymentProcessor).repaymentEvery(1).repaymentFrequencyType(2)
+                        .loanTermFrequency(4).loanTermFrequencyType(2).submittedOnDate("2024-01-31")
+                        .dateFormat(LoanTestData.ISO_DATE_PATTERN);
+            });
+            Long loanId = applyForLoan(loanRequest);
+            verifyRepaymentSchedule(loanId, installment(1000.0, null, "31 January 2024"), //
                     installment(250.0, false, "07 March 2024"), //
                     installment(250.0, false, "07 April 2024"), //
                     installment(250.0, false, "07 May 2024"), //
                     installment(250.0, false, "07 June 2024")) //
             ;
 
-            loanTransactionHelper.approveLoan(postLoansResponse.getResourceId(), approveLoanRequest(1000.0, "31 January 2024"));
+            approveLoan(loanId, approveLoanRequest(1000.0, "31 January 2024"));
 
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), installment(1000.0, null, "31 January 2024"), //
+            verifyRepaymentSchedule(loanId, installment(1000.0, null, "31 January 2024"), //
                     installment(250.0, false, "07 March 2024"), //
                     installment(250.0, false, "07 April 2024"), //
                     installment(250.0, false, "07 May 2024"), //
                     installment(250.0, false, "07 June 2024")) //
             ;
 
-            disburseLoan(postLoansResponse.getLoanId(), BigDecimal.valueOf(1000.00), "31 January 2024");
+            disburseLoan(loanId, BigDecimal.valueOf(1000.00), "31 January 2024");
 
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), installment(1000.0, null, "31 January 2024"), //
+            verifyRepaymentSchedule(loanId, installment(1000.0, null, "31 January 2024"), //
                     installment(250.0, false, "07 March 2024"), //
                     installment(250.0, false, "07 April 2024"), //
                     installment(250.0, false, "07 May 2024"), //
@@ -297,19 +289,18 @@ public class LoanDueCalculationTest extends BaseLoanIntegrationTest {
     @MethodSource("processingStrategy")
     public void dueDateBasedOnSubmittedOnDateButChangingExpectedDisbursementAtApproval(String repaymentProcessor) {
         runAt("03 February 2024", () -> {
-            // Client and Loan account creation
-            final Long clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
+            final Long clientId = createClient();
             PostLoanProductsRequest loanProductsRequest = create4Period1MonthLongWithoutInterestProduct(repaymentProcessor)
                     .repaymentStartDateType(RepaymentStartDateType.SUBMITTED_ON_DATE.getValue());
-            PostLoanProductsResponse loanProductResponse = loanProductHelper.createLoanProduct(loanProductsRequest);
+            Long loanProductId = createLoanProduct(loanProductsRequest);
 
-            PostLoansRequest loanRequest = applyLoanRequest(clientId, loanProductResponse.getResourceId(), "2024-02-01", 1000.0, 4,
-                    (postLoansRequest) -> {
-                        postLoansRequest.transactionProcessingStrategyCode(repaymentProcessor).repaymentEvery(1).repaymentFrequencyType(2)
-                                .loanTermFrequency(4).loanTermFrequencyType(2).submittedOnDate("2024-01-31").dateFormat("yyyy-MM-dd");
-                    });
-            PostLoansResponse postLoansResponse = loanTransactionHelper.applyLoan(loanRequest);
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), //
+            PostLoansRequest loanRequest = applyLoanRequest(clientId, loanProductId, "2024-02-01", 1000.0, 4, (postLoansRequest) -> {
+                postLoansRequest.transactionProcessingStrategyCode(repaymentProcessor).repaymentEvery(1).repaymentFrequencyType(2)
+                        .loanTermFrequency(4).loanTermFrequencyType(2).submittedOnDate("2024-01-31")
+                        .dateFormat(LoanTestData.ISO_DATE_PATTERN);
+            });
+            Long loanId = applyForLoan(loanRequest);
+            verifyRepaymentSchedule(loanId, //
                     installment(1000.0, null, "01 February 2024"), //
                     installment(250.0, false, "29 February 2024"), //
                     installment(250.0, false, "31 March 2024"), //
@@ -317,10 +308,9 @@ public class LoanDueCalculationTest extends BaseLoanIntegrationTest {
                     installment(250.0, false, "31 May 2024")) //
             ;
 
-            loanTransactionHelper.approveLoan(postLoansResponse.getResourceId(),
-                    approveLoanRequest(1000.0, "31 January 2024", "02 February 2024"));
+            approveLoan(loanId, approveLoanRequest(1000.0, "31 January 2024", "02 February 2024"));
 
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), //
+            verifyRepaymentSchedule(loanId, //
                     installment(1000.0, null, "02 February 2024"), //
                     installment(250.0, false, "29 February 2024"), //
                     installment(250.0, false, "31 March 2024"), //
@@ -328,9 +318,9 @@ public class LoanDueCalculationTest extends BaseLoanIntegrationTest {
                     installment(250.0, false, "31 May 2024")) //
             ;
 
-            disburseLoan(postLoansResponse.getLoanId(), BigDecimal.valueOf(1000.00), "03 February 2024");
+            disburseLoan(loanId, BigDecimal.valueOf(1000.00), "03 February 2024");
 
-            verifyRepaymentSchedule(postLoansResponse.getLoanId(), //
+            verifyRepaymentSchedule(loanId, //
                     installment(1000.0, null, "03 February 2024"), //
                     installment(250.0, false, "29 February 2024"), //
                     installment(250.0, false, "31 March 2024"), //

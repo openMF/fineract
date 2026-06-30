@@ -18,47 +18,43 @@
  */
 package org.apache.fineract.integrationtests;
 
+import static org.apache.fineract.integrationtests.client.feign.modules.LoanTestData.DATETIME_PATTERN;
 import static org.apache.fineract.portfolio.loanaccount.domain.transactionprocessor.impl.AdvancedPaymentScheduleTransactionProcessor.ADVANCED_PAYMENT_ALLOCATION_STRATEGY;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.client.models.AdvancedPaymentData;
 import org.apache.fineract.client.models.GetLoansLoanIdResponse;
 import org.apache.fineract.client.models.PaymentAllocationOrder;
 import org.apache.fineract.client.models.PostLoanProductsRequest;
-import org.apache.fineract.client.models.PostLoanProductsResponse;
 import org.apache.fineract.client.models.PostLoansLoanIdResponse;
 import org.apache.fineract.client.models.PostLoansRequest;
-import org.apache.fineract.client.models.PostLoansResponse;
-import org.apache.fineract.integrationtests.common.ClientHelper;
-import org.apache.fineract.integrationtests.common.loans.LoanTestLifecycleExtension;
+import org.apache.fineract.integrationtests.client.feign.FeignLoanTestBase;
+import org.apache.fineract.integrationtests.client.feign.modules.LoanRequestBuilders;
+import org.apache.fineract.integrationtests.client.feign.modules.LoanTestData;
 import org.apache.fineract.portfolio.loanproduct.domain.PaymentAllocationType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 @Slf4j
-@ExtendWith({ LoanTestLifecycleExtension.class })
-public class LoanInterestRateFrequencyTest extends BaseLoanIntegrationTest {
+public class LoanInterestRateFrequencyTest extends FeignLoanTestBase {
 
     @Test
     public void testProgressiveInterestRateTypeWholeTerm() {
         runAt("15 April 2024", () -> {
-            // Create Client
-            Long clientId = clientHelper.createClient(ClientHelper.defaultClientCreationRequest()).getClientId();
+            Long clientId = createClient();
 
-            // Create Loan Product
             PostLoanProductsRequest loanProductsRequest = createLoanProductWithInterestCalculation();
-            PostLoanProductsResponse loanProductResponse = loanProductHelper.createLoanProduct(loanProductsRequest);
+            Long loanProductId = createLoanProduct(loanProductsRequest);
 
-            // Apply and Approve Loan
-            Long loanId = applyAndApproveLoanApplication(clientId, loanProductResponse.getResourceId(), "15 April 2024", 1000.0, 6);
+            Long loanId = applyAndApproveLoanApplication(clientId, loanProductId, "15 April 2024", 1000.0, 6);
 
-            // Disburse Loan
             disburseLoan(loanId, BigDecimal.valueOf(1000), "15 April 2024");
 
-            GetLoansLoanIdResponse loanDetails = loanTransactionHelper.getLoanDetails(loanId);
+            GetLoansLoanIdResponse loanDetails = getLoanDetails(loanId);
             Assertions.assertEquals(loanDetails.getInterestRateFrequencyType().getCode(),
                     "interestRateFrequency.periodFrequencyType.whole_term");
             Assertions.assertEquals(loanDetails.getAnnualInterestRate(), new BigDecimal("20.000000"));
@@ -71,23 +67,22 @@ public class LoanInterestRateFrequencyTest extends BaseLoanIntegrationTest {
         PostLoansRequest postLoansRequest = new PostLoansRequest().clientId(clientId).productId(productId)
                 .expectedDisbursementDate(disbursementDate).dateFormat(DATETIME_PATTERN) //
                 .transactionProcessingStrategyCode(ADVANCED_PAYMENT_ALLOCATION_STRATEGY) //
-                .locale("en") //
+                .locale(LoanTestData.LOCALE) //
                 .submittedOnDate(disbursementDate) //
-                .amortizationType(AmortizationType.EQUAL_INSTALLMENTS) //
+                .amortizationType(LoanTestData.AmortizationType.EQUAL_INSTALLMENTS) //
                 .interestRatePerPeriod(new BigDecimal(10.0)) //
-                .interestCalculationPeriodType(InterestCalculationPeriodType.SAME_AS_REPAYMENT_PERIOD) //
-                .interestType(InterestType.DECLINING_BALANCE) //
+                .interestCalculationPeriodType(LoanTestData.InterestCalculationPeriodType.SAME_AS_REPAYMENT_PERIOD) //
+                .interestType(LoanTestData.InterestType.DECLINING_BALANCE) //
                 .repaymentEvery(1) //
-                .repaymentFrequencyType(RepaymentFrequencyType.MONTHS) //
+                .repaymentFrequencyType(LoanTestData.RepaymentFrequencyType.MONTHS) //
                 .numberOfRepayments(numberOfRepayments) //
                 .loanTermFrequency(numberOfRepayments) //
                 .loanTermFrequencyType(2) //
                 .maxOutstandingLoanBalance(BigDecimal.valueOf(amount)) //
                 .principal(BigDecimal.valueOf(amount)) //
                 .loanType("individual");
-        PostLoansResponse postLoansResponse = loanTransactionHelper.applyLoan(postLoansRequest);
-        PostLoansLoanIdResponse approvedLoanResult = loanTransactionHelper.approveLoan(postLoansResponse.getResourceId(),
-                approveLoanRequest(amount, disbursementDate));
+        Long loanId = applyForLoan(postLoansRequest);
+        PostLoansLoanIdResponse approvedLoanResult = approveLoan(loanId, LoanRequestBuilders.approveLoan(amount, disbursementDate));
         return approvedLoanResult.getLoanId();
     }
 
@@ -98,18 +93,18 @@ public class LoanInterestRateFrequencyTest extends BaseLoanIntegrationTest {
                 .overAppliedCalculationType(null)//
                 .overAppliedNumber(null)//
                 .transactionProcessingStrategyCode(ADVANCED_PAYMENT_ALLOCATION_STRATEGY) //
-                .paymentAllocation(List.of(createDefaultPaymentAllocation(), createRepaymentPaymentAllocation())) //
+                .paymentAllocation(List.of(LoanRequestBuilders.defaultPaymentAllocation(), createRepaymentPaymentAllocation())) //
                 .loanScheduleType("PROGRESSIVE") //
                 .loanScheduleProcessingType("HORIZONTAL") //
                 .principal(1000.0)//
                 .numberOfRepayments(6)//
                 .repaymentEvery(1)//
-                .repaymentFrequencyType(RepaymentFrequencyType.MONTHS.longValue())//
-                .interestType(BaseLoanIntegrationTest.InterestType.DECLINING_BALANCE)//
-                .amortizationType(BaseLoanIntegrationTest.AmortizationType.EQUAL_INSTALLMENTS)//
-                .interestCalculationPeriodType(BaseLoanIntegrationTest.InterestCalculationPeriodType.SAME_AS_REPAYMENT_PERIOD)//
+                .repaymentFrequencyType(LoanTestData.RepaymentFrequencyType.MONTHS.longValue())//
+                .interestType(LoanTestData.InterestType.DECLINING_BALANCE)//
+                .amortizationType(LoanTestData.AmortizationType.EQUAL_INSTALLMENTS)//
+                .interestCalculationPeriodType(LoanTestData.InterestCalculationPeriodType.SAME_AS_REPAYMENT_PERIOD)//
                 .interestRatePerPeriod(10.0) //
-                .interestRateFrequencyType(InterestRateFrequencyType.WHOLE_TERM)//
+                .interestRateFrequencyType(LoanTestData.InterestRateFrequencyType.WHOLE_TERM)//
                 .isInterestRecalculationEnabled(false);
     }
 
@@ -118,11 +113,14 @@ public class LoanInterestRateFrequencyTest extends BaseLoanIntegrationTest {
         advancedPaymentData.setTransactionType("REPAYMENT");
         advancedPaymentData.setFutureInstallmentAllocationRule("NEXT_INSTALLMENT");
 
-        List<PaymentAllocationOrder> paymentAllocationOrders = getPaymentAllocationOrder(PaymentAllocationType.PAST_DUE_PENALTY,
-                PaymentAllocationType.PAST_DUE_FEE, PaymentAllocationType.PAST_DUE_INTEREST, PaymentAllocationType.PAST_DUE_PRINCIPAL,
-                PaymentAllocationType.DUE_PENALTY, PaymentAllocationType.DUE_FEE, PaymentAllocationType.DUE_INTEREST,
-                PaymentAllocationType.DUE_PRINCIPAL, PaymentAllocationType.IN_ADVANCE_PENALTY, PaymentAllocationType.IN_ADVANCE_FEE,
-                PaymentAllocationType.IN_ADVANCE_PRINCIPAL, PaymentAllocationType.IN_ADVANCE_INTEREST);
+        AtomicInteger order = new AtomicInteger(1);
+        List<PaymentAllocationOrder> paymentAllocationOrders = Arrays
+                .stream(new PaymentAllocationType[] { PaymentAllocationType.PAST_DUE_PENALTY, PaymentAllocationType.PAST_DUE_FEE,
+                        PaymentAllocationType.PAST_DUE_INTEREST, PaymentAllocationType.PAST_DUE_PRINCIPAL,
+                        PaymentAllocationType.DUE_PENALTY, PaymentAllocationType.DUE_FEE, PaymentAllocationType.DUE_INTEREST,
+                        PaymentAllocationType.DUE_PRINCIPAL, PaymentAllocationType.IN_ADVANCE_PENALTY, PaymentAllocationType.IN_ADVANCE_FEE,
+                        PaymentAllocationType.IN_ADVANCE_PRINCIPAL, PaymentAllocationType.IN_ADVANCE_INTEREST })
+                .map(pat -> new PaymentAllocationOrder().paymentAllocationRule(pat.name()).order(order.getAndIncrement())).toList();
 
         advancedPaymentData.setPaymentAllocationOrder(paymentAllocationOrders);
         return advancedPaymentData;

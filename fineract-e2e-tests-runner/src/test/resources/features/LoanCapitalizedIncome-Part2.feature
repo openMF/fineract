@@ -3750,3 +3750,152 @@ Feature: Capitalized Income - Part2
     When Loan Pay-off is made on "16 April 2024"
     Then Loan is closed with zero outstanding balance and it's all installments have obligations met
 
+  @TestRailId:C85353
+  Scenario: Verify Capitalized Income amortization allocation mappings after loan re-open via repayment reversal
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    When Admin creates a fully customized loan with the following data:
+      | LoanProduct                                                                                       | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
+      | LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALC_DAILY_CAPITALIZED_INCOME_ADJ_CUSTOM_ALLOC | 01 January 2026   | 250            | 7                      | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 3                 | MONTHS                | 1              | MONTHS                 | 3                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION |
+    And Admin successfully approves the loan on "01 January 2026" with "250" amount and expected disbursement date on "1 January 2026"
+    And Admin successfully disburse the loan on "01 January 2026" with "100" EUR transaction amount
+    Then Loan status will be "ACTIVE"
+    And Admin adds capitalized income with "AUTOPAY" payment type to the loan on "01 January 2026" with "50" EUR transaction amount
+    When Admin sets the business date to "02 January 2026"
+    And Admin runs inline COB job for Loan
+    Then Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type                | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 01 January 2026  | Disbursement                    | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income              | 50.0   | 50.0      | 0.0      | 0.0  | 0.0       | 150.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income Amortization | 0.56   | 0.0       | 0.56     | 0.0  | 0.0       | 0.0          | false    | false    |
+    And Loan Amortization Allocation Mapping for "CAPITALIZED_INCOME" transaction created on "01 January 2026" contains the following data:
+      | Date            | Type | Amount |
+      | 01 January 2026 | AM   | 0.56   |
+    When Admin sets the business date to "03 January 2026"
+    When Loan Pay-off is made on "03 January 2026"
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
+    And Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type                | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 01 January 2026  | Disbursement                    | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income              | 50.0   | 50.0      | 0.0      | 0.0  | 0.0       | 150.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income Amortization | 0.56   | 0.0       | 0.56     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Repayment                       | 150.06 | 150.0     | 0.06     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Accrual                         | 0.06   | 0.0       | 0.06     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Capitalized Income Amortization | 49.44  | 0.0       | 49.44    | 0.0  | 0.0       | 0.0          | false    | false    |
+    When Customer undo "1"th "Repayment" transaction made on "03 January 2026"
+    Then Loan status will be "ACTIVE"
+    And Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type                | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 01 January 2026  | Disbursement                    | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income              | 50.0   | 50.0      | 0.0      | 0.0  | 0.0       | 150.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income Amortization | 0.56   | 0.0       | 0.56     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Repayment                       | 150.06 | 150.0     | 0.06     | 0.0  | 0.0       | 0.0          | true     | false    |
+      | 03 January 2026  | Accrual                         | 0.06   | 0.0       | 0.06     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Capitalized Income Amortization | 49.44  | 0.0       | 49.44    | 0.0  | 0.0       | 0.0          | false    | false    |
+    When Admin sets the business date to "04 January 2026"
+    And Admin runs inline COB job for Loan
+    And Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type                | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 01 January 2026  | Disbursement                    | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income              | 50.0   | 50.0      | 0.0      | 0.0  | 0.0       | 150.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income Amortization | 0.56   | 0.0       | 0.56     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Repayment                       | 150.06 | 150.0     | 0.06     | 0.0  | 0.0       | 0.0          | true     | false    |
+      | 03 January 2026  | Accrual                         | 0.06   | 0.0       | 0.06     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Capitalized Income Amortization | 49.44  | 0.0       | 49.44    | 0.0  | 0.0       | 0.0          | false    | false    |
+    And Loan Amortization Allocation Mapping for "CAPITALIZED_INCOME" transaction created on "01 January 2026" contains the following data:
+      | Date            | Type | Amount |
+      | 01 January 2026 | AM   | 0.56   |
+      | 03 January 2026 | AM   | 49.44  |
+    When Admin sets the business date to "05 January 2026"
+    And Admin runs inline COB job for Loan
+    And Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type                | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 01 January 2026  | Disbursement                    | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income              | 50.0   | 50.0      | 0.0      | 0.0  | 0.0       | 150.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income Amortization | 0.56   | 0.0       | 0.56     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Repayment                       | 150.06 | 150.0     | 0.06     | 0.0  | 0.0       | 0.0          | true     | false    |
+      | 03 January 2026  | Accrual                         | 0.06   | 0.0       | 0.06     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Capitalized Income Amortization | 49.44  | 0.0       | 49.44    | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 04 January 2026  | Accrual                         | 0.02   | 0.0       | 0.02     | 0.0  | 0.0       | 0.0          | false    | false    |
+    And Loan Amortization Allocation Mapping for "CAPITALIZED_INCOME" transaction created on "01 January 2026" contains the following data:
+      | Date            | Type | Amount |
+      | 01 January 2026 | AM   | 0.56   |
+      | 03 January 2026 | AM   | 49.44  |
+
+    When Loan Pay-off is made on "05 January 2026"
+    Then Loan is closed with zero outstanding balance and it's all installments have obligations met
+
+  @TestRailId:C85354
+  Scenario: Verify Capitalized Income amortization allocation mappings after loan re-open via payout refund reversal
+    When Admin sets the business date to "01 January 2026"
+    And Admin creates a client with random data
+    When Admin creates a fully customized loan with the following data:
+      | LoanProduct                                                                                       | submitted on date | with Principal | ANNUAL interest rate % | interest type     | interest calculation period | amortization type  | loanTermFrequency | loanTermFrequencyType | repaymentEvery | repaymentFrequencyType | numberOfRepayments | graceOnPrincipalPayment | graceOnInterestPayment | interest free period | Payment strategy            |
+      | LP2_ADV_PYMNT_INTEREST_DAILY_EMI_360_30_INTEREST_RECALC_DAILY_CAPITALIZED_INCOME_ADJ_CUSTOM_ALLOC | 01 January 2026   | 250            | 7                      | DECLINING_BALANCE | DAILY                       | EQUAL_INSTALLMENTS | 3                 | MONTHS                | 1              | MONTHS                 | 3                  | 0                       | 0                      | 0                    | ADVANCED_PAYMENT_ALLOCATION |
+    And Admin successfully approves the loan on "01 January 2026" with "250" amount and expected disbursement date on "1 January 2026"
+    And Admin successfully disburse the loan on "01 January 2026" with "100" EUR transaction amount
+    Then Loan status will be "ACTIVE"
+    And Admin adds capitalized income with "AUTOPAY" payment type to the loan on "01 January 2026" with "50" EUR transaction amount
+    When Admin sets the business date to "02 January 2026"
+    And Admin runs inline COB job for Loan
+    Then Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type                | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 01 January 2026  | Disbursement                    | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income              | 50.0   | 50.0      | 0.0      | 0.0  | 0.0       | 150.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income Amortization | 0.56   | 0.0       | 0.56     | 0.0  | 0.0       | 0.0          | false    | false    |
+    And Loan Amortization Allocation Mapping for "CAPITALIZED_INCOME" transaction created on "01 January 2026" contains the following data:
+      | Date            | Type | Amount |
+      | 01 January 2026 | AM   | 0.56   |
+    When Admin sets the business date to "03 January 2026"
+    And Customer makes "PAYOUT_REFUND" transaction with "AUTOPAY" payment type on "03 January 2026" with 150.06 EUR transaction amount and self-generated Idempotency key
+    Then Loan status will be "CLOSED_OBLIGATIONS_MET"
+    And Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type                | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 01 January 2026  | Disbursement                    | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income              | 50.0   | 50.0      | 0.0      | 0.0  | 0.0       | 150.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income Amortization | 0.56   | 0.0       | 0.56     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Payout Refund                   | 150.06 | 150.0     | 0.06     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Accrual                         | 0.06   | 0.0       | 0.06     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Capitalized Income Amortization | 49.44  | 0.0       | 49.44    | 0.0  | 0.0       | 0.0          | false    | false    |
+    When Customer undo "1"th "Payout Refund" transaction made on "03 January 2026"
+    Then Loan status will be "ACTIVE"
+    And Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type                | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 01 January 2026  | Disbursement                    | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income              | 50.0   | 50.0      | 0.0      | 0.0  | 0.0       | 150.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income Amortization | 0.56   | 0.0       | 0.56     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Payout Refund                   | 150.06 | 150.0     | 0.06     | 0.0  | 0.0       | 0.0          | true     | false    |
+      | 03 January 2026  | Accrual                         | 0.06   | 0.0       | 0.06     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Capitalized Income Amortization | 49.44  | 0.0       | 49.44    | 0.0  | 0.0       | 0.0          | false    | false    |
+    When Admin sets the business date to "04 January 2026"
+    And Admin runs inline COB job for Loan
+    And Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type                | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 01 January 2026  | Disbursement                    | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income              | 50.0   | 50.0      | 0.0      | 0.0  | 0.0       | 150.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income Amortization | 0.56   | 0.0       | 0.56     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Payout Refund                   | 150.06 | 150.0     | 0.06     | 0.0  | 0.0       | 0.0          | true     | false    |
+      | 03 January 2026  | Accrual                         | 0.06   | 0.0       | 0.06     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Capitalized Income Amortization | 49.44  | 0.0       | 49.44    | 0.0  | 0.0       | 0.0          | false    | false    |
+    And Loan Amortization Allocation Mapping for "CAPITALIZED_INCOME" transaction created on "01 January 2026" contains the following data:
+      | Date            | Type | Amount |
+      | 01 January 2026 | AM   | 0.56   |
+      | 03 January 2026 | AM   | 49.44  |
+    When Admin sets the business date to "05 January 2026"
+    And Admin runs inline COB job for Loan
+    And Loan Transactions tab has the following data:
+      | Transaction date | Transaction Type                | Amount | Principal | Interest | Fees | Penalties | Loan Balance | Reverted | Replayed |
+      | 01 January 2026  | Disbursement                    | 100.0  | 0.0       | 0.0      | 0.0  | 0.0       | 100.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income              | 50.0   | 50.0      | 0.0      | 0.0  | 0.0       | 150.0        | false    | false    |
+      | 01 January 2026  | Capitalized Income Amortization | 0.56   | 0.0       | 0.56     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Payout Refund                   | 150.06 | 150.0     | 0.06     | 0.0  | 0.0       | 0.0          | true     | false    |
+      | 03 January 2026  | Accrual                         | 0.06   | 0.0       | 0.06     | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 03 January 2026  | Capitalized Income Amortization | 49.44  | 0.0       | 49.44    | 0.0  | 0.0       | 0.0          | false    | false    |
+      | 04 January 2026  | Accrual                         | 0.02   | 0.0       | 0.02     | 0.0  | 0.0       | 0.0          | false    | false    |
+    And Loan Amortization Allocation Mapping for "CAPITALIZED_INCOME" transaction created on "01 January 2026" contains the following data:
+      | Date            | Type | Amount |
+      | 01 January 2026 | AM   | 0.56   |
+      | 03 January 2026 | AM   | 49.44  |
+
+    When Loan Pay-off is made on "05 January 2026"
+    Then Loan is closed with zero outstanding balance and it's all installments have obligations met

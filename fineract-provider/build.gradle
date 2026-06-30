@@ -89,6 +89,7 @@ resolve {
     outputDir = file("${buildDir}/resources/main/static")
     openApiFile = file("${buildDir}/tmp/swagger/fineract-input.yaml")
     readerClass = 'org.apache.fineract.infrastructure.openapi.FineractOperationIdReader'
+    filterClass = 'org.apache.fineract.infrastructure.openapi.FineractOpenApiSpecFilter'
     sortOutput = true
     dependsOn(prepareInputYaml, classes)
 }
@@ -122,6 +123,10 @@ configurations {
 dependencies {
     implementation project(':fineract-core')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Spins up a real PostgreSQL for self-contained persistence tests (e.g. JpaJdbcSameTransactionVisibilityTest) that
+    // need a real EclipseLink EntityManagerFactory against a real database. Skipped automatically when Docker is absent.
+    testImplementation 'org.testcontainers:postgresql:1.20.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.4'

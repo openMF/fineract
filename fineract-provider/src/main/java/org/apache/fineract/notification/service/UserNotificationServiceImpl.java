@@ -83,7 +83,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
                 List<Long> tempUserIds = new ArrayList<>(userIds);
                 for (Long userId : tempUserIds) {
                     AppUser appUser = appUserRepository.findById(userId).orElseThrow();
-                    if (!Objects.equals(appUser.getOffice().getId(), notificationData.getOfficeId())) {
+                    if (appUser.getOffice() == null || !Objects.equals(appUser.getOffice().getId(), notificationData.getOfficeId())) {
                         userIds.remove(userId);
                     }
                 }

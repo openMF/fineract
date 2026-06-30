@@ -65,7 +65,6 @@ import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionExecution;
 import org.springframework.transaction.TransactionSystemException;
@@ -144,16 +143,12 @@ public class BatchApiServiceImpl implements BatchApiService {
      */
     private List<BatchResponse> callInTransaction(Consumer<TransactionTemplate> transactionConfigurator,
             Supplier<List<BatchResponse>> request) {
-        // Retry logic for enclosingTransaction=true and when the isolation level is REPEATABLE_READ or stricter we need
-        // to restart the transaction as well!
-
         Retry retry = retryConfigurationAssembler.getRetryConfigurationForBatchApiWithEnclosingTransaction();
         List<BatchResponse> responseList = new ArrayList<>();
         Supplier<List<BatchResponse>> batchSupplier = () -> {
             responseList.clear();
             try {
                 TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
-                transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
                 if (transactionManager instanceof ExtendedJpaTransactionManager extendedJpaTransactionManager) {
                     transactionTemplate.setReadOnly(extendedJpaTransactionManager.isReadOnly());
                 }

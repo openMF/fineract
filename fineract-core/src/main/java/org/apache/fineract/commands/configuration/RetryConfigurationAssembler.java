@@ -25,7 +25,6 @@ import io.github.resilience4j.retry.RetryRegistry;
 import java.util.Arrays;
 import lombok.AllArgsConstructor;
 import org.apache.fineract.batch.service.BatchExecutionException;
-import org.apache.fineract.commands.exception.CommandResultPersistenceException;
 import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.apache.fineract.infrastructure.core.domain.FineractRequestContextHolder;
 import org.springframework.stereotype.Service;
@@ -36,7 +35,6 @@ public class RetryConfigurationAssembler {
 
     public static final String EXECUTE_COMMAND = "executeCommand";
     public static final String BATCH_RETRY = "batchRetry";
-    public static final String COMMAND_RESULT_PERSISTENCE = "commandResultPersistence";
     private static final String LAST_EXECUTION_EXCEPTION_KEY = "LAST_EXECUTION_EXCEPTION";
     private final RetryRegistry registry;
     private final FineractProperties fineractProperties;
@@ -108,14 +106,5 @@ public class RetryConfigurationAssembler {
         }
 
         return configBuilder;
-    }
-
-    public Retry getRetryConfigurationForCommandResultPersistence() {
-        RetryConfig.Builder<Throwable> configBuilder = buildCommonExecuteCommandConfiguration();
-
-        configBuilder.retryOnException(e -> e instanceof RuntimeException && !(e instanceof CommandResultPersistenceException));
-
-        RetryConfig config = configBuilder.build();
-        return registry.retry(COMMAND_RESULT_PERSISTENCE, config);
     }
 }

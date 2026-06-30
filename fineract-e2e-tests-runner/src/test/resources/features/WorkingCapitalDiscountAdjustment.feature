@@ -194,8 +194,8 @@ Feature: Working Capital Discount Adjustment
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct                | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP_ACCOUNTING_CASH_BASED | 01 January 2026 | 01 January 2026          | 100             | 100          | 18                | 0        |
+      | LoanProduct         | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP_ACC_DEF_REV_AM | 01 January 2026 | 01 January 2026          | 100             | 100          | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     And Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
     Then Admin adds Discount fee with "12" amount on Working Capital loan account for last disbursement
@@ -207,22 +207,22 @@ Feature: Working Capital Discount Adjustment
       | 01 January 2026 | Disbursement              | 100.0             | 100.0            | 0.0               | 0.0                   | false    |
       | 01 January 2026 | Discount Fee              | 12.0              | 12.0             | 0.0               | 0.0                   | false    |
       | 02 January 2026 | Repayment                 | 112.0             | 112.0            | 0.0               | 0.0                   | false    |
-      | 02 January 2026 | Discount Fee Amortization | 12.19             |                  |                   |                       | false    |
+      | 02 January 2026 | Discount Fee Amortization | 12.0              |                  |                   |                       | false    |
     Then Add Discount fee adjustment with "12" amount and transaction date "02 January 2026" on Working Capital loan account failed due to not active loan
     And Working Capital Loan has transactions:
       | transactionDate | type                      | transactionAmount | principalPortion | feeChargesPortion | penaltyChargesPortion | reversed |
       | 01 January 2026 | Disbursement              | 100.0             | 100.0            | 0.0               | 0.0                   | false    |
       | 01 January 2026 | Discount Fee              | 12.0              | 12.0             | 0.0               | 0.0                   | false    |
       | 02 January 2026 | Repayment                 | 112.0             | 112.0            | 0.0               | 0.0                   | false    |
-      | 02 January 2026 | Discount Fee Amortization | 12.19             |                  |                   |                       | false    |
+      | 02 January 2026 | Discount Fee Amortization | 12.0              |                  |                   |                       | false    |
 
   @TestRailId:C83034
   Scenario: Verify Discount fee adjustment failed when loan is overpaid - UC11
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct                | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP_ACCOUNTING_CASH_BASED | 01 January 2026 | 01 January 2026          | 100             | 100          | 18                | 0        |
+      | LoanProduct         | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP_ACC_DEF_REV_AM | 01 January 2026 | 01 January 2026          | 100             | 100          | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     And Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
     Then Admin adds Discount fee with "12" amount on Working Capital loan account for last disbursement
@@ -248,8 +248,8 @@ Feature: Working Capital Discount Adjustment
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct                | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP_ACCOUNTING_CASH_BASED | 01 January 2026 | 01 January 2026          | 100             | 100          | 18                | 0        |
+      | LoanProduct         | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP_ACC_DEF_REV_AM | 01 January 2026 | 01 January 2026          | 100             | 100          | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     And Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
     Then Admin adds Discount fee with "12" amount on Working Capital loan account for last disbursement
@@ -283,8 +283,8 @@ Feature: Working Capital Discount Adjustment
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a working capital loan with the following data:
-      | LoanProduct                | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
-      | WCLP_ACCOUNTING_CASH_BASED | 01 January 2026 | 01 January 2026          | 100             | 100          | 18                | 0        |
+      | LoanProduct         | submittedOnDate | expectedDisbursementDate | principalAmount | totalPayment | periodPaymentRate | discount |
+      | WCLP_ACC_DEF_REV_AM | 01 January 2026 | 01 January 2026          | 100             | 100          | 18                | 0        |
     And Admin successfully approves the working capital loan on "01 January 2026" with "100" amount and expected disbursement date on "01 January 2026"
     And Admin successfully disburse the Working Capital loan on "01 January 2026" with "100" EUR transaction amount
     Then Admin adds Discount fee with "12" amount on Working Capital loan account for last disbursement

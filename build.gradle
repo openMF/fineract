@@ -244,7 +244,7 @@ allprojects  {
 
         groovyGradle {
             target '*.gradle', '**/*.gradle'
-            targetExclude '**/build/**', '/**/build.gradle' // TODO: temporary disabled on build.gradle until someone fix this issue: https://github.com/diffplug/spotless/issues/1807
+            targetExclude '**/build/**', '/**/build.gradle','**/static-weaving.gradle' // TODO: temporary disabled on build.gradle until someone fix this issue: https://github.com/diffplug/spotless/issues/1807
             greclipse()
             indentWithSpaces(4)
             endWithNewline()

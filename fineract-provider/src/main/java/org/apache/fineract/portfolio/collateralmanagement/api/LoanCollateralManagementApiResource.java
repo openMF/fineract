@@ -33,7 +33,6 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import org.apache.fineract.command.core.CommandDispatcher;
-import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.portfolio.collateralmanagement.command.LoanCollateralDeleteCommand;
 import org.apache.fineract.portfolio.collateralmanagement.data.LoanCollateralDeleteRequest;
 import org.apache.fineract.portfolio.collateralmanagement.data.LoanCollateralDeleteResponse;
@@ -54,7 +53,7 @@ public class LoanCollateralManagementApiResource {
     @DELETE
     @Path("{id}")
     @Operation(description = "Delete Loan Collateral", summary = "Delete Loan Collateral")
-    @ApiResponse(responseCode = "default", content = @Content(schema = @Schema(implementation = CommandProcessingResult.class)))
+    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoanCollateralDeleteResponse.class)))
     public LoanCollateralDeleteResponse deleteLoanCollateral(@PathParam("loanId") @Parameter(description = "loanId") final Long loanId,
             @PathParam("id") @Parameter(description = "loan collateral id") final Long id) {
 
