@@ -26,7 +26,7 @@ public interface ClientFamilyMembersReadPlatformService {
 
     List<ClientFamilyMembersData> getClientFamilyMembers(long clientId);
 
-    ClientFamilyMembersData getClientFamilyMember(long id);
+    ClientFamilyMembersData getClientFamilyMember(long clientId, long familyMemberId);
 
     ClientFamilyMembersData retrieveTemplate();
 }
