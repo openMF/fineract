@@ -33,7 +33,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
 import org.apache.fineract.infrastructure.codes.domain.CodeValueRepository;
-import org.apache.fineract.infrastructure.configuration.domain.GlobalConfigurationRepositoryWrapper;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResultBuilder;
@@ -61,8 +60,6 @@ import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 import org.apache.fineract.portfolio.paymentdetail.service.PaymentDetailWritePlatformService;
 import org.apache.fineract.portfolio.workingcapitalloan.WorkingCapitalLoanConstants;
 import org.apache.fineract.portfolio.workingcapitalloan.accounting.WorkingCapitalLoanAccountingProcessor;
-import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanAllocationPlan;
-import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanAllocationRequest;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanBalance;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanCharge;
@@ -77,7 +74,6 @@ import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoa
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransactionRelationRepository;
 import org.apache.fineract.portfolio.workingcapitalloan.exception.WorkingCapitalLoanNotFoundException;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanBalanceRepository;
-import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanBreachScheduleRepository;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanChargeRepository;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanNoteRepository;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanPeriodPaymentRateChangeRepository;
@@ -111,18 +107,13 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
     private final WorkingCapitalLoanAccountingProcessor accountingProcessor;
     private final WorkingCapitalLoanTransactionRelationRepository relationRepository;
     private final WorkingCapitalLoanPeriodPaymentRateChangeRepository rateChangeRepository;
-    private final WorkingCapitalLoanBreachScheduleRepository breachScheduleRepository;
     private final WorkingCapitalLoanDiscountFeeAmortizationService discountFeeAmortizationService;
     private final WorkingCapitalLoanTransactionReprocessingService transactionReprocessingService;
     private final WorkingCapitalLoanChargeRepository chargeRepository;
-    private final WorkingCapitalLoanPaymentAllocationProcessor allocationProcessor;
     private final WorkingCapitalLoanDelinquencyRangeScheduleService delinquencyRangeScheduleService;
-    private final GlobalConfigurationRepositoryWrapper globalConfigurationRepository;
-    private final WorkingCapitalLoanDelinquencyClassificationService delinquencyClassificationService;
     private final WorkingCapitalLoanBreachScheduleService breachScheduleService;
-    private final WorkingCapitalLoanAllocationRequestFactory allocationRequestFactory;
-    private final WorkingCapitalLoanAllocationApplier allocationApplier;
-    private final WorkingCapitalLoanBalanceUpdater balanceUpdater;
+    private final WorkingCapitalLoanTransactionProcessor transactionProcessor;
+    private final WorkingCapitalLoanChargeAccrualService chargeAccrualService;
 
     @Override
     public CommandProcessingResult approveApplication(final Long loanId, final JsonCommand command) {
@@ -521,6 +512,8 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
                 txnExternalId, amount, relatedDisbursementTransaction.getTransactionDate(), classification, paymentDetail);
 
         updateBalanceForDiscountChange(loan, amount, false);
+        // The principal change moves the remaining-balance cap, so the delinquency schedule must be re-derived.
+        delinquencyRangeScheduleService.reprocessDelinquencySchedule(loan);
         loanRepository.saveAndFlush(loan);
 
         return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(discountTransaction.getId())
@@ -591,9 +584,14 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
         amortizationScheduleWriteService.applyDiscountFeeAdjustment(loan);
         updateBalanceForDiscountChange(loan, amount, true);
+        // The principal change moves the remaining-balance cap, so the delinquency schedule must be re-derived.
+        delinquencyRangeScheduleService.reprocessDelinquencySchedule(loan);
 
-        handleStateChanges(loan, transactionDate);
-        triggerInlineAmortizationIfLoanClosed(loan, transactionDate);
+        final List<WorkingCapitalLoanCharge> activeCharges = chargeRepository.findByLoanIdAndActiveTrueOrderByDueDateAscIdAsc(loan.getId());
+        stateMachine.determineAndTransition(loan, transactionDate, activeCharges);
+        transactionProcessor.triggerInlineAmortizationIfLoanClosed(loan, transactionDate);
+        // A discount-fee adjustment can pay down principal and close the loan, so accrue any pending charge income.
+        chargeAccrualService.accrueOnClosure(loan, transactionDate);
         changes.put("status", loan.getLoanStatus());
 
         loanRepository.save(loan);
@@ -624,59 +622,11 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
                         "Working capital loan transaction not found", WorkingCapitalLoanConstants.transactionIdParamName));
         return switch (transaction.getTypeOf()) {
             case DISCOUNT_FEE_ADJUSTMENT -> undoDiscountFeeAdjustment(loan, transaction, command);
-            case CHARGE_ADJUSTMENT -> undoChargeAdjustment(loan, transaction, command);
-            case REPAYMENT, GOODWILL_CREDIT -> undoTransaction(loan, transaction, command);
+            case REPAYMENT, GOODWILL_CREDIT, CHARGE_ADJUSTMENT, PAYOUT_REFUND -> undoTransaction(loan, transaction, command);
             default -> throw new PlatformApiDataValidationException("validation.msg.wc.loan.transaction.undo.not.supported",
                     "Undo is not supported for transaction type " + transaction.getTypeOf(),
                     WorkingCapitalLoanConstants.transactionTypeParamName);
         };
-    }
-
-    private CommandProcessingResult undoChargeAdjustment(final WorkingCapitalLoan loan,
-            final WorkingCapitalLoanTransaction adjustmentTransaction, final JsonCommand command) {
-        if (adjustmentTransaction.isReversed()) {
-            throw new PlatformApiDataValidationException("validation.msg.wc.loan.charge.adjustment.already.reversed",
-                    "Charge adjustment transaction is already reversed", WorkingCapitalLoanConstants.transactionIdParamName);
-        }
-
-        final WorkingCapitalLoanTransactionRelation chargeRelation = adjustmentTransaction.getLoanTransactionRelations().stream()
-                .filter(r -> r.getToCharge() != null && r.getRelationType() == LoanTransactionRelationTypeEnum.CHARGE_ADJUSTMENT)
-                .findFirst()
-                .orElseThrow(() -> new PlatformApiDataValidationException("validation.msg.wc.loan.charge.adjustment.relation.missing",
-                        "Charge adjustment transaction is missing the link to the charge",
-                        WorkingCapitalLoanConstants.transactionIdParamName));
-
-        final org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanCharge wcCharge = chargeRelation.getToCharge();
-        final BigDecimal amount = adjustmentTransaction.getTransactionAmount();
-
-        reverseTransaction(adjustmentTransaction);
-        accountingProcessor.postReversalJournalEntries(loan, adjustmentTransaction);
-
-        final BigDecimal newPaid = MathUtil.subtract(MathUtil.nullToZero(wcCharge.getAmountPaid()), amount).max(BigDecimal.ZERO);
-        wcCharge.setAmountPaid(newPaid);
-        if (newPaid.compareTo(MathUtil.nullToZero(wcCharge.getAmount())) < 0) {
-            wcCharge.setPaid(false);
-        }
-
-        final WorkingCapitalLoanBalance balance = balanceRepository.findByWcLoan_Id(loan.getId())
-                .orElseGet(() -> WorkingCapitalLoanBalance.createFor(loan));
-        if (wcCharge.isPenaltyCharge()) {
-            balance.setPenaltyPaid(MathUtil.subtract(MathUtil.nullToZero(balance.getPenaltyPaid()), amount).max(BigDecimal.ZERO));
-        } else {
-            balance.setFeePaid(MathUtil.subtract(MathUtil.nullToZero(balance.getFeePaid()), amount).max(BigDecimal.ZERO));
-        }
-        balanceRepository.save(balance);
-
-        final String noteText = command.stringValueOfParameterNamed(WorkingCapitalLoanConstants.noteParamName);
-        createNote(noteText, loan);
-
-        final Map<String, Object> changes = new LinkedHashMap<>();
-        if (StringUtils.isNotBlank(noteText)) {
-            changes.put(WorkingCapitalLoanConstants.noteParamName, noteText);
-        }
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(adjustmentTransaction.getId())
-                .withEntityExternalId(adjustmentTransaction.getExternalId()).withOfficeId(loan.getOfficeId())
-                .withClientId(loan.getClientId()).withLoanId(loan.getId()).with(changes).build();
     }
 
     private CommandProcessingResult undoDiscountFeeAdjustment(final WorkingCapitalLoan loan,
@@ -692,6 +642,8 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
         amortizationScheduleWriteService.applyDiscountFeeAdjustment(loan);
         updateBalanceForDiscountChange(loan, adjustmentTransaction.getTransactionAmount().negate(), true);
+        // The principal change moves the remaining-balance cap, so the delinquency schedule must be re-derived.
+        delinquencyRangeScheduleService.reprocessDelinquencySchedule(loan);
         loanRepository.saveAndFlush(loan);
 
         final String noteText = command.stringValueOfParameterNamed(WorkingCapitalLoanConstants.noteParamName);
@@ -737,48 +689,9 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
                 transactionDate, classification, txnExternalId);
         this.transactionRepository.saveAndFlush(transaction);
 
-        final WorkingCapitalLoanBalance balance = this.balanceRepository.findByWcLoan_Id(loan.getId())
-                .orElseGet(() -> WorkingCapitalLoanBalance.createFor(loan));
-        final List<WorkingCapitalLoanCharge> charges = this.chargeRepository.findByLoanIdAndActiveTrueOrderByDueDateAscIdAsc(loanId);
+        final WorkingCapitalLoanTransactionAllocation allocation = transactionProcessor.processRepaymentLikeTransaction(loan, transaction,
+                transactionType, transactionDate, transactionAmount);
 
-        // Decide the allocation across penalty/fee/principal following the loan's configured payment allocation order
-        // (principal-only when no order is configured), then materialize it onto the charges and refresh the balance.
-        final WorkingCapitalLoanAllocationRequest allocationRequest = allocationRequestFactory.build(loan, balance, charges,
-                transactionDate, transactionAmount);
-        final WorkingCapitalLoanAllocationPlan allocationPlan = allocationProcessor.plan(allocationRequest);
-        final WorkingCapitalLoanTransactionAllocation allocation = allocationApplier.apply(transaction, null, allocationPlan, charges);
-        balanceUpdater.apply(balance, allocationPlan);
-        this.chargeRepository.saveAll(charges);
-        this.balanceRepository.saveAndFlush(balance);
-        this.allocationRepository.saveAndFlush(allocation);
-
-        // Only the principal portion affects the amortization and delinquency/breach schedules; fee and penalty
-        // portions settle charges.
-        final BigDecimal principalPortion = allocationPlan.principalPortion();
-
-        // A backdated transaction can change how the other transactions allocate across charges, so it triggers
-        // reprocessing. When the loan has charges, reprocessing rebuilds the amortization schedule from scratch, so
-        // the incremental apply below would be immediately overwritten and is skipped. For a charge-free loan
-        // reprocessing is a no-op (principal-only allocation is order-independent), so the incremental apply stands.
-        final List<WorkingCapitalLoanTransaction> allTransactions = this.transactionRepository
-                .findByWcLoan_IdOrderByTransactionDateAscIdAsc(loanId);
-        final boolean backdated = isBackdatedTransaction(allTransactions, transaction);
-        final boolean reprocessingWillRebuildSchedule = backdated && !charges.isEmpty();
-        if (!reprocessingWillRebuildSchedule) {
-            // The amortization model records the principal on its actual day and recalculates forward.
-            amortizationScheduleWriteService.applyRepayment(loan, transactionDate, principalPortion);
-        }
-        if (backdated) {
-            transactionReprocessingService.reprocessTransactions(loan, allTransactions);
-            delinquencyRangeScheduleService.reprocessDelinquencySchedule(loan);
-        } else {
-            delinquencyRangeScheduleService.applyRepayment(loan, transactionDate, principalPortion);
-        }
-        // Breach schedule is maintained incrementally here; reprocessing does not rebuild it.
-        breachScheduleService.applyRepayment(loanId, transactionDate, principalPortion);
-
-        handleStateChanges(loan, transactionDate);
-        triggerInlineAmortizationIfLoanClosed(loan, transactionDate);
         changes.put("status", loan.getLoanStatus());
 
         handleNote(loan, command, changes);
@@ -789,11 +702,16 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
 
         notifyPostBusinessEvent(transactionType, transaction, loan);
 
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(loanId)
-                .withEntityExternalId(loan.getExternalId()).withSubEntityId(transaction.getId())
-                .withSubEntityExternalId(transaction.getExternalId()).withOfficeId(loan.getOfficeId()).withClientId(loan.getClientId())
-                .withLoanId(loanId).with(changes).build();
-
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(transaction.getId()) //
+                .withEntityExternalId(transaction.getExternalId()) //
+                .withOfficeId(loan.getOfficeId()) //
+                .withClientId(loan.getClientId()) //
+                .withLoanId(loanId) //
+                .withLoanExternalId(loan.getExternalId()) //
+                .with(changes) //
+                .build();
     }
 
     private void notifyPostBusinessEvent(LoanTransactionType transactionType, WorkingCapitalLoanTransaction transaction,
@@ -814,6 +732,8 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
                     classification, txnExternalId);
             case GOODWILL_CREDIT -> WorkingCapitalLoanTransaction.goodwillCredit(loan, transactionAmount, paymentDetail, transactionDate,
                     classification, txnExternalId);
+            case PAYOUT_REFUND -> WorkingCapitalLoanTransaction.payoutRefund(loan, transactionAmount, paymentDetail, transactionDate,
+                    classification, txnExternalId);
             default -> throw new NotImplementedException("Missing implementation for : " + transactionType.getCode());
         };
     }
@@ -824,44 +744,6 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
             changes.put(WorkingCapitalLoanConstants.noteParamName, noteText);
         }
         createNote(noteText, loan);
-    }
-
-    private void triggerInlineAmortizationIfLoanClosed(final WorkingCapitalLoan loan, final LocalDate transactionDate) {
-        if ((loan.getLoanStatus().isClosed() || loan.getLoanStatus().isOverpaid())
-                && loan.getLoanProduct().getAccountingRule().isAccrualWithDeferredRevenueAmortization()) {
-            final BigDecimal discount = loan.getLoanProductRelatedDetails() != null ? loan.getLoanProductRelatedDetails().getDiscount()
-                    : null;
-            final boolean adjustmentNeeded = loan.getBalance() != null
-                    && MathUtil.isGreaterThanZero(loan.getBalance().getRealizedIncomeFromDiscountFee());
-
-            if (MathUtil.isGreaterThanZero(discount) || adjustmentNeeded) {
-                discountFeeAmortizationService.processDiscountFeeAmortization(loan, transactionDate);
-            }
-        }
-    }
-
-    private void handleStateChanges(WorkingCapitalLoan loan, LocalDate transactionDate) {
-        if (loan.getBalance() != null) {
-            final BigDecimal overpaymentAmount = loan.getBalance().getOverpaymentAmount() != null ? loan.getBalance().getOverpaymentAmount()
-                    : BigDecimal.ZERO;
-            final BigDecimal principalOutstanding = loan.getBalance().getPrincipalOutstanding() != null
-                    ? loan.getBalance().getPrincipalOutstanding()
-                    : BigDecimal.ZERO;
-            if (overpaymentAmount.compareTo(BigDecimal.ZERO) > 0) {
-                this.stateMachine.transition(WorkingCapitalLoanEvent.LOAN_OVERPAID, loan);
-                if (loan.getMaturedOnDate() == null) {
-                    loan.setMaturedOnDate(transactionDate);
-                }
-            } else if (principalOutstanding.compareTo(BigDecimal.ZERO) == 0) {
-                this.stateMachine.transition(WorkingCapitalLoanEvent.LOAN_REPAID_IN_FULL, loan);
-                if (loan.getMaturedOnDate() == null) {
-                    loan.setMaturedOnDate(transactionDate);
-                }
-            } else if (principalOutstanding.compareTo(BigDecimal.ZERO) > 0 && loan.getMaturedOnDate() != null) {
-                this.stateMachine.transition(WorkingCapitalLoanEvent.LOAN_REOPENED, loan);
-                loan.setMaturedOnDate(null);
-            }
-        }
     }
 
     @Override
@@ -927,6 +809,8 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
             }
         }
 
+        // Closing an overpaid loan via a full credit balance refund must still recognize any pending charge accrual.
+        chargeAccrualService.accrueOnClosure(loan, transactionDate);
         changes.put("status", loan.getLoanStatus());
         handleNote(loan, command, changes);
 
@@ -939,10 +823,16 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         businessEventNotifierService.notifyPostBusinessEvent(
                 new WorkingCapitalLoanCreditBalanceRefundTransactionBusinessEvent(creditBalanceRefundTransaction, loan.getId()));
 
-        return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(loanId)
-                .withEntityExternalId(loan.getExternalId()).withSubEntityId(creditBalanceRefundTransaction.getId())
-                .withSubEntityExternalId(creditBalanceRefundTransaction.getExternalId()).withOfficeId(loan.getOfficeId())
-                .withClientId(loan.getClientId()).withLoanId(loanId).with(changes).build();
+        return new CommandProcessingResultBuilder() //
+                .withCommandId(command.commandId()) //
+                .withEntityId(creditBalanceRefundTransaction.getId()) //
+                .withEntityExternalId(creditBalanceRefundTransaction.getExternalId()) //
+                .withOfficeId(loan.getOfficeId()) //
+                .withClientId(loan.getClientId()) //
+                .withLoanId(loanId) //
+                .withLoanExternalId(loan.getExternalId()) //
+                .with(changes) //
+                .build();
     }
 
     @Override
@@ -1021,21 +911,20 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
             } else {
                 amortizationScheduleWriteService.applyRepaymentUndo(loan, transaction.getTransactionDate(),
                         transaction.getAllocation().getPrincipalPortion());
-                updateBalanceOnUndoRepayment(loan, transaction.getTransactionAmount());
+                updateBalanceOnUndoRepayment(loan, transaction.getAllocation().getPrincipalPortion());
             }
         } else {
             transactionReprocessingService.reprocessTransactions(loan);
         }
 
-        breachScheduleService.applyRepaymentUndo(loan.getId(), transaction.getTransactionDate(),
-                transaction.getAllocation().getPrincipalPortion());
+        breachScheduleService.applyRepaymentUndo(loan.getId(), transaction.getTransactionDate(), transaction.getTransactionAmount());
         delinquencyRangeScheduleService.reprocessDelinquencySchedule(loan);
 
         if (loan.getLoanProduct().getAccountingRule().isAccrualWithDeferredRevenueAmortization()) {
             accountingProcessor.postReversalJournalEntries(loan, transaction);
         }
 
-        handleStateChanges(loan, transaction.getReversedOnDate());
+        stateMachine.determineAndTransition(loan, transaction.getReversedOnDate(), charges);
         changes.put("status", loan.getLoanStatus());
 
         handleNote(loan, command, changes);
@@ -1047,6 +936,11 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
     @Override
     public CommandProcessingResult makeGoodwillCredit(Long loanId, JsonCommand command) {
         return makeRepaymentLikeTransaction(loanId, command, LoanTransactionType.GOODWILL_CREDIT);
+    }
+
+    @Override
+    public CommandProcessingResult makePayoutRefund(Long loanId, JsonCommand command) {
+        return makeRepaymentLikeTransaction(loanId, command, LoanTransactionType.PAYOUT_REFUND);
     }
 
     private PaymentDetail createAndPersistPaymentDetailFromCommand(final JsonCommand command, final Map<String, Object> changes) {
@@ -1062,16 +956,9 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
     }
 
     private void updateBalanceOnDisburse(final WorkingCapitalLoan loan, final BigDecimal disbursedAmount) {
-        WorkingCapitalLoanBalance balance = this.balanceRepository.findByWcLoan_Id(loan.getId()).orElse(null);
-        if (balance == null) {
-            balance = WorkingCapitalLoanBalance.createFor(loan);
-        }
-        final BigDecimal discount = loan.getLoanProductRelatedDetails() != null && loan.getLoanProductRelatedDetails().getDiscount() != null
-                ? loan.getLoanProductRelatedDetails().getDiscount()
-                : BigDecimal.ZERO;
-        balance.setTotalDiscountFee(discount);
-        balance.setPrincipal(disbursedAmount.add(discount));
-        balance.setOverpaymentAmount(BigDecimal.ZERO);
+        final WorkingCapitalLoanBalance balance = this.balanceRepository.findByWcLoan_Id(loan.getId())
+                .orElseGet(() -> WorkingCapitalLoanBalance.createFor(loan));
+        balance.applyDisbursement(disbursedAmount);
         this.balanceRepository.saveAndFlush(balance);
     }
 
@@ -1124,15 +1011,6 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         this.balanceRepository.saveAndFlush(balance);
     }
 
-    private boolean isBackdatedTransaction(final List<WorkingCapitalLoanTransaction> allTransactions,
-            final WorkingCapitalLoanTransaction newTxn) {
-        // The same-date ID comparison is defensive only: the just-persisted transaction holds the highest
-        // ID, so in practice only a strictly later transaction date marks the new one as backdated.
-        return allTransactions.stream().filter(txn -> !txn.isReversed() && !txn.getId().equals(newTxn.getId()))
-                .anyMatch(txn -> txn.getTransactionDate().isAfter(newTxn.getTransactionDate())
-                        || (txn.getTransactionDate().equals(newTxn.getTransactionDate()) && txn.getId().compareTo(newTxn.getId()) > 0));
-    }
-
     private void markReversed(final WorkingCapitalLoanTransaction txn) {
         txn.setReversed(true);
         txn.setReversedOnDate(DateUtils.getBusinessLocalDate());
@@ -1160,9 +1038,16 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         }
         final WorkingCapitalLoanTransaction txn = activeDisbursements.getFirst();
 
+        final List<WorkingCapitalLoanTransaction> accrualsToReverse = transactions.stream()
+                .filter(t -> t.getTypeOf() == LoanTransactionType.ACCRUAL && !t.isReversed()).toList();
+
         transactions.forEach(this::markReversed);
         this.transactionRepository.saveAll(transactions);
         this.transactionRepository.flush();
+
+        // Reverse the journal entries of any charge accrual so the recognized income/receivable is backed out with the
+        // disbursement; marking the transaction reversed alone would leave the GL postings in place.
+        accrualsToReverse.forEach(accrual -> accountingProcessor.postReversalJournalEntries(loan, accrual));
 
         // Operate on loan.getBalance() directly: it is the single managed balance instance that
         // recalculateRealizedIncome writes to, so all updates here apply to the same object that gets persisted.
@@ -1190,7 +1075,8 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
             if (txn.getTypeOf() != LoanTransactionType.DISBURSEMENT && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE
                     && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE_ADJUSTMENT
                     && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE_AMORTIZATION
-                    && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE_AMORTIZATION_ADJUSTMENT) {
+                    && txn.getTypeOf() != LoanTransactionType.DISCOUNT_FEE_AMORTIZATION_ADJUSTMENT
+                    && txn.getTypeOf() != LoanTransactionType.ACCRUAL) {
                 throw new PlatformApiDataValidationException("validation.msg.wc.loan.undo.disbursal.not.allowed",
                         "Undo disbursal is not allowed when there are other monetary transactions on the loan", "loanId");
             }

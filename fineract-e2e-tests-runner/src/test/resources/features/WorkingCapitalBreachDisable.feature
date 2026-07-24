@@ -1,4 +1,5 @@
 @WorkingCapital
+@WorkingCapitalBreach
 @WorkingCapitalBreachDisableFeature
 Feature: Working Capital Breach Disable
 
@@ -189,7 +190,7 @@ Feature: Working Capital Breach Disable
     Then Working Capital loan status will be "CLOSED_OBLIGATIONS_MET"
 
   @TestRailId:C85471
-  Scenario: Verify Working Capital breach enable/disable - UC9: Undo reset is allowed while breach is disabled
+  Scenario: Verify Working Capital breach enable/disable - UC9: Undo reset is not allowed while breach is disabled
     When Admin sets the business date to "01 January 2026"
     And Admin creates a client with random data
     And Admin creates a new Working Capital Loan Product with breachId and overrides enabled
@@ -203,15 +204,12 @@ Feature: Working Capital Breach Disable
     And Admin runs inline COB job for Working Capital Loan by loanId
     And Admin creates WC breach reset action
     And Admin initiate a Working Capital loan breach disable with startDate "15 January 2026"
-    And Admin creates WC breach undo reset action
-    Then WC loan breach actions have the following data:
-      | action     | startDate       |
-      | RESET      | 15 January 2026 |
-      | DISABLE    | 15 January 2026 |
-      | UNDO_RESET | 15 January 2026 |
     And Working Capital loan breach disable action has the following data:
       | action  | startDate  | endDate |
       | DISABLE | 2026-01-15 |         |
+    Then Initiating a Working Capital loan breach undo reset results an error with the following data:
+      | httpCode | message                                           |
+      | 400      | Failed data validation due to: breach.is.disabled |
     When Admin closes the Working Capital loan with a full repayment on "15 January 2026"
     Then Working Capital loan status will be "CLOSED_OBLIGATIONS_MET"
 
@@ -500,7 +498,7 @@ Feature: Working Capital Breach Disable
     And Admin creates WC breach reset action
     Then Working Capital loan breach schedule has the following data:
       | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
-      | 1            | 2026-01-01 | 2026-02-28 | 110.70           | 0                 | null       | null   |
+      | 1            | 2026-01-01 | 2026-02-28 | 110.70           | 0                 | null       | false  |
     When Admin sets the business date to "20 January 2026"
     And Admin runs inline COB job for Working Capital Loan by loanId
     And Admin initiate a Working Capital loan breach disable with startDate "20 January 2026"
@@ -509,7 +507,7 @@ Feature: Working Capital Breach Disable
     And Admin initiate a Working Capital loan breach enable with startDate "01 March 2026"
     Then Working Capital loan breach schedule has the following data:
       | periodNumber | fromDate   | toDate     | minPaymentAmount | outstandingAmount | nearBreach | breach |
-      | 1            | 2026-01-01 | 2026-02-28 | 110.70           | 110.70            | null       | true   |
+      | 1            | 2026-01-01 | 2026-02-28 | 110.70           | 0                 | null       | false  |
       | 2            | 2026-03-01 | 2026-04-30 | 110.70           | 110.70            | null       | null   |
     When Admin closes the Working Capital loan with a full repayment on "01 March 2026"
     Then Working Capital loan status will be "CLOSED_OBLIGATIONS_MET"

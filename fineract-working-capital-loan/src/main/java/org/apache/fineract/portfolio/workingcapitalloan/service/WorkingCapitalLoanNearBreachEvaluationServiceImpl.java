@@ -83,7 +83,7 @@ public class WorkingCapitalLoanNearBreachEvaluationServiceImpl implements Workin
 
     private boolean evaluatePeriod(final Long loanId, final WorkingCapitalLoanBreachSchedule period, final BigDecimal threshold,
             final Integer frequency, final WorkingCapitalLoanPeriodFrequencyType frequencyType, final LocalDate effectiveDate) {
-        if (period.getMinPaymentAmount().compareTo(BigDecimal.ZERO) == 0) {
+        if (period.getMinPaymentAmount() == null || period.getMinPaymentAmount().compareTo(BigDecimal.ZERO) == 0) {
             return false;
         }
         final LocalDate firstEvalDate = addFrequency(period.getFromDate(), frequency, frequencyType);

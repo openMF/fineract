@@ -61,6 +61,9 @@ public class WorkingCapitalLoanDelinquencyRangeSchedule extends AbstractAuditabl
     @Column(name = "expected_amount", scale = 6, precision = 19)
     private BigDecimal expectedAmount;
 
+    @Column(name = "base_expected_amount", scale = 6, precision = 19)
+    private BigDecimal baseExpectedAmount;
+
     @Column(name = "paid_amount", scale = 6, precision = 19)
     private BigDecimal paidAmount;
 
@@ -75,5 +78,21 @@ public class WorkingCapitalLoanDelinquencyRangeSchedule extends AbstractAuditabl
 
     @Column(name = "delinquent_amount", scale = 6, precision = 19)
     private BigDecimal delinquentAmount;
+
+    @Column(name = "reset")
+    private Boolean reset = false;
+
+    public void reset() {
+        setReset(true);
+        setDelinquentDays(null);
+        setDelinquentAmount(null);
+        setMinPaymentCriteriaMet(null);
+        setPaidAmount(null);
+        setOutstandingAmount(null);
+    }
+
+    public BigDecimal getExpectedAmount() {
+        return reset ? null : this.expectedAmount;
+    }
 
 }

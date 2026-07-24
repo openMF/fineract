@@ -19,13 +19,18 @@
 package org.apache.fineract.commands.exception;
 
 import org.apache.fineract.infrastructure.core.exception.AbstractPlatformResourceNotFoundException;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 /**
- * A {@link RuntimeException} thrown when client resources are not found.
+ * A {@link RuntimeException} thrown when command (audit) resources are not found.
  */
 public class CommandNotFoundException extends AbstractPlatformResourceNotFoundException {
 
     public CommandNotFoundException(final Long id) {
         super("error.msg.command.id.invalid", "Audit with identifier " + id + " does not exist", id);
+    }
+
+    public CommandNotFoundException(final Long id, final EmptyResultDataAccessException e) {
+        super("error.msg.command.id.invalid", "Audit with identifier " + id + " does not exist", id, e);
     }
 }

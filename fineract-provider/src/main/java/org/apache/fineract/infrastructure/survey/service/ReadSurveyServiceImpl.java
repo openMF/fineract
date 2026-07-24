@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
 import org.apache.fineract.infrastructure.dataqueries.api.DataTableApiConstant;
 import org.apache.fineract.infrastructure.dataqueries.data.DatatableData;
 import org.apache.fineract.infrastructure.dataqueries.data.GenericResultsetData;
@@ -47,6 +48,7 @@ public class ReadSurveyServiceImpl implements ReadSurveyService {
     private final SqlValidator sqlValidator;
     private final GenericDataService genericDataService;
     private final DatatableReadService datatableReadService;
+    private final DatabaseSpecificSQLGenerator sqlGenerator;
 
     @Override
     public List<SurveyDataTableData> retrieveAllSurveys() {
@@ -114,22 +116,27 @@ public class ReadSurveyServiceImpl implements ReadSurveyService {
 
     @Override
     public List<ClientScoresOverview> retrieveClientSurveyScoreOverview(String surveyName, Long clientId) {
+        sqlValidator.validate(surveyName);
+        final String registeredSurveyName = retrievePermittedSurveyName(surveyName);
+        if (registeredSurveyName == null) {
+            return List.of();
+        }
 
-        final String sql = "SELECT  tz.id, lkh.name, lkh.code, poverty_line, tz.date, tz.score FROM ? tz"
-                + " JOIN ppi_likelihoods_ppi lkp on lkp.ppi_name = ? AND enabled = ? "
+        final String sql = "SELECT  tz.id, lkh.name, lkh.code, poverty_line, tz.date, tz.score FROM "
+                + sqlGenerator.escape(registeredSurveyName) + " tz" + " JOIN ppi_likelihoods_ppi lkp on lkp.ppi_name = ? AND enabled = ? "
                 + " JOIN ppi_scores sc on score_from  <= tz.score AND score_to >=tz.score"
                 + " JOIN ppi_poverty_line pvl on pvl.likelihood_ppi_id = lkp.id AND pvl.score_id = sc.id"
                 + " JOIN ppi_likelihoods lkh on lkh.id = lkp.likelihood_id " + " WHERE  client_id = ? ";
 
         final SqlRowSet rs = this.jdbcTemplate.queryForRowSet(sql,
-                new Object[] { surveyName, surveyName, LikelihoodStatus.ENABLED, clientId });
+                new Object[] { registeredSurveyName, LikelihoodStatus.ENABLED, clientId });
 
         List<ClientScoresOverview> scoresOverviews = new ArrayList<>();
 
         while (rs.next()) {
             scoresOverviews.add(new ClientScoresOverview().setLikelihoodCode(rs.getString("code")).setLikelihoodName(rs.getString("name"))
                     .setScore(rs.getLong("score")).setPovertyLine(rs.getDouble("poverty_line")).setDate(rs.getDate("date").toLocalDate())
-                    .setId(rs.getLong("id")).setSurveyName(surveyName));
+                    .setId(rs.getLong("id")).setSurveyName(registeredSurveyName));
         }
         return scoresOverviews;
     }
@@ -170,14 +177,29 @@ public class ReadSurveyServiceImpl implements ReadSurveyService {
     }
 
     private String retrieveAllSurveyNameSQL() {
+        return retrieveAllSurveyNameSQL("");
+    }
+
+    private String retrieveAllSurveyNameSQL(String andClause) {
         // PERMITTED datatables
         return "select cf.name from x_registered_table " + " join c_configuration cf on x_registered_table.registered_table_name = cf.name "
                 + " where exists" + " (select 'f'" + " from m_appuser_role ur " + " join m_role r on r.id = ur.role_id"
                 + " left join m_role_permission rp on rp.role_id = r.id" + " left join m_permission p on p.id = rp.permission_id"
                 + " where ur.appuser_id = " + this.context.authenticatedUser().getId()
                 + " and (p.code in ('ALL_FUNCTIONS', 'ALL_FUNCTIONS_READ') or p.code = concat('READ_', registered_table_name))) "
-                + " and x_registered_table.category = " + DataTableApiConstant.CATEGORY_PPI
+                + " and x_registered_table.category = " + DataTableApiConstant.CATEGORY_PPI + andClause
                 + " order by application_table_name, registered_table_name";
+    }
+
+    private String retrievePermittedSurveyName(String surveyName) {
+        final String sql = retrieveAllSurveyNameSQL(" and x_registered_table.registered_table_name = ?");
+        final SqlRowSet rs = this.jdbcTemplate.queryForRowSet(sql, surveyName);
+        if (rs.next()) {
+            final String registeredSurveyName = rs.getString("name");
+            sqlValidator.validate(registeredSurveyName);
+            return registeredSurveyName;
+        }
+        return null;
     }
 
     @Override

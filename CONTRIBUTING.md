@@ -298,8 +298,8 @@ Our `ClasspathHellDuplicatesCheckRuleTest` detects classes that appear in more t
 
 ### Pull Requests
 
-We request that your commit message includes a FINERACT JIRA issue and a one-liner that describes the changes.
-Start with an upper case imperative verb (not past form), and a short but concise clear description. (E.g. "FINERACT-821: Add enforced HideUtilityClassConstructor checkstyle").
+Your PR title must include a JIRA issue and a one-liner that describes the changes.
+Start your one-liner after the JIRA issue id. Use an upper case present-tense imperative verb and a short but concise clear description. (E.g. "FINERACT-821: Add enforced HideUtilityClassConstructor checkstyle").
 
 If your PR is failing to pass our CI build due to a test failure, then:
 
@@ -320,6 +320,10 @@ Each commit should be reviewable and logically coherent.
 Add detail and context as necessary in commit log messages to communicate not only *what* you changed, but *why*, including summaries of discussions leading to the changes, ideas/plans for future changes, etc.
 Keep the *what* simple: Use the summary (first line) and let the diff otherwise speak for itself.
 
+If your PR is a single commit, use the PR title verbatim in the first line of the commit log message. Add as much detail as you want in the commit log body.
+
+If your PR is multiple commits, use the first line of the commit log message to summarize changes specific to that commit (using present-tense imperative language, e.g. _update release signing gpg guidance_). You may include the JIRA issue id in the first line or somewhere in the commit log body.
+
 Contributors: squash, rebase, and force-push your PR branches as you see fit.
 You might, for example, rebase on top of `develop`.
 You might also squash several commits with code formatting / whitespace fixes, but keep separate commits for code changes affecting functionality.
@@ -337,6 +341,7 @@ We have an automated bot which marks pull requests as "stale" after a while, and
 
 After PR review and passing CI build, a committer will merge your PR branch into our primary integration branch, `develop`, either locally or on GitHub using "Merge pull request - Create a merge commit" (not "Squash and merge" and not "Rebase and merge").
 
+If merging the PR resolved a JIRA issue, mark that issue as resolved and set "Fix Version/s" to the next unreleased version. These fix versions only apply to the `apache/fineract` repository. Other repositories should set "Fix Version/s" to "Unknown".
 
 ### Signing Your Commits
 

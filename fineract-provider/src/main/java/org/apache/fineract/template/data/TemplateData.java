@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.template.data;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
@@ -38,7 +39,9 @@ public final class TemplateData implements Serializable {
     private Long id;
     private String name;
     private String text;
-    private Integer entity;
-    private Integer type;
+    @Schema(implementation = Integer.class)
+    private String entity;
+    @Schema(implementation = Integer.class)
+    private String type;
     private List<TemplateMapperData> mappers;
 }

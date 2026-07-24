@@ -62,7 +62,7 @@ public class WorkingCapitalLoanBreachActionWriteServiceImpl implements WorkingCa
                 || WorkingCapitalLoanBreachActionType.RESUME.equals(breachAction.getAction())) {
             breachScheduleService.recalculatePeriodsForPauses(workingCapitalLoan);
         } else if (WorkingCapitalLoanBreachActionType.RESCHEDULE.equals(breachAction.getAction())) {
-            breachScheduleService.rescheduleMinimumPayment(workingCapitalLoan, breachAction);
+            breachScheduleService.rescheduleMinimumPayment(workingCapitalLoan);
         } else if (WorkingCapitalLoanBreachActionType.RESET.equals(breachAction.getAction())) {
             breachResetService.resetBreach(workingCapitalLoan, saved);
         } else if (WorkingCapitalLoanBreachActionType.UNDO_RESET.equals(breachAction.getAction())) {
@@ -72,7 +72,7 @@ public class WorkingCapitalLoanBreachActionWriteServiceImpl implements WorkingCa
                     .reduce((first, second) -> second).ifPresent(action -> {
                         action.setEndDate(breachAction.getStartDate().minusDays(1));
                     });
-            breachScheduleService.reEvaluateAfterEnable(workingCapitalLoan, breachAction.getStartDate());
+            breachScheduleService.reprocessBreachSchedule(workingCapitalLoan);
         }
 
         return new CommandProcessingResultBuilder() //

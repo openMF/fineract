@@ -32,6 +32,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
@@ -41,8 +42,10 @@ import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
 import org.apache.fineract.portfolio.workingcapitalloan.data.ProjectedAmortizationScheduleGenerateRequest;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanBalance;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDisbursementDetails;
 import org.apache.fineract.portfolio.workingcapitalloan.exception.WorkingCapitalLoanNotFoundException;
+import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanBalanceRepository;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanRepository;
 import org.apache.fineract.portfolio.workingcapitalloan.service.WorkingCapitalLoanAmortizationScheduleWriteService;
 import org.apache.fineract.portfolio.workingcapitalloan.service.WorkingCapitalLoanDelinquencyRangeScheduleService;
@@ -61,6 +64,7 @@ public class InternalWorkingCapitalLoanApiResource implements InitializingBean {
 
     private final WorkingCapitalLoanAmortizationScheduleWriteService writeService;
     private final WorkingCapitalLoanRepository loanRepository;
+    private final WorkingCapitalLoanBalanceRepository balanceRepository;
     private final WorkingCapitalLoanDelinquencyRangeScheduleService rangeScheduleService;
 
     @Override
@@ -98,7 +102,8 @@ public class InternalWorkingCapitalLoanApiResource implements InitializingBean {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     @Operation(summary = "Activate a Working Capital Loan (testing only)", description = """
-            Sets the WC loan status to ACTIVE and records a disbursement detail with the given date.
+            Sets the WC loan status to ACTIVE, records a disbursement detail with the given date and
+            initializes the loan balance as a real disbursement would.
             Also generates the initial delinquency range schedule period if a delinquency bucket is configured.
 
             DO NOT USE THIS IN PRODUCTION! Disbursement must go through the proper disbursement flow.""")
@@ -117,8 +122,27 @@ public class InternalWorkingCapitalLoanApiResource implements InitializingBean {
         detail.setActualAmount(loan.getApprovedPrincipal());
         loan.getDisbursementDetails().add(detail);
 
+        // Mirror updateBalanceOnDisburse from the real disbursement flow: without the balance principal, any
+        // repayment allocates fully to overpayment and flips the loan to OVERPAID.
+        WorkingCapitalLoanBalance balance = loan.getBalance();
+        if (balance == null) {
+            balance = WorkingCapitalLoanBalance.createFor(loan);
+            loan.setBalance(balance);
+        }
+        final BigDecimal discount = loan.getLoanProductRelatedDetails() != null && loan.getLoanProductRelatedDetails().getDiscount() != null
+                ? loan.getLoanProductRelatedDetails().getDiscount()
+                : BigDecimal.ZERO;
+        balance.setTotalDiscountFee(discount);
+        balance.setPrincipal(loan.getApprovedPrincipal().add(discount));
+        balance.setOverpaymentAmount(BigDecimal.ZERO);
+
         loan.setLoanStatus(LoanStatus.ACTIVE);
         loanRepository.saveAndFlush(loan);
+
+        // The balance must reflect the faked disbursement (as the real disbursement flow does),
+        // otherwise the schedule generation caps the period to the zero remaining balance.
+        balance.applyDisbursement(loan.getApprovedPrincipal());
+        balanceRepository.saveAndFlush(balance);
 
         rangeScheduleService.generateInitialPeriod(loan);
 

@@ -24,16 +24,19 @@ import java.util.List;
 import org.apache.fineract.portfolio.workingcapitalloan.data.WorkingCapitalLoanDelinquencyRangeScheduleData;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoan;
 import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDelinquencyAction;
+import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanDelinquencyRangeSchedule;
 
 public interface WorkingCapitalLoanDelinquencyRangeScheduleService {
 
     void generateInitialPeriod(WorkingCapitalLoan loan);
 
-    void generateNextPeriodIfNeeded(WorkingCapitalLoan loan, LocalDate businessDate);
+    List<WorkingCapitalLoanDelinquencyRangeSchedule> generateNextPeriodIfNeeded(WorkingCapitalLoan loan, LocalDate businessDate);
 
     boolean hasSchedule(Long loanId);
 
     void applyRepayment(WorkingCapitalLoan loan, LocalDate transactionDate, BigDecimal amount);
+
+    void applyRepaymentUndo(WorkingCapitalLoan loan, LocalDate businessDate, BigDecimal amount);
 
     void evaluateExpiredPeriods(WorkingCapitalLoan loan, LocalDate businessDate);
 
@@ -41,7 +44,13 @@ public interface WorkingCapitalLoanDelinquencyRangeScheduleService {
 
     void extendPeriodsForPause(WorkingCapitalLoan loan, LocalDate pauseStart, LocalDate pauseEnd);
 
-    void rescheduleMinimumPayment(WorkingCapitalLoan loan, WorkingCapitalLoanDelinquencyAction rescheduleAction);
+    /**
+     * Re-derives the base expectation of the current period and the boundaries of future periods from the effective
+     * reschedule parameters resolved from the persisted RESCHEDULE actions; a newly created reschedule action must
+     * therefore be saved before this is called. Amounts, the remaining-balance cap and expired-period evaluation are
+     * left to {@link #reprocessDelinquencySchedule(WorkingCapitalLoan)}, which the caller must invoke afterwards.
+     */
+    void rescheduleMinimumPayment(WorkingCapitalLoan loan);
 
     void resumeActivePause(WorkingCapitalLoan loan, WorkingCapitalLoanDelinquencyAction activePause,
             WorkingCapitalLoanDelinquencyAction resumeAction);
@@ -52,4 +61,8 @@ public interface WorkingCapitalLoanDelinquencyRangeScheduleService {
      */
     void reprocessDelinquencySchedule(WorkingCapitalLoan loan);
 
+    void resetPeriods(WorkingCapitalLoan workingCapitalLoan, WorkingCapitalLoanDelinquencyAction action);
+
+    void undoResetPeriods(WorkingCapitalLoan workingCapitalLoan, WorkingCapitalLoanDelinquencyAction action,
+            List<WorkingCapitalLoanDelinquencyAction> byWorkingCapitalLoanIdOrderById);
 }

@@ -19,6 +19,7 @@
 package org.apache.fineract.integrationtests.common.workingcapitalloanproduct;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -74,10 +75,12 @@ public class WorkingCapitalLoanProductTestBuilder {
     private String repaymentFrequencyType = DEFAULT_PERIOD_PAYMENT_FREQUENCY_TYPE;
     private Long breachId;
     private List<String> paymentAllocationTypes = DEFAULT_PAYMENT_ALLOCATION_TYPES;
+    private final List<PostPaymentAllocation> additionalPaymentAllocations = new ArrayList<>();
     private Map<String, Boolean> allowAttributeOverrides;
     private Integer delinquencyGraceDays;
     private String delinquencyStartType;
     private Integer breachGraceDays;
+    private String breachStartType;
     private AccountingRuleEnum accountingRule = DEFAULT_ACCOUNTING_RULE;
     private Long nearBreachId;
 
@@ -155,6 +158,17 @@ public class WorkingCapitalLoanProductTestBuilder {
         return this;
     }
 
+    /**
+     * Adds a payment allocation rule scoped to a specific transaction type (e.g. GOODWILL_CREDIT, CHARGE_ADJUSTMENT),
+     * on top of the DEFAULT rule. {@code allocationOrder} must contain every
+     * {@link org.apache.fineract.client.models.PaymentAllocationOrder} rule exactly once.
+     */
+    public WorkingCapitalLoanProductTestBuilder withPaymentAllocationForTransactionType(
+            final PostPaymentAllocation.TransactionTypeEnum transactionType, final List<String> allocationOrder) {
+        this.additionalPaymentAllocations.add(buildPaymentAllocationEntry(transactionType, allocationOrder));
+        return this;
+    }
+
     public WorkingCapitalLoanProductTestBuilder withPrincipalAmountMin(final BigDecimal principalAmountMin) {
         this.principalAmountMin = principalAmountMin;
         return this;
@@ -227,6 +241,11 @@ public class WorkingCapitalLoanProductTestBuilder {
 
     public WorkingCapitalLoanProductTestBuilder withBreachGraceDays(final Integer breachGraceDays) {
         this.breachGraceDays = breachGraceDays;
+        return this;
+    }
+
+    public WorkingCapitalLoanProductTestBuilder withBreachStartType(final String breachStartType) {
+        this.breachStartType = breachStartType;
         return this;
     }
 
@@ -340,6 +359,7 @@ public class WorkingCapitalLoanProductTestBuilder {
         request.setDelinquencyGraceDays(this.delinquencyGraceDays);
         request.setDelinquencyStartType(this.delinquencyStartType);
         request.setBreachGraceDays(this.breachGraceDays);
+        request.setBreachStartType(this.breachStartType);
         request.setBreachId(this.breachId);
         request.setAccountingRule(this.accountingRule);
         request.setNearBreachId(this.nearBreachId);
@@ -387,6 +407,7 @@ public class WorkingCapitalLoanProductTestBuilder {
         request.setDelinquencyGraceDays(this.delinquencyGraceDays);
         request.setDelinquencyStartType(this.delinquencyStartType);
         request.setBreachGraceDays(this.breachGraceDays);
+        request.setBreachStartType(this.breachStartType);
         request.setBreachId(this.breachId);
         if (this.accountingRule != null) {
             request.setAccountingRule(PutWorkingCapitalLoanProductsProductIdRequest.AccountingRuleEnum.valueOf(this.accountingRule.name()));
@@ -397,31 +418,39 @@ public class WorkingCapitalLoanProductTestBuilder {
     }
 
     private void setPaymentAllocation(final PostWorkingCapitalLoanProductsRequest request) {
-        if (this.paymentAllocationTypes != null && !this.paymentAllocationTypes.isEmpty()) {
-            PostPaymentAllocation defaultPaymentAllocation = new PostPaymentAllocation();
-            defaultPaymentAllocation.setTransactionType(PostPaymentAllocation.TransactionTypeEnum.DEFAULT);
-            defaultPaymentAllocation.setPaymentAllocationOrder(IntStream.range(0, this.paymentAllocationTypes.size()).mapToObj(index -> {
-                PaymentAllocationOrder paymentAllocationOrder = new PaymentAllocationOrder();
-                paymentAllocationOrder.setOrder(index + 1);
-                paymentAllocationOrder.setPaymentAllocationRule(this.paymentAllocationTypes.get(index));
-                return paymentAllocationOrder;
-            }).toList());
-            request.setPaymentAllocation(List.of(defaultPaymentAllocation));
+        final List<PostPaymentAllocation> allocations = buildPaymentAllocations();
+        if (!allocations.isEmpty()) {
+            request.setPaymentAllocation(allocations);
         }
     }
 
     private void setPaymentAllocation(final PutWorkingCapitalLoanProductsProductIdRequest request) {
-        if (this.paymentAllocationTypes != null && !this.paymentAllocationTypes.isEmpty()) {
-            PostPaymentAllocation defaultPaymentAllocation = new PostPaymentAllocation();
-            defaultPaymentAllocation.setTransactionType(PostPaymentAllocation.TransactionTypeEnum.DEFAULT);
-            defaultPaymentAllocation.setPaymentAllocationOrder(IntStream.range(0, this.paymentAllocationTypes.size()).mapToObj(index -> {
-                PaymentAllocationOrder paymentAllocationOrder = new PaymentAllocationOrder();
-                paymentAllocationOrder.setOrder(index + 1);
-                paymentAllocationOrder.setPaymentAllocationRule(this.paymentAllocationTypes.get(index));
-                return paymentAllocationOrder;
-            }).toList());
-            request.setPaymentAllocation(List.of(defaultPaymentAllocation));
+        final List<PostPaymentAllocation> allocations = buildPaymentAllocations();
+        if (!allocations.isEmpty()) {
+            request.setPaymentAllocation(allocations);
         }
+    }
+
+    private List<PostPaymentAllocation> buildPaymentAllocations() {
+        final List<PostPaymentAllocation> allocations = new ArrayList<>();
+        if (this.paymentAllocationTypes != null && !this.paymentAllocationTypes.isEmpty()) {
+            allocations.add(buildPaymentAllocationEntry(PostPaymentAllocation.TransactionTypeEnum.DEFAULT, this.paymentAllocationTypes));
+        }
+        allocations.addAll(this.additionalPaymentAllocations);
+        return allocations;
+    }
+
+    private static PostPaymentAllocation buildPaymentAllocationEntry(final PostPaymentAllocation.TransactionTypeEnum transactionType,
+            final List<String> allocationOrder) {
+        final PostPaymentAllocation paymentAllocation = new PostPaymentAllocation();
+        paymentAllocation.setTransactionType(transactionType);
+        paymentAllocation.setPaymentAllocationOrder(IntStream.range(0, allocationOrder.size()).mapToObj(index -> {
+            PaymentAllocationOrder paymentAllocationOrder = new PaymentAllocationOrder();
+            paymentAllocationOrder.setOrder(index + 1);
+            paymentAllocationOrder.setPaymentAllocationRule(allocationOrder.get(index));
+            return paymentAllocationOrder;
+        }).toList());
+        return paymentAllocation;
     }
 
     private void setAllowAttributeOverrides(final PostWorkingCapitalLoanProductsRequest request) {

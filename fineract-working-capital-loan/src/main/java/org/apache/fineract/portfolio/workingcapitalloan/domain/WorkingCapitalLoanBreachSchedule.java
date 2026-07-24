@@ -71,4 +71,6 @@ public class WorkingCapitalLoanBreachSchedule extends AbstractAuditableWithUTCDa
     @Column(name = "breach")
     private Boolean breach;
 
+    @Column(name = "reset", nullable = false)
+    private boolean reset;
 }

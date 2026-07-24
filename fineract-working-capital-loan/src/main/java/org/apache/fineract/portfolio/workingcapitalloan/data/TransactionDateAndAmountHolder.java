@@ -16,14 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.workingcapitalloan.repository;
+package org.apache.fineract.portfolio.workingcapitalloan.data;
 
-import java.util.List;
-import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanBreachResetHistory;
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
-public interface WorkingCapitalLoanBreachResetHistoryRepository extends JpaRepository<WorkingCapitalLoanBreachResetHistory, Long> {
-
-    List<WorkingCapitalLoanBreachResetHistory> findByBreachActionIdOrderByBreachSchedulePeriodNumberAsc(Long breachActionId);
-
+public record TransactionDateAndAmountHolder(LocalDate transactionDate, BigDecimal transactionAmount) {
 }
