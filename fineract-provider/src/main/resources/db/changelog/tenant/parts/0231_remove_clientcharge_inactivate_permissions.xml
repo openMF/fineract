@@ -24,17 +24,14 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
     <changeSet author="fineract" id="1">
         <comment>Remove INACTIVATE_CLIENTCHARGE permissions - command was never implemented and the client-charge inactivate write path is being removed.</comment>
-        <delete tableName="m_role_permission">
-            <where>permission_id=(SELECT id FROM m_permission WHERE code='INACTIVATE_CLIENTCHARGE')</where>
-        </delete>
-        <delete tableName="m_role_permission">
-            <where>permission_id=(SELECT id FROM m_permission WHERE code='INACTIVATE_CLIENTCHARGE_CHECKER')</where>
-        </delete>
-        <delete tableName="m_permission">
-            <where>code='INACTIVATE_CLIENTCHARGE'</where>
-        </delete>
-        <delete tableName="m_permission">
-            <where>code='INACTIVATE_CLIENTCHARGE_CHECKER'</where>
-        </delete>
+        <sql><![CDATA[
+            DELETE FROM m_role_permission
+            WHERE permission_id IN (
+                SELECT id FROM m_permission WHERE code IN ('INACTIVATE_CLIENTCHARGE', 'INACTIVATE_CLIENTCHARGE_CHECKER')
+            );
+
+            DELETE FROM m_permission
+            WHERE code IN ('INACTIVATE_CLIENTCHARGE', 'INACTIVATE_CLIENTCHARGE_CHECKER');
+        ]]></sql>
     </changeSet>
 </databaseChangeLog>
