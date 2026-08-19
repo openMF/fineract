@@ -54,7 +54,6 @@ import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapita
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanDelinquencyRangeScheduleRepository;
 import org.apache.fineract.portfolio.workingcapitalloan.repository.WorkingCapitalLoanTransactionRepository;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanDelinquencyStartType;
-import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProduct;
 import org.apache.fineract.portfolio.workingcapitalloanproduct.domain.WorkingCapitalLoanProductRelatedDetails;
 import org.springframework.stereotype.Service;
 
@@ -71,16 +70,16 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleServiceImpl implements Wo
     private final WorkingCapitalLoanTransactionRepository transactionRepository;
 
     @Override
-    public void generateInitialPeriod(WorkingCapitalLoan loan) {
+    public boolean generateInitialPeriod(WorkingCapitalLoan loan) {
         final DelinquencyMinimumPaymentPeriodAndRule rule = getMinimumPaymentRule(loan);
         if (rule == null) {
-            return;
+            return false;
         }
 
         final LocalDate fromDate = resolveScheduleAnchorDate(loan);
         if (fromDate == null) {
             log.warn("No anchor date found for WC loan {}, skipping initial period generation", loan.getId());
-            return;
+            return false;
         }
 
         final EffectiveDelinquencyRescheduleParams params = resolveEffectiveRescheduleParams(loan.getId(), rule);
@@ -94,6 +93,7 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleServiceImpl implements Wo
 
         loanDelinquencyRangeScheduleRepository.saveAndFlush(period);
         log.debug("Generated initial delinquency range schedule period for WC loan {}", loan.getId());
+        return true;
     }
 
     @Override
@@ -295,9 +295,10 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleServiceImpl implements Wo
     }
 
     @Override
-    public void evaluateExpiredPeriods(WorkingCapitalLoan loan, LocalDate businessDate) {
+    public boolean evaluateExpiredPeriods(WorkingCapitalLoan loan, LocalDate businessDate) {
         List<WorkingCapitalLoanDelinquencyRangeSchedule> unevaluatedPeriods = loanDelinquencyRangeScheduleRepository
                 .findByLoanIdAndToDateLessThanEqualAndMinPaymentCriteriaMetIsNull(loan.getId(), businessDate);
+        boolean evaluated = false;
         for (WorkingCapitalLoanDelinquencyRangeSchedule period : unevaluatedPeriods) {
             if (period.getReset()) {
                 continue;
@@ -306,9 +307,11 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleServiceImpl implements Wo
             boolean criteriaMet = period.getPaidAmount().compareTo(period.getExpectedAmount()) >= 0;
             period.setMinPaymentCriteriaMet(criteriaMet);
             loanDelinquencyRangeScheduleRepository.saveAndFlush(period);
+            evaluated = true;
             log.debug("Evaluated delinquency range schedule period {} for WC loan {}: criteriaMet={}", period.getPeriodNumber(),
                     loan.getId(), criteriaMet);
         }
+        return evaluated;
     }
 
     @Override
@@ -464,15 +467,14 @@ public class WorkingCapitalLoanDelinquencyRangeScheduleServiceImpl implements Wo
     }
 
     private DelinquencyMinimumPaymentPeriodAndRule getMinimumPaymentRule(WorkingCapitalLoan loan) {
-        WorkingCapitalLoanProduct product = loan.getLoanProduct();
-        if (product == null) {
+        if (loan.getLoanProductRelatedDetails() == null) {
             return null;
         }
-        DelinquencyBucket bucket = product.getDelinquencyBucket();
-        if (bucket == null) {
+        DelinquencyBucket delinquencyBucket = loan.getLoanProductRelatedDetails().getDelinquencyBucket();
+        if (delinquencyBucket == null) {
             return null;
         }
-        return minimumPaymentPeriodAndRuleRepository.findByBucketId(bucket.getId()).orElse(null);
+        return minimumPaymentPeriodAndRuleRepository.findByBucketId(delinquencyBucket.getId()).orElse(null);
     }
 
     private BigDecimal calculateExpectedAmount(final WorkingCapitalLoan loan, final EffectiveDelinquencyRescheduleParams params) {
