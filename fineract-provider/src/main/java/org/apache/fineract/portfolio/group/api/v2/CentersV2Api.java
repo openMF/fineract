@@ -16,21 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.infrastructure.entityaccess.data;
+package org.apache.fineract.portfolio.group.api.v2;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
-import org.apache.fineract.infrastructure.entityaccess.domain.FineractEntity;
-import org.apache.fineract.infrastructure.entityaccess.domain.FineractEntityAccessType;
+import org.apache.fineract.infrastructure.core.data.PaginationParameters;
+import org.apache.fineract.infrastructure.core.service.Page;
+import org.apache.fineract.infrastructure.core.service.SearchParameters;
+import org.apache.fineract.portfolio.group.data.CenterData;
 
-@Data
-@NoArgsConstructor
-@Accessors(chain = true)
-public class FineractEntityAccessData {
+public interface CentersV2Api {
 
-    private FineractEntity firstEntity;
-    private FineractEntityAccessType accessType;
-    private FineractEntity secondEntity;
-
+    Page<CenterData> retrieveAllCenters(SearchParameters searchParameters, PaginationParameters parameters);
 }

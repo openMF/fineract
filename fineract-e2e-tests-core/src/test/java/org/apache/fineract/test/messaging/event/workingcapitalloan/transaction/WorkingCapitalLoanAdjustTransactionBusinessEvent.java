@@ -16,28 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.infrastructure.event.business.domain.workingcapitalloan.charge;
+package org.apache.fineract.test.messaging.event.workingcapitalloan.transaction;
 
-import org.apache.fineract.infrastructure.event.business.domain.AbstractBusinessEvent;
-import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanCharge;
+import java.util.function.Function;
+import org.apache.fineract.avro.workingcapitalloan.v1.WorkingCapitalLoanTransactionAdjustmentDataV1;
+import org.apache.fineract.test.messaging.event.Event;
 
-public abstract class WorkingCapitalLoanChargeBusinessEvent extends AbstractBusinessEvent<WorkingCapitalLoanCharge> {
+public class WorkingCapitalLoanAdjustTransactionBusinessEvent implements Event<WorkingCapitalLoanTransactionAdjustmentDataV1> {
 
-    private static final String CATEGORY = "WorkingCapitalLoan";
-    private final Long aggregateRootId;
-
-    public WorkingCapitalLoanChargeBusinessEvent(final WorkingCapitalLoanCharge value) {
-        super(value);
-        this.aggregateRootId = value != null && value.getLoan() != null ? value.getLoan().getId() : null;
+    @Override
+    public Class<WorkingCapitalLoanTransactionAdjustmentDataV1> getDataClass() {
+        return WorkingCapitalLoanTransactionAdjustmentDataV1.class;
     }
 
     @Override
-    public String getCategory() {
-        return CATEGORY;
+    public Function<WorkingCapitalLoanTransactionAdjustmentDataV1, Long> getIdExtractor() {
+        return data -> data.getTransactionToAdjust().getId();
     }
 
     @Override
-    public Long getAggregateRootId() {
-        return aggregateRootId;
+    public String getEventName() {
+        return "WorkingCapitalLoanAdjustTransactionBusinessEvent";
     }
 }

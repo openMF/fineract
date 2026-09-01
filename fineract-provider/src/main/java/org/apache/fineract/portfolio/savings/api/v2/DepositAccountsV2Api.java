@@ -16,12 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.test.messaging.event.workingcapitalloan.transaction;
+package org.apache.fineract.portfolio.savings.api.v2;
 
-public class WorkingCapitalLoanUndoWrittenOffBusinessEvent extends AbstractWorkingCapitalLoanTransactionEvent {
+import org.apache.fineract.infrastructure.core.data.PaginationParameters;
+import org.apache.fineract.infrastructure.core.service.Page;
+import org.apache.fineract.portfolio.savings.DepositAccountType;
+import org.apache.fineract.portfolio.savings.data.DepositAccountData;
 
-    @Override
-    public String getEventName() {
-        return "WorkingCapitalLoanUndoWrittenOffBusinessEvent";
-    }
+public interface DepositAccountsV2Api {
+
+    Page<DepositAccountData> retrieveAllDepositAccounts(DepositAccountType depositAccountType, PaginationParameters parameters);
 }

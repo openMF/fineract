@@ -18,10 +18,10 @@
  */
 package org.apache.fineract.test.messaging.event.workingcapitalloan.transaction;
 
-public class WorkingCapitalLoanChargeAdjustmentPostBusinessEvent extends AbstractWorkingCapitalLoanTransactionEvent {
+public class WorkingCapitalLoanChargeAdjustmentTransactionBusinessEvent extends AbstractWorkingCapitalLoanTransactionEvent {
 
     @Override
     public String getEventName() {
-        return "WorkingCapitalLoanChargeAdjustmentPostBusinessEvent";
+        return "WorkingCapitalLoanChargeAdjustmentTransactionBusinessEvent";
     }
 }

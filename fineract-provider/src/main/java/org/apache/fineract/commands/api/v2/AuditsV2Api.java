@@ -16,12 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.infrastructure.entityaccess.domain;
+package org.apache.fineract.commands.api.v2;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import jakarta.ws.rs.core.UriInfo;
+import org.apache.fineract.commands.data.AuditData;
+import org.apache.fineract.commands.data.request.AuditRequest;
+import org.apache.fineract.infrastructure.core.service.Page;
 
-public interface FineractEntityAccessRepository
-        extends JpaRepository<FineractEntityAccess, Long>, JpaSpecificationExecutor<FineractEntityAccess> {
-    // no added behaviour
+public interface AuditsV2Api {
+
+    Page<AuditData> retrieveAllAudits(UriInfo uriInfo, AuditRequest auditRequest, Integer offset, Integer limit, String orderBy,
+            String sortOrder, boolean includeJson);
 }

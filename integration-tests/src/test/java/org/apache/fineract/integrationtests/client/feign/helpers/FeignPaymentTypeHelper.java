@@ -16,24 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.infrastructure.event.business.domain.workingcapitalloan.transaction;
+package org.apache.fineract.integrationtests.client.feign.helpers;
 
-import org.apache.fineract.portfolio.workingcapitalloan.domain.WorkingCapitalLoanTransaction;
+import static org.apache.fineract.client.feign.util.FeignCalls.ok;
 
-public class WorkingCapitalLoanUndoWrittenOffBusinessEvent extends WorkingCapitalLoanTransactionBusinessEvent {
+import org.apache.fineract.client.feign.FineractFeignClient;
+import org.apache.fineract.client.models.PaymentTypeCreateRequest;
+import org.apache.fineract.client.models.PaymentTypeCreateResponse;
 
-    private static final String TYPE = "WorkingCapitalLoanUndoWrittenOffBusinessEvent";
+public class FeignPaymentTypeHelper {
 
-    public WorkingCapitalLoanUndoWrittenOffBusinessEvent(final WorkingCapitalLoanTransaction value) {
-        super(value);
+    private final FineractFeignClient fineractClient;
+
+    public FeignPaymentTypeHelper(FineractFeignClient fineractClient) {
+        this.fineractClient = fineractClient;
     }
 
-    public WorkingCapitalLoanUndoWrittenOffBusinessEvent(final WorkingCapitalLoanTransaction value, final Long aggregateRootId) {
-        super(value, aggregateRootId);
-    }
-
-    @Override
-    public String getType() {
-        return TYPE;
+    public PaymentTypeCreateResponse createPaymentType(PaymentTypeCreateRequest request) {
+        return ok(() -> fineractClient.paymentType().createPaymentType(request));
     }
 }
