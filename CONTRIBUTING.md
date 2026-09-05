@@ -278,8 +278,7 @@ The project uses [Lombok](https://projectlombok.org/) to reduce boilerplate code
 - AI tools must not replace contributor accountability.
 - The human submitter is responsible for correctness, safety, performance, and maintainability of all submitted changes.
 - Follow the [Generative Tooling Guidance by the ASF](https://www.apache.org/legal/generative-tooling.html).
-
-In general: Own your contributions, don't vibe code them. Be transparent. Share your env/tooling/experiences. Ask for help as you scour docs, code, PRs, issues, check with actual users, chat, email, write spikes, run builds/tests, write new tests, and all that with and without AI.
+- Disclose generative AI tool usage with `Assisted-By: TOOL-MODEL-VERSION` trailer(s) in commit log messages, e.g. `Assisted-By: botcoder-poem-5.1`.
 
 ## Change Process
 
