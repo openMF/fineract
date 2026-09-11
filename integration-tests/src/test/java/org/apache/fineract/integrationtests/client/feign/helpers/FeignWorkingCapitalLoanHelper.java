@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.fineract.client.feign.FineractFeignClient;
 import org.apache.fineract.client.feign.util.CallFailedRuntimeException;
+import org.apache.fineract.client.models.ChargeData;
 import org.apache.fineract.client.models.ChargeRequest;
 import org.apache.fineract.client.models.CommandProcessingResult;
 import org.apache.fineract.client.models.ExecuteWorkingCapitalLoanTransactionCommandRequest;
@@ -49,6 +50,7 @@ import org.apache.fineract.client.models.PostLoansLoanIdChargesResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoanTransactionsResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansBreachActionRequest;
+import org.apache.fineract.client.models.PostWorkingCapitalLoansBreachActionResponse;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansDelinquencyActionRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdChargesChargeIdRequest;
 import org.apache.fineract.client.models.PostWorkingCapitalLoansLoanIdChargesChargeIdResponse;
@@ -61,6 +63,7 @@ import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdDiscountReq
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRateRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdRequest;
 import org.apache.fineract.client.models.PutWorkingCapitalLoansLoanIdResponse;
+import org.apache.fineract.client.models.WorkingCapitalLoanBreachActionData;
 import org.apache.fineract.client.models.WorkingCapitalLoanBreachScheduleData;
 import org.apache.fineract.client.models.WorkingCapitalLoanChargeData;
 import org.apache.fineract.client.models.WorkingCapitalLoanDelinquencyRangeScheduleData;
@@ -242,12 +245,38 @@ public class FeignWorkingCapitalLoanHelper {
         return response.getResourceId();
     }
 
+    public CallFailedRuntimeException addChargeExpectingFailure(Long loanId, PostLoansLoanIdChargesRequest request) {
+        return fail(() -> fineractClient.workingCapitalLoanCharges().createLoanCharge(loanId, request));
+    }
+
+    public List<ChargeData> getChargeTemplateOptions(Long loanId) {
+        WorkingCapitalLoanChargeData template = ok(
+                () -> fineractClient.workingCapitalLoanCharges().retrieveTemplateWorkingCapitalLoanCharge(loanId));
+        return template.getChargeOptions() != null ? template.getChargeOptions() : List.of();
+    }
+
     public List<WorkingCapitalLoanChargeData> getCharges(Long loanId) {
         return ok(() -> fineractClient.workingCapitalLoanCharges().retrieveAllWorkingCapitalLoanChargesByLoanId(loanId));
     }
 
     public List<WorkingCapitalLoanBreachScheduleData> getBreachSchedule(Long loanId) {
         return ok(() -> fineractClient.workingCapitalLoanBreachSchedule().retrieveBreachSchedule(loanId));
+    }
+
+    public Long createBreachAction(Long loanId, PostWorkingCapitalLoansBreachActionRequest request) {
+        PostWorkingCapitalLoansBreachActionResponse response = ok(
+                () -> fineractClient.workingCapitalLoanBreachActions().createBreachAction(loanId, request));
+        return response.getResourceId();
+    }
+
+    public List<WorkingCapitalLoanBreachActionData> getBreachActions(Long loanId) {
+        return ok(() -> fineractClient.workingCapitalLoanBreachActions().retrieveBreachActions(loanId));
+    }
+
+    public BigDecimal getBreachPastDueAmount(Long loanId) {
+        GetWorkingCapitalLoansLoanIdResponse loan = getLoanDetails(loanId);
+        assertNotNull(loan.getBalance(), "Balance section must be present on WC loan " + loanId);
+        return loan.getBalance().getBreachPastDueAmount();
     }
 
     public Long adjustCharge(Long loanId, Long loanChargeId, PostWorkingCapitalLoansLoanIdChargesChargeIdRequest request) {

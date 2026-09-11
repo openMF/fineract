@@ -87,6 +87,7 @@ public class WorkingCapitalLoanData implements Serializable {
     private BigDecimal periodPaymentAmount;
     private BigDecimal dailyEir;
     private BigDecimal calculatedAnnualEir;
+    private List<WorkingCapitalLoanPeriodPaymentRateChangeData> periodPaymentRateHistory;
     private DelinquencyBucketData delinquencyBucket;
     private WorkingCapitalBreachData breach;
     private WorkingCapitalNearBreachData nearBreach;
@@ -114,4 +115,5 @@ public class WorkingCapitalLoanData implements Serializable {
     // carried by status == CLOSED_WRITTEN_OFF.
     private LocalDate writtenOffOnDate;
     private CodeValueData writeOffReason;
+    private LocalDate overpaidOnDate;
 }
