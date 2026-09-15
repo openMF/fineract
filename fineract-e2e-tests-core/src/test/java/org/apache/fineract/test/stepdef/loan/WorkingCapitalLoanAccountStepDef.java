@@ -116,6 +116,7 @@ import org.apache.fineract.test.messaging.event.EventCheckHelper;
 import org.apache.fineract.test.stepdef.AbstractStepDef;
 import org.apache.fineract.test.stepdef.common.JournalEntriesStepDef;
 import org.apache.fineract.test.support.TestContextKey;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Assertions;
 
 @Slf4j
@@ -135,6 +136,8 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
     private static final String WC_LAST_TRANSACTION_TYPE = "wcLastTransactionType";
     private static final String WC_LAST_TRANSACTION_DATE = "wcLastTransactionDate";
     private static final String WC_LAST_TRANSACTION_AMOUNT = "wcLastTransactionAmount";
+    private static final String WC_STORED_DISBURSEMENT_TRANSACTION_ID = "wcStoredDisbursementTransactionId";
+    private static final long NON_EXISTENT_TRANSACTION_ID = 999_999_999L;
 
     private final FineractFeignClient fineractClient;
     private final WorkingCapitalLoanProductResolver workingCapitalLoanProductResolver;
@@ -287,6 +290,13 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         if (breachStartType != null) {
             loansRequest.breachStartType(breachStartType);
         }
+        if (rawData.get("repaymentEvery") != null) {
+            loansRequest.repaymentEvery(Integer.parseInt(rawData.get("repaymentEvery")));
+        }
+        if (rawData.get("repaymentFrequencyType") != null) {
+            loansRequest.repaymentFrequencyType(
+                    PostWorkingCapitalLoansRequest.RepaymentFrequencyTypeEnum.valueOf(rawData.get("repaymentFrequencyType")));
+        }
         testContext().set(TestContextKey.LOAN_CREATE_REQUEST, loansRequest);
 
         final PostWorkingCapitalLoansResponse response = ok(
@@ -352,6 +362,12 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         assertThat(response.getClientId()).as("clientId").isNotNull();
     }
 
+    @Then("Working capital loan details has annual EIR {string}")
+    public void verifyWorkingCapitalLoanDetailsAnnualEir(final String expectedAnnualEir) {
+        final GetWorkingCapitalLoansLoanIdResponse response = retrieveLoanDetails(getCreatedLoanId());
+        assertThat(response.getCalculatedAnnualEir()).as("calculatedAnnualEir").isEqualByComparingTo(new BigDecimal(expectedAnnualEir));
+    }
+
     @Then("Working capital loan details has the following field values:")
     public void verifyWorkingCapitalLoanDetailFieldValues(final DataTable table) {
         final GetWorkingCapitalLoansLoanIdResponse response = retrieveLoanDetails(getCreatedLoanId());
@@ -363,6 +379,18 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
             } else {
                 assertThat(actual).as("WC loan details field %s", field).isEqualTo(expected);
             }
+        });
+    }
+
+    @Then("Working capital loan details has the following exact decimal field values:")
+    public void verifyWorkingCapitalLoanDetailExactDecimalFieldValues(final DataTable table) {
+        final GetWorkingCapitalLoansLoanIdResponse response = retrieveLoanDetails(getCreatedLoanId());
+
+        table.asMap().forEach((field, expected) -> {
+            final Object actual = invokeGetter(response, field);
+            assertThat(actual).as("WC loan details field %s is not a decimal", field).isInstanceOf(BigDecimal.class);
+            assertThat(WorkingCapitalScheduleMatcher.matchesDecimal((BigDecimal) actual, expected))
+                    .as("WC loan details field %s: expected=%s actual=%s", field, expected, actual).isTrue();
         });
     }
 
@@ -1662,6 +1690,11 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         eventCheckHelper.workingCapitalLoanBalanceChangedEventChargesCheck(getCreatedLoanId(), table.asMaps());
     }
 
+    @Then("a Working Capital Loan Balance Changed business event is raised with annual effective interest rate {string}")
+    public void aWorkingCapitalLoanBalanceChangedBusinessEventIsRaisedWithAnnualEir(final String expectedAnnualEir) {
+        eventCheckHelper.workingCapitalLoanBalanceChangedEventAnnualEirCheck(getCreatedLoanId(), expectedAnnualEir);
+    }
+
     @Then("a Working Capital Loan Balance Changed business event is raised on approval")
     public void aWorkingCapitalLoanBalanceChangedBusinessEventIsRaisedOnApproval() {
         eventCheckHelper.workingCapitalLoanBalanceChangedOnApprovalEventCheck(getCreatedLoanId());
@@ -2073,15 +2106,7 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
     }
 
     private List<GetWorkingCapitalLoanTransactionIdResponse> fetchActiveDiscountFeeTransactions() {
-        final GetWorkingCapitalLoanTransactionsResponse loanResponse = retrieveLoanTransactions(getCreatedLoanId());
-        final List<GetWorkingCapitalLoanTransactionIdResponse> transactions = loanResponse.getContent();
-        if (transactions == null) {
-            return List.of();
-        }
-        return transactions.stream() //
-                .filter(t -> t.getType() != null && "loanTransactionType.discountFee".equals(t.getType().getCode())) //
-                .filter(t -> !Boolean.TRUE.equals(t.getReversed())) //
-                .toList();
+        return fetchActiveTransactionsOfType(TransactionType.DISCOUNT_FEE);
     }
 
     private void assertActiveDiscountFeeTransactionsNotEmpty(final List<GetWorkingCapitalLoanTransactionIdResponse> activeDiscounts) {
@@ -2115,6 +2140,60 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoanTransactions()
                 .executeWorkingCapitalLoanTransactionByExternalId(loanExternalId, "discountFee", request));
         verifyErrorResponse(exception, table);
+    }
+
+    @And("Admin stores the last Working Capital loan disbursement transaction id for later reference")
+    public void storeLastDisbursementTransactionId() {
+        final PostWorkingCapitalLoansLoanIdResponse lastDisbursementResponse = testContext().get(TestContextKey.LOAN_DISBURSE_RESPONSE);
+        Assertions.assertNotNull(lastDisbursementResponse, "A disbursement must precede storing its transaction id");
+        testContext().set(WC_STORED_DISBURSEMENT_TRANSACTION_ID, lastDisbursementResponse.getResourceId());
+    }
+
+    @Then("Adding Discount fee with {string} amount referencing the stored disbursement transaction id on Working Capital loan account results an error with the following data:")
+    public void addingDiscountFeeReferencingStoredDisbursementResultsAnError(final String discountAmount, final DataTable table) {
+        final Long storedDisbursementId = testContext().get(WC_STORED_DISBURSEMENT_TRANSACTION_ID);
+        Assertions.assertNotNull(storedDisbursementId, "A disbursement transaction id must be stored by a prior step");
+        addingDiscountFeeReferencingResultsAnError(discountAmount, storedDisbursementId, table);
+    }
+
+    @Then("Adding Discount fee with {string} amount referencing the last repayment transaction on Working Capital loan account results an error with the following data:")
+    public void addingDiscountFeeReferencingLastRepaymentResultsAnError(final String discountAmount, final DataTable table) {
+        addingDiscountFeeReferencingResultsAnError(discountAmount, latestActiveTransactionOfType(TransactionType.REPAYMENT).getId(), table);
+    }
+
+    @Then("Adding Discount fee with {string} amount referencing a non-existent transaction id on Working Capital loan account results an error with the following data:")
+    public void addingDiscountFeeReferencingNonExistentTransactionResultsAnError(final String discountAmount, final DataTable table) {
+        addingDiscountFeeReferencingResultsAnError(discountAmount, NON_EXISTENT_TRANSACTION_ID, table);
+    }
+
+    private void addingDiscountFeeReferencingResultsAnError(final String discountAmount, final Long relatedResourceId,
+            final DataTable table) {
+        final PostWorkingCapitalLoanTransactionsRequest request = workingCapitalProductRequestFactory
+                .defaultWorkingCapitalLoanRepaymentRequest().relatedResourceId(relatedResourceId)
+                .transactionAmount(new BigDecimal(discountAmount));
+
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoanTransactions()
+                .executeWorkingCapitalLoanTransactionById(getCreatedLoanId(), "discountFee", request));
+        verifyErrorResponse(exception, table);
+    }
+
+    private GetWorkingCapitalLoanTransactionIdResponse latestActiveTransactionOfType(final TransactionType transactionType) {
+        return fetchActiveTransactionsOfType(transactionType).stream() //
+                .max(Comparator.comparing(GetWorkingCapitalLoanTransactionIdResponse::getId)) //
+                .orElseThrow(() -> new IllegalStateException(
+                        "No active " + transactionType.getValue() + " transaction on the Working Capital loan"));
+    }
+
+    private List<GetWorkingCapitalLoanTransactionIdResponse> fetchActiveTransactionsOfType(final TransactionType transactionType) {
+        final String expectedCode = "loanTransactionType." + transactionType.getValue();
+        final List<GetWorkingCapitalLoanTransactionIdResponse> transactions = retrieveLoanTransactions(getCreatedLoanId()).getContent();
+        if (transactions == null) {
+            return List.of();
+        }
+        return transactions.stream() //
+                .filter(t -> t.getType() != null && expectedCode.equals(t.getType().getCode())) //
+                .filter(t -> !Boolean.TRUE.equals(t.getReversed())) //
+                .toList();
     }
 
     @And("Admin adds Discount fee adjustment with {string} amount on Working Capital loan account for last discount")
@@ -3629,11 +3708,13 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         final int linesActual = (int) periods.stream().filter(p -> p.getPaymentNo() != null).count();
 
         final List<List<String>> data = table.asLists();
+        final List<String> headers = data.getFirst();
+        final int dateColumn = headers.indexOf("paymentDate");
+        assertThat(dateColumn).as("Table must contain 'paymentDate' column").isGreaterThanOrEqualTo(0);
+
+        final SoftAssertions assertions = new SoftAssertions();
         for (int i = 1; i < data.size(); i++) {
             final List<String> expectedValues = data.get(i);
-            final List<String> headers = data.getFirst();
-            final int dateColumn = headers.indexOf("paymentDate");
-            assertThat(dateColumn).as("Table must contain 'paymentDate' column").isGreaterThanOrEqualTo(0);
             final String paymentDateExpected = expectedValues.get(dateColumn);
 
             final List<ProjectedAmortizationSchedulePaymentData> matchingPeriods = periods.stream()
@@ -3641,15 +3722,17 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
 
             final boolean containsExpectedValues = matchingPeriods.stream()
                     .anyMatch(period -> matchesExpectedWcAmortizationRow(headers, expectedValues, period));
-            assertThat(containsExpectedValues).as(
-                    "Wrong value in line %s of amortization schedule: \n actual=%s,\n expected=%s", i, matchingPeriods.stream()
+            assertions.assertThat(containsExpectedValues)
+                    .as("Wrong value in line %s of amortization schedule: \n actual=%s,\n expected=%s", i, matchingPeriods.stream()
                             .map(period -> fetchValuesOfWcAmortizationSchedule(headers, period)).collect(Collectors.toList()),
-                    expectedValues).isTrue();
+                            expectedValues)
+                    .isTrue();
         }
 
-        assertThat(linesActual)
+        assertions.assertThat(linesActual)
                 .as("Wrong number of lines in WC amortization schedule: \n actual=%s,\n expected=%s", linesActual, linesExpected)
                 .isEqualTo(linesExpected);
+        assertions.assertAll();
     }
 
     private String asText(final BigDecimal value) {
