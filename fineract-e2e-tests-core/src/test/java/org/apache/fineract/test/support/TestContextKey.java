@@ -340,6 +340,7 @@ public abstract class TestContextKey {
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_BREACH_DISALLOW_OVERRIDES = "workingCapitalLoanProductCreateResponseWCLPBreachDisallowOverrides";
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_BREACH_NEAR_BREACH_DISALLOW_OVERRIDES = "workingCapitalLoanProductCreateResponseWCLPBreachNearBreachDisallowOverrides";
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_ADVANCED_ACCOUNTING = "workingCapitalLoanProductCreateResponseWCLPAdvancedAccounting";
+    public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_FLAT_ADVANCED_ACCOUNTING = "workingCapitalLoanProductCreateResponseWCLPFlatAdvancedAccounting";
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_ACC_DEF_REV_AM = "workingCapitalLoanProductCreateResponseWCLPAccDefRevAm";
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_PERIOD_PAYMENT_RATE = "workingCapitalLoanProductCreateResponseWCLPPeriodPaymentRate";
     public static final String DEFAULT_WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE_WCLP_DUE_FEE_PENALTY_PRINCIPAL = "workingCapitalLoanProductCreateResponseWCLPDueFeePenaltyPrincipal";
@@ -376,6 +377,7 @@ public abstract class TestContextKey {
     public static final String WORKING_CAPITAL_NEAR_BREACH_ID_FOR_UPDATE = "workingCapitalNearBreachIdForUpdate";
     public static final String WORKING_CAPITAL_NEAR_BREACH_CREATE_REQUEST_FOR_UPDATE = "workingCapitalNearBreachCreateRequestForUpdate";
     public static final String WC_LOAN_ACTION_TEMPLATE_RESPONSE = "wcLoanActionTemplateResponse";
+    public static final String WC_LOAN_TRANSACTION_TEMPLATE_RESPONSE = "wcLoanTransactionTemplateResponse";
     public static final String WORKING_CAPITAL_LOAN_RATE_CHANGE_ID = "wcLoanRateChangeId";
     public static final String WORKING_CAPITAL_CURRENT_TENANT_DATE_BEFORE_ACTION = "wcCurrentTenantDateBeforeAction";
     public static final String WORKING_CAPITAL_CHARGE_ID = "workingCapitalChargeId";
