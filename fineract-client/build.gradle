@@ -254,9 +254,12 @@ tasks.named('licenseMain') {
 }
 
 java {
-    // keep this at Java 8, not 17; see https://issues.apache.org/jira/browse/FINERACT-1214
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    // This SDK is published for external consumers, including Android apps, so it stays behind the
+    // project toolchain. Java 17 is the ceiling that buys us: Android 14 ships OpenJDK 17 core
+    // libraries, and the Android Gradle Plugin still requires/targets JDK 17. Java 21+ bytecode is
+    // not consumable by D8/R8. The previous Java 8 pin (FINERACT-1214) predates all of that.
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.withType(JavaCompile).configureEach {
