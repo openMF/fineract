@@ -18,9 +18,7 @@
  */
 package org.apache.fineract.infrastructure.security.api;
 
-import com.google.gson.Gson;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -84,17 +82,10 @@ public class AuthenticationApiResource {
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = AuthenticationApiResourceSwagger.PostAuthenticationResponse.class)))
     @ApiResponse(responseCode = "400", description = "Unauthenticated. Please login")
     @ApiResponse(responseCode = "403", description = "Password reset required")
-    public String authenticate(@Parameter(hidden = true) final String apiRequestBodyAsJson) {
-        // TODO FINERACT-819: sort out Jersey so JSON conversion does not have
-        // to be done explicitly via GSON here, but implicit by arg
-        AuthenticateRequest request = new Gson().fromJson(apiRequestBodyAsJson, AuthenticateRequest.class);
-        if (request == null) {
+    public String authenticate(final AuthenticateRequest request) {
+        if (request == null || request.username == null || request.password == null) {
             throw new IllegalArgumentException(
-                    "Invalid JSON in BODY (no longer URL param; see FINERACT-726) of POST to /authentication: " + apiRequestBodyAsJson);
-        }
-        if (request.username == null || request.password == null) {
-            throw new IllegalArgumentException("Username or Password is null in JSON (see FINERACT-726) of POST to /authentication: "
-                    + apiRequestBodyAsJson + "; username=" + request.username + ", password=" + request.password);
+                    "Username or Password is null in request body (see FINERACT-726) of POST to /authentication");
         }
 
         final Authentication authentication = new UsernamePasswordAuthenticationToken(request.username, request.password);
