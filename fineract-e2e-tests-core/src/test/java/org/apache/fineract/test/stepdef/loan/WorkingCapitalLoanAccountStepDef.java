@@ -1870,6 +1870,18 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         checkChangesExpectedStatus(TestContextKey.LOAN_UNDO_DISBURSE_RESPONSE, APPROVED);
     }
 
+    @Then("Undo Working Capital disbursal results an error with the following data:")
+    public void undoDisbursalWCLoanResultsAnError(final DataTable table) {
+        final PostWorkingCapitalLoansLoanIdRequest undoDisbursalRequest = workingCapitalLoanRequestFactory
+                .defaultWorkingCapitalLoanUndoDisburseRequest();
+
+        final CallFailedRuntimeException exception = fail(() -> fineractClient.workingCapitalLoans()
+                .stateTransitionWorkingCapitalLoanById(getCreatedLoanId(), "undodisbursal", undoDisbursalRequest));
+
+        verifyErrorResponse(exception, table);
+        log.info("Verified working capital loan undo disbursal failed with expected error");
+    }
+
     @Then("Working Capital disbursal transaction business event is raised")
     public void workingCapitalDisbursalTransactionBusinessEventIsRaised() {
         eventCheckHelper.workingCapitalLoanDisbursalTransactionEventCheck(getCreatedLoanId());
@@ -2765,6 +2777,20 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
             assertThat(txn.getExternalId()).as("WC transaction id=%s type=%s date=%s must have a non-blank externalId", txn.getId(),
                     txn.getType() == null ? null : txn.getType().getValue(), txn.getTransactionDate()).isNotBlank();
         }
+    }
+
+    @Then("The Working Capital Loan {string} transaction is retrievable by its own external id")
+    public void workingCapitalLoanTransactionIsRetrievableByExternalId(final String transactionType) {
+        final Long loanId = getCreatedLoanId();
+        final GetWorkingCapitalLoanTransactionIdResponse transaction = latestActiveTransactionOfType(
+                TransactionType.valueOf(transactionType));
+        assertThat(transaction.getExternalId()).as("WC %s transaction must have a non-blank externalId to be addressable", transactionType)
+                .isNotBlank();
+        final GetWorkingCapitalLoanTransactionIdResponse byExternalId = ok(() -> fineractClient.workingCapitalLoanTransactions()
+                .retrieveWorkingCapitalLoanTransactionByExternalTransactionId(loanId, transaction.getExternalId()));
+        assertThat(byExternalId.getId())
+                .as("WC transaction fetched by external id %s must be the same transaction", transaction.getExternalId())
+                .isEqualTo(transaction.getId());
     }
 
     @Then("Add discount with {string} amount on Working Capital loan account failed due to date diff from disbursement date")
@@ -4755,17 +4781,8 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
     @When("Customer undo {string}th {string} transaction made on {string} on Working Capital loan")
     public void undoWorkingCapitalLoanTransaction(String nthItemStr, String transactionType, String transactionDate) throws IOException {
         final Long loanId = getCreatedLoanId();
-        final GetWorkingCapitalLoanTransactionsResponse response = retrieveLoanTransactions(loanId);
-        final List<GetWorkingCapitalLoanTransactionIdResponse> actualTransactions = response.getContent();
-
-        final TransactionType resolvedType = resolveTransactionType(transactionType);
-        final String expectedCode = "loanTransactionType." + resolvedType.getValue();
-        int nthItem = Integer.parseInt(nthItemStr) - 1;
-
-        GetWorkingCapitalLoanTransactionIdResponse target = actualTransactions.stream()
-                .filter(t -> t.getType() != null && expectedCode.equals(t.getType().getCode())
-                        && transactionDate.equals(FORMATTER.format(t.getTransactionDate())) && !Boolean.TRUE.equals(t.getReversed()))
-                .toList().get(nthItem);
+        final GetWorkingCapitalLoanTransactionIdResponse target = findNthActiveTransaction(loanId, nthItemStr, transactionType,
+                transactionDate);
 
         String reversalExternalId = Utils.randomStringGenerator("wcl-reversal-ext-id", 8);
         ExecuteWorkingCapitalLoanTransactionCommandRequest request = new ExecuteWorkingCapitalLoanTransactionCommandRequest()
@@ -4801,6 +4818,40 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
                 .executeWorkingCapitalLoanTransactionCommandByLoanIdTransactionId(loanId, target.getId(), "undo", request));
         assertHttpStatus(exception, expectedHttpCode);
         assertValidationError(exception, expectedErrorMessage);
+    }
+
+    @When("Created user undoes {string}th {string} transaction made on {string} on Working Capital loan")
+    public void undoWorkingCapitalLoanTransactionWithCreatedUser(final String nthItemStr, final String transactionType,
+            final String transactionDate) {
+        final Long loanId = getCreatedLoanId();
+        final GetWorkingCapitalLoanTransactionIdResponse target = findNthActiveTransaction(loanId, nthItemStr, transactionType,
+                transactionDate);
+        final ExecuteWorkingCapitalLoanTransactionCommandRequest request = new ExecuteWorkingCapitalLoanTransactionCommandRequest()
+                .reversalExternalId(Utils.randomStringGenerator("wcl-reversal-ext-id", 8));
+        final FineractFeignClient userClient = userClient();
+        final ExecuteWorkingCapitalLoanTransactionCommandResponse undo = ok(() -> userClient.workingCapitalLoanTransactions()
+                .executeWorkingCapitalLoanTransactionCommandByLoanIdTransactionId(loanId, target.getId(), "undo", request));
+        Assertions.assertNotNull(undo);
+    }
+
+    @Then("Created user without UNDO_WORKINGCAPITALLOANTRANSACTION permission fails to undo {string}th {string} transaction made on {string} on Working Capital loan")
+    public void undoWorkingCapitalLoanTransactionWithoutPermissionResultsAnError(final String nthItemStr, final String transactionType,
+            final String transactionDate) {
+        final Long loanId = getCreatedLoanId();
+        final GetWorkingCapitalLoanTransactionIdResponse target = findNthActiveTransaction(loanId, nthItemStr, transactionType,
+                transactionDate);
+        final ExecuteWorkingCapitalLoanTransactionCommandRequest request = new ExecuteWorkingCapitalLoanTransactionCommandRequest();
+        final FineractFeignClient userClient = userClient();
+        final CallFailedRuntimeException exception = fail(() -> userClient.workingCapitalLoanTransactions()
+                .executeWorkingCapitalLoanTransactionCommandByLoanIdTransactionId(loanId, target.getId(), "undo", request));
+        assertHttpStatus(exception, 403);
+        assertThat(exception.getDeveloperMessage()).contains("User has no authority to: UNDO_WORKINGCAPITALLOANTRANSACTION");
+    }
+
+    private GetWorkingCapitalLoanTransactionIdResponse findNthActiveTransaction(final Long loanId, final String nthItemStr,
+            final String transactionType, final String transactionDate) {
+        return findMatchingTransactions(loanId, resolveTransactionType(transactionType), transactionDate, false)
+                .get(Integer.parseInt(nthItemStr) - 1);
     }
 
     public void updatePeriodPaymentRateFailed(String periodPaymentRate, String errorMessage) {
