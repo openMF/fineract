@@ -185,8 +185,8 @@ public class DefaultScheduledDateGeneratorTest {
             final int numberOfRepayments, final PeriodFrequencyType repaymentFrequency, final Integer fixedLength,
             final MonthEndDueDateStrategy monthEndDueDateStrategy, final HolidayDetailDTO holidayDetailDTO) {
         return LoanApplicationTerms.assembleFrom(currency.toData(), 1, repaymentFrequency, numberOfRepayments, 1, repaymentFrequency, null,
-                INVALID, EQUAL_PRINCIPAL, FLAT, ZERO, repaymentFrequency, ZERO, SAME_AS_REPAYMENT_PERIOD, false, principalAmount,
-                expectedDisbursementDate, null, calculatedFirstRepaymentDate, null, null, null, null, null,
+                null, null, INVALID, EQUAL_PRINCIPAL, FLAT, ZERO, repaymentFrequency, ZERO, SAME_AS_REPAYMENT_PERIOD, false,
+                principalAmount, expectedDisbursementDate, null, calculatedFirstRepaymentDate, null, null, null, null, null,
                 Money.of(fromApplicationCurrency(currency), ZERO), false, null, EMPTY_LIST, BigDecimal.valueOf(36_000L), null,
                 DaysInMonthType.ACTUAL, DaysInYearType.ACTUAL, false, null, null, null, null, null, ZERO, null, NONE, null, ZERO,
                 EMPTY_LIST, true, 0, false, holidayDetailDTO, false, false, false, null, false, false, null, false, DISBURSEMENT_DATE,

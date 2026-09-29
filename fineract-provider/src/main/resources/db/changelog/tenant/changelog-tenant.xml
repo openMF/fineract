@@ -289,4 +289,5 @@
     <include file="parts/0268_add_payoff_schedule_preview_max_payoff_periods_configuration.xml" relativeToChangelogFile="true" />
     <include file="parts/0269_add_payoff_schedule_preview_max_term_periods_configuration.xml" relativeToChangelogFile="true" />
     <include file="parts/0270_month_end_due_date_strategy.xml" relativeToChangelogFile="true" />
+    <include file="parts/0271_add_semi_monthly_repayment_frequency.xml" relativeToChangelogFile="true" />
 </databaseChangeLog>
