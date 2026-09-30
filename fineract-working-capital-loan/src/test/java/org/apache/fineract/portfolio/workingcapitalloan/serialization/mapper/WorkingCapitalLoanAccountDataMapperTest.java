@@ -237,6 +237,7 @@ class WorkingCapitalLoanAccountDataMapperTest {
         assertNotNull(delinquency);
         assertStringEnum(source.getDelinquencyStartType(), delinquency.getDelinquencyStartType());
         assertEquals("2024-01-05", delinquency.getDelinquencyStartDate());
+        assertEquals("2024-01-12", delinquency.getDelinquencyEffectiveStartDate());
     }
 
     @Test
@@ -254,6 +255,7 @@ class WorkingCapitalLoanAccountDataMapperTest {
         // loan-level fields lifted into the breach record
         assertEquals(3, breach.getBreachGraceDays());
         assertEquals("2024-01-06", breach.getBreachStartDate());
+        assertEquals("2024-01-09", breach.getBreachEffectiveStartDate());
 
         final WorkingCapitalNearBreachDataV1 nearBreach = breach.getNearBreach();
         assertNotNull(nearBreach);
@@ -282,6 +284,7 @@ class WorkingCapitalLoanAccountDataMapperTest {
         assertNull(breach.getNearBreach());
         assertEquals(3, breach.getBreachGraceDays());
         assertEquals("2024-01-06", breach.getBreachStartDate());
+        assertEquals("2024-01-09", breach.getBreachEffectiveStartDate());
     }
 
     @Test
@@ -577,7 +580,8 @@ class WorkingCapitalLoanAccountDataMapperTest {
                         WorkingCapitalPaymentAmountCalculationStrategy.PAYMENT_AMOUNT.getValueAsStringEnumOptionData())
                 .breachGraceDays(3).delinquencyGraceDays(7)
                 .delinquencyStartType(stringEnum("1", "delinquencyStart.disbursement", "Disbursement"))
-                .delinquencyStartDate(LocalDate.of(2024, 1, 5)).breachStartDate(LocalDate.of(2024, 1, 6))
+                .delinquencyStartDate(LocalDate.of(2024, 1, 5)).delinquencyEffectiveStartDate(LocalDate.of(2024, 1, 12))
+                .breachStartDate(LocalDate.of(2024, 1, 6)).breachEffectiveStartDate(LocalDate.of(2024, 1, 9))
                 .lastClosedBusinessDate(LocalDate.of(2024, 2, 1)).overpaidOnDate(LocalDate.of(2024, 2, 14)).chargedOff(Boolean.TRUE)
                 .enableInstallmentLevelDelinquency(Boolean.TRUE).currency(currency()).timeline(fullTimeline()).summary(fullSummary())
                 .delinquent(fullCollection()).breach(fullBreach()).nearBreach(fullNearBreach()).charges(List.of(fullCharge()))

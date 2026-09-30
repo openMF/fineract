@@ -2125,6 +2125,11 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
         eventCheckHelper.workingCapitalLoanBreachChangeEventCheck(getCreatedLoanId(), Boolean.valueOf(breachFlag));
     }
 
+    @Then("a Working Capital Loan Breach Change business event is raised with breach data:")
+    public void aWorkingCapitalLoanBreachChangeBusinessEventIsRaisedWithBreachData(final DataTable table) {
+        eventCheckHelper.workingCapitalLoanBreachChangeEventWithBreachDataCheck(getCreatedLoanId(), table.asMaps().get(0));
+    }
+
     @Then("a Working Capital Loan Near Breach Change business event is raised with near breach flag {string}")
     public void aWorkingCapitalLoanNearBreachChangeBusinessEventIsRaised(final String nearBreachFlag) {
         eventCheckHelper.workingCapitalLoanNearBreachChangeEventCheck(getCreatedLoanId(), Boolean.valueOf(nearBreachFlag));
@@ -2322,6 +2327,11 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
     @Then("a Working Capital Loan Delinquency Range Change business event is raised naming the delinquency range")
     public void aWorkingCapitalLoanDelinquencyRangeChangeBusinessEventIsRaisedNamingTheDelinquencyRange() {
         eventCheckHelper.workingCapitalLoanDelinquencyRangeChangeEventNamesRangeCheck(getCreatedLoanId());
+    }
+
+    @Then("Working Capital Loan Delinquency Range Change business event is raised with delinquency data:")
+    public void aWorkingCapitalLoanDelinquencyRangeChangeBusinessEventIsRaisedWithDelinquencyData(final DataTable table) {
+        eventCheckHelper.workingCapitalLoanDelinquencyRangeChangeEventWithDelinquencyDataCheck(getCreatedLoanId(), table.asMaps().get(0));
     }
 
     @Then("a Working Capital Loan Balance Changed business event is raised with transaction type totals:")
@@ -3690,8 +3700,12 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
                             : new Utils.DoubleFormatter(response.getBalance().getTotalDiscountFee().doubleValue()).format());
                 case "breachStartDate" ->
                     actualValues.add(response.getBreachStartDate() == null ? "null" : response.getBreachStartDate().toString());
+                case "breachEffectiveStartDate" -> actualValues
+                        .add(response.getBreachEffectiveStartDate() == null ? "null" : response.getBreachEffectiveStartDate().toString());
                 case "delinquencyStartDate" ->
                     actualValues.add(response.getDelinquencyStartDate() == null ? "null" : response.getDelinquencyStartDate().toString());
+                case "delinquencyEffectiveStartDate" -> actualValues.add(response.getDelinquencyEffectiveStartDate() == null ? "null"
+                        : response.getDelinquencyEffectiveStartDate().toString());
                 case "totalDiscountFeeAdjustment" ->
                     actualValues.add(response.getBalance() == null || response.getBalance().getTotalDiscountFeeAdjustment() == null ? null
                             : new Utils.DoubleFormatter(response.getBalance().getTotalDiscountFeeAdjustment().doubleValue()).format());
@@ -3859,16 +3873,35 @@ public class WorkingCapitalLoanAccountStepDef extends AbstractStepDef {
 
     @When("Admin creates a Working Capital Loan Product with delinquencyGraceDays {int} and delinquencyStartType {string} for loan test")
     public void createProductWithGraceDaysForLoanTest(int graceDays, String startType) {
+        createGraceDaysProductForLoanTest(graceDays, startType, null);
+    }
+
+    @When("Admin creates a Working Capital Loan Product with delinquencyGraceDays {int} and delinquencyStartType {string} and the created delinquency bucket for loan test")
+    public void createProductWithGraceDaysAndBucketForLoanTest(int graceDays, String startType) {
+        final Long bucketId = testContext().get(TestContextKey.DELINQUENCY_BUCKET_ID);
+        assertThat(bucketId).as("delinquency bucket must be created in this scenario before the product").isNotNull();
+        createGraceDaysProductForLoanTest(graceDays, startType, bucketId);
+    }
+
+    /**
+     * Creates the grace days product used by the loan tests. A null bucketId leaves the factory default bucket in
+     * place, which is what the callers that do not build their own bucket rely on.
+     */
+    private void createGraceDaysProductForLoanTest(final int graceDays, final String startType, final Long bucketId) {
         final String name = "WCLP-GD-" + Utils.randomStringGenerator("", 8);
         final PostWorkingCapitalLoanProductsRequest request = workingCapitalProductRequestFactory.defaultWorkingCapitalLoanProductRequest() //
                 .name(name) //
                 .delinquencyGraceDays(graceDays) //
                 .delinquencyStartType(startType);
+        if (bucketId != null) {
+            request.delinquencyBucketId(bucketId);
+        }
         final PostWorkingCapitalLoanProductsResponse response = ok(
                 () -> fineractClient.workingCapitalLoanProducts().createWorkingCapitalLoanProduct(request, Map.of()));
         testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_CREATE_RESPONSE, response);
         testContext().set(TestContextKey.WORKING_CAPITAL_LOAN_PRODUCT_FOR_LOAN_TEST, response.getResourceId());
-        log.info("Created WC Loan Product with grace days for loan test, ID: {}", response.getResourceId());
+        log.info("Created WC Loan Product with grace days for loan test, ID: {}, delinquency bucket: {}", response.getResourceId(),
+                bucketId);
     }
 
     @When("Admin creates a working capital loan with the grace days product and the following data:")
