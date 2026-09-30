@@ -814,6 +814,37 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         };
     }
 
+    @Override
+    public CommandProcessingResult adjustByDeltaTransaction(final Long loanId, final Long transactionId, final JsonCommand command) {
+        final WorkingCapitalLoan loan = loanRepository.findById(loanId).orElseThrow(() -> new WorkingCapitalLoanNotFoundException(loanId));
+        final WorkingCapitalLoanTransaction transaction = transactionRepository.findByIdAndWcLoan_Id(transactionId, loanId)
+                .orElseThrow(() -> new PlatformApiDataValidationException("validation.msg.wc.loan.transaction.not.found",
+                        "Working capital loan transaction not found", WorkingCapitalLoanConstants.transactionIdParamName));
+
+        return switch (transaction.getTypeOf()) {
+            case REPAYMENT, GOODWILL_CREDIT, CHARGE_ADJUSTMENT, PAYOUT_REFUND ->
+                adjustByDeltaRepaymentLikeTransaction(loan, transaction, command);
+            default -> throw new PlatformApiDataValidationException("validation.msg.wc.loan.transaction.adjust.not.supported",
+                    "Adjust is not supported for transaction type " + transaction.getTypeOf(),
+                    WorkingCapitalLoanConstants.transactionTypeParamName);
+        };
+    }
+
+    private CommandProcessingResult adjustByDeltaRepaymentLikeTransaction(final WorkingCapitalLoan loan,
+            final WorkingCapitalLoanTransaction transactionToAdjust, final JsonCommand command) {
+        this.validator.validateAdjustByDelta(command, loan, transactionToAdjust);
+
+        final BigDecimal deltaAmount = this.fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanConstants.transactionAmountParamName,
+                command.parsedJson(), new HashSet<>());
+        final BigDecimal newTransactionAmount = transactionToAdjust.getTransactionAmount().add(deltaAmount);
+
+        final Map<String, Object> changes = new LinkedHashMap<>();
+        changes.put("adjustByDelta", true);
+        changes.put(WorkingCapitalLoanConstants.transactionAmountParamName, newTransactionAmount);
+
+        return adjustRepaymentLikeTransaction(loan, transactionToAdjust, newTransactionAmount, command, changes);
+    }
+
     /**
      * Deliberately not routed through the generic {@code undoTransaction}: none of its branches gives the waived bucket
      * back, and the two that rewind a balance reach {@code updateBalanceAfterUndo}, which throws on any type outside
@@ -1005,6 +1036,12 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         if (chargeAdjustmentCharge != null) {
             chargeWritePlatformService.validateChargeAdjustmentEntrance(loan, chargeAdjustmentCharge, adjustedTransactionAmount,
                     transactionToAdjust.getId());
+            if (chargeAdjustmentCharge.getDueDate() != null
+                    && DateUtils.isBefore(newTransactionDate, chargeAdjustmentCharge.getDueDate())) {
+                throw new PlatformApiDataValidationException("validation.msg.wc.loan.charge.adjustment.invalid.date",
+                        "Charge adjustment transaction date cannot be before the charge due date: " + chargeAdjustmentCharge.getDueDate(),
+                        WorkingCapitalLoanConstants.transactionDateParamName);
+            }
             copyChargeAdjustmentRelation(newTransaction, chargeAdjustmentCharge);
         }
         return newTransaction;
