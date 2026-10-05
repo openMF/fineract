@@ -18,48 +18,16 @@
  */
 package org.apache.fineract.investor.data.attribute;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-
-public enum BuyDownFeeAmortizationStrategyExternalAssetOwnerLoanProductAttribute implements ExternalAssetOwnerLoanProductAttribute {
+public enum BuyDownFeeAmortizationStrategyExternalAssetOwnerLoanProductAttribute implements
+        CaseInsensitiveEnumExternalAssetOwnerLoanProductAttribute<BuyDownFeeAmortizationStrategyExternalAssetOwnerLoanProductAttribute> {
 
     DEFERRED, //
     IMMEDIATE; //
 
-    private final String attributeKey;
-
-    BuyDownFeeAmortizationStrategyExternalAssetOwnerLoanProductAttribute() {
-        this.attributeKey = "BUY_DOWN_FEE_AMORTIZATION_STRATEGY";
-    }
+    public static final String ATTRIBUTE_KEY = "BUY_DOWN_FEE_AMORTIZATION_STRATEGY";
 
     @Override
     public String getAttributeKey() {
-        return attributeKey;
-    }
-
-    @Override
-    public String getAttributeValue() {
-        return name();
-    }
-
-    @Override
-    public List<String> getAttributeValues() {
-        return Arrays.stream(values()).map(Enum::name).toList();
-    }
-
-    @Override
-    public boolean validate(final String attributeValue) {
-        return getAttributeValue().equals(attributeValue.toUpperCase(Locale.ROOT));
-    }
-
-    @Override
-    public boolean isMultiValue() {
-        return false;
-    }
-
-    @Override
-    public String normalize(final String attributeValue) {
-        return attributeValue.trim().toUpperCase(Locale.ROOT);
+        return ATTRIBUTE_KEY;
     }
 }
