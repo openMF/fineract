@@ -229,16 +229,12 @@ public class WorkingCapitalLoanDataValidator {
             validateDiscountAmountWithProductDiscount(discountAmount, loan.getLoanProduct().getRelatedDetail(), baseDataValidator);
         }
 
+        WorkingCapitalLoanDiscountValidation.validateDiscountDoesNotExceedPrincipal(discountAmount, loan.getFirstActualDisbursementAmount(),
+                WorkingCapitalLoanConstants.discountAmountParamName, baseDataValidator);
+
         if (loan.isNotDisbursed()) {
             baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.actualDisbursementDateParamName)
                     .failWithCode("loan.not.disbursed");
-        }
-
-        final LocalDate actualDisbursementDate = loan.getFirstActualDisbursementDate();
-        final LocalDate businessDate = DateUtils.getBusinessLocalDate();
-        if (actualDisbursementDate != null && !actualDisbursementDate.equals(businessDate)) {
-            baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.actualDisbursementDateParamName).value(businessDate)
-                    .failWithCode("transaction.date.must.be.equal.disbursement.date");
         }
 
         final Integer classificationId = this.fromApiJsonHelper
@@ -444,7 +440,55 @@ public class WorkingCapitalLoanDataValidator {
             }
         }
 
+        // Resolved rather than read off the request: approval can lower the principal without touching the discount,
+        // which is the other way the pair ends up inverted.
+        WorkingCapitalLoanDiscountValidation.validateDiscountDoesNotExceedPrincipal(effectiveDiscountForApproval(element, loan),
+                effectivePrincipalForApproval(element, loan), WorkingCapitalLoanConstants.discountAmountParamName, baseDataValidator);
+
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
+    }
+
+    /**
+     * Mirrors the approval write path: the requested discount (an explicit null clears it), else the one proposed on
+     * submission when the product forbids overriding it, else nothing - an overridable product carries no approved
+     * discount unless the approval names one.
+     */
+    private BigDecimal effectiveDiscountForApproval(final JsonElement element, final WorkingCapitalLoan loan) {
+        if (this.fromApiJsonHelper.parameterExists(WorkingCapitalLoanConstants.discountAmountParamName, element)) {
+            return this.fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanConstants.discountAmountParamName, element,
+                    new HashSet<>());
+        }
+        if (isDiscountOverrideDisallowed(loan)) {
+            return loan.getLoanProductRelatedDetails() != null ? loan.getLoanProductRelatedDetails().getDiscountProposed() : null;
+        }
+        return null;
+    }
+
+    /** Mirrors the approval write path: the approved amount when positive, else the proposed principal. */
+    private BigDecimal effectivePrincipalForApproval(final JsonElement element, final WorkingCapitalLoan loan) {
+        if (this.fromApiJsonHelper.parameterHasValue(WorkingCapitalLoanConstants.approvedLoanAmountParamName, element)) {
+            final BigDecimal approvedLoanAmount = this.fromApiJsonHelper
+                    .extractBigDecimalNamed(WorkingCapitalLoanConstants.approvedLoanAmountParamName, element, new HashSet<>());
+            if (approvedLoanAmount != null && approvedLoanAmount.signum() > 0) {
+                return approvedLoanAmount;
+            }
+        }
+        return loan.getProposedPrincipal();
+    }
+
+    /**
+     * Mirrors the disbursement write path: the approved discount when the product forbids overriding it, else the
+     * requested one, else nothing - a loan disbursed without a discount books no discount fee transaction.
+     */
+    private BigDecimal effectiveDiscountForDisbursement(final JsonElement element, final WorkingCapitalLoan loan) {
+        if (isDiscountOverrideDisallowed(loan)) {
+            return loan.getLoanProductRelatedDetails() != null ? loan.getLoanProductRelatedDetails().getDiscountApproved() : null;
+        }
+        if (this.fromApiJsonHelper.parameterHasValue(WorkingCapitalLoanConstants.discountAmountParamName, element)) {
+            return this.fromApiJsonHelper.extractBigDecimalNamed(WorkingCapitalLoanConstants.discountAmountParamName, element,
+                    new HashSet<>());
+        }
+        return null;
     }
 
     private void validateDiscountAmountWithProductDiscount(final BigDecimal discountAmount,
@@ -583,6 +627,11 @@ public class WorkingCapitalLoanDataValidator {
                 }
             }
         }
+
+        // Against the amount actually being disbursed, not the approved principal: disbursing less than approved is
+        // allowed above, and it is the disbursed amount the discount fee is charged on.
+        WorkingCapitalLoanDiscountValidation.validateDiscountDoesNotExceedPrincipal(effectiveDiscountForDisbursement(element, loan),
+                transactionAmount, WorkingCapitalLoanConstants.discountAmountParamName, baseDataValidator);
 
         final String note = this.fromApiJsonHelper.extractStringNamed(WorkingCapitalLoanConstants.noteParamName, element);
         baseDataValidator.reset().parameter(WorkingCapitalLoanConstants.noteParamName).value(note).ignoreIfNull()
@@ -1072,7 +1121,7 @@ public class WorkingCapitalLoanDataValidator {
                     .failWithCodeNoParameterAddedToErrorCode("near.breach.action.not.allowed.loan.has.no.near.breach.configuration");
         }
 
-        if (breachActionRepository.isBreachDisabledAsOf(loan.getId(), DateUtils.getBusinessLocalDate())) {
+        if (breachActionRepository.isBreachDisabled(loan.getId())) {
             baseDataValidator.reset().failWithCodeNoParameterAddedToErrorCode("breach.is.disabled");
         }
 
