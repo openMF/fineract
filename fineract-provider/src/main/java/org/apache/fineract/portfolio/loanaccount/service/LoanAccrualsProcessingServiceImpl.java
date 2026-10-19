@@ -45,6 +45,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.fineract.accounting.common.AccountingRuleType;
+import org.apache.fineract.infrastructure.configuration.domain.ChargeAccrualDateConfig;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.config.TaskExecutorConstant;
 import org.apache.fineract.infrastructure.core.domain.ExternalId;
@@ -102,7 +103,6 @@ public class LoanAccrualsProcessingServiceImpl implements LoanAccrualsProcessing
 
     private static final Set<LoanTransactionType> ACCRUAL_TYPES = Set.of(ACCRUAL, ACCRUAL_ADJUSTMENT);
 
-    private static final String ACCRUAL_ON_CHARGE_SUBMITTED_ON_DATE = "submitted-date";
     private final ExternalIdFactory externalIdFactory;
     private final BusinessEventNotifierService businessEventNotifierService;
     private final ConfigurationDomainService configurationDomainService;
@@ -1303,8 +1303,7 @@ public class LoanAccrualsProcessingServiceImpl implements LoanAccrualsProcessing
     }
 
     private boolean isChargeOnDueDate() {
-        final String chargeAccrualDateType = configurationDomainService.getAccrualDateConfigForCharge();
-        return !ACCRUAL_ON_CHARGE_SUBMITTED_ON_DATE.equalsIgnoreCase(chargeAccrualDateType);
+        return configurationDomainService.getAccrualDateConfigForCharge() != ChargeAccrualDateConfig.SUBMITTED_DATE;
     }
 
     private static boolean resolveChargeOnDueDate(final boolean chargeOnDueDateConfigured, final boolean realTimeChargeAccrual) {
