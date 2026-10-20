@@ -57,6 +57,7 @@ import org.apache.fineract.infrastructure.security.service.PlatformSecurityConte
 import org.apache.fineract.organisation.holiday.domain.HolidayRepositoryWrapper;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
+import org.apache.fineract.organisation.office.domain.Office;
 import org.apache.fineract.organisation.staff.domain.StaffRepositoryWrapper;
 import org.apache.fineract.organisation.workingdays.domain.WorkingDaysRepositoryWrapper;
 import org.apache.fineract.portfolio.account.domain.StandingInstructionRepository;
@@ -278,7 +279,7 @@ class SavingsAccountWritePlatformServiceJpaRepositoryImplTest {
 
         when(context.authenticatedUser()).thenReturn(submittedBy);
         when(savingAccountAssembler.getPivotConfigStatus()).thenReturn(false);
-        when(savingAccountAssembler.assembleFrom(savingsId, false)).thenReturn(account);
+        when(savingAccountAssembler.assembleFromInUserScope(savingsId, false)).thenReturn(account);
         when(command.localDateValueOfParameterNamed("transactionDate")).thenReturn(transactionDate);
         when(command.bigDecimalValueOfParameterNamed("transactionAmount")).thenReturn(amount);
         when(command.booleanPrimitiveValueOfParameterNamed("lienAllowed")).thenReturn(false);
@@ -324,7 +325,7 @@ class SavingsAccountWritePlatformServiceJpaRepositoryImplTest {
         when(savingsAccountTransactionDataValidator.validateReleaseAmountAndAssembleForm(holdTransaction)).thenReturn(releaseTransaction);
         when(externalIdFactory.createFromCommand(command, "externalId")).thenReturn(externalId);
         when(savingAccountAssembler.getPivotConfigStatus()).thenReturn(false);
-        when(savingAccountAssembler.assembleFrom(savingsId, false)).thenReturn(account);
+        when(savingAccountAssembler.assembleFromInUserScope(savingsId, false)).thenReturn(account);
         when(account.getClient()).thenReturn(null);
         when(account.group()).thenReturn(null);
         when(account.getCurrency()).thenReturn(currency);
@@ -380,7 +381,7 @@ class SavingsAccountWritePlatformServiceJpaRepositoryImplTest {
         when(command.localDateValueOfParameterNamed("transactionDate")).thenReturn(transactionDate);
         when(externalIdFactory.createFromCommand(command, "externalId")).thenReturn(externalId);
         when(savingAccountAssembler.getPivotConfigStatus()).thenReturn(false);
-        when(savingAccountAssembler.assembleFrom(savingsId, false)).thenReturn(account);
+        when(savingAccountAssembler.assembleFromInUserScope(savingsId, false)).thenReturn(account);
         when(account.getClient()).thenReturn(null);
         when(account.group()).thenReturn(null);
         when(account.getTransactions()).thenReturn(transactions);
@@ -466,6 +467,9 @@ class SavingsAccountWritePlatformServiceJpaRepositoryImplTest {
         SavingsAccount savingsAccount = mock(SavingsAccount.class);
         when(savingsAccount.getId()).thenReturn(savingsAccountId);
         when(savingsAccount.officeId()).thenReturn(1L);
+        Office office = mock(Office.class);
+        when(office.getHierarchy()).thenReturn(".");
+        when(savingsAccount.office()).thenReturn(office);
         when(savingsAccount.clientId()).thenReturn(1L);
         when(savingsAccount.groupId()).thenReturn(1L);
         when(savingsAccount.findExistingTransactionIds()).thenReturn(new HashSet<>());
