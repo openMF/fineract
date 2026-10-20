@@ -241,6 +241,8 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         // The loan is back in SUBMITTED state and can be modified.
         loan.getLoanProductRelatedDetails().setDiscountApproved(null);
 
+        this.amortizationScheduleWriteService.restoreScheduledFrequencyOnUndoApproval(loan);
+
         // The active contractual principal falls back to the proposed one while the loan is unapproved again.
         loan.getLoanProductRelatedDetails().setPrincipal(loan.getProposedPrincipal());
 
@@ -248,6 +250,9 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         if (!loan.getDisbursementDetails().isEmpty()) {
             loan.getDisbursementDetails().getFirst().setExpectedAmount(loan.getProposedPrincipal());
         }
+
+        // The approval-time projection goes with the approval: a submitted loan has none until it is approved again.
+        this.amortizationScheduleWriteService.deleteAmortizationScheduleOnUndoApproval(loan);
 
         this.loanRepository.saveAndFlush(loan);
 
@@ -850,6 +855,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         final LocalDate reversedOnDate = waiverTransaction.getReversedOnDate();
         final LoanStatus oldStatus = loan.getLoanStatus();
         stateMachine.determineAndTransition(loan, reversedOnDate);
+        breachScheduleService.rederiveNearBreachIfReopened(loan, oldStatus);
         transactionProcessor.recalculateOverpaidOnDate(loan, waiverTransaction);
         loanRepository.saveAndFlush(loan);
 
@@ -1065,6 +1071,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         final LoanStatus oldStatus = loan.getLoanStatus();
 
         stateMachine.determineAndTransition(loan, reversedOnDate);
+        breachScheduleService.rederiveNearBreachIfReopened(loan, oldStatus);
 
         loanRepository.saveAndFlush(loan);
 
@@ -1377,7 +1384,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
                     rateChange.getId(), rateChange.getEffectiveDate());
             return;
         }
-        rateChange.applyCalculatedValues(solve.calculatedAnnualEir(), solve.dailyPayment().getAmount(), solve.term());
+        rateChange.applyCalculatedValues(solve.calculatedAnnualEir(), solve.periodPayment().getAmount(), solve.term());
         this.rateChangeRepository.save(rateChange);
     }
 
@@ -1414,6 +1421,7 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
     }
 
     private void processUndoTransaction(final WorkingCapitalLoan loan, final WorkingCapitalLoanTransaction transaction) {
+        final LoanStatus statusBeforeUndo = loan.getLoanStatus();
         final boolean lastMonetaryAction = transactionProcessor.isLastMonetaryAction(transaction);
         final boolean isAccountingOnly = isAccountingOnlyTransaction(transaction);
         final boolean isChargesInvolved = isChargesInvolved(loan);
@@ -1439,13 +1447,17 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
         }
 
         if (!isAccountingOnly) {
-            breachScheduleService.applyRepaymentUndo(loan.getId(), transaction.getTransactionDate(), transaction.getTransactionAmount());
+            breachScheduleService.applyRepaymentUndo(loan, transaction.getTransactionDate(), transaction.getTransactionAmount());
             delinquencyRangeScheduleService.reprocessDelinquencySchedule(loan);
         }
 
         accountingProcessor.postReversalJournalEntries(loan, transaction);
 
         stateMachine.determineAndTransition(loan, DateUtils.getBusinessLocalDate());
+        if (!isAccountingOnly) {
+            // The breach undo above ran while the loan was still closed, which the near breach evaluation skips.
+            breachScheduleService.rederiveNearBreachIfReopened(loan, statusBeforeUndo);
+        }
         transactionProcessor.recalculateOverpaidOnDate(loan, transaction);
         transactionProcessor.recalculateSettlementDates(loan);
     }
@@ -1638,15 +1650,18 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
     /**
      * Drops everything the disbursement brought into being, so the loan is back where approval left it and the next
      * disbursement builds it all again from the loan's current configuration: the delinquency and breach schedules with
-     * every action recorded against them, the charges (deactivated, as transactions still reference them) and the
-     * balance. The amortization model is regenerated last, from that clean approved state.
+     * every action recorded against them, the period payment rate changes (reversed, like the transactions undone with
+     * them: they were user-entered commands whose history stays readable, while a later rate change would otherwise
+     * read them as still in force), the charges (deactivated, as transactions still reference them) and the balance.
+     * The amortization model is regenerated last, from that clean approved state.
      */
     private void resetToApprovedState(final WorkingCapitalLoan loan) {
         delinquencyRangeScheduleService.deleteScheduleAndActions(loan.getId());
         breachScheduleService.deleteScheduleAndActions(loan.getId());
+        reverseRateChanges(loan);
         deactivateCharges(loan);
         replaceBalance(loan);
-        amortizationScheduleWriteService.generateAndSaveAmortizationScheduleOnApproval(loan);
+        amortizationScheduleWriteService.regenerateAmortizationScheduleOnUndoDisbursal(loan);
     }
 
     private void deactivateCharges(final WorkingCapitalLoan loan) {
@@ -1688,6 +1703,22 @@ public class WorkingCapitalLoanWritePlatformServiceImpl implements WorkingCapita
                         "Undo disbursal is not allowed when there are other monetary transactions on the loan", "loanId");
             }
         }
+    }
+
+    /**
+     * Reverses every rate change still in force, stamped with the business date like a same-date overwrite: it records
+     * when the undo happened, not what the change was effective for. Readers that matter (schedule rebuild, validator,
+     * rate in effect) already skip reversed changes, and the history endpoint keeps showing them as reversed.
+     */
+    private void reverseRateChanges(final WorkingCapitalLoan loan) {
+        final List<WorkingCapitalLoanPeriodPaymentRateChange> activeChanges = rateChangeRepository
+                .findByWorkingCapitalLoanIdAndReversedFalse(loan.getId());
+        if (activeChanges.isEmpty()) {
+            return;
+        }
+        final LocalDate businessDate = DateUtils.getBusinessLocalDate();
+        activeChanges.forEach(change -> change.reverse(businessDate));
+        rateChangeRepository.saveAll(activeChanges);
     }
 
     private void createNote(final String noteText, final WorkingCapitalLoan loan) {

@@ -65,6 +65,28 @@ public final class WorkingCapitalLoanRequestBuilders {
                 .discount(discount);
     }
 
+    /**
+     * Submit overload carrying a loan-level repayment frequency override. Only usable on a product whose
+     * {@code periodPaymentFrequency} / {@code periodPaymentFrequencyType} attributes are overridable.
+     */
+    public static PostWorkingCapitalLoansRequest submitApplicationWithFrequency(Long clientId, Long productId, BigDecimal principal,
+            BigDecimal periodPaymentRate, String submittedOnDate, String expectedDisbursementDate, BigDecimal discount,
+            Integer repaymentEvery, String repaymentFrequencyType) {
+        return submitApplicationWithDiscount(clientId, productId, principal, periodPaymentRate, submittedOnDate, expectedDisbursementDate,
+                discount).repaymentEvery(repaymentEvery)
+                .repaymentFrequencyType(PostWorkingCapitalLoansRequest.RepaymentFrequencyTypeEnum.fromValue(repaymentFrequencyType));
+    }
+
+    /**
+     * An ANNUAL_EIR loan carries neither a TPV nor a % payment rate: the payment is solved from the annual EIR.
+     */
+    public static PostWorkingCapitalLoansRequest submitAnnualEirApplication(Long clientId, Long productId, BigDecimal principal,
+            BigDecimal annualEir, BigDecimal discount, String submittedOnDate, String expectedDisbursementDate) {
+        return new PostWorkingCapitalLoansRequest().clientId(clientId).productId(productId).principalAmount(principal).annualEir(annualEir)
+                .discount(discount).submittedOnDate(submittedOnDate).expectedDisbursementDate(expectedDisbursementDate).locale(LOCALE)
+                .dateFormat(DATE_FORMAT);
+    }
+
     public static PostWorkingCapitalLoansRequest submitPaymentAmountApplication(Long clientId, Long productId, BigDecimal principal,
             BigDecimal discount, BigDecimal paymentAmount, String submittedOnDate, String expectedDisbursementDate) {
         return new PostWorkingCapitalLoansRequest().clientId(clientId).productId(productId).principalAmount(principal).discount(discount)
@@ -134,6 +156,12 @@ public final class WorkingCapitalLoanRequestBuilders {
     public static PostWorkingCapitalLoansBreachActionRequest breachReschedule(Integer frequency, String frequencyType) {
         return new PostWorkingCapitalLoansBreachActionRequest().action("reschedule").frequency(frequency).frequencyType(frequencyType)
                 .locale(LOCALE).dateFormat(DATE_FORMAT);
+    }
+
+    public static PostWorkingCapitalLoansBreachActionRequest breachMinimumPaymentReschedule(BigDecimal minimumPayment,
+            String minimumPaymentType) {
+        return new PostWorkingCapitalLoansBreachActionRequest().action("reschedule").minimumPayment(minimumPayment)
+                .minimumPaymentType(minimumPaymentType).locale(LOCALE).dateFormat(DATE_FORMAT);
     }
 
     public static PostWorkingCapitalLoansBreachActionRequest breachUndoReset() {
@@ -272,6 +300,16 @@ public final class WorkingCapitalLoanRequestBuilders {
 
     public static PostWorkingCapitalLoansBreachActionRequest breachPause(String startDate, String endDate) {
         return new PostWorkingCapitalLoansBreachActionRequest().action("pause").startDate(startDate).endDate(endDate).locale(LOCALE)
+                .dateFormat(DATE_FORMAT);
+    }
+
+    public static PostWorkingCapitalLoansBreachActionRequest breachDisable(String startDate) {
+        return new PostWorkingCapitalLoansBreachActionRequest().action("disable").startDate(startDate).locale(LOCALE)
+                .dateFormat(DATE_FORMAT);
+    }
+
+    public static PostWorkingCapitalLoansBreachActionRequest breachEnable(String startDate) {
+        return new PostWorkingCapitalLoansBreachActionRequest().action("enable").startDate(startDate).locale(LOCALE)
                 .dateFormat(DATE_FORMAT);
     }
 
