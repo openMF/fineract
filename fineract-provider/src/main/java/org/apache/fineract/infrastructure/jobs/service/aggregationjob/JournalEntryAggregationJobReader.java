@@ -38,15 +38,13 @@ import org.springframework.stereotype.Component;
 @StepScope
 public class JournalEntryAggregationJobReader extends JdbcCursorItemReader<JournalEntryAggregationSummaryData> {
 
-    private final DatabaseTypeResolver databaseTypeResolver;
     private LocalDate aggregatedOnDateFrom;
     private LocalDate aggregatedOnDateTo;
 
     public JournalEntryAggregationJobReader(TenantDataSourceFactory tenantDataSourceFactory, DatabaseTypeResolver databaseTypeResolver) {
-        this.databaseTypeResolver = databaseTypeResolver;
         FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
         setDataSource(tenantDataSourceFactory.create(tenant));
-        setSql(buildAggregationQuery());
+        setSql(buildAggregationQuery(databaseTypeResolver));
         setRowMapper(this::mapRow);
     }
 
@@ -81,7 +79,7 @@ public class JournalEntryAggregationJobReader extends JdbcCursorItemReader<Journ
                 .build(); //
     }
 
-    private String buildAggregationQuery() {
+    private static String buildAggregationQuery(DatabaseTypeResolver databaseTypeResolver) {
         String aggregateFunction = databaseTypeResolver.isMySQL()
                 ? "GROUP_CONCAT(DISTINCT mlo.external_id ORDER BY mlo.external_id SEPARATOR ', ')"
                 : "STRING_AGG(DISTINCT mlo.external_id, ', ' ORDER BY mlo.external_id)";
