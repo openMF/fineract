@@ -738,6 +738,56 @@ public class BatchWorkingCapitalLoanIntegrationTest {
     }
 
     /**
+     * Tests that a working capital loan transaction can be undone via the Batch API by loan ID and transaction ID, and
+     * read back in the same batch call.
+     */
+    @Test
+    public void testUndoWorkingCapitalLoanTransactionByLoanIdAndTransactionIdViaBatchApi() {
+        final RepaidLoan loan = createActiveLoanWithRepayment();
+
+        assertUndoneAndRetrievedInOneBatchCall(
+                "v1/working-capital-loans/" + loan.loanId() + "/transactions/" + loan.repaymentId() + "?command=undo", loan);
+    }
+
+    /**
+     * Tests that a working capital loan transaction can be undone via the Batch API by loan ID and transaction external
+     * ID, and read back in the same batch call.
+     */
+    @Test
+    public void testUndoWorkingCapitalLoanTransactionByLoanIdAndTransactionExternalIdViaBatchApi() {
+        final RepaidLoan loan = createActiveLoanWithRepayment();
+
+        assertUndoneAndRetrievedInOneBatchCall(
+                "v1/working-capital-loans/" + loan.loanId() + "/transactions/external-id/" + loan.repaymentExternalId() + "?command=undo",
+                loan);
+    }
+
+    /**
+     * Tests that a working capital loan transaction can be undone via the Batch API by loan external ID and transaction
+     * ID, and read back in the same batch call.
+     */
+    @Test
+    public void testUndoWorkingCapitalLoanTransactionByLoanExternalIdAndTransactionIdViaBatchApi() {
+        final RepaidLoan loan = createActiveLoanWithRepayment();
+
+        assertUndoneAndRetrievedInOneBatchCall(
+                "v1/working-capital-loans/external-id/" + loan.loanExternalId() + "/transactions/" + loan.repaymentId() + "?command=undo",
+                loan);
+    }
+
+    /**
+     * Tests that a working capital loan transaction can be undone via the Batch API by loan external ID and transaction
+     * external ID, and read back in the same batch call.
+     */
+    @Test
+    public void testUndoWorkingCapitalLoanTransactionByLoanExternalIdAndTransactionExternalIdViaBatchApi() {
+        final RepaidLoan loan = createActiveLoanWithRepayment();
+
+        assertUndoneAndRetrievedInOneBatchCall("v1/working-capital-loans/external-id/" + loan.loanExternalId()
+                + "/transactions/external-id/" + loan.repaymentExternalId() + "?command=undo", loan);
+    }
+
+    /**
      * Tests that a delinquency action can be batched by loan ID: submit → approve → disburse → pause in a single
      * enclosing-transaction batch call, the pause resolving the loan created by the first sub-request.
      */
@@ -822,6 +872,69 @@ public class BatchWorkingCapitalLoanIntegrationTest {
         assertEquals(0, BigDecimal.valueOf(40).compareTo(history.getFirst().getThreshold()));
         assertEquals(15, history.getFirst().getFrequency());
         assertEquals("DAYS", history.getFirst().getFrequencyType());
+    }
+
+    /**
+     * An active working capital loan with one repayment, each named by both its id and its external id.
+     */
+    private record RepaidLoan(Long loanId, String loanExternalId, Long repaymentId, String repaymentExternalId) {
+    }
+
+    private RepaidLoan createActiveLoanWithRepayment() {
+        final Long productId = createProduct();
+        final Long clientId = createClient();
+        final String loanExternalId = "wcl-undo-batch-" + UUID.randomUUID().toString().substring(0, 8);
+        final String repaymentExternalId = "wcl-undo-txn-" + UUID.randomUUID().toString().substring(0, 8);
+        final LocalDate today = Utils.getLocalDateOfTenant();
+
+        final Long loanId = submitAndTrack(new WorkingCapitalLoanApplicationTestBuilder() //
+                .withClientId(clientId) //
+                .withProductId(productId) //
+                .withExternalId(loanExternalId) //
+                .withPrincipal(BigDecimal.valueOf(5000)) //
+                .withPeriodPaymentRate(WorkingCapitalLoanProductTestBuilder.DEFAULT_PERIOD_PAYMENT_RATE_PERCENT) //
+                .withTotalPaymentVolume(BigDecimal.valueOf(5500)) //
+                .withSubmittedOnDate(today) //
+                .buildSubmitRequest());
+        createdLoanIds.add(loanId);
+
+        loanHelper.approveById(loanId, WorkingCapitalLoanApplicationTestBuilder.buildApproveRequest(today, BigDecimal.valueOf(5000), null));
+        loanHelper.disburseById(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildDisburseRequest(today, BigDecimal.valueOf(5000)));
+        loanHelper.makeRepaymentByLoanId(loanId, WorkingCapitalLoanDisbursementTestBuilder.buildTransactionRequest(today,
+                BigDecimal.valueOf(500), null, null, null, null, repaymentExternalId));
+
+        final Long repaymentId = loanHelper.retrieveTransactionByLoanIdAndTransactionExternalId(loanId, repaymentExternalId).getId();
+        assertNotNull(repaymentId);
+        return new RepaidLoan(loanId, loanExternalId, repaymentId, repaymentExternalId);
+    }
+
+    /**
+     * Sends the undo and a GET of the transaction it names in one enclosing-transaction batch call, the GET resolving
+     * the transaction from the undo's {@code $.resourceId}, and checks that the repayment comes back reversed.
+     */
+    private void assertUndoneAndRetrievedInOneBatchCall(final String undoRelativeUrl, final RepaidLoan loan) {
+        final BatchRequest undoRequest = buildBatchRequest(1L, null, undoRelativeUrl, "POST", "{}");
+        final BatchRequest getRequest = buildBatchRequest(2L, 1L,
+                "v1/working-capital-loans/" + loan.loanId() + "/transactions/$.resourceId", "GET", null);
+
+        final List<BatchResponse> responses = batchServiceHelper.handleBatch(List.of(undoRequest, getRequest), true);
+
+        assertEquals(2, responses.size());
+        for (final BatchResponse response : responses) {
+            assertEquals(HttpStatus.SC_OK, response.getStatusCode(),
+                    "Expected HTTP 200 for request " + response.getRequestId() + ": " + response.getBody());
+        }
+
+        final DocumentContext undoResult = JsonPath.parse(responses.get(0).getBody());
+        assertEquals(loan.repaymentId(), undoResult.read("$.resourceId", Long.class));
+        assertEquals(loan.loanId(), undoResult.read("$.loanId", Long.class));
+
+        final DocumentContext undoneTransaction = JsonPath.parse(responses.get(1).getBody());
+        assertEquals(loan.repaymentId(), undoneTransaction.read("$.id", Long.class));
+        assertEquals(loan.repaymentExternalId(), undoneTransaction.read("$.externalId", String.class));
+        assertEquals(Boolean.TRUE, undoneTransaction.read("$.reversed", Boolean.class));
+
+        assertEquals(Boolean.TRUE, loanHelper.retrieveTransactionByLoanIdAndTransactionId(loan.loanId(), loan.repaymentId()).getReversed());
     }
 
     /**
