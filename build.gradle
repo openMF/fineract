@@ -105,6 +105,8 @@ buildscript {
         classpath 'org.eclipse.persistence:eclipselink:5.0.2'
         classpath 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'
         classpath 'com.google.cloud.tools:jib-layer-filter-extension-gradle:0.3.0'
+        // jib needs it to read zstd-compressed base image layers, which the Docker Hardened Images (dhi.io) use
+        classpath 'com.github.luben:zstd-jni:1.5.7-28'
         classpath 'org.apache.commons:commons-lang3:3.20.0'
         // Gradle 9 no longer bundles groovy-sql; keep this aligned with Gradle's embedded Groovy version.
         classpath 'org.apache.groovy:groovy-sql:4.0.32'
@@ -168,6 +170,15 @@ if (gitVersion != null) {
 logger.lifecycle("project version: ${version}")
 
 ext['swaggerFile'] = "$rootDir/fineract-provider/build/resources/main/static/fineract.json".toString()
+
+// Base image of the jib-built images (:fineract-provider and :custom:docker). The default is a public image, so
+// anyone can build without registry credentials. -Pfineract.docker.hardened=true builds on a Docker Hardened Image
+// instead: it has no shell or package manager, and pulling it needs a Docker account (`docker login dhi.io`, or
+// -Djib.from.auth.username / -Djib.from.auth.password). CI publishes apache/fineract this way. -Djib.from.image
+// still overrides both.
+ext['fineractDockerBaseImage'] = providers.gradleProperty('fineract.docker.hardened').map { it.toBoolean() }.getOrElse(false)
+        ? 'dhi.io/eclipse-temurin:25-alpine'
+        : 'azul/zulu-openjdk-alpine:25-jre-headless'
 
 // Apply static weaving configuration to all subprojects
 subprojects { subproject ->

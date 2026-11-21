@@ -28,7 +28,7 @@ tasks.withType(com.google.cloud.tools.jib.gradle.JibTask).configureEach {
 
 jib {
     from {
-        image = 'azul/zulu-openjdk-alpine:25-jre-headless'
+        image = rootProject.ext.fineractDockerBaseImage
         platforms {
             platform {
                 architecture = System.getProperty("os.arch").equals("aarch64")?"arm64":"amd64"
@@ -56,7 +56,9 @@ jib {
         ]
         ports = ['8080/tcp', '8443/tcp']
         labels = [maintainer: 'Aleksandar Vidakovic <aleks@apache.org>']
-        user = 'nobody:nogroup'
+        // numeric nobody:nobody, which exists in both base images (the hardened one has no 'nogroup'); numeric also
+        // lets Kubernetes check runAsNonRoot
+        user = '65534:65534'
     }
 
     allowInsecureRegistries = true

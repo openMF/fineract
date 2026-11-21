@@ -216,10 +216,21 @@ You must go to https://localhost:8443 and remember to accept the self-signed SSL
 
 [Docker Hub](https://hub.docker.com/r/apache/fineract) has a pre-built container image of this project, built continuously.
 
+The image on Docker Hub is built on a [Docker Hardened Image](https://docs.docker.com/dhi/) (Eclipse Temurin 25 JRE on
+Alpine). It runs as the unprivileged user `65534` (`nobody`) and contains no shell and no package manager, so
+`docker exec ... sh` does not work in it, and healthchecks that call `sh`, `nc` or `curl` inside the container (like the
+ones in our `docker-compose` files) report it as unhealthy; check `/fineract-provider/actuator/health` from outside
+instead. A local `jibDockerBuild` uses the public `azul/zulu-openjdk-alpine` image unless you build the hardened variant
+yourself, which needs a Docker account:
+```bash
+docker login dhi.io
+./gradlew :fineract-provider:jibDockerBuild -Pfineract.docker.hardened=true -x test
+```
+
 The official Fineract Docker image includes the PostgreSQL JDBC driver only. MySQL and MariaDB JDBC drivers are
 **not** included due to license incompatibility (see LICENSE section below). To use Fineract with MySQL or MariaDB,
-download the driver from the vendor and either build your own Docker image on top of the official one, mount it
-via a Docker volume, or install it from the OS package manager inside a custom image.
+download the driver from the vendor and put it into `/app/plugins/`, which is on the classpath: either mount it there
+via a Docker volume, or build your own Docker image on top of the official one that copies it there.
 
 You must specify the tenants database JDBC URL by passing it to the `fineract` container via environment
 variables; please consult the [`docker-compose.yml`](docker-compose.yml) for exact details how to specify those.

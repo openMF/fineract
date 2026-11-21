@@ -74,12 +74,13 @@ jobs:
           echo "long_hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         id: git_hashes
 
-      - name: Build the Apache Fineract image
+      - name: Determine image tags
+        id: image_tags
         env:
           REF_NAME: ${{ github.ref_name }}
           SHORT_HASH: ${{ steps.git_hashes.outputs.short_hash }}
           LONG_HASH: ${{ steps.git_hashes.outputs.long_hash }}
-        run:  |
+        run: |
           TAGS=$REF_NAME
           if [ "$TAGS" == "develop" ]; then
             TAGS="$TAGS,$SHORT_HASH,$LONG_HASH"
@@ -87,12 +88,43 @@ jobs:
             TAGS=$(git tag --points-at HEAD | grep -E '^1\.' | head -n 1 || true)
             if [ -z "$TAGS" ]; then
               echo "Skipping DockerHub publish because this run is not for develop or a 1.* tag."
-              exit 0
             fi
           fi
-          ./gradlew --no-daemon --console=plain :fineract-provider:jib -x test -x cucumber -x buildJavaSdk  \
-            -Djib.to.auth.username=${{secrets.DOCKERHUB_USER}} \
-            -Djib.to.auth.password=${{secrets.DOCKERHUB_TOKEN}} \
+          echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
+
+      # The published image is built on a Docker Hardened Image (dhi.io), which needs a Docker account to pull; the
+      # DockerHub credentials are used for that as well. PR builds keep the public base image (no secrets there).
+      # Nothing else in CI runs the hardened variant, so start it once before pushing it.
+      - name: Smoke test the hardened image
+        if: steps.image_tags.outputs.tags != ''
+        env:
+          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -z "$DOCKERHUB_USER" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
+            echo "::error::DOCKERHUB_USER and DOCKERHUB_TOKEN are needed to pull the hardened base image from dhi.io"
+            exit 1
+          fi
+          ./gradlew --no-daemon --console=plain :fineract-provider:jibDockerBuild -x test -x cucumber -x buildJavaSdk \
+            -Pfineract.docker.hardened=true \
+            -Djib.from.auth.username="$DOCKERHUB_USER" \
+            -Djib.from.auth.password="$DOCKERHUB_TOKEN" \
+            -Djib.to.image=fineract-hardened-smoke
+          .github/scripts/smoke-test-docker-image.sh fineract-hardened-smoke
+
+      - name: Build and push the Apache Fineract image
+        if: steps.image_tags.outputs.tags != ''
+        env:
+          TAGS: ${{ steps.image_tags.outputs.tags }}
+          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          ./gradlew --no-daemon --console=plain :fineract-provider:jib -x test -x cucumber -x buildJavaSdk \
+            -Pfineract.docker.hardened=true \
+            -Djib.from.auth.username="$DOCKERHUB_USER" \
+            -Djib.from.auth.password="$DOCKERHUB_TOKEN" \
+            -Djib.to.auth.username="$DOCKERHUB_USER" \
+            -Djib.to.auth.password="$DOCKERHUB_TOKEN" \
             -Djib.from.platforms=linux/amd64,linux/arm64 \
             -Djib.to.image=apache/fineract \
-            -Djib.to.tags=$TAGS
+            -Djib.to.tags="$TAGS"
